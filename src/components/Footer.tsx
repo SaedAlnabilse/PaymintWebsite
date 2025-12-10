@@ -6,11 +6,8 @@ export const Footer = () => {
       <div className="container mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
           <div className="col-span-1 md:col-span-1">
-            <div className="text-2xl font-bold text-dark flex items-center gap-2 mb-6">
-              <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center p-1">
-                <img src="/favicon.png" alt="PayMint Logo" className="w-full h-full object-contain" />
-              </div>
-              PayMint
+            <div className="mb-6">
+              <img src="/paymint-logo-new.png" alt="PayMint Logo" className="h-10 w-auto object-contain" />
             </div>
             <p className="text-gray-500 mb-6">
               The POS system built for today's businesses. Flexible, secure, and packed with premium features.
@@ -47,7 +44,7 @@ export const Footer = () => {
             </ul>
           </div>
         </div>
-        
+
         <div className="border-t border-gray-100 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-gray-400 text-sm">© 2025 PayMint LLC. All rights reserved.</p>
           <div className="flex gap-8 text-sm text-gray-400">

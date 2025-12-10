@@ -5,9 +5,9 @@ export const AdminControl = () => {
     <section id="admin" className="py-20 bg-white overflow-hidden">
       <div className="container mx-auto px-6">
         <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-24">
-          
+
           {/* Left Side: Image with Fade Effect */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, x: -50 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
@@ -15,11 +15,11 @@ export const AdminControl = () => {
             className="w-full lg:w-1/2 relative"
           >
             <div className="relative rounded-2xl overflow-hidden shadow-xl">
-              <video 
-                src="/demo-video.mp4" 
-                autoPlay 
-                loop 
-                muted 
+              <video
+                src="/demo-video.mp4"
+                autoPlay
+                loop
+                muted
                 playsInline
                 className="w-full h-auto rounded-2xl shadow-xl"
               >
@@ -29,7 +29,7 @@ export const AdminControl = () => {
           </motion.div>
 
           {/* Right Side: Content */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, x: 30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
@@ -37,15 +37,10 @@ export const AdminControl = () => {
             className="w-full lg:w-1/2"
           >
             <h2 className="text-4xl font-bold text-mint-dark mb-8">Stay in Control</h2>
-            
+
             {/* Logo Lockup */}
             <div className="flex items-center gap-4 mb-8">
-              <div className="flex items-center gap-2">
-                <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center p-2">
-                  <img src="/favicon.png" alt="PayMint Logo" className="w-full h-full object-contain" />
-                </div>
-                <span className="text-3xl font-bold text-dark">PayMint</span>
-              </div>
+              <img src="/paymint-logo-new.png" alt="PayMint Logo" className="h-12 w-auto object-contain" />
               <div className="h-10 w-px bg-gray-300 mx-2"></div>
               <div className="flex flex-col justify-center leading-tight">
                 <span className="text-dark font-medium">Admin</span>

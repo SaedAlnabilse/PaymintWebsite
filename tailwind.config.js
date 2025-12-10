@@ -8,21 +8,27 @@ export default {
     extend: {
       colors: {
         mint: {
-          DEFAULT: '#7cc39f',
-          light: '#a3d9be',
-          dark: '#5ba382',
+          DEFAULT: '#7CC39F',
+          light: '#9DD4B5',
+          dark: '#5FAF87',
         },
         paymint: {
-          green: '#8FBC8F',
-          dark: '#4A5568',
+          green: '#7CC39F',
+          dark: '#1F1D2B',
           gray: '#718096',
         },
         dark: {
-          DEFAULT: '#1a1a1a',
-          light: '#2d2d2d',
+          DEFAULT: '#1F1D2B',
+          light: '#2A2838',
+        },
+        accent: {
+          DEFAULT: '#D55263',
+          light: '#E07584',
+          dark: '#B8404F',
         },
         neutral: {
           bg: '#F7F9FA',
+          white: '#FFFFFF',
         }
       },
       fontFamily: {
