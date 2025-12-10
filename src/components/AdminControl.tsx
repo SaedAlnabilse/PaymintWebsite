@@ -41,7 +41,9 @@ export const AdminControl = () => {
             {/* Logo Lockup */}
             <div className="flex items-center gap-4 mb-8">
               <div className="flex items-center gap-2">
-                <span className="w-10 h-10 bg-mint rounded-lg flex items-center justify-center text-white font-bold text-xl">P</span>
+                <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center p-2">
+                  <img src="/favicon.png" alt="PayMint Logo" className="w-full h-full object-contain" />
+                </div>
                 <span className="text-3xl font-bold text-dark">PayMint</span>
               </div>
               <div className="h-10 w-px bg-gray-300 mx-2"></div>

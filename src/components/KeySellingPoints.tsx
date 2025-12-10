@@ -29,6 +29,16 @@ export const KeySellingPoints = () => {
     <section className="py-20 bg-white">
       <div className="container mx-auto px-6">
         <div className="text-center mb-16">
+          {/* PayMint Logo */}
+          <div className="flex justify-center mb-6">
+            <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center shadow-lg p-3">
+              <img 
+                src="/favicon.png" 
+                alt="PayMint Logo" 
+                className="w-full h-full object-contain"
+              />
+            </div>
+          </div>
           <h2 className="text-3xl lg:text-4xl font-bold text-dark mb-4">Why PayMint?</h2>
         </div>
 

@@ -7,7 +7,9 @@ export const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
           <div className="col-span-1 md:col-span-1">
             <div className="text-2xl font-bold text-dark flex items-center gap-2 mb-6">
-              <span className="w-8 h-8 bg-mint rounded-lg flex items-center justify-center text-white font-bold">P</span>
+              <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center p-1">
+                <img src="/favicon.png" alt="PayMint Logo" className="w-full h-full object-contain" />
+              </div>
               PayMint
             </div>
             <p className="text-gray-500 mb-6">
