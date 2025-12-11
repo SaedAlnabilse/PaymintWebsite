@@ -1,4 +1,4 @@
-import { Send, Mail, Phone, X } from 'lucide-react';
+import { Send, Mail, Phone } from 'lucide-react';
 import { useState } from 'react';
 
 type ModalType = 'privacy' | 'terms' | null;
