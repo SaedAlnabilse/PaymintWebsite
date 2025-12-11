@@ -40,6 +40,17 @@ export const FeaturedTestimonial = () => {
 
             <div className="min-h-[400px] flex items-center justify-center">
               <div className="flex flex-col md:flex-row items-center justify-center gap-12 md:gap-24 w-full">
+                {/* Quote Section */}
+                <div className="flex-1 max-w-xl relative pt-10 pb-10">
+                  <span className="absolute top-0 left-0 text-4xl md:text-5xl font-serif text-black/5 dark:text-white/10 leading-none select-none">"</span>
+                  
+                  <p className="text-lg md:text-xl leading-relaxed text-gray-700 dark:text-gray-300 font-normal px-8 relative z-10">
+                    {testimonial.text}
+                  </p>
+                  
+                  <span className="absolute bottom-[-1rem] right-0 text-4xl md:text-5xl font-serif text-black/5 dark:text-white/10 leading-none select-none">"</span>
+                </div>
+
                 {/* Image Section */}
                 <div className="relative">
                   <div className="text-center">
@@ -57,17 +68,6 @@ export const FeaturedTestimonial = () => {
                       {testimonial.title}
                     </p>
                   </div>
-                </div>
-
-                {/* Quote Section */}
-                <div className="flex-1 max-w-xl relative pt-10 pb-10">
-                  <span className="absolute top-0 left-0 text-4xl md:text-5xl font-serif text-black/5 dark:text-white/10 leading-none select-none">"</span>
-                  
-                  <p className="text-lg md:text-xl leading-relaxed text-gray-700 dark:text-gray-300 font-normal px-8 relative z-10">
-                    {testimonial.text}
-                  </p>
-                  
-                  <span className="absolute bottom-[-1rem] right-0 text-4xl md:text-5xl font-serif text-black/5 dark:text-white/10 leading-none select-none">"</span>
                 </div>
               </div>
             </div>

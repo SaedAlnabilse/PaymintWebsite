@@ -8,12 +8,34 @@ export const AdminControl = () => {
       <div className="container mx-auto px-8 lg:px-20 max-w-7xl">
         <div className="flex flex-col lg:flex-row items-stretch gap-16 lg:gap-24">
 
-          {/* Left Side: Content */}
+          {/* Left Side: Dashboard Video */}
           <motion.div
             initial={{ opacity: 0, x: -50 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
+            className="w-full lg:w-1/2 relative flex"
+          >
+            <div className="relative rounded-none overflow-hidden shadow-2xl shadow-black/50 w-full">
+              <video
+                src="/demo-video.mp4"
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="w-full h-full object-cover rounded-none shadow-xl"
+              >
+                Your browser does not support the video tag.
+              </video>
+            </div>
+          </motion.div>
+
+          {/* Right Side: Content */}
+          <motion.div
+            initial={{ opacity: 0, x: 50 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, delay: 0.2 }}
             className="w-full lg:w-1/2 flex flex-col justify-center"
           >
             <h2 className="text-5xl lg:text-6xl font-bold font-sans text-gray-900 dark:text-white mb-8 tracking-tight">Stay in Control</h2>
@@ -36,23 +58,6 @@ export const AdminControl = () => {
             <p className="text-gray-600 dark:text-gray-400 text-lg leading-relaxed mb-8">
               Stay on top of every detail in real time. From shifts to daily summaries to individual sales, our mobile-enabled back office gives owners and managers complete oversight—anytime, anywhere.
             </p>
-          </motion.div>
-
-          {/* Right Side: Dashboard Image */}
-          <motion.div
-            initial={{ opacity: 0, x: 50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="w-full lg:w-1/2 relative flex"
-          >
-            <div className="relative rounded-none overflow-hidden shadow-2xl shadow-black/50 w-full">
-              <img
-                src="/admin-dashboard.png"
-                alt="Admin Dashboard - Real-time monitoring interface"
-                className="w-full h-full object-cover rounded-none shadow-xl"
-              />
-            </div>
           </motion.div>
 
         </div>
