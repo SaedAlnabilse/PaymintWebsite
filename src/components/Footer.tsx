@@ -1,43 +1,44 @@
 import { Instagram } from 'lucide-react';
+import WhiteLogo from '../assets/White Green Full Logo.png';
 
 export const Footer = () => {
   return (
-    <footer className="bg-white pt-20 pb-10 border-t border-gray-100">
+    <footer className="bg-paymint-dark pt-20 pb-10 border-t border-white/10">
       <div className="container mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
           <div className="col-span-1 md:col-span-1">
             <div className="mb-6">
-              <img src="/paymint-logo-new.png" alt="PayMint Logo" className="h-10 w-auto object-contain" />
+              <img src={WhiteLogo} alt="PayMint Logo" className="h-14 w-auto object-contain" />
             </div>
-            <p className="text-gray-500 mb-6">
+            <p className="text-gray-400 mb-6">
               The POS system built for today's businesses. Flexible, secure, and packed with premium features.
             </p>
             <div className="flex gap-4">
-              <a href="#" className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 hover:bg-mint hover:text-white transition-colors">
+              <a href="#" className="w-10 h-10 rounded-none bg-white/10 flex items-center justify-center text-gray-400 hover:bg-mint hover:text-white transition-colors">
                 <Instagram size={20} />
               </a>
             </div>
           </div>
 
           <div>
-            <h4 className="font-bold text-dark mb-6">Product</h4>
-            <ul className="space-y-4 text-gray-500">
+            <h4 className="font-bold text-white mb-6">Product</h4>
+            <ul className="space-y-4 text-gray-400">
               <li><a href="#features" className="hover:text-mint transition-colors">Features</a></li>
               <li><a href="#pricing" className="hover:text-mint transition-colors">Pricing</a></li>
             </ul>
           </div>
 
           <div>
-            <h4 className="font-bold text-dark mb-6">Company</h4>
-            <ul className="space-y-4 text-gray-500">
+            <h4 className="font-bold text-white mb-6">Company</h4>
+            <ul className="space-y-4 text-gray-400">
               <li><a href="#" className="hover:text-mint transition-colors">About Us</a></li>
               <li><a href="#" className="hover:text-mint transition-colors">Contact</a></li>
             </ul>
           </div>
 
           <div>
-            <h4 className="font-bold text-dark mb-6">Contact</h4>
-            <ul className="space-y-4 text-gray-500">
+            <h4 className="font-bold text-white mb-6">Contact</h4>
+            <ul className="space-y-4 text-gray-400">
               <li>Sales: sales@paymint.com</li>
               <li>Support: support@paymint.com</li>
               <li>1-800-PAYMINT</li>
@@ -45,9 +46,9 @@ export const Footer = () => {
           </div>
         </div>
 
-        <div className="border-t border-gray-100 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-gray-400 text-sm">© 2025 PayMint LLC. All rights reserved.</p>
-          <div className="flex gap-8 text-sm text-gray-400">
+        <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-gray-500 text-sm">© 2025 PayMint LLC. All rights reserved.</p>
+          <div className="flex gap-8 text-sm text-gray-500">
             <a href="#" className="hover:text-mint">Privacy Policy</a>
             <a href="#" className="hover:text-mint">Terms of Service</a>
           </div>

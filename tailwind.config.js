@@ -14,12 +14,14 @@ export default {
         },
         paymint: {
           green: '#7CC39F',
-          dark: '#1F1D2B',
-          gray: '#718096',
+          dark: '#000000', // Main background
+          light: '#FFFFFF', // Main text
+          gray: '#9CA3AF', // Subtitles
+          surface: '#121212', // Cards/Sections
         },
         dark: {
-          DEFAULT: '#1F1D2B',
-          light: '#2A2838',
+          DEFAULT: '#000000',
+          light: '#1A1A1A',
         },
         accent: {
           DEFAULT: '#D55263',
@@ -27,13 +29,14 @@ export default {
           dark: '#B8404F',
         },
         neutral: {
-          bg: '#F7F9FA',
+          bg: '#000000',
           white: '#FFFFFF',
         }
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
         paymint: ['Crimson Text', 'serif'],
+        poppins: ['Poppins', 'sans-serif'],
       },
     },
   },

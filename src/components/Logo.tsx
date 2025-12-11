@@ -1,4 +1,5 @@
 import React from 'react';
+import WhiteLogo from '../assets/White Green Full Logo.png';
 
 interface LogoProps {
   className?: string;
@@ -10,15 +11,15 @@ export const Logo: React.FC<LogoProps> = ({
   size = "md"
 }) => {
   const logoSizes = {
-    sm: "h-8",
-    md: "h-10",
-    lg: "h-14"
+    sm: "h-10",
+    md: "h-14",
+    lg: "h-20"
   };
 
   return (
     <div className={`flex items-center ${className}`}>
       <img
-        src="/paymint-logo-new.png"
+        src={WhiteLogo}
         alt="PayMint Logo"
         className={`${logoSizes[size]} w-auto object-contain`}
       />

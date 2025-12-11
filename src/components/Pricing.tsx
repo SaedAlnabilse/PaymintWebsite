@@ -58,12 +58,12 @@ export const Pricing = () => {
   const [selectedPlan, setSelectedPlan] = useState<typeof plans[0] | null>(null);
 
   return (
-    <section id="pricing" className="py-20 bg-white relative">
-      <div className="container mx-auto px-6">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl lg:text-4xl font-bold text-dark mb-4">PayMint Pricing and Plans</h2>
-          <p className="text-gray-500 max-w-2xl mx-auto">
-            The second image details three subscription plans:
+    <section id="pricing" className="py-24 bg-paymint-dark relative">
+      <div className="container mx-auto px-8 lg:px-20 max-w-7xl">
+        <div className="text-center mb-20">
+          <h2 className="text-5xl lg:text-6xl font-bold font-sans text-white mb-6 tracking-tight">PayMint Pricing and Plans</h2>
+          <p className="text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed">
+            Choose the plan that fits your business needs.
           </p>
         </div>
 
@@ -71,39 +71,39 @@ export const Pricing = () => {
           {plans.map((plan, index) => (
             <div 
               key={index}
-              className={`rounded-2xl p-8 border ${plan.highlight ? 'border-mint bg-white shadow-xl scale-105 relative z-10' : 'border-gray-100 bg-neutral-bg hover:border-mint/50 transition-colors'}`}
+              className={`rounded-none p-8 border ${plan.highlight ? 'border-paymint-green bg-white/10 shadow-xl scale-105 relative z-10' : 'border-white/10 bg-paymint-surface hover:border-paymint-green/50 transition-colors'}`}
             >
               {plan.highlight && (
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-mint text-white px-4 py-1 rounded-full text-sm font-bold">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-paymint-green text-black px-4 py-1 rounded-none text-sm font-bold">
                   Most Popular
                 </div>
               )}
-              <h3 className="text-xl font-bold text-dark mb-2">{plan.name}</h3>
+              <h3 className="text-xl font-semibold text-white mb-2">{plan.name}</h3>
               <div className="flex items-baseline gap-1 mb-4">
-                <span className="text-4xl font-bold text-dark">{plan.price}</span>
-                <span className="text-gray-500">{plan.period}</span>
+                <span className="text-4xl font-bold text-white">{plan.price}</span>
+                <span className="text-gray-400">{plan.period}</span>
               </div>
-              <p className="text-gray-500 mb-8 text-sm">{plan.description}</p>
+              <p className="text-base text-gray-400 mb-8 leading-relaxed">{plan.description}</p>
               
               <ul className="space-y-4 mb-8">
                 {plan.features.map((feature, i) => (
-                  <li key={i} className="flex items-center gap-3 text-sm text-gray-600">
-                    <Check size={16} className="text-mint flex-shrink-0" />
+                  <li key={i} className="flex items-center gap-3 text-sm text-gray-400">
+                    <Check size={16} className="text-paymint-green flex-shrink-0" />
                     {feature}
                   </li>
                 ))}
               </ul>
 
               {plan.notIncluded && (
-                <p className="text-sm text-gray-400 mb-4"><span className="font-semibold">Not Included:</span> {plan.notIncluded}</p>
+                <p className="text-sm text-gray-500 mb-4"><span className="font-semibold">Not Included:</span> {plan.notIncluded}</p>
               )}
 
               <button 
                 onClick={() => setSelectedPlan(plan)}
-                className={`w-full py-3 rounded-xl font-bold transition-all ${
+                className={`w-full py-3 rounded-none font-bold transition-all ${
                   plan.highlight 
-                    ? 'bg-mint text-white hover:bg-mint-dark shadow-lg shadow-mint/25' 
-                    : 'bg-white border border-gray-200 text-dark hover:border-mint hover:text-mint'
+                    ? 'bg-paymint-green text-black hover:bg-paymint-green/90 shadow-lg shadow-paymint-green/25' 
+                    : 'bg-transparent border border-white/20 text-white hover:border-paymint-green hover:text-paymint-green'
                 }`}
               >
                 {plan.cta}
@@ -122,42 +122,42 @@ export const Pricing = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setSelectedPlan(null)}
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
             />
             
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl relative z-10 max-h-[90vh] flex flex-col"
+              className="bg-paymint-surface border border-white/10 rounded-none w-full max-w-lg overflow-hidden shadow-2xl relative z-10 max-h-[90vh] flex flex-col"
             >
-              <div className="p-6 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white">
-                <h3 className="text-xl font-bold text-dark">Plan Details</h3>
+              <div className="p-6 border-b border-white/10 flex justify-between items-center sticky top-0 bg-paymint-surface">
+                <h3 className="text-xl font-bold text-white">Plan Details</h3>
                 <button 
                   onClick={() => setSelectedPlan(null)}
-                  className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                  className="p-2 rounded-none hover:bg-white/10 transition-colors"
                 >
-                  <X size={20} className="text-gray-500" />
+                  <X size={20} className="text-gray-400" />
                 </button>
               </div>
               
               <div className="p-8 overflow-y-auto">
                 <div className="text-center mb-8">
-                  <h2 className="text-3xl font-bold text-dark mb-2">{selectedPlan.name}</h2>
+                  <h2 className="text-3xl font-bold text-white mb-2">{selectedPlan.name}</h2>
                   <div className="flex items-baseline justify-center gap-1 mb-4">
-                    <span className="text-5xl font-bold text-mint">{selectedPlan.price}</span>
-                    <span className="text-gray-500 text-xl">{selectedPlan.period}</span>
+                    <span className="text-5xl font-bold text-paymint-green">{selectedPlan.price}</span>
+                    <span className="text-gray-400 text-xl">{selectedPlan.period}</span>
                   </div>
-                  <p className="text-gray-600">{selectedPlan.description}</p>
+                  <p className="text-gray-400">{selectedPlan.description}</p>
                 </div>
 
-                <div className="bg-neutral-bg rounded-xl p-6 mb-8">
-                  <h4 className="font-bold text-dark mb-4 text-sm uppercase tracking-wider">What's Included</h4>
+                <div className="bg-black/40 rounded-none p-6 mb-8 border border-white/5">
+                  <h4 className="font-bold text-white mb-4 text-sm uppercase tracking-wider">What's Included</h4>
                   <ul className="space-y-3">
                     {[...selectedPlan.features, ...selectedPlan.detailedFeatures].map((feature, i) => (
-                      <li key={i} className="flex items-start gap-3 text-gray-700">
-                        <div className="mt-1 w-5 h-5 rounded-full bg-mint/20 flex items-center justify-center flex-shrink-0">
-                          <Check size={12} className="text-mint" />
+                      <li key={i} className="flex items-start gap-3 text-gray-400">
+                        <div className="mt-1 w-5 h-5 rounded-none bg-paymint-green/20 flex items-center justify-center flex-shrink-0">
+                          <Check size={12} className="text-paymint-green" />
                         </div>
                         <span>{feature}</span>
                       </li>
@@ -168,11 +168,11 @@ export const Pricing = () => {
                 <a 
                   href="#contact" 
                   onClick={() => setSelectedPlan(null)}
-                  className="block w-full bg-mint text-white py-4 rounded-xl font-bold text-center hover:bg-mint-dark transition-all hover:shadow-lg hover:shadow-mint/25 text-lg"
+                  className="block w-full bg-paymint-green text-black py-4 rounded-none font-bold text-center hover:bg-paymint-green/90 transition-all hover:shadow-lg hover:shadow-paymint-green/25 text-lg"
                 >
                   Contact Sales Team
                 </a>
-                <p className="text-center text-xs text-gray-400 mt-4">
+                <p className="text-center text-xs text-gray-500 mt-4">
                   No credit card required for consultation
                 </p>
               </div>

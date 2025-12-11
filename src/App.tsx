@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
-import { KeySellingPoints } from './components/KeySellingPoints';
 import { Features } from './components/Features';
 import { AdminControl } from './components/AdminControl';
 import { FeaturedTestimonial } from './components/FeaturedTestimonial';
@@ -14,11 +13,10 @@ function App() {
   const [isVideoOpen, setIsVideoOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-neutral-bg font-sans text-paymint-dark selection:bg-paymint-green selection:text-white">
+    <div className="min-h-screen bg-paymint-dark font-sans text-paymint-light selection:bg-paymint-green selection:text-black">
       <Navbar />
       <main>
         <Hero isVideoOpen={isVideoOpen} setIsVideoOpen={setIsVideoOpen} />
-        <KeySellingPoints />
         <Features />
         <AdminControl />
         <FeaturedTestimonial />
