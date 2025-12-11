@@ -13,7 +13,7 @@ function App() {
   const [isVideoOpen, setIsVideoOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-paymint-dark font-sans text-paymint-light selection:bg-paymint-green selection:text-black">
+    <div className="min-h-screen bg-white dark:bg-paymint-dark font-sans text-gray-900 dark:text-paymint-light selection:bg-paymint-green selection:text-black">
       <Navbar />
       <main>
         <Hero isVideoOpen={isVideoOpen} setIsVideoOpen={setIsVideoOpen} />

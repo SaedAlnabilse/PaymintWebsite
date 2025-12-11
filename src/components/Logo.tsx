@@ -1,5 +1,6 @@
 import React from 'react';
 import WhiteLogo from '../assets/White Green Full Logo.png';
+import GreenLogo from '../assets/Green Full Logo.png';
 
 interface LogoProps {
   className?: string;
@@ -21,7 +22,12 @@ export const Logo: React.FC<LogoProps> = ({
       <img
         src={WhiteLogo}
         alt="PayMint Logo"
-        className={`${logoSizes[size]} w-auto object-contain`}
+        className={`${logoSizes[size]} w-auto object-contain hidden dark:block`}
+      />
+      <img
+        src={GreenLogo}
+        alt="PayMint Logo"
+        className={`${logoSizes[size]} w-auto object-contain block dark:hidden`}
       />
     </div>
   );

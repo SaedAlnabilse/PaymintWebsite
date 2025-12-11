@@ -11,6 +11,6 @@
     scroll-behavior: smooth;
   }
   body {
-    @apply font-sans text-paymint-light antialiased bg-paymint-dark;
+    @apply font-sans text-gray-900 bg-white dark:text-paymint-light dark:bg-paymint-dark antialiased transition-colors duration-300;
   }
 }

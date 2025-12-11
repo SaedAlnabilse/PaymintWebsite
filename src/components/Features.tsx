@@ -25,7 +25,7 @@ const features = [
 
 export const Features = () => {
   return (
-    <section id="features" className="py-24 bg-paymint-dark overflow-hidden">
+    <section id="features" className="py-24 bg-white dark:bg-paymint-dark overflow-hidden">
       <div className="flex flex-col lg:flex-row items-stretch gap-16 lg:gap-24">
         
         {/* Left Side: Video - extends to left edge */}
@@ -46,7 +46,7 @@ export const Features = () => {
 
         {/* Right Side: Content */}
         <div className="w-full lg:w-1/2 flex flex-col justify-center pr-8 lg:pr-20 px-8 lg:px-0">
-          <h2 className="text-5xl lg:text-6xl font-bold font-sans text-white mb-10 tracking-tight">Why PayMint?</h2>
+          <h2 className="text-5xl lg:text-6xl font-bold font-sans text-gray-900 dark:text-white mb-10 tracking-tight">Why PayMint?</h2>
 
           <div className="space-y-6">
             {features.map((feature, index) => (
@@ -55,8 +55,8 @@ export const Features = () => {
                   {feature.icon}
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white mb-1">{feature.title}</h3>
-                  <p className="text-gray-400 leading-relaxed">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{feature.title}</h3>
+                  <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
                     {feature.description}
                   </p>
                 </div>

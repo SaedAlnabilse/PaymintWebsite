@@ -3,7 +3,7 @@ import { CheckCircle2, Play, X } from 'lucide-react';
 
 export const Hero = ({ isVideoOpen, setIsVideoOpen }: { isVideoOpen: boolean; setIsVideoOpen: (open: boolean) => void }) => {
   return (
-    <section className="pt-40 pb-0 bg-paymint-dark overflow-hidden relative">
+    <section className="pt-40 pb-0 bg-white dark:bg-paymint-dark overflow-hidden relative">
       {/* Subtle Gradient/Glow */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-paymint-green/10 rounded-full blur-[100px] -z-10" />
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-paymint-green/5 rounded-full blur-[80px] -z-10" />
@@ -16,7 +16,7 @@ export const Hero = ({ isVideoOpen, setIsVideoOpen }: { isVideoOpen: boolean; se
           transition={{ duration: 0.6 }}
           className="text-center max-w-4xl mx-auto flex flex-col items-center"
         >
-          <h1 className="text-6xl lg:text-7xl font-bold font-sans text-white mb-6 leading-none tracking-tight">
+          <h1 className="text-6xl lg:text-7xl font-bold font-sans text-gray-900 dark:text-white mb-6 leading-none tracking-tight">
             The <span className="text-paymint-green">POS System</span> Built for <br />
             <span className="relative inline-block mt-2">
               Today's
@@ -25,7 +25,7 @@ export const Hero = ({ isVideoOpen, setIsVideoOpen }: { isVideoOpen: boolean; se
               </svg>
             </span> Businesses
           </h1>
-          <p className="text-xl text-gray-400 mb-10 leading-relaxed max-w-2xl font-light">
+          <p className="text-xl text-gray-600 dark:text-gray-400 mb-10 leading-relaxed max-w-2xl font-light">
             Flexible, secure, and packed with premium features. Streamline operations and grow revenue without the overhead.
           </p>
           
@@ -36,12 +36,12 @@ export const Hero = ({ isVideoOpen, setIsVideoOpen }: { isVideoOpen: boolean; se
             >
               Watch Demo <Play size={20} fill="currentColor" className="group-hover:translate-x-1 transition-transform" />
             </button>
-            <a href="#contact" className="bg-transparent text-white border border-white/30 px-10 py-5 rounded-none font-bold text-lg hover:bg-white hover:text-black transition-colors flex items-center justify-center min-w-[200px]">
+            <a href="#contact" className="bg-transparent text-gray-900 dark:text-white border border-gray-900/30 dark:border-white/30 px-10 py-5 rounded-none font-bold text-lg hover:bg-gray-900 hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors flex items-center justify-center min-w-[200px]">
               Contact Sales
             </a>
           </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-8 text-sm text-gray-400 mt-4">
+          <div className="flex flex-wrap items-center justify-center gap-8 text-sm text-gray-500 dark:text-gray-400 mt-4">
             <div className="flex items-center gap-2">
               <CheckCircle2 size={18} className="text-paymint-green flex-shrink-0" />
               <span className="font-medium">No Setup Fees</span>

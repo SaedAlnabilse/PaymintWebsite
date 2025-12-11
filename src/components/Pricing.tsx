@@ -58,11 +58,11 @@ export const Pricing = () => {
   const [selectedPlan, setSelectedPlan] = useState<typeof plans[0] | null>(null);
 
   return (
-    <section id="pricing" className="py-24 bg-paymint-dark relative">
+    <section id="pricing" className="py-24 bg-white dark:bg-paymint-dark relative">
       <div className="container mx-auto px-8 lg:px-20 max-w-7xl">
         <div className="text-center mb-20">
-          <h2 className="text-5xl lg:text-6xl font-bold font-sans text-white mb-6 tracking-tight">PayMint Pricing and Plans</h2>
-          <p className="text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed">
+          <h2 className="text-5xl lg:text-6xl font-bold font-sans text-gray-900 dark:text-white mb-6 tracking-tight">PayMint Pricing and Plans</h2>
+          <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto leading-relaxed">
             Choose the plan that fits your business needs.
           </p>
         </div>
@@ -71,23 +71,23 @@ export const Pricing = () => {
           {plans.map((plan, index) => (
             <div 
               key={index}
-              className={`rounded-none p-8 border ${plan.highlight ? 'border-paymint-green bg-white/10 shadow-xl scale-105 relative z-10' : 'border-white/10 bg-paymint-surface hover:border-paymint-green/50 transition-colors'}`}
+              className={`rounded-none p-8 border ${plan.highlight ? 'border-paymint-green bg-paymint-green/5 dark:bg-white/10 shadow-xl scale-105 relative z-10' : 'border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-paymint-surface hover:border-paymint-green/50 transition-colors'}`}
             >
               {plan.highlight && (
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-paymint-green text-black px-4 py-1 rounded-none text-sm font-bold">
                   Most Popular
                 </div>
               )}
-              <h3 className="text-xl font-semibold text-white mb-2">{plan.name}</h3>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">{plan.name}</h3>
               <div className="flex items-baseline gap-1 mb-4">
-                <span className="text-4xl font-bold text-white">{plan.price}</span>
-                <span className="text-gray-400">{plan.period}</span>
+                <span className="text-4xl font-bold text-gray-900 dark:text-white">{plan.price}</span>
+                <span className="text-gray-600 dark:text-gray-400">{plan.period}</span>
               </div>
-              <p className="text-base text-gray-400 mb-8 leading-relaxed">{plan.description}</p>
+              <p className="text-base text-gray-600 dark:text-gray-400 mb-8 leading-relaxed">{plan.description}</p>
               
               <ul className="space-y-4 mb-8">
                 {plan.features.map((feature, i) => (
-                  <li key={i} className="flex items-center gap-3 text-sm text-gray-400">
+                  <li key={i} className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
                     <Check size={16} className="text-paymint-green flex-shrink-0" />
                     {feature}
                   </li>
@@ -103,7 +103,7 @@ export const Pricing = () => {
                 className={`w-full py-3 rounded-none font-bold transition-all ${
                   plan.highlight 
                     ? 'bg-paymint-green text-black hover:bg-paymint-green/90 shadow-lg shadow-paymint-green/25' 
-                    : 'bg-transparent border border-white/20 text-white hover:border-paymint-green hover:text-paymint-green'
+                    : 'bg-transparent border border-gray-300 dark:border-white/20 text-gray-900 dark:text-white hover:border-paymint-green hover:text-paymint-green'
                 }`}
               >
                 {plan.cta}
@@ -129,33 +129,33 @@ export const Pricing = () => {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-paymint-surface border border-white/10 rounded-none w-full max-w-lg overflow-hidden shadow-2xl relative z-10 max-h-[90vh] flex flex-col"
+              className="bg-white dark:bg-paymint-surface border border-gray-200 dark:border-white/10 rounded-none w-full max-w-lg overflow-hidden shadow-2xl relative z-10 max-h-[90vh] flex flex-col"
             >
-              <div className="p-6 border-b border-white/10 flex justify-between items-center sticky top-0 bg-paymint-surface">
-                <h3 className="text-xl font-bold text-white">Plan Details</h3>
+              <div className="p-6 border-b border-gray-200 dark:border-white/10 flex justify-between items-center sticky top-0 bg-white dark:bg-paymint-surface">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Plan Details</h3>
                 <button 
                   onClick={() => setSelectedPlan(null)}
-                  className="p-2 rounded-none hover:bg-white/10 transition-colors"
+                  className="p-2 rounded-none hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
                 >
-                  <X size={20} className="text-gray-400" />
+                  <X size={20} className="text-gray-500 dark:text-gray-400" />
                 </button>
               </div>
               
               <div className="p-8 overflow-y-auto">
                 <div className="text-center mb-8">
-                  <h2 className="text-3xl font-bold text-white mb-2">{selectedPlan.name}</h2>
+                  <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">{selectedPlan.name}</h2>
                   <div className="flex items-baseline justify-center gap-1 mb-4">
                     <span className="text-5xl font-bold text-paymint-green">{selectedPlan.price}</span>
-                    <span className="text-gray-400 text-xl">{selectedPlan.period}</span>
+                    <span className="text-gray-600 dark:text-gray-400 text-xl">{selectedPlan.period}</span>
                   </div>
-                  <p className="text-gray-400">{selectedPlan.description}</p>
+                  <p className="text-gray-600 dark:text-gray-400">{selectedPlan.description}</p>
                 </div>
 
-                <div className="bg-black/40 rounded-none p-6 mb-8 border border-white/5">
-                  <h4 className="font-bold text-white mb-4 text-sm uppercase tracking-wider">What's Included</h4>
+                <div className="bg-gray-100 dark:bg-black/40 rounded-none p-6 mb-8 border border-gray-200 dark:border-white/5">
+                  <h4 className="font-bold text-gray-900 dark:text-white mb-4 text-sm uppercase tracking-wider">What's Included</h4>
                   <ul className="space-y-3">
                     {[...selectedPlan.features, ...selectedPlan.detailedFeatures].map((feature, i) => (
-                      <li key={i} className="flex items-start gap-3 text-gray-400">
+                      <li key={i} className="flex items-start gap-3 text-gray-600 dark:text-gray-400">
                         <div className="mt-1 w-5 h-5 rounded-none bg-paymint-green/20 flex items-center justify-center flex-shrink-0">
                           <Check size={12} className="text-paymint-green" />
                         </div>
