@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { Features } from './components/Features';
+import { WorkflowSupport } from './components/WorkflowSupport';
 import { AdminControl } from './components/AdminControl';
 import { FeaturedTestimonial } from './components/FeaturedTestimonial';
 import { Pricing } from './components/Pricing';
@@ -18,6 +19,7 @@ function App() {
       <main>
         <Hero isVideoOpen={isVideoOpen} setIsVideoOpen={setIsVideoOpen} />
         <Features />
+        <WorkflowSupport />
         <AdminControl />
         <FeaturedTestimonial />
         <Pricing />
