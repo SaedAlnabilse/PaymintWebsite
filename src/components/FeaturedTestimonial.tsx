@@ -38,12 +38,6 @@ export const FeaturedTestimonial = () => {
               <ChevronRight className="w-6 h-6 md:w-8 md:h-8" />
             </button>
 
-            {/* Mobile Navigation Buttons */}
-             <div className="flex md:hidden justify-center gap-4 mb-8">
-               <button onClick={handlePrevClick} className="p-2 rounded-none bg-white dark:bg-black border border-gray-200 dark:border-white/10 shadow-md text-gray-900 dark:text-white"><ChevronLeft/></button>
-               <button onClick={handleNextClick} className="p-2 rounded-none bg-white dark:bg-black border border-gray-200 dark:border-white/10 shadow-md text-gray-900 dark:text-white"><ChevronRight/></button>
-             </div>
-
             <div className="min-h-[400px] flex items-center justify-center">
               <div className="flex flex-col md:flex-row items-center justify-center gap-12 md:gap-24 w-full">
                 {/* Image Section */}
@@ -76,6 +70,12 @@ export const FeaturedTestimonial = () => {
                   <span className="absolute bottom-[-1rem] right-0 text-4xl md:text-5xl font-serif text-black/5 dark:text-white/10 leading-none select-none">"</span>
                 </div>
               </div>
+            </div>
+
+            {/* Mobile Navigation Buttons - Below content */}
+            <div className="flex md:hidden justify-center gap-4 mt-8">
+              <button onClick={handlePrevClick} className="p-2 rounded-none bg-white dark:bg-black border border-gray-200 dark:border-white/10 shadow-md text-gray-900 dark:text-white"><ChevronLeft/></button>
+              <button onClick={handleNextClick} className="p-2 rounded-none bg-white dark:bg-black border border-gray-200 dark:border-white/10 shadow-md text-gray-900 dark:text-white"><ChevronRight/></button>
             </div>
         </div>
       </div>
