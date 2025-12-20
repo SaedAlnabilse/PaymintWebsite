@@ -35,6 +35,10 @@ export const DownloadApp = () => {
                     <CheckCircle className="w-5 h-5 text-paymint-green" />
                     <span>Instant APK Install</span>
                   </li>
+                  <li className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                    <CheckCircle className="w-5 h-5 text-paymint-green" />
+                    <span>Latest Version (v1.6)</span>
+                  </li>
                 </ul>
               </div>
               
