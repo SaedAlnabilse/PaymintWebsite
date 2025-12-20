@@ -8,6 +8,7 @@ import { FeaturedTestimonial } from './components/FeaturedTestimonial';
 import { Pricing } from './components/Pricing';
 
 import { Contact } from './components/Contact';
+import { DownloadApp } from './components/DownloadApp';
 import { Footer } from './components/Footer';
 
 function App() {
@@ -23,6 +24,7 @@ function App() {
         <AdminControl />
         <FeaturedTestimonial />
         <Pricing />
+        <DownloadApp />
         <Contact />
       </main>
       <Footer />
