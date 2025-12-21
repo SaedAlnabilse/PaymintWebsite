@@ -37,7 +37,7 @@ export const DownloadApp = () => {
                   </li>
                   <li className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
                     <CheckCircle className="w-5 h-5 text-paymint-green" />
-                    <span>Latest Version (v1.6)</span>
+                    <span>Latest Version (v2.0)</span>
                   </li>
                 </ul>
               </div>
