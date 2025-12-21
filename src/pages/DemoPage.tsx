@@ -45,7 +45,7 @@ export const DemoPage = () => {
     // Use environment variable for API URL in production, or dynamic hostname for local dev
     // Fallback logic: if VITE_API_URL is missing in prod, warn user
     const baseUrl = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:3000`;
-    const apiUrl = `${baseUrl}/demo/setup`;
+    const apiUrl = `${baseUrl}/api/demo/setup`;
 
     setErrorMsg(null);
 
