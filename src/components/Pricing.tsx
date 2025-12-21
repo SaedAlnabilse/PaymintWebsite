@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Check, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 
 const plans = [
   {
@@ -18,7 +19,8 @@ const plans = [
     ],
     notIncluded: "Hardware (Tablet)",
     cta: "Get Started",
-    highlight: false
+    highlight: false,
+    type: "standard"
   },
   {
     name: "Inclusive Plan",
@@ -35,7 +37,8 @@ const plans = [
       "Mobile Admin Portal access"
     ],
     cta: "Get Started",
-    highlight: true
+    highlight: true,
+    type: "standard"
   },
   {
     name: "Custom Plan",
@@ -50,12 +53,28 @@ const plans = [
       "Dedicated onboarding & support"
     ],
     cta: "Contact Sales",
-    highlight: false
+    highlight: false,
+    type: "custom"
   }
 ];
 
 export const Pricing = () => {
   const [selectedPlan, setSelectedPlan] = useState<typeof plans[0] | null>(null);
+  const navigate = useNavigate();
+
+  const handlePlanAction = (plan: typeof plans[0]) => {
+    if (plan.type === 'custom') {
+      // Scroll to contact or open contact modal
+      const contactSection = document.getElementById('contact');
+      if (contactSection) {
+        contactSection.scrollIntoView({ behavior: 'smooth' });
+      }
+      setSelectedPlan(null);
+    } else {
+      // Navigate to Demo Setup
+      navigate(`/demo?plan=${encodeURIComponent(plan.name)}`);
+    }
+  };
 
   return (
     <section id="pricing" className="py-24 bg-white dark:bg-paymint-dark relative">
@@ -98,16 +117,24 @@ export const Pricing = () => {
                 <p className="text-sm text-gray-500 mb-4"><span className="font-semibold">Not Included:</span> {plan.notIncluded}</p>
               )}
 
-              <button 
-                onClick={() => setSelectedPlan(plan)}
-                className={`w-full py-3 rounded-none font-bold transition-all ${
-                  plan.highlight 
-                    ? 'bg-paymint-green text-black hover:bg-paymint-green/90 shadow-lg shadow-paymint-green/25' 
-                    : 'bg-transparent border border-gray-300 dark:border-white/20 text-gray-900 dark:text-white hover:border-paymint-green hover:text-paymint-green'
-                }`}
-              >
-                {plan.cta}
-              </button>
+              <div className="flex flex-col gap-3">
+                <button 
+                  onClick={() => handlePlanAction(plan)}
+                  className={`w-full py-3 rounded-none font-bold transition-all ${
+                    plan.highlight 
+                      ? 'bg-paymint-green text-black hover:bg-paymint-green/90 shadow-lg shadow-paymint-green/25' 
+                      : 'bg-transparent border border-gray-300 dark:border-white/20 text-gray-900 dark:text-white hover:border-paymint-green hover:text-paymint-green'
+                  }`}
+                >
+                  {plan.cta}
+                </button>
+                 <button 
+                  onClick={() => setSelectedPlan(plan)}
+                  className="text-sm text-gray-500 hover:text-paymint-green underline"
+                >
+                  View Details
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -165,13 +192,12 @@ export const Pricing = () => {
                   </ul>
                 </div>
 
-                <a 
-                  href="#contact" 
-                  onClick={() => setSelectedPlan(null)}
+                <button 
+                  onClick={() => handlePlanAction(selectedPlan)}
                   className="block w-full bg-paymint-green text-black py-4 rounded-none font-bold text-center hover:bg-paymint-green/90 transition-all hover:shadow-lg hover:shadow-paymint-green/25 text-lg"
                 >
-                  Contact Sales Team
-                </a>
+                  {selectedPlan.cta}
+                </button>
                 <p className="text-center text-xs text-gray-500 mt-4">
                   No credit card required for consultation
                 </p>

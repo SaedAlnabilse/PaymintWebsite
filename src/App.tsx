@@ -1,34 +1,15 @@
-import { useState } from 'react';
-import { Navbar } from './components/Navbar';
-import { Hero } from './components/Hero';
-import { Features } from './components/Features';
-import { WorkflowSupport } from './components/WorkflowSupport';
-import { AdminControl } from './components/AdminControl';
-import { FeaturedTestimonial } from './components/FeaturedTestimonial';
-import { Pricing } from './components/Pricing';
-
-import { Contact } from './components/Contact';
-import { DownloadApp } from './components/DownloadApp';
-import { Footer } from './components/Footer';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { LandingPage } from './pages/LandingPage';
+import { DemoPage } from './pages/DemoPage';
 
 function App() {
-  const [isVideoOpen, setIsVideoOpen] = useState(false);
-
   return (
-    <div className="min-h-screen bg-white dark:bg-paymint-dark font-sans text-gray-900 dark:text-paymint-light selection:bg-paymint-green selection:text-black">
-      <Navbar />
-      <main>
-        <Hero isVideoOpen={isVideoOpen} setIsVideoOpen={setIsVideoOpen} />
-        <Features />
-        <WorkflowSupport />
-        <AdminControl />
-        <FeaturedTestimonial />
-        <Pricing />
-        <DownloadApp />
-        <Contact />
-      </main>
-      <Footer />
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/demo" element={<DemoPage />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
