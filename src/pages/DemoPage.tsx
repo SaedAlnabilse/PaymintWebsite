@@ -41,8 +41,8 @@ export const DemoPage = () => {
     setIsSubmitting(true);
     setStep(2); // Go to processing
     
-    // Use current hostname to allow testing from other devices on the network
-    const apiUrl = `http://${window.location.hostname}:3000/demo/setup`;
+    // Use environment variable for API URL in production, or dynamic hostname for local dev
+    const apiUrl = (import.meta.env.VITE_API_URL || `http://${window.location.hostname}:3000`) + '/demo/setup';
 
     try {
       const response = await fetch(apiUrl, {
