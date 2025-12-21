@@ -11,6 +11,7 @@ export const DemoPage = () => {
 
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     restaurantName: '',
     ownerName: '',
@@ -42,7 +43,11 @@ export const DemoPage = () => {
     setStep(2); // Go to processing
     
     // Use environment variable for API URL in production, or dynamic hostname for local dev
-    const apiUrl = (import.meta.env.VITE_API_URL || `http://${window.location.hostname}:3000`) + '/demo/setup';
+    // Fallback logic: if VITE_API_URL is missing in prod, warn user
+    const baseUrl = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:3000`;
+    const apiUrl = `${baseUrl}/demo/setup`;
+
+    setErrorMsg(null);
 
     try {
       const response = await fetch(apiUrl, {
@@ -57,7 +62,7 @@ export const DemoPage = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to send email');
+        throw new Error(`Server Error: ${response.status}`);
       }
 
       // Simulate remaining processing time if needed
@@ -67,11 +72,8 @@ export const DemoPage = () => {
     } catch (error) {
       console.error('Error sending demo email:', error);
       setIsSubmitting(false);
-      // In a real app, you might want to show an error message here
-      // For now, we'll proceed to success to not block the user (or handle error differently)
-      setTimeout(() => {
-        setStep(3); 
-      }, 3000);
+      setErrorMsg(`Failed to connect to server at ${baseUrl}. Please check your connection.`);
+      // Do NOT proceed to success step on error
     }
   };
 
@@ -87,6 +89,14 @@ export const DemoPage = () => {
         <p className="text-gray-600 dark:text-gray-400 mb-8">
           You chose the <span className="text-paymint-green font-bold">{plan}</span>. Let's get your restaurant set up.
         </p>
+
+        {errorMsg && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-none text-sm">
+            <strong>Error:</strong> {errorMsg}
+            <br />
+            <span className="text-xs mt-1 block">Make sure VITE_API_URL is set in your deployment settings.</span>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-2 gap-6">
