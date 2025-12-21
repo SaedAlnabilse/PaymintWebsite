@@ -42,9 +42,8 @@ export const DemoPage = () => {
     setIsSubmitting(true);
     setStep(2); // Go to processing
     
-    // Use environment variable for API URL in production, or dynamic hostname for local dev
-    // Fallback logic: if VITE_API_URL is missing in prod, warn user
-    const baseUrl = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:3000`;
+    // Use environment variable for API URL in production, or hardcoded fallback
+    const baseUrl = import.meta.env.VITE_API_URL || 'https://grateful-liberation-production-d036.up.railway.app';
     const apiUrl = `${baseUrl}/api/demo/setup`;
 
     setErrorMsg(null);
@@ -72,7 +71,7 @@ export const DemoPage = () => {
     } catch (error) {
       console.error('Error sending demo email:', error);
       setIsSubmitting(false);
-      setErrorMsg(`Failed to connect to server at ${baseUrl}. Please check your connection.`);
+      setErrorMsg(`Failed to connect to server at ${apiUrl}. Please check your connection.`);
       setStep(1); // Go back to form to show error
     }
   };
