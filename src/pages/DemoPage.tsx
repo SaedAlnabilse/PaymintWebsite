@@ -73,7 +73,7 @@ export const DemoPage = () => {
       console.error('Error sending demo email:', error);
       setIsSubmitting(false);
       setErrorMsg(`Failed to connect to server at ${baseUrl}. Please check your connection.`);
-      // Do NOT proceed to success step on error
+      setStep(1); // Go back to form to show error
     }
   };
 
