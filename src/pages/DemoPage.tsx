@@ -68,10 +68,10 @@ export const DemoPage = () => {
       setTimeout(() => {
         setStep(3); // Success/Demo View
       }, 3000);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error sending demo email:', error);
       setIsSubmitting(false);
-      setErrorMsg(`Failed to connect to server at ${apiUrl}. Please check your connection.`);
+      setErrorMsg(`Failed to connect to server at ${apiUrl}. Details: ${error.message || error}`);
       setStep(1); // Go back to form to show error
     }
   };
