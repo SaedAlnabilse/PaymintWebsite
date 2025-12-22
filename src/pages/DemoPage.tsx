@@ -20,7 +20,7 @@ export const DemoPage = () => {
     type: 'Restaurant' // Restaurant, Cafe, etc.
   });
 
-  const [demoCredentials, setDemoCredentials] = useState<any>(null);
+  // demoCredentials no longer displayed on page - sent via email only
 
   // If no plan is selected, redirect to pricing
   useEffect(() => {
@@ -43,7 +43,7 @@ export const DemoPage = () => {
     if (isSubmitting) return;
     setIsSubmitting(true);
     setStep(2); // Go to processing
-    
+
     // Use environment variable for API URL in production, or hardcoded fallback
     const baseUrl = import.meta.env.VITE_API_URL || 'https://grateful-liberation-production-d036.up.railway.app';
     const apiUrl = `${baseUrl}/api/demo/setup`;
@@ -74,8 +74,7 @@ export const DemoPage = () => {
         throw new Error(errorMessage);
       }
 
-      const data = await response.json();
-      setDemoCredentials(data.credentials);
+      await response.json(); // Credentials are sent via email, not displayed on page
 
       // Simulate remaining processing time if needed
       setTimeout(() => {
@@ -90,7 +89,7 @@ export const DemoPage = () => {
   };
 
   const renderStep1 = () => (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
@@ -114,9 +113,9 @@ export const DemoPage = () => {
           <div className="grid grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Restaurant Name</label>
-              <input 
+              <input
                 required
-                type="text" 
+                type="text"
                 name="restaurantName"
                 value={formData.restaurantName}
                 onChange={handleInputChange}
@@ -126,7 +125,7 @@ export const DemoPage = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Business Type</label>
-              <select 
+              <select
                 name="type"
                 value={formData.type}
                 onChange={handleInputChange}
@@ -142,9 +141,9 @@ export const DemoPage = () => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Owner Name</label>
-            <input 
+            <input
               required
-              type="text" 
+              type="text"
               name="ownerName"
               value={formData.ownerName}
               onChange={handleInputChange}
@@ -154,11 +153,11 @@ export const DemoPage = () => {
           </div>
 
           <div className="grid grid-cols-2 gap-6">
-             <div>
+            <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email Address</label>
-              <input 
+              <input
                 required
-                type="email" 
+                type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
@@ -168,9 +167,9 @@ export const DemoPage = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Phone Number</label>
-              <input 
+              <input
                 required
-                type="tel" 
+                type="tel"
                 name="phone"
                 value={formData.phone}
                 onChange={handleInputChange}
@@ -181,7 +180,7 @@ export const DemoPage = () => {
           </div>
 
           <div className="pt-4">
-            <button 
+            <button
               type="submit"
               disabled={isSubmitting}
               className="w-full bg-paymint-green text-black py-4 rounded-none font-bold text-lg hover:bg-paymint-green/90 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -195,152 +194,119 @@ export const DemoPage = () => {
   );
 
   const renderStep2 = () => (
-    <motion.div 
+    <motion.div
       className="max-w-xl mx-auto text-center"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
     >
       <div className="bg-white dark:bg-paymint-surface border border-gray-200 dark:border-white/10 p-12 rounded-none shadow-xl">
         <div className="relative w-24 h-24 mx-auto mb-8">
-            <motion.div 
-                className="absolute inset-0 border-4 border-paymint-green/30 rounded-full"
-            />
-            <motion.div 
-                className="absolute inset-0 border-4 border-paymint-green border-t-transparent rounded-full"
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-            />
-            <div className="absolute inset-0 flex items-center justify-center">
-                <Database className="text-paymint-green" size={32} />
-            </div>
+          <motion.div
+            className="absolute inset-0 border-4 border-paymint-green/30 rounded-full"
+          />
+          <motion.div
+            className="absolute inset-0 border-4 border-paymint-green border-t-transparent rounded-full"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Database className="text-paymint-green" size={32} />
+          </div>
         </div>
-        
+
         <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Setting Up Your Environment</h2>
         <div className="space-y-3 text-left max-w-xs mx-auto">
-             <motion.div 
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.5 }}
-                className="flex items-center gap-3 text-gray-600 dark:text-gray-400"
-            >
-                <Check size={18} className="text-paymint-green" />
-                <span>Creating Tenant Database...</span>
-            </motion.div>
-            <motion.div 
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 1.5 }}
-                className="flex items-center gap-3 text-gray-600 dark:text-gray-400"
-            >
-                <Check size={18} className="text-paymint-green" />
-                <span>Configuring {formData.restaurantName}...</span>
-            </motion.div>
-             <motion.div 
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 2.5 }}
-                className="flex items-center gap-3 text-gray-600 dark:text-gray-400"
-            >
-                <Check size={18} className="text-paymint-green" />
-                <span>Generating Access Keys...</span>
-            </motion.div>
+          <motion.div
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.5 }}
+            className="flex items-center gap-3 text-gray-600 dark:text-gray-400"
+          >
+            <Check size={18} className="text-paymint-green" />
+            <span>Creating Tenant Database...</span>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 1.5 }}
+            className="flex items-center gap-3 text-gray-600 dark:text-gray-400"
+          >
+            <Check size={18} className="text-paymint-green" />
+            <span>Configuring {formData.restaurantName}...</span>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 2.5 }}
+            className="flex items-center gap-3 text-gray-600 dark:text-gray-400"
+          >
+            <Check size={18} className="text-paymint-green" />
+            <span>Generating Access Keys...</span>
+          </motion.div>
         </div>
       </div>
     </motion.div>
   );
 
   const renderStep3 = () => (
-    <motion.div 
+    <motion.div
       className="max-w-4xl mx-auto"
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
     >
-       <div className="bg-white dark:bg-paymint-surface border border-gray-200 dark:border-white/10 p-8 rounded-none shadow-xl">
+      <div className="bg-white dark:bg-paymint-surface border border-gray-200 dark:border-white/10 p-8 rounded-none shadow-xl">
         <div className="text-center mb-10">
-            <div className="w-16 h-16 bg-paymint-green/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Check size={32} className="text-paymint-green" />
-            </div>
-            <h2 className="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Your Demo is Ready!</h2>
-            <p className="text-gray-600 dark:text-gray-400 max-w-lg mx-auto mb-6">
-                We've sent the login credentials to <strong>{formData.email}</strong>. 
-                Please save the credentials below as well.
+          <div className="w-16 h-16 bg-paymint-green/10 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Check size={32} className="text-paymint-green" />
+          </div>
+          <h2 className="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Your Demo is Ready!</h2>
+          <p className="text-gray-600 dark:text-gray-400 max-w-lg mx-auto mb-6">
+            We've sent your login credentials and user guide to <strong>{formData.email}</strong>.
+            Please check your inbox (and spam folder) for the access details.
+          </p>
+
+          <div className="max-w-lg mx-auto bg-paymint-green/10 border border-paymint-green/30 p-4 mb-8 text-center">
+            <p className="text-paymint-green font-medium">
+              📧 Check your email for your credentials and the PayMint User Manual
             </p>
-
-            {/* Credentials Display */}
-            {demoCredentials && (
-              <div className="max-w-lg mx-auto bg-gray-50 dark:bg-black/20 border border-dashed border-gray-300 dark:border-white/20 p-6 mb-8 text-left">
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 border-b border-gray-200 dark:border-white/10 pb-2">
-                  Access Credentials
-                </h3>
-                
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-1">POS / App Login</p>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <span className="text-sm text-gray-500 block">Restaurant ID</span>
-                        <code className="text-paymint-green font-mono font-bold bg-paymint-green/10 px-2 py-1">{demoCredentials.slug}</code>
-                      </div>
-                      <div>
-                        <span className="text-sm text-gray-500 block">Restaurant Pass</span>
-                        <code className="text-paymint-green font-mono font-bold bg-paymint-green/10 px-2 py-1">{demoCredentials.restaurantPassword}</code>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <p className="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-1">Back Office Admin</p>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <span className="text-sm text-gray-500 block">Username</span>
-                        <code className="text-paymint-green font-mono font-bold bg-paymint-green/10 px-2 py-1">{demoCredentials.adminUsername}</code>
-                      </div>
-                      <div>
-                        <span className="text-sm text-gray-500 block">Password</span>
-                        <code className="text-paymint-green font-mono font-bold bg-paymint-green/10 px-2 py-1">{demoCredentials.adminPassword}</code>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
+          </div>
         </div>
 
         <div className="grid md:grid-cols-2 gap-8">
-            <div className="bg-gray-50 dark:bg-black/20 p-6 border border-gray-200 dark:border-white/5 hover:border-paymint-green/50 transition-colors group cursor-pointer">
-                <div className="mb-4 bg-white dark:bg-paymint-surface w-12 h-12 flex items-center justify-center shadow-sm">
-                    <Store className="text-gray-900 dark:text-white" />
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-paymint-green transition-colors">Launch POS Demo</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                    Experience the point of sale interface used by cashiers and waiters.
-                </p>
-                <span className="text-paymint-green font-bold text-sm flex items-center gap-2">
-                    Launch App <ArrowRight size={16} />
-                </span>
+          <div className="bg-gray-50 dark:bg-black/20 p-6 border border-gray-200 dark:border-white/5 hover:border-paymint-green/50 transition-colors group cursor-pointer">
+            <div className="mb-4 bg-white dark:bg-paymint-surface w-12 h-12 flex items-center justify-center shadow-sm">
+              <Store className="text-gray-900 dark:text-white" />
             </div>
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-paymint-green transition-colors">Launch POS Demo</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              Experience the point of sale interface used by cashiers and waiters.
+            </p>
+            <span className="text-paymint-green font-bold text-sm flex items-center gap-2">
+              Launch App <ArrowRight size={16} />
+            </span>
+          </div>
 
-            <div className="bg-gray-50 dark:bg-black/20 p-6 border border-gray-200 dark:border-white/5 hover:border-paymint-green/50 transition-colors group cursor-pointer">
-                <div className="mb-4 bg-white dark:bg-paymint-surface w-12 h-12 flex items-center justify-center shadow-sm">
-                    <Database className="text-gray-900 dark:text-white" />
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-paymint-green transition-colors">Open Admin Dashboard</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                    Manage your menu, inventory, employees and view reports.
-                </p>
-                <span className="text-paymint-green font-bold text-sm flex items-center gap-2">
-                    Go to Dashboard <ArrowRight size={16} />
-                </span>
+          <div className="bg-gray-50 dark:bg-black/20 p-6 border border-gray-200 dark:border-white/5 hover:border-paymint-green/50 transition-colors group cursor-pointer">
+            <div className="mb-4 bg-white dark:bg-paymint-surface w-12 h-12 flex items-center justify-center shadow-sm">
+              <Database className="text-gray-900 dark:text-white" />
             </div>
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-paymint-green transition-colors">Open Admin Dashboard</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              Manage your menu, inventory, employees and view reports.
+            </p>
+            <span className="text-paymint-green font-bold text-sm flex items-center gap-2">
+              Go to Dashboard <ArrowRight size={16} />
+            </span>
+          </div>
         </div>
 
         <div className="mt-10 pt-8 border-t border-gray-200 dark:border-white/10 text-center">
-            <button 
-                onClick={() => navigate('/')}
-                className="text-gray-500 hover:text-gray-900 dark:hover:text-white flex items-center justify-center gap-2 mx-auto transition-colors"
-            >
-                <ArrowLeft size={16} /> Back to Home
-            </button>
+          <button
+            onClick={() => navigate('/')}
+            className="text-gray-500 hover:text-gray-900 dark:hover:text-white flex items-center justify-center gap-2 mx-auto transition-colors"
+          >
+            <ArrowLeft size={16} /> Back to Home
+          </button>
         </div>
       </div>
     </motion.div>
@@ -351,9 +317,9 @@ export const DemoPage = () => {
       <Navbar /> {/* Assuming simplified navbar or same navbar */}
       <div className="container mx-auto px-4 py-20 lg:py-32">
         <AnimatePresence mode="wait">
-            {step === 1 && renderStep1()}
-            {step === 2 && renderStep2()}
-            {step === 3 && renderStep3()}
+          {step === 1 && renderStep1()}
+          {step === 2 && renderStep2()}
+          {step === 3 && renderStep3()}
         </AnimatePresence>
       </div>
     </div>
