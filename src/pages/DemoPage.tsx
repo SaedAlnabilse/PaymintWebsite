@@ -20,6 +20,8 @@ export const DemoPage = () => {
     type: 'Restaurant' // Restaurant, Cafe, etc.
   });
 
+  const [demoCredentials, setDemoCredentials] = useState<any>(null);
+
   // If no plan is selected, redirect to pricing
   useEffect(() => {
     if (!plan) {
@@ -61,8 +63,19 @@ export const DemoPage = () => {
       });
 
       if (!response.ok) {
-        throw new Error(`Server Error: ${response.status}`);
+        let errorMessage = `Server Error: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorData.error || errorMessage;
+        } catch (e) {
+          // If response is not JSON, use status text
+          errorMessage = response.statusText || errorMessage;
+        }
+        throw new Error(errorMessage);
       }
+
+      const data = await response.json();
+      setDemoCredentials(data.credentials);
 
       // Simulate remaining processing time if needed
       setTimeout(() => {
@@ -248,10 +261,49 @@ export const DemoPage = () => {
                 <Check size={32} className="text-paymint-green" />
             </div>
             <h2 className="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Your Demo is Ready!</h2>
-            <p className="text-gray-600 dark:text-gray-400 max-w-lg mx-auto">
+            <p className="text-gray-600 dark:text-gray-400 max-w-lg mx-auto mb-6">
                 We've sent the login credentials to <strong>{formData.email}</strong>. 
-                You can now access your dashboard or preview the Paymint POS interface.
+                Please save the credentials below as well.
             </p>
+
+            {/* Credentials Display */}
+            {demoCredentials && (
+              <div className="max-w-lg mx-auto bg-gray-50 dark:bg-black/20 border border-dashed border-gray-300 dark:border-white/20 p-6 mb-8 text-left">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 border-b border-gray-200 dark:border-white/10 pb-2">
+                  Access Credentials
+                </h3>
+                
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-1">POS / App Login</p>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <span className="text-sm text-gray-500 block">Restaurant ID</span>
+                        <code className="text-paymint-green font-mono font-bold bg-paymint-green/10 px-2 py-1">{demoCredentials.slug}</code>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-500 block">Restaurant Pass</span>
+                        <code className="text-paymint-green font-mono font-bold bg-paymint-green/10 px-2 py-1">{demoCredentials.restaurantPassword}</code>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-1">Back Office Admin</p>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <span className="text-sm text-gray-500 block">Username</span>
+                        <code className="text-paymint-green font-mono font-bold bg-paymint-green/10 px-2 py-1">{demoCredentials.adminUsername}</code>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-500 block">Password</span>
+                        <code className="text-paymint-green font-mono font-bold bg-paymint-green/10 px-2 py-1">{demoCredentials.adminPassword}</code>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
         </div>
 
         <div className="grid md:grid-cols-2 gap-8">
