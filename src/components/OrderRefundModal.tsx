@@ -20,6 +20,10 @@ import { TEXT_INPUT_LIMITS } from '../config/textLimits';
 import { useCurrency } from '../context/CurrencyContext';
 import { useScrollLock } from '../hooks/useScrollLock';
 import { formatInputLabel, formatInputPlaceholder } from '../utils/textCase';
+import {
+  calculateSelectedRefundAmount,
+  withRefundAllocation,
+} from '../utils/refundAllocation';
 
 export interface RefundOrderItem {
   id: string;
@@ -39,6 +43,7 @@ export interface RefundOrderItem {
   chosenAttributes?: any[];
   selectedAttributes?: any[];
   remainingRefundQuantity?: number;
+  refundUnitAmountWithAdjustments?: number;
 }
 
 export interface RefundOrder {
@@ -46,9 +51,21 @@ export interface RefundOrder {
   orderNumber: string;
   status: string;
   paymentStatus?: string;
+  subtotal?: number;
+  discount?: number;
+  discountAmount?: number;
+  serviceChargeAmount?: number;
+  tax?: number;
   total?: number;
   items?: RefundOrderItem[];
-  refundOrders?: Array<{ total?: number; items?: RefundOrderItem[] }>;
+  refundOrders?: Array<{
+    subtotal?: number;
+    discountAmount?: number;
+    serviceChargeAmount?: number;
+    tax?: number;
+    total?: number;
+    items?: RefundOrderItem[];
+  }>;
 }
 
 type RefundMode = 'item' | 'order';
@@ -130,6 +147,11 @@ const getRefundItemTotal = (item: RefundOrderItem): number => {
 };
 
 const getRefundItemUnitTotal = (item: RefundOrderItem): number => {
+  const allocatedUnit = Number(item?.refundUnitAmountWithAdjustments);
+  if (Number.isFinite(allocatedUnit) && allocatedUnit > 0) {
+    return allocatedUnit;
+  }
+
   const quantity = Math.max(1, Number(item?.quantity || 1));
   const explicitUnit = Number(item?.unitPrice ?? item?.finalUnitPrice);
   if (Number.isFinite(explicitUnit) && explicitUnit > 0) {
@@ -142,7 +164,7 @@ const buildRefundableItems = (orderDetails: RefundOrder): RefundOrderItem[] => {
   const items = Array.isArray(orderDetails?.items) ? orderDetails.items : [];
   const refundedByLine = getRefundedQuantitiesByLine(orderDetails);
 
-  return items
+  const refundableItems = items
     .map(item => {
       const orderItemId = getRefundOrderItemId(item);
       const originalQuantity = Math.max(0, Number(item?.quantity || 0));
@@ -162,6 +184,8 @@ const buildRefundableItems = (orderDetails: RefundOrder): RefundOrderItem[] => {
       };
     })
     .filter(item => Boolean(item.orderItemId) && Number(item.remainingRefundQuantity) > 0);
+
+  return withRefundAllocation(orderDetails, refundableItems);
 };
 
 const getRefundedAmountFromResult = (
@@ -237,9 +261,9 @@ export function OrderRefundModal({
     [refundableItems, selectedRefundItems],
   );
 
-  const selectedRefundItemsAmount = selectedRefundLines.reduce(
-    (sum, line) => sum + getRefundItemUnitTotal(line.item) * line.quantity,
-    0,
+  const selectedRefundItemsAmount = useMemo(
+    () => calculateSelectedRefundAmount(order, selectedRefundLines),
+    [order, selectedRefundLines],
   );
 
   const selectedRefundItemsCount = selectedRefundLines.reduce(
@@ -407,10 +431,15 @@ export function OrderRefundModal({
             <Check size={30} />
           </div>
           <h3 className="mt-4 text-lg font-bold text-gray-900 dark:text-white">
-            {t('orders.messages.refundSuccess')}
+            {t('reports.refundReasonAdded', {
+              defaultValue: 'Refund Reason Added Successfully',
+            })}
           </h3>
-          <p className="mt-2 text-sm font-black text-mintcom-red">
-            {formatAmount(refundedAmount)}
+          <p className="mt-2 text-sm font-semibold text-gray-500 dark:text-gray-300">
+            {t('reports.refundAmountLabel', {
+              defaultValue: 'Refund Amount: {{amount}}',
+              amount: formatAmount(refundedAmount),
+            })}
           </p>
           <button
             type="button"
