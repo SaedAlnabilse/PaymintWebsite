@@ -1,18 +1,16 @@
-import React, { useState, useRef } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, CreditCard, Lock } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { X, CreditCard, Lock, Info, Check } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import api from '../config/api';
 import toast from 'react-hot-toast';
 import { useScrollLock } from '../hooks/useScrollLock';
-import { formatInputPlaceholder, formatInputLabel } from '../utils/textCase';
 
 interface ApiError {
     response?: {
         data?: {
-            message?: string;
+            message?: string | string[];
         };
     };
 }
@@ -20,87 +18,165 @@ interface ApiError {
 interface AddPaymentMethodModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSuccess: () => void;
+    onSuccess: () => void | Promise<void>;
+}
+
+type DetectedBrand = 'card' | 'visa' | 'mastercard' | 'amex' | 'discover';
+
+const API_BRAND: Record<DetectedBrand, string> = {
+    card: 'CARD',
+    visa: 'VISA',
+    mastercard: 'MASTERCARD',
+    amex: 'AMEX',
+    discover: 'DISCOVER',
+};
+
+const getDigits = (value: string) => value.replace(/\D/g, '');
+
+function detectBrand(digits: string): DetectedBrand {
+    if (/^3[47]/.test(digits)) return 'amex';
+    if (/^(5[1-5]|2[2-7])/.test(digits)) return 'mastercard';
+    if (/^4/.test(digits)) return 'visa';
+    if (/^(6011|65|64[4-9])/.test(digits)) return 'discover';
+    return 'card';
+}
+
+function formatCardNumber(value: string) {
+    const digits = getDigits(value).slice(0, 19);
+    const brand = detectBrand(digits);
+    const groupSizes = brand === 'amex' ? [4, 6, 5] : [4, 4, 4, 4, 3];
+    const parts: string[] = [];
+    let cursor = 0;
+
+    for (const size of groupSizes) {
+        const part = digits.slice(cursor, cursor + size);
+        if (!part) break;
+        parts.push(part);
+        cursor += size;
+    }
+
+    return parts.join(' ');
+}
+
+function luhnCheck(digits: string) {
+    let sum = 0;
+    let shouldDouble = false;
+
+    for (let index = digits.length - 1; index >= 0; index -= 1) {
+        let digit = Number(digits[index]);
+        if (shouldDouble) {
+            digit *= 2;
+            if (digit > 9) digit -= 9;
+        }
+        sum += digit;
+        shouldDouble = !shouldDouble;
+    }
+
+    return sum > 0 && sum % 10 === 0;
+}
+
+function isValidCardNumber(digits: string) {
+    return digits.length >= 13 && digits.length <= 19 && luhnCheck(digits);
+}
+
+function formatExpiryDate(value: string) {
+    const digits = getDigits(value).slice(0, 4);
+    return digits.length >= 3 ? `${digits.slice(0, 2)}/${digits.slice(2)}` : digits;
+}
+
+function parseExpiry(value: string) {
+    const [monthValue, yearValue] = value.split('/');
+    const month = Number(monthValue);
+    const year = yearValue?.length === 2 ? 2000 + Number(yearValue) : NaN;
+
+    if (!Number.isFinite(month) || !Number.isFinite(year)) return null;
+    if (month < 1 || month > 12) return null;
+
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1;
+    if (year < currentYear || (year === currentYear && month < currentMonth)) {
+        return null;
+    }
+
+    return { month, year };
 }
 
 export function AddPaymentMethodModal({ isOpen, onClose, onSuccess }: AddPaymentMethodModalProps) {
     const { t } = useTranslation();
-    const [cardLast4, setCardLast4] = useState('');
-    const [brand, setBrand] = useState('CARD');
+    const [cardNumber, setCardNumber] = useState('');
     const [expiry, setExpiry] = useState('');
+    const [cvv, setCvv] = useState('');
     const [name, setName] = useState('');
+    const [saveForFuturePurchases, setSaveForFuturePurchases] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
     const scrollRef = useRef<HTMLDivElement>(null);
-    const errorBannerRef = useRef<HTMLDivElement>(null);
 
     useScrollLock(isOpen);
 
-    const handleCardLast4Change = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value.replace(/\D/g, '').slice(0, 4);
-        setCardLast4(value);
-            if (errors.cardLast4) {
-                const newErrors = { ...errors };
-                delete newErrors.cardLast4;
-                setErrors(newErrors);
-            }
+    const cardDigits = useMemo(() => getDigits(cardNumber), [cardNumber]);
+    const brand = useMemo(() => detectBrand(cardDigits), [cardDigits]);
+    const cvvLength = brand === 'amex' ? 4 : 3;
+    const locale = t('common.locale');
+
+    const clearError = (key: string) => {
+        if (!errors[key] && !errors.general) return;
+        const next = { ...errors };
+        delete next[key];
+        delete next.general;
+        setErrors(next);
     };
 
-    // Format expiry as Mm/Yy
-    const handleExpiryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value.replace(/\D/g, '');
-        if (value.length <= 4) {
-            let formatted = value;
-            if (value.length >= 2) {
-                formatted = `${value.slice(0, 2)}/${value.slice(2)}`;
-            }
-            setExpiry(formatted);
-            if (errors.expiry) {
-                const newErrors = { ...errors };
-                delete newErrors.expiry;
-                setErrors(newErrors);
-            }
-        }
+    const resetForm = () => {
+        setCardNumber('');
+        setExpiry('');
+        setCvv('');
+        setName('');
+        setSaveForFuturePurchases(false);
+        setErrors({});
+    };
+
+    const handleClose = () => {
+        if (isSubmitting) return;
+        resetForm();
+        onClose();
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        const newErrors: Record<string, string> = {};
+        const nextErrors: Record<string, string> = {};
+        const parsedExpiry = parseExpiry(expiry);
 
-        if (!/^\d{4}$/.test(cardLast4)) newErrors.cardLast4 = t('paymentMethods.modal.errors.invalidCard', { defaultValue: 'Enter the last 4 digits only' });
-        if (!brand) newErrors.brand = t('common.required');
-        if (!expiry) newErrors.expiry = t('common.required');
-        if (!name) newErrors.name = t('common.required');
-
-        const [expMonthStr, expYearStr] = expiry.split('/');
-        const expMonth = parseInt(expMonthStr, 10);
-        const expYear = expYearStr?.length === 2 ? 2000 + parseInt(expYearStr, 10) : NaN;
-        const now = new Date();
-        const currentYear = now.getFullYear();
-        const currentMonth = now.getMonth() + 1;
-
-        if (
-            expiry &&
-            (!expMonth ||
-                !Number.isFinite(expYear) ||
-                expMonth < 1 ||
-                expMonth > 12 ||
-                expYear < currentYear ||
-                (expYear === currentYear && expMonth < currentMonth))
-        ) {
-            newErrors.expiry = t('paymentMethods.modal.errors.invalidExpiry');
+        if (!isValidCardNumber(cardDigits)) {
+            nextErrors.cardNumber = t('paymentMethods.modal.errors.invalidCardNumber', {
+                defaultValue: 'Enter a valid card number',
+            });
         }
 
-        if (Object.keys(newErrors).length > 0) {
-            setErrors(newErrors);
-            // Scroll to the first field that has an error
+        if (!parsedExpiry) {
+            nextErrors.expiry = t('paymentMethods.modal.errors.invalidExpiry', {
+                defaultValue: 'Invalid expiry date',
+            });
+        }
+
+        if (getDigits(cvv).length !== cvvLength) {
+            nextErrors.cvv = t('paymentMethods.modal.errors.invalidCvv', {
+                defaultValue: 'Enter a valid CVV',
+            });
+        }
+
+        if (!name.trim()) {
+            nextErrors.name = t('common.required', { defaultValue: 'Required' });
+        }
+
+        if (Object.keys(nextErrors).length > 0 || !parsedExpiry) {
+            setErrors(nextErrors);
             setTimeout(() => {
-                const firstErrorField = scrollRef.current?.querySelector('.border-red-500');
-                if (firstErrorField) {
-                    firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                } else {
-                    scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
-                }
+                scrollRef.current?.querySelector('[data-error="true"]')?.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center',
+                });
             }, 50);
             return;
         }
@@ -109,30 +185,26 @@ export function AddPaymentMethodModal({ isOpen, onClose, onSuccess }: AddPayment
             setIsSubmitting(true);
 
             await api.post('/api/accounts/cards', {
-                last4: cardLast4,
-                brand,
-                expMonth,
-                expYear,
-                cardholderName: name,
-                setAsDefault: true,
+                last4: cardDigits.slice(-4),
+                brand: API_BRAND[brand],
+                expMonth: parsedExpiry.month,
+                expYear: parsedExpiry.year,
+                cardholderName: name.trim(),
+                saveForFuturePurchases,
+                setAsDefault: saveForFuturePurchases,
             });
 
-            toast.success(t('paymentMethods.messages.added'));
-            onSuccess();
+            toast.success(t('paymentMethods.messages.added', { defaultValue: 'Card added' }));
+            resetForm();
+            await onSuccess();
             onClose();
-
-            // Reset form
-            setCardLast4('');
-            setBrand('CARD');
-            setExpiry('');
-            setName('');
-            setErrors({});
         } catch (err) {
-            const msg = (err as ApiError).response?.data?.message || t('paymentMethods.messages.failedToAdd');
+            const rawMessage = (err as ApiError).response?.data?.message;
+            const msg = Array.isArray(rawMessage)
+                ? rawMessage.join('\n')
+                : rawMessage || t('paymentMethods.messages.failedToAdd', { defaultValue: 'Failed to add card' });
             setErrors({ general: msg });
-            setTimeout(() => {
-                scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
-            }, 50);
+            setTimeout(() => scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' }), 50);
         } finally {
             setIsSubmitting(false);
         }
@@ -142,140 +214,185 @@ export function AddPaymentMethodModal({ isOpen, onClose, onSuccess }: AddPayment
         <AnimatePresence mode="wait">
             {isOpen && (
                 <div
-                    dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}
-                    className="fixed inset-0 z-[9999] popup-surface flex items-end sm:items-center justify-center p-0 sm:p-4 font-barlow"
+                    dir={locale === 'ar' ? 'rtl' : 'ltr'}
+                    className="fixed inset-0 z-[9999] flex items-end justify-center bg-black/45 p-0 font-barlow sm:items-center sm:p-4"
                 >
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-black/30 dark:bg-black/80 backdrop-blur-sm transition-opacity"
-                        onClick={onClose}
+                        className="fixed inset-0"
+                        onClick={handleClose}
                     />
                     <motion.div
-                        initial={{ opacity: 0, y: 100 }}
+                        initial={{ opacity: 0, y: 28 }}
                         animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 100 }}
-                        transition={{ type: "spring", duration: 0.4, bounce: 0.2 }}
-                        className="bg-white dark:bg-[#1E293B] rounded-t-3xl sm:rounded-[2rem] border border-gray-200 dark:border-white/10 w-full sm:max-w-md overflow-hidden relative z-10 max-h-[92vh] sm:max-h-[90vh]"
+                        exit={{ opacity: 0, y: 28 }}
+                        transition={{ type: 'spring', duration: 0.38, bounce: 0.16 }}
+                        className="relative z-10 max-h-[92vh] w-full overflow-hidden rounded-t-[18px] border border-gray-200 bg-white shadow-2xl sm:max-w-[420px] sm:rounded-xl"
                     >
-                        {/* Mobile drag handle */}
-                        <div className="sm:hidden flex justify-center pt-3 pb-1">
-                            <div className="w-10 h-1 bg-gray-300 dark:bg-white/20 rounded-full" />
-                        </div>
-
-                        {/* Decorative Background */}
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-mintcom-green/10 rounded-full blur-[80px] pointer-events-none -translate-y-1/2 translate-x-1/2" />
-
-                        <div className="p-4 sm:p-8 overflow-y-auto custom-scrollbar pb-safe">
-                            <div className="flex items-center justify-between mb-8">
+                        <div ref={scrollRef} className="max-h-[92vh] overflow-y-auto px-8 pb-6 pt-8">
+                            <div className="mb-7 flex items-start justify-between gap-4">
                                 <div>
-                                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">{t('paymentMethods.modal.title')}</h2>
-                                    <p className="text-sm font-bold text-gray-500 mt-1">{t('paymentMethods.modal.subtitle')}</p>
+                                    <h2 className="text-xl font-semibold tracking-normal text-slate-700">
+                                        {t('paymentMethods.modal.title', { defaultValue: 'Add payment card' })}
+                                    </h2>
+                                    <div className="mt-1 flex items-center gap-1.5 text-sm font-medium tracking-normal text-slate-600">
+                                        <Lock size={13} />
+                                        <span>
+                                            {t('paymentMethods.modal.subtitle', {
+                                                defaultValue: 'Secure - 256-bit encrypted',
+                                            })}
+                                        </span>
+                                    </div>
                                 </div>
                                 <button
-                                    onClick={onClose}
-                                    className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-white/5 text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors"
+                                    type="button"
+                                    onClick={handleClose}
+                                    disabled={isSubmitting}
+                                    aria-label={t('common.close', { defaultValue: 'Close' })}
+                                    className="grid h-8 w-8 place-items-center rounded-md text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 disabled:opacity-50"
                                 >
                                     <X size={20} />
                                 </button>
                             </div>
 
-                            <form onSubmit={handleSubmit} className="space-y-6">
-                                {/* Error Banner */}
-                                {Object.keys(errors).length > 0 && (
-                                    <div ref={errorBannerRef} className="p-4 rounded-xl bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400 text-sm font-bold animate-pulse">
-                                        {errors.general || errors.expiry || errors.cardLast4 || errors.brand || errors.name || t('paymentMethods.modal.errors.correctErrors')}
+                            <form onSubmit={handleSubmit} className="space-y-4">
+                                {errors.general && (
+                                    <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold tracking-normal text-red-700">
+                                        {errors.general}
                                     </div>
                                 )}
 
-                                {/* Card Metadata */}
-                                <div className="space-y-2">
-                                    <label className="text-sm font-normal text-gray-900 dark:text-white tracking-tight block pl-1">{formatInputLabel('Card last 4', t('common.locale'))}</label>
-                                    <div className="relative group">
-                                        <input
-                                            type="text"
-                                            value={cardLast4}
-                                            onChange={handleCardLast4Change}
-                                            placeholder={formatInputPlaceholder("1234", t('common.locale'))}
-                                            inputMode="numeric"
-                                            maxLength={4}
-                                            className={`w-full h-14 bg-gray-50 dark:bg-white/5 border ${errors.cardLast4 ? 'border-red-500' : 'border-gray-200 dark:border-white/10'} rounded-xl px-4 pl-12 font-normal text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-mintcom-green focus:ring-1 focus:ring-mintcom-green transition-all`}
-                                        />
-                                        <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-mintcom-green transition-colors" size={20} />
-                                    </div>
-                                    {errors.cardLast4 && <p className="text-xs font-bold text-red-500 pl-1">{errors.cardLast4}</p>}
-                                </div>
+                                <CardField
+                                    label={t('paymentMethods.modal.cardNumber', { defaultValue: 'Card number' })}
+                                    error={errors.cardNumber}
+                                >
+                                    <input
+                                        type="text"
+                                        value={cardNumber}
+                                        onChange={(e) => {
+                                            setCardNumber(formatCardNumber(e.target.value));
+                                            clearError('cardNumber');
+                                        }}
+                                        placeholder="0000 0000 0000 0000"
+                                        inputMode="numeric"
+                                        autoComplete="cc-number"
+                                        maxLength={23}
+                                        data-error={errors.cardNumber ? 'true' : undefined}
+                                        className="h-10 min-w-0 flex-1 bg-transparent text-base font-medium tracking-normal text-slate-900 placeholder:text-slate-400 focus:outline-none"
+                                    />
+                                    <CreditCard size={18} className="text-slate-500" />
+                                </CardField>
 
-                                <div className="space-y-2">
-                                    <label className="text-sm font-normal text-gray-900 dark:text-white tracking-tight block pl-1">{formatInputLabel('Brand', t('common.locale'))}</label>
-                                    <select
-                                        value={brand}
-                                        onChange={(e) => { setBrand(e.target.value); if (errors.brand) setErrors({ ...errors, brand: '' }); }}
-                                        className={`w-full h-14 bg-gray-50 dark:bg-white/5 border ${errors.brand ? 'border-red-500' : 'border-gray-200 dark:border-white/10'} rounded-xl px-4 font-normal text-gray-900 dark:text-white focus:outline-none focus:border-mintcom-green focus:ring-1 focus:ring-mintcom-green transition-all`}
+                                <div className="grid grid-cols-2 gap-3">
+                                    <CardField
+                                        label={t('paymentMethods.modal.expiry', { defaultValue: 'Expiry date' })}
+                                        error={errors.expiry}
                                     >
-                                        <option value="CARD">Card</option>
-                                        <option value="VISA">Visa</option>
-                                        <option value="MASTERCARD">Mastercard</option>
-                                        <option value="AMEX">American Express</option>
-                                        <option value="DISCOVER">Discover</option>
-                                    </select>
-                                    {errors.brand && <p className="text-xs font-bold text-red-500 pl-1">{errors.brand}</p>}
-                                </div>
-
-                                {/* Expiry */}
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-normal text-gray-900 dark:text-white tracking-tight block pl-1">{formatInputLabel(t('paymentMethods.modal.expiry'), t('common.locale'))}</label>
                                         <input
                                             type="text"
                                             value={expiry}
-                                            onChange={handleExpiryChange}
-                                            placeholder={formatInputPlaceholder(t('paymentMethods.modal.expiryPlaceholder') || "MM/YY", t('common.locale'))}
+                                            onChange={(e) => {
+                                                setExpiry(formatExpiryDate(e.target.value));
+                                                clearError('expiry');
+                                            }}
+                                            placeholder="MM / YY"
+                                            inputMode="numeric"
+                                            autoComplete="cc-exp"
                                             maxLength={5}
-                                            className={`w-full h-14 bg-gray-50 dark:bg-white/5 border ${errors.expiry ? 'border-red-500' : 'border-gray-200 dark:border-white/10'} rounded-xl px-4 font-normal text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-mintcom-green focus:ring-1 focus:ring-mintcom-green transition-all text-center`}
+                                            data-error={errors.expiry ? 'true' : undefined}
+                                            className="h-10 min-w-0 flex-1 bg-transparent text-base font-medium tracking-normal text-slate-900 placeholder:text-slate-400 focus:outline-none"
                                         />
-                                        {errors.expiry && <p className="text-xs font-bold text-red-500 pl-1">{errors.expiry}</p>}
-                                    </div>
+                                    </CardField>
+
+                                    <CardField
+                                        label={
+                                            <span className="flex items-center gap-1">
+                                                CVV
+                                                <Info size={12} className="text-slate-400" />
+                                            </span>
+                                        }
+                                        error={errors.cvv}
+                                    >
+                                        <input
+                                            type="password"
+                                            value={cvv}
+                                            onChange={(e) => {
+                                                setCvv(getDigits(e.target.value).slice(0, cvvLength));
+                                                clearError('cvv');
+                                            }}
+                                            placeholder="..."
+                                            inputMode="numeric"
+                                            autoComplete="cc-csc"
+                                            maxLength={4}
+                                            data-error={errors.cvv ? 'true' : undefined}
+                                            className="h-10 min-w-0 flex-1 bg-transparent text-base font-medium tracking-normal text-slate-900 placeholder:text-slate-400 focus:outline-none"
+                                        />
+                                    </CardField>
                                 </div>
 
-                                {/* Cardholder Name */}
-                                <div className="space-y-2">
-                                    <label className="text-sm font-normal text-gray-900 dark:text-white tracking-tight block pl-1">{formatInputLabel(t('paymentMethods.modal.cardholder'), t('common.locale'))}</label>
-                                    <input maxLength={255}
+                                <CardField
+                                    label={t('paymentMethods.modal.cardholder', { defaultValue: 'Cardholder name' })}
+                                    error={errors.name}
+                                >
+                                    <input
                                         type="text"
                                         value={name}
-                                        onChange={(e) => { setName(e.target.value); if (errors.name) setErrors({ ...errors, name: '' }); }}
-                                        className={`w-full h-14 bg-gray-50 dark:bg-white/5 border ${errors.name ? 'border-red-500' : 'border-gray-200 dark:border-white/10'} rounded-xl px-4 font-normal text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-mintcom-green focus:ring-1 focus:ring-mintcom-green transition-all`}
+                                        onChange={(e) => {
+                                            setName(e.target.value);
+                                            clearError('name');
+                                        }}
+                                        placeholder={t('paymentMethods.modal.cardholderPlaceholder', {
+                                            defaultValue: 'Name as it appears on card',
+                                        })}
+                                        autoComplete="cc-name"
+                                        maxLength={80}
+                                        data-error={errors.name ? 'true' : undefined}
+                                        className="h-10 min-w-0 flex-1 bg-transparent text-base font-medium tracking-normal text-slate-900 placeholder:text-slate-400 focus:outline-none"
                                     />
-                                    {errors.name && <p className="text-xs font-bold text-red-500 pl-1">{errors.name}</p>}
-                                </div>
+                                </CardField>
+
+                                <button
+                                    type="button"
+                                    onClick={() => setSaveForFuturePurchases((value) => !value)}
+                                    className="flex items-center gap-2 pt-1 text-left text-sm font-medium tracking-normal text-slate-600"
+                                >
+                                    <span
+                                        className={`grid h-4 w-4 place-items-center rounded-sm border transition ${
+                                            saveForFuturePurchases
+                                                ? 'border-[#5DC99B] bg-[#5DC99B]'
+                                                : 'border-slate-300 bg-white'
+                                        }`}
+                                    >
+                                        {saveForFuturePurchases && <Check size={12} className="text-white" />}
+                                    </span>
+                                    <span>
+                                        {t('paymentMethods.modal.saveForFuture', {
+                                            defaultValue: 'Save card for future purchases',
+                                        })}
+                                    </span>
+                                </button>
 
                                 <button
                                     type="submit"
                                     disabled={isSubmitting}
-                                    className="w-full h-14 bg-mintcom-green text-black rounded-xl font-black text-xs tracking-[0.2em] hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-mintcom-green/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none uppercase"
+                                    className="mt-5 flex h-11 w-full items-center justify-center gap-2 rounded-md bg-[#5DC99B] text-base font-semibold tracking-normal text-white shadow-lg shadow-[#5DC99B]/25 transition hover:bg-[#55bc90] disabled:cursor-not-allowed disabled:opacity-70"
                                 >
                                     {isSubmitting ? (
-                                        <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
                                     ) : (
-                                        t('paymentMethods.modal.secureVault')
+                                        <>
+                                            <CreditCard size={15} />
+                                            {t('paymentMethods.modal.addCard', { defaultValue: 'Add card' })}
+                                        </>
                                     )}
                                 </button>
 
-                                <div className="flex items-center justify-center gap-2 text-[10px] font-bold text-gray-400 tracking-wider">
-                                    <div className="flex items-center gap-1.5">
-                                        <Lock size={10} />
-                                        <span>{t('paymentMethods.modal.encrypted')}</span>
-                                    </div>
-                                    <span className="text-gray-300">•</span>
-                                    <Link 
-                                        to="/legal/terms" 
-                                        target="_blank" 
-                                        className="text-mintcom-green hover:underline decoration-mintcom-green/30"
-                                    >
-                                        {t('paymentMethods.modal.termsAndConditions')}
-                                    </Link>
+                                <div className="flex items-center justify-center gap-5 pt-1 text-sm font-semibold tracking-normal text-gray-400">
+                                    <BrandMark brand="mastercard" />
+                                    <BrandMark brand="visa" />
+                                    <BrandMark brand="amex" />
                                 </div>
                             </form>
                         </div>
@@ -287,5 +404,58 @@ export function AddPaymentMethodModal({ isOpen, onClose, onSuccess }: AddPayment
     );
 }
 
+interface CardFieldProps {
+    label: React.ReactNode;
+    error?: string;
+    children: React.ReactNode;
+}
 
+function CardField({ label, error, children }: CardFieldProps) {
+    return (
+        <label className="block">
+            <span className="mb-1.5 block text-sm font-medium tracking-normal text-slate-600">{label}</span>
+            <span
+                className={`flex h-10 items-center rounded-md border bg-white px-3 transition focus-within:border-[#5DC99B] focus-within:ring-2 focus-within:ring-[#5DC99B]/15 ${
+                    error ? 'border-red-500' : 'border-gray-200'
+                }`}
+            >
+                {children}
+            </span>
+            {error && <span className="mt-1 block text-xs font-semibold tracking-normal text-red-600">{error}</span>}
+        </label>
+    );
+}
 
+function BrandMark({ brand }: { brand: 'mastercard' | 'visa' | 'amex' }) {
+    if (brand === 'mastercard') {
+        return (
+            <span className="inline-flex items-center gap-1">
+                <span className="relative inline-block h-4 w-7">
+                    <span className="absolute left-0.5 top-0.5 h-3.5 w-3.5 rounded-full bg-[#EB001B]" />
+                    <span className="absolute right-0.5 top-0.5 h-3.5 w-3.5 rounded-full bg-[#F79E1B]/90" />
+                </span>
+                <span>Mastercard</span>
+            </span>
+        );
+    }
+
+    if (brand === 'visa') {
+        return (
+            <span className="inline-flex items-center gap-1">
+                <span className="grid h-4 min-w-7 place-items-center rounded border border-gray-200 px-1 text-[8px] font-black tracking-normal text-[#1A4F9C]">
+                    VISA
+                </span>
+                <span>Visa</span>
+            </span>
+        );
+    }
+
+    return (
+        <span className="inline-flex items-center gap-1">
+            <span className="grid h-4 min-w-7 place-items-center rounded bg-[#2E77BC] px-1 text-[8px] font-black tracking-normal text-white">
+                AMEX
+            </span>
+            <span>Amex</span>
+        </span>
+    );
+}
