@@ -3940,19 +3940,26 @@
     "modal": {
       "cardholder": "اسم صاحب البطاقة",
       "cardLast4": "آخر 4 أرقام من البطاقة",
+      "cardNumber": "رقم البطاقة",
       "brand": "العلامة",
       "encrypted": "تشفير SSL 256 بت",
       "errors": {
         "correctErrors": "يرجى تصحيح الأخطاء أدناه",
         "invalidCard": "أدخل آخر 4 أرقام فقط",
-        "invalidExpiry": "تاريخ انتهاء غير صالح"
+        "invalidExpiry": "تاريخ انتهاء غير صالح",
+        "invalidCardNumber": "أدخل رقم بطاقة صالح",
+        "invalidCvv": "أدخل رمز CVV صالح"
       },
+      "cvv": "CVV",
       "expiry": "تاريخ الانتهاء",
       "expiryPlaceholder": "شهر/سنة",
       "secureVault": "خزنة آمنة",
-      "subtitle": "خزنة دفع آمنة",
+      "subtitle": "آمن - مشفر 256 بت",
       "termsAndConditions": "الشروط والأحكام",
-      "title": "بطاقة جديدة"
+      "title": "إضافة بطاقة دفع",
+      "cardholderPlaceholder": "الاسم كما يظهر على البطاقة",
+      "saveForFuture": "احفظ البطاقة للمشتريات المستقبلية",
+      "addCard": "إضافة البطاقة"
     },
     "newType": "نوع جديد",
     "noActiveCardBrands": "لا توجد علامات بطاقات نشطة",

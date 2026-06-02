@@ -77,6 +77,20 @@ const normalizeAttributesForDisplay = (records: Attribute[]) =>
     subAttributes: sortArchivedLastByNewest(Array.isArray(attribute.subAttributes) ? attribute.subAttributes : []),
   }));
 
+const formatATMAmount = (value: string) => {
+  const digits = value.replace(/\D/g, '');
+  if (digits.length > 19) return null;
+  const cents = Number.parseInt(digits || '0', 10);
+  if (cents === 0) return '';
+  return (cents / 100).toFixed(2);
+};
+
+const formatExistingATMAmount = (value?: number | null) => {
+  const numericValue = Number(value || 0);
+  if (!Number.isFinite(numericValue) || numericValue <= 0) return '';
+  return numericValue.toFixed(2);
+};
+
 export function AddonsPage() {
   const { t } = useTranslation();
   const { currentEstablishment } = useAuth();
@@ -129,7 +143,7 @@ export function AddonsPage() {
   });
   const [subAttributeForm, setSubAttributeForm] = useState({
     name: '',
-    price: 0,
+    price: '',
     isAvailable: true,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -272,12 +286,12 @@ export function AddonsPage() {
       setEditingSubAttribute(subAttr);
       setSubAttributeForm({
         name: subAttr.name,
-        price: Number(subAttr.price),
+        price: formatExistingATMAmount(Number(subAttr.price)),
         isAvailable: subAttr.isAvailable,
       });
     } else {
       setEditingSubAttribute(null);
-      setSubAttributeForm({ name: '', price: 0, isAvailable: true });
+      setSubAttributeForm({ name: '', price: '', isAvailable: true });
     }
     setShowSubAttributeModal(true);
     setErrors({});
@@ -367,12 +381,17 @@ export function AddonsPage() {
 
     setIsSubmitting(true);
     try {
+      const payload = {
+        ...subAttributeForm,
+        name: subAttributeForm.name.trim(),
+        price: Number.parseFloat(subAttributeForm.price) || 0,
+      };
       if (editingSubAttribute) {
-        await api.patch(`/api/attributes/sub-attributes/${editingSubAttribute.id}`, subAttributeForm);
+        await api.patch(`/api/attributes/sub-attributes/${editingSubAttribute.id}`, payload);
         toast.success(t('attributes.messages.optionUpdated'));
       } else {
         const conflict = await api.get('/api/attributes/name-conflicts', {
-          params: { name: subAttributeForm.name, attributeId: parentAttributeId },
+          params: { name: payload.name, attributeId: parentAttributeId },
         });
         const data = conflict.data;
         if (data?.activeDuplicate) {
@@ -394,7 +413,7 @@ export function AddonsPage() {
             onSecondary: async () => {
               setIsSubmitting(true);
               try {
-                await api.post(`/api/attributes/${parentAttributeId}/sub-attributes`, subAttributeForm);
+                await api.post(`/api/attributes/${parentAttributeId}/sub-attributes`, payload);
                 toast.success(t('attributes.messages.optionCreated'));
                 moveCreateViewToActive();
                 setShowSubAttributeModal(false);
@@ -408,7 +427,7 @@ export function AddonsPage() {
           });
           return;
         }
-        await api.post(`/api/attributes/${parentAttributeId}/sub-attributes`, subAttributeForm);
+        await api.post(`/api/attributes/${parentAttributeId}/sub-attributes`, payload);
         toast.success(t('attributes.messages.optionCreated'));
         moveCreateViewToActive();
       }
@@ -821,9 +840,7 @@ export function AddonsPage() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            setSubAttributeForm({ name: '', price: 0, isAvailable: true });
-                            setParentAttributeId(attr.id);
-                            setShowSubAttributeModal(true);
+                            openSubAttributeModal(attr.id);
                           }}
                           className="w-10 h-10 flex items-center justify-center bg-mintcom-green text-black rounded-xl hover:bg-[#5fa888] transition-all shadow-lg shadow-mintcom-green/20 group active:scale-90"
                           title={t('attributes.list.addOption')}
@@ -1129,14 +1146,23 @@ export function AddonsPage() {
                         {currencySymbol}
                       </div>
                       <input
-                        type="number"
-                        step="0.01"
+                        type="text"
+                        inputMode="decimal"
+                        maxLength={TEXT_INPUT_LIMITS.AMOUNT}
                         value={subAttributeForm.price}
-                        onChange={(e) => setSubAttributeForm({ ...subAttributeForm, price: Number(e.target.value) })}
+                        onChange={(e) => {
+                          const formatted = formatATMAmount(e.target.value);
+                          if (formatted !== null) {
+                            setSubAttributeForm({ ...subAttributeForm, price: formatted });
+                          }
+                        }}
                         className="w-full pl-16 pr-5 py-4 bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-2xl text-gray-900 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-mintcom-green/20 transition-all"
-                        placeholder="0.00"
+                        placeholder={formatInputPlaceholder('0.00', t('common.locale'))}
                       />
                     </div>
+                    <p className="mt-2 text-[10px] font-bold text-mintcom-green tracking-widest px-1">
+                      {t('attributes.form.atmStyle', { defaultValue: 'Digits shift right to left (ATM style)' })}
+                    </p>
                   </div>
 
                   <div className="flex items-center justify-between p-5 bg-gray-50 dark:bg-white/5 rounded-2xl border border-gray-200 dark:border-white/5">
@@ -1216,4 +1242,3 @@ export function AddonsPage() {
     </div>
   );
 }
-

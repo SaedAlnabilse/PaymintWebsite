@@ -3935,21 +3935,28 @@
       "updated": "Payment method updated"
     },
     "modal": {
-      "cardholder": "Cardholder Name",
+      "cardholder": "Cardholder name",
       "cardLast4": "Card last 4",
+      "cardNumber": "Card number",
       "brand": "Brand",
-      "encrypted": "256-Bit Ssl Encrypted",
+      "encrypted": "256-bit SSL encrypted",
       "errors": {
         "correctErrors": "Please correct the errors below",
         "invalidCard": "Enter the last 4 digits only",
-        "invalidExpiry": "Invalid expiry date"
+        "invalidExpiry": "Invalid expiry date",
+        "invalidCardNumber": "Enter a valid card number",
+        "invalidCvv": "Enter a valid CVV"
       },
-      "expiry": "Expiry",
+      "cvv": "CVV",
+      "expiry": "Expiry date",
       "expiryPlaceholder": "MM/YY",
-      "secureVault": "Add Card",
-      "subtitle": "Secure Payment Vault",
+      "secureVault": "Add card",
+      "subtitle": "Secure - 256-bit encrypted",
       "termsAndConditions": "Terms and Conditions",
-      "title": "Add New Card"
+      "title": "Add payment card",
+      "cardholderPlaceholder": "Name as it appears on card",
+      "saveForFuture": "Save card for future purchases",
+      "addCard": "Add card"
     },
     "newType": "New Type",
     "noActiveCardBrands": "No active card brands found",
