@@ -29,6 +29,8 @@ import { StatValue } from '../../components/ui/StatValue';
 import { usePermissionGuard } from '../../hooks/usePermissionGuard';
 import { PortalDropdown } from '../../components/PortalDropdown';
 import { formatInputPlaceholder } from '../../utils/textCase';
+import { useRealtime } from '../../hooks/useRealtime';
+import { DataChangeEventTypes } from '../../services/realtimeService';
 
 interface Staff {
   id: string;
@@ -87,6 +89,9 @@ export function StaffPage() {
   const location = useLocation();
   // Permission guard - redirects if user lacks permission
   usePermissionGuard();
+  const { onRefresh } = useRealtime({
+    establishmentId: currentEstablishment?.id || null,
+  });
 
   const [staff, setStaff] = useState<Staff[]>([]);
   const [discounts, setDiscounts] = useState<Discount[]>([]);
@@ -277,6 +282,27 @@ export function StaffPage() {
       console.error('Failed to load discounts');
     }
   };
+
+  useEffect(() => {
+    const staffEvents = new Set<string>([
+      DataChangeEventTypes.STAFF_CREATED,
+      DataChangeEventTypes.STAFF_UPDATED,
+      DataChangeEventTypes.STAFF_DELETED,
+    ]);
+
+    const unsubscribe = onRefresh((eventType) => {
+      if (staffEvents.has(eventType)) {
+        fetchStaff();
+        return;
+      }
+
+      if (eventType === DataChangeEventTypes.SETTINGS_UPDATED) {
+        fetchDiscounts();
+      }
+    });
+
+    return unsubscribe;
+  }, [onRefresh, currentEstablishment?.id]);
 
   const openEditModal = (member: Staff) => {
     if (isOwnerStaff(member)) {

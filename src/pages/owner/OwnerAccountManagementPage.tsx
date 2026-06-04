@@ -39,6 +39,7 @@ import { ONBOARDING_VIDEO_URL } from '../../config/downloads';
 import { CURRENCIES } from '../../context/CurrencyContext';
 import { useAuth } from '../../context/AuthContext';
 import { PasswordResetOtpModal } from '../../components/PasswordResetOtpModal';
+import { ConfirmModal } from '../../components/ConfirmModal';
 import { StatValue } from '../../components/ui/StatValue';
 import toast from 'react-hot-toast';
 import { getBusinessTypeIcon } from '../../utils/businessTypeIcons';
@@ -134,6 +135,8 @@ export function OwnerAccountManagementPage() {
     // Global Currency state
     const [globalCurrency, setGlobalCurrency] = useState('AED');
     const [isUpdatingCurrency, setIsUpdatingCurrency] = useState(false);
+    // Currency awaiting confirmation (warning popup) before it is applied.
+    const [pendingCurrency, setPendingCurrency] = useState<string | null>(null);
 
     const handleUpdateGlobalCurrency = async (newCurrency: string) => {
         try {
@@ -993,7 +996,10 @@ export function OwnerAccountManagementPage() {
                                 <div className="relative">
                                     <select
                                         value={globalCurrency}
-                                        onChange={(e) => handleUpdateGlobalCurrency(e.target.value)}
+                                        onChange={(e) => {
+                                            const next = e.target.value;
+                                            if (next !== globalCurrency) setPendingCurrency(next);
+                                        }}
                                         disabled={isUpdatingCurrency}
                                         className="w-full h-12 bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/[0.08] rounded-xl px-4 font-bold text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 transition-all appearance-none cursor-pointer disabled:opacity-50"
                                     >
@@ -1515,6 +1521,21 @@ export function OwnerAccountManagementPage() {
                     document.body
                 )}
             </AnimatePresence>
+
+            {/* Warning before changing the system currency for all locations. */}
+            <ConfirmModal
+                isOpen={pendingCurrency !== null}
+                onClose={() => setPendingCurrency(null)}
+                onConfirm={() => {
+                    if (pendingCurrency) handleUpdateGlobalCurrency(pendingCurrency);
+                    setPendingCurrency(null);
+                }}
+                title={t('settings.confirm.changeCurrencyTitle')}
+                message={t('settings.confirm.changeCurrencyMessage', { from: globalCurrency, to: pendingCurrency || '' })}
+                type="warning"
+                confirmText={t('common.continue', { defaultValue: 'Continue' })}
+                cancelText={t('common.cancel')}
+            />
         </div>
     );
 }

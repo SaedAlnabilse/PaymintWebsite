@@ -32,6 +32,8 @@ import { usePermissionGuard } from '../../hooks/usePermissionGuard';
 import { useCurrency } from '../../context/CurrencyContext';
 import { formatInputPlaceholder, formatInputLabel } from '../../utils/textCase';
 import { StatValue } from '../../components/ui/StatValue';
+import { useRealtime } from '../../hooks/useRealtime';
+import { DataChangeEventTypes } from '../../services/realtimeService';
 
 interface ApiError {
   response?: {
@@ -135,6 +137,9 @@ export function CustomersPage() {
   const { t } = useTranslation();
   const { currentEstablishment } = useAuth();
   usePermissionGuard();
+  const { onRefresh } = useRealtime({
+    establishmentId: currentEstablishment?.id || null,
+  });
 
   const { formatAmount, currencySymbol } = useCurrency();
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -204,6 +209,24 @@ export function CustomersPage() {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    const customerEvents = new Set<string>([
+      DataChangeEventTypes.CUSTOMER_CREATED,
+      DataChangeEventTypes.CUSTOMER_UPDATED,
+      DataChangeEventTypes.CUSTOMER_DELETED,
+      DataChangeEventTypes.ORDER_CREATED,
+      DataChangeEventTypes.ORDER_REFUNDED,
+    ]);
+
+    const unsubscribe = onRefresh((eventType) => {
+      if (customerEvents.has(eventType)) {
+        fetchCustomers();
+      }
+    });
+
+    return unsubscribe;
+  }, [onRefresh, currentEstablishment?.id, page, searchQuery]);
 
   useEffect(() => {
     fetchCustomers();

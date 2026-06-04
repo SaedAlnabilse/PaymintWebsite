@@ -22,6 +22,25 @@ import AppStoreBadge from '../assets/app-store-badge.svg';
 import GooglePlayBadge from '../assets/google-play-badge.svg';
 import { OWNER_ANDROID_DOWNLOAD_URL, OWNER_IOS_DOWNLOAD_URL } from '../config/downloads';
 
+const SplitText = ({ text, className = "" }: { text: string; className?: string }) => {
+  return (
+    <span className={className}>
+      {text.split(' ').map((word, i) => {
+        const isMintcom = word.toLowerCase().includes('mintcom');
+        return (
+          <span
+            key={i}
+            className={isMintcom ? 'text-mintcom-green' : (i % 2 === 0 ? 'text-gray-900 dark:text-white' : 'text-mintcom-green')}
+          >
+            {word}{' '}
+          </span>
+        );
+      })}
+    </span>
+  );
+};
+
+
 // ---------------------------------------------------------------------------
 // Mini "scope" preview — accurate miniaturised dashboard for each scope.
 // Each one mirrors what that scope actually manages in Mintcom.
@@ -50,7 +69,7 @@ const OwnerScopePreview = ({ t }: { t: any }) => {
   const total = brands.reduce((s, b) => s + b.val, 0);
   return (
     <>
-      <Chrome url="dashboard.mintcom.app/owner" label="Owner" />
+      <Chrome url="dashboard.mintcom.app/owner" label={t('landing.cloudControl.scope.preview.owner', 'Owner')} />
       <div className="h-full flex gap-1.5">
         {/* Hero KPI */}
         <div className="flex-shrink-0 w-[42%] rounded-md bg-gradient-to-br from-mintcom-green/15 to-mintcom-green/5 border border-mintcom-green/25 px-1.5 py-1 flex flex-col justify-center">
@@ -115,7 +134,7 @@ const BrandScopePreview = ({ t }: { t: any }) => {
   ];
   return (
     <>
-      <Chrome url="dashboard.mintcom.app/brand" label="Brand" />
+      <Chrome url="dashboard.mintcom.app/brand" label={t('landing.cloudControl.scope.preview.brand', 'Brand')} />
       <div className="h-full flex flex-col gap-1">
         {/* Brand header */}
         <div className="flex items-center justify-between">
@@ -198,13 +217,13 @@ const LocationScopePreview = ({ t }: { t: any }) => {
     { label: t('landing.cloudControl.scope.preview.aov', 'AOV'), val: '$16.9' },
   ];
   const orders = [
-    { id: '#4218', amt: '$24.50', method: 'Card' },
-    { id: '#4217', amt: '$8.75', method: 'Cash' },
-    { id: '#4216', amt: '$32.00', method: 'Mobile' },
+    { id: '#4218', amt: '$24.50', method: t('landing.cloudControl.scope.preview.methodCard', 'Card') },
+    { id: '#4217', amt: '$8.75', method: t('landing.cloudControl.scope.preview.methodCash', 'Cash') },
+    { id: '#4216', amt: '$32.00', method: t('landing.cloudControl.scope.preview.methodMobile', 'Mobile') },
   ];
   return (
     <>
-      <Chrome url="dashboard.mintcom.app/location" label="Location" />
+      <Chrome url="dashboard.mintcom.app/location" label={t('landing.cloudControl.scope.preview.location', 'Location')} />
       <div className="h-full flex flex-col gap-1">
         {/* KPI strip */}
         <div className="grid grid-cols-3 gap-1">
@@ -429,7 +448,13 @@ const DeviceMockup = ({ t }: { t: any }) => {
                 >
                   <Ic size={9} />
                   <span className="hidden md:inline truncate">
-                    {['Owner', 'Brand', 'Reports', 'Team', 'Settings'][i]}
+                    {[
+                      t('landing.cloudControl.scope.preview.owner', 'Owner'),
+                      t('landing.cloudControl.scope.preview.brand', 'Brand'),
+                      t('landing.cloudControl.scope.preview.reports', 'Reports'),
+                      t('landing.cloudControl.scope.preview.team', 'Team'),
+                      t('landing.cloudControl.scope.preview.settings', 'Settings'),
+                    ][i]}
                   </span>
                 </div>
               ))}
@@ -440,21 +465,21 @@ const DeviceMockup = ({ t }: { t: any }) => {
               {/* Header */}
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-[7px] text-white/40 uppercase tracking-widest">Owner Dashboard</p>
-                  <p className="text-white font-bold text-[10px]">Performance Overview</p>
+                  <p className="text-[7px] text-white/40 uppercase tracking-widest">{t('landing.cloudControl.scope.preview.ownerDashboard', 'Owner Dashboard')}</p>
+                  <p className="text-white font-bold text-[10px]">{t('landing.cloudControl.scope.preview.performanceOverview', 'Performance Overview')}</p>
                 </div>
                 <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-mintcom-green/10 border border-mintcom-green/20">
                   <span className="w-1.5 h-1.5 rounded-full bg-mintcom-green animate-pulse" />
-                  <span className="text-[7px] text-mintcom-green font-bold uppercase tracking-wider">Live</span>
+                  <span className="text-[7px] text-mintcom-green font-bold uppercase tracking-wider">{t('landing.cloudControl.scope.preview.live', 'Live')}</span>
                 </div>
               </div>
 
               {/* Stats row */}
               <div className="grid grid-cols-3 gap-1.5">
                 {[
-                  { label: 'Revenue', value: '$24.8K', up: '+12.4%' },
-                  { label: 'Orders', value: '1,402', up: '+8.1%' },
-                  { label: 'Locations', value: '6', up: '+2' },
+                  { label: t('landing.cloudControl.scope.preview.revenue', 'Revenue'), value: t('landing.cloudControl.scope.preview.revenueAmount', '$24.8K'), up: '+12.4%' },
+                  { label: t('landing.cloudControl.scope.preview.orders', 'Orders'), value: t('landing.cloudControl.scope.preview.ordersAmount', '1,402'), up: '+8.1%' },
+                  { label: t('common.locations', 'Locations'), value: t('landing.cloudControl.scope.preview.locationsAmount', '6'), up: '+2' },
                 ].map((s, i) => (
                   <div
                     key={i}
@@ -469,7 +494,7 @@ const DeviceMockup = ({ t }: { t: any }) => {
 
               {/* Chart */}
               <div className="flex-1 bg-white/5 border border-white/10 rounded-md p-2 flex flex-col">
-                <span className="text-[7px] text-white/40 uppercase tracking-wider mb-1">Sales Trend</span>
+                <span className="text-[7px] text-white/40 uppercase tracking-wider mb-1">{t('landing.cloudControl.scope.preview.salesTrend', 'Sales Trend')}</span>
                 <div className="flex-1 flex items-end gap-1">
                   {[35, 50, 38, 65, 48, 72, 55, 88, 62, 95, 78, 90].map((h, i) => (
                     <div
@@ -506,8 +531,8 @@ const DeviceMockup = ({ t }: { t: any }) => {
             {/* Header */}
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[6px] text-white/40 uppercase tracking-widest">Location</p>
-                <p className="text-white font-bold text-[8px]">Today</p>
+                <p className="text-[6px] text-white/40 uppercase tracking-widest">{t('landing.cloudControl.scope.preview.location', 'Location')}</p>
+                <p className="text-white font-bold text-[8px]">{t('landing.cloudControl.scope.preview.today', 'Today')}</p>
               </div>
               <div className="w-3 h-3 rounded-full bg-mintcom-green/20 flex items-center justify-center">
                 <Cloud size={6} className="text-mintcom-green" />
@@ -516,17 +541,17 @@ const DeviceMockup = ({ t }: { t: any }) => {
 
             {/* Hero stat */}
             <div className="bg-gradient-to-br from-mintcom-green/25 to-mintcom-green/5 border border-mintcom-green/25 rounded-md p-1.5">
-              <p className="text-[6px] text-white/70 font-semibold mb-0.5">Daily Revenue</p>
-              <p className="text-white font-black text-[12px] tracking-tight">JOD 2,450</p>
+              <p className="text-[6px] text-white/70 font-semibold mb-0.5">{t('landing.cloudControl.scope.preview.dailyRevenue', 'Daily Revenue')}</p>
+              <p className="text-white font-black text-[12px] tracking-tight">{t('landing.cloudControl.scope.preview.jod2450', 'JOD 2,450')}</p>
             </div>
 
             {/* List items */}
             <div className="flex-1 flex flex-col gap-1">
               {[
-                { Ic: ShoppingCart, label: 'Orders', val: '142' },
-                { Ic: Users, label: 'Staff', val: '8 / 12' },
-                { Ic: Tags, label: 'Discounts', val: '12' },
-                { Ic: TrendingUp, label: 'Profit', val: '+18%' },
+                { Ic: ShoppingCart, label: t('landing.cloudControl.scope.preview.orders', 'Orders'), val: '142' },
+                { Ic: Users, label: t('landing.cloudControl.scope.preview.team', 'Staff'), val: '8 / 12' },
+                { Ic: Tags, label: t('landing.cloudControl.scope.preview.discounts', 'Discounts'), val: '12' },
+                { Ic: TrendingUp, label: t('landing.cloudControl.scope.preview.profit', 'Profit'), val: '+18%' },
               ].map((row, i) => (
                 <div
                   key={i}
@@ -629,8 +654,7 @@ export const CloudControl = () => {
             </motion.div>
 
             <h2 className="text-4xl sm:text-5xl lg:text-7xl font-bold font-magilio mb-6 leading-tight tracking-tight">
-              <span className="text-gray-900 dark:text-white">In-Sync </span>
-              <span className="text-mintcom-green">Cloud Control</span>
+              <SplitText text={t('landing.cloudControl.title', 'In-Sync Cloud Control')} />
               <span className="block text-gray-900 dark:text-white mt-2">
                 {t('landing.cloudControl.titleHighlight')}
               </span>
@@ -671,7 +695,7 @@ export const CloudControl = () => {
                   <button
                     type="button"
                     disabled
-                    aria-label="Owner iOS app download coming soon"
+                    aria-label={t('landing.cloudControl.scope.preview.ownerIosDownloadComingSoon', 'Owner iOS app download coming soon')}
                     className="block opacity-50 cursor-not-allowed rounded-[11px]"
                   >
                     <img
@@ -703,7 +727,7 @@ export const CloudControl = () => {
                   <button
                     type="button"
                     disabled
-                    aria-label="Owner Android app download coming soon"
+                    aria-label={t('landing.cloudControl.scope.preview.ownerAndroidDownloadComingSoon', 'Owner Android app download coming soon')}
                     className="block opacity-50 cursor-not-allowed rounded-[11px]"
                   >
                     <img
