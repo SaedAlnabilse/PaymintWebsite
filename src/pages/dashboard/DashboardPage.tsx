@@ -791,6 +791,13 @@ export const DashboardPage = () => {
       if (eventType === DataChangeEventTypes.ORDER_CREATED ||
           eventType === DataChangeEventTypes.ORDER_UPDATED ||
           eventType === DataChangeEventTypes.ORDER_REFUNDED ||
+          eventType === DataChangeEventTypes.CUSTOMER_CREATED ||
+          eventType === DataChangeEventTypes.CUSTOMER_UPDATED ||
+          eventType === DataChangeEventTypes.CUSTOMER_DELETED ||
+          eventType === DataChangeEventTypes.STAFF_CREATED ||
+          eventType === DataChangeEventTypes.STAFF_UPDATED ||
+          eventType === DataChangeEventTypes.STAFF_DELETED ||
+          eventType === DataChangeEventTypes.SETTINGS_UPDATED ||
           eventType === DataChangeEventTypes.HELD_ORDER_CREATED ||
           eventType === DataChangeEventTypes.HELD_ORDER_UPDATED ||
           eventType === DataChangeEventTypes.HELD_ORDER_DELETED) {

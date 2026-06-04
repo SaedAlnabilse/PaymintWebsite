@@ -108,7 +108,7 @@ export const DownloadApp = () => {
                   <Download className="w-6 h-6" />
                   <div className="text-left">
                     <div className="text-xs font-medium opacity-80">{t('landing.download.android')}</div>
-                    <div className="text-lg font-bold leading-none">Coming Soon</div>
+                    <div className="text-lg font-bold leading-none">{t('landing.download.comingSoon')}</div>
                   </div>
                 </button>
               )}

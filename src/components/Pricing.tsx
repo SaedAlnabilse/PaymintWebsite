@@ -5,6 +5,29 @@ import { Check, ArrowRight, Tag } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 
+const SplitPricingText = ({ text, highlightColor = "text-[#d4ff33]", baseColor = "text-white" }: { text: string; highlightColor?: string; baseColor?: string }) => {
+  return (
+    <>
+      {text.split(' ').map((word, i) => {
+        const lowerWord = word.toLowerCase();
+        const shouldHighlight = lowerWord.includes('started') || 
+                                lowerWord.includes('now') || 
+                                lowerWord.includes('الآن') || 
+                                lowerWord.includes('aha') || 
+                                lowerWord.includes('الـ');
+        return (
+          <span
+            key={i}
+            className={shouldHighlight ? highlightColor : baseColor}
+          >
+            {word}{' '}
+          </span>
+        );
+      })}
+    </>
+  );
+};
+
 export const Pricing = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -56,18 +79,10 @@ export const Pricing = () => {
           className="text-center mb-16 lg:mb-24"
         >
           <h2 className="text-5xl lg:text-7xl font-bold font-magilio text-white mb-6 leading-tight tracking-tight">
-            {t('common.locale') === 'ar' ? (
-              <>ابدأ <span className="text-[#d4ff33]">الآن</span></>
-            ) : (
-              <>Get <span className="text-[#d4ff33]">Started</span></>
-            )}
+            <SplitPricingText text={t('landing.pricing.title')} highlightColor="text-[#d4ff33]" baseColor="text-white" />
           </h2>
           <p className="mb-10 max-w-2xl text-base font-light leading-relaxed text-gray-600 dark:text-gray-400 xs:text-lg sm:text-xl mx-auto">
-            {t('common.locale') === 'ar' ? (
-              <>لحظة <span className="text-[#d4ff33]">"aha"</span> الخاصة بك على بعد دقائق فقط.</>
-            ) : (
-              <>Your <span className="text-[#d4ff33]">"aha"</span> moment is just minutes away.</>
-            )}
+            <SplitPricingText text={t('landing.pricing.subtitle')} highlightColor="text-[#d4ff33]" baseColor="text-gray-400" />
           </p>
         </motion.div>
 

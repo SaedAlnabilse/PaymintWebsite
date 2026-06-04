@@ -55,8 +55,8 @@ export const AdminControl = () => {
                 {/* Header */}
                 <div className="flex justify-between items-center">
                   <div>
-                    <p className="text-gray-400 text-[9px] font-medium mb-0.5">Good morning,</p>
-                    <p className="text-white font-bold text-xs">Business Owner</p>
+                    <p className="text-gray-400 text-[9px] font-medium mb-0.5">{t('landing.admin.mockup.goodMorning')}</p>
+                    <p className="text-white font-bold text-xs">{t('landing.admin.mockup.businessOwner')}</p>
                   </div>
                   <div className="w-7 h-7 rounded-full bg-mintcom-green/10 border border-mintcom-green/20 flex items-center justify-center">
                     <User size={12} className="text-mintcom-green" />
@@ -83,14 +83,14 @@ export const AdminControl = () => {
                   <div className="bg-white/5 border border-white/10 rounded-xl p-2.5">
                     <div className="flex items-center gap-1.5 mb-1">
                       <ShoppingCart size={10} className="text-blue-400" />
-                      <span className="text-gray-400 text-[8px] font-medium uppercase tracking-wider">Orders</span>
+                      <span className="text-gray-400 text-[8px] font-medium uppercase tracking-wider">{t('landing.admin.mockup.orders')}</span>
                     </div>
                     <div className="text-white font-bold text-sm">142</div>
                   </div>
                   <div className="bg-white/5 border border-white/10 rounded-xl p-2.5">
                     <div className="flex items-center gap-1.5 mb-1">
                       <Users size={10} className="text-amber-400" />
-                      <span className="text-gray-400 text-[8px] font-medium uppercase tracking-wider">Staff</span>
+                      <span className="text-gray-400 text-[8px] font-medium uppercase tracking-wider">{t('landing.admin.mockup.staff')}</span>
                     </div>
                     <div className="text-white font-bold text-sm">8 / 12</div>
                   </div>
@@ -99,7 +99,7 @@ export const AdminControl = () => {
                 {/* Animated Chart Mockup */}
                 <div className="bg-white/5 border border-white/10 rounded-xl p-3 flex-1 flex flex-col relative overflow-hidden">
                   <div className="flex justify-between items-center mb-2 relative z-10">
-                    <span className="text-gray-400 text-[8px] font-medium uppercase tracking-wider">Sales Activity</span>
+                    <span className="text-gray-400 text-[8px] font-medium uppercase tracking-wider">{t('landing.admin.mockup.salesActivity')}</span>
                   </div>
                   <div className="flex-1 flex items-end justify-between gap-1 pb-1 relative z-10">
                     {[35, 45, 25, 60, 40, 75, 50, 85, 65, 95].map((h, i) => (
@@ -123,8 +123,8 @@ export const AdminControl = () => {
                 {/* Header */}
                 <div className="flex justify-between items-center">
                   <div>
-                    <p className="text-gray-400 text-[10px] font-medium mb-0.5">Welcome back,</p>
-                    <p className="text-white font-bold text-xs">Admin Dashboard</p>
+                    <p className="text-gray-400 text-[10px] font-medium mb-0.5">{t('landing.admin.mockup.welcomeBack')}</p>
+                    <p className="text-white font-bold text-xs">{t('landing.admin.mockup.adminDashboard')}</p>
                   </div>
                   <div className="w-8 h-8 rounded-full bg-mintcom-green/10 border border-mintcom-green/20 flex items-center justify-center">
                     <User size={14} className="text-mintcom-green" />
@@ -162,7 +162,7 @@ export const AdminControl = () => {
                     </div>
                     <div>
                       <div className="text-white/90 text-[10px] font-semibold mb-0.5">{t('landing.admin.stockAlerts')}</div>
-                      <div className="text-gray-400 text-[9px]">Espresso Beans <span className="text-red-400 ml-1 font-medium">-3 kg remaining</span></div>
+                      <div className="text-gray-400 text-[9px]">{t('landing.admin.mockup.espressoBeans')} <span className="text-red-400 ml-1 font-medium">{t('landing.admin.mockup.espressoRemaining')}</span></div>
                     </div>
                   </div>
                   <div className="bg-white/5 border border-white/10 rounded-xl p-3 flex items-center gap-3 hover:bg-white/10 transition-colors cursor-pointer">
@@ -171,7 +171,7 @@ export const AdminControl = () => {
                     </div>
                     <div>
                       <div className="text-white/90 text-[10px] font-semibold mb-0.5">{t('landing.admin.shiftAlerts')}</div>
-                      <div className="text-gray-400 text-[9px]">Cashier Sara <span className="text-blue-400 ml-1 font-medium">clocked out 4:00 PM</span></div>
+                      <div className="text-gray-400 text-[9px]">{t('landing.admin.mockup.cashierSara')} <span className="text-blue-400 ml-1 font-medium">{t('landing.admin.mockup.clockedOut')}</span></div>
                     </div>
                   </div>
                   <div className="bg-white/5 border border-white/10 rounded-xl p-3 flex items-center gap-3 hover:bg-white/10 transition-colors cursor-pointer">
@@ -179,8 +179,8 @@ export const AdminControl = () => {
                       <ShoppingCart size={12} className="text-mintcom-green" />
                     </div>
                     <div>
-                      <div className="text-white/90 text-[10px] font-semibold mb-0.5">Order Completed</div>
-                      <div className="text-gray-400 text-[9px]">Order #1042 <span className="text-mintcom-green ml-1 font-medium">JOD 24.00</span></div>
+                      <div className="text-white/90 text-[10px] font-semibold mb-0.5">{t('landing.admin.mockup.orderCompleted')}</div>
+                      <div className="text-gray-400 text-[9px]">{t('landing.admin.mockup.orderNum')} <span className="text-mintcom-green ml-1 font-medium">{(24).toLocaleString(t('common.locale'), { style: 'currency', currency: 'JOD', minimumFractionDigits: 2 })}</span></div>
                     </div>
                   </div>
                   <div className="bg-white/5 border border-white/10 rounded-xl p-3 flex items-center gap-3 hover:bg-white/10 transition-colors cursor-pointer">
@@ -188,8 +188,8 @@ export const AdminControl = () => {
                       <Users size={12} className="text-amber-400" />
                     </div>
                     <div>
-                      <div className="text-white/90 text-[10px] font-semibold mb-0.5">Shift Started</div>
-                      <div className="text-gray-400 text-[9px]">Ahmad clocked in <span className="text-amber-400 ml-1 font-medium">9:00 AM</span></div>
+                      <div className="text-white/90 text-[10px] font-semibold mb-0.5">{t('landing.admin.mockup.shiftStarted')}</div>
+                      <div className="text-gray-400 text-[9px]">{t('landing.admin.mockup.ahmadClockedIn')} <span className="text-amber-400 ml-1 font-medium">{t('landing.admin.mockup.nineAM')}</span></div>
                     </div>
                   </div>
                   <div className="bg-white/5 border border-white/10 rounded-xl p-3 flex items-center gap-3 hover:bg-white/10 transition-colors cursor-pointer">
@@ -198,7 +198,7 @@ export const AdminControl = () => {
                     </div>
                     <div>
                       <div className="text-white/90 text-[10px] font-semibold mb-0.5">{t('landing.admin.liveReports')}</div>
-                      <div className="text-gray-400 text-[9px]">Today's revenue <span className="text-purple-400 ml-1 font-medium">JOD 2,450</span></div>
+                      <div className="text-gray-400 text-[9px]">{t('landing.admin.mockup.todaysRevenue')} <span className="text-purple-400 ml-1 font-medium">{(2450).toLocaleString(t('common.locale'), { style: 'currency', currency: 'JOD', minimumFractionDigits: 0 })}</span></div>
                     </div>
                   </div>
                   <div className="bg-white/5 border border-white/10 rounded-xl p-3 flex items-center gap-3 hover:bg-white/10 transition-colors cursor-pointer">
@@ -206,8 +206,8 @@ export const AdminControl = () => {
                       <Package size={12} className="text-cyan-400" />
                     </div>
                     <div>
-                      <div className="text-white/90 text-[10px] font-semibold mb-0.5">Stock Restocked</div>
-                      <div className="text-gray-400 text-[9px]">Whole Milk <span className="text-cyan-400 ml-1 font-medium">+20 L added</span></div>
+                      <div className="text-white/90 text-[10px] font-semibold mb-0.5">{t('landing.admin.mockup.stockRestocked')}</div>
+                      <div className="text-gray-400 text-[9px]">{t('landing.admin.mockup.wholeMilk')} <span className="text-cyan-400 ml-1 font-medium">{t('landing.admin.mockup.milkAdded')}</span></div>
                     </div>
                   </div>
                 </div>
@@ -321,7 +321,7 @@ export const AdminControl = () => {
                   <button
                     type="button"
                     disabled
-                    aria-label="Owner iOS app download coming soon"
+                    aria-label={t('landing.cloudControl.scope.preview.ownerIosDownloadComingSoon', 'Owner iOS app download coming soon')}
                     className="block opacity-50 cursor-not-allowed rounded-[11px]"
                   >
                     <img
@@ -353,7 +353,7 @@ export const AdminControl = () => {
                   <button
                     type="button"
                     disabled
-                    aria-label="Owner Android app download coming soon"
+                    aria-label={t('landing.cloudControl.scope.preview.ownerAndroidDownloadComingSoon', 'Owner Android app download coming soon')}
                     className="block opacity-50 cursor-not-allowed rounded-[11px]"
                   >
                     <img

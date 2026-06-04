@@ -145,7 +145,7 @@ export const Hero = ({ isVideoOpen, setIsVideoOpen }: { isVideoOpen: boolean; se
                 <div className="bg-transparent rounded-2xl overflow-hidden">
                   <img 
                     src="/mintcom-pos-hero.png" 
-                    alt="Mintcom All-in-One POS System" 
+                    alt={t('landing.hero.alt', 'Mintcom All-in-One POS System')} 
                     className="w-full h-auto object-contain"
                   />
                 </div>

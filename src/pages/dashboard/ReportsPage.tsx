@@ -45,6 +45,8 @@ import { TaxesView } from '../../components/dashboard/reports/views/TaxesView';
 import { CashDiscrepancyView } from '../../components/dashboard/reports/views/CashDiscrepancyView';
 import { PayInPayOutLogModal } from '../../components/dashboard/reports/PayInPayOutLogModal';
 import { formatInputPlaceholder } from '../../utils/textCase';
+import { useRealtime } from '../../hooks/useRealtime';
+import { DataChangeEventTypes } from '../../services/realtimeService';
 
 type ReportType = 'sales' | 'top-items' | 'top-categories' | 'top-modifiers' | 'peak-hours' | 'shifts' | 'staff-sales' | 'payments' | 'discounts' | 'taxes' | 'receipts' | 'cash-discrepancy';
 
@@ -58,6 +60,9 @@ export function ReportsPage() {
   const { account, currentEstablishment } = useAuth();
   const { currencySymbol } = useCurrency();
   usePermissionGuard(['view_reports']);
+  const { onRefresh } = useRealtime({
+    establishmentId: currentEstablishment?.id || null,
+  });
 
   const canExport = useMemo(() => checkPermission(account, ['export_data']), [account]);
 
@@ -361,6 +366,57 @@ export function ReportsPage() {
       setIsFetching(false);
     }
   };
+
+  useEffect(() => {
+    const reportEvents = new Set<string>([
+      DataChangeEventTypes.ORDER_CREATED,
+      DataChangeEventTypes.ORDER_UPDATED,
+      DataChangeEventTypes.ORDER_REFUNDED,
+      DataChangeEventTypes.ITEM_CREATED,
+      DataChangeEventTypes.ITEM_UPDATED,
+      DataChangeEventTypes.ITEM_DELETED,
+      DataChangeEventTypes.ITEM_STOCK_CHANGED,
+      DataChangeEventTypes.CATEGORY_CREATED,
+      DataChangeEventTypes.CATEGORY_UPDATED,
+      DataChangeEventTypes.CATEGORY_DELETED,
+      DataChangeEventTypes.CUSTOMER_CREATED,
+      DataChangeEventTypes.CUSTOMER_UPDATED,
+      DataChangeEventTypes.CUSTOMER_DELETED,
+      DataChangeEventTypes.STAFF_CREATED,
+      DataChangeEventTypes.STAFF_UPDATED,
+      DataChangeEventTypes.STAFF_DELETED,
+      DataChangeEventTypes.SHIFT_STARTED,
+      DataChangeEventTypes.SHIFT_ENDED,
+      DataChangeEventTypes.SETTINGS_UPDATED,
+    ]);
+
+    const unsubscribe = onRefresh((eventType) => {
+      if (!reportEvents.has(eventType)) {
+        return;
+      }
+
+      if (
+        eventType === DataChangeEventTypes.STAFF_CREATED ||
+        eventType === DataChangeEventTypes.STAFF_UPDATED ||
+        eventType === DataChangeEventTypes.STAFF_DELETED
+      ) {
+        fetchEmployees();
+      }
+
+      fetchReportData();
+    });
+
+    return unsubscribe;
+  }, [
+    onRefresh,
+    currentEstablishment?.id,
+    reportType,
+    effectiveDateRange.start,
+    effectiveDateRange.end,
+    selectedEmployeeId,
+    selectedShiftId,
+    itemReportTab,
+  ]);
 
   const setQuickDate = (range: string) => {
     setSelectedDateRange(range);
