@@ -156,18 +156,18 @@ export const AppStrings = {
   AUTH: {
     LOGIN: {
       TITLE: "Welcome Back",
-      SUBTITLE: "Sign in to your account",
+      SUBTITLE: "Sign In to Your Account",
       BUTTON: "Sign In",
       FORGOT_PASSWORD: "Forgot Password?",
       NO_ACCOUNT: "Don't have an account?",
-      SIGN_UP: "Sign up",
+      SIGN_UP: "Sign Up",
     },
     SIGNUP: {
       TITLE: "Create Account",
-      SUBTITLE: "Get started with Mintcom",
+      SUBTITLE: "Get Started with Mintcom",
       BUTTON: "Create Account",
       HAS_ACCOUNT: "Already have an account?",
-      SIGN_IN: "Sign in",
+      SIGN_IN: "Sign In",
     },
     LOGOUT: {
       TITLE: "Log Out",

@@ -139,7 +139,7 @@ export const DiscussionDetailPage = () => {
     }
 
     if (!discussion) {
-        return <div className="min-h-screen bg-gray-50 dark:bg-[#050505] p-20 text-center">Discussion not found</div>;
+        return <div className="min-h-screen bg-gray-50 dark:bg-[#050505] p-20 text-center">Discussion Not Found</div>;
     }
 
     return (

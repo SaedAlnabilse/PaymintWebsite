@@ -468,17 +468,13 @@ export function PaymentMethodsPage() {
     [paymentMethods, paymentMethodStatusFilter],
   );
   const cardTypesEmptyLabel =
-    cardTypeStatusFilter === 'INACTIVE'
-      ? t('paymentMethods.noInactiveCardBrands', 'No inactive card brands found')
-      : cardTypeStatusFilter === 'ACTIVE'
-        ? t('paymentMethods.noActiveCardBrands', 'No active card brands found')
-        : t('common.noResults', 'No results');
+    cardTypeStatusFilter !== 'ALL'
+      ? t('common.noFilteredResults')
+      : t('common.noResults', 'No results');
   const paymentMethodsEmptyLabel =
-    paymentMethodStatusFilter === 'INACTIVE'
-      ? t('paymentMethods.noInactivePaymentMethods', 'No inactive payment methods found')
-      : paymentMethodStatusFilter === 'ACTIVE'
-        ? t('paymentMethods.noActivePaymentMethods', 'No active payment methods found')
-        : t('common.noResults', 'No results');
+    paymentMethodStatusFilter !== 'ALL'
+      ? t('common.noFilteredResults')
+      : t('common.noResults', 'No results');
 
   return (
     <div className="max-w-7xl mx-auto space-y-10 pb-16" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>

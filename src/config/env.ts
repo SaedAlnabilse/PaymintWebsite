@@ -7,6 +7,8 @@ import { z } from 'zod';
 const envSchema = z.object({
   VITE_API_URL: z.string().url().default('https://grateful-liberation-production-d036.up.railway.app'),
   VITE_GOOGLE_CLIENT_ID: z.string().optional(),
+  VITE_APPLE_SERVICE_ID: z.string().optional(),
+  VITE_APPLE_REDIRECT_URI: z.string().optional(),
   VITE_GA_MEASUREMENT_ID: z.string().optional(),
   VITE_META_PIXEL_ID: z.string().optional(),
   VITE_SUPPORT_ADMIN_EMAILS: z.string().optional(),
@@ -27,6 +29,8 @@ const envSchema = z.object({
 const envData = {
   VITE_API_URL: import.meta.env.VITE_API_URL,
   VITE_GOOGLE_CLIENT_ID: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+  VITE_APPLE_SERVICE_ID: import.meta.env.VITE_APPLE_SERVICE_ID,
+  VITE_APPLE_REDIRECT_URI: import.meta.env.VITE_APPLE_REDIRECT_URI,
   VITE_GA_MEASUREMENT_ID: import.meta.env.VITE_GA_MEASUREMENT_ID,
   VITE_META_PIXEL_ID: import.meta.env.VITE_META_PIXEL_ID,
   VITE_SUPPORT_ADMIN_EMAILS: import.meta.env.VITE_SUPPORT_ADMIN_EMAILS,

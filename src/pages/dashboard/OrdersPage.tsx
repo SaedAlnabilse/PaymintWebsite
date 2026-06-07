@@ -118,6 +118,18 @@ interface ShiftStatus {
   activeShift: ShiftInfo | null;
 }
 
+interface EmployeeOption {
+  label: string;
+  value: string;
+}
+
+interface EmployeeShiftOption {
+  label: string;
+  value: string;
+  startTime: string;
+  endTime: string | null;
+}
+
 export function OrdersPage() {
   const { t } = useTranslation();
   usePermissionGuard();
@@ -163,6 +175,10 @@ export function OrdersPage() {
   });
   const [paymentFilter, setPaymentFilter] = useState('all');
   const [serviceChargeFilter, setServiceChargeFilter] = useState('all');
+  const [employees, setEmployees] = useState<EmployeeOption[]>([]);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
+  const [employeeShifts, setEmployeeShifts] = useState<EmployeeShiftOption[]>([]);
+  const [selectedShiftId, setSelectedShiftId] = useState<string | null>(null);
 
   // Helper function to format payment method display
   const formatPaymentMethod = (order: Order): string => {
@@ -225,6 +241,22 @@ export function OrdersPage() {
   const realtimeRefreshTimeoutRef = useRef<number | null>(null);
   const [canScrollHeldLeft, setCanScrollHeldLeft] = useState(false);
   const [canScrollHeldRight, setCanScrollHeldRight] = useState(false);
+  const selectedEmployeeName = useMemo(
+    () => employees.find((employee) => employee.value === selectedEmployeeId)?.label || null,
+    [employees, selectedEmployeeId],
+  );
+  const selectedEmployeeShift = useMemo(
+    () => employeeShifts.find((shift) => shift.value === selectedShiftId) || null,
+    [employeeShifts, selectedShiftId],
+  );
+  const hasOrderSearch = searchQuery.trim().length > 0;
+  const hasOrderFilters =
+    statusFilter !== 'all' ||
+    paymentFilter !== 'all' ||
+    serviceChargeFilter !== 'all' ||
+    selectedDateRange !== 'all' ||
+    Boolean(selectedEmployeeId) ||
+    Boolean(selectedShiftId);
 
   const requestSort = (key: string) => {
     let direction: 'asc' | 'desc' = 'asc';
@@ -346,6 +378,93 @@ export function OrdersPage() {
       checkShiftStatus(false);
     }
   }, [currentEstablishment?.id, canUseShiftFeatures, checkShiftStatus]);
+
+  useEffect(() => {
+    if (!currentEstablishment?.id) {
+      setEmployees([]);
+      setSelectedEmployeeId(null);
+      setEmployeeShifts([]);
+      setSelectedShiftId(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    const fetchEmployees = async () => {
+      try {
+        const res = await api.get('/reports/employees');
+        if (cancelled) return;
+
+        const options = Array.isArray(res.data)
+          ? res.data
+            .map((employee: any) => ({
+              label: String(employee?.name || employee?.username || '').trim(),
+              value: String(employee?.id || ''),
+            }))
+            .filter((employee: EmployeeOption) => employee.label && employee.value)
+          : [];
+
+        setEmployees(options);
+      } catch (err: any) {
+        console.error('[Orders] Failed to load employees', err?.response?.status, err?.response?.data || err);
+      }
+    };
+
+    fetchEmployees();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentEstablishment?.id]);
+
+  useEffect(() => {
+    if (!currentEstablishment?.id || !selectedEmployeeId) {
+      setEmployeeShifts([]);
+      setSelectedShiftId(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    const fetchEmployeeShifts = async () => {
+      try {
+        const res = await api.get('/reports/shifts', {
+          params: {
+            employeeId: selectedEmployeeId,
+            startDate: startOfDay(new Date(startDate)).toISOString(),
+            endDate: endOfDay(new Date(endDate)).toISOString(),
+            limit: 50,
+          },
+        });
+
+        if (cancelled) return;
+
+        const shifts = Array.isArray(res.data) ? res.data : [];
+        const sortedShifts = shifts
+          .slice()
+          .sort((a: any, b: any) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
+
+        setEmployeeShifts(sortedShifts.map((shift: any) => ({
+          label: `${format(new Date(shift.startTime), 'MMM d, HH:mm', { locale: getDateLocale(t('common.locale')) })} - ${shift.endTime ? format(new Date(shift.endTime), 'HH:mm', { locale: getDateLocale(t('common.locale')) }) : t('dashboard.shiftStatus.activeOnly', { defaultValue: 'Active Shift' })}`,
+          value: String(shift.id),
+          startTime: shift.startTime,
+          endTime: shift.endTime || null,
+        })));
+      } catch (err: any) {
+        console.error('[Orders] Failed to load employee shifts', err?.response?.status, err?.response?.data || err);
+        if (!cancelled) {
+          setEmployeeShifts([]);
+          setSelectedShiftId(null);
+        }
+      }
+    };
+
+    fetchEmployeeShifts();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentEstablishment?.id, selectedEmployeeId, startDate, endDate, t]);
 
   // Normalize shift range for users without shift access
   useEffect(() => {
@@ -509,7 +628,10 @@ export function OrdersPage() {
       let start: Date;
       let end: Date;
 
-      if (selectedDateRange === 'current_shift' && activeShiftStartTime) {
+      if (selectedEmployeeShift) {
+        start = new Date(selectedEmployeeShift.startTime);
+        end = selectedEmployeeShift.endTime ? new Date(selectedEmployeeShift.endTime) : new Date();
+      } else if (selectedDateRange === 'current_shift' && activeShiftStartTime) {
         // Current shift data
         start = new Date(activeShiftStartTime);
         end = new Date();
@@ -534,6 +656,7 @@ export function OrdersPage() {
       const needsOverallTotalsRequest =
         effectiveStatusFilter !== 'all' ||
         paymentFilter !== 'all' ||
+        !!selectedEmployeeId ||
         !!debouncedSearchQuery;
 
       // 1. Held orders data (needed for KPI + held section)
@@ -548,6 +671,7 @@ export function OrdersPage() {
       const overallParams = {
         startDate: start.toISOString(),
         endDate: end.toISOString(),
+        ...(selectedEmployeeId ? { employeeId: selectedEmployeeId } : {}),
         limit: 1,
         page: 1
       };
@@ -566,6 +690,7 @@ export function OrdersPage() {
           params: {
             startDate: start.toISOString(),
             endDate: end.toISOString(),
+            ...(selectedEmployeeId ? { employeeId: selectedEmployeeId } : {}),
           },
         })
         .catch((e) => {
@@ -616,7 +741,8 @@ export function OrdersPage() {
           page: page,
           limit: 10, // Default limit
           startDate: start.toISOString(),
-          endDate: end.toISOString()
+          endDate: end.toISOString(),
+          ...(selectedEmployeeId ? { employeeId: selectedEmployeeId } : {}),
         };
 
         if (effectiveStatusFilter !== 'all') {
@@ -744,6 +870,8 @@ export function OrdersPage() {
     activeShiftStartTime,
     previousShiftStartTime,
     previousShiftEndTime,
+    selectedEmployeeId,
+    selectedEmployeeShift,
     t,
   ]);
 
@@ -869,6 +997,7 @@ export function OrdersPage() {
 
   const setQuickDate = (range: string) => {
     setSelectedDateRange(range);
+    setSelectedShiftId(null);
     setPage(1);
 
     // For shift-based ranges, don't update the date inputs
@@ -1114,6 +1243,7 @@ export function OrdersPage() {
                 setStartDate(start);
                 setEndDate(end);
                 setSelectedDateRange('custom');
+                setSelectedShiftId(null);
                 setPage(1);
               }}
               onClear={() => setQuickDate('today')}
@@ -1182,6 +1312,46 @@ export function OrdersPage() {
                 className="w-full h-full"
               />
             </div>
+
+            <div className="flex-1 min-w-[160px] relative z-[20]">
+              <SingleSelect
+                value={selectedEmployeeId}
+                onChange={(val) => {
+                  setSelectedEmployeeId(val);
+                  setSelectedShiftId(null);
+                  setPage(1);
+                }}
+                options={employees}
+                placeholder={formatInputPlaceholder(t('common.allStaff', { defaultValue: 'All Staff' }), t('common.locale'))}
+                allOptionLabel={t('common.allStaff', { defaultValue: 'All Staff' })}
+                showAllOption={true}
+                className="w-full h-full"
+                buttonClassName={`!h-full !min-h-[48px] !rounded-xl !px-4 !text-xs sm:!text-sm !font-bold border transition-all ${selectedEmployeeId
+                  ? '!bg-mintcom-green/5 !border-mintcom-green !text-mintcom-green ring-2 ring-mintcom-green shadow-lg shadow-mintcom-green/10'
+                  : '!bg-white dark:!bg-[#1E293B] !border-gray-200 dark:!border-white/10 hover:!bg-gray-50 dark:hover:!bg-white/10'
+                  }`}
+              />
+            </div>
+
+            <div className={`flex-1 min-w-[160px] relative z-[10] ${!selectedEmployeeId ? 'opacity-50 pointer-events-none grayscale' : ''}`}>
+              <SingleSelect
+                value={selectedShiftId}
+                onChange={(val) => {
+                  setSelectedShiftId(val);
+                  setPage(1);
+                }}
+                options={employeeShifts}
+                placeholder={formatInputPlaceholder(t('common.selectShift', { defaultValue: 'Select Shift' }), t('common.locale'))}
+                allOptionLabel={t('common.allShifts', { defaultValue: 'All Shifts' })}
+                showAllOption={true}
+                disabled={!selectedEmployeeId}
+                className="w-full h-full"
+                buttonClassName={`!h-full !min-h-[48px] !rounded-xl !px-4 !text-xs sm:!text-sm !font-bold border transition-all ${selectedShiftId
+                  ? '!bg-mintcom-green/5 !border-mintcom-green !text-mintcom-green ring-2 ring-mintcom-green shadow-lg shadow-mintcom-green/10'
+                  : '!bg-white dark:!bg-[#1E293B] !border-gray-200 dark:!border-white/10 hover:!bg-gray-50 dark:hover:!bg-white/10'
+                  }`}
+              />
+            </div>
           </div>
 
         </div>
@@ -1205,6 +1375,24 @@ export function OrdersPage() {
               </span>
             </div>
           </div>
+        </div>
+      )}
+
+      {(selectedEmployeeName || selectedEmployeeShift) && (
+        <div className="flex flex-wrap items-center gap-2 p-3 rounded-xl bg-mintcom-green/5 dark:bg-mintcom-green/10 border border-mintcom-green/15">
+          <span className="text-xs font-black tracking-widest uppercase text-mintcom-green">
+            {t('common.activeFilters', { defaultValue: 'Active filters' })}
+          </span>
+          {selectedEmployeeName && (
+            <span className="px-2.5 py-1 rounded-lg bg-white dark:bg-white/10 border border-mintcom-green/15 text-xs font-bold text-gray-700 dark:text-gray-200">
+              {t('common.staff', { defaultValue: 'Staff' })}: {selectedEmployeeName}
+            </span>
+          )}
+          {selectedEmployeeShift && (
+            <span className="px-2.5 py-1 rounded-lg bg-white dark:bg-white/10 border border-mintcom-green/15 text-xs font-bold text-gray-700 dark:text-gray-200">
+              {t('common.shift', { defaultValue: 'Shift' })}: {selectedEmployeeShift.label}
+            </span>
+          )}
         </div>
       )}
 
@@ -1451,15 +1639,21 @@ export function OrdersPage() {
                 <ShoppingCart className="w-8 h-8 text-gray-300" />
               </div>
               <h3 className="dashboard-card-value mb-2">
-                {searchQuery.trim() ? t('common.noResults') : t('orders.messages.noOrders')}
+                {hasOrderSearch
+                  ? t('common.noResults')
+                  : hasOrderFilters
+                    ? t('common.noFilteredResults')
+                    : t('orders.messages.noOrders')}
               </h3>
-              {searchQuery.trim() && (
+              {(hasOrderSearch || hasOrderFilters) && (
                 <p className="text-sm font-bold text-gray-500">
-                  {t('common.noMatchingResults', {
-                    entity: 'orders',
-                    query: searchQuery.trim(),
-                    defaultValue: 'No {{entity}} matching "{{query}}"',
-                  })}
+                  {hasOrderSearch
+                    ? t('common.noMatchingResults', {
+                      entity: 'orders',
+                      query: searchQuery.trim(),
+                      defaultValue: 'No {{entity}} matching "{{query}}"',
+                    })
+                    : t('common.noFilteredResultsDesc')}
                 </p>
               )}
             </div>

@@ -11,6 +11,7 @@ import {
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { GoogleAuthButton, AuthDivider, GOOGLE_CLIENT_ID } from '../components/GoogleAuthButton';
+import { AppleAuthButton, APPLE_AUTH_ENABLED, type AppleAuthCredential } from '../components/AppleAuthButton';
 import { useTranslation } from 'react-i18next';
 import { Helmet } from 'react-helmet-async';
 import { LanguageSwitcher } from '../components/LanguageSwitcher';
@@ -37,7 +38,7 @@ export function LoginPage() {
   const [isResending, setIsResending] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, loginWithGoogle, resendVerification } = useAuth();
+  const { login, loginWithGoogle, loginWithApple, resendVerification } = useAuth();
 
   const redirectTo = (location.state as { from?: string })?.from;
 
@@ -56,6 +57,20 @@ export function LoginPage() {
   };
 
   const handleGoogleError = (error: string) => toast.error(error);
+
+  const handleAppleSuccess = async (credential: AppleAuthCredential) => {
+    try {
+      const result = await loginWithApple(credential);
+      if (result.success) {
+        toast.success(result.message || t('common.welcome'));
+        navigate(redirectTo || '/');
+      } else {
+        toast.error(result.error || t('auth.login.failed'));
+      }
+    } catch {
+      toast.error(t('common.error'));
+    }
+  };
 
   const { register, handleSubmit, setError, formState: { errors } } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -181,15 +196,27 @@ export function LoginPage() {
           <div aria-hidden className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-mintcom-green/10 blur-3xl" />
 
           <div className="relative">
-            {/* Google — only shown (with its divider) when Google auth is configured */}
-            {GOOGLE_CLIENT_ID && (
+            {/* Social sign-in — Google and/or Apple, shown when configured */}
+            {(GOOGLE_CLIENT_ID || APPLE_AUTH_ENABLED) && (
               <>
-                <GoogleAuthButton
-                  onSuccess={handleGoogleSuccess}
-                  onError={handleGoogleError}
-                  text="signin_with"
-                  disabled={isSubmitting}
-                />
+                <div className="space-y-3">
+                  {GOOGLE_CLIENT_ID && (
+                    <GoogleAuthButton
+                      onSuccess={handleGoogleSuccess}
+                      onError={handleGoogleError}
+                      text="signin_with"
+                      disabled={isSubmitting}
+                    />
+                  )}
+                  {APPLE_AUTH_ENABLED && (
+                    <AppleAuthButton
+                      onSuccess={handleAppleSuccess}
+                      onError={handleGoogleError}
+                      text="signin_with"
+                      disabled={isSubmitting}
+                    />
+                  )}
+                </div>
 
                 <AuthDivider />
               </>

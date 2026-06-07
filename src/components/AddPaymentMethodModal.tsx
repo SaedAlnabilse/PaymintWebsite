@@ -6,6 +6,16 @@ import { useTranslation } from 'react-i18next';
 import api from '../config/api';
 import toast from 'react-hot-toast';
 import { useScrollLock } from '../hooks/useScrollLock';
+import {
+    detectCardBrand,
+    formatCardNumberInput,
+    formatExpiryInput,
+    getCardCvvLength,
+    getCardDigits,
+    isValidCardNumber,
+    parseExpiryDate,
+    PAYMENT_CARD_API_BRAND,
+} from '../utils/paymentCard';
 
 interface ApiError {
     response?: {
@@ -21,87 +31,6 @@ interface AddPaymentMethodModalProps {
     onSuccess: () => void | Promise<void>;
 }
 
-type DetectedBrand = 'card' | 'visa' | 'mastercard' | 'amex' | 'discover';
-
-const API_BRAND: Record<DetectedBrand, string> = {
-    card: 'CARD',
-    visa: 'VISA',
-    mastercard: 'MASTERCARD',
-    amex: 'AMEX',
-    discover: 'DISCOVER',
-};
-
-const getDigits = (value: string) => value.replace(/\D/g, '');
-
-function detectBrand(digits: string): DetectedBrand {
-    if (/^3[47]/.test(digits)) return 'amex';
-    if (/^(5[1-5]|2[2-7])/.test(digits)) return 'mastercard';
-    if (/^4/.test(digits)) return 'visa';
-    if (/^(6011|65|64[4-9])/.test(digits)) return 'discover';
-    return 'card';
-}
-
-function formatCardNumber(value: string) {
-    const digits = getDigits(value).slice(0, 19);
-    const brand = detectBrand(digits);
-    const groupSizes = brand === 'amex' ? [4, 6, 5] : [4, 4, 4, 4, 3];
-    const parts: string[] = [];
-    let cursor = 0;
-
-    for (const size of groupSizes) {
-        const part = digits.slice(cursor, cursor + size);
-        if (!part) break;
-        parts.push(part);
-        cursor += size;
-    }
-
-    return parts.join(' ');
-}
-
-function luhnCheck(digits: string) {
-    let sum = 0;
-    let shouldDouble = false;
-
-    for (let index = digits.length - 1; index >= 0; index -= 1) {
-        let digit = Number(digits[index]);
-        if (shouldDouble) {
-            digit *= 2;
-            if (digit > 9) digit -= 9;
-        }
-        sum += digit;
-        shouldDouble = !shouldDouble;
-    }
-
-    return sum > 0 && sum % 10 === 0;
-}
-
-function isValidCardNumber(digits: string) {
-    return digits.length >= 13 && digits.length <= 19 && luhnCheck(digits);
-}
-
-function formatExpiryDate(value: string) {
-    const digits = getDigits(value).slice(0, 4);
-    return digits.length >= 3 ? `${digits.slice(0, 2)}/${digits.slice(2)}` : digits;
-}
-
-function parseExpiry(value: string) {
-    const [monthValue, yearValue] = value.split('/');
-    const month = Number(monthValue);
-    const year = yearValue?.length === 2 ? 2000 + Number(yearValue) : NaN;
-
-    if (!Number.isFinite(month) || !Number.isFinite(year)) return null;
-    if (month < 1 || month > 12) return null;
-
-    const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentMonth = now.getMonth() + 1;
-    if (year < currentYear || (year === currentYear && month < currentMonth)) {
-        return null;
-    }
-
-    return { month, year };
-}
-
 export function AddPaymentMethodModal({ isOpen, onClose, onSuccess }: AddPaymentMethodModalProps) {
     const { t } = useTranslation();
     const [cardNumber, setCardNumber] = useState('');
@@ -115,9 +44,9 @@ export function AddPaymentMethodModal({ isOpen, onClose, onSuccess }: AddPayment
 
     useScrollLock(isOpen);
 
-    const cardDigits = useMemo(() => getDigits(cardNumber), [cardNumber]);
-    const brand = useMemo(() => detectBrand(cardDigits), [cardDigits]);
-    const cvvLength = brand === 'amex' ? 4 : 3;
+    const cardDigits = useMemo(() => getCardDigits(cardNumber), [cardNumber]);
+    const brand = useMemo(() => detectCardBrand(cardDigits), [cardDigits]);
+    const cvvLength = getCardCvvLength(brand);
     const locale = t('common.locale');
 
     const clearError = (key: string) => {
@@ -146,7 +75,7 @@ export function AddPaymentMethodModal({ isOpen, onClose, onSuccess }: AddPayment
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         const nextErrors: Record<string, string> = {};
-        const parsedExpiry = parseExpiry(expiry);
+        const parsedExpiry = parseExpiryDate(expiry);
 
         if (!isValidCardNumber(cardDigits)) {
             nextErrors.cardNumber = t('paymentMethods.modal.errors.invalidCardNumber', {
@@ -160,7 +89,7 @@ export function AddPaymentMethodModal({ isOpen, onClose, onSuccess }: AddPayment
             });
         }
 
-        if (getDigits(cvv).length !== cvvLength) {
+        if (getCardDigits(cvv).length !== cvvLength) {
             nextErrors.cvv = t('paymentMethods.modal.errors.invalidCvv', {
                 defaultValue: 'Enter a valid CVV',
             });
@@ -186,7 +115,7 @@ export function AddPaymentMethodModal({ isOpen, onClose, onSuccess }: AddPayment
 
             await api.post('/api/accounts/cards', {
                 last4: cardDigits.slice(-4),
-                brand: API_BRAND[brand],
+                brand: PAYMENT_CARD_API_BRAND[brand],
                 expMonth: parsedExpiry.month,
                 expYear: parsedExpiry.year,
                 cardholderName: name.trim(),
@@ -269,12 +198,12 @@ export function AddPaymentMethodModal({ isOpen, onClose, onSuccess }: AddPayment
                                     error={errors.cardNumber}
                                 >
                                     <input
-                                        type="text"
-                                        value={cardNumber}
-                                        onChange={(e) => {
-                                            setCardNumber(formatCardNumber(e.target.value));
-                                            clearError('cardNumber');
-                                        }}
+                                            type="text"
+                                            value={cardNumber}
+                                            onChange={(e) => {
+                                                setCardNumber(formatCardNumberInput(e.target.value));
+                                                clearError('cardNumber');
+                                            }}
                                         placeholder="0000 0000 0000 0000"
                                         inputMode="numeric"
                                         autoComplete="cc-number"
@@ -294,7 +223,7 @@ export function AddPaymentMethodModal({ isOpen, onClose, onSuccess }: AddPayment
                                             type="text"
                                             value={expiry}
                                             onChange={(e) => {
-                                                setExpiry(formatExpiryDate(e.target.value));
+                                                setExpiry(formatExpiryInput(e.target.value));
                                                 clearError('expiry');
                                             }}
                                             placeholder="MM / YY"
@@ -319,7 +248,7 @@ export function AddPaymentMethodModal({ isOpen, onClose, onSuccess }: AddPayment
                                             type="password"
                                             value={cvv}
                                             onChange={(e) => {
-                                                setCvv(getDigits(e.target.value).slice(0, cvvLength));
+                                                setCvv(getCardDigits(e.target.value).slice(0, cvvLength));
                                                 clearError('cvv');
                                             }}
                                             placeholder="..."

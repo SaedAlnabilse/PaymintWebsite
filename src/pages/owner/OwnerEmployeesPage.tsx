@@ -386,6 +386,8 @@ export function OwnerEmployeesPage() {
     }, [filteredEmployees, currentPage]);
 
     const totalPages = Math.ceil(filteredEmployees.length / itemsPerPage);
+    const hasEmployeeSearch = searchQuery.trim().length > 0;
+    const hasEmployeeFilters = roleFilter !== 'ALL' || statusFilter !== 'ALL';
 
     const getRoleStyle = (role: string) => {
         switch (role?.toUpperCase()) {
@@ -579,8 +581,20 @@ export function OwnerEmployeesPage() {
             ) : filteredEmployees.length === 0 ? (
                 <div className="text-center py-20 bg-white dark:bg-[#1E293B] rounded-2xl border border-dashed border-gray-200 dark:border-white/10">
                     <Users size={48} className="mx-auto text-gray-300 dark:text-gray-700 mb-4" />
-                    <p className="dashboard-card-value">{searchQuery.trim() ? t('common.noResults') : t('owner.staff.noStaffFound')}</p>
-                    <p className="text-sm font-medium text-gray-500 mt-1">{searchQuery.trim() ? t('common.noMatchingResults', { entity: 'staff', query: searchQuery.trim(), defaultValue: 'No {{entity}} matching "{{query}}"' }) : t('owner.staff.noStaffDesc')}</p>
+                    <p className="dashboard-card-value">
+                        {hasEmployeeSearch
+                            ? t('common.noResults')
+                            : hasEmployeeFilters
+                                ? t('common.noFilteredResults')
+                                : t('owner.staff.noStaffFound')}
+                    </p>
+                    <p className="mx-auto mt-2 max-w-sm text-sm font-medium text-gray-500">
+                        {hasEmployeeSearch
+                            ? t('common.noMatchingResults', { entity: 'staff', query: searchQuery.trim(), defaultValue: 'No {{entity}} matching "{{query}}"' })
+                            : hasEmployeeFilters
+                                ? t('common.noFilteredResultsDesc')
+                                : t('owner.staff.noStaffDesc')}
+                    </p>
                 </div>
             ) : (
                 <>

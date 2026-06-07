@@ -13,6 +13,7 @@ import {
   GoogleAuthButton, AuthDivider, GOOGLE_CLIENT_ID,
   type GoogleAuthButtonHandle,
 } from '../components/GoogleAuthButton';
+import { AppleAuthButton, APPLE_AUTH_ENABLED, type AppleAuthCredential } from '../components/AppleAuthButton';
 import { useTranslation } from 'react-i18next';
 import { Helmet } from 'react-helmet-async';
 import { Spinner } from '../components/ui/Spinner';
@@ -42,7 +43,7 @@ export function SignUpPage() {
   const googleAuthRef = useRef<GoogleAuthButtonHandle>(null);
 
   const navigate = useNavigate();
-  const { register: registerAccount, loginWithGoogle, resendVerification } = useAuth();
+  const { register: registerAccount, loginWithGoogle, loginWithApple, resendVerification } = useAuth();
 
   const {
     register, handleSubmit, watch, setError, setValue,
@@ -93,6 +94,35 @@ export function SignUpPage() {
   };
 
   const handleGoogleError = (error: string) => toast.error(error);
+
+  // Gate the Apple popup behind the terms checkbox, mirroring the Google flow.
+  const handleAppleBeforeSignIn = () => {
+    if (!agreed) {
+      setModalAgreed(false);
+      setModalSubscribeToNews(false);
+      setShowGoogleTermsModal(true);
+      return false;
+    }
+    return true;
+  };
+
+  const handleAppleSuccess = async (credential: AppleAuthCredential) => {
+    if (!agreed) {
+      setError('agreeToTerms', { type: 'manual', message: t('auth.validation.termsRequired') });
+      return;
+    }
+    try {
+      const result = await loginWithApple({ ...credential, subscribeToNews });
+      if (result.success) {
+        toast.success(result.message || t('auth.signup.success'));
+        navigate('/');
+      } else {
+        toast.error(result.error || t('auth.signup.failed'));
+      }
+    } catch {
+      toast.error(t('common.error'));
+    }
+  };
 
   const onSubmit = async (data: SignUpFormData) => {
     setIsSubmitting(true);
@@ -473,19 +503,32 @@ export function SignUpPage() {
               </motion.button>
             </form>
 
-            {GOOGLE_CLIENT_ID && (
+            {(GOOGLE_CLIENT_ID || APPLE_AUTH_ENABLED) && (
               <>
                 <AuthDivider />
-                <div className="relative w-full">
-                  <GoogleAuthButton
-                    ref={googleAuthRef}
-                    onSuccess={handleGoogleSuccess}
-                    onError={handleGoogleError}
-                    text="signup_with"
-                    disabled={isSubmitting}
-                  />
-                  {!agreed && (
-                    <div className="absolute inset-0 z-20 cursor-pointer" onClick={handleGoogleAuthClick} />
+                <div className="space-y-3">
+                  {GOOGLE_CLIENT_ID && (
+                    <div className="relative w-full">
+                      <GoogleAuthButton
+                        ref={googleAuthRef}
+                        onSuccess={handleGoogleSuccess}
+                        onError={handleGoogleError}
+                        text="signup_with"
+                        disabled={isSubmitting}
+                      />
+                      {!agreed && (
+                        <div className="absolute inset-0 z-20 cursor-pointer" onClick={handleGoogleAuthClick} />
+                      )}
+                    </div>
+                  )}
+                  {APPLE_AUTH_ENABLED && (
+                    <AppleAuthButton
+                      onSuccess={handleAppleSuccess}
+                      onError={handleGoogleError}
+                      onBeforeSignIn={handleAppleBeforeSignIn}
+                      text="signup_with"
+                      disabled={isSubmitting}
+                    />
                   )}
                 </div>
               </>
@@ -652,27 +695,54 @@ export function SignUpPage() {
                   </div>
                 </div>
 
-                <GoogleAuthButton
-                  onSuccess={async (credential) => {
-                    setValue('agreeToTerms', true);
-                    setSubscribeToNews(modalSubscribeToNews);
-                    setShowGoogleTermsModal(false);
-                    try {
-                      const result = await loginWithGoogle(credential, modalSubscribeToNews);
-                      if (result.success) {
-                        toast.success(result.message || t('auth.signup.success'));
-                        navigate('/');
-                      } else {
-                        toast.error(result.error || t('auth.signup.failed'));
-                      }
-                    } catch {
-                      toast.error(t('common.error'));
-                    }
-                  }}
-                  onError={handleGoogleError}
-                  text="signup_with"
-                  disabled={!modalAgreed || isSubmitting}
-                />
+                <div className="space-y-3">
+                  {GOOGLE_CLIENT_ID && (
+                    <GoogleAuthButton
+                      onSuccess={async (credential) => {
+                        setValue('agreeToTerms', true);
+                        setSubscribeToNews(modalSubscribeToNews);
+                        setShowGoogleTermsModal(false);
+                        try {
+                          const result = await loginWithGoogle(credential, modalSubscribeToNews);
+                          if (result.success) {
+                            toast.success(result.message || t('auth.signup.success'));
+                            navigate('/');
+                          } else {
+                            toast.error(result.error || t('auth.signup.failed'));
+                          }
+                        } catch {
+                          toast.error(t('common.error'));
+                        }
+                      }}
+                      onError={handleGoogleError}
+                      text="signup_with"
+                      disabled={!modalAgreed || isSubmitting}
+                    />
+                  )}
+                  {APPLE_AUTH_ENABLED && (
+                    <AppleAuthButton
+                      onSuccess={async (credential) => {
+                        setValue('agreeToTerms', true);
+                        setSubscribeToNews(modalSubscribeToNews);
+                        setShowGoogleTermsModal(false);
+                        try {
+                          const result = await loginWithApple({ ...credential, subscribeToNews: modalSubscribeToNews });
+                          if (result.success) {
+                            toast.success(result.message || t('auth.signup.success'));
+                            navigate('/');
+                          } else {
+                            toast.error(result.error || t('auth.signup.failed'));
+                          }
+                        } catch {
+                          toast.error(t('common.error'));
+                        }
+                      }}
+                      onError={handleGoogleError}
+                      text="signup_with"
+                      disabled={!modalAgreed || isSubmitting}
+                    />
+                  )}
+                </div>
 
                 <button
                   onClick={() => setShowGoogleTermsModal(false)}

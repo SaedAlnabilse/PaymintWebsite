@@ -594,7 +594,7 @@ export const SupportAdminDetailPage = () => {
                         </div>
 
                         <div className="rounded-xl border border-gray-100 bg-white p-4 dark:border-white/5 dark:bg-white/[0.03]">
-                            <div className="mb-3 text-sm font-bold text-gray-900 dark:text-white">Internal note</div>
+                            <div className="mb-3 text-sm font-bold text-gray-900 dark:text-white">Internal Note</div>
                             <textarea
                                 value={internalNote}
                                 onChange={(e) => setInternalNote(e.target.value)}

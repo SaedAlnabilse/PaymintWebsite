@@ -175,6 +175,8 @@ export const IdeasPage = () => {
     }
     return 0; // Keep original order for 'recent'
   });
+  const hasIdeaSearch = searchQuery.trim().length > 0;
+  const hasIdeaFilters = selectedCategory !== 'all' || selectedStatus !== 'all';
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#050505] font-sans text-gray-900 dark:text-white">
@@ -417,10 +419,14 @@ export const IdeasPage = () => {
                 <Lightbulb size={32} className="text-gray-400" />
               </div>
               <h3 className="font-barlow text-xl font-bold mb-2">
-                {searchQuery.trim() ? t('common.noResults') : t('community.ideas.empty_title', 'No ideas found')}
+                {hasIdeaSearch ? t('common.noResults') : hasIdeaFilters ? t('common.noFilteredResults') : t('community.ideas.empty_title', 'No ideas found')}
               </h3>
               <p className="text-gray-500 dark:text-gray-400 mb-6">
-                {searchQuery.trim() ? t('common.noMatchingResults', { entity: 'ideas', query: searchQuery.trim(), defaultValue: 'No {{entity}} matching "{{query}}"' }) : t('community.ideas.empty_subtitle', 'Try adjusting your search or filters')}
+                {hasIdeaSearch
+                  ? t('common.noMatchingResults', { entity: 'ideas', query: searchQuery.trim(), defaultValue: 'No {{entity}} matching "{{query}}"' })
+                  : hasIdeaFilters
+                    ? t('common.noFilteredResultsDesc')
+                    : t('community.ideas.empty_subtitle', 'Try adjusting your search or filters')}
               </p>
               {isAuthenticated ? (
                 <Link

@@ -185,6 +185,8 @@ export const SupportAdminPage = () => {
     { key: 'resolved' as const, label: 'Resolved', count: stats.resolved, icon: CheckCircle2 },
     { key: 'all' as const, label: 'All tickets', count: stats.total, icon: BarChart3 },
   ]), [deskStats.needsReply, deskStats.stale, deskStats.urgent, stats.inProgress, stats.open, stats.resolved, stats.total]);
+  const hasAdminSearch = searchQuery.trim().length > 0;
+  const hasAdminFilters = queue !== 'all' || statusFilter !== 'all' || priorityFilter !== 'all';
 
   const filteredTickets = useMemo(() => {
     const filtered = tickets.filter((ticket) => {
@@ -305,7 +307,7 @@ export const SupportAdminPage = () => {
               </div>
 
               <div className="rounded-2xl border border-gray-100 bg-white p-4 dark:border-white/10 dark:bg-white/[0.03]">
-                <h2 className="font-barlow mb-3 text-sm font-black text-gray-900 dark:text-white">Triage rules</h2>
+                <h2 className="font-barlow mb-3 text-sm font-black text-gray-900 dark:text-white">Triage Rules</h2>
                 <div className="space-y-3 text-xs font-medium text-gray-500 dark:text-gray-400">
                   <p>Urgent tickets target a 2 hour first response.</p>
                   <p>High priority tickets target 8 hours.</p>
@@ -387,8 +389,16 @@ export const SupportAdminPage = () => {
               ) : filteredTickets.length === 0 ? (
                 <div className="rounded-2xl border border-gray-100 bg-white p-16 text-center dark:border-white/10 dark:bg-white/[0.03]">
                   <Inbox className="mx-auto mb-4 h-14 w-14 text-gray-300 dark:text-gray-600" />
-                  <h3 className="font-barlow mb-2 text-lg font-black text-gray-900 dark:text-white">No tickets in this queue</h3>
-                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Try a different queue or clear filters.</p>
+                  <h3 className="font-barlow mb-2 text-lg font-black text-gray-900 dark:text-white">
+                    {hasAdminSearch ? t('common.noResults') : hasAdminFilters ? t('common.noFilteredResults') : 'No Tickets Found'}
+                  </h3>
+                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                    {hasAdminSearch
+                      ? t('common.noMatchingResults', { entity: 'tickets', query: searchQuery.trim(), defaultValue: 'No {{entity}} matching "{{query}}"' })
+                      : hasAdminFilters
+                        ? t('common.noFilteredResultsDesc')
+                        : 'No support tickets are available yet.'}
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-3">

@@ -229,6 +229,7 @@ export const TicketsPage = () => {
   );
 
   const activeFilters = (statusFilter !== 'all' ? 1 : 0) + (priorityFilter !== 'all' ? 1 : 0);
+  const hasTicketSearch = searchQuery.trim().length > 0;
 
   // ─── Auth guard ──────────────────────────────────────────────────────────────────────────────────────────────────
   if (isLoading) {
@@ -450,16 +451,22 @@ export const TicketsPage = () => {
                 <div className="w-20 h-20 bg-gray-100 dark:bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
                   <Inbox size={36} className="text-gray-400" />
                 </div>
-                <h3 className="font-barlow text-xl font-bold mb-2">{searchQuery.trim() ? t('common.noResults') : t('support.tickets.notFound')}</h3>
+                <h3 className="font-barlow text-xl font-bold mb-2">
+                  {hasTicketSearch
+                    ? t('common.noResults')
+                    : activeFilters > 0
+                      ? t('common.noFilteredResults')
+                      : t('support.tickets.notFound')}
+                </h3>
                 <p className="text-sm font-bold text-gray-500 dark:text-gray-400 transition-colors mb-8 max-w-sm mx-auto">
-                  {searchQuery.trim()
+                  {hasTicketSearch
                     ? t('common.noMatchingResults', {
                         entity: 'tickets',
                         query: searchQuery.trim(),
                         defaultValue: 'No {{entity}} matching "{{query}}"',
                       })
-                    : searchQuery || activeFilters > 0
-                      ? t('support.tickets.notFoundSearch')
+                    : activeFilters > 0
+                      ? t('common.noFilteredResultsDesc')
                       : t('support.tickets.noTicketsYet')}
                 </p>
                 {searchQuery || activeFilters > 0 ? (

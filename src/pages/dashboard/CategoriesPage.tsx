@@ -323,19 +323,14 @@ export function CategoriesPage() {
       );
     });
   }, [categories, normalizedSearchQuery, filterStatus, recentlyArchivedCategoryIds]);
-  const shouldShowStatusEmptyState = !normalizedSearchQuery && filterStatus !== 'ALL';
-  const categoriesEmptyTitle = shouldShowStatusEmptyState
-    ? t(
-        filterStatus === 'INACTIVE' ? 'categories.messages.noInactiveCategories' : 'categories.messages.noActiveCategories',
-        {
-          defaultValue: filterStatus === 'INACTIVE' ? 'No inactive categories found' : 'No active categories found',
-        },
-      )
+  const hasCategoryFilters = filterStatus !== 'ALL';
+  const categoriesEmptyTitle = !normalizedSearchQuery && hasCategoryFilters
+    ? t('common.noFilteredResults')
     : normalizedSearchQuery
       ? t('categories.messages.noResults')
       : t('categories.messages.noCategories');
-  const categoriesEmptyDescription = shouldShowStatusEmptyState
-    ? ''
+  const categoriesEmptyDescription = !normalizedSearchQuery && hasCategoryFilters
+    ? t('common.noFilteredResultsDesc')
     : normalizedSearchQuery
       ? t('categories.messages.noResultsDesc', { query: searchQuery.trim() })
       : t('categories.messages.noCategoriesDesc');

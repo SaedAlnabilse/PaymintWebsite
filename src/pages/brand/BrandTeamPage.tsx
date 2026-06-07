@@ -345,7 +345,9 @@ export default function BrandTeamPage() {
         setSortOrder('asc');
     };
 
-    const hasActiveFilters = searchQuery || roleFilter !== 'all' || locationFilter !== 'all';
+    const hasSearch = searchQuery.trim().length > 0;
+    const hasActiveFilters = hasSearch || roleFilter !== 'all' || locationFilter !== 'all';
+    const hasOnlyFilters = !hasSearch && (roleFilter !== 'all' || locationFilter !== 'all');
     const hasFilters = roleFilter !== 'all' || locationFilter !== 'all';
 
     if (isLoading) {
@@ -509,18 +511,17 @@ export default function BrandTeamPage() {
                         {filteredEmployees.length === 0 ? (
                             <div className="text-center py-20 bg-white dark:bg-[#1E293B] rounded-2xl border border-dashed border-gray-200 dark:border-white/10">
                                 <Users size={48} className="mx-auto text-gray-300 dark:text-gray-700 mb-4" />
-                                <p className="text-lg font-medium text-gray-900 dark:text-white">{searchQuery.trim() ? t('common.noResults') : t('owner.staff.noStaffFound')}</p>
-                                {searchQuery.trim() && (
-                                    <p className="text-sm text-gray-500 mt-1">
-                                        {t('common.noMatchingResults', { entity: 'staff', query: searchQuery.trim(), defaultValue: 'No {{entity}} matching "{{query}}"' })}
-                                    </p>
-                                )}
-                                {!hasActiveFilters && (
-                                    <p className="text-sm text-gray-500 mt-1">
-                                        {t('owner.staff.addStaffDesc')}
-                                    </p>
-                                )}
-                                {hasFilters && (
+                                <p className="text-lg font-medium text-gray-900 dark:text-white">
+                                    {hasSearch ? t('common.noResults') : hasOnlyFilters ? t('common.noFilteredResults') : t('owner.staff.noStaffFound')}
+                                </p>
+                                <p className="mx-auto mt-2 max-w-sm text-sm text-gray-500">
+                                    {hasSearch
+                                        ? t('common.noMatchingResults', { entity: 'staff', query: searchQuery.trim(), defaultValue: 'No {{entity}} matching "{{query}}"' })
+                                        : hasOnlyFilters
+                                            ? t('common.noFilteredResultsDesc')
+                                            : t('owner.staff.addStaffDesc')}
+                                </p>
+                                {hasActiveFilters && (
                                     <button
                                         onClick={clearFilters}
                                         className="mt-4 px-6 py-2 rounded-xl bg-mintcom-green text-black text-sm font-bold hover:bg-[#5fa888] transition-all"

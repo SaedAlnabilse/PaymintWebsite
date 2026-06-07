@@ -33,6 +33,8 @@ export const QAPage = () => {
         const matchesCategory = activeCategory === 'All' || item.category === activeCategory;
         return matchesSearch && matchesCategory;
     });
+    const hasSearch = searchQuery.trim().length > 0;
+    const hasTopicFilter = activeCategory !== 'All';
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-[#0F172A] text-gray-900 dark:text-white font-sans" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
@@ -181,10 +183,14 @@ export const QAPage = () => {
                                         <Search className="w-8 h-8 text-gray-400" />
                                     </div>
                                     <h3 className="font-barlow text-base font-semibold text-gray-900 dark:text-white mb-2">
-                                        {t('support.qa.empty_title', 'No Results Found')}
+                                        {hasTopicFilter && !hasSearch ? t('common.noFilteredResults') : t('support.qa.empty_title', 'No Results Found')}
                                     </h3>
                                     <p className="text-xs font-medium text-gray-500">
-                                        {searchQuery.trim() ? t('common.noMatchingResults', { entity: 'questions', query: searchQuery.trim(), defaultValue: 'No {{entity}} matching "{{query}}"' }) : t('support.qa.empty_subtitle', 'Try adjusting your search or topic filter.')}
+                                        {hasSearch
+                                            ? t('common.noMatchingResults', { entity: 'questions', query: searchQuery.trim(), defaultValue: 'No {{entity}} matching "{{query}}"' })
+                                            : hasTopicFilter
+                                                ? t('common.noFilteredResultsDesc')
+                                                : t('support.qa.empty_subtitle', 'Try adjusting your search or topic filter.')}
                                     </p>
                                 </motion.div>
                             )}

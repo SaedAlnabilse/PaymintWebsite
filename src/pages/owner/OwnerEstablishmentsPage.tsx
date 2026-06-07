@@ -95,6 +95,15 @@ export function OwnerEstablishmentsPage() {
     }, [filteredEstablishments, currentPage]);
 
     const totalPages = Math.ceil(filteredEstablishments.length / ITEMS_PER_PAGE);
+    const hasSearch = searchQuery.trim().length > 0;
+    const hasActiveFilters = hasSearch || statusFilter !== 'all' || typeFilter !== 'all';
+    const hasOnlyFilters = !hasSearch && (statusFilter !== 'all' || typeFilter !== 'all');
+
+    const clearFilters = () => {
+        setSearchQuery('');
+        setStatusFilter('all');
+        setTypeFilter('all');
+    };
 
     const handleEstablishmentClick = (establishment: any) => {
         setCurrentEstablishment(establishment);
@@ -315,10 +324,28 @@ export function OwnerEstablishmentsPage() {
             {filteredEstablishments.length === 0 ? (
                 <div className="text-center py-20 bg-white dark:bg-[#1E293B] rounded-2xl border border-dashed border-gray-200 dark:border-white/10">
                     <Store size={48} className="mx-auto text-gray-300 dark:text-gray-700 mb-4" />
-                    <p className="text-xl font-bold text-gray-900 dark:text-white">{searchQuery.trim() ? t('common.noResults') : t('owner.locations.noLocations')}</p>
-                    <p className="text-sm font-bold text-gray-500 mt-1">
-                        {searchQuery.trim() ? t('common.noMatchingResults', { entity: 'locations', query: searchQuery.trim(), defaultValue: 'No {{entity}} matching "{{query}}"' }) : t('owner.locations.addFirstLocation')}
+                    <p className="text-xl font-bold text-gray-900 dark:text-white">
+                        {hasSearch
+                            ? t('common.noResults')
+                            : hasOnlyFilters
+                                ? t('common.noFilteredResults')
+                                : t('owner.locations.noLocations')}
                     </p>
+                    <p className="mx-auto mt-2 max-w-sm text-sm font-bold text-gray-500">
+                        {hasSearch
+                            ? t('common.noMatchingResults', { entity: 'locations', query: searchQuery.trim(), defaultValue: 'No {{entity}} matching "{{query}}"' })
+                            : hasOnlyFilters
+                                ? t('common.noFilteredResultsDesc')
+                                : t('owner.locations.addFirstLocation')}
+                    </p>
+                    {hasActiveFilters && (
+                        <button
+                            onClick={clearFilters}
+                            className="mt-6 px-6 py-2 rounded-xl bg-gray-100 dark:bg-white/5 text-gray-500 text-sm font-bold hover:bg-gray-200 dark:hover:bg-white/10 transition-all"
+                        >
+                            {t('attributes.filters.reset')}
+                        </button>
+                    )}
                 </div>
             ) : viewMode === 'grid' ? (
                 /* Grid View */

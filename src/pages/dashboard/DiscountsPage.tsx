@@ -167,17 +167,12 @@ export function DiscountsPage() {
 
     return result;
   }, [discounts, normalizedSearchQuery, sortConfig, filterStatus]);
-  const shouldShowStatusEmptyState = !normalizedSearchQuery && filterStatus !== 'ALL';
-  const discountsEmptyTitle = shouldShowStatusEmptyState
-    ? t(
-        filterStatus === 'INACTIVE' ? 'discounts.messages.noInactiveDiscounts' : 'discounts.messages.noActiveDiscounts',
-        {
-          defaultValue: filterStatus === 'INACTIVE' ? 'No inactive discounts found' : 'No active discounts found',
-        },
-      )
+  const hasDiscountFilters = filterStatus !== 'ALL';
+  const discountsEmptyTitle = !normalizedSearchQuery && hasDiscountFilters
+    ? t('common.noFilteredResults')
     : t('discounts.messages.noResults', 'No results found');
-  const discountsEmptyDescription = shouldShowStatusEmptyState
-    ? ''
+  const discountsEmptyDescription = !normalizedSearchQuery && hasDiscountFilters
+    ? t('common.noFilteredResultsDesc')
     : t('discounts.messages.noResultsDesc', { query: searchQuery.trim(), defaultValue: 'No discounts matching "{{query}}"' });
   const totalPages = Math.ceil((Array.isArray(filteredDiscounts) ? filteredDiscounts : []).length / ITEMS_PER_PAGE);
 

@@ -21,6 +21,7 @@ interface AuthContextType {
   register: (data: RegisterData) => Promise<AuthResult>;
   login: (email: string, password: string) => Promise<AuthResult>;
   loginWithGoogle: (credential: string, subscribeToNews?: boolean) => Promise<AuthResult>;
+  loginWithApple: (data: AppleAuthData) => Promise<AuthResult>;
   logout: () => Promise<void>;
 
   // Verification methods
@@ -47,6 +48,14 @@ interface RegisterData {
   subscribeToNews?: boolean;
   // Records the user's acceptance of the Terms of Service and Privacy Policy.
   acceptedTerms: boolean;
+}
+
+interface AppleAuthData {
+  identityToken: string;
+  nonce: string;
+  firstName?: string;
+  lastName?: string;
+  subscribeToNews?: boolean;
 }
 
 interface AuthResult {
@@ -292,6 +301,69 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const loginWithApple = async (data: AppleAuthData): Promise<AuthResult> => {
+    setIsLoggingIn(true);
+    setLoginSuccess(false);
+
+    try {
+      // Send the Apple identity token (plus the raw nonce and first-auth name)
+      // to our backend. The backend hashes the nonce and verifies the token,
+      // then logs in an existing account or creates a new one — same as Google.
+      const response = await api.post('/api/accounts/apple-auth', {
+        identityToken: data.identityToken,
+        nonce: data.nonce,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        subscribeToNews: data.subscribeToNews,
+      });
+
+      if (response.data.account) {
+        // Success state
+        setLoginSuccess(true);
+
+        // Wait for success animation to play
+        await new Promise(resolve => setTimeout(resolve, 1500));
+
+        const { account: accountData, establishments: estList } = response.data;
+
+        // Save non-sensitive account data only. The server stores auth in an HttpOnly cookie.
+        localStorage.setItem('account', JSON.stringify(accountData));
+
+        setAccount(accountData);
+        setEstablishments(estList || []);
+
+        // Auto-select the first establishment if available
+        if (estList && estList.length > 0) {
+          const defaultEst = estList[0];
+          setCurrentEstablishmentState(defaultEst);
+          sessionStorage.setItem('currentEstablishment', JSON.stringify(defaultEst));
+        }
+
+        // Keep overlay on until navigation completes
+        setTimeout(() => {
+          setIsLoggingIn(false);
+          setLoginSuccess(false);
+        }, 500);
+
+        return {
+          success: true,
+          isSecondaryAdmin: !!accountData.isSecondaryAdmin,
+          message: response.data.isNewUser ? 'Account created successfully!' : 'Welcome back!'
+        };
+      }
+
+      setIsLoggingIn(false);
+      return { success: false, error: 'Apple login failed' };
+    } catch (error: any) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setIsLoggingIn(false);
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Apple authentication failed. Please try again.',
+      };
+    }
+  };
+
   const logout = async () => {
     setIsLoggingOut(true);
     try {
@@ -430,7 +502,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Update account data (e.g., after setting Owner Pos Id)
+  // Update account data (e.g., after setting Owner POS ID)
   const updateAccount = (updates: Partial<Account>) => {
     if (account) {
       const updatedAccount = { ...account, ...updates };
@@ -451,6 +523,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         register,
         login,
         loginWithGoogle,
+        loginWithApple,
         logout,
         verifyEmail,
         resendVerification,

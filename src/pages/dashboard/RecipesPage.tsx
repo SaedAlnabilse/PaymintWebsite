@@ -276,7 +276,8 @@ export function RecipesPage() {
   const filteredMaterials = useMemo(() => (Array.isArray(rawMaterials) ? rawMaterials : []).filter(r => r.name.toLowerCase().includes(searchQuery.toLowerCase()) && matchesStatus(r)), [rawMaterials, searchQuery, statusFilter]);
   const filteredSub = useMemo(() => (Array.isArray(subRecipes) ? subRecipes : []).filter(r => r.name.toLowerCase().includes(searchQuery.toLowerCase()) && matchesStatus(r)), [subRecipes, searchQuery, statusFilter]);
   const filteredFinal = useMemo(() => (Array.isArray(finalRecipes) ? finalRecipes : []).filter(r => getFinalRecipeTargetName(r).toLowerCase().includes(searchQuery.toLowerCase()) && matchesStatus(r)), [finalRecipes, searchQuery, statusFilter]);
-  const shouldShowInactiveEmptyState = !searchQuery.trim() && statusFilter === 'INACTIVE';
+  const hasRecipeSearch = searchQuery.trim().length > 0;
+  const hasRecipeFilters = statusFilter !== 'ALL';
 
   const moveCreateViewToActive = () => {
     if (statusFilter === 'INACTIVE') {
@@ -636,21 +637,17 @@ export function RecipesPage() {
               <Pizza size={32} className="text-gray-300" />
             </div>
             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-              {searchQuery.trim()
+              {hasRecipeSearch
                 ? t('common.noResults')
-                : shouldShowInactiveEmptyState
-                  ? t('manufacturing.noInactiveRecipes', { defaultValue: activeTab === 'materials' ? 'No inactive ingredients found' : 'No inactive recipes found' })
+                : hasRecipeFilters
+                  ? t('common.noFilteredResults')
                   : t('manufacturing.noRecipes')}
             </h3>
             <p className="text-sm font-medium text-gray-500 max-w-xs">
-              {searchQuery.trim()
+              {hasRecipeSearch
                 ? t('common.noMatchingResults', { entity: 'recipes', query: searchQuery.trim(), defaultValue: 'No {{entity}} matching "{{query}}"' })
-                : shouldShowInactiveEmptyState
-                  ? t('manufacturing.noInactiveRecipesDesc', {
-                    defaultValue: activeTab === 'materials'
-                      ? 'Archived ingredients will appear here.'
-                      : 'Archived recipes will appear here.',
-                  })
+                : hasRecipeFilters
+                  ? t('common.noFilteredResultsDesc')
                   : t('manufacturing.noRecipesDesc')}
             </p>
           </div>

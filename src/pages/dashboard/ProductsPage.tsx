@@ -782,45 +782,24 @@ export function ProductsPage() {
     }, [searchQuery, selectedCategoryId, stockFilter, filterStatus, sortConfig]);
 
     const hasAnyProducts = (Array.isArray(products) ? products : []).length > 0;
-    const selectedCategoryName = (Array.isArray(categories) ? categories : []).find(c => c.id === selectedCategoryId)?.name || '';
     const isCategoryFilterActive = selectedCategoryId !== 'all';
-    const activeStockFilterLabel =
-        stockFilter === 'yellow'
-            ? t('products.stats.low')
-            : stockFilter === 'red'
-                ? t('products.stats.critical')
-                : stockFilter === 'out'
-                    ? t('products.stats.outOfStock')
-                    : '';
 
-    const shouldShowStatusEmptyState =
-        searchQuery.trim().length === 0 &&
-        selectedCategoryId === 'all' &&
-        stockFilter === 'all' &&
-        filterStatus !== 'ALL';
+    const hasProductSearch = searchQuery.trim().length > 0;
+    const hasProductFilters = selectedCategoryId !== 'all' || stockFilter !== 'all' || filterStatus !== 'ALL';
 
     const emptyStateTitle = !hasAnyProducts
         ? t('products.messages.noProducts')
-        : shouldShowStatusEmptyState
-            ? t(
-                filterStatus === 'INACTIVE' ? 'products.messages.noInactiveProducts' : 'products.messages.noActiveProducts',
-                {
-                    defaultValue: filterStatus === 'INACTIVE' ? 'No inactive products found' : 'No active products found',
-                },
-            )
-        : stockFilter !== 'all'
-            ? `${t('products.messages.noProducts')} (${activeStockFilterLabel})`
+        : !hasProductSearch && hasProductFilters
+            ? t('common.noFilteredResults')
             : t('products.messages.noResults');
 
     const emptyStateDescription = !hasAnyProducts
         ? t('products.messages.noProductsDesc')
-        : shouldShowStatusEmptyState
-            ? ''
-        : searchQuery.trim()
+        : !hasProductSearch && hasProductFilters
+            ? t('common.noFilteredResultsDesc')
+        : hasProductSearch
             ? t('products.messages.noResultsDesc', { query: searchQuery.trim() })
-            : selectedCategoryId !== 'all' && selectedCategoryName
-                ? `${t('products.messages.noProducts')} (${selectedCategoryName})`
-                : '';
+            : '';
 
     // Statistics - calculated from all products (not filtered) so counts remain accurate
     const stats = useMemo(() => {

@@ -19,7 +19,7 @@ export function PwaUpdatePrompt() {
     >
       <RefreshCw className="mt-0.5 h-5 w-5 flex-shrink-0 text-[#2D7A55]" aria-hidden="true" />
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold">New Mintcom version ready</p>
+        <p className="text-sm font-semibold">New Mintcom Version Ready</p>
         <p className="mt-1 text-sm text-slate-600">
           Update now to reload the latest cached app version.
         </p>
