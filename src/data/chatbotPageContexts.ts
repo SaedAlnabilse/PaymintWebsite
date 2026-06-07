@@ -781,7 +781,7 @@ const PAGE_CONTEXTS: ChatbotPageContextDefinition[] = [
     quickActions: [
       {
         id: 'public-signup',
-        label: text('Sign up', 'إنشاء حساب'),
+        label: text('Sign Up', 'إنشاء حساب'),
         icon: 'star',
         type: 'navigate',
         path: '/signup',

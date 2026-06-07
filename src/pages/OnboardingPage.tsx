@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -71,6 +71,16 @@ import MintcomLogoWhite from '../assets/white-green-full-logo.svg';
 import AppStoreBadge from '../assets/app-store-badge.svg';
 import GooglePlayBadge from '../assets/google-play-badge.svg';
 import { formatInputPlaceholder, formatInputLabel } from '../utils/textCase';
+import {
+  detectCardBrand,
+  formatCardNumberInput,
+  formatExpiryInput,
+  getCardCvvLength,
+  getCardDigits,
+  isValidCardNumber,
+  parseExpiryDate,
+  PAYMENT_CARD_API_BRAND,
+} from '../utils/paymentCard';
 
 const ONBOARDING_LAUNCH_STORAGE_KEY = 'mintcom.onboarding.launch.v1';
 
@@ -115,6 +125,64 @@ const clearStoredLaunchData = () => {
     console.warn('[Onboarding] Failed to clear launch data:', error);
   }
 };
+
+function EmbeddedCardField({
+  label,
+  error,
+  children,
+}: {
+  label: ReactNode;
+  error?: string;
+  children: ReactNode;
+}) {
+  return (
+    <label className="block">
+      <span className="mb-1.5 block text-sm font-medium tracking-normal text-slate-600">{label}</span>
+      <span
+        className={`flex h-10 items-center rounded-md border bg-white px-3 transition focus-within:border-[#5DC99B] focus-within:ring-2 focus-within:ring-[#5DC99B]/15 ${
+          error ? 'border-red-500' : 'border-gray-200'
+        }`}
+      >
+        {children}
+      </span>
+      {error && <span className="mt-1 block text-xs font-semibold tracking-normal text-red-600">{error}</span>}
+    </label>
+  );
+}
+
+function CardBrandMark({ brand }: { brand: 'mastercard' | 'visa' | 'amex' }) {
+  if (brand === 'mastercard') {
+    return (
+      <span className="inline-flex items-center gap-1">
+        <span className="relative inline-block h-4 w-7">
+          <span className="absolute left-0.5 top-0.5 h-3.5 w-3.5 rounded-full bg-[#EB001B]" />
+          <span className="absolute right-0.5 top-0.5 h-3.5 w-3.5 rounded-full bg-[#F79E1B]/90" />
+        </span>
+        <span>Mastercard</span>
+      </span>
+    );
+  }
+
+  if (brand === 'visa') {
+    return (
+      <span className="inline-flex items-center gap-1">
+        <span className="grid h-4 min-w-7 place-items-center rounded border border-gray-200 px-1 text-[8px] font-black tracking-normal text-[#1A4F9C]">
+          VISA
+        </span>
+        <span>Visa</span>
+      </span>
+    );
+  }
+
+  return (
+    <span className="inline-flex items-center gap-1">
+      <span className="grid h-4 min-w-7 place-items-center rounded bg-[#2E77BC] px-1 text-[8px] font-black tracking-normal text-white">
+        AMEX
+      </span>
+      <span>Amex</span>
+    </span>
+  );
+}
 
 
 export function OnboardingPage() {
@@ -169,15 +237,55 @@ export function OnboardingPage() {
 
   // Step 4: Payment Method
   const step4Schema = z.object({
-    cardLast4: z.string().regex(
-      /^\d{4}$/,
-      t('onboarding.step2.errors.cardLast4Exact', {
-        defaultValue: 'Enter exactly the last 4 digits',
-      }),
-    ),
-    brand: z.string().min(2, t('common.required')),
-    expiryDate: z.string().min(5, t('onboarding.step2.errors.expiryRequired')),
-    cardName: z.string().min(1, t('onboarding.step2.errors.cardNameRequired')),
+    cardNumber: z.string(),
+    expiryDate: z.string(),
+    cvv: z.string(),
+    cardName: z.string(),
+  }).superRefine((value, ctx) => {
+    const cardDigits = getCardDigits(value.cardNumber);
+    const parsedExpiry = parseExpiryDate(value.expiryDate);
+    const brand = detectCardBrand(cardDigits);
+    const cvvLength = getCardCvvLength(brand);
+
+    if (!isValidCardNumber(cardDigits)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['cardNumber'],
+        message: t('paymentMethods.modal.errors.invalidCardNumber', {
+          defaultValue: 'Enter a valid card number',
+        }),
+      });
+    }
+
+    if (!parsedExpiry) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['expiryDate'],
+        message: t('paymentMethods.modal.errors.invalidExpiry', {
+          defaultValue: 'Invalid expiry date',
+        }),
+      });
+    }
+
+    if (getCardDigits(value.cvv).length !== cvvLength) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['cvv'],
+        message: t('paymentMethods.modal.errors.invalidCvv', {
+          defaultValue: 'Enter a valid CVV',
+        }),
+      });
+    }
+
+    if (!value.cardName.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['cardName'],
+        message: t('onboarding.step2.errors.cardNameRequired', {
+          defaultValue: 'Name on card is required',
+        }),
+      });
+    }
   });
 
   const { refreshEstablishments, account, needsOnboarding, setCurrentEstablishment, establishments, updateAccount } = useAuth();
@@ -337,7 +445,13 @@ export function OnboardingPage() {
   });
 
   const form4 = useForm({
-    resolver: zodResolver(step4Schema)
+    resolver: zodResolver(step4Schema),
+    defaultValues: {
+      cardNumber: '',
+      expiryDate: '',
+      cvv: '',
+      cardName: '',
+    },
   });
 
   // Set default currency for additional locations
@@ -347,18 +461,16 @@ export function OnboardingPage() {
     }
   }, [establishments, form1]);
 
-  const formatCardLast4 = (value: string) => {
-    return value.replace(/[^0-9]/g, '').substring(0, 4);
-  };
+  const cardNumberValue = form4.watch('cardNumber') || '';
+  const cardDigits = getCardDigits(cardNumberValue);
+  const cardBrand = detectCardBrand(cardDigits);
+  const cvvLength = getCardCvvLength(cardBrand);
 
-  // Format expiry date (MM/YY)
-  const formatExpiryDate = (value: string) => {
-    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-    if (v.length >= 2) {
-      return v.substring(0, 2) + '/' + v.substring(2, 4);
+  useEffect(() => {
+    if (hasSavedCard && useSavedCard) {
+      form4.clearErrors();
     }
-    return v;
-  };
+  }, [form4, hasSavedCard, useSavedCard]);
 
   const onStep1Submit = (data: any) => {
     // If currency is disabled, it might be missing from data
@@ -529,36 +641,36 @@ export function OnboardingPage() {
       paymentMethodToken = 'use_saved_card';
       savedCardId = account?.defaultCardId || '';
     } else if (!isTrialFlow) {
-      // New billing method - save non-sensitive card metadata only.
-      const last4Digits = data.cardLast4?.replace(/\D/g, '') || '';
-      const expiry = data.expiryDate || '';
-      const [expMonthStr, expYearStr] = expiry.split('/');
-      const expMonth = parseInt(expMonthStr, 10);
-      const expYear = parseInt('20' + expYearStr, 10); // Assume 20XX
+      // Save only safe card metadata. A gateway token/id will replace this flow later.
+      const parsedExpiry = parseExpiryDate(data.expiryDate || '');
+      const cardDigits = getCardDigits(data.cardNumber || '');
+
+      if (!parsedExpiry || !isValidCardNumber(cardDigits)) {
+        toast.error(t('paymentMethods.messages.failedToAdd', { defaultValue: 'Failed to add card' }));
+        setIsLoading(false);
+        return;
+      }
 
       try {
-        // Save the card to the account
         const response = await api.post('/api/accounts/cards', {
-          last4: last4Digits,
-          brand: data.brand,
-          expMonth: expMonth,
-          expYear: expYear,
-          cardholderName: data.cardName,
-          setAsDefault: true
+          last4: cardDigits.slice(-4),
+          brand: PAYMENT_CARD_API_BRAND[detectCardBrand(cardDigits)],
+          expMonth: parsedExpiry.month,
+          expYear: parsedExpiry.year,
+          cardholderName: data.cardName.trim(),
+          saveForFuturePurchases: true,
+          setAsDefault: true,
         });
 
         savedCardId = response.data.card?.id;
-        const newDefaultPaymentMethod = response.data.card?.last4 || last4Digits;
+        const newDefaultPaymentMethod = response.data.card?.last4 || cardDigits.slice(-4);
 
-        // Update local account state
         if (savedCardId) {
           updateAccount({
             defaultCardId: savedCardId,
-            defaultPaymentMethod: newDefaultPaymentMethod // For legacy/UI compatibility
+            defaultPaymentMethod: newDefaultPaymentMethod,
           });
         }
-
-        paymentMethodToken = 'tok_mock_' + Date.now();
       } catch (err: any) {
         console.error('Failed to save payment method:', err);
         toast.error('Failed to save card. Please try again.');
@@ -1288,7 +1400,7 @@ export function OnboardingPage() {
                   </div>
 
                   {/* Saved Card Option */}
-                  {hasSavedCard && (
+                  {!isTrialFlow && hasSavedCard && (
                     <div className="space-y-4 mb-6">
                       <div
                         onClick={() => setUseSavedCard(true)}
@@ -1337,77 +1449,129 @@ export function OnboardingPage() {
                   )}
 
                   {/* New Card Form - Only show if no saved card OR user chose to add new */}
-                  {(!hasSavedCard || !useSavedCard) && (
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <label className="text-xs font-sans text-gray-400 ml-1">{formatInputLabel('Card last 4', t('common.locale'))}</label>
-                        <div className="relative group">
-                          <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                  {!isTrialFlow && (!hasSavedCard || !useSavedCard) && (
+                    <div className="space-y-4 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                      <div className="flex items-center gap-1.5 text-sm font-medium tracking-normal text-slate-600">
+                        <Lock size={13} />
+                        <span>
+                          {t('paymentMethods.modal.subtitle', {
+                            defaultValue: 'Secure - 256-bit encrypted',
+                          })}
+                        </span>
+                      </div>
+
+                      <EmbeddedCardField
+                        label={t('paymentMethods.modal.cardNumber', { defaultValue: 'Card number' })}
+                        error={form4.formState.errors.cardNumber?.message as string | undefined}
+                      >
+                        <input
+                          type="text"
+                          autoComplete="cc-number"
+                          {...form4.register('cardNumber')}
+                          value={cardNumberValue}
+                          onChange={(e) => {
+                            form4.setValue('cardNumber', formatCardNumberInput(e.target.value), {
+                              shouldDirty: true,
+                              shouldTouch: true,
+                            });
+                            form4.clearErrors('cardNumber');
+                          }}
+                          maxLength={23}
+                          inputMode="numeric"
+                          placeholder="0000 0000 0000 0000"
+                          className="h-10 min-w-0 flex-1 bg-transparent text-base font-medium tracking-normal text-slate-900 placeholder:text-slate-400 focus:outline-none"
+                        />
+                        <CreditCard size={18} className="text-slate-500" />
+                      </EmbeddedCardField>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <EmbeddedCardField
+                          label={t('paymentMethods.modal.expiry', { defaultValue: 'Expiry date' })}
+                          error={form4.formState.errors.expiryDate?.message as string | undefined}
+                        >
                           <input
                             type="text"
-                            autoComplete="new-password"
-                            {...form4.register('cardLast4')}
+                            autoComplete="cc-exp"
+                            {...form4.register('expiryDate')}
+                            value={form4.watch('expiryDate') || ''}
                             onChange={(e) => {
-                              const formatted = formatCardLast4(e.target.value);
-                              form4.setValue('cardLast4', formatted);
+                              form4.setValue('expiryDate', formatExpiryInput(e.target.value), {
+                                shouldDirty: true,
+                                shouldTouch: true,
+                              });
+                              form4.clearErrors('expiryDate');
+                            }}
+                            maxLength={5}
+                            placeholder="MM / YY"
+                            className="h-10 min-w-0 flex-1 bg-transparent text-base font-medium tracking-normal text-slate-900 placeholder:text-slate-400 focus:outline-none"
+                          />
+                        </EmbeddedCardField>
+
+                        <EmbeddedCardField
+                          label={(
+                            <span className="flex items-center gap-1">
+                              {t('paymentMethods.modal.cvv', { defaultValue: 'CVV' })}
+                              <Info size={12} className="text-slate-400" />
+                            </span>
+                          )}
+                          error={form4.formState.errors.cvv?.message as string | undefined}
+                        >
+                          <input
+                            type="password"
+                            autoComplete="cc-csc"
+                            {...form4.register('cvv')}
+                            value={form4.watch('cvv') || ''}
+                            onChange={(e) => {
+                              form4.setValue('cvv', getCardDigits(e.target.value).slice(0, cvvLength), {
+                                shouldDirty: true,
+                                shouldTouch: true,
+                              });
+                              form4.clearErrors('cvv');
                             }}
                             maxLength={4}
                             inputMode="numeric"
-                            placeholder={formatInputPlaceholder("1234", t('common.locale'))}
-                            className={`w-full bg-gray-100 dark:bg-black/20 border ${form4.formState.errors.cardLast4 ? 'border-mintcom-red' : 'border-gray-200 dark:border-white/10'} rounded-xl py-4 pl-12 pr-4 text-sm font-sans font-bold text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-mintcom-green/50`}
+                            placeholder="..."
+                            className="h-10 min-w-0 flex-1 bg-transparent text-base font-medium tracking-normal text-slate-900 placeholder:text-slate-400 focus:outline-none"
                           />
-                        </div>
-                        {form4.formState.errors.cardLast4 && <p className="text-mintcom-red text-xs font-sans text-gray-500 mt-1 ml-1">{form4.formState.errors.cardLast4.message as string}</p>}
+                        </EmbeddedCardField>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <label className="text-xs font-sans text-gray-400 ml-1">{formatInputLabel('Brand', t('common.locale'))}</label>
-                          <select
-                            {...form4.register('brand')}
-                            defaultValue="CARD"
-                            className={`w-full bg-gray-100 dark:bg-black/20 border ${form4.formState.errors.brand ? 'border-mintcom-red' : 'border-gray-200 dark:border-white/10'} rounded-xl py-4 px-4 text-sm font-sans font-bold text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-mintcom-green/50`}
-                          >
-                            <option value="CARD">Card</option>
-                            <option value="VISA">Visa</option>
-                            <option value="MASTERCARD">Mastercard</option>
-                            <option value="AMEX">American Express</option>
-                            <option value="DISCOVER">Discover</option>
-                          </select>
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-xs font-sans text-gray-400 ml-1">{formatInputLabel(t('onboarding.step2.expiry'), t('common.locale'))}</label>
-                          <input
-                            type="text"
-                            autoComplete="new-password"
-                            {...form4.register('expiryDate')}
-                            onChange={(e) => {
-                              const formatted = formatExpiryDate(e.target.value);
-                              form4.setValue('expiryDate', formatted);
-                            }}
-                            maxLength={5}
-                            placeholder={formatInputPlaceholder("MM/YY", t('common.locale'))}
-                            className={`w-full bg-gray-100 dark:bg-black/20 border ${form4.formState.errors.expiryDate ? 'border-mintcom-red' : 'border-gray-200 dark:border-white/10'} rounded-xl py-4 px-4 text-sm font-sans font-bold text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-mintcom-green/50 text-center`}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="text-xs font-sans text-gray-400 ml-1">{formatInputLabel(t('onboarding.step2.cardName'), t('common.locale'))}</label>
-                        <input maxLength={255}
+                      <EmbeddedCardField
+                        label={t('paymentMethods.modal.cardholder', { defaultValue: 'Cardholder name' })}
+                        error={form4.formState.errors.cardName?.message as string | undefined}
+                      >
+                        <input
+                          maxLength={255}
                           type="text"
-                          autoComplete="new-password"
+                          autoComplete="cc-name"
                           {...form4.register('cardName')}
-                          className={`w-full bg-gray-100 dark:bg-black/20 border ${form4.formState.errors.cardName ? 'border-mintcom-red' : 'border-gray-200 dark:border-white/10'} rounded-xl py-4 px-4 text-sm font-sans font-normal text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-mintcom-green/50`}
+                          value={form4.watch('cardName') || ''}
+                          onChange={(e) => {
+                            form4.setValue('cardName', e.target.value, {
+                              shouldDirty: true,
+                              shouldTouch: true,
+                            });
+                            form4.clearErrors('cardName');
+                          }}
+                          placeholder={t('paymentMethods.modal.cardholderPlaceholder', {
+                            defaultValue: 'Name as it appears on card',
+                          })}
+                          className="h-10 min-w-0 flex-1 bg-transparent text-base font-medium tracking-normal text-slate-900 placeholder:text-slate-400 focus:outline-none"
                         />
+                      </EmbeddedCardField>
+
+                      <div className="flex items-center justify-center gap-5 pt-1 text-sm font-semibold tracking-normal text-gray-400">
+                        <CardBrandMark brand="mastercard" />
+                        <CardBrandMark brand="visa" />
+                        <CardBrandMark brand="amex" />
                       </div>
                     </div>
                   )}
 
                   <div className="pt-2">
                     <button
-                      type={hasSavedCard && useSavedCard ? 'button' : 'submit'}
-                      onClick={hasSavedCard && useSavedCard ? () => onStep4Submit({}) : undefined}
+                      type={isTrialFlow || (hasSavedCard && useSavedCard) ? 'button' : 'submit'}
+                      onClick={isTrialFlow || (hasSavedCard && useSavedCard) ? () => onStep4Submit({}) : undefined}
                       disabled={isLoading}
                       className="w-full py-5 bg-mintcom-green text-black text-base font-sans font-bold rounded-2xl hover:bg-mintcom-green/90 transition-all shadow-xl shadow-mintcom-green/20 disabled:opacity-50 flex items-center justify-center gap-3 active:scale-[0.98]"
                     >

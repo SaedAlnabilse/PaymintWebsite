@@ -200,24 +200,19 @@ export function AddonsPage() {
       return matchesSearch && matchesSelection && matchesRequirement && matchesPricing && matchesStatus;
     });
   }, [attributes, searchQuery, filterSelection, filterRequirement, filterPricing, filterStatus, recentlyArchivedAttributeIds]);
-  const shouldShowStatusEmptyState =
-    !searchQuery.trim() &&
-    filterSelection === 'ALL' &&
-    filterRequirement === 'ALL' &&
-    filterPricing === 'ALL' &&
+  const hasAddonsSearch = searchQuery.trim().length > 0;
+  const hasAddonsFilters =
+    filterSelection !== 'ALL' ||
+    filterRequirement !== 'ALL' ||
+    filterPricing !== 'ALL' ||
     filterStatus !== 'ALL';
-  const addonsEmptyTitle = shouldShowStatusEmptyState
-    ? t(
-        filterStatus === 'INACTIVE' ? 'attributes.list.noInactiveAddons' : 'attributes.list.noActiveAddons',
-        {
-          defaultValue: filterStatus === 'INACTIVE' ? 'No inactive add-ons found' : 'No active add-ons found',
-        },
-      )
+  const addonsEmptyTitle = !hasAddonsSearch && hasAddonsFilters
+    ? t('common.noFilteredResults')
     : searchQuery.trim()
       ? t('common.noResults')
       : t('attributes.list.noAddons');
-  const addonsEmptyDescription = shouldShowStatusEmptyState
-    ? ''
+  const addonsEmptyDescription = !hasAddonsSearch && hasAddonsFilters
+    ? t('common.noFilteredResultsDesc')
     : searchQuery.trim()
       ? t('common.noMatchingResults', { entity: 'add-ons', query: searchQuery.trim(), defaultValue: 'No {{entity}} matching "{{query}}"' })
       : t('attributes.list.noAddonsDesc');

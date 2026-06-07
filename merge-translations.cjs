@@ -112,7 +112,7 @@ const properEnglish = {
     "copy": "Copy",
     "copyFailed": "Failed to copy to clipboard",
     "creating": "Creating...",
-    "currencySymbol": "$",
+    "currencySymbol": "USD",
     "days": {
       "fri": "Fri",
       "mon": "Mon",

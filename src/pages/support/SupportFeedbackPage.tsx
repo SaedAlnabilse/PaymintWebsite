@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   ArrowLeft,
   BarChart3,
@@ -68,6 +69,7 @@ function formatDate(value: string) {
 }
 
 export const SupportFeedbackPage = () => {
+  const { t } = useTranslation();
   const { isAuthenticated, isLoading: authLoading, account } = useAuth();
   const [feedback, setFeedback] = useState<FeedbackItem[]>([]);
   const [stats, setStats] = useState<FeedbackStats>({
@@ -125,6 +127,8 @@ export const SupportFeedbackPage = () => {
   }, [fetchFeedback, isAuthenticated, isSupportTeam]);
 
   const topCategory = useMemo(() => stats.byCategory[0], [stats.byCategory]);
+  const hasFeedbackSearch = searchQuery.trim().length > 0;
+  const hasFeedbackFilters = statusFilter !== 'all' || categoryFilter !== 'all' || ratingFilter !== 'all';
 
   const updateFeedback = async (item: FeedbackItem, status: string) => {
     try {
@@ -246,8 +250,16 @@ export const SupportFeedbackPage = () => {
           ) : feedback.length === 0 ? (
             <div className="rounded-2xl border border-gray-100 bg-white p-16 text-center dark:border-white/10 dark:bg-white/[0.03]">
               <Inbox className="mx-auto mb-4 h-14 w-14 text-gray-300 dark:text-gray-600" />
-              <h3 className="font-barlow mb-2 text-lg font-black text-gray-900 dark:text-white">No feedback found</h3>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Try a different filter or clear the search.</p>
+              <h3 className="font-barlow mb-2 text-lg font-black text-gray-900 dark:text-white">
+                {hasFeedbackSearch ? t('common.noResults') : hasFeedbackFilters ? t('common.noFilteredResults') : 'No Feedback Found'}
+              </h3>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                {hasFeedbackSearch
+                  ? t('common.noMatchingResults', { entity: 'feedback', query: searchQuery.trim(), defaultValue: 'No {{entity}} matching "{{query}}"' })
+                  : hasFeedbackFilters
+                    ? t('common.noFilteredResultsDesc')
+                    : 'No feedback is available yet.'}
+              </p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -278,7 +290,7 @@ export const SupportFeedbackPage = () => {
                         <span>{item.userName || 'Anonymous'}</span>
                         {item.userEmail && <span>{item.userEmail}</span>}
                         {item.route && <span>{item.route}</span>}
-                        {item.contactConsent && <span className="font-bold text-mintcom-green">Contact allowed</span>}
+                        {item.contactConsent && <span className="font-bold text-mintcom-green">Contact Allowed</span>}
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-2 lg:w-80 lg:justify-end">

@@ -548,18 +548,18 @@ export function BrandLocationsPage() {
                     <Store size={48} className="mx-auto text-gray-300 dark:text-gray-700 mb-4" />
                     <p className="text-lg font-medium text-gray-900 dark:text-white">
                         {isFilterOnlyEmptyState
-                            ? `${t('brand.dashboard.noLocations')} - ${t('brand.dashboard.adjustFilters')}`
+                            ? t('common.noFilteredResults')
                             : searchQuery.trim()
                                 ? t('common.noResults')
                                 : t('brand.dashboard.noLocations')}
                     </p>
-                    {!isFilterOnlyEmptyState && (
-                        <p className="text-sm text-gray-500 mt-1">
-                            {searchQuery.trim()
+                    <p className="mx-auto mt-2 max-w-sm text-sm text-gray-500">
+                        {isFilterOnlyEmptyState
+                            ? t('common.noFilteredResultsDesc')
+                            : searchQuery.trim()
                                 ? t('common.noMatchingResults', { entity: 'locations', query: searchQuery.trim(), defaultValue: 'No {{entity}} matching "{{query}}"' })
                                 : t('brand.dashboard.addLocationsDesc')}
-                        </p>
-                    )}
+                    </p>
                     <div className="flex items-center justify-center gap-4 mt-6">
                         {hasActiveFilters ? (
                             <button

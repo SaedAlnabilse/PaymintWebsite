@@ -46,11 +46,13 @@ interface ApiError {
 }
 
 const customerSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
+  name: z.string().optional().or(z.literal('')),
   phone: z.string().optional().or(z.literal('')),
   email: z.string().email().optional().or(z.literal('')),
   address: z.string().optional(),
-  notes: z.string().optional(),
+}).refine((data) => data.name?.trim() || data.phone?.trim(), {
+  message: 'Enter a name or phone number',
+  path: ['name'],
 });
 
 type CustomerFormData = z.infer<typeof customerSchema>;
@@ -65,7 +67,6 @@ interface Customer {
   totalSpent: number;
   totalVisits: number;
   address?: string;
-  notes?: string;
 }
 
 interface CustomerStats {
@@ -243,11 +244,18 @@ export function CustomersPage() {
   const handleSaveCustomer = async (data: CustomerFormData) => {
     setIsSubmitting(true);
     try {
+      const payload = {
+        name: data.name?.trim() || undefined,
+        phone: data.phone?.trim() || undefined,
+        email: data.email?.trim() || undefined,
+        address: data.address?.trim() || undefined,
+      };
+
       if (editingCustomer) {
-        await api.patch(`/customers/${editingCustomer.id}`, data);
+        await api.patch(`/customers/${editingCustomer.id}`, payload);
         toast.success(t('customers.messages.updated'));
       } else {
-        await api.post('/customers', data);
+        await api.post('/customers', payload);
         toast.success(t('customers.messages.created'));
       }
       setShowModal(false);
@@ -343,7 +351,6 @@ export function CustomersPage() {
       phone: customer.phone,
       email: customer.email || '',
       address: customer.address || '',
-      notes: customer.notes || '',
     });
     setShowModal(true);
   };
@@ -370,7 +377,7 @@ export function CustomersPage() {
       }));
 
       exportToCSV(exportData, 'customers_registry', {
-        name: t('customers.form.name'),
+        name: t('common.name', { defaultValue: 'Name' }),
         phone: t('customers.form.phone'),
         email: t('customers.form.email'),
         tier: t('rewards.items.tier', { defaultValue: 'Tier' }),
@@ -409,7 +416,7 @@ export function CustomersPage() {
             <span>{t('orders.export')}</span>
           </button>
           <button
-            onClick={() => { setEditingCustomer(null); reset({ name: '', phone: '', email: '', address: '', notes: '' }); setShowModal(true); }}
+            onClick={() => { setEditingCustomer(null); reset({ name: '', phone: '', email: '', address: '' }); setShowModal(true); }}
             className="flex items-center gap-2 px-3 sm:px-5 py-2.5 sm:py-3 rounded-xl bg-mintcom-green text-black font-bold text-sm hover:bg-[#5fa888] transition-all shadow-sm touch-target"
           >
             <Plus size={18} />
@@ -484,7 +491,7 @@ export function CustomersPage() {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.02]">
-                    <th className="px-6 py-4 text-[11px] font-bold text-gray-400 tracking-widest uppercase">{t('customers.form.name')}</th>
+                    <th className="px-6 py-4 text-[11px] font-bold text-gray-400 tracking-widest uppercase">{t('common.name', { defaultValue: 'Name' })}</th>
                     <th className="px-6 py-4 text-[11px] font-bold text-gray-400 tracking-widest uppercase">{t('customers.form.phone')}</th>
                     <th className="px-6 py-4 text-[11px] font-bold text-gray-400 tracking-widest uppercase">{t('rewards.items.tier', { defaultValue: 'Tier' })}</th>
                     <th className="px-6 py-4 text-[11px] font-bold text-gray-400 tracking-widest uppercase">{t('customers.details.points')}</th>
@@ -604,7 +611,7 @@ export function CustomersPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-gray-500 uppercase tracking-wider px-1">
-                      {formatInputLabel(t('customers.form.name'), t('common.locale'))}
+                      {formatInputLabel(t('common.name', { defaultValue: 'Name' }), t('common.locale'))}
                     </label>
                     <div className="relative">
                       <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -659,17 +666,6 @@ export function CustomersPage() {
                       className="w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl text-sm font-medium focus:ring-2 focus:ring-mintcom-green/20 focus:border-mintcom-green outline-none transition-all"
                     />
                   </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider px-1">
-                    {formatInputLabel(t('common.notes'), t('common.locale'))}
-                  </label>
-                  <textarea maxLength={1000}
-                    {...register('notes')}
-                    rows={3}
-                    className="w-full p-4 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl text-sm font-medium focus:ring-2 focus:ring-mintcom-green/20 focus:border-mintcom-green outline-none transition-all resize-none"
-                  />
                 </div>
 
                 <div className="pt-4 flex gap-3">
@@ -782,7 +778,7 @@ export function CustomersPage() {
                 </div>
 
                 {/* Contact Info */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 gap-6">
                   <div className="space-y-4">
                     <h4 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">{t('customers.details.contact')}</h4>
                     <div className="space-y-3">
@@ -799,12 +795,6 @@ export function CustomersPage() {
                         <span className="font-medium">{selectedCustomer.address || '—'}</span>
                       </div>
                     </div>
-                  </div>
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">{t('common.notes')}</h4>
-                    <p className="text-sm text-gray-500 font-medium leading-relaxed italic">
-                      {selectedCustomer.notes || t('customers.messages.noNotes')}
-                    </p>
                   </div>
                 </div>
 

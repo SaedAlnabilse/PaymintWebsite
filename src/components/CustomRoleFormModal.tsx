@@ -259,7 +259,7 @@ export function CustomRoleFormModal({
   const [backofficeAccess, setBackofficeAccess] = useState(false);
 
   // Permissions State
-  const [permissions, setPermissions] = useState<string[]>([]); // Pos permissions
+  const [permissions, setPermissions] = useState<string[]>([]); // POS permissions
   const [backofficePermissions, setBackofficePermissions] = useState<string[]>([]); // Back office permissions
 
   // Discount State
@@ -551,7 +551,7 @@ export function CustomRoleFormModal({
                 </div>
               </div>
 
-              {/* Pos Section */}
+              {/* POS Section */}
               <div className="rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 overflow-hidden transition-all duration-300">
                 <div
                   className="flex items-center justify-between p-5 cursor-pointer hover:bg-gray-100/50 dark:hover:bg-white/[0.02]"
@@ -594,7 +594,7 @@ export function CustomRoleFormModal({
                           </div>
                         </div>
 
-                        {/* Pos Permissions List */}
+                        {/* POS Permissions List */}
                         <div className="space-y-3">
                           {POS_PERMISSIONS.map(perm => (
                             <div

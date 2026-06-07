@@ -163,7 +163,7 @@ export const IdeaDetailPage = () => {
     }
 
     if (!idea) {
-        return <div className="min-h-screen bg-gray-50 dark:bg-[#050505] p-20 text-center">Idea not found</div>;
+        return <div className="min-h-screen bg-gray-50 dark:bg-[#050505] p-20 text-center">Idea Not Found</div>;
     }
 
     const status = statusConfig[idea.status];

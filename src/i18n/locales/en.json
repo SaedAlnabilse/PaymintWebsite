@@ -26,11 +26,11 @@
       },
       "v2": {
         "description": "We developed Mintcom in close collaboration with business owners and frontline staff. The result is an intuitive system that can be learned in minutes, not days. Guided in-app tours and clear workflows ensure users always know what to do and how to do it.",
-        "title": "Built For Simplicity"
+        "title": "Built for Simplicity"
       },
       "v3": {
         "description": "Speed, reliability, and usability are central to everything we build. Mintcom is engineered for fast transactions and smooth daily operations. Our UI and workflows are designed using behavioral insights and user interaction analysis, ensuring that critical actions are easy to access and setup is quick and effortless.",
-        "title": "Performance-driven Design"
+        "title": "Performance-Driven Design"
       }
     }
   },
@@ -91,7 +91,7 @@
     "internal": "Internal",
     "ip": "IP address",
     "loading": "Loading logs...",
-    "logDetails": "Log details",
+    "logDetails": "Log Details",
     "noLogs": "No logs found.",
     "owner": "Owner",
     "searchPlaceholder": "Search logs...",
@@ -130,7 +130,7 @@
       "updated": "Admin updated"
     },
     "newAdmin": "New Admin",
-    "noAdmins": "No admins",
+    "noAdmins": "No Admins",
     "noAdminsDesc": "Add an admin to help manage your business.",
     "noLocations": "No locations assigned",
     "searchPlaceholder": "Search admins...",
@@ -140,13 +140,13 @@
   "attributes": {
     "confirm": {
       "deleteGroupMessage": "Are you sure you want to archive add-on group \"{{name}}\"? This will archive its options as well, remove it from POS add-on selection, and it can only be reactivated from Location Portal website (back-office).",
-      "deleteGroupTitle": "Archive Add-on Group",
+      "deleteGroupTitle": "Archive Add-On Group",
       "deleteOptionMessage": "Are you sure you want to archive add-on option \"{{name}}\"? It will be removed from POS add-on selection and can only be reactivated from Location Portal website (back-office).",
       "deleteOptionTitle": "Archive Option",
       "reactivateGroupMessage": "Reactivate \"{{name}}\" and restore the options archived with this group? Historical order option snapshots stay unchanged.",
       "reactivateOptionMessage": "Reactivate \"{{name}}\" so it can be selected in new sales again? Historical order option snapshots stay unchanged."
     },
-    "editAttribute": "Edit Add-on",
+    "editAttribute": "Edit Add-On",
     "errors": {
       "deleteFailed": "Failed to archive attribute",
       "deletionBlocked": "Archive blocked",
@@ -179,7 +179,7 @@
       "availableTip": "If the add-on is currently out of stock, you can uncheck this at any time.",
       "groupNameLabel": "Group Name",
       "groupNamePlaceholder": "E.g. Cooking preference",
-      "groupTitle": "Add-on Group",
+      "groupTitle": "Add-On Group",
       "infoDesc": "Add options like 'small' or 'large' after saving.",
       "infoTitle": "Info",
       "multiple": "Multi Select",
@@ -189,7 +189,7 @@
       "nameTip": "Name (e.g. size, sauce).",
       "optionNameLabel": "Option Name",
       "optionNamePlaceholder": "E.g. Double espresso",
-      "optionTitle": "Add-on Option",
+      "optionTitle": "Add-On Option",
       "priceLabel": "Price",
       "requiredDesc": "Customer must select an option",
       "requiredLabel": "Required",
@@ -219,7 +219,7 @@
       "optionReactivated": "Add-on option reactivated",
       "optionUpdated": "Option updated"
     },
-    "newAttribute": "New Add-on",
+    "newAttribute": "New Add-On",
     "newGroup": "New Group",
     "stats": {
       "groups": "Attributes/Groups",
@@ -228,10 +228,15 @@
       "withPrice": "With price"
     },
     "subtitle": "Manage Extra Options and Pricing",
-    "title": "Add-on"
+    "title": "Add-On"
   },
   "auth": {
     "errors": {
+      "appleCancelled": "Apple sign-in was cancelled",
+      "appleConfigMissing": "Apple sign-in is not configured for this site yet.",
+      "appleLoadFailed": "Failed to load Apple sign-in",
+      "appleNoToken": "Could not get Apple credentials. Please try again.",
+      "appleUnavailable": "Apple sign-in is currently unavailable",
       "clickGoogleDirectly": "Please click the \"Sign in with Google\" button directly to continue.",
       "googleCancelled": "Google sign-in was cancelled",
       "googleInitFailed": "Failed to initialize Google sign-in",
@@ -240,11 +245,16 @@
       "googlePromptFailed": "Google sign-in prompt failed",
       "googleUnavailable": "Google sign-in is currently unavailable"
     },
+    "apple": {
+      "continueWith": "Continue with Apple",
+      "signInWith": "Sign In with Apple",
+      "signUpWith": "Sign Up with Apple"
+    },
     "forgotPassword": {
       "backToLogin": "Back to login",
       "didntReceive": "Didn't receive the link?",
       "emailLabel": "Email Address",
-      "emailSent": "Email sent",
+      "emailSent": "Email Sent",
       "linkSentTo": "A reset link has been sent to",
       "resetLinkSent": "Reset link sent!",
       "sendLink": "Send reset link",
@@ -254,9 +264,9 @@
     },
     "google": {
       "continueWith": "Continue with Google",
-      "signIn": "Sign in with Google",
-      "signInWith": "Sign in with Google",
-      "signUpWith": "Sign up with Google"
+      "signIn": "Sign In with Google",
+      "signInWith": "Sign In with Google",
+      "signUpWith": "Sign Up with Google"
     },
     "login": {
       "ariaCloseModal": "Close modal",
@@ -278,7 +288,7 @@
       "irisScanner": "Iris Scanner",
       "keepLoggedIn": "Keep me logged in",
       "loggingIn": "Logging in...",
-      "loginButton": "Log in",
+      "loginButton": "Log In",
       "newSignIn": "New sign in",
       "noAccount": "Don't have an account?",
       "notRegistered": "Not yet registered? ",
@@ -292,7 +302,7 @@
       "showPassword": "Show password",
       "signingIn": "Signing in...",
       "signingOut": "Signing out...",
-      "signUp": "Sign up",
+      "signUp": "Sign Up",
       "subtitle": "Log In to Your Account to Continue",
       "title": "Welcome Back",
       "welcomeBack": "Welcome back"
@@ -348,7 +358,7 @@
       "getNewLink": "Get new link",
       "goToLogin": "Go to login",
       "invalidLink": "Invalid or expired reset link",
-      "invalidLinkSubtitle": "This link is invalid or expired",
+      "invalidLinkSubtitle": "This Link Is Invalid or Expired",
       "invalidLinkTitle": "Invalid Link",
       "passwordHighlight": "Password",
       "passwordLabel": "New Password",
@@ -364,7 +374,7 @@
     "signup": {
       "allFeaturesIncluded": "All features included",
       "backButton": "Back",
-      "checkEmail": "Check your email",
+      "checkEmail": "Check Your Email",
       "clickToVerify": "Click the link in your email to verify your account",
       "confirmPasswordLabel": "Confirm Password",
       "confirmPasswordPlaceholder": "Confirm your password",
@@ -378,7 +388,7 @@
       "feature1Desc": "Manage all your locations and brands from a single interface.",
       "feature1Title": "Unified Dashboard",
       "feature2Desc": "Monitor sales, inventory, and staff performance as it happens.",
-      "feature2Title": "Real-time Analytics",
+      "feature2Title": "Real-Time Analytics",
       "feature3Desc": "Industry-standard security for all your transactions and data.",
       "feature3Title": "Secure Payments",
       "feature4Desc": "Control access levels and track employee productivity easily.",
@@ -435,7 +445,7 @@
       "successTitle": "Email Verified!",
       "verified": "Your email has been successfully verified",
       "verifying": "Verifying your email...",
-      "verifyingSubtitle": "Verifying your account",
+      "verifyingSubtitle": "Verifying Your Account",
       "verifyingTitle": "Verifying Email"
     }
   },
@@ -607,7 +617,7 @@
       "noMatchingResults": "No {{entity}} matching \"{{query}}\"",
       "noResults": "No results found",
       "searchPlaceholder": "Search FAQs...",
-      "subtitle": "Find Answers to Common Questions about Mintcom",
+      "subtitle": "Find Answers to Common Questions About Mintcom",
       "title": "Frequently Asked Questions",
       "tryDifferent": "Try different keywords or browse categories"
     },
@@ -650,7 +660,7 @@
     },
     "tasks": {
       "aboutMinutes": "About {{minutes}} minutes",
-      "allDoneSubtitle": "Your location is fully set up and ready to go",
+      "allDoneSubtitle": "Your Location Is Fully Set Up and Ready to Go",
       "allDoneTitle": "All Done!",
       "categories": {
         "action": "New Category",
@@ -687,7 +697,7 @@
         "description": "Set logo, header, address, Tax ID, and footer message exactly how customers should see it.",
         "title": "Configure Receipt Layout"
       },
-      "setupGuideSubtitle": "Set up your location step by step, then run your first test sale with confidence",
+      "setupGuideSubtitle": "Set Up Your Location Step by Step, Then Run Your First Test Sale with Confidence",
       "setupGuideTitle": "Setup Guide",
       "staff": {
         "action": "Add Staff",
@@ -706,8 +716,10 @@
   "common": {
     "actions": "Actions",
     "active": "Active",
+    "activeFilters": "Active filters",
     "add": "Add",
     "all": "All",
+    "allShifts": "All Shifts",
     "allStaff": "All Staff",
     "allStatuses": "All Statuses",
     "and": "and",
@@ -738,6 +750,8 @@
     "connecting": "Connecting...",
     "continue": "Continue",
     "copied": "Copied!",
+    "shift": "Shift",
+    "staff": "Staff",
     "copy": "Copy",
     "copyFailed": "Copy failed",
     "countries": {
@@ -839,11 +853,13 @@
     "name": "Name",
     "next": "Next",
     "noData": "No data available",
+    "noFilteredResults": "No Results Match Your Filters",
+    "noFilteredResultsDesc": "Adjust or clear filters to see results.",
     "noMatchingResults": "No {{entity}} matching \"{{query}}\"",
     "none": "None",
     "noOptions": "No options available",
     "noRecordsFound": "No records found",
-    "noResults": "No results found",
+    "noResults": "No Results Found",
     "notAvailable": "N/A",
     "note": "Note",
     "notes": "Notes",
@@ -977,10 +993,10 @@
       "uiUxDesc": "Design, layout, and user experience improvements."
     },
     "cta": {
-      "joinHero": "Join this conversation",
+      "joinHero": "Join This Conversation",
       "joinHeroDesc": "Share your thoughts and help build a better multi-location business.",
       "subtitle": "Help others, earn badges, and get early access to new features. Join the Mintcom community today!",
-      "title": "Become A Community Champion"
+      "title": "Become a Community Champion"
     },
     "difficulty": {
       "advanced": "Advanced",
@@ -998,28 +1014,28 @@
       "errors": {
         "category": "Please select a topic",
         "description": "Please provide some context",
-        "title": "Title is required"
+        "title": "Title Is Required"
       },
       "featured_1": {
-        "title": "Best Practices For Managing Multiple Locations"
+        "title": "Best Practices for Managing Multiple Locations"
       },
       "featured_2": {
-        "title": "How We Reduced Checkout Time By 40%"
+        "title": "How We Reduced Checkout Time by 40%"
       },
       "featured_3": {
-        "title": "Integrating Mintcom With Our Recipe operations system"
+        "title": "Integrating Mintcom with Our Recipe Operations System"
       },
       "item_1": {
         "excerpt": "I recently expanded to 3 locations and looking for tips on how to manage inventory and staff across all of them efficiently...",
-        "title": "Best Practices For Managing Multiple Locations"
+        "title": "Best Practices for Managing Multiple Locations"
       },
       "item_2": {
         "excerpt": "After optimizing our menu layout and training staff on quick keys, we managed to significantly speed up our service...",
-        "title": "How We Reduced Checkout Time By 40%"
+        "title": "How We Reduced Checkout Time by 40%"
       },
       "item_3": {
         "excerpt": "Has anyone successfully integrated Mintcom with a third-party inventory management system? Looking for recommendations...",
-        "title": "Integrating Mintcom With Our Recipe operations system"
+        "title": "Integrating Mintcom with Our Recipe Operations System"
       },
       "item_4": {
         "excerpt": "I want to add our logo and customize the footer of our receipts. Is this possible with the current version?",
@@ -1027,7 +1043,7 @@
       },
       "item_5": {
         "excerpt": "Looking for advice on the best loyalty program setup for a coffee shop. Should I use points or stamps?",
-        "title": "Setting Up Loyalty Points For Coffee Shop"
+        "title": "Setting Up Loyalty Points for Coffee Shop"
       },
       "loginToReply": "Sign in to reply...",
       "new": "Start a Discussion",
@@ -1035,7 +1051,7 @@
       "replyPlaceholder": "What are your thoughts?",
       "search_placeholder": "Search discussions...",
       "submitError": "Failed to start discussion.",
-      "submitSubtitle": "Connect with other business owners and share your expertise.",
+      "submitSubtitle": "Connect with Other Business Owners and Share Your Expertise.",
       "submitSuccess": "Discussion started!",
       "submitTitle": "Start a Discussion",
       "subtitle": "Ask Questions and Share Knowledge with the Community",
@@ -1044,17 +1060,17 @@
       "titleLabel": "Discussion Title",
       "titlePlaceholder": "e.g. How do you handle rush hour staff scheduling?",
       "trending": "Trending Discussions",
-      "trending_subtitle": "Popular Conversations In The Community"
+      "trending_subtitle": "Popular Conversations in the Community"
     },
     "guides": {
       "all": "All Guides",
       "browse_all": "Browse all",
       "description": "Learn best practices and master every feature with our guides.",
-      "empty_subtitle": "Try Adjusting Your Search Or Filters",
+      "empty_subtitle": "Try Adjusting Your Search or Filters",
       "empty_title": "No Guides Found",
       "featured": "Featured Guides",
       "item_1": {
-        "title": "Complete Setup Guide For New Users"
+        "title": "Complete Setup Guide for New Users"
       },
       "item_2": {
         "title": "Optimizing Your Menu Layout"
@@ -1066,16 +1082,16 @@
         "title": "Employee Management Best Practices"
       },
       "popular": "Popular Guides",
-      "popular_subtitle": "Most-read Tutorials From The Community",
+      "popular_subtitle": "Most-Read Tutorials from the Community",
       "search_placeholder": "Search guides...",
       "start": "Start Learning",
-      "subtitle": "Learn Everything about Mintcom with Our Comprehensive Guides",
+      "subtitle": "Learn Everything About Mintcom with Our Comprehensive Guides",
       "title": "Guides & Tutorials"
     },
     "hub": {
       "hero": {
         "search_placeholder": "Search discussions, ideas, or guides...",
-        "subtitle": "Join thousands of business owners sharing tips, requesting features, and helping each other succeed",
+        "subtitle": "Join Thousands of Business Owners Sharing Tips, Requesting Features, and Helping Each Other Succeed",
         "title_part1": "Learn, Share,",
         "title_part2": "Grow",
         "title_part3": "Together"
@@ -1091,26 +1107,26 @@
       "description": "Vote on feature requests and help shape the future of Mintcom.",
       "descriptionLabel": "Details & Context",
       "descriptionPlaceholder": "Describe the problem this solves and how you envision it working...",
-      "empty_subtitle": "Try Adjusting Your Search Or Filters",
+      "empty_subtitle": "Try Adjusting Your Search or Filters",
       "empty_title": "No Ideas Found",
       "errors": {
         "category": "Please select a category",
         "description": "Please provide more details",
         "descriptionLength": "Description must be at least 20 characters",
-        "title": "Please enter a title"
+        "title": "Please Enter a Title"
       },
       "explore": "Explore Ideas",
       "item_1": {
         "description": "Many users work in dim environments (bars, restaurants). A dark mode would reduce eye strain and look more professional.",
-        "title": "Dark Mode For POS Tablet App"
+        "title": "Dark Mode for POS Tablet App"
       },
       "item_2": {
         "description": "Allow connecting multiple printers to a single tablet - one for customer receipts, one for kitchen orders.",
-        "title": "Multiple Receipt Printers Per Station"
+        "title": "Multiple Receipt Printers per Station"
       },
       "item_3": {
         "description": "Support for a secondary display showing order details and total to customers during checkout.",
-        "title": "Customer-facing Display Support"
+        "title": "Customer-Facing Display Support"
       },
       "item_4": {
         "description": "Better offline functionality - sync orders automatically when connection is restored.",
@@ -1122,7 +1138,7 @@
       },
       "item_6": {
         "description": "Let customers scan a QR code at their table to view menu and place orders from their phone.",
-        "title": "QR Code Ordering For Customers"
+        "title": "QR Code Ordering for Customers"
       },
       "post": "Post Idea",
       "search_placeholder": "Search ideas...",
@@ -1130,7 +1146,7 @@
       "submit": "Share an Idea",
       "submit_first": "Submit the First Idea",
       "submitError": "Failed to submit idea. Please try again.",
-      "submitSubtitle": "Help us build the perfect POS by sharing your feature requests.",
+      "submitSubtitle": "Help Us Build the Perfect POS by Sharing Your Feature Requests.",
       "submitSuccess": "Idea submitted! Our team will review it soon.",
       "submitTitle": "Submit an Idea",
       "subtitle": "Vote and Help Shape the Future of Mintcom",
@@ -1138,7 +1154,7 @@
       "titleLabel": "Idea Summary",
       "titlePlaceholder": "e.g. Dark mode for the merchant portal",
       "top": "Top Feature Ideas",
-      "top_subtitle": "Vote To Help Prioritize What We Build Next",
+      "top_subtitle": "Vote to Help Prioritize What We Build Next",
       "total": "Total Ideas",
       "upvote": "Upvote Idea",
       "voted": "Voted"
@@ -1149,7 +1165,7 @@
       "by": "by",
       "categories": "Categories",
       "commentRules": "Be respectful & constructive",
-      "comments": "comments",
+      "comments": "Comments",
       "difficulty": "Difficulty",
       "formattingEnabled": "Basic formatting supported",
       "hot": "Hot",
@@ -1423,7 +1439,7 @@
     "refresh": "Refresh",
     "revenueChart": {
       "currentTitle": "Current Shift Sales",
-      "last24hTitle": "Sales (Last 24h)",
+      "last24hTitle": "Sales (Last 24H)",
       "noData": "No revenue data",
       "noDataDesc": "No sales activity recorded for the selected period.",
       "previousTitle": "Previous Shift Sales",
@@ -1571,7 +1587,7 @@
       "created": "Discount Created Successfully",
       "deleted": "Discount deactivated successfully",
       "duplicate": "The selected discount is already in use. Please choose a different one.",
-      "emptySubtitle": "Create your first discount to start offering special deals to your customers",
+      "emptySubtitle": "Create Your First Discount to Start Offering Special Deals to Your Customers",
       "emptyTitle": "No Discounts Created Yet",
       "loadFailed": "Failed To Load Discounts",
       "noMatchingResults": "No {{entity}} Matching \"{{query}}\"",
@@ -1753,7 +1769,7 @@
     "quantity": "Quantity",
     "search": "Search items...",
     "stock": "Stock",
-    "subtitle": "View and update recipes and ingredients",
+    "subtitle": "View and Update Recipes and Ingredients",
     "tips": {
       "quantity": "Current stock available for this ingredient.",
       "unit": "The primary unit used to measure this ingredient (e.g., Kg, Liters)."
@@ -1821,7 +1837,7 @@
       "realTime": "Real-time Sync",
       "shiftAlerts": "Shift Alerts",
       "stockAlerts": "Stock Alerts",
-      "subtitle": "Complete control over your business from anywhere in the world",
+      "subtitle": "Complete Control over Your Business from Anywhere in the World",
       "title": "Powerful Admin Dashboard",
       "title1": "Full Visibility.",
       "title2": "Full Control.",
@@ -1876,7 +1892,7 @@
           "ownerDashboard": "Owner Dashboard",
           "performanceOverview": "Performance Overview",
           "live": "Live",
-          "revenueAmount": "$24.8K",
+          "revenueAmount": "24.8K USD",
           "ordersAmount": "1,402",
           "locationsAmount": "6",
           "salesTrend": "Sales Trend",
@@ -1919,12 +1935,12 @@
       "sendAnother": "Send another message",
       "sending": "Sending...",
       "sendMessage": "Send Message",
-      "subtitle": "Have questions? our team is here to help",
-      "success": "Message sent successfully!",
+      "subtitle": "Have Questions? Our Team Is Here to Help",
+      "success": "Message Sent Successfully!",
       "terms": "By submitting, you agree to our Terms of Service and Privacy Policy.",
       "termsAgree": "I agree to the",
       "termsOfService": "Terms of Service",
-      "title": "Get In Touch",
+      "title": "Get in Touch",
       "titleHighlight": "With Us",
       "validation": {
         "emailInvalid": "Please enter a valid email address",
@@ -1952,7 +1968,7 @@
       "playStore": "Play Store",
       "qrCode": "Scan QR code to download",
       "requirements": "Requires iOS 13+ or Android 8+",
-      "subtitle": "Download the app and transform your business",
+      "subtitle": "Download the App and Transform Your Business",
       "title": "Get Started Today",
       "titleHighlight": "Transform Your Business",
       "totalSales": "Total Sales",
@@ -1966,7 +1982,7 @@
       "cards": {
         "complete": {
           "description": "Mintcom is more than a checkout system. You get a powerful reporting engine with advanced filters, staff and role management, customer profiles and loyalty programs, discounts, raw material and stock tracking, and much more, all included in one fixed monthly plan.",
-          "title": "A Complete Solution With No Hidden Costs"
+          "title": "A Complete Solution with No Hidden Costs"
         },
         "multiBranch": {
           "description": "Run one store or many. Mintcom supports multiple merged branches or separate stores under one unified dashboard. Manage staff, products, sales, and performance across all locations from a single control panel.",
@@ -1974,7 +1990,7 @@
         },
         "realUsers": {
           "description": "Mintcom is built for business owners, cashiers, and managers, not tech experts. We worked closely with real users to design an intuitive experience that minimizes training time. From login to first sale in under 10 minutes.",
-          "title": "Designed For Real Users"
+          "title": "Designed for Real Users"
         },
         "security": {
           "description": "Your data is fully encrypted, securely stored, and automatically archived. We've invested heavily in top-tier security standards to ensure your business information is protected at all times.",
@@ -1987,7 +2003,7 @@
       "seamlessSync": "Seamless real-time synchronization across all devices",
       "seeInAction": "See Mintcom in Action",
       "subtitle": "At Mintcom, we believe in keeping things simple: simple onboarding, simple installation, simple setup, and simple pricing",
-      "title": "Simple is",
+      "title": "Simple Is",
       "titleHighlight": "Superior",
       "verified": "Verified",
       "videoTitle": "Mintcom Demo Video"
@@ -2084,7 +2100,7 @@
           "specs": "10.5\" Touchscreen, Intel N200"
         }
       },
-      "subtitle": "Mintcom works with most standard tablets and thermal printers. here are some models we recommend",
+      "subtitle": "Mintcom Works with Most Standard Tablets and Thermal Printers. Here Are Some Models We Recommend",
       "tablets": {
         "description": "Powerful handheld and desktop devices for your staff",
         "name": "Tablets & Terminals",
@@ -2120,7 +2136,7 @@
         "revenue": "Revenue",
         "table": "Table"
       },
-      "subtitle": "The all-in-one pos solution built for growth, efficiency, and seamless operations",
+      "subtitle": "The All-in-One POS Solution Built for Growth, Efficiency, and Seamless Operations",
       "table": "Table",
       "takeaway": "Takeaway",
       "thisMonth": "this month",
@@ -2143,7 +2159,7 @@
       "additionalLocations": "Additional Locations",
       "additionalLocationsDesc": "Each additional location after your first",
       "addLocation": "Add Location",
-      "alreadySignedIn": "You are already signed in",
+      "alreadySignedIn": "You Are Already Signed In",
       "alreadySignedInDesc": "You can continue to your Dashboard to manage your business.",
       "billedAnnually": "Billed annually.",
       "features": {
@@ -2216,7 +2232,7 @@
       "setupFee": "No setup fees or hidden charges. Cancel anytime.",
       "standardPrice": "20 USD",
       "startFreeTrial": "Start Free Trial",
-      "subtitle": "Your \"aha\" moment is just minutes away",
+      "subtitle": "Your \"Aha\" Moment Is Just Minutes Away",
       "title": "Get Started",
       "viewDetails": "View Details",
       "whatsIncluded": "What's included in the plan",
@@ -2281,7 +2297,7 @@
         "demo": {
           "ai": {
             "a1": "Espresso led with 142 cups, up 18% from yesterday.",
-            "a2": "Try a \"Croissant + Latte\" bundle at $5.50 — projects +12% basket.",
+            "a2": "Try a \"Croissant + Latte\" bundle at 5.50 USD — projects +12% basket.",
             "a3": "Expect 320–360 orders, peak 9–11 AM. Schedule 2 baristas.",
             "placeholder": "Pick a prompt above",
             "q1": "What sold best today?",
@@ -2304,7 +2320,7 @@
             "tier": "Tier"
           },
           "mobile": {
-            "n1": "New order #4218 — $24.50",
+            "n1": "New order #4218 — 24.50 USD",
             "n2": "Daily target reached 🎉",
             "n3": "Low stock: Espresso beans",
             "n4": "Sara clocked in"
@@ -2398,7 +2414,7 @@
           "yield": "Yield"
         },
         "sku": "SKU",
-        "subtitle": "Feature receipt",
+        "subtitle": "Feature Receipt",
         "tagline": "Built for businesses on the move.",
         "thanks": "Thank you",
         "total": "Included",
@@ -2463,7 +2479,7 @@
       "declineButton": "Decline and sign out",
       "reviewPrivacy": "Review Privacy Policy",
       "reviewTerms": "Review Terms of Service",
-      "title": "We've updated our policies"
+      "title": "We've Updated Our Policies"
     },
     "cookies": {
       "backToHome": "Back to Home",
@@ -2493,7 +2509,7 @@
         "questionsTitle": "Questions About Cookies",
         "thirdParty_1": "If configured and accepted, we may use third-party technologies from Google Analytics and Meta Pixel to measure site traffic, campaign performance, and advertising effectiveness.",
         "thirdPartyTitle": "Third-Party Services",
-        "typesTitle": "Types Of Cookies",
+        "typesTitle": "Types of Cookies",
         "updates_1": "We may update this Cookie Policy from time to time to reflect changes in our practices or for operational, legal, or regulatory reasons.",
         "updates_2": "We will notify you of any material changes by posting the updated policy on this page with a new effective date.",
         "updatesTitle": "Policy Updates",
@@ -2508,21 +2524,21 @@
       "legalCenter": "Legal Center",
       "openSettings": "OPEN COOKIE SETTINGS",
       "preferenceCenter": "Cookie Preference Center",
-      "preferenceCenterSubtitle": "You can change your settings at any time by clicking the button below",
+      "preferenceCenterSubtitle": "You Can Change Your Settings at Any Time by Clicking the Button Below",
       "preferenceCenterTitle": "Preference Center",
       "preferences": {
         "save": "Save Preferences",
-        "subtitle": "Manage how cookies are used on this site",
+        "subtitle": "Manage How Cookies Are Used on This Site",
         "title": "Cookie Preferences"
       },
       "questions": "Questions?",
       "sections": {
-        "control": "How to control cookies",
+        "control": "How to Control Cookies",
         "thirdParty": "Third-Party Cookies",
         "types": "Types of Cookies",
-        "updates": "Updates to this policy",
-        "whatAre": "What are cookies?",
-        "whyUse": "Why do we use them?"
+        "updates": "Updates to This Policy",
+        "whatAre": "What Are Cookies?",
+        "whyUse": "Why Do We Use Them?"
       },
       "subtitle": "This policy explains how Mintcom uses cookies and similar technologies, including local storage and session storage, across the website and product.",
       "title": "Cookie Statement",
@@ -2565,7 +2581,7 @@
       },
       "deletion": {
         "desc": "You can request deletion of your Mintcom account and associated personal data at any time.",
-        "emailLabel": "Send deletion requests to:",
+        "emailLabel": "Send Deletion Requests To:",
         "retention": "We will delete or anonymize eligible personal data after verifying the request. Some records may be retained where required for billing, tax, fraud prevention, dispute resolution, security, or legal compliance.",
         "step1": "Email support@mintcompos.com from the email address connected to your Mintcom account, or include enough information for us to verify account ownership.",
         "step2": "Use the subject line \"Account and data deletion request\" and include the business, brand, or establishment name connected to the account.",
@@ -2782,9 +2798,9 @@
       "syncFailed": "Failed to sync data"
     },
     "newPrep": "New Prep",
-    "noInactiveRecipes": "No inactive recipes found",
+    "noInactiveRecipes": "No Inactive Recipes Found",
     "noInactiveRecipesDesc": "Archived recipes will appear here.",
-    "noRecipes": "No recipes found",
+    "noRecipes": "No Recipes Found",
     "noRecipesDesc": "Create a recipe to get started.",
     "numBatches": "Number of Batches",
     "prep": "Prep",
@@ -2792,7 +2808,7 @@
     "products": "Products",
     "runBatch": "Run Batch",
     "search": "Search recipes...",
-    "subtitle": "View and update recipes and ingredients",
+    "subtitle": "View and Update Recipes and Ingredients",
     "tips": {
       "targetItem": "The product on your menu that users order (e.g., Pepperoni Pizza).",
       "yield": "How much of the prep this recipe makes (e.g., 5 Liters of sauce)."
@@ -2827,7 +2843,7 @@
     },
     "signup": {
       "description": "Join thousands of businesses using Mintcom. Create your account and start your 30-day free trial.",
-      "title": "Sign Up | Start Your Free Trial With Mintcom"
+      "title": "Sign Up | Start Your Free Trial with Mintcom"
     },
     "terms": {
       "description": "Review our terms of service for using the Mintcom platform and services.",
@@ -2863,7 +2879,7 @@
     "screen": {
       "continue_portal": "Continue to Portal",
       "description": "Complete the onboarding workflow to configure account details, locations, and operational defaults.",
-      "subtitle": "Account setup steps",
+      "subtitle": "Account Setup Steps",
       "title": "Onboarding"
     },
     "select": "Select",
@@ -2918,10 +2934,10 @@
       "menuDesc": "Copy menu items, categories and their addons",
       "paymentMethods": "Payment Methods",
       "paymentMethodsDesc": "Card types and custom payment options",
-      "quickSetup": "Quick setup",
+      "quickSetup": "Quick Setup",
       "selectData": "Select data to duplicate:",
       "startFresh": "Do not import (Start fresh)",
-      "subtitle": "Tell us about your business location",
+      "subtitle": "Tell Us About Your Business Location",
       "title": "Location Details"
     },
     "step2": {
@@ -2965,7 +2981,7 @@
       "password": "Location Password",
       "passwordPlaceholder": "••••••••",
       "passwordTip": "At least 8 characters with uppercase, lowercase, and a number.",
-      "subtitle": "This is the ID used to access the POS application",
+      "subtitle": "This Is the ID Used to Access the POS Application",
       "title": "Create Location Login",
       "uniqueAccess": "Unique access:",
       "uniqueAccessDesc": "Each location needs its own ID and password."
@@ -2987,7 +3003,7 @@
       "passwordPlaceholder": "••••••••",
       "passwordTip": "At least 8 characters with uppercase, lowercase, and a number.",
       "step2Note": "This is step 2 of the POS login.",
-      "subtitle": "Create your personal account",
+      "subtitle": "Create Your Personal Account",
       "title": "Create Your Login",
       "username": "Admin Username",
       "usernamePlaceholder": "admin",
@@ -3026,7 +3042,7 @@
       "terms": "Terms",
       "userManual": "User Manual",
       "videoGuide": "Video Guide",
-      "welcomeTitle": "Welcome To Mintcom!"
+      "welcomeTitle": "Welcome to Mintcom!"
     },
     "tour": {
       "chatBotDesc": "Minto is always here to answer your questions and guide you through the system.",
@@ -3183,7 +3199,7 @@
       "items": {
         "addonName": "Add-on Name",
         "attributeGroup": "Attribute Group",
-        "breakdownTitle": "Category Breakdown ({{count}} items)",
+        "breakdownTitle": "Category Breakdown ({{count}} Items)",
         "byAddons": "By Add-ons",
         "byAttributes": "By Attributes (Groups)",
         "byCategory": "By Category",
@@ -3192,8 +3208,8 @@
         "categoryName": "Category Name",
         "grossRevenue": "Gross Revenue",
         "modifiers": "Add-ons",
-        "noData": "No transactional data identified for this period",
-        "noDataDesc": "Items will appear here once orders are completed.",
+        "noData": "No Data for This Period",
+        "noDataDesc": "No Data for This Period",
         "productName": "Product Name",
         "searchPlaceholder": "Search {{type}}...",
         "totalItems": "Total Units",
@@ -3380,7 +3396,7 @@
         "desc": "You have active locations linked to your account. Please deactivate or transfer them before proceeding.",
         "goToBilling": "View Plans",
         "goToLocations": "Go to locations",
-        "subtitle": "You have active locations that need to be resolved before proceeding",
+        "subtitle": "You Have Active Locations That Need to Be Resolved Before Proceeding",
         "title": "Active Locations Found"
       },
       "admins": "Admins",
@@ -3389,7 +3405,7 @@
       "brandLoginHint": "Use this ID to sign in to the brand dashboard.",
       "brandLoginId": "Brand Login ID",
       "brandLogins": "Brand Logins",
-      "brandLoginsSubtitle": "Login Credentials For Your Brand Dashboards",
+      "brandLoginsSubtitle": "Login Credentials for Your Brand Dashboards",
       "brands": "Brands",
       "cancel": "Cancel",
       "completeProfile": "Complete profile",
@@ -3436,11 +3452,11 @@
       "locationLoginHint": "Use this ID to sign in to this location dashboard.",
       "locationLoginId": "Location Login ID",
       "locationLogins": "Location Logins",
-      "locationLoginsSubtitle": "Login IDs for your POS locations",
+      "locationLoginsSubtitle": "Login IDs for Your POS Locations",
       "locations": "Locations",
       "locationsCount": "{{count}} locations",
       "loginId": "Login ID",
-      "noLocationsOrBrands": "No locations or brands found",
+      "noLocationsOrBrands": "No Locations or Brands Found",
       "noLocationsOrBrandsHint": "Get started by creating your first location or brand.",
       "privacy": "Privacy",
       "profileUpdated": "Profile updated successfully",
@@ -3480,7 +3496,7 @@
         }
       },
       "restore": "Restore",
-      "restoreAccount": "Restore account",
+      "restoreAccount": "Restore Account",
       "restoreAction": "Restore account",
       "restoreButton": "Restore account",
       "restored": "Account restored!",
@@ -3544,7 +3560,7 @@
       "cost": "Cost",
       "daysRemaining": "{{count}} days left",
       "deleteCard": "Delete Card",
-      "endingSoon": "Ending soon",
+      "endingSoon": "Ending Soon",
       "endingSoonDesc": "Your subscription is ending soon",
       "enterprise": "Enterprise",
       "expires": "Expires",
@@ -3614,7 +3630,7 @@
       "countSummary": "{{count}} Brands",
       "createBrand": "Create New Brand",
       "createBrandHint": "Group multiple locations under one brand for unified management.",
-      "createBrandSubtitle": "Set Up A New Brand To Manage Multiple Locations",
+      "createBrandSubtitle": "Set Up a New Brand to Manage Multiple Locations",
       "createBrandTitle": "Create New Brand",
       "created": "Created",
       "createFirst": "Create your first brand",
@@ -3623,7 +3639,7 @@
       "disclaimerAction": "I Understand",
       "disclaimerDesc": "To create a brand, you must have at least 2 locations that are not already part of another brand. Currently, all your locations are already grouped.",
       "disclaimerNoLocations": "You currently don't have enough locations to form a brand. A brand requires at least 2 locations.",
-      "disclaimerSubtitle": "All your locations are already linked to brands",
+      "disclaimerSubtitle": "All Your Locations Are Already Linked to Brands",
       "disclaimerTitle": "Unable to Create Brand",
       "failedToLoad": "Failed to load brands",
       "linkedLocations": "Linked Locations",
@@ -3640,7 +3656,7 @@
       "searchFilter": "Search & Filter",
       "searchPlaceholder": "Search Brands by Name or Login ID...",
       "selectedCount": "{{count}} Selected",
-      "selectLocationsToLink": "Select locations to link to this brand",
+      "selectLocationsToLink": "Select Locations to Link to This Brand",
       "subtitle": "Manage Multiple Locations Under One Brand",
       "title": "Brands",
       "tryAdjustingSearch": "Try Adjusting Your Search Or Filters",
@@ -3680,7 +3696,7 @@
         "selectMinLocations": "Select at least 2 locations to create a brand",
         "step1": "Brand details",
         "step2": "Link locations",
-        "step3": "Global access",
+        "step3": "Global Access",
         "title": "Create Brand"
       }
     },
@@ -3736,8 +3752,8 @@
       "back": "Back",
       "brand": "Brand",
       "brandCreated": "Brand created successfully!",
-      "brandDetails": "Brand details",
-      "brandDetailsSubtitle": "Enter Details For Your New Brand",
+      "brandDetails": "Brand Details",
+      "brandDetailsSubtitle": "Enter Details for Your New Brand",
       "brandName": "Brand name",
       "brandNamePlaceholder": "Enter brand name...",
       "brandNameToast": "Please enter a brand name",
@@ -3763,7 +3779,7 @@
       "securityTitle": "Security",
       "selectAll": "Select all",
       "selected": "Selected",
-      "selectedLocations": "Selected locations",
+      "selectedLocations": "Selected Locations",
       "selectMinLocations": "Select at least 2 locations to create a brand",
       "selectMinToast": "Select at least 2 locations to merge",
       "selectMore": "Select more",
@@ -3772,10 +3788,10 @@
         "details": "Brand details",
         "select": "Select locations"
       },
-      "subtitle": "Combine Multiple Locations Into A Single Brand",
+      "subtitle": "Combine Multiple Locations into a Single Brand",
       "success": "Success",
       "title": "Merge Locations",
-      "whyMerge": "Why merge?",
+      "whyMerge": "Why Merge?",
       "whyMergeDesc": "Merging locations into a brand lets you manage them together, share staff, and view unified reports."
     },
     "overview": {
@@ -3806,7 +3822,7 @@
       "salesTrends": "Sales Trends",
       "selectPeriod": "Select Period",
       "staffManagement": "Staff Management",
-      "subtitle": "You are managing {{count}} locations across {{brands}} brands",
+      "subtitle": "You Are Managing {{count}} Locations Across {{brands}} Brands",
       "title": "Owner Portal",
       "total": "Total",
       "totalBrands": "Total Brands",
@@ -3842,7 +3858,7 @@
       "global": "Global",
       "loading": "Loading roles...",
       "newRole": "New Role",
-      "noRoles": "No roles found",
+      "noRoles": "No Roles Found",
       "noRolesDesc": "Create a role here to share it across all your locations.",
       "permissions": "Permissions",
       "pos": {
@@ -3885,7 +3901,7 @@
       "allRoles": "All roles",
       "allStatus": "All status",
       "badge": "Team access",
-      "brandLabel": "brand",
+      "brandLabel": "Brand",
       "editDetails": "Edit Details",
       "enterPassword": "Please enter your password",
       "enterPasswordPlaceholder": "Enter your password to confirm",
@@ -3981,7 +3997,7 @@
       "visa": "Visa"
     },
     "cardBrands": "Card Brands",
-    "cardBrandsSubtitle": "Manage accepted card logos",
+    "cardBrandsSubtitle": "Manage Accepted Card Logos",
     "confirm": {
       "deleteCardMessage": "Deactivate \"{{name}}\"? It will no longer be available for future card payments, while historical reports keep the original card brand.",
       "deleteCardTitle": "Deactivate Card Brand",
@@ -4041,9 +4057,9 @@
       "expiryPlaceholder": "MM/YY",
       "saveForFuture": "Save card for future purchases",
       "secureVault": "Add card",
-      "subtitle": "Secure - 256-bit encrypted",
+      "subtitle": "Secure - 256-Bit Encrypted",
       "termsAndConditions": "Terms and Conditions",
-      "title": "Add payment card"
+      "title": "Add Payment Card"
     },
     "newType": "New Type",
     "noActiveCardBrands": "No active card brands found",
@@ -4052,7 +4068,7 @@
     "noInactiveCardBrands": "No inactive card brands found",
     "noInactivePaymentMethods": "No inactive payment methods found",
     "paymentTypes": "Digital Wallets & Apps",
-    "paymentTypesSubtitle": "Manage non-card payments such as Apple Pay, Uber, and Talabat",
+    "paymentTypesSubtitle": "Manage Non-Card Payments Such as Apple Pay, Uber, and Talabat",
     "setupDefaults": "Setup Defaults",
     "showLogo": "Show Logo",
     "subtitle": "Manage How You Accept Payments",
@@ -4171,7 +4187,7 @@
     },
     "editProduct": "Edit Product",
     "form": {
-      "addonsLabel": "Add-ons",
+      "addonsLabel": "Add-Ons",
       "addonsTip": "Extras.",
       "categoryLabel": "Category",
       "categoryTip": "Group.",
@@ -4251,7 +4267,7 @@
       "noMatches": "No matches found",
       "noMatchingResults": "No {{entity}} matching \"{{query}}\"",
       "noneSelected": "None selected",
-      "noProducts": "No products found",
+      "noProducts": "No Products Found",
       "noProductsDesc": "Your inventory is empty. Start by adding your first product.",
       "noResults": "No results found",
       "noResultsDesc": "No products matching \"{{query}}\"",
@@ -4264,7 +4280,7 @@
     "newProduct": "New Product",
     "reactivate": {
       "categoryProblem": "This product belongs to inactive category \"{{category}}\". Choose an active category or create a replacement category before reactivating.",
-      "categoryTitle": "Category needs attention",
+      "categoryTitle": "Category Needs Attention",
       "message": "Reactivate \"{{name}}\" so it can be used in new sales again? Historical receipts keep their original snapshots.",
       "selectActiveCategory": "Select an active category before reactivating this product."
     },
@@ -4322,7 +4338,7 @@
       "disclaimer": "History helps explain reporting changes when item or add-on details are updated over time.",
       "emptyValue": "Empty",
       "fieldImage": "Image",
-      "fieldLabel": "Changed field",
+      "fieldLabel": "Changed Field",
       "fieldName": "Name",
       "fieldPrice": "Price",
       "from": "Old value",
@@ -4349,7 +4365,7 @@
     "configuration": "Configuration",
     "configurationSubtitle": "Manage Earning Rules",
     "createTiers": "Create reward tiers to activate redemption",
-    "earningRules": "Earning rules",
+    "earningRules": "Earning Rules",
     "editReward": "Edit Reward",
     "equals": "Equals",
     "errors": {
@@ -4366,7 +4382,7 @@
       "categoryLabel": "Category",
       "discountPercentageLabel": "Discount %",
       "freeItem": "Free item",
-      "pointsCostLabel": "Points cost",
+      "pointsCostLabel": "Points Cost",
       "pointsCostPlaceholder": "0",
       "selectCategory": "Select category...",
       "typeLabel": "Type",
@@ -4423,20 +4439,20 @@
       "settingsDesc": "Modify store and establishment settings",
       "staff": "Manage staff",
       "staffDesc": "Manage team members and roles",
-      "title": "Advanced Back-office Permissions"
+      "title": "Advanced Back-Office Permissions"
     },
     "createRole": "Create Role",
     "deleteResolution": {
       "detachAction": "Keep permissions and delete role",
       "detachDesc": "Delete the role and keep each employee permissions exactly as they are.",
-      "detachTitle": "Keep their current access",
+      "detachTitle": "Keep Their Current Access",
       "message": "Choose what happens to employees using \"{{roleName}}\" before deleting it.",
       "noReplacement": "No replacement roles available",
       "reassignAction": "Move employees and delete role",
       "reassignDesc": "Employees will receive the selected role permissions immediately.",
-      "reassignTitle": "Move employees to another role",
+      "reassignTitle": "Move Employees to Another Role",
       "summary": "{{employeeCount}} employees, {{assignmentCount}} assignments, {{locationCount}} locations affected",
-      "title": "Role is assigned to employees"
+      "title": "Role Is Assigned to Employees"
     },
     "editRole": "Edit Role",
     "form": {
@@ -4510,7 +4526,7 @@
         "confirmYou": "Account level password (Owner Portal)",
         "deletionDate": "Deletion date:",
         "fail": "Failed to request deletion",
-        "gracePeriod": "Grace period",
+        "gracePeriod": "Grace Period",
         "gracePeriodDesc": "You can stop this anytime in the next 30 days.",
         "locationId": "Location ID",
         "locationIdTip": "The unique ID for this location",
@@ -4547,7 +4563,7 @@
       },
       "title": "Delete Location",
       "warning": {
-        "subtitle": "All data will be gone forever after 30 days",
+        "subtitle": "All Data Will Be Gone Forever After 30 Days",
         "summary": "Deletion Summary",
         "title": "This Cannot Be Undone"
       }
@@ -4556,10 +4572,10 @@
     "encrypted": "End-to-end encrypted security session",
     "errorBanner": "Please correct the highlighted errors below",
     "highImpact": "High impact action",
-    "identityLabel": "Identity Confirmation (email)",
+    "identityLabel": "Identity Confirmation (Email)",
     "masterKeyInfo": {
       "description": "This is your primary account password. You can reset it from your account management if you have forgotten it.",
-      "title": "What Is A Master Access Key?"
+      "title": "What Is a Master Access Key?"
     },
     "modes": {
       "cancel": {
@@ -4589,7 +4605,7 @@
       },
       "dissolveEstablishment": {
         "button": "Dissolve Location from Brand",
-        "title": "Dissolve Location From Brand",
+        "title": "Dissolve Location from Brand",
         "warning": "You are about to dissolve \"{{name}}\". This will permanently cease operations and remove this location from your brand portfolio."
       },
       "reactivate": {
@@ -4612,7 +4628,7 @@
     },
     "noMasterKeyDesc": "To perform high-impact actions, you must first create a Master Access Key for your account.",
     "noMasterKeyTitle": "Master Access Key Required",
-    "passwordLabel": "Master Access Key (password)",
+    "passwordLabel": "Master Access Key (Password)",
     "restore": {
       "confirm": "Restore Location",
       "newLoginId": "New Location Login ID",
@@ -4745,7 +4761,7 @@
       "serviceChargeType": "Charge type",
       "serviceChargeValue": "Charge value",
       "serviceChargeValueErrorRange": "Charge value must be between 0 and {{max}}.",
-      "subtitle": "Configure taxes, currency, and table structure",
+      "subtitle": "Configure Taxes, Currency, and Table Structure",
       "taxErrorGeneric": "Failed to update tax rate",
       "taxErrorRange": "Tax rate must be between 0 and 100%",
       "taxLabel": "TAXATION",
@@ -4993,9 +5009,9 @@
       "backToHelp": "Back to Help Center",
       "bl1": "Understanding Billing Status",
       "bl1_excerpt": "Learn how trial, active, past-due, suspended, canceled, and multi-location billing statuses work.",
-      "bl10": "Canceling Or Resuming A Subscription",
+      "bl10": "Canceling or Resuming a Subscription",
       "bl10_excerpt": "Learn what to check before canceling, pausing, or resuming Mintcom subscription access.",
-      "bl11": "Billing Access And Owner Permissions",
+      "bl11": "Billing Access and Owner Permissions",
       "bl11_excerpt": "Control who can view invoices, manage billing, and handle sensitive subscription actions.",
       "bl2": {
         "h1": "Billing & Payments Guide",
@@ -5053,6 +5069,7 @@
       "feedbackFailed": "Could not save feedback. Please try again.",
       "feedbackSorry": "We're sorry this wasn't helpful. We'll work on improving it.",
       "feedbackThanks": "Thanks for your feedback!",
+      "emptySubtitle": "No articles are available yet.",
       "ft1": {
         "h1": "Complete Feature Guide",
         "h2": "Point of Sale (POS)",
@@ -5102,11 +5119,11 @@
       "ft1_excerpt": "Read sales, payments, taxes, discounts, items, shifts, and cash reports correctly.",
       "ft10": "Offline Mode & Data Sync",
       "ft10_excerpt": "How Mintcom handles offline transactions and syncs data when back online.",
-      "ft11": "Hold And Resume Orders",
+      "ft11": "Hold and Resume Orders",
       "ft11_excerpt": "Use held orders for paused carts, tables, and interrupted checkout workflows.",
-      "ft12": "Pay-In And Pay-Out Cash Tracking",
+      "ft12": "Pay-In and Pay-Out Cash Tracking",
       "ft12_excerpt": "Record cash added to or removed from the drawer so shift closing stays accurate.",
-      "ft13": "Importing Products With CSV",
+      "ft13": "Importing Products with CSV",
       "ft13_excerpt": "Prepare clean product spreadsheets and import catalogs safely without messy data.",
       "ft2": "Recipe Operations Guide",
       "ft2_excerpt": "Connect materials, sub-recipes, final recipes, products, and stock behavior.",
@@ -5122,10 +5139,10 @@
       "ft7_excerpt": "Manage establishments, brands, employees, roles, billing, and brand teams.",
       "ft8": "Payment Methods Setup",
       "ft8_excerpt": "Configure accepted payment methods including cards and digital wallets.",
-      "ft9": "Add-ons & Modifiers Guide",
+      "ft9": "Add-Ons & Modifiers Guide",
       "ft9_excerpt": "Create product add-ons and modifiers for customizable orders.",
       "gs1": {
-        "h1": "Getting Started With Mintcom",
+        "h1": "Getting Started with Mintcom",
         "h2": "Creating Your Account",
         "h3": "Setting Up Your First Location",
         "h4": "Adding Products",
@@ -5149,7 +5166,7 @@
         "p7": "Once everything is set up, download the POS app and start processing orders!"
       },
       "gs1_excerpt": "Manage profile, password, language, and location access settings.",
-      "gs10": "Choosing The Right Business Structure",
+      "gs10": "Choosing the Right Business Structure",
       "gs10_excerpt": "Decide how to organize businesses, branches, registers, staff, and test data before launch.",
       "gs11": "Launch Checklist Before First Sale",
       "gs11_excerpt": "Review account, catalog, printer, payment, and shift setup before taking live orders.",
@@ -5205,7 +5222,7 @@
       "gs7_excerpt": "Get the Mintcom POS app on your tablet and connect to your location.",
       "gs8": "Starting Your First Shift",
       "gs8_excerpt": "Learn how to open a shift, process orders, and close out at the end of the day.",
-      "gs9": "Verifying Email And Resetting Password",
+      "gs9": "Verifying Email and Resetting Password",
       "gs9_excerpt": "Verify your email, recover access, and keep owner and staff accounts secure.",
       "helpfulNo": "No",
       "helpfulQuestion": "Was this article helpful?",
@@ -5216,7 +5233,7 @@
       "popular": "Popular Articles",
       "read": "Read",
       "related": "Related Articles",
-      "searchResultCount": "{{count}} results found",
+      "searchResultCount": "{{count}} Results Found",
       "showing": "Showing {{count}} articles",
       "sortBy": "Sort by",
       "sortPopular": "Most Popular",
@@ -5267,7 +5284,7 @@
       "tc1_excerpt": "Connect receipt printers, run test prints, and fix common printer setup issues.",
       "tc10": "API Integration Guide",
       "tc10_excerpt": "Technical guide for integrating with the Mintcom API.",
-      "tc11": "Uploading Images And Logos",
+      "tc11": "Uploading Images and Logos",
       "tc11_excerpt": "Prepare product photos and business logos that upload reliably and display clearly.",
       "tc12": "Using Support Tickets Effectively",
       "tc12_excerpt": "Send useful ticket details so support can reproduce and resolve issues faster.",
@@ -5320,9 +5337,9 @@
       "title": "Help Center"
     },
     "cta": {
-      "stillNeedHelp": "Still need help?",
+      "stillNeedHelp": "Still Need Help?",
       "stillNeedHelpDesc": "Open a support ticket or email support with the location, error, device, and steps already tried.",
-      "subtitle": "Can't find what you're looking for? we're here to help",
+      "subtitle": "Can't Find What You're Looking for? We're Here to Help",
       "title": "Contact Support"
     },
     "genericArticle": {
@@ -5349,24 +5366,24 @@
       "badge": "Help Center",
       "searchPlaceholder": "Search for help articles...",
       "subtitle": "Find Answers, Guides, and Support for All Things Mintcom",
-      "titleHighlight": "help",
-      "titlePart1": "How can we",
-      "titlePart2": "you?"
+      "titleHighlight": "Help",
+      "titlePart1": "How Can We",
+      "titlePart2": "You?"
     },
     "loginModal": {
       "benefit1": "Track your ticket status in real time",
       "benefit2": "Get email notifications on replies",
       "benefit3": "View your full support history",
       "desc": "You need to be logged in to submit a support ticket. It only takes a moment.",
-      "loginBtn": "Log in to continue",
-      "signupBtn": "Don't have an account? Sign up",
-      "title": "Sign in to continue"
+      "loginBtn": "Log In to Continue",
+      "signupBtn": "Don't Have an Account? Sign Up",
+      "title": "Sign In to Continue"
     },
     "manual": {
       "description": "The complete Mintcom manual covers setup, categories, POS workflow, billing, roles, reports, devices, offline sync, and support.",
       "downloadButton": "Download PDF manual",
       "fileSize": "132 KB",
-      "subtitle": "Download The Complete Guide",
+      "subtitle": "Download the Complete Guide",
       "title": "User Manual",
       "updated": "Updated May 17, 2026"
     },
@@ -5391,7 +5408,7 @@
       "submit": "Submit ticket",
       "subtitle": "Describe Your Issue and We'll Get Back to You",
       "success": "Ticket submitted successfully! We'll respond within 24 hours.",
-      "title": "Submit A Support Ticket"
+      "title": "Submit a Support Ticket"
     },
     "popularArticles": {
       "account": "How to manage your account settings",
@@ -5413,7 +5430,7 @@
         "staff": "Staff",
         "technical": "Technical"
       },
-      "empty_subtitle": "Try adjusting your search or category filter",
+      "empty_subtitle": "Try Adjusting Your Search or Category Filter",
       "empty_title": "No Results Found",
       "needMoreHelp": "Need more help? Contact our support team.",
       "noMatchingResults": "No {{entity}} matching \"{{query}}\"",
@@ -5483,7 +5500,7 @@
       "myTickets": "My Tickets",
       "new": "New Ticket",
       "newLabel": "New",
-      "notFound": "Ticket not found",
+      "notFound": "Ticket Not Found",
       "notFoundSearch": "No tickets matching your search",
       "noTicketsYet": "No tickets yet",
       "priority": {

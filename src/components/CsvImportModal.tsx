@@ -471,7 +471,7 @@ export function CsvImportModal({
                                     <div className="p-4 rounded-xl bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-500/20">
                                         <div className="flex items-center gap-2 mb-2">
                                             <FileWarning size={16} className="text-red-500" />
-                                            <p className="text-sm font-bold text-red-600 dark:text-red-400">Issues found</p>
+                                            <p className="text-sm font-bold text-red-600 dark:text-red-400">Issues Found</p>
                                         </div>
                                         <ul className="space-y-1">
                                             {parseErrors.map((err, i) => (
@@ -514,7 +514,7 @@ export function CsvImportModal({
                                     <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-500/20">
                                         <div className="flex items-center gap-2 mb-1.5">
                                             <AlertCircle size={14} className="text-amber-500" />
-                                            <p className="text-xs font-bold text-amber-600 dark:text-amber-400">Some rows were skipped</p>
+                                            <p className="text-xs font-bold text-amber-600 dark:text-amber-400">Some Rows Were Skipped</p>
                                         </div>
                                         <ul className="space-y-0.5">
                                             {parseErrors.map((err, i) => (
@@ -652,7 +652,7 @@ export function CsvImportModal({
                                 {/* Error Details */}
                                 {importResult.errors.length > 0 && (
                                     <div className="p-4 rounded-xl bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-500/20">
-                                        <p className="text-xs font-bold text-red-600 dark:text-red-400 mb-2">Error details:</p>
+                                        <p className="text-xs font-bold text-red-600 dark:text-red-400 mb-2">Error Details:</p>
                                         <ul className="space-y-1 max-h-40 overflow-y-auto custom-scrollbar">
                                             {importResult.errors.map((err, i) => (
                                                 <li key={i} className="text-[11px] text-red-500 dark:text-red-400 flex items-start gap-1.5">

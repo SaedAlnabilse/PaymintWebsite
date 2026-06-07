@@ -166,6 +166,8 @@ export const GuidesPage = () => {
 
     return matchesSearch && matchesCategory && matchesDifficulty;
   });
+  const hasGuideSearch = searchQuery.trim().length > 0;
+  const hasGuideFilters = selectedCategory !== 'all' || selectedDifficulty !== 'all';
 
   // Get featured guides
   const featuredGuides = guides.filter(guide => guide.featured);
@@ -389,10 +391,14 @@ export const GuidesPage = () => {
                     <BookOpen size={32} className="text-gray-400" />
                   </div>
                   <h3 className="font-barlow text-xl font-bold mb-2">
-                    {searchQuery.trim() ? t('common.noResults') : t('community.guides.empty_title', 'No guides found')}
+                    {hasGuideSearch ? t('common.noResults') : hasGuideFilters ? t('common.noFilteredResults') : t('community.guides.empty_title', 'No guides found')}
                   </h3>
                   <p className="text-gray-500 dark:text-gray-400">
-                    {searchQuery.trim() ? t('common.noMatchingResults', { entity: 'guides', query: searchQuery.trim(), defaultValue: 'No {{entity}} matching "{{query}}"' }) : t('community.guides.empty_subtitle', 'Try adjusting your search or filters')}
+                    {hasGuideSearch
+                      ? t('common.noMatchingResults', { entity: 'guides', query: searchQuery.trim(), defaultValue: 'No {{entity}} matching "{{query}}"' })
+                      : hasGuideFilters
+                        ? t('common.noFilteredResultsDesc')
+                        : t('community.guides.empty_subtitle', 'Try adjusting your search or filters')}
                   </p>
                 </div>
               )}

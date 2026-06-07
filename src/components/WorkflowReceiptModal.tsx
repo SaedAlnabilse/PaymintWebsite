@@ -351,7 +351,7 @@ const AiDemo = ({ t }: { t: any }) => {
   ];
   const answers = [
     t('landing.workflow.receipt.demo.ai.a1', 'Espresso led with 142 cups, up 18% from yesterday.'),
-    t('landing.workflow.receipt.demo.ai.a2', 'Try a "Croissant + Latte" bundle at $5.50 — projects +12% basket.'),
+    t('landing.workflow.receipt.demo.ai.a2', 'Try a "Croissant + Latte" bundle at 5.50 USD — projects +12% basket.'),
     t('landing.workflow.receipt.demo.ai.a3', 'Expect 320–360 orders, peak 9–11 AM. Schedule 2 baristas.'),
   ];
   const [pick, setPick] = useState<number | null>(null);
@@ -645,7 +645,7 @@ const LoyaltyDemo = ({ t }: { t: any }) => {
 const MobileDemo = ({ t }: { t: any }) => {
   const messages = useMemo(
     () => [
-      t('landing.workflow.receipt.demo.mobile.n1', 'New order #4218 — $24.50'),
+      t('landing.workflow.receipt.demo.mobile.n1', 'New order #4218 — 24.50 USD'),
       t('landing.workflow.receipt.demo.mobile.n2', 'Daily target reached 🎉'),
       t('landing.workflow.receipt.demo.mobile.n3', 'Low stock: Espresso beans'),
       t('landing.workflow.receipt.demo.mobile.n4', 'Sara clocked in'),

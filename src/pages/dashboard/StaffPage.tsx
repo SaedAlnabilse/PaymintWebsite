@@ -249,19 +249,15 @@ export function StaffPage() {
 
     return result;
   }, [staff, filterRole, filterStatus, searchQuery, sortConfig]);
-  const shouldShowStatusEmptyState = !searchQuery.trim() && filterRole === 'ALL' && filterStatus !== 'ALL';
-  const staffEmptyTitle = shouldShowStatusEmptyState
-    ? t(
-        filterStatus === 'INACTIVE' ? 'staff.messages.noInactiveStaff' : 'staff.messages.noActiveStaff',
-        {
-          defaultValue: filterStatus === 'INACTIVE' ? 'No inactive employees found' : 'No active employees found',
-        },
-      )
+  const hasStaffSearch = searchQuery.trim().length > 0;
+  const hasStaffFilters = filterRole !== 'ALL' || filterStatus !== 'ALL';
+  const staffEmptyTitle = !hasStaffSearch && hasStaffFilters
+    ? t('common.noFilteredResults')
     : searchQuery.trim()
       ? t('common.noResults')
       : t('staff.messages.noStaff');
-  const staffEmptyDescription = shouldShowStatusEmptyState
-    ? ''
+  const staffEmptyDescription = !hasStaffSearch && hasStaffFilters
+    ? t('common.noFilteredResultsDesc')
     : searchQuery.trim()
       ? t('common.noMatchingResults', { entity: 'staff', query: searchQuery.trim(), defaultValue: 'No {{entity}} matching "{{query}}"' })
       : t('staff.messages.noStaffDesc');

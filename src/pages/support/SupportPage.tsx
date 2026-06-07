@@ -343,7 +343,7 @@ export const SupportPage = () => {
                 animate={{ y: [0, -8, 0] }} transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
                 className="absolute -bottom-5 -start-8 flex items-center gap-2 rounded-2xl border border-gray-100 bg-white px-4 py-2.5 shadow-lg dark:border-white/10 dark:bg-[#111]">
                 <div className="h-2 w-2 rounded-full bg-mintcom-green" />
-                <span className="text-xs font-bold text-gray-700 dark:text-gray-200">Ticket support available</span>
+                <span className="text-xs font-bold text-gray-700 dark:text-gray-200">Ticket Support Available</span>
               </motion.div>
             </motion.div>
 

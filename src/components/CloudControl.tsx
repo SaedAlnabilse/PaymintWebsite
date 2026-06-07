@@ -213,13 +213,13 @@ const BrandScopePreview = ({ t }: { t: any }) => {
 const LocationScopePreview = ({ t }: { t: any }) => {
   const kpis = [
     { label: t('landing.cloudControl.scope.preview.orders', 'Orders'), val: '142' },
-    { label: t('landing.cloudControl.scope.preview.revenue', 'Revenue'), val: '$2.4K' },
-    { label: t('landing.cloudControl.scope.preview.aov', 'AOV'), val: '$16.9' },
+    { label: t('landing.cloudControl.scope.preview.revenue', 'Revenue'), val: '2.4K USD' },
+    { label: t('landing.cloudControl.scope.preview.aov', 'AOV'), val: '16.9 USD' },
   ];
   const orders = [
-    { id: '#4218', amt: '$24.50', method: t('landing.cloudControl.scope.preview.methodCard', 'Card') },
-    { id: '#4217', amt: '$8.75', method: t('landing.cloudControl.scope.preview.methodCash', 'Cash') },
-    { id: '#4216', amt: '$32.00', method: t('landing.cloudControl.scope.preview.methodMobile', 'Mobile') },
+    { id: '#4218', amt: '24.50 USD', method: t('landing.cloudControl.scope.preview.methodCard', 'Card') },
+    { id: '#4217', amt: '8.75 USD', method: t('landing.cloudControl.scope.preview.methodCash', 'Cash') },
+    { id: '#4216', amt: '32.00 USD', method: t('landing.cloudControl.scope.preview.methodMobile', 'Mobile') },
   ];
   return (
     <>
@@ -477,7 +477,7 @@ const DeviceMockup = ({ t }: { t: any }) => {
               {/* Stats row */}
               <div className="grid grid-cols-3 gap-1.5">
                 {[
-                  { label: t('landing.cloudControl.scope.preview.revenue', 'Revenue'), value: t('landing.cloudControl.scope.preview.revenueAmount', '$24.8K'), up: '+12.4%' },
+                  { label: t('landing.cloudControl.scope.preview.revenue', 'Revenue'), value: t('landing.cloudControl.scope.preview.revenueAmount', '24.8K USD'), up: '+12.4%' },
                   { label: t('landing.cloudControl.scope.preview.orders', 'Orders'), value: t('landing.cloudControl.scope.preview.ordersAmount', '1,402'), up: '+8.1%' },
                   { label: t('common.locations', 'Locations'), value: t('landing.cloudControl.scope.preview.locationsAmount', '6'), up: '+2' },
                 ].map((s, i) => (

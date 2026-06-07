@@ -84,7 +84,7 @@ const overrides = {
   'common.copy': 'Copy',
   'common.copyFailed': 'Failed to copy',
   'common.creating': 'Creating...',
-  'common.currencySymbol': '$',
+  'common.currencySymbol': 'USD',
   'common.days.fri': 'Fri',
   'common.days.mon': 'Mon',
   'common.days.sat': 'Sat',
