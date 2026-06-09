@@ -13,6 +13,7 @@ import {
   List
 } from 'lucide-react';
 import api, { extractErrorMessage } from '../../config/api';
+import { fetchAllPages } from '../../utils/fetchAllPages';
 import toast from 'react-hot-toast';
 import { ConfirmModal } from '../../components/ConfirmModal';
 import { CustomRoleFormModal } from '../../components/CustomRoleFormModal';
@@ -126,9 +127,9 @@ export function CustomRolesPage() {
       if (!currentEstablishment) return;
 
       const { id: establishmentId } = JSON.parse(currentEstablishment);
-      const response = await api.get(`/api/custom-roles/${establishmentId}`);
-      // Backend returns { items, total, limit, offset }
-      setRoles(response.data?.items || []);
+      // Load every page so roles past the backend default (100) are not dropped.
+      const allRoles = await fetchAllPages<any>(api, `/api/custom-roles/${establishmentId}`);
+      setRoles(allRoles);
     } catch {
       toast.error(t('dashboard.roles.messages.loadFailed'));
     } finally {

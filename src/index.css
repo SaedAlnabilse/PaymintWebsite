@@ -440,11 +440,11 @@
 
   /* Button text */
   .btn-text {
-    @apply text-button font-semibold;
+    @apply font-sans text-button font-semibold;
   }
 
   .btn-text-sm {
-    @apply text-button-sm font-semibold;
+    @apply font-sans text-button-sm font-semibold;
   }
 
   /* Status badges */
@@ -452,6 +452,28 @@
     @apply text-xs font-medium tracking-normal;
     letter-spacing: normal !important;
     text-transform: none !important;
+  }
+
+  /* ──────────────────────────────────────────────────────────────
+     UNIFIED BUTTON FONT — Inter across the entire application
+     Prevents button labels inheriting display fonts (Outfit,
+     Barlow, Magilio, Poppins) from their ancestor containers.
+     RTL: falls back to Noto Sans Arabic automatically.
+     ────────────────────────────────────────────────────────────── */
+  button,
+  [role='button'],
+  [type='button'],
+  [type='submit'],
+  [type='reset'] {
+    font-family: 'Inter', 'Noto Sans Arabic', sans-serif !important;
+  }
+
+  [dir='rtl'] button,
+  [dir='rtl'] [role='button'],
+  [dir='rtl'] [type='button'],
+  [dir='rtl'] [type='submit'],
+  [dir='rtl'] [type='reset'] {
+    font-family: 'Noto Sans Arabic', 'Inter', sans-serif !important;
   }
 
   /* Empty state text */

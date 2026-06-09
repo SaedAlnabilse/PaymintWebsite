@@ -7,6 +7,7 @@ import {
     Loader2, Trash2, FileWarning, ChevronDown, ChevronUp, Info
 } from 'lucide-react';
 import { useScrollLock } from '../hooks/useScrollLock';
+import { withExcelBom } from '../utils/csvBom';
 
 // Types
 export interface CsvColumn {
@@ -320,9 +321,9 @@ export function CsvImportModal({
     // Download Sample
     const downloadSample = () => {
         const csv = generateCSV(columns, sampleData);
-        // Add BOM for Excel compatibility
-        const bom = '\uFEFF';
-        const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
+        // UTF-8, with a BOM only on Windows so legacy Excel reads it correctly
+        // there while the file stays clean (no "\u00EF\u00BB\u00BF") elsewhere.
+        const blob = new Blob([withExcelBom(csv)], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
@@ -587,13 +588,13 @@ export function CsvImportModal({
                             <div className="space-y-5">
                                 {/* Result Summary */}
                                 <div className={`p-6 rounded-2xl text-center ${importResult.failed === 0
-                                    ? 'bg-mintcom-green/10 dark:bg-mintcom-green/ border border-mintcom-green/20 dark:border-mintcom-green/'
+                                    ? 'bg-mintcom-green/10 dark:bg-mintcom-green/10 border border-mintcom-green/20 dark:border-mintcom-green/20'
                                     : importResult.success === 0
                                         ? 'bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-500/20'
                                         : 'bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-500/20'
                                     }`}>
                                     <div className={`w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center ${importResult.failed === 0
-                                        ? 'bg-mintcom-green/ text-mintcom-green'
+                                        ? 'bg-mintcom-green/10 text-mintcom-green'
                                         : importResult.success === 0
                                             ? 'bg-red-500/10 text-red-500'
                                             : 'bg-amber-500/10 text-amber-500'
@@ -620,7 +621,7 @@ export function CsvImportModal({
 
                                 {/* Stats Grid */}
                                 <div className="grid grid-cols-2 gap-3">
-                                    <div className="p-4 rounded-xl bg-mintcom-green/10 dark:bg-mintcom-green/ border border-mintcom-green/20 dark:border-mintcom-green/ text-center">
+                                    <div className="p-4 rounded-xl bg-mintcom-green/10 dark:bg-mintcom-green/10 border border-mintcom-green/20 dark:border-mintcom-green/20 text-center">
                                         <p className="text-2xl font-black text-mintcom-green">{importResult.success}</p>
                                         <p className="text-xs font-bold text-mintcom-green dark:text-mintcom-green mt-1">Successful</p>
                                     </div>
