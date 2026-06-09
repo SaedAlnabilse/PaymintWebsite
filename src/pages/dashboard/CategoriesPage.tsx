@@ -19,7 +19,8 @@ import {
   AlertTriangle,
   Grid,
   List,
-  Upload
+  Upload,
+  Download
 } from 'lucide-react';
 import api from '../../config/api';
 import toast from 'react-hot-toast';
@@ -31,6 +32,7 @@ import { StatValue } from '../../components/ui/StatValue';
 import { ThumbnailImage } from '../../components/OptimizedImage';
 import { usePermissionGuard } from '../../hooks/usePermissionGuard';
 import { formatInputPlaceholder } from '../../utils/textCase';
+import { withExcelBom } from '../../utils/csvBom';
 import { useRealtime } from '../../hooks/useRealtime';
 import { DataChangeEventTypes } from '../../services/realtimeService';
 
@@ -306,6 +308,38 @@ export function CategoriesPage() {
     return { success, failed, errors };
   }, [categories]);
 
+  const handleExport = () => {
+    // Escape a value for CSV: wrap in quotes and double any inner quotes.
+    const esc = (val: unknown): string => {
+      const str = val === null || val === undefined ? '' : String(val);
+      if (/[",\n]/.test(str)) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    };
+
+    // "name" matches the import schema for round-trips; description/items are
+    // extra reference columns the importer simply ignores.
+    const headers = ['name', 'description', 'items'];
+    const rows = (Array.isArray(filteredCategories) ? filteredCategories : []).map(c =>
+      [esc(c.name), esc(c.description ?? ''), esc(c._count?.items ?? 0)].join(',')
+    );
+    const csvContent = [headers.join(','), ...rows].join('\n');
+
+    // UTF-8, with a BOM only on Windows so legacy Excel reads Arabic correctly
+    // there while the file stays clean (no "ï»¿") elsewhere.
+    const blob = new Blob([withExcelBom(csvContent)], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'categories_export.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toast.success(t('categories.messages.exportDownloaded'));
+  };
+
   const normalizedSearchQuery = searchQuery.trim().toLowerCase();
 
   const filteredCategories = useMemo(() => {
@@ -517,6 +551,14 @@ export function CategoriesPage() {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
+          <button
+            onClick={handleExport}
+            className="flex items-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl bg-white dark:bg-white/5 text-gray-900 dark:text-white border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/10 transition-all shadow-sm group"
+            title={t('orders.export')}
+          >
+            <Download size={18} className="group-hover:text-mintcom-green transition-colors" />
+            <span className="font-bold text-xs sm:text-sm hidden sm:inline">{t('orders.export')}</span>
+          </button>
           <button
             onClick={() => setShowCsvImport(true)}
             className="flex items-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl bg-white dark:bg-white/5 text-gray-900 dark:text-white border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/10 transition-all shadow-sm group"

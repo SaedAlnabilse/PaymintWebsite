@@ -557,6 +557,7 @@
       "deleted": "Category archived",
       "deleteFailed": "Failed to archive category",
       "exists": "A category with this name already exists in this location.",
+      "exportDownloaded": "Categories export downloaded",
       "loadFailed": "Failed to load data",
       "loading": "Loading data...",
       "noCategories": "No categories found",
@@ -3654,7 +3655,7 @@
       "noBrandsFound": "No Brands Found",
       "openDashboard": "Open Dashboard",
       "searchFilter": "Search & Filter",
-      "searchPlaceholder": "Search Brands by Name or Login ID...",
+      "searchPlaceholder": "Search brands by name or login ID...",
       "selectedCount": "{{count}} Selected",
       "selectLocationsToLink": "Select Locations to Link to This Brand",
       "subtitle": "Manage Multiple Locations Under One Brand",
@@ -4331,6 +4332,7 @@
   "reports": {
     "refundReasonAdded": "Refund Reason Added Successfully",
     "refundAmountLabel": "Refund Amount: {{amount}}",
+    "deletedBadge": "[Deleted]",
     "history": {
       "allOnly": "View all recorded history",
       "badge": "History",

@@ -130,6 +130,9 @@ interface EmployeeShiftOption {
   endTime: string | null;
 }
 
+// Orders per page — kept in sync with the backoffice Orders screen.
+const PAGE_SIZE = 15;
+
 export function OrdersPage() {
   const { t } = useTranslation();
   usePermissionGuard();
@@ -739,7 +742,7 @@ export function OrdersPage() {
         // Calculate params for regular orders
         const params: Record<string, any> = {
           page: page,
-          limit: 10, // Default limit
+          limit: PAGE_SIZE,
           startDate: start.toISOString(),
           endDate: end.toISOString(),
           ...(selectedEmployeeId ? { employeeId: selectedEmployeeId } : {}),
@@ -818,15 +821,15 @@ export function OrdersPage() {
         // Show Held Orders
         const total = heldOrdersList.length;
         setTotalCount(total);
-        setTotalPages(Math.ceil(total / 10) || 1);
-        const startIndex = (page - 1) * 10;
-        setOrders((Array.isArray(heldOrdersList) ? heldOrdersList : []).slice(startIndex, startIndex + 10));
+        setTotalPages(Math.ceil(total / PAGE_SIZE) || 1);
+        const startIndex = (page - 1) * PAGE_SIZE;
+        setOrders((Array.isArray(heldOrdersList) ? heldOrdersList : []).slice(startIndex, startIndex + PAGE_SIZE));
       } else {
         // Show Regular Orders (possibly mixed with held if page 1)
         const responseData = mainRes?.data || {};
         const fetchedOrders = Array.isArray(responseData.orders) ? responseData.orders : (Array.isArray(responseData) ? responseData : []);
         const totalOrders = responseData.totalOrders || responseData.total || fetchedOrders.length;
-        const serverTotalPages = responseData.totalPages || Math.ceil(totalOrders / 10) || 1;
+        const serverTotalPages = responseData.totalPages || Math.ceil(totalOrders / PAGE_SIZE) || 1;
 
         // Held orders are always shown in their own dedicated section above,
         // so we no longer mix them into the main orders table.
@@ -835,9 +838,9 @@ export function OrdersPage() {
           // Fallback for array response
           const total = fetchedOrders.length;
           setTotalCount(total);
-          setTotalPages(Math.ceil(total / 10) || 1);
-          const startIndex = (page - 1) * 10;
-          setOrders(fetchedOrders.slice(startIndex, startIndex + 10));
+          setTotalPages(Math.ceil(total / PAGE_SIZE) || 1);
+          const startIndex = (page - 1) * PAGE_SIZE;
+          setOrders(fetchedOrders.slice(startIndex, startIndex + PAGE_SIZE));
         } else {
           setTotalCount(totalOrders);
           setTotalPages(serverTotalPages);
@@ -879,7 +882,8 @@ export function OrdersPage() {
     fetchOrders();
   }, [fetchOrders]);
 
-  // Auto-scroll to list when filters change
+  // Auto-scroll to the top of the list when filters change or the page changes,
+  // so each new page starts from the top (matches the backoffice behavior).
   useEffect(() => {
     if (isInitialMount.current) {
       isInitialMount.current = false;
@@ -889,7 +893,7 @@ export function OrdersPage() {
     if (ordersListRef.current) {
       ordersListRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-  }, [statusFilter, paymentFilter]);
+  }, [statusFilter, paymentFilter, page]);
 
   useEffect(() => {
     if (activeActionMenu) {
@@ -1905,7 +1909,7 @@ export function OrdersPage() {
           totalPages={totalPages}
           onPageChange={setPage}
           totalItems={totalCount}
-          itemsPerPage={10}
+          itemsPerPage={PAGE_SIZE}
           variant="footer"
         />
       </div>

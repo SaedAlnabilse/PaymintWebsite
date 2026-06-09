@@ -358,14 +358,22 @@ export function CustomersPage() {
   const handleExport = async () => {
     try {
       toast.loading('Exporting...', { id: 'export' });
-      const response = await api.get('/customers', {
-        params: {
-          limit: 1000,
-          search: searchQuery,
-        },
-      });
+      // Page through every customer so the export isn't truncated at a fixed cap.
+      // The endpoint caps `limit` at 100, so request that and advance by page;
+      // stop on an empty page or once we've collected every row `total` reports
+      // (never on a short page — that can just mean the server capped the size).
+      const PAGE_SIZE = 100;
+      const allCustomers: Customer[] = [];
+      for (let page = 1; page < 1000; page++) {
+        const response = await api.get('/customers', {
+          params: { page, limit: PAGE_SIZE, search: searchQuery },
+        });
+        const batch: Customer[] = response.data.customers || [];
+        allCustomers.push(...batch);
+        if (batch.length === 0) break;
+        if (typeof response.data.total === 'number' && allCustomers.length >= response.data.total) break;
+      }
 
-      const allCustomers = response.data.customers || [];
       const exportData = allCustomers.map((c: Customer) => ({
         name: c.name,
         phone: c.phone,

@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "npm run validate:locales && tsc -b && vite build",
     "lint": "eslint .",
+    "check:pagination": "node ../scripts/check-list-limits.js",
     "preview": "vite preview",
     "validate:locales": "node scripts/check-locale-encoding.cjs && node scripts/check-translation-keys.cjs",
     "validate:locales:strict": "node scripts/check-locale-encoding.cjs && node scripts/check-translation-keys.cjs --strict",

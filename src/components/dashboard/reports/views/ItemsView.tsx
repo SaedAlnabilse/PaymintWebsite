@@ -508,6 +508,11 @@ export const ItemsView = React.memo(function ItemsView({
                         : [];
                     const hasHistory = itemHist.length > 0;
                     const hasHistoryInRange = periodHist.length > 0;
+                    const isDeleted =
+                      Boolean(item.deletedAt) ||
+                      Boolean(item.deactivatedAt) ||
+                      item.isActive === false ||
+                      item.deleted === true;
 
                     return (
                       <motion.tr
@@ -533,6 +538,11 @@ export const ItemsView = React.memo(function ItemsView({
                             </div>
                             <div className="flex items-center gap-2">
                               <span className="font-bold text-gray-900 dark:text-white text-sm">{item.itemName || item.name || t('common.unknown')}</span>
+                              {isDeleted && (
+                                <span className="text-[11px] font-black uppercase tracking-wider text-paymint-red">
+                                  {t('reports.deletedBadge', { defaultValue: '[Deleted]' })}
+                                </span>
+                              )}
                               {itemReportTab === 'categories' && (
                                 <ChevronRight size={14} className="text-gray-300 dark:text-white/10 opacity-40 group-hover:opacity-100 transition-all group-hover:translate-x-1" />
                               )}
@@ -547,7 +557,7 @@ export const ItemsView = React.memo(function ItemsView({
                                        type: itemType,
                                      });
                                    }}
-                                   className={`flex items-center gap-1.5 px-2 py-0.5 rounded-lg border transition-all ${
+                                   className={`flex items-center justify-center w-7 h-7 rounded-lg border transition-all ${
                                      hasHistoryInRange
                                        ? 'bg-amber-500/10 text-amber-500 border-amber-500/20 hover:bg-amber-500/20'
                                        : 'bg-slate-500/10 text-slate-500 border-slate-500/20 hover:bg-slate-500/20'
@@ -566,10 +576,7 @@ export const ItemsView = React.memo(function ItemsView({
                                            })
                                    }
                                  >
-                                   <History size={12} strokeWidth={2.5} />
-                                   <span className="text-[10px] font-black uppercase tracking-wider">
-                                     {t('reports.history.badge', { defaultValue: 'History' })}
-                                   </span>
+                                   <History size={13} strokeWidth={2.5} />
                                  </button>
                                )}
                             </div>

@@ -22,6 +22,7 @@ import {
     RotateCcw
 } from 'lucide-react';
 import api from '../../config/api';
+import { fetchAllPages } from '../../utils/fetchAllPages';
 import toast from 'react-hot-toast';
 import { ConfirmModal } from '../../components/ConfirmModal';
 import { ProductFormModal } from '../../components/forms/ProductFormModal';
@@ -34,6 +35,7 @@ import { useCurrency } from '../../context/CurrencyContext';
 import { useAuth } from '../../context/AuthContext';
 import { checkPermission, usePermissionGuard } from '../../hooks/usePermissionGuard';
 import { formatInputPlaceholder } from '../../utils/textCase';
+import { withExcelBom } from '../../utils/csvBom';
 import { useRealtime } from '../../hooks/useRealtime';
 import { DataChangeEventTypes } from '../../services/realtimeService';
 
@@ -178,13 +180,12 @@ export function ProductsPage() {
     const fetchData = async (silent = false, preserveCurrentOrder = false) => {
         try {
             if (!silent) setIsLoading(true);
-            const [productsRes, categoriesRes] = await Promise.all([
-                api.get('/api/items', { params: { includeInactive: true } }),
+            const [productsData, categoriesRes] = await Promise.all([
+                // Load every page so products past the per-request cap (default 500)
+                // are not silently dropped from the list/filter.
+                fetchAllPages<any>(api, '/api/items', { includeInactive: true }),
                 api.get('/api/categories', { params: { includeInactive: true } })
             ]);
-            // Backend returns { items: [...], total, limit, offset } for paginated response
-            // or an array directly for backwards compatibility
-            const productsData = productsRes.data?.items ?? productsRes.data;
             const sortedProducts = sortArchivedLastByNewest(Array.isArray(productsData) ? productsData : []);
             const sortedCategories = sortArchivedLastByNewest(Array.isArray(categoriesRes.data) ? categoriesRes.data : []);
 
@@ -477,24 +478,42 @@ export function ProductsPage() {
     };
 
     const handleExport = () => {
-        // Placeholder for export functionality
-        const headers = [
-            t('products.table.name'),
-            t('products.table.price'),
-            t('products.table.category'),
-            t('products.table.stock')
-        ];
+        // Stable English headers that match the import schema exactly, so an
+        // exported file can be re-imported without remapping (round-trip safe).
+        const headers = ['name', 'price', 'category', 'description', 'cost_price', 'track_stock', 'available_stock'];
+
+        // Escape a value for CSV: wrap in quotes and double any inner quotes.
+        const esc = (val: unknown): string => {
+            const str = val === null || val === undefined ? '' : String(val);
+            if (/[",\n]/.test(str)) {
+                return `"${str.replace(/"/g, '""')}"`;
+            }
+            return str;
+        };
+
         const productsToExport = Array.isArray(filteredProducts) ? filteredProducts : [];
         const csvContent = [
             headers.join(','),
             ...productsToExport.map(p => {
                 const catName = (Array.isArray(categories) ? categories : []).find(c => c.id === p.categoryId)?.name || t('categories.uncategorized');
-                const stockVal = p.trackStock ? p.availableStock : t('products.table.unlimited');
-                return `"${p.name}",${p.price},"${catName}",${stockVal}`;
+                // Leave stock empty for untracked items so re-import keeps them unlimited
+                // (the "Unlimited" label would otherwise fail numeric validation on import).
+                const stockVal = p.trackStock ? (p.availableStock ?? '') : '';
+                return [
+                    esc(p.name),
+                    esc(p.price),
+                    esc(catName),
+                    esc(p.description ?? ''),
+                    esc(p.costPrice ?? ''),
+                    esc(p.trackStock ? 'true' : 'false'),
+                    esc(stockVal),
+                ].join(',');
             })
         ].join('\n');
 
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        // UTF-8, with a BOM only on Windows so legacy Excel reads Arabic
+        // correctly there while the file stays clean (no "ï»¿") elsewhere.
+        const blob = new Blob([withExcelBom(csvContent)], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
@@ -502,6 +521,7 @@ export function ProductsPage() {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        URL.revokeObjectURL(url);
         toast.success(t('products.messages.exportDownloaded'));
     };
 

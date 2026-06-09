@@ -15,6 +15,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import api, { extractErrorMessage } from '../../config/api';
+import { fetchAllPages } from '../../utils/fetchAllPages';
 import toast from 'react-hot-toast';
 import { ConfirmModal } from '../../components/ConfirmModal';
 import { CustomSelect } from '../../components/CustomSelect';
@@ -219,14 +220,14 @@ export function RecipesPage() {
   const fetchData = async () => {
     try {
       setIsLoading(true);
-      const [subRes, finalRes, materialsRes, itemsRes, attributesRes] = await Promise.all([
+      const [subRes, finalRes, materialsRes, itemsData, attributesRes] = await Promise.all([
         api.get('/api/manufacturing/sub-recipes', { params: { includeInactive: true } }),
         api.get('/api/manufacturing/final-recipes', { params: { includeInactive: true } }),
         api.get('/api/manufacturing/raw-materials', { params: { includeInactive: true } }),
-        api.get('/api/items'),
+        // Load every page so all products are selectable as recipe targets.
+        fetchAllPages<any>(api, '/api/items'),
         api.get('/api/attributes', { params: { includeInactive: true } }),
       ]);
-      const itemsData = Array.isArray(itemsRes.data) ? itemsRes.data : itemsRes.data?.items || [];
       const attributesData: AttributeGroup[] = Array.isArray(attributesRes.data)
         ? attributesRes.data
         : attributesRes.data?.items || [];
