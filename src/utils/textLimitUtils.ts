@@ -1,6 +1,7 @@
 import { TEXT_INPUT_LIMITS, type TextInputLimitKey } from '../config/textLimits';
 
 type LimitInput = TextInputLimitKey | number | undefined | null;
+const IMAGE_DATA_URL_PATTERN = /^data:image\/[a-z0-9.+-]+[;,]/i;
 
 const ATTRIBUTE_MATCHERS: Array<[RegExp, TextInputLimitKey]> = [
   [/(refund|return).*reason|reason.*(refund|return)/, 'REFUND_REASON'],
@@ -74,6 +75,10 @@ export function getLimitForField(fieldName?: string | null, inputType?: string |
 }
 
 function sanitizeStringValue(key: string, value: string): string {
+  if (IMAGE_DATA_URL_PATTERN.test(value)) {
+    return value;
+  }
+
   return limitText(value, getLimitKeyForField(key));
 }
 

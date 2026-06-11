@@ -53,6 +53,13 @@ interface Employee {
 type ViewMode = 'grid' | 'list';
 type RoleFilter = 'all' | 'ADMIN' | 'CASHIER';
 type SortOption = 'name' | 'role' | 'locations';
+// Employees can be created without a name; fall back to the username.
+const getDisplayName = (emp: { firstName?: string; lastName?: string; username?: string }) =>
+    `${emp.firstName || ''} ${emp.lastName || ''}`.trim() || emp.username || '';
+
+const getDisplayInitial = (emp: { firstName?: string; username?: string }) =>
+    (emp.firstName?.trim()?.charAt(0) || emp.username?.trim()?.charAt(0) || '?').toUpperCase();
+
 const MAX_EMPLOYEES_PER_ACCOUNT = 50;
 const MAX_DELETE_PASSWORD_ATTEMPTS = 3;
 const EMPLOYEE_LIMIT_POPUP_MESSAGE =
@@ -547,7 +554,7 @@ export default function BrandTeamPage() {
                                                     <div className="flex items-center gap-4">
                                                         <div className="w-14 h-14 rounded-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 flex items-center justify-center relative flex-shrink-0">
                                                             <span className="text-gray-900 dark:text-white font-bold text-xl">
-                                                                {emp.firstName.charAt(0).toUpperCase()}
+                                                                {getDisplayInitial(emp)}
                                                             </span>
                                                             {emp.isActive && (
                                                                 <div className="absolute bottom-0 right-0 w-4 h-4 bg-mintcom-green rounded-full border-2 border-white dark:border-[#0A0A0A]" />
@@ -555,7 +562,7 @@ export default function BrandTeamPage() {
                                                         </div>
                                                         <div>
                                                             <h3 className="text-lg font-bold text-gray-900 dark:text-white leading-tight">
-                                                                {emp.firstName} {emp.lastName}
+                                                                {getDisplayName(emp)}
                                                             </h3>
                                                             <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
                                                                 <AtSign size={12} />
@@ -681,7 +688,7 @@ export default function BrandTeamPage() {
                                                     <div className="flex items-center gap-3 mb-3">
                                                         <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center relative">
                                                             <span className="text-gray-900 dark:text-white font-bold text-sm">
-                                                                {emp.firstName.charAt(0).toUpperCase()}
+                                                                {getDisplayInitial(emp)}
                                                             </span>
                                                             {emp.isActive && (
                                                                 <div className="absolute bottom-0 right-0 w-3 h-3 bg-mintcom-green rounded-full border-2 border-white dark:border-[#0A0A0A]" />
@@ -689,7 +696,7 @@ export default function BrandTeamPage() {
                                                         </div>
                                                         <div>
                                                             <h3 className="text-sm font-bold text-gray-900 dark:text-white">
-                                                                {emp.firstName} {emp.lastName}
+                                                                {getDisplayName(emp)}
                                                             </h3>
                                                             <p className="dashboard-card-meta mt-0.5">@{emp.username}</p>
                                                         </div>
@@ -749,7 +756,7 @@ export default function BrandTeamPage() {
                                                     <div className="col-span-4 flex items-center gap-4">
                                                         <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center relative">
                                                             <span className="text-gray-900 dark:text-white font-bold text-sm">
-                                                                {emp.firstName.charAt(0).toUpperCase()}
+                                                                {getDisplayInitial(emp)}
                                                             </span>
                                                             {emp.isActive && (
                                                                 <div className="absolute bottom-0 right-0 w-3 h-3 bg-mintcom-green rounded-full border-2 border-white dark:border-[#0A0A0A]" />
@@ -757,7 +764,7 @@ export default function BrandTeamPage() {
                                                         </div>
                                                         <div>
                                                             <h3 className="text-sm font-bold text-gray-900 dark:text-white">
-                                                                {emp.firstName} {emp.lastName}
+                                                                {getDisplayName(emp)}
                                                             </h3>
                                                             <p className="dashboard-card-meta mt-0.5">@{emp.username}</p>
                                                         </div>

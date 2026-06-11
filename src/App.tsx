@@ -21,7 +21,7 @@ import { useTextInputLimits } from './hooks/useTextInputLimits';
 // ============================================================================
 // These are loaded immediately as they're needed for the auth flow
 import { ErrorPage } from './components/ErrorPage';
-import { ProtectedRoute } from './components/ProtectedRoute';
+import { ProtectedRoute, OwnerRoute } from './components/ProtectedRoute';
 import { ChatWidgetEnhancer } from './components/ChatWidgetEnhancer';
 import { ScrollToTop } from './components/ScrollToTop';
 
@@ -481,6 +481,10 @@ const router = createBrowserRouter([
             ),
           },
 
+          // ===== Owner & Brand Portals (account owner only) =====
+          {
+            element: <OwnerRoute />,
+            children: [
           // ========== Owner Portal ==========
           {
             path: "/owner",
@@ -591,6 +595,8 @@ const router = createBrowserRouter([
                 ),
               },
             ],
+          },
+            ], // end OwnerRoute children
           },
         ],
       },

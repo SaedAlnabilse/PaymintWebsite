@@ -16,7 +16,8 @@ export function EstablishmentUrlResolver({ children }: { children: React.ReactNo
         setCurrentEstablishment,
         isLoading: authLoading,
         isAuthenticated,
-        needsOnboarding
+        needsOnboarding,
+        account
     } = useAuth();
 
     const { locationSlug } = useParams<{ locationSlug: string }>();
@@ -111,12 +112,19 @@ export function EstablishmentUrlResolver({ children }: { children: React.ReactNo
         return <LoadingFallback message="Switching location..." />;
     }
 
-    const isOwnerBillingPage = location.pathname.startsWith('/owner/billing');
-    if (
-        LOCKED_SUBSCRIPTION_STATUSES.has(currentEstablishment.subscriptionStatus) &&
-        !isOwnerBillingPage
-    ) {
-        return <Navigate to="/owner/billing" replace />;
+    if (LOCKED_SUBSCRIPTION_STATUSES.has(currentEstablishment.subscriptionStatus)) {
+        // Only the owner can manage billing. Secondary admins/employees can't
+        // reach the owner portal, so send them a clear message instead of
+        // redirecting into an owner-only page (which would bounce in a loop).
+        if (account?.isSecondaryAdmin) {
+            return (
+                <LoadingFallback message="This location's subscription is inactive. Please ask the account owner to reactivate it." />
+            );
+        }
+        const isOwnerBillingPage = location.pathname.startsWith('/owner/billing');
+        if (!isOwnerBillingPage) {
+            return <Navigate to="/owner/billing" replace />;
+        }
     }
 
     return <>{children}</>;

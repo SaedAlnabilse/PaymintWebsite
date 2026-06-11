@@ -443,6 +443,52 @@ export function EmployeeFormModal({
     ],
   );
 
+  // Email is mandatory whenever the selected role grants access to the
+  // website/backoffice (those platforms authenticate by email). POS-only
+  // roles keep the email optional.
+  const roleOptionRequiresEmail = useCallback(
+    (optionId?: string): boolean => {
+      if (!optionId) return false;
+      if (optionId.startsWith('builtin:')) {
+        return optionId.slice(8).toUpperCase() === 'ADMIN';
+      }
+      const template = getRoleTemplateByOptionId(optionId);
+      if (!template) {
+        // Role template not loaded/assignable - fall back to the tracked flag.
+        return backofficeAccess;
+      }
+      return (
+        (template.baseRole || template.role || 'USER').toUpperCase() === 'ADMIN' ||
+        !!template.backofficeAccess
+      );
+    },
+    [backofficeAccess, getRoleTemplateByOptionId],
+  );
+
+  const requiresEmail = useMemo(() => {
+    if (role === 'ADMIN') return true;
+    if (
+      establishments &&
+      !sameRoleForAllLocations &&
+      selectedEstablishmentIds.length > 0
+    ) {
+      return selectedEstablishmentIds.some((establishmentId) =>
+        roleOptionRequiresEmail(getRoleOptionForTarget(establishmentId)),
+      );
+    }
+    if (!selectedCustomRoleId) return false;
+    return roleOptionRequiresEmail(customRoleOptionId(selectedCustomRoleId));
+  }, [
+    customRoleOptionId,
+    establishments,
+    getRoleOptionForTarget,
+    role,
+    roleOptionRequiresEmail,
+    sameRoleForAllLocations,
+    selectedCustomRoleId,
+    selectedEstablishmentIds,
+  ]);
+
   const isRoleVisibleForTarget = useCallback(
     (customRole: CustomRole, target: 'ALL' | string) => {
       if (customRole.isGlobal) return true;
@@ -868,12 +914,11 @@ export function EmployeeFormModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validation
+    // Validation - the name is optional, employees without one are shown by username.
     const newErrors: Record<string, string> = {};
-    if (!name.trim()) newErrors.name = t('staff.errors.nameRequired');
     if (!username.trim()) newErrors.username = t('staff.errors.usernameRequired');
     if (usernameAvailabilityError) newErrors.username = usernameAvailabilityError;
-    if ((role === 'ADMIN' || backofficeAccess) && !email.trim()) {
+    if (requiresEmail && !email.trim()) {
       newErrors.email = t('staff.errors.emailRequired');
     }
 
@@ -942,9 +987,10 @@ export function EmployeeFormModal({
 
     setErrors({});
 
-    // Split name into first and last name
-    const nameParts = name.trim().split(/\s+/);
-    const firstName = nameParts[0] || t('staff.form.defaultFirstName');
+    // Split the optional name into first and last name. An empty name is
+    // allowed - the employee is then identified by username everywhere.
+    const nameParts = name.trim().split(/\s+/).filter(Boolean);
+    const firstName = nameParts[0] || '';
     const lastName = nameParts.slice(1).join(' ');
     const sanitizedPosPermissions = sanitizeAssignablePosPermissions(
       normalizeAndFilterPermissions(permissions, ALLOWED_POS_PERMISSION_IDS),
@@ -984,7 +1030,7 @@ export function EmployeeFormModal({
 
     const payload: Partial<StaffMember> & { password?: string; pinCode?: string } = {
       firstName,
-      ...(lastName && { lastName }),
+      lastName,
       username,
       email: email || undefined,
       phone: phone || undefined,
@@ -1068,10 +1114,10 @@ export function EmployeeFormModal({
                 </div>
               )}
 
-              {/* Name */}
+              {/* Name (optional) */}
               <div className="space-y-2">
                 <label className="block text-sm font-normal text-gray-900 dark:text-white flex items-center gap-1 tracking-tight">
-                  {t('staff.form.nameLabel')} <span className="text-mintcom-red">*</span>
+                  {t('staff.form.nameLabel')} {t('staff.form.nameOptional', { defaultValue: '(Optional)' })}
                 </label>
                 <input maxLength={255}
                   type="text"
@@ -1081,63 +1127,6 @@ export function EmployeeFormModal({
                   className={`w-full bg-gray-50 dark:bg-white/5 border ${errors.name ? 'border-mintcom-red ring-2 ring-mintcom-red/20' : 'border-gray-200 dark:border-white/10'} rounded-xl px-4 py-3 text-sm font-bold text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:border-mintcom-green focus:ring-1 focus:ring-mintcom-green transition-colors`}
                 />
                 {errors.name && <p className="mt-1 text-xs font-bold text-mintcom-red">{errors.name}</p>}
-              </div>
-
-              {/* Username */}
-              <div className="space-y-2">
-                <label className="block text-sm font-normal text-gray-900 dark:text-white flex items-center gap-1 tracking-tight">
-                  {t('staff.form.usernameLabel')} <span className="text-mintcom-red">*</span>
-                </label>
-                <input maxLength={255}
-                  type="text"
-                  value={username}
-                  onChange={(e) => {
-                    setUsername(e.target.value);
-                    setUsernameAvailabilityError('');
-                    if (errors.username) setErrors({ ...errors, username: '' });
-                  }}
-                  placeholder={formatInputPlaceholder(t('staff.form.usernamePlaceholder'), t('common.locale'))}
-                  className={`w-full bg-gray-50 dark:bg-white/5 border ${errors.username || usernameAvailabilityError ? 'border-mintcom-red ring-2 ring-mintcom-red/20' : 'border-gray-200 dark:border-white/10'} rounded-xl px-4 py-3 text-sm font-bold text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:border-mintcom-green focus:ring-1 focus:ring-mintcom-green transition-colors`}
-                />
-                {(errors.username || usernameAvailabilityError) && (
-                  <p className="mt-1 text-xs font-bold text-mintcom-red">
-                    {errors.username || usernameAvailabilityError}
-                  </p>
-                )}
-                {isCheckingUsername && !errors.username && !usernameAvailabilityError && (
-                  <p className="mt-1 text-xs font-bold text-gray-400">
-                    {t('staff.form.checkingUsername', { defaultValue: 'Checking username...' })}
-                  </p>
-                )}
-              </div>
-
-              {/* Email */}
-              <div className="space-y-2">
-                <label className="block text-sm font-normal text-gray-900 dark:text-white flex items-center gap-1 tracking-tight">
-                  {t('staff.form.emailLabel')} {role === 'ADMIN' ? <span className="text-mintcom-red">*</span> : t('staff.form.emailOptional')}
-                </label>
-                <input maxLength={255}
-                  type="email"
-                  value={email}
-                  onChange={(e) => { setEmail(e.target.value); if (errors.email) setErrors({ ...errors, email: '' }); }}
-                  placeholder={formatInputPlaceholder(t('staff.form.emailPlaceholder'), t('common.locale'))}
-                  className={`w-full bg-gray-50 dark:bg-white/5 border ${errors.email ? 'border-mintcom-red ring-2 ring-mintcom-red/20' : 'border-gray-200 dark:border-white/10'} rounded-xl px-4 py-3 text-sm font-bold text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:border-mintcom-green focus:ring-1 focus:ring-mintcom-green transition-colors`}
-                />
-                {errors.email && <p className="mt-1 text-xs font-bold text-mintcom-red">{errors.email}</p>}
-              </div>
-
-              {/* Phone */}
-              <div className="space-y-2">
-                <label className="block text-sm font-normal text-gray-900 dark:text-white flex items-center gap-1 tracking-tight">
-                  {t('staff.form.phoneLabel')} {t('staff.form.phoneOptional')}
-                </label>
-                <input maxLength={255}
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder={formatInputPlaceholder(t('staff.form.phonePlaceholder'), t('common.locale'))}
-                  className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:border-mintcom-green focus:ring-1 focus:ring-mintcom-green transition-colors"
-                />
               </div>
 
               {/* Establishment Selection (Only if establishments prop is provided) */}
@@ -1533,6 +1522,70 @@ export function EmployeeFormModal({
                       />
                     </p>                  </div>
                 )}
+              </div>
+
+              {/* Email - required when the selected role has website/backoffice access */}
+              <div className="space-y-2">
+                <label className="block text-sm font-normal text-gray-900 dark:text-white flex items-center gap-1 tracking-tight">
+                  {t('staff.form.emailLabel')} {requiresEmail ? <span className="text-mintcom-red">*</span> : t('staff.form.emailOptional')}
+                </label>
+                <input maxLength={255}
+                  type="email"
+                  value={email}
+                  onChange={(e) => { setEmail(e.target.value); if (errors.email) setErrors({ ...errors, email: '' }); }}
+                  placeholder={formatInputPlaceholder(t('staff.form.emailPlaceholder'), t('common.locale'))}
+                  className={`w-full bg-gray-50 dark:bg-white/5 border ${errors.email ? 'border-mintcom-red ring-2 ring-mintcom-red/20' : 'border-gray-200 dark:border-white/10'} rounded-xl px-4 py-3 text-sm font-bold text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:border-mintcom-green focus:ring-1 focus:ring-mintcom-green transition-colors`}
+                />
+                {requiresEmail && (
+                  <p className="mt-1 text-xs font-bold text-gray-500 dark:text-gray-400">
+                    {t('staff.form.emailRequiredHint', {
+                      defaultValue: 'This role can access the website and Back Office app, so an email is required to sign in.',
+                    })}
+                  </p>
+                )}
+                {errors.email && <p className="mt-1 text-xs font-bold text-mintcom-red">{errors.email}</p>}
+              </div>
+
+              {/* Username */}
+              <div className="space-y-2">
+                <label className="block text-sm font-normal text-gray-900 dark:text-white flex items-center gap-1 tracking-tight">
+                  {t('staff.form.usernameLabel')} <span className="text-mintcom-red">*</span>
+                </label>
+                <input maxLength={255}
+                  type="text"
+                  value={username}
+                  onChange={(e) => {
+                    setUsername(e.target.value);
+                    setUsernameAvailabilityError('');
+                    if (errors.username) setErrors({ ...errors, username: '' });
+                  }}
+                  placeholder={formatInputPlaceholder(t('staff.form.usernamePlaceholder'), t('common.locale'))}
+                  className={`w-full bg-gray-50 dark:bg-white/5 border ${errors.username || usernameAvailabilityError ? 'border-mintcom-red ring-2 ring-mintcom-red/20' : 'border-gray-200 dark:border-white/10'} rounded-xl px-4 py-3 text-sm font-bold text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:border-mintcom-green focus:ring-1 focus:ring-mintcom-green transition-colors`}
+                />
+                {(errors.username || usernameAvailabilityError) && (
+                  <p className="mt-1 text-xs font-bold text-mintcom-red">
+                    {errors.username || usernameAvailabilityError}
+                  </p>
+                )}
+                {isCheckingUsername && !errors.username && !usernameAvailabilityError && (
+                  <p className="mt-1 text-xs font-bold text-gray-400">
+                    {t('staff.form.checkingUsername', { defaultValue: 'Checking username...' })}
+                  </p>
+                )}
+              </div>
+
+              {/* Phone */}
+              <div className="space-y-2">
+                <label className="block text-sm font-normal text-gray-900 dark:text-white flex items-center gap-1 tracking-tight">
+                  {t('staff.form.phoneLabel')} {t('staff.form.phoneOptional')}
+                </label>
+                <input maxLength={255}
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder={formatInputPlaceholder(t('staff.form.phonePlaceholder'), t('common.locale'))}
+                  className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:border-mintcom-green focus:ring-1 focus:ring-mintcom-green transition-colors"
+                />
               </div>
 
               {/* Password wrapper start (to match existing indentation/structure) */}

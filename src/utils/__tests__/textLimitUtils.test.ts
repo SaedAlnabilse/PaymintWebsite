@@ -32,6 +32,13 @@ describe('text limit utilities', () => {
     expect(payload.nested.taxIdNumber).toHaveLength(TEXT_INPUT_LIMITS.TAX_ID);
   });
 
+  it('does not truncate generated image data URLs', () => {
+    const image = `data:image/png;base64,${'a'.repeat(500)}`;
+    const payload = sanitizeTextPayload({ image });
+
+    expect(payload.image).toBe(image);
+  });
+
   it('assigns maxlength and truncates old long values on text inputs', () => {
     const input = document.createElement('input');
     input.name = 'productName';

@@ -76,6 +76,10 @@ const EMPLOYEE_LIMIT_POPUP_MESSAGE =
 const getDisplayInitial = (firstName?: string, username?: string) =>
     (firstName?.trim()?.charAt(0) || username?.trim()?.charAt(0) || '?').toUpperCase();
 
+// Employees can be created without a name; fall back to the username.
+const getDisplayName = (emp: { firstName?: string; lastName?: string; username?: string }) =>
+    `${emp.firstName || ''} ${emp.lastName || ''}`.trim() || emp.username || '';
+
 const isOwnerEmployee = (employee: Pick<Employee, 'role' | 'isAccountOwner' | 'isOwnerAccount' | 'isProtected'>) =>
     Boolean(
         employee.isAccountOwner ||
@@ -622,7 +626,7 @@ export function OwnerEmployeesPage() {
                                                 </div>
                                                 <div>
                                                     <h3 className="text-lg font-bold tracking-tight text-gray-900 dark:text-white leading-tight">
-                                                        {emp.firstName} {emp.lastName}
+                                                        {getDisplayName(emp)}
                                                     </h3>
                                                     <p className="text-xs text-gray-500 mt-1">
                                                         {emp.username}
@@ -748,7 +752,7 @@ export function OwnerEmployeesPage() {
                                                     </div>
                                                     <div>
                                                         <p className="font-bold text-gray-900 dark:text-white text-sm flex items-center gap-2">
-                                                            <span>{emp.firstName} {emp.lastName}</span>
+                                                            <span>{getDisplayName(emp)}</span>
                                                         </p>
                                                         <p className="text-xs text-gray-500">{emp.username}</p>
                                                     </div>
@@ -892,7 +896,7 @@ export function OwnerEmployeesPage() {
                                                             </div>
                                                             <div>
                                                                 <p className="font-bold text-gray-900 dark:text-white text-sm flex items-center gap-2">
-                                                                    <span>{emp.firstName} {emp.lastName}</span>
+                                                                    <span>{getDisplayName(emp)}</span>
                                                                 </p>
                                                                 <p className="text-xs text-gray-500">{emp.username}</p>
                                                             </div>

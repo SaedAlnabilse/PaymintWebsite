@@ -280,7 +280,7 @@ export interface ItemPriceHistory {
   name: string;
   establishmentId?: string;
   itemNameSnapshot?: string;
-  field?: 'price' | 'name' | 'image';
+  field?: 'price' | 'cost' | 'name' | 'image' | 'category';
   oldPrice?: number | null;
   newPrice?: number | null;
   oldValue?: number | string | null;
