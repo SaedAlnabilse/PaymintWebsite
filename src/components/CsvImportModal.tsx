@@ -460,10 +460,10 @@ export function CsvImportModal({
                                         <Upload size={28} />
                                     </div>
                                     <p className="text-sm font-bold text-gray-900 dark:text-white mb-1">
-                                        {dragOver ? 'Drop your CSV file here' : 'Click or drag & drop your CSV file'}
+                                        {dragOver ? t('csv.dragDropHover') : t('csv.dragDropPrompt')}
                                     </p>
                                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                                        Supports .csv files up to 5MB
+                                        {t('csv.supportsLimit')}
                                     </p>
                                 </div>
 
@@ -472,7 +472,7 @@ export function CsvImportModal({
                                     <div className="p-4 rounded-xl bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-500/20">
                                         <div className="flex items-center gap-2 mb-2">
                                             <FileWarning size={16} className="text-red-500" />
-                                            <p className="text-sm font-bold text-red-600 dark:text-red-400">Issues Found</p>
+                                            <p className="text-sm font-bold text-red-600 dark:text-red-400">{t('csv.issuesFound')}</p>
                                         </div>
                                         <ul className="space-y-1">
                                             {parseErrors.map((err, i) => (
@@ -498,13 +498,13 @@ export function CsvImportModal({
                                         </div>
                                         <div>
                                             <p className="text-sm font-bold text-gray-900 dark:text-white">{fileName}</p>
-                                            <p className="text-xs text-gray-500">{parsedData.length} valid row(s) ready to import</p>
+                                            <p className="text-xs text-gray-500">{t('csv.validRowsReady', { count: parsedData.length })}</p>
                                         </div>
                                     </div>
                                     <button
                                         onClick={resetState}
                                         className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors"
-                                        title="Remove file"
+                                        title={t('csv.removeFile')}
                                     >
                                         <Trash2 size={16} />
                                     </button>
@@ -515,7 +515,7 @@ export function CsvImportModal({
                                     <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-500/20">
                                         <div className="flex items-center gap-2 mb-1.5">
                                             <AlertCircle size={14} className="text-amber-500" />
-                                            <p className="text-xs font-bold text-amber-600 dark:text-amber-400">Some Rows Were Skipped</p>
+                                            <p className="text-xs font-bold text-amber-600 dark:text-amber-400">{t('csv.someRowsSkipped')}</p>
                                         </div>
                                         <ul className="space-y-0.5">
                                             {parseErrors.map((err, i) => (
@@ -608,14 +608,14 @@ export function CsvImportModal({
 
                                     <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">
                                         {importResult.failed === 0
-                                            ? 'Import Successful!'
+                                            ? t('csv.importSuccessful')
                                             : importResult.success === 0
-                                                ? 'Import Failed'
-                                                : 'Partial Import'}
+                                                ? t('csv.importFailed')
+                                                : t('csv.partialImport')}
                                     </h3>
                                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                                        {importResult.success} imported successfully
-                                        {importResult.failed > 0 && `, ${importResult.failed} failed`}
+                                        {t('csv.importedCount', { success: importResult.success })}
+                                        {importResult.failed > 0 && `, ${t('csv.failedCount', { failed: importResult.failed })}`}
                                     </p>
                                 </div>
 
@@ -623,11 +623,11 @@ export function CsvImportModal({
                                 <div className="grid grid-cols-2 gap-3">
                                     <div className="p-4 rounded-xl bg-mintcom-green/10 dark:bg-mintcom-green/10 border border-mintcom-green/20 dark:border-mintcom-green/20 text-center">
                                         <p className="text-2xl font-black text-mintcom-green">{importResult.success}</p>
-                                        <p className="text-xs font-bold text-mintcom-green dark:text-mintcom-green mt-1">Successful</p>
+                                        <p className="text-xs font-bold text-mintcom-green dark:text-mintcom-green mt-1">{t('csv.successfulLabel')}</p>
                                     </div>
                                     <div className="p-4 rounded-xl bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-500/20 text-center">
                                         <p className="text-2xl font-black text-red-500">{importResult.failed}</p>
-                                        <p className="text-xs font-bold text-red-600 dark:text-red-400 mt-1">Failed</p>
+                                        <p className="text-xs font-bold text-red-600 dark:text-red-400 mt-1">{t('csv.failedLabel')}</p>
                                     </div>
                                 </div>
 
@@ -637,7 +637,9 @@ export function CsvImportModal({
                                         <div className="flex items-center gap-2 mb-2">
                                             <CheckCircle2 size={14} className="text-blue-500" />
                                             <p className="text-xs font-bold text-blue-600 dark:text-blue-400">
-                                                {importResult.createdCategories.length} new categor{importResult.createdCategories.length === 1 ? 'y' : 'ies'} auto-created:
+                                                {importResult.createdCategories.length === 1 
+                                                    ? t('csv.newCategoryAutoCreated') 
+                                                    : t('csv.newCategoriesAutoCreated', { count: importResult.createdCategories.length })}
                                             </p>
                                         </div>
                                         <div className="flex flex-wrap gap-1.5">
@@ -653,7 +655,7 @@ export function CsvImportModal({
                                 {/* Error Details */}
                                 {importResult.errors.length > 0 && (
                                     <div className="p-4 rounded-xl bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-500/20">
-                                        <p className="text-xs font-bold text-red-600 dark:text-red-400 mb-2">Error Details:</p>
+                                        <p className="text-xs font-bold text-red-600 dark:text-red-400 mb-2">{t('csv.errorDetails')}</p>
                                         <ul className="space-y-1 max-h-40 overflow-y-auto custom-scrollbar">
                                             {importResult.errors.map((err, i) => (
                                                 <li key={i} className="text-[11px] text-red-500 dark:text-red-400 flex items-start gap-1.5">
@@ -675,7 +677,7 @@ export function CsvImportModal({
                                 onClick={handleClose}
                                 className="flex-1 h-12 rounded-xl bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-500 font-bold text-sm hover:text-gray-900 dark:hover:text-white transition-all"
                             >
-                                Cancel
+                                {t('common.cancel')}
                             </button>
                         )}
 
@@ -685,7 +687,7 @@ export function CsvImportModal({
                                     onClick={resetState}
                                     className="flex-1 h-12 rounded-xl bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-500 font-bold text-sm hover:text-gray-900 dark:hover:text-white transition-all"
                                 >
-                                    Back
+                                    {t('common.back')}
                                 </button>
                                 <button
                                     onClick={handleImport}
@@ -695,12 +697,12 @@ export function CsvImportModal({
                                     {isImporting ? (
                                         <>
                                             <Loader2 size={16} className="animate-spin" />
-                                            Importing...
+                                            {t('csv.importing')}
                                         </>
                                     ) : (
                                         <>
                                             <Upload size={16} />
-                                            Import {parsedData.length} Row{parsedData.length !== 1 ? 's' : ''}
+                                            {t('csv.importRows', { count: parsedData.length })}
                                         </>
                                     )}
                                 </button>
@@ -712,7 +714,7 @@ export function CsvImportModal({
                                 onClick={handleClose}
                                 className="flex-1 h-12 rounded-xl bg-mintcom-green text-black font-bold text-sm hover:bg-[#5fa888] active:scale-[0.98] transition-all shadow-lg shadow-mintcom-green/20"
                             >
-                                Done
+                                {t('common.done')}
                             </button>
                         )}
                     </div>

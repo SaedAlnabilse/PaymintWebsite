@@ -702,7 +702,7 @@ export function RecipesPage() {
                       <tr className="border-b border-gray-200 dark:border-white/5">
                         <th className="px-6 py-4 text-left label-strong font-outfit">{t('inventory.form.name', {defaultValue: 'NAME'})}</th>
                         <th className="px-6 py-4 text-center label-strong font-outfit">{t('inventory.quantity', {defaultValue: 'QUANTITY'})}</th>
-                        <th className="px-6 py-4 text-center label-strong font-outfit">{t('common.status', {defaultValue: 'STATUS'})}</th>
+                        <th className="px-6 py-4 text-center label-strong font-outfit">{t('common.status_title', {defaultValue: 'STATUS'})}</th>
                         <th className="px-6 py-4 text-center label-strong font-outfit">{t('orders.table.actions', {defaultValue: 'ACTIONS'})}</th>
                       </tr>
                     </thead>

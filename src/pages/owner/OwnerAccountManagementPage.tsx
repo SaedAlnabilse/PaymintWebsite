@@ -798,7 +798,7 @@ export function OwnerAccountManagementPage() {
                                                     <button
                                                         onClick={() => window.open(`/dashboard/${slug}`, '_blank')}
                                                         className="flex items-center justify-center w-8 h-8 rounded-lg bg-gray-50 dark:bg-white/5 text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-all ml-auto shrink-0"
-                                                        title="View Dashboard"
+                                                        title={t('owner.brands.viewDashboard')}
                                                     >
                                                         <ExternalLink size={16} />
                                                     </button>

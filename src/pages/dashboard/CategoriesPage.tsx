@@ -564,7 +564,7 @@ export function CategoriesPage() {
             className="flex items-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl bg-white dark:bg-white/5 text-gray-900 dark:text-white border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/10 transition-all shadow-sm group"
           >
             <Upload size={18} className="group-hover:text-mintcom-green transition-colors" />
-            <span className="font-bold text-xs sm:text-sm hidden sm:inline">Import CSV</span>
+            <span className="font-bold text-xs sm:text-sm hidden sm:inline">{t('products.importCsv')}</span>
           </button>
           <button
             onClick={openCreateModal}
@@ -986,8 +986,8 @@ export function CategoriesPage() {
       <CsvImportModal
         isOpen={showCsvImport}
         onClose={() => setShowCsvImport(false)}
-        title="Import Categories"
-        description="Bulk import categories from a CSV file"
+        title={t('categories.importCategories')}
+        description={t('categories.importDescription')}
         columns={categoryCsvColumns}
         sampleData={categorySampleData}
         sampleFileName="categories_sample.csv"

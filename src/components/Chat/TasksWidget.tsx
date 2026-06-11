@@ -420,8 +420,8 @@ export function TasksWidget() {
                                     <button
                                         onClick={handleResetTasks}
                                         className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-400 transition-colors"
-                                        aria-label="Reset tasks"
-                                        title="Reset all tasks"
+                                        aria-label={t('common.resetAllTasks')}
+                                        title={t('common.resetAllTasks')}
                                     >
                                         <RotateCcw size={16} />
                                     </button>
