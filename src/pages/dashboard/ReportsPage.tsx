@@ -233,29 +233,22 @@ export function ReportsPage() {
 
   const [isFetching, setIsFetching] = useState(false);
   const prevReportType = useRef<ReportType>(reportType);
+  // Monotonic id so only the most recent request is allowed to write state.
+  // Prevents out-of-order responses (from fast tab switching) overwriting the
+  // currently selected report with stale data.
+  const fetchSeq = useRef(0);
 
   useEffect(() => {
     if (!currentEstablishment?.id) {
       return;
     }
 
-    // Determine if we need a hard loading state (blocking)
+    // Any change to the report type / sub-tab / filters triggers a fresh fetch.
+    // While that request is in flight the whole reports area is muted and
+    // blocked (see `busy` overlay below), so a hard loading state on the major
+    // report-type switch is enough to swap the view cleanly.
     const isMajorSwitch = prevReportType.current !== reportType;
-    // Initial load check
-    const hasData =
-      (reportType === 'sales' && salesData) ||
-      (reportType === 'payments' && salesData) ||
-      (reportType === 'discounts' && salesData) ||
-      (reportType === 'taxes' && salesData) ||
-      (reportType === 'top-items' && itemReportData) ||
-      (reportType === 'peak-hours' && true) ||
-      (reportType === 'staff-sales' && true) ||
-      (reportType === 'shifts' && true) ||
-      (reportType === 'receipts' && true); // Receipts are fetched inside the component
-
-    // If switching report types or no data yet, block UI.
-    // Otherwise (filters/sub-tabs), just show fetching indicator.
-    if (isMajorSwitch || !hasData) {
+    if (isMajorSwitch) {
       setIsLoading(true);
     }
 
@@ -263,13 +256,19 @@ export function ReportsPage() {
     prevReportType.current = reportType;
   }, [reportType, startDate, endDate, startTime, endTime, selectedEmployeeId, selectedShiftId, itemReportTab, currentEstablishment?.id]);
 
-  const fetchReportData = async () => {
+  const fetchReportData = async (silent = false) => {
+    // Claim this request id. Any response from an older request is ignored.
+    const seq = ++fetchSeq.current;
+    const isStale = () => seq !== fetchSeq.current;
+
     try {
       if (!currentEstablishment?.id) {
         return;
       }
 
-      setIsFetching(true);
+      if (!silent) {
+        setIsFetching(true);
+      }
 
       const commonParams: Record<string, string> = {
         startDate: effectiveDateRange.start,
@@ -285,11 +284,13 @@ export function ReportsPage() {
         case 'payments':
         case 'taxes': {
           const salesRes = await api.get('/reports/historical-summary', { params: commonParams });
+          if (isStale()) return;
           setSalesData(normalizeSalesSummary(salesRes.data));
           break;
         }
         case 'discounts': {
           const discountRes = await api.get('/reports/discounts', { params: commonParams });
+          if (isStale()) return;
           const rawReports = discountRes.data?.reports;
           const discountReports = Array.isArray(rawReports) ? rawReports.filter((r: any) => r) : [];
 
@@ -317,31 +318,38 @@ export function ReportsPage() {
           const itemRes = await api.get(endpoint, {
             params: commonParams,
           });
+          if (isStale()) return;
           setItemReportData(normalizeItemReportData(itemRes.data));
           break;
         }
         case 'peak-hours': {
           const peakRes = await api.get('/reports/peak-hours', { params: { ...commonParams, timezone: browserTimeZone } });
+          if (isStale()) return;
           setPeakHours(normalizePeakHours(peakRes.data));
           break;
         }
         case 'staff-sales': {
           const staffSalesRes = await api.get('/reports/shifts', { params: { ...commonParams, limit: 50 } });
+          if (isStale()) return;
           setShifts(normalizeShifts(staffSalesRes.data));
           break;
         }
         case 'shifts': {
           const shiftsRes = await api.get('/reports/shifts', { params: { ...commonParams, limit: 20 } });
+          if (isStale()) return;
           setShifts(normalizeShifts(shiftsRes.data));
           break;
         }
         case 'cash-discrepancy': {
           const shiftsRes = await api.get('/reports/shifts', { params: { ...commonParams, limit: 100 } });
+          if (isStale()) return;
           setShifts(normalizeShifts(shiftsRes.data));
           break;
         }
       }
     } catch (error: any) {
+      // A superseded request failing must not clobber the current view.
+      if (isStale()) return;
       console.error('[Reports] Failed to load report data', {
         reportType,
         establishmentId: currentEstablishment?.id,
@@ -362,8 +370,14 @@ export function ReportsPage() {
       }
       toast.error(t('dashboard.messages.loadFailed'));
     } finally {
-      setIsLoading(false);
-      setIsFetching(false);
+      // Only the latest request clears the loading/fetching flags, so the UI
+      // stays muted until the response the user is actually waiting for lands.
+      if (!isStale()) {
+        setIsLoading(false);
+        if (!silent) {
+          setIsFetching(false);
+        }
+      }
     }
   };
 
@@ -403,7 +417,8 @@ export function ReportsPage() {
         fetchEmployees();
       }
 
-      fetchReportData();
+      // Background refresh: update data without muting/blocking the UI.
+      fetchReportData(true);
     });
 
     return unsubscribe;
@@ -496,8 +511,11 @@ export function ReportsPage() {
     exportToCSV(dataToExport, filename, headers);
   };
 
+  // Any in-flight (non-silent) request mutes and blocks the entire reports UI.
+  const busy = isLoading || isFetching;
+
   return (
-    <div className="max-w-7xl mx-auto space-y-8 pb-10">
+    <div className="relative max-w-7xl mx-auto space-y-8 pb-10" aria-busy={busy}>
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
         <div>
@@ -726,13 +744,12 @@ export function ReportsPage() {
         </div>
       </div>
 
-      {/* Content */}
+      {/* Content. The busy overlay (below) mutes/blocks this area while a
+          request is in flight; on a major report-type switch we hide the old
+          view to avoid showing the previous report's data under the overlay. */}
       <AnimatePresence mode="wait">
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-32">
-            <div className="w-16 h-16 border-4 border-mintcom-green/10 border-t-mintcom-green rounded-full animate-spin mb-4" />
-            <p className="label-strong font-outfit">{t('dashboard.processing')}</p>
-          </div>
+          <div className="py-32" aria-hidden="true" />
         ) : (
           <motion.div key={reportType} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
 
@@ -806,6 +823,22 @@ export function ReportsPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Global busy overlay: mutes and blocks ALL interaction (tabs, filters,
+          content) while any report request is in flight, so the user can't
+          stack requests or click a stale view mid-load. */}
+      {busy && (
+        <div
+          className="absolute inset-0 z-[80] flex items-start justify-center pt-32 cursor-wait bg-white/50 dark:bg-[#0F172A]/50 backdrop-blur-[1px]"
+          role="status"
+          aria-live="polite"
+        >
+          <div className="flex flex-col items-center">
+            <div className="w-12 h-12 border-4 border-mintcom-green/10 border-t-mintcom-green rounded-full animate-spin mb-3" />
+            <p className="label-strong font-outfit">{t('dashboard.processing')}</p>
+          </div>
+        </div>
+      )}
 
       <PayInPayOutLogModal
         isOpen={showPayInOutModal}

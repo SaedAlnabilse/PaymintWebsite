@@ -302,6 +302,12 @@ export const ItemsView = React.memo(function ItemsView({
     if (field === 'image') {
       return t('reports.history.fieldImage', { defaultValue: 'Image' });
     }
+    if (field === 'cost') {
+      return t('reports.history.fieldCost', { defaultValue: 'Cost' });
+    }
+    if (field === 'category') {
+      return t('reports.history.fieldCategory', { defaultValue: 'Category' });
+    }
     return t('reports.history.fieldPrice', { defaultValue: 'Price' });
   };
 
@@ -342,7 +348,7 @@ export const ItemsView = React.memo(function ItemsView({
     const field = history.field || 'price';
     const value = side === 'old' ? history.oldValue : history.newValue;
 
-    if (field === 'price') {
+    if (field === 'price' || field === 'cost') {
       return formatHistoryMoney(
         value,
         side === 'old' ? history.oldPrice : history.newPrice,
@@ -741,7 +747,7 @@ export const ItemsView = React.memo(function ItemsView({
                             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">
                               {t('reports.history.from', { defaultValue: 'Old value' })}
                             </p>
-                            <div className={(history.field || 'price') === 'price' ? 'text-lg font-bold text-gray-500 line-through decoration-mintcom-red/40' : 'flex justify-center'}>
+                            <div className={['price', 'cost'].includes(history.field || 'price') ? 'text-lg font-bold text-gray-500 line-through decoration-mintcom-red/40' : 'flex justify-center'}>
                               {renderHistoryValue(history, 'old')}
                             </div>
                           </div>
@@ -750,7 +756,7 @@ export const ItemsView = React.memo(function ItemsView({
                             <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-1">
                               {t('reports.history.to', { defaultValue: 'New value' })}
                             </p>
-                            <div className={(history.field || 'price') === 'price' ? 'text-xl font-black text-gray-900 dark:text-white' : 'flex justify-center'}>
+                            <div className={['price', 'cost'].includes(history.field || 'price') ? 'text-xl font-black text-gray-900 dark:text-white' : 'flex justify-center'}>
                               {renderHistoryValue(history, 'new')}
                             </div>
                           </div>

@@ -10,10 +10,14 @@ import api from '../../config/api';
 import { QuickInfo } from '../QuickInfo';
 import { ConfirmModal } from '../ConfirmModal';
 import {
+  buildProductImagePrompt,
   buildProductImageSignature,
   createProductFallbackDataUrl,
   createProductFallbackImageAsset,
+  dataUrlToFile,
+  extractProductImageSource,
   generatePollinationsProductImage,
+  sanitizeProductImageFilename,
 } from '../../utils/productImage';
 
 import { AttributeFormModal } from './AttributeFormModal';
@@ -349,6 +353,44 @@ export function ProductFormModal({
     }
   };
 
+  const generateBackendProductImage = async (signal: AbortSignal) => {
+    const prompt = buildProductImagePrompt(currentImageContext);
+    const response = await api.post('/api/items/generate-image', {
+      prompt,
+      context: currentImageContext,
+    }, { signal });
+    const imageSource = extractProductImageSource(response.data);
+
+    if (!imageSource) {
+      throw new Error('No generated image returned.');
+    }
+
+    const provider = typeof response.data?.provider === 'string'
+      ? response.data.provider
+      : 'generated';
+    const mimeType = imageSource.match(/^data:([^;,]+)/)?.[1] || 'image/jpeg';
+    const extension = mimeType.includes('png')
+      ? 'png'
+      : mimeType.includes('webp')
+        ? 'webp'
+        : mimeType.includes('gif')
+          ? 'gif'
+          : 'jpg';
+    const safeName = sanitizeProductImageFilename(currentImageContext.name);
+    const file = await dataUrlToFile(
+      imageSource,
+      `${safeName}-${provider}.${extension}`,
+      mimeType,
+      signal,
+    );
+
+    return {
+      file,
+      previewUrl: imageSource,
+      source: response.data?.fallback ? 'fallback' as const : 'pollinations' as const,
+    };
+  };
+
   const handleGenerateImage = async () => {
     if (!name.trim()) {
       toast.error(t('products.messages.nameRequired'));
@@ -366,17 +408,21 @@ export function ProductFormModal({
         return;
       }
 
-      const generatedImage = await generatePollinationsProductImage(currentImageContext, controller.signal);
+      const generatedImage = await generateBackendProductImage(controller.signal);
 
       if (controller.signal.aborted) {
         return;
       }
 
-      applyImageSelection(generatedImage.file, generatedImage.previewUrl, 'pollinations', currentImageSignature);
+      applyImageSelection(generatedImage.file, generatedImage.previewUrl, generatedImage.source, currentImageSignature);
       toast.success(
-        t('products.messages.imageGenerated', {
-          defaultValue: 'Product image generated.',
-        })
+        generatedImage.source === 'fallback'
+          ? t('products.messages.imageFallbackUsed', {
+              defaultValue: 'A free product image was created.',
+            })
+          : t('products.messages.imageGenerated', {
+              defaultValue: 'Product image generated.',
+            })
       );
     } catch (error: any) {
       if (error?.code === 'ERR_CANCELED' || error?.name === 'CanceledError') {
@@ -387,25 +433,46 @@ export function ProductFormModal({
         return;
       }
 
-      console.error('Failed to generate Pollinations image:', error);
+      console.error('Failed to generate backend product image:', error);
 
       try {
-        const fallbackAsset = await createProductFallbackImageAsset(currentImageContext);
+        const generatedImage = await generatePollinationsProductImage(currentImageContext, controller.signal);
 
         if (controller.signal.aborted) {
           return;
         }
 
-        applyImageSelection(fallbackAsset.file, fallbackAsset.dataUrl, 'fallback', currentImageSignature);
+        applyImageSelection(generatedImage.file, generatedImage.previewUrl, 'pollinations', currentImageSignature);
         toast.success(
-          t('products.messages.imageFallbackUsed', {
-            defaultValue: 'Pollinations was unavailable, so a free product image was created.',
+          t('products.messages.imageGenerated', {
+            defaultValue: 'Product image generated.',
           })
         );
       } catch (fallbackError) {
-        console.error('Failed to create fallback image:', fallbackError);
-        const message = error?.message || t('products.messages.aiOverloaded');
-        toast.error(message);
+        if (controller.signal.aborted) {
+          return;
+        }
+
+        console.error('Failed to generate browser Pollinations image:', fallbackError);
+
+        try {
+          const fallbackAsset = await createProductFallbackImageAsset(currentImageContext);
+
+          if (controller.signal.aborted) {
+            return;
+          }
+
+          applyImageSelection(fallbackAsset.file, fallbackAsset.dataUrl, 'fallback', currentImageSignature);
+          toast.success(
+            t('products.messages.imageFallbackUsed', {
+              defaultValue: 'Pollinations was unavailable, so a free product image was created.',
+            })
+          );
+        } catch (localFallbackError) {
+          console.error('Failed to create fallback image:', localFallbackError);
+          const message = error?.message || t('products.messages.aiOverloaded');
+          toast.error(message);
+        }
       }
     } finally {
       if (imageRequestControllerRef.current === controller) {

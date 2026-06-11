@@ -592,7 +592,7 @@ export function StaffPage() {
                       </div>
                       <div>
                         <p className="font-bold text-gray-900 dark:text-white text-sm flex items-center gap-2">
-                          <span>{member.name}</span>
+                          <span>{member.name?.trim() || member.username}</span>
                         </p>
                         <p className="text-xs text-gray-500">{member.username}</p>
                       </div>
@@ -716,7 +716,7 @@ export function StaffPage() {
                           </div>
                           <div>
                             <p className="font-bold text-gray-900 dark:text-white text-sm flex items-center gap-2">
-                              <span>{member.name}</span>
+                              <span>{member.name?.trim() || member.username}</span>
                             </p>
                             <p className="text-xs text-gray-500">{member.username}</p>
                           </div>
@@ -794,7 +794,12 @@ export function StaffPage() {
                               className="py-1.5"
                             >
                               <button
-                                onClick={() => { setActiveDropdown(null); toast.success(t('staff.messages.resetSuccess')); }}
+                                onClick={() => {
+                                  setActiveDropdown(null);
+                                  // Password resets happen from the edit form
+                                  // (same behaviour as the backoffice app).
+                                  openEditModal(member);
+                                }}
                                 className="w-full flex items-center gap-3 px-4 py-3 label-strong font-outfit text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors text-left"
                               >
                                 <Key size={14} className="text-mintcom-green" />
@@ -859,6 +864,9 @@ export function StaffPage() {
         onClose={() => setSecurityModal(prev => ({ ...prev, isOpen: false }))}
         onSuccess={() => {
           setSecurityModal(prev => ({ ...prev, isOpen: false }));
+          // Close the employee form too when the delete started from inside it.
+          setShowModal(false);
+          setEditingStaff(null);
           fetchStaff();
         }}
         targetId={securityModal.memberId}

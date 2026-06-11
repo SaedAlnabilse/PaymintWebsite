@@ -33,6 +33,31 @@ export function ProtectedRoute() {
   return <Outlet />;
 }
 
+// Owner-only routes (Owner Portal + Brand Portal). Secondary admins and
+// employees who log in with Back Office access can use the dashboards, but the
+// owner portal is reserved for the account owner. If a non-owner reaches an
+// /owner or /brand URL directly, send them back to their dashboard.
+export function OwnerRoute() {
+  const { isAuthenticated, isLoading, account } = useAuth();
+  const location = useLocation();
+
+  if (isLoading) {
+    return <FullScreenLoader />;
+  }
+
+  if (!isAuthenticated && !account) {
+    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+  }
+
+  // `isSecondaryAdmin` is true for admin users and Back Office employees;
+  // only the real account owner has it false/undefined.
+  if (account?.isSecondaryAdmin) {
+    return <Navigate to="/select-establishment" replace />;
+  }
+
+  return <Outlet />;
+}
+
 // Separate component for routes that require an establishment
 export function EstablishmentRequiredRoute() {
   const { isAuthenticated, isLoading, needsOnboarding, currentEstablishment, account } = useAuth();
