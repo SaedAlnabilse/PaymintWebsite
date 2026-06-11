@@ -231,6 +231,11 @@
     "title": "Add-On"
   },
   "auth": {
+    "apple": {
+      "continueWith": "Continue with Apple",
+      "signInWith": "Sign In with Apple",
+      "signUpWith": "Sign Up with Apple"
+    },
     "errors": {
       "appleCancelled": "Apple sign-in was cancelled",
       "appleConfigMissing": "Apple sign-in is not configured for this site yet.",
@@ -244,11 +249,6 @@
       "googleNoSession": "No active Google session found",
       "googlePromptFailed": "Google sign-in prompt failed",
       "googleUnavailable": "Google sign-in is currently unavailable"
-    },
-    "apple": {
-      "continueWith": "Continue with Apple",
-      "signInWith": "Sign In with Apple",
-      "signUpWith": "Sign Up with Apple"
     },
     "forgotPassword": {
       "backToLogin": "Back to login",
@@ -550,6 +550,8 @@
       "nameTip": "Category name."
     },
     "iconPreview": "Icon preview",
+    "importCategories": "Import Categories",
+    "importDescription": "Bulk import categories from a CSV file",
     "itemsCount": "{{count}} items",
     "messages": {
       "created": "Category created",
@@ -751,8 +753,6 @@
     "connecting": "Connecting...",
     "continue": "Continue",
     "copied": "Copied!",
-    "shift": "Shift",
-    "staff": "Staff",
     "copy": "Copy",
     "copyFailed": "Copy failed",
     "countries": {
@@ -888,6 +888,7 @@
     "report_unavailable": "Report Unavailable",
     "report_unavailable_desc": "This report type is currently unavailable.",
     "required": "Required",
+    "resetAllTasks": "Reset All Tasks",
     "restoring": "Restoring...",
     "role": "Role",
     "save": "Save",
@@ -904,8 +905,14 @@
     "sending": "Sending...",
     "settings": "Settings",
     "share": "Share",
+    "shift": "Shift",
     "showing": "Showing",
     "showTechnicalDetails": "Show technical details",
+    "sort": {
+      "highestPriority": "Highest Priority",
+      "newestFirst": "Newest First",
+      "oldestFirst": "Oldest First"
+    },
     "sort_az": "A-Z",
     "sort_directory": "Sort Directory",
     "sort_za": "Z-A",
@@ -916,6 +923,7 @@
     "sortByRevenue": "Sort by Revenue",
     "sortByRole": "Sort by Role",
     "sortByStaff": "Sort by Staff",
+    "staff": "Staff",
     "start": "START",
     "status": {
       "active": "Active",
@@ -930,6 +938,7 @@
       "title": "Status",
       "trial": "Trial"
     },
+    "status_title": "STATUS",
     "submitting": "Submitting...",
     "success": "Success",
     "systemDefault": "System Default",
@@ -1262,6 +1271,27 @@
       }
     }
   },
+  "csv": {
+    "dragDropHover": "Drop your CSV file here",
+    "dragDropPrompt": "Click or drag & drop your CSV file",
+    "errorDetails": "Error Details:",
+    "failedCount": "{{failed}} failed",
+    "failedLabel": "Failed",
+    "importedCount": "{{success}} imported successfully",
+    "importFailed": "Import Failed",
+    "importing": "Importing...",
+    "importRows": "Import {{count}} Rows",
+    "importSuccessful": "Import Successful!",
+    "issuesFound": "Issues Found",
+    "newCategoriesAutoCreated": "{{count}} new categories auto-created:",
+    "newCategoryAutoCreated": "1 new category auto-created:",
+    "partialImport": "Partial Import",
+    "removeFile": "Remove file",
+    "someRowsSkipped": "Some Rows Were Skipped",
+    "successfulLabel": "Successful",
+    "supportsLimit": "Supports .csv files up to 5MB",
+    "validRowsReady": "{{count}} valid row(s) ready to import"
+  },
   "customers": {
     "addCustomer": "Add Customer",
     "badge": "CRM",
@@ -1295,6 +1325,8 @@
       "nameOrPhoneRequired": "Enter at least a name or a phone number",
       "nameRequired": "Name Is Required"
     },
+    "exportComplete": "Export Complete",
+    "exportFailed": "Export Failed",
     "form": {
       "address": "Address",
       "addressPlaceholder": "Street, city, country",
@@ -1802,30 +1834,6 @@
         "shiftStarted": "Shift started at {{location}}",
         "voidItem": "Item voided by {{name}}"
       },
-      "mockup": {
-        "goodMorning": "Good morning,",
-        "businessOwner": "Business Owner",
-        "welcomeBack": "Welcome back,",
-        "adminDashboard": "Admin Dashboard",
-        "salesActivity": "Sales Activity",
-        "espressoBeans": "Espresso Beans",
-        "espressoRemaining": "-3 kg remaining",
-        "cashierSara": "Cashier Sara",
-        "clockedOut": "clocked out 4:00 PM",
-        "orderCompleted": "Order Completed",
-        "orderNum": "Order #1042",
-        "orderAmt": "JOD 24.00",
-        "shiftStarted": "Shift Started",
-        "ahmadClockedIn": "Ahmad clocked in",
-        "nineAM": "9:00 AM",
-        "todaysRevenue": "Today's revenue",
-        "stockRestocked": "Stock Restocked",
-        "wholeMilk": "Whole Milk",
-        "milkAdded": "+20 L added",
-        "orders": "Orders",
-        "staff": "Staff",
-        "jod2450": "JOD 2,450"
-      },
       "badge": "Owner App",
       "controlCenter": "Control Center",
       "dailyRevenue": "Daily Revenue",
@@ -1836,6 +1844,30 @@
       "installBackofficeApp": "INSTALL BACKOFFICE APPLICATION",
       "liveAlerts": "Live Alerts",
       "liveReports": "Live Sales & Performance Reports",
+      "mockup": {
+        "adminDashboard": "Admin Dashboard",
+        "ahmadClockedIn": "Ahmad clocked in",
+        "businessOwner": "Business Owner",
+        "cashierSara": "Cashier Sara",
+        "clockedOut": "clocked out 4:00 PM",
+        "espressoBeans": "Espresso Beans",
+        "espressoRemaining": "-3 kg remaining",
+        "goodMorning": "Good morning,",
+        "jod2450": "JOD 2,450",
+        "milkAdded": "+20 L added",
+        "nineAM": "9:00 AM",
+        "orderAmt": "JOD 24.00",
+        "orderCompleted": "Order Completed",
+        "orderNum": "Order #1042",
+        "orders": "Orders",
+        "salesActivity": "Sales Activity",
+        "shiftStarted": "Shift Started",
+        "staff": "Staff",
+        "stockRestocked": "Stock Restocked",
+        "todaysRevenue": "Today's revenue",
+        "welcomeBack": "Welcome back,",
+        "wholeMilk": "Whole Milk"
+      },
       "multiLocationManagement": "Multi-Location Management",
       "realTime": "Real-time Sync",
       "shiftAlerts": "Shift Alerts",
@@ -1871,45 +1903,45 @@
         "preview": {
           "aov": "AOV",
           "billingActive": "Billing · Active",
+          "brand": "Brand",
           "brandA": "Cafe Delight",
           "brandB": "Urban Eats",
           "brandC": "Pizza Yard",
+          "dailyRevenue": "Daily Revenue",
+          "discounts": "Discounts",
+          "jod2450": "JOD 2,450",
+          "live": "Live",
           "liveOrders": "Live orders",
           "locAirport": "Airport",
+          "location": "Location",
+          "locationsAmount": "6",
           "locDowntown": "Downtown",
           "locMall": "Mall",
           "locWest": "West Side",
+          "methodCard": "Card",
+          "methodCash": "Cash",
+          "methodMobile": "Mobile",
           "orders": "Orders",
+          "ordersAmount": "1,402",
+          "owner": "Owner",
+          "ownerAndroidDownloadComingSoon": "Owner Android app download coming soon",
+          "ownerDashboard": "Owner Dashboard",
+          "ownerIosDownloadComingSoon": "Owner iOS app download coming soon",
+          "performanceOverview": "Performance Overview",
+          "profit": "Profit",
+          "reports": "Reports",
           "revenue": "Revenue",
+          "revenueAmount": "24.8K USD",
           "roleBarista": "Barista",
           "roleCashier": "Cashier",
           "roleManager": "Manager",
           "rolesAcrossLocations": "Roles across locations",
           "roleStaff": "Staff",
-          "totalRevenue": "Total revenue",
-          "owner": "Owner",
-          "brand": "Brand",
-          "reports": "Reports",
-          "team": "Team",
-          "settings": "Settings",
-          "ownerDashboard": "Owner Dashboard",
-          "performanceOverview": "Performance Overview",
-          "live": "Live",
-          "revenueAmount": "24.8K USD",
-          "ordersAmount": "1,402",
-          "locationsAmount": "6",
           "salesTrend": "Sales Trend",
-          "location": "Location",
+          "settings": "Settings",
+          "team": "Team",
           "today": "Today",
-          "dailyRevenue": "Daily Revenue",
-          "jod2450": "JOD 2,450",
-          "discounts": "Discounts",
-          "profit": "Profit",
-          "methodCard": "Card",
-          "methodCash": "Cash",
-          "methodMobile": "Mobile",
-          "ownerIosDownloadComingSoon": "Owner iOS app download coming soon",
-          "ownerAndroidDownloadComingSoon": "Owner Android app download coming soon"
+          "totalRevenue": "Total revenue"
         }
       },
       "subtitle": "Mintcom provides powerful cloud-based dashboards that allow you to manage your entire business ecosystem directly from your browser. Anytime, anywhere.",
@@ -4242,6 +4274,10 @@
       "uploaded": "Uploaded",
       "uploadReady": "Uploaded image is ready to save."
     },
+    "importCsv": "Import CSV",
+    "importDescription": "Bulk import products from a CSV file. Missing categories will be auto-created.",
+    "importFromCsv": "Import from CSV",
+    "importProducts": "Import Products",
     "messages": {
       "active": "Active",
       "addFirst": "Add first product",
@@ -4332,8 +4368,6 @@
     "serviceChargeLabel": "Service Charge"
   },
   "reports": {
-    "refundReasonAdded": "Refund Reason Added Successfully",
-    "refundAmountLabel": "Refund Amount: {{amount}}",
     "deletedBadge": "[Deleted]",
     "history": {
       "allOnly": "View all recorded history",
@@ -4361,7 +4395,9 @@
       "scopeSummary": "{{all}} total changes - {{period}} in selected range",
       "to": "New value",
       "updatedLabel": "Updated"
-    }
+    },
+    "refundAmountLabel": "Refund Amount: {{amount}}",
+    "refundReasonAdded": "Refund Reason Added Successfully"
   },
   "rewards": {
     "activeRule": "Active rule: customers earn {{points}} points for every {{amount}} {{currency}} spent",
@@ -5073,11 +5109,11 @@
       "clearFilters": "Clear Filters",
       "clearSearch": "Clear Search",
       "count": "{{count}} articles",
+      "emptySubtitle": "No articles are available yet.",
       "featuredTitle": "Featured Articles",
       "feedbackFailed": "Could not save feedback. Please try again.",
       "feedbackSorry": "We're sorry this wasn't helpful. We'll work on improving it.",
       "feedbackThanks": "Thanks for your feedback!",
-      "emptySubtitle": "No articles are available yet.",
       "ft1": {
         "h1": "Complete Feature Guide",
         "h2": "Point of Sale (POS)",

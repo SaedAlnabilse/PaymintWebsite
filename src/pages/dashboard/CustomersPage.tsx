@@ -421,9 +421,9 @@ export function CustomersPage() {
         totalSpent: `${t('customers.details.spent')} (${currencySymbol})`,
         visits: t('customers.details.visits')
       });
-      toast.success('Export complete', { id: 'export' });
+      toast.success(t('customers.messages.exportComplete'), { id: 'export' });
     } catch {
-      toast.error('Failed to export customers', { id: 'export' });
+      toast.error(t('customers.messages.exportFailed'), { id: 'export' });
     }
   };
 

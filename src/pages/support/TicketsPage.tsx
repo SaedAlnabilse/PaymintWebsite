@@ -341,9 +341,9 @@ export const TicketsPage = () => {
                 onChange={(e) => setSortBy(e.target.value as any)}
                 className="px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-sm font-bold text-gray-500 dark:text-gray-400 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-mintcom-green/50 appearance-none"
               >
-                <option value="newest">Newest First</option>
-                <option value="oldest">Oldest First</option>
-                <option value="priority">Highest Priority</option>
+                <option value="newest">{t('common.sort.newestFirst')}</option>
+                <option value="oldest">{t('common.sort.oldestFirst')}</option>
+                <option value="priority">{t('common.sort.highestPriority')}</option>
               </select>
 
               {/* Filter toggle */}

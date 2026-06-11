@@ -884,10 +884,10 @@ export function ProductsPage() {
                     <button
                         onClick={() => setShowCsvImport(true)}
                         className="flex items-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl bg-white dark:bg-white/5 text-gray-900 dark:text-white border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/10 transition-all shadow-sm group"
-                        title="Import from CSV"
+                        title={t('products.importFromCsv')}
                     >
                         <Upload size={18} className="group-hover:text-mintcom-green transition-colors" />
-                        <span className="font-bold text-xs sm:text-sm hidden sm:inline">Import CSV</span>
+                        <span className="font-bold text-xs sm:text-sm hidden sm:inline">{t('products.importCsv')}</span>
                     </button>
                     <button
                         onClick={handleCreateNew}
@@ -1413,8 +1413,8 @@ export function ProductsPage() {
             <CsvImportModal
                 isOpen={showCsvImport}
                 onClose={() => setShowCsvImport(false)}
-                title="Import Products"
-                description="Bulk import products from a CSV file. Missing categories will be auto-created."
+                title={t('products.importProducts')}
+                description={t('products.importDescription')}
                 columns={productCsvColumns}
                 sampleData={productSampleData}
                 sampleFileName="products_sample.csv"
