@@ -45,17 +45,29 @@ interface ApiError {
   };
 }
 
-const customerSchema = z.object({
-  name: z.string().optional().or(z.literal('')),
-  phone: z.string().optional().or(z.literal('')),
-  email: z.string().email().optional().or(z.literal('')),
-  address: z.string().optional(),
+const CUSTOMER_FIELD_LIMITS = {
+  name: 50,
+  phone: 20,
+  email: 80,
+  address: 120,
+} as const;
+
+const createCustomerSchema = (requiredMessage: string, invalidEmailMessage: string) => z.object({
+  name: z.string().max(CUSTOMER_FIELD_LIMITS.name).optional().or(z.literal('')),
+  phone: z.string().max(CUSTOMER_FIELD_LIMITS.phone).optional().or(z.literal('')),
+  email: z.string().email(invalidEmailMessage).max(CUSTOMER_FIELD_LIMITS.email).optional().or(z.literal('')),
+  address: z.string().max(CUSTOMER_FIELD_LIMITS.address).optional().or(z.literal('')),
 }).refine((data) => data.name?.trim() || data.phone?.trim(), {
-  message: 'Enter a name or phone number',
+  message: requiredMessage,
   path: ['name'],
 });
 
-type CustomerFormData = z.infer<typeof customerSchema>;
+type CustomerFormData = {
+  name?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+};
 
 interface Customer {
   id: string;
@@ -67,6 +79,18 @@ interface Customer {
   totalSpent: number;
   totalVisits: number;
   address?: string;
+}
+
+function FieldStatusBadge({ tone, text }: { tone: 'required' | 'optional'; text: string }) {
+  const toneClasses = tone === 'required'
+    ? 'bg-mintcom-green/10 text-mintcom-green border-mintcom-green/20'
+    : 'bg-gray-100 text-gray-500 border-gray-200 dark:bg-white/5 dark:text-gray-300 dark:border-white/10';
+
+  return (
+    <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.18em] ${toneClasses}`}>
+      {text}
+    </span>
+  );
 }
 
 interface CustomerStats {
@@ -136,6 +160,10 @@ function TableActionMenu({ customer, onViewProfile, onDelete }: TableActionMenuP
 
 export function CustomersPage() {
   const { t } = useTranslation();
+  const customerSchema = createCustomerSchema(
+    t('customers.errors.nameOrPhoneRequired'),
+    t('customers.errors.invalidEmail'),
+  );
   const { currentEstablishment } = useAuth();
   usePermissionGuard();
   const { onRefresh } = useRealtime({
@@ -616,61 +644,86 @@ export function CustomersPage() {
               </div>
 
               <form onSubmit={handleSubmit(handleSaveCustomer)} className="p-6 space-y-4">
+                <div className="rounded-2xl border border-mintcom-green/15 bg-mintcom-green/[0.06] px-4 py-3">
+                  <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                    {t('customers.form.requirementsTitle')}
+                  </p>
+                  <p className="mt-1 text-xs leading-5 text-gray-600 dark:text-gray-300">
+                    {t('customers.form.requirementsHint')}
+                  </p>
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider px-1">
-                      {formatInputLabel(t('common.name', { defaultValue: 'Name' }), t('common.locale'))}
-                    </label>
+                    <div className="flex items-center justify-between gap-2 px-1">
+                      <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                        {formatInputLabel(t('common.name', { defaultValue: 'Name' }), t('common.locale'))}
+                      </label>
+                      <FieldStatusBadge tone="required" text={t('customers.form.oneOfTwoRequired')} />
+                    </div>
                     <div className="relative">
                       <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                      <input maxLength={255}
+                      <input maxLength={CUSTOMER_FIELD_LIMITS.name}
                         {...register('name')}
-                        placeholder="John Doe"
+                        placeholder={t('customers.form.namePlaceholder')}
                         className="w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl text-sm font-medium focus:ring-2 focus:ring-mintcom-green/20 focus:border-mintcom-green outline-none transition-all"
                       />
                     </div>
-                    {errors.name && <p className="text-[10px] font-bold text-mintcom-red px-1">{errors.name.message}</p>}
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider px-1">
-                      {formatInputLabel(t('customers.form.phone'), t('common.locale'))}
-                    </label>
+                    <div className="flex items-center justify-between gap-2 px-1">
+                      <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                        {formatInputLabel(t('customers.form.phone'), t('common.locale'))}
+                      </label>
+                      <FieldStatusBadge tone="required" text={t('customers.form.oneOfTwoRequired')} />
+                    </div>
                     <div className="relative">
                       <Phone size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                      <input maxLength={255}
+                      <input maxLength={CUSTOMER_FIELD_LIMITS.phone}
                         {...register('phone')}
-                        placeholder="+1 234 567 890"
+                        placeholder={t('customers.form.phonePlaceholder')}
                         className="w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl text-sm font-medium focus:ring-2 focus:ring-mintcom-green/20 focus:border-mintcom-green outline-none transition-all"
                       />
                     </div>
                   </div>
                 </div>
+                <p className="px-1 text-[11px] font-medium text-gray-500 dark:text-gray-400">
+                  {t('customers.form.namePhoneHelper')}
+                </p>
+                {errors.name && <p className="text-[10px] font-bold text-mintcom-red px-1">{errors.name.message}</p>}
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider px-1">
-                    {formatInputLabel(t('customers.form.email'), t('common.locale'))}
-                  </label>
+                  <div className="flex items-center justify-between gap-2 px-1">
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                      {formatInputLabel(t('customers.form.email'), t('common.locale'))}
+                    </label>
+                    <FieldStatusBadge tone="optional" text={t('customers.form.optional')} />
+                  </div>
                   <div className="relative">
                     <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input maxLength={255}
+                    <input maxLength={CUSTOMER_FIELD_LIMITS.email}
                       {...register('email')}
                       type="email"
-                      placeholder="john@example.com"
+                      placeholder={t('customers.form.emailPlaceholder')}
                       className="w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl text-sm font-medium focus:ring-2 focus:ring-mintcom-green/20 focus:border-mintcom-green outline-none transition-all"
                     />
                   </div>
+                  {errors.email && <p className="text-[10px] font-bold text-mintcom-red px-1">{errors.email.message}</p>}
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider px-1">
-                    {formatInputLabel(t('customers.form.address'), t('common.locale'))}
-                  </label>
+                  <div className="flex items-center justify-between gap-2 px-1">
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                      {formatInputLabel(t('customers.form.address'), t('common.locale'))}
+                    </label>
+                    <FieldStatusBadge tone="optional" text={t('customers.form.optional')} />
+                  </div>
                   <div className="relative">
                     <MapPin size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input maxLength={255}
+                    <input maxLength={CUSTOMER_FIELD_LIMITS.address}
                       {...register('address')}
-                      placeholder="Street, City, Country"
+                      placeholder={t('customers.form.addressPlaceholder')}
                       className="w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl text-sm font-medium focus:ring-2 focus:ring-mintcom-green/20 focus:border-mintcom-green outline-none transition-all"
                     />
                   </div>
