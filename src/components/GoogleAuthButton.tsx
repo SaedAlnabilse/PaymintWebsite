@@ -137,6 +137,7 @@ export const GoogleAuthButton = forwardRef<GoogleAuthButtonHandle, GoogleAuthBut
         setIsLoading(false);
         onSuccess(credential);
       };
+      const buttonElement = buttonRef.current;
 
       // Small delay to ensure the buttonRef div is rendered in the DOM
       const timeoutId = setTimeout(() => {
@@ -158,10 +159,10 @@ export const GoogleAuthButton = forwardRef<GoogleAuthButtonHandle, GoogleAuthBut
           }
 
           // Use renderButton for correct incognito/strict cookie support
-          if (buttonRef.current) {
-            buttonRef.current.replaceChildren();
+          if (buttonElement) {
+            buttonElement.replaceChildren();
             window.google!.accounts.id.renderButton(
-              buttonRef.current,
+              buttonElement,
               {
                 type: 'standard',
                 theme: resolvedTheme === 'dark' ? 'filled_black' : 'outline',
@@ -169,7 +170,7 @@ export const GoogleAuthButton = forwardRef<GoogleAuthButtonHandle, GoogleAuthBut
                 text: text,
                 shape: 'rectangular',
                 logo_alignment: 'center',
-                width: buttonRef.current.parentElement?.offsetWidth || 400,
+                width: buttonElement.parentElement?.offsetWidth || 400,
                 locale: i18n.language,
               }
             );
@@ -185,8 +186,8 @@ export const GoogleAuthButton = forwardRef<GoogleAuthButtonHandle, GoogleAuthBut
         if (activeGoogleCredentialCallback === credentialCallback) {
           activeGoogleCredentialCallback = null;
         }
-        if (buttonRef.current) {
-          buttonRef.current.replaceChildren();
+        if (buttonElement) {
+          buttonElement.replaceChildren();
         }
       };
     }, [isScriptLoaded, onSuccess, onError, t, text, i18n.language, resolvedTheme]);

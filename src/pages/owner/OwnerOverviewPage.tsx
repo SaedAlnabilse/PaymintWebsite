@@ -120,7 +120,7 @@ export function OwnerOverviewPage() {
         } catch (err) {
             console.error('Failed to fetch overview stats:', err);
         }
-    }, [startDate, endDate, startTime, endTime, selectedDateRange, establishments.length]);
+    }, [startDate, endDate, startTime, endTime, establishments.length]);
 
     useEffect(() => {
         fetchOverviewStats();

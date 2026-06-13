@@ -3,7 +3,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ProductFormModal } from '../ProductFormModal';
 import api from '../../../config/api';
-import * as productImageUtils from '../../../utils/productImage';
 import enTranslations from '../../../i18n/locales/en.json';
 
 function resolveKey(obj: unknown, key: string): string | undefined {
@@ -86,6 +85,7 @@ describe('ProductFormModal image generation', () => {
     consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     (URL as any).createObjectURL = vi.fn(() => 'blob:mock-preview');
     (URL as any).revokeObjectURL = vi.fn();
+    HTMLElement.prototype.scrollIntoView = vi.fn();
     fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation((input: any) =>
       Promise.reject(new Error(`Unexpected fetch request: ${String(input)}`))
     );
@@ -117,14 +117,14 @@ describe('ProductFormModal image generation', () => {
 
   it('generates via the backend image service and saves the generated image', async () => {
     // The component is backend-first: it calls /api/items/generate-image and
-    // only falls back to in-browser generation if that request fails.
+    // only falls back to the local designed image if that request fails.
     vi.mocked(api.post).mockImplementation((url: string) => {
       if (url === '/api/items/generate-image') {
         return Promise.resolve({
           data: {
             success: true,
             image: 'data:image/jpeg;base64,ZmFrZS1pbWFnZQ==',
-            provider: 'pollinations',
+            provider: 'pexels',
             fallback: false,
           },
         }) as any;
@@ -155,7 +155,7 @@ describe('ProductFormModal image generation', () => {
     fireEvent.click(screen.getByRole('button', { name: /Generate image/i }));
 
     await waitFor(() => {
-      expect(screen.getByText('Your generated image is ready.')).toBeInTheDocument();
+      expect(screen.getByText('Your product image is ready.')).toBeInTheDocument();
     });
 
     expect(api.post).toHaveBeenCalledWith(
@@ -174,15 +174,18 @@ describe('ProductFormModal image generation', () => {
     const imageFile = submittedFormData.get('image');
 
     expect(imageFile).toBeInstanceOf(File);
-    expect((imageFile as File).name).toContain('espresso-pollinations');
+    expect((imageFile as File).name).toContain('espresso-pexels');
   });
 
-  it('shows a live timer while generating and falls back after a Pollinations failure', async () => {
-    vi.spyOn(productImageUtils, 'generatePollinationsProductImage').mockImplementationOnce(() =>
-      new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Pollinations unavailable')), 250);
-      })
-    );
+  it('shows a live timer while generating and falls back when the backend request fails', async () => {
+    vi.mocked(api.post).mockImplementation((url: string) => {
+      if (url === '/api/items/generate-image') {
+        return new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('backend unavailable')), 250);
+        }) as any;
+      }
+      return Promise.resolve({ data: {} }) as any;
+    });
 
     const onSubmit = vi.fn().mockResolvedValue(undefined);
 
@@ -265,7 +268,7 @@ describe('ProductFormModal image generation', () => {
       />
     );
 
-    expect(screen.getByText('Category needs attention')).toBeInTheDocument();
+    expect(await screen.findByText(/Category Needs Attention/i)).toBeInTheDocument();
     expect(screen.getByText(/inactive category/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Reactivate/i })).toBeDisabled();
 
@@ -280,5 +283,80 @@ describe('ProductFormModal image generation', () => {
     fireEvent.click(confirmButtons[confirmButtons.length - 1]);
 
     expect(onReactivate).toHaveBeenCalledWith('item-1', 'coffee');
+  });
+
+  it('preserves the draft and auto-selects the new category created from the product modal', async () => {
+    vi.mocked(api.post).mockImplementation((url: string, body: any) => {
+      if (url === '/api/categories') {
+        return Promise.resolve({
+          data: {
+            id: 'tea',
+            name: body.name,
+            icon: body.icon,
+            sortOrder: body.sortOrder,
+            isActive: true,
+          },
+        }) as any;
+      }
+
+      return Promise.resolve({ data: {} }) as any;
+    });
+
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+
+    render(
+      <ProductFormModal
+        isOpen
+        onClose={vi.fn()}
+        onSubmit={onSubmit}
+        categories={[{ id: 'coffee', name: 'Coffee', isActive: true }]}
+        defaultCategoryId="coffee"
+      />
+    );
+
+    fireEvent.change(screen.getByPlaceholderText(/Organic Espresso/i), {
+      target: { value: 'Iced Matcha' },
+    });
+    fireEvent.change(screen.getAllByPlaceholderText(/^0$/i)[0], {
+      target: { value: '450' },
+    });
+    fireEvent.change(screen.getByPlaceholderText(/Summarize product characteristics/i), {
+      target: { value: 'Green tea with milk.' },
+    });
+
+    fireEvent.click(screen.getByText('Coffee'));
+    fireEvent.click(screen.getByText(/New Category/i));
+    fireEvent.change(screen.getByPlaceholderText(/Hot infusions/i), {
+      target: { value: 'Tea' },
+    });
+
+    const addButtons = screen.getAllByRole('button', { name: /^Add$/i });
+    fireEvent.click(addButtons[addButtons.length - 1]);
+
+    await waitFor(() => {
+      expect(api.post).toHaveBeenCalledWith('/api/categories', {
+        name: 'Tea',
+        icon: 'tag',
+        sortOrder: 0,
+      });
+    });
+
+    expect(screen.getByDisplayValue('Iced Matcha')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('4.50')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Green tea with milk.')).toBeInTheDocument();
+    expect(screen.getByText('Tea')).toBeInTheDocument();
+
+    fireEvent.submit(document.getElementById('product-form') as HTMLFormElement);
+
+    await waitFor(() => {
+      expect(onSubmit).toHaveBeenCalledTimes(1);
+    });
+
+    const submittedFormData = onSubmit.mock.calls[0][0] as FormData;
+
+    expect(submittedFormData.get('name')).toBe('Iced Matcha');
+    expect(submittedFormData.get('price')).toBe('4.5');
+    expect(submittedFormData.get('description')).toBe('Green tea with milk.');
+    expect(submittedFormData.get('categoryId')).toBe('tea');
   });
 });
