@@ -52,6 +52,10 @@ const CUSTOMER_FIELD_LIMITS = {
   address: 120,
 } as const;
 
+// Max magnitude for a single manual loyalty-points adjustment. Mirrors the
+// backend LOYALTY_LIMITS.MAX_ADJUSTMENT guard.
+const MAX_POINTS_ADJUSTMENT = 1000000;
+
 const createCustomerSchema = (requiredMessage: string, invalidEmailMessage: string) => z.object({
   name: z.string().max(CUSTOMER_FIELD_LIMITS.name).optional().or(z.literal('')),
   phone: z.string().max(CUSTOMER_FIELD_LIMITS.phone).optional().or(z.literal('')),
@@ -350,6 +354,11 @@ export function CustomersPage() {
   const handlePointsUpdate = async () => {
     if (!selectedCustomer || pointsAmount <= 0) return;
     setPointsError(null);
+
+    if (pointsAmount > MAX_POINTS_ADJUSTMENT) {
+      setPointsError(t('customers.messages.maxPoints', { max: MAX_POINTS_ADJUSTMENT.toLocaleString() }));
+      return;
+    }
 
     if (pointsAction === 'deduct' && pointsAmount > selectedCustomer.points) {
       setPointsError(t('customers.messages.insufficientPoints', { points: selectedCustomer.points }));
@@ -947,13 +956,24 @@ export function CustomersPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider px-1">{t('customers.details.pointsAmount')}</label>
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider px-1">
+                    {t('customers.details.pointsAmount')}
+                    <span className="ml-1 normal-case font-medium text-gray-400">
+                      ({t('customers.details.maxPointsHint', { max: MAX_POINTS_ADJUSTMENT.toLocaleString() })})
+                    </span>
+                  </label>
                   <div className="relative">
                     <Award size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input maxLength={255}
+                    <input
                       type="number"
+                      min={1}
+                      max={MAX_POINTS_ADJUSTMENT}
                       value={pointsAmount || ''}
-                      onChange={(e) => setPointsAmount(parseInt(e.target.value) || 0)}
+                      onChange={(e) => {
+                        const next = Math.min(parseInt(e.target.value) || 0, MAX_POINTS_ADJUSTMENT);
+                        setPointsAmount(next);
+                        if (pointsError) setPointsError(null);
+                      }}
                       className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl text-lg font-black focus:ring-2 focus:ring-mintcom-green/20 focus:border-mintcom-green outline-none transition-all"
                       placeholder="0"
                     />

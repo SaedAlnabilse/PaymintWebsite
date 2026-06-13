@@ -90,6 +90,11 @@ describe('ProductFormModal image generation', () => {
       Promise.reject(new Error(`Unexpected fetch request: ${String(input)}`))
     );
 
+    // clearAllMocks keeps implementations; reset api.post so a per-test
+    // implementation never leaks into the next test (default: backend fails,
+    // exercising the browser fallback path).
+    vi.mocked(api.post).mockReset();
+
     vi.mocked(api.get).mockImplementation((url: string) => {
       if (url === '/api/attributes') {
         return Promise.resolve({ data: [] }) as any;
@@ -110,11 +115,21 @@ describe('ProductFormModal image generation', () => {
     fetchSpy.mockRestore();
   });
 
-  it('uses Pollinations only and saves the generated image', async () => {
-    vi.spyOn(productImageUtils, 'generatePollinationsProductImage').mockResolvedValue({
-      file: new File(['fake-image'], 'espresso-pollinations.jpg', { type: 'image/jpeg' }),
-      previewUrl: 'data:image/jpeg;base64,ZmFrZS1pbWFnZQ==',
-      prompt: 'studio product photo of espresso in a cup on clean white background',
+  it('generates via the backend image service and saves the generated image', async () => {
+    // The component is backend-first: it calls /api/items/generate-image and
+    // only falls back to in-browser generation if that request fails.
+    vi.mocked(api.post).mockImplementation((url: string) => {
+      if (url === '/api/items/generate-image') {
+        return Promise.resolve({
+          data: {
+            success: true,
+            image: 'data:image/jpeg;base64,ZmFrZS1pbWFnZQ==',
+            provider: 'pollinations',
+            fallback: false,
+          },
+        }) as any;
+      }
+      return Promise.resolve({ data: {} }) as any;
     });
 
     const onSubmit = vi.fn().mockResolvedValue(undefined);
@@ -143,7 +158,11 @@ describe('ProductFormModal image generation', () => {
       expect(screen.getByText('Your generated image is ready.')).toBeInTheDocument();
     });
 
-    expect(api.post).not.toHaveBeenCalled();
+    expect(api.post).toHaveBeenCalledWith(
+      '/api/items/generate-image',
+      expect.objectContaining({ context: expect.objectContaining({ name: 'Espresso' }) }),
+      expect.anything()
+    );
 
     fireEvent.submit(document.getElementById('product-form') as HTMLFormElement);
 
