@@ -7,8 +7,16 @@ export function useChatPageContext(
   useArabic: boolean,
   options?: ChatbotPageContextOptions,
 ) {
+  const canAccessOwnerPortal = options?.canAccessOwnerPortal;
+  const dashboardPath = options?.dashboardPath;
+  const isAuthenticated = options?.isAuthenticated;
+
   return useMemo(
-    () => resolveChatbotPageContext(pathname, useArabic, options),
-    [pathname, useArabic, options?.canAccessOwnerPortal, options?.dashboardPath, options?.isAuthenticated],
+    () => resolveChatbotPageContext(pathname, useArabic, {
+      canAccessOwnerPortal,
+      dashboardPath,
+      isAuthenticated,
+    }),
+    [pathname, useArabic, canAccessOwnerPortal, dashboardPath, isAuthenticated],
   );
 }

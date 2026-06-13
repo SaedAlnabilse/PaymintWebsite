@@ -16,7 +16,6 @@ import {
   createProductFallbackImageAsset,
   dataUrlToFile,
   extractProductImageSource,
-  generatePollinationsProductImage,
   sanitizeProductImageFilename,
 } from '../../utils/productImage';
 
@@ -84,13 +83,31 @@ interface ProductFormModalProps {
   defaultCategoryId?: string;
 }
 
-type ProductImageSource = 'existing' | 'upload' | 'pollinations' | 'fallback' | null;
+type ProductImageSource = 'existing' | 'upload' | 'generated' | 'fallback' | null;
 
 const isInactiveCategory = (category?: Category | null) =>
   !category ||
   category.isActive === false ||
   !!category.deletedAt ||
   !!category.deactivatedAt;
+
+const mergeCategoriesById = (currentCategories: Category[], incomingCategories: Category[]) => {
+  const preservedById = new Map(currentCategories.map((category) => [category.id, category]));
+  const incomingIds = new Set(incomingCategories.map((category) => category.id));
+
+  const mergedCategories = incomingCategories.map((category) => ({
+    ...preservedById.get(category.id),
+    ...category,
+  }));
+
+  currentCategories.forEach((category) => {
+    if (!incomingIds.has(category.id)) {
+      mergedCategories.push(category);
+    }
+  });
+
+  return mergedCategories;
+};
 
 export function ProductFormModal({
   isOpen,
@@ -155,11 +172,12 @@ export function ProductFormModal({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showReactivateConfirm, setShowReactivateConfirm] = useState(false);
   const isInitialLoad = useRef(true);
+  const hydratedFormKeyRef = useRef<string | null>(null);
 
   useScrollLock(isOpen);
 
   useEffect(() => {
-    setLocalCategories(categories);
+    setLocalCategories((currentCategories) => mergeCategoriesById(currentCategories, categories));
   }, [categories]);
 
   const handleCategorySubmit = async (name: string, icon: string, sortOrder: number) => {
@@ -168,8 +186,17 @@ export function ProductFormModal({
       setCategoryError(null);
       const res = await api.post('/api/categories', { name, icon, sortOrder });
       const newCategory = res.data;
-      setLocalCategories(prev => [...prev, newCategory]);
+      setLocalCategories((currentCategories) => mergeCategoriesById(currentCategories, [newCategory]));
       setCategoryId(newCategory.id);
+      setErrors((currentErrors) => {
+        if (!currentErrors.category) {
+          return currentErrors;
+        }
+
+        const nextErrors = { ...currentErrors };
+        delete nextErrors.category;
+        return nextErrors;
+      });
       setShowCategoryModal(false);
       toast.success(t('categories.messages.created'));
     } catch (error: any) {
@@ -297,7 +324,7 @@ export function ProductFormModal({
 
   const generatedImageNeedsRefresh = Boolean(
     imagePreview &&
-    (imageSource === 'pollinations' || imageSource === 'fallback') &&
+    (imageSource === 'generated' || imageSource === 'fallback') &&
     generatedImageSignature &&
     generatedImageSignature !== currentImageSignature
   );
@@ -387,7 +414,7 @@ export function ProductFormModal({
     return {
       file,
       previewUrl: imageSource,
-      source: response.data?.fallback ? 'fallback' as const : 'pollinations' as const,
+      source: response.data?.fallback ? 'fallback' as const : 'generated' as const,
     };
   };
 
@@ -435,44 +462,26 @@ export function ProductFormModal({
 
       console.error('Failed to generate backend product image:', error);
 
+      // The backend already falls back to a designed image, so this path only
+      // runs when the request itself fails (e.g. offline). Render the same
+      // designed fallback locally so the user still gets an image.
       try {
-        const generatedImage = await generatePollinationsProductImage(currentImageContext, controller.signal);
+        const fallbackAsset = await createProductFallbackImageAsset(currentImageContext);
 
         if (controller.signal.aborted) {
           return;
         }
 
-        applyImageSelection(generatedImage.file, generatedImage.previewUrl, 'pollinations', currentImageSignature);
+        applyImageSelection(fallbackAsset.file, fallbackAsset.dataUrl, 'fallback', currentImageSignature);
         toast.success(
-          t('products.messages.imageGenerated', {
-            defaultValue: 'Product image generated.',
+          t('products.messages.imageFallbackUsed', {
+            defaultValue: 'A product image was created for you.',
           })
         );
-      } catch (fallbackError) {
-        if (controller.signal.aborted) {
-          return;
-        }
-
-        console.error('Failed to generate browser Pollinations image:', fallbackError);
-
-        try {
-          const fallbackAsset = await createProductFallbackImageAsset(currentImageContext);
-
-          if (controller.signal.aborted) {
-            return;
-          }
-
-          applyImageSelection(fallbackAsset.file, fallbackAsset.dataUrl, 'fallback', currentImageSignature);
-          toast.success(
-            t('products.messages.imageFallbackUsed', {
-              defaultValue: 'Pollinations was unavailable, so a free product image was created.',
-            })
-          );
-        } catch (localFallbackError) {
-          console.error('Failed to create fallback image:', localFallbackError);
-          const message = error?.message || t('products.messages.aiOverloaded');
-          toast.error(message);
-        }
+      } catch (localFallbackError) {
+        console.error('Failed to create fallback image:', localFallbackError);
+        const message = error?.message || t('products.messages.aiOverloaded');
+        toast.error(message);
       }
     } finally {
       if (imageRequestControllerRef.current === controller) {
@@ -483,6 +492,19 @@ export function ProductFormModal({
   };
 
   useEffect(() => {
+    if (!isOpen) {
+      hydratedFormKeyRef.current = null;
+      return;
+    }
+
+    const formKey = initialData?.id ? `edit:${initialData.id}` : `new:${defaultCategoryId || ''}`;
+    if (hydratedFormKeyRef.current === formKey) {
+      return;
+    }
+
+    hydratedFormKeyRef.current = formKey;
+    setLocalCategories(categories);
+
     const fetchAddonsAndSettings = async () => {
       try {
         const [attrRes, settingsRes] = await Promise.all([
@@ -497,96 +519,94 @@ export function ProductFormModal({
       }
     };
 
-    if (isOpen) {
-      isInitialLoad.current = true;
-      setErrors({});
-      fetchAddonsAndSettings();
+    isInitialLoad.current = true;
+    setErrors({});
+    fetchAddonsAndSettings();
 
 
-      // Allow initial render effects to pass before enabling auto-scroll
-      setTimeout(() => {
-        isInitialLoad.current = false;
-      }, 500);
-      if (initialData) {
-        setName(initialData.name || '');
-        const priceVal = typeof initialData.price === 'string' ? parseFloat(initialData.price) : initialData.price;
-        // Allow 0 as valid price (for free items), only show empty for null/undefined/NaN
-        setPrice(priceVal == null || isNaN(priceVal) ? '' : priceVal.toFixed(2));
-        const costVal = typeof initialData.costPrice === 'string' ? parseFloat(initialData.costPrice) : initialData.costPrice;
-        // Allow 0 as valid cost (items with no cost)
-        setCostPrice(costVal == null || isNaN(costVal) ? '' : costVal.toFixed(2));
-        setCategoryId(initialData.categoryId || '');
-        setDescription(initialData.description || '');
-        setType(initialData.type || 'ITEM');
-        setTrackStock(initialData.trackStock || false);
-        setAllowNegativeStock(initialData.allowNegativeStock || false);
-        // Use loose check for null/undefined to hit both cases from Prisma
-        setStock(initialData.availableStock != null ? String(initialData.availableStock) : '');
-        setLowStockYellow(initialData.lowStockThresholdYellow != null ? String(initialData.lowStockThresholdYellow) : '5');
-        setLowStockRed(initialData.lowStockThresholdRed != null ? String(initialData.lowStockThresholdRed) : '2');
+    // Allow initial render effects to pass before enabling auto-scroll
+    setTimeout(() => {
+      isInitialLoad.current = false;
+    }, 500);
+    if (initialData) {
+      setName(initialData.name || '');
+      const priceVal = typeof initialData.price === 'string' ? parseFloat(initialData.price) : initialData.price;
+      // Allow 0 as valid price (for free items), only show empty for null/undefined/NaN
+      setPrice(priceVal == null || isNaN(priceVal) ? '' : priceVal.toFixed(2));
+      const costVal = typeof initialData.costPrice === 'string' ? parseFloat(initialData.costPrice) : initialData.costPrice;
+      // Allow 0 as valid cost (items with no cost)
+      setCostPrice(costVal == null || isNaN(costVal) ? '' : costVal.toFixed(2));
+      setCategoryId(initialData.categoryId || '');
+      setDescription(initialData.description || '');
+      setType(initialData.type || 'ITEM');
+      setTrackStock(initialData.trackStock || false);
+      setAllowNegativeStock(initialData.allowNegativeStock || false);
+      // Use loose check for null/undefined to hit both cases from Prisma
+      setStock(initialData.availableStock != null ? String(initialData.availableStock) : '');
+      setLowStockYellow(initialData.lowStockThresholdYellow != null ? String(initialData.lowStockThresholdYellow) : '5');
+      setLowStockRed(initialData.lowStockThresholdRed != null ? String(initialData.lowStockThresholdRed) : '2');
 
-        // Handle image preview
-        if (initialData.image) {
-          // Use relative path by default to leverage Vite proxy
-          // Only use absolute URL if strictly necessary
-          const baseUrl = '';
+      // Handle image preview
+      if (initialData.image) {
+        // Use relative path by default to leverage Vite proxy
+        // Only use absolute URL if strictly necessary
+        const baseUrl = '';
 
-          // Fix: Remove /public prefix to match POS behavior and correct serving path
-          const cleanPath = initialData.image.replace('/public', '').replace('public/', '');
+        // Fix: Remove /public prefix to match POS behavior and correct serving path
+        const cleanPath = initialData.image.replace('/public', '').replace('public/', '');
 
-          const imgUrl = initialData.image.startsWith('http')
-            ? initialData.image
-            : `${baseUrl}${cleanPath.startsWith('/') ? '' : '/'}${cleanPath}`;
+        const imgUrl = initialData.image.startsWith('http')
+          ? initialData.image
+          : `${baseUrl}${cleanPath.startsWith('/') ? '' : '/'}${cleanPath}`;
 
-          console.log('[ProductFormModal] Image URL:', imgUrl);
-          setPreviewUrl(imgUrl);
-          setImageSource('existing');
-        } else {
-          setPreviewUrl(null);
-          setImageSource(null);
-        }
-        setSelectedImage(null);
-        setGeneratedImageSignature(null);
-        setIsImageDeleted(false);
-
-        // Fetch item attributes if editing
-        const fetchItemAttrs = async () => {
-          try {
-            const res = await api.get(`/api/items/${initialData.id}`, {
-              params: { includeInactive: true },
-            });
-            if (res.data?.itemAttributes) {
-              setSelectedAttributeIds(res.data.itemAttributes.map((ia: { attributeId: string }) => ia.attributeId));
-            }
-          } catch {
-            console.error('Failed to fetch item attributes');
-          }
-        };
-        fetchItemAttrs();
+        console.log('[ProductFormModal] Image URL:', imgUrl);
+        setPreviewUrl(imgUrl);
+        setImageSource('existing');
       } else {
-        // Reset form
-        setName('');
-        setPrice('');
-        setCostPrice('');
-        setCategoryId(defaultCategoryId || '');
-        setDescription('');
-        setType('ITEM');
-        setTrackStock(false);
-        setAllowNegativeStock(false);
-        setStock('');
-        setLowStockYellow('5');
-        setLowStockRed('2');
-        setSelectedImage(null);
         setPreviewUrl(null);
         setImageSource(null);
-        setGeneratedImageSignature(null);
-        setSelectedAttributeIds([]);
-        setIsImageDeleted(false);
       }
-      setCategorySearchQuery('');
-      setAddonsSearchQuery('');
+      setSelectedImage(null);
+      setGeneratedImageSignature(null);
+      setIsImageDeleted(false);
+
+      // Fetch item attributes if editing
+      const fetchItemAttrs = async () => {
+        try {
+          const res = await api.get(`/api/items/${initialData.id}`, {
+            params: { includeInactive: true },
+          });
+          if (res.data?.itemAttributes) {
+            setSelectedAttributeIds(res.data.itemAttributes.map((ia: { attributeId: string }) => ia.attributeId));
+          }
+        } catch {
+          console.error('Failed to fetch item attributes');
+        }
+      };
+      fetchItemAttrs();
+    } else {
+      // Reset form
+      setName('');
+      setPrice('');
+      setCostPrice('');
+      setCategoryId(defaultCategoryId || '');
+      setDescription('');
+      setType('ITEM');
+      setTrackStock(false);
+      setAllowNegativeStock(false);
+      setStock('');
+      setLowStockYellow('5');
+      setLowStockRed('2');
+      setSelectedImage(null);
+      setPreviewUrl(null);
+      setImageSource(null);
+      setGeneratedImageSignature(null);
+      setSelectedAttributeIds([]);
+      setIsImageDeleted(false);
     }
-  }, [isOpen, initialData, categories, defaultCategoryId, t]);
+    setCategorySearchQuery('');
+    setAddonsSearchQuery('');
+  }, [isOpen, initialData, categories, defaultCategoryId]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -751,8 +771,8 @@ export function ProductFormModal({
     : generatedImageNeedsRefresh
       ? t('products.image.refresh')
       : t('products.image.generate');
-  const imageSourceLabel = imageSource === 'pollinations'
-    ? t('products.image.pollinations')
+  const imageSourceLabel = imageSource === 'generated'
+    ? t('products.image.generated', { defaultValue: 'Photo' })
     : imageSource === 'fallback'
       ? t('products.image.freeFallback', { defaultValue: 'Free fallback' })
       : imageSource === 'upload'
@@ -766,15 +786,15 @@ export function ProductFormModal({
     ? t('products.image.nameRequired', { defaultValue: 'Enter a product name before generating an image. It may take from 1 to 200 seconds and you will not be able to leave this screen until the generation is complete.' })
     : generatedImageNeedsRefresh
       ? t('products.image.outdated', { defaultValue: 'The current image no longer matches the latest product details.' })
-      : imageSource === 'pollinations'
-        ? t('products.image.pollinationsReady', { defaultValue: 'Your generated image is ready.' })
+      : imageSource === 'generated'
+        ? t('products.image.generatedReady', { defaultValue: 'Your product image is ready.' })
       : imageSource === 'fallback'
         ? t('products.image.fallbackReady', { defaultValue: 'A free fallback image is ready to save.' })
           : imageSource === 'upload'
             ? t('products.image.uploadReady', { defaultValue: 'Uploaded image is ready to save.' })
             : imageSource === 'existing'
               ? t('products.image.savedReady', { defaultValue: 'Saved image will be kept unless you replace it.' })
-              : t('products.image.pollinationsOnly', { defaultValue: 'The app uses AI to generate a high-quality product image. If the generation fails, a default image will be provided. It may take from 1 to 200 seconds, and you will not be able to leave this screen until the process is complete.' });
+              : t('products.image.generateHint', { defaultValue: 'A high-quality product photo is added automatically. If none is found, a clean designed image is used instead.' });
 
   if (!isOpen) return null;
 

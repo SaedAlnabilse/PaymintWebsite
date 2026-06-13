@@ -9,7 +9,7 @@ import { PartyPopper, X, CheckCircle2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 
-const TOTAL_TASKS = 8; // Match the number of tasks in TasksWidget
+const TOTAL_TASKS = 8;
 const getTasksStorageKey = (contextId: string) => `mintcom.widget.tasks.v1.${contextId}`;
 const getPopupSeenKey = (contextId: string) => `mintcom.widget.tasks.popup.seen.${contextId}`;
 
