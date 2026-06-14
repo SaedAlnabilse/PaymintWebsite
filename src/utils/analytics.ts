@@ -17,7 +17,8 @@ declare global {
   interface Window {
     dataLayer: any[];
     gtag: (...args: any[]) => void;
-    fbq: (...args: any[]) => void;
+    fbq: ((...args: any[]) => void) & { callMethod?: (...args: any[]) => void; queue?: any[] };
+    _fbq?: unknown;
   }
 }
 
@@ -90,21 +91,31 @@ const loadMarketingPixel = () => {
 
   console.log('🎯 Initializing Marketing Pixels...');
 
+  // Build the fbq command queue programmatically instead of injecting inline
+  // script text. This keeps the Content-Security-Policy free of
+  // `script-src 'unsafe-inline'`: the only thing we load is the external
+  // fbevents.js (already allow-listed in connect-src/script-src).
+  if (!window.fbq) {
+    const fbq = function (this: unknown, ...args: any[]) {
+      if (fbq.callMethod) {
+        fbq.callMethod(...args);
+      } else {
+        fbq.queue!.push(args);
+      }
+    } as Window['fbq'];
+    fbq.queue = [];
+    if (!window._fbq) window._fbq = fbq;
+    window.fbq = fbq;
+  }
+
   const script = document.createElement('script');
   script.id = 'meta-pixel-script';
-  script.innerHTML = `
-    !function(f,b,e,v,n,t,s)
-    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-    n.queue=[];t=b.createElement(e);t.async=!0;
-    t.src=v;s=b.getElementsByTagName(e)[0];
-    s.parentNode.insertBefore(t,s)}(window, document,'script',
-    'https://connect.facebook.net/en_US/fbevents.js');
-    fbq('init', '${META_PIXEL_ID}');
-    fbq('track', 'PageView');
-  `;
+  script.async = true;
+  script.src = 'https://connect.facebook.net/en_US/fbevents.js';
   document.head.appendChild(script);
+
+  window.fbq('init', META_PIXEL_ID);
+  window.fbq('track', 'PageView');
 };
 
 /**
