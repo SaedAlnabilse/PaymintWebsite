@@ -4,23 +4,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5" />
-  <script>
-    (() => {
-      try {
-        const storageKey = 'mintcom-ui-theme';
-        const storedTheme = localStorage.getItem(storageKey) || 'system';
-        const resolvedTheme = storedTheme === 'system'
-          ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
-          : storedTheme;
-        const root = document.documentElement;
-        root.classList.remove('light', 'dark');
-        root.classList.add(resolvedTheme);
-        root.style.colorScheme = resolvedTheme;
-      } catch {
-        // Ignore pre-hydration theme initialization failures.
-      }
-    })();
-  </script>
+  <!-- Pre-hydration theme init (external so the CSP needs no inline scripts).
+       Bump the ?v= query whenever theme-init.js changes to bust the immutable cache. -->
+  <script src="/theme-init.js?v=1"></script>
 
   <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="/mintcom-leaf.svg" />
@@ -109,9 +95,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
-  <!-- Preload Critical Fonts -->
-  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
-  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" /></noscript>
+  <!-- Critical Fonts (plain stylesheet — no inline onload handler, so the CSP needs no inline scripts) -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" />
 </head>
 
 <body>

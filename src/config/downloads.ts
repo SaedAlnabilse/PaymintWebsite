@@ -40,4 +40,12 @@ export const OWNER_IOS_DOWNLOAD_URL = readSafeDownloadUrl(env.VITE_OWNER_IOS_DOW
 
 export const ONBOARDING_VIDEO_URL = readSafeDownloadUrl(env.VITE_ONBOARDING_VIDEO_URL);
 
+// Landing-page marketing video. Falls back to the onboarding video when a
+// dedicated hero video isn't configured, so the "Watch Video" CTA only appears
+// when there is something real to play.
+export const HERO_VIDEO_URL = readSafeDownloadUrl(
+  env.VITE_HERO_VIDEO_URL,
+  ONBOARDING_VIDEO_URL
+);
+
 export const isDirectInstallerDownload = (url: string) => /\.(apk|ipa)(?:$|\?)/i.test(url);

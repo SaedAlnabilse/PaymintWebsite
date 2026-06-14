@@ -15,29 +15,25 @@ test.describe('Landing Page Smoke Tests', () => {
 
   test('should load the landing page and show key sections', async ({ page }) => {
     await page.goto('/');
-    
+
     // Check for Logo
     await expect(page.locator('nav img[alt="Mintcom"]').first()).toBeVisible();
 
-    // Check for Hero Section (Get Started button)
-    // Use getByRole for more robust matching
-    await expect(page.getByRole('link', { name: /Get Started/i }).first()).toBeVisible();
+    // Check for Hero Section primary CTA. For an unauthenticated visitor this is
+    // a button labelled "Start Free Trial" (see Hero.tsx), not a link.
+    await expect(page.getByRole('button', { name: /Start Free Trial/i }).first()).toBeVisible();
 
     // Check for Footer
     await expect(page.locator('footer')).toBeVisible();
   });
 
-  test('should navigate to legal pages', async ({ page, context }) => {
+  test('should navigate to legal pages', async ({ page }) => {
     await page.goto('/');
-    
-    // Privacy Policy in footer has target="_blank"
-    // We wait for the new page to be created
-    const [privacyPage] = await Promise.all([
-      context.waitForEvent('page'),
-      page.getByRole('link', { name: /Privacy Policy/i }).last().click()
-    ]);
-    
-    await expect(privacyPage).toHaveURL(/\/legal\/privacy/);
-    await expect(privacyPage.getByRole('heading', { level: 1 })).toBeVisible();
+
+    // The footer "Privacy Policy" link navigates in the same tab.
+    await page.getByRole('link', { name: /Privacy Policy/i }).last().click();
+
+    await expect(page).toHaveURL(/\/legal\/privacy/);
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
   });
 });

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -138,42 +138,47 @@ export const TicketsPage = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'priority'>('newest');
   const [loadingTickets, setLoadingTickets] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
-  // Load tickets from API, fallback to localStorage
+  // Load tickets from the support API. We deliberately do NOT silently fall back
+  // to browser-local storage here: showing stale, browser-only data as if it were
+  // the real ticket list would mislead the customer. On failure we surface an
+  // explicit error with a retry instead.
+  const fetchTickets = useCallback(async () => {
+    setLoadingTickets(true);
+    setLoadError(false);
+    try {
+      const res = await api.get('/api/support/tickets/mine');
+      // Map API response to local Ticket shape
+      const apiTickets: Ticket[] = (res.data || []).map((t: Record<string, unknown>) => ({
+        id: t.id as string,
+        ticketNumber: t.ticketNumber as string,
+        subject: t.subject as string,
+        category: t.category as string,
+        status: (t.status as string || 'open').replace(/_/g, '_') as TicketStatus,
+        priority: t.priority as TicketPriority,
+        createdAt: t.createdAt as string,
+        updatedAt: t.updatedAt as string,
+        description: '',
+        messages: [],
+        unreadReplies: t.needsCustomerReply ? 1 : 0,
+        lastMessage: t.lastMessage as Ticket['lastMessage'],
+        needsCustomerReply: Boolean(t.needsCustomerReply),
+      }));
+      setTickets(apiTickets);
+    } catch {
+      setTickets([]);
+      setLoadError(true);
+    } finally {
+      setLoadingTickets(false);
+    }
+  }, []);
+
   useEffect(() => {
-    const fetchTickets = async () => {
-      setLoadingTickets(true);
-      try {
-        const res = await api.get('/api/support/tickets/mine');
-        // Map API response to local Ticket shape
-        const apiTickets: Ticket[] = (res.data || []).map((t: Record<string, unknown>) => ({
-          id: t.id as string,
-          ticketNumber: t.ticketNumber as string,
-          subject: t.subject as string,
-          category: t.category as string,
-          status: (t.status as string || 'open').replace(/_/g, '_') as TicketStatus,
-          priority: t.priority as TicketPriority,
-          createdAt: t.createdAt as string,
-          updatedAt: t.updatedAt as string,
-          description: '',
-          messages: [],
-          unreadReplies: t.needsCustomerReply ? 1 : 0,
-          lastMessage: t.lastMessage as Ticket['lastMessage'],
-          needsCustomerReply: Boolean(t.needsCustomerReply),
-        }));
-        setTickets(apiTickets);
-      } catch {
-        // Fallback to localStorage
-        setTickets(loadTickets());
-      } finally {
-        setLoadingTickets(false);
-      }
-    };
-
     if (isAuthenticated) {
       fetchTickets();
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, fetchTickets]);
 
   const statusConfig: Record<TicketStatus, { label: string; color: string; bg: string; icon: React.ElementType; dotColor: string }> = useMemo(() => ({
     open: { label: t('support.tickets.status.open'), color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-500/15', icon: Inbox, dotColor: 'bg-blue-500' },
@@ -442,6 +447,32 @@ export const TicketsPage = () => {
                 message={t('support.tickets.loading', { defaultValue: 'Loading tickets...' })}
                 paddingClassName="p-16"
               />
+            ) : loadError ? (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="rounded-3xl border border-red-100 bg-white dark:border-red-500/20 dark:bg-white/[0.03] p-16 text-center"
+              >
+                <div className="w-20 h-20 bg-red-50 dark:bg-red-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                  <XCircle size={36} className="text-red-500" />
+                </div>
+                <h3 className="font-barlow text-xl font-bold mb-2">
+                  {t('support.tickets.loadErrorTitle', { defaultValue: "Couldn't load your tickets" })}
+                </h3>
+                <p className="text-sm font-bold text-gray-500 dark:text-gray-400 transition-colors mb-8 max-w-sm mx-auto">
+                  {t('support.tickets.loadErrorDesc', {
+                    defaultValue:
+                      'We were unable to reach the support service. Please check your connection and try again.',
+                  })}
+                </p>
+                <button
+                  onClick={() => fetchTickets()}
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-gray-100 dark:bg-white/10 rounded-xl text-sm font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/20 transition-all"
+                >
+                  <RefreshCw size={18} />
+                  {t('common.retry', { defaultValue: 'Try again' })}
+                </button>
+              </motion.div>
             ) : filteredTickets.length === 0 ? (
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}

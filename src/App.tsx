@@ -188,23 +188,41 @@ function RouteSeo() {
 // ============================================================================
 const MAINTENANCE_MODE = env.VITE_MAINTENANCE_MODE;
 
-/** 
+/**
  * Handles secret access to the site during maintenance.
- * Visit /qa-access to bypass the coming soon page.
+ * Visit /qa-access?key=<VITE_QA_ACCESS_KEY> to bypass the coming soon page.
+ *
+ * Access is only granted when a non-empty key is configured AND the supplied
+ * `key` query parameter matches it exactly. Without a configured key the bypass
+ * is disabled entirely, so the maintenance lockout cannot be trivially defeated.
  */
 function SecretAccessHandler() {
   useEffect(() => {
-    localStorage.setItem('mintcom_preview_access', 'true');
-    toast.success('Preview access granted. Redirecting...', {
-      icon: '🔐',
-      duration: 2000
-    });
-    
+    const expectedKey = env.VITE_QA_ACCESS_KEY?.trim();
+    const providedKey = new URLSearchParams(window.location.search).get('key')?.trim();
+
+    const granted = Boolean(expectedKey) && providedKey === expectedKey;
+
+    if (granted) {
+      localStorage.setItem('mintcom_preview_access', 'true');
+      toast.success('Preview access granted. Redirecting...', {
+        icon: '🔐',
+        duration: 2000,
+      });
+    } else {
+      // Ensure a stale/forged flag can never linger and unlock the site.
+      localStorage.removeItem('mintcom_preview_access');
+      toast.error('Invalid or missing access key.', {
+        icon: '🔒',
+        duration: 2500,
+      });
+    }
+
     // Brief delay to allow the toast to be seen before redirecting
     const timer = setTimeout(() => {
       window.location.href = '/';
-    }, 1000);
-    
+    }, 1200);
+
     return () => clearTimeout(timer);
   }, []);
 

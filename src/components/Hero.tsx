@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Play, X, ArrowRight, Zap } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { HERO_VIDEO_URL } from '../config/downloads';
 
 const SplitText = ({ text, className = "" }: { text: string; className?: string }) => {
   return (
@@ -110,14 +111,16 @@ export const Hero = ({ isVideoOpen, setIsVideoOpen }: { isVideoOpen: boolean; se
                 <ArrowRight size={20} className={`transition-transform ${t('common.locale') === 'ar' ? 'rotate-180 group-hover:-translate-x-1' : 'group-hover:translate-x-1'}`} />
               </motion.button>
 
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setIsVideoOpen(true)}
-                className="flex w-full items-center justify-center gap-3 rounded-xl border border-gray-200 bg-gray-100 px-6 py-3.5 text-base font-bold text-gray-900 transition-colors hover:bg-gray-200 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10 sm:px-8 sm:py-4 sm:text-lg sm:w-auto"
-              >
-                <Play size={20} fill="currentColor" className="text-mintcom-green" />
-                {t('landing.hero.watchVideo')}
-              </motion.button>
+              {HERO_VIDEO_URL && (
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setIsVideoOpen(true)}
+                  className="flex w-full items-center justify-center gap-3 rounded-xl border border-gray-200 bg-gray-100 px-6 py-3.5 text-base font-bold text-gray-900 transition-colors hover:bg-gray-200 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10 sm:px-8 sm:py-4 sm:text-lg sm:w-auto"
+                >
+                  <Play size={20} fill="currentColor" className="text-mintcom-green" />
+                  {t('landing.hero.watchVideo')}
+                </motion.button>
+              )}
             </div>
 
 
@@ -158,7 +161,7 @@ export const Hero = ({ isVideoOpen, setIsVideoOpen }: { isVideoOpen: boolean; se
 
       {/* Video Modal */}
       <AnimatePresence>
-        {isVideoOpen && (
+        {isVideoOpen && HERO_VIDEO_URL && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -181,7 +184,8 @@ export const Hero = ({ isVideoOpen, setIsVideoOpen }: { isVideoOpen: boolean; se
               onClick={(e) => e.stopPropagation()}
             >
               <iframe
-                src=""
+                src={HERO_VIDEO_URL}
+                title={t('landing.hero.watchVideo')}
                 className="w-full h-full"
                 allow="autoplay; fullscreen; picture-in-picture"
                 allowFullScreen

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
@@ -28,8 +28,6 @@ import api from '../../config/api';
 import { SurfaceLoader } from '../../components/LoadingState';
 import { formatInputPlaceholder } from '../../utils/textCase';
 import {
-  getTicketById,
-  updateTicket,
   type Ticket,
   type TicketStatus,
   type TicketMessage,
@@ -53,10 +51,6 @@ function formatTimestamp(iso: string): string {
   }
 }
 
-function generateMsgId(): string {
-  return `msg-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
-}
-
 // ─── Component ───────────────────────────────────────────────────────────────
 export const TicketDetailPage = () => {
   const { t } = useTranslation();
@@ -66,6 +60,7 @@ export const TicketDetailPage = () => {
 
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [notFound, setNotFound] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [newMessage, setNewMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
 
@@ -76,65 +71,63 @@ export const TicketDetailPage = () => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
 
-  // Load ticket from API, fallback to localStorage
-  useEffect(() => {
+  // Load ticket from the support API. A 404 means the ticket genuinely does not
+  // exist; any other failure is a transient/load error that we surface with a
+  // retry rather than substituting unreliable browser-local data.
+  const fetchTicket = useCallback(async () => {
     if (!ticketId) return;
-
-    const fetchTicket = async () => {
-      setLoadingDetail(true);
-      try {
-        const res = await api.get(`/api/support/tickets/${ticketId}`);
-        const data = res.data;
-        // Map API response to local Ticket shape
-        const mapped: Ticket = {
-          id: data.id,
-          subject: data.subject,
-          category: data.category,
-          status: data.status as TicketStatus,
-          priority: data.priority,
-          createdAt: data.createdAt,
-          updatedAt: data.updatedAt,
-          description: data.description,
-          messages: (data.messages || []).map((m: Record<string, unknown>) => {
-            // Parse attachments from API (stored as JSON)
-            const rawAtts = (m.attachments as Array<{ name?: string; url?: string; sizeBytes?: number; type?: string }>) || [];
-            const parsedAtts = Array.isArray(rawAtts) ? rawAtts.map((a) => ({
-              name: a.name || 'file',
-              url: a.url || '',
-              size: a.sizeBytes ? (a.sizeBytes > 1024 * 1024 ? `${(a.sizeBytes / 1024 / 1024).toFixed(1)} MB` : `${Math.round(a.sizeBytes / 1024)} KB`) : '',
-              type: a.type || 'file',
-            })) : [];
-            return {
-              id: m.id as string,
-              sender: (m.senderType as string) === 'support' ? 'support' : 'user',
-              senderName: m.senderName as string,
-              content: m.content as string,
-              timestamp: m.createdAt as string,
-              attachments: parsedAtts,
-            } as TicketMessage;
-          }),
-          unreadReplies: 0,
-        };
-        setTicket(mapped);
-      } catch {
-        // Fallback to localStorage
-        const found = getTicketById(ticketId);
-        if (found) {
-          if (found.unreadReplies > 0) {
-            found.unreadReplies = 0;
-            updateTicket(found);
-          }
-          setTicket(found);
-        } else {
-          setNotFound(true);
-        }
-      } finally {
-        setLoadingDetail(false);
+    setLoadingDetail(true);
+    setNotFound(false);
+    setLoadError(false);
+    try {
+      const res = await api.get(`/api/support/tickets/${ticketId}`);
+      const data = res.data;
+      // Map API response to local Ticket shape
+      const mapped: Ticket = {
+        id: data.id,
+        subject: data.subject,
+        category: data.category,
+        status: data.status as TicketStatus,
+        priority: data.priority,
+        createdAt: data.createdAt,
+        updatedAt: data.updatedAt,
+        description: data.description,
+        messages: (data.messages || []).map((m: Record<string, unknown>) => {
+          // Parse attachments from API (stored as JSON)
+          const rawAtts = (m.attachments as Array<{ name?: string; url?: string; sizeBytes?: number; type?: string }>) || [];
+          const parsedAtts = Array.isArray(rawAtts) ? rawAtts.map((a) => ({
+            name: a.name || 'file',
+            url: a.url || '',
+            size: a.sizeBytes ? (a.sizeBytes > 1024 * 1024 ? `${(a.sizeBytes / 1024 / 1024).toFixed(1)} MB` : `${Math.round(a.sizeBytes / 1024)} KB`) : '',
+            type: a.type || 'file',
+          })) : [];
+          return {
+            id: m.id as string,
+            sender: (m.senderType as string) === 'support' ? 'support' : 'user',
+            senderName: m.senderName as string,
+            content: m.content as string,
+            timestamp: m.createdAt as string,
+            attachments: parsedAtts,
+          } as TicketMessage;
+        }),
+        unreadReplies: 0,
+      };
+      setTicket(mapped);
+    } catch (err: unknown) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status === 404) {
+        setNotFound(true);
+      } else {
+        setLoadError(true);
       }
-    };
-
-    fetchTicket();
+    } finally {
+      setLoadingDetail(false);
+    }
   }, [ticketId]);
+
+  useEffect(() => {
+    fetchTicket();
+  }, [fetchTicket]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -174,28 +167,15 @@ export const TicketDetailPage = () => {
 
       setTicket(updated);
       setNewMessage('');
-      toast.success('Reply sent');
+      toast.success(t('support.tickets.replySent', { defaultValue: 'Reply sent' }));
     } catch {
-      // Fallback: save locally
-      const msg: TicketMessage = {
-        id: generateMsgId(),
-        sender: 'user',
-        senderName: account?.firstName ? `${account.firstName} ${account.lastName || ''}`.trim() : t('support.tickets.you'),
-        content: newMessage.trim(),
-        timestamp: new Date().toISOString(),
-      };
-
-      const updated: Ticket = {
-        ...ticket,
-        messages: [...ticket.messages, msg],
-        updatedAt: new Date().toISOString(),
-        status: ticket.status === 'resolved' || ticket.status === 'closed' ? 'open' : ticket.status,
-      };
-
-      updateTicket(updated);
-      setTicket(updated);
-      setNewMessage('');
-      toast.success('Reply sent (saved locally)');
+      // The reply did NOT reach support. Never report success or silently store
+      // it in the browser — keep the draft in the box so the user can retry.
+      toast.error(
+        t('support.tickets.replyError', {
+          defaultValue: "Your reply couldn't be sent. Please try again.",
+        })
+      );
     } finally {
       setIsSending(false);
     }
@@ -218,12 +198,21 @@ export const TicketDetailPage = () => {
         status: newStatus.toUpperCase(),
       });
     } catch {
-      // Best effort
+      // Only reflect the change locally once the server has confirmed it.
+      toast.error(
+        t('support.tickets.statusError', {
+          defaultValue: "Couldn't update the ticket. Please try again.",
+        })
+      );
+      return;
     }
     const updated = { ...ticket, status: newStatus, updatedAt: new Date().toISOString() };
-    updateTicket(updated);
     setTicket(updated);
-    toast.success(newStatus === 'resolved' ? t('support.tickets.markResolved') : 'Ticket reopened');
+    toast.success(
+      newStatus === 'resolved'
+        ? t('support.tickets.markResolved')
+        : t('support.tickets.reopened', { defaultValue: 'Ticket reopened' })
+    );
   };
 
   // ─── Status configs ──────────────────────────────────────────────────────
@@ -271,6 +260,41 @@ export const TicketDetailPage = () => {
               message={t('support.tickets.loadingDetail', { defaultValue: 'Loading ticket...' })}
               className="max-w-4xl mx-auto"
             />
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // ─── Load error (transient) ──────────────────────────────────────────────────
+  if (loadError && !ticket) {
+    return (
+      <div className="min-h-screen bg-white font-sans text-gray-900 dark:bg-[#050505] dark:text-white">
+        <Navbar />
+        <main className="pt-28 pb-20">
+          <div className="container mx-auto max-w-[1280px] px-6 md:px-10">
+            <div className="max-w-4xl mx-auto rounded-3xl border border-red-100 bg-white dark:border-red-500/20 dark:bg-white/[0.03] p-16 text-center">
+              <div className="w-20 h-20 bg-red-50 dark:bg-red-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <AlertCircle size={36} className="text-red-500" />
+              </div>
+              <h3 className="font-barlow text-xl font-bold mb-2">
+                {t('support.tickets.loadErrorTitle', { defaultValue: "Couldn't load this ticket" })}
+              </h3>
+              <p className="text-gray-500 dark:text-gray-400 mb-8">
+                {t('support.tickets.loadErrorDesc', {
+                  defaultValue:
+                    'We were unable to reach the support service. Please check your connection and try again.',
+                })}
+              </p>
+              <button
+                onClick={() => fetchTicket()}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-mintcom-green font-bold text-black shadow-[0_4px_16px_-4px_rgba(124,195,159,0.5)] transition-all hover:shadow-[0_8px_24px_-6px_rgba(124,195,159,0.6)]"
+              >
+                <Loader2 size={18} />
+                {t('common.retry', { defaultValue: 'Try again' })}
+              </button>
+            </div>
           </div>
         </main>
         <Footer />
