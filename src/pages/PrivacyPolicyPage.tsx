@@ -29,6 +29,17 @@ export const PrivacyPolicyPage = () => {
                 'Google Firebase Crashlytics لمعالجة سجلات الأعطال وبيانات التشخيص ومعرّف جهاز بهدف مراقبة الاستقرار وتحسين أداء التطبيق، وليس لتتبعك عبر التطبيقات أو الخدمات.'
             ],
             deletionNote: 'لطلب حذف الحساب والبيانات، أرسل رسالة من البريد الإلكتروني المسجل في حسابك أو أرفق اسم النشاط التجاري مع البريد الإلكتروني أو رقم الهاتف المرتبط بالحساب حتى نتمكن من التحقق من الهوية. بعد التحقق، نحذف أو نخفي هوية البيانات المؤهلة خلال 30 يوماً، مع الاحتفاظ فقط بما يلزم قانونياً أو ضريبياً أو محاسبياً أو أمنياً أو لتسوية النزاعات.',
+            rightsTitle: '6. حقوقك',
+            rightsIntro: 'بحسب موقعك الجغرافي، قد تكون لديك الحقوق التالية فيما يتعلق ببياناتك الشخصية:',
+            rights: [
+                'الوصول إلى البيانات الشخصية التي نحتفظ بها عنك والحصول على نسخة منها.',
+                'تصحيح المعلومات غير الدقيقة أو غير المكتملة.',
+                'طلب حذف بياناتك الشخصية.',
+                'تقييد بعض معالجات البيانات أو الاعتراض عليها.',
+                'طلب تصدير بياناتك أو نقلها حيثما كان ذلك قابلاً للتطبيق.'
+            ],
+            rightsOutro: 'لممارسة أي من هذه الحقوق، تواصل معنا عبر',
+            rightsLegal: '. وسنرد وفقاً للقانون المعمول به.',
             governingLawTitle: 'القانون الواجب التطبيق',
             governingLawBody: 'تخضع سياسة الخصوصية هذه واستخدامك لخدمات Mintcom لقوانين المملكة الأردنية الهاشمية، ما لم يفرض القانون المحلي الإلزامي خلاف ذلك.'
         }
@@ -51,6 +62,17 @@ export const PrivacyPolicyPage = () => {
                 'Google Firebase Crashlytics, which processes crash logs, diagnostic data, and a device identifier on our behalf to help us monitor stability and improve app performance, not to track you across apps or services.'
             ],
             deletionNote: 'For account and data deletion requests, email us from the address registered to your Mintcom account or include your business name together with the email address or phone number associated with the account so we can verify identity. Once verified, we delete or anonymize eligible personal data within 30 days, except where longer retention is required for legal, tax, accounting, billing, security, fraud-prevention, or dispute-resolution purposes.',
+            rightsTitle: '6. Your Rights',
+            rightsIntro: 'Depending on your location, you may have the following rights regarding your personal data:',
+            rights: [
+                'Access and receive a copy of the personal data we hold about you.',
+                'Correct inaccurate or incomplete information.',
+                'Request deletion of your personal data.',
+                'Restrict or object to certain processing of your data.',
+                'Request export or portability of your data where applicable.'
+            ],
+            rightsOutro: 'To exercise any of these rights, contact us at',
+            rightsLegal: '. We will respond in accordance with applicable law.',
             governingLawTitle: 'Governing Law',
             governingLawBody: 'This Privacy Policy and your use of the Mintcom services are governed by the laws of the Hashemite Kingdom of Jordan, unless mandatory local law requires otherwise.'
         };
@@ -77,7 +99,7 @@ export const PrivacyPolicyPage = () => {
                         </div>
                         <h1 className="font-magilio text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-4 tracking-tight">{t('legal.privacy.title')}</h1>
                         <p className="label-strong font-outfit">
-                            {t('legal.privacy.lastUpdated')}: {new Date('2026-05-29').toLocaleDateString(isArabic ? 'ar-EG' : 'en-US', { month: 'long', day: 'numeric', year: 'numeric' }).toUpperCase()}
+                            {t('legal.privacy.lastUpdated')}: {new Date('2026-06-14').toLocaleDateString(isArabic ? 'ar-EG' : 'en-US', { month: 'long', day: 'numeric', year: 'numeric' }).toUpperCase()}
                         </p>
                     </motion.div>
                 </div>
@@ -240,21 +262,6 @@ export const PrivacyPolicyPage = () => {
                             <p className="text-sm font-medium mt-4">{appPrivacyAddendum.deletionNote}</p>
                         </section>
 
-                        {/* 7. Your Rights */}
-                        <section>
-                            <h2 className="font-magilio text-xl font-bold text-gray-900 dark:text-white mb-4">{t('legal.privacy.sections.s7')}</h2>
-                            <p className="text-sm font-medium mb-4">{t('legal.privacy.sections.s7_desc')}:</p>
-                            <ul className="list-disc pr-5 pl-5 space-y-2 text-sm font-medium mb-6">
-                                <li>{t('legal.privacy.rights.ri1')}</li>
-                                <li>{t('legal.privacy.rights.ri2')}</li>
-                                <li>{t('legal.privacy.rights.ri3')}</li>
-                                <li>{t('legal.privacy.rights.ri4')}</li>
-                            </ul>
-                            <p className="text-sm font-medium">
-                                {t('legal.privacy.rights.contact')} <a href="mailto:support@mintcompos.com" className="text-mintcom-green hover:underline font-bold">support@mintcompos.com</a>
-                            </p>
-                        </section>
-
                         {/* Account and Data Deletion Requests */}
                         <section className="bg-mintcom-green/5 p-6 rounded-2xl border border-mintcom-green/20">
                             <h2 className="font-magilio text-xl font-bold text-gray-900 dark:text-white mb-4">{t('legal.privacy.deletion.title')}</h2>
@@ -267,6 +274,21 @@ export const PrivacyPolicyPage = () => {
                             <p className="text-sm font-medium mb-3">{t('legal.privacy.deletion.retention')}</p>
                             <p className="text-sm font-medium">
                                 {t('legal.privacy.deletion.emailLabel')} <a href="mailto:support@mintcompos.com?subject=Account%20and%20data%20deletion%20request" className="text-mintcom-green hover:underline font-bold">support@mintcompos.com</a>
+                            </p>
+                        </section>
+
+                        <section>
+                            <h2 className="font-magilio text-xl font-bold text-gray-900 dark:text-white mb-4">{appPrivacyAddendum.rightsTitle}</h2>
+                            <p className="text-sm font-medium mb-4">{appPrivacyAddendum.rightsIntro}</p>
+                            <ul className="list-disc pr-5 pl-5 space-y-2 text-sm font-medium mb-6">
+                                {appPrivacyAddendum.rights.map((item) => (
+                                    <li key={item}>{item}</li>
+                                ))}
+                            </ul>
+                            <p className="text-sm font-medium">
+                                {appPrivacyAddendum.rightsOutro}{' '}
+                                <a href="mailto:support@mintcompos.com" className="text-mintcom-green hover:underline font-bold">support@mintcompos.com</a>
+                                {appPrivacyAddendum.rightsLegal}
                             </p>
                         </section>
 
