@@ -359,6 +359,14 @@ const router = createBrowserRouter([
         ),
       },
       {
+        path: "/legal/privacy/",
+        element: (
+          <PageSuspense>
+            <PrivacyPolicyPage />
+          </PageSuspense>
+        ),
+      },
+      {
         path: "/privacy",
         element: (
           <PageSuspense>
