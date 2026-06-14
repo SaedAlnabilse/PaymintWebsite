@@ -457,7 +457,7 @@ export const TicketsPage = () => {
                   <XCircle size={36} className="text-red-500" />
                 </div>
                 <h3 className="font-barlow text-xl font-bold mb-2">
-                  {t('support.tickets.loadErrorTitle', { defaultValue: "Couldn't load your tickets" })}
+                  {t('support.tickets.loadListErrorTitle', { defaultValue: "Couldn't load your tickets" })}
                 </h3>
                 <p className="text-sm font-bold text-gray-500 dark:text-gray-400 transition-colors mb-8 max-w-sm mx-auto">
                   {t('support.tickets.loadErrorDesc', {
