@@ -8,3 +8,5 @@ binding = "ASSETS"
 
 [vars]
 API_TARGET = "https://grateful-liberation-production-d036.up.railway.app"
+VITE_GA_MEASUREMENT_ID = "G-QHV2SVCG99"
+VITE_QA_ACCESS_KEY = "fDJg_HNS87_R5QNjWWt-cxJXf557sMBI"
