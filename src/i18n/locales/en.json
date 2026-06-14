@@ -718,6 +718,7 @@
   },
   "common": {
     "actions": "Actions",
+    "retry": "Try again",
     "active": "Active",
     "activeFilters": "Active filters",
     "add": "Add",
@@ -5586,7 +5587,14 @@
       "support": "Support",
       "toClose": "Close Ticket",
       "updated": "Updated",
-      "you": "You"
+      "you": "You",
+      "loadErrorTitle": "Couldn't load this ticket",
+      "loadListErrorTitle": "Couldn't load your tickets",
+      "loadErrorDesc": "We were unable to reach the support service. Please check your connection and try again.",
+      "replySent": "Reply sent",
+      "replyError": "Your reply couldn't be sent. Please try again.",
+      "statusError": "Couldn't update the ticket. Please try again.",
+      "reopened": "Ticket reopened"
     }
   },
   "theme": {
