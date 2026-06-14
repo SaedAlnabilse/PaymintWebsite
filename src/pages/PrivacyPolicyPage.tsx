@@ -19,14 +19,17 @@ export const PrivacyPolicyPage = () => {
                 'Photos & Media: تُستخدم فقط عندما تختار رفع صورة موجودة على جهازك لمنتج أو عنصر قائمة أو شعار النشاط.',
                 'Local Network: تُستخدم لاكتشاف طابعات الإيصالات أو المطبخ والاتصال بها داخل شبكتك المحلية.',
                 'Local Storage: يُستخدم لتخزين الإعدادات والبيانات المؤقتة والسجلات المؤقتة لتحسين الأداء أثناء ضعف الاتصال.',
-                'Images You Provide: قد نخزن الصور التي ترفعها أو تلتقطها داخل التطبيق لاستخدامها كصور منتجات أو شعارات أو عناصر قائمة.'
+                'Images You Provide: قد نخزن الصور التي ترفعها أو تلتقطها داخل التطبيق لاستخدامها كصور منتجات أو شعارات أو عناصر قائمة.',
+                'Biometric Authentication (Face ID / Touch ID / Fingerprint): يُستخدم فقط لفتح التطبيق وتسجيل دخولك على جهازك. تُعالَج بيانات السمات الحيوية داخل الأجهزة الآمنة في جهازك ولا تغادره مطلقاً، ولا نقوم بإرسالها أو تخزينها لدينا.',
+                'Push Notifications: بعد إذنك، نُسجّل رمز إشعارات للجهاز عبر Google Firebase Cloud Messaging وخدمة إشعارات Apple لإرسال تنبيهات تشغيلية (مثل إشعارات الطلبات والحساب والأمان). يمكنك تعطيل الإشعارات في أي وقت من إعدادات جهازك.'
             ],
             diagnosticsTitle: 'التشخيص والخدمات الخارجية',
             diagnosticsIntro: 'لا نبيع بياناتك الشخصية أو بيانات نشاطك التجاري. عند الحاجة لتشغيل التطبيق وتحسينه، قد نشارك بيانات محدودة مع مزودي الخدمة التاليين:',
             diagnostics: [
                 'خادمك الخلفي المرتبط بحسابك أو نشاطك التجاري لمعالجة المبيعات والمخزون والحسابات والتقارير.',
                 'معالجو الدفع إذا قمت بتفعيل وسائل الدفع الإلكتروني.',
-                'Google Firebase Crashlytics لمعالجة سجلات الأعطال وبيانات التشخيص ومعرّف جهاز بهدف مراقبة الاستقرار وتحسين أداء التطبيق، وليس لتتبعك عبر التطبيقات أو الخدمات.'
+                'Google Firebase Crashlytics لمعالجة سجلات الأعطال وبيانات التشخيص ومعرّف جهاز بهدف مراقبة الاستقرار وتحسين أداء التطبيق، وليس لتتبعك عبر التطبيقات أو الخدمات.',
+                'Groq، مزود المساعد الذكي لدينا، الذي يعالج الأسئلة التي ترسلها إلى المساعد داخل التطبيق مع بيانات النشاط التجاري اللازمة للإجابة عليها (مثل المبيعات والمنتجات والتقارير). تُستخدم هذه البيانات فقط لإنشاء إجابتك ولا تُستخدم لتدريب نماذج أطراف ثالثة أو لتتبعك.'
             ],
             deletionNote: 'لطلب حذف الحساب والبيانات، أرسل رسالة من البريد الإلكتروني المسجل في حسابك أو أرفق اسم النشاط التجاري مع البريد الإلكتروني أو رقم الهاتف المرتبط بالحساب حتى نتمكن من التحقق من الهوية. بعد التحقق، نحذف أو نخفي هوية البيانات المؤهلة خلال 30 يوماً، مع الاحتفاظ فقط بما يلزم قانونياً أو ضريبياً أو محاسبياً أو أمنياً أو لتسوية النزاعات.',
             rightsTitle: '6. حقوقك',
@@ -52,14 +55,17 @@ export const PrivacyPolicyPage = () => {
                 'Photos & Media: Used only when you choose to upload an existing image from your device for a product, menu item, or business logo.',
                 'Local Network: Used to discover and connect to receipt or kitchen printers on your local network.',
                 'Local Storage: Used to store settings, cached data, and temporary logs so the app can remain usable during unstable connectivity.',
-                'Images You Provide: We may store images you capture or upload in the app for use as product photos, menu-item images, or business logos.'
+                'Images You Provide: We may store images you capture or upload in the app for use as product photos, menu-item images, or business logos.',
+                'Biometric Authentication (Face ID / Touch ID / Fingerprint): Used only to unlock the app and sign you in on your device. Biometric data is processed by your device\'s secure hardware, never leaves your device, and is never transmitted to or stored by us.',
+                'Push Notifications: With your permission, we register a device push token via Google Firebase Cloud Messaging and the Apple Push Notification service to send operational alerts (such as order, account, and security notifications). You can disable notifications at any time in your device settings.'
             ],
             diagnosticsTitle: 'Diagnostics & Third-Party Services',
             diagnosticsIntro: 'We do not sell your personal or business data. Where needed to operate and improve the app, limited data may be shared with the following service providers:',
             diagnostics: [
                 'Your backend server instance associated with your business account so sales, inventory, account, and reporting features can function.',
                 'Payment processors if you choose to enable electronic payment integrations.',
-                'Google Firebase Crashlytics, which processes crash logs, diagnostic data, and a device identifier on our behalf to help us monitor stability and improve app performance, not to track you across apps or services.'
+                'Google Firebase Crashlytics, which processes crash logs, diagnostic data, and a device identifier on our behalf to help us monitor stability and improve app performance, not to track you across apps or services.',
+                'Groq, our AI assistant provider, which processes the questions you send to the in-app assistant together with the related business data needed to answer them (such as sales, products, and reports). This data is used only to generate your answer and is not used to train third-party models or to track you.'
             ],
             deletionNote: 'For account and data deletion requests, email us from the address registered to your Mintcom account or include your business name together with the email address or phone number associated with the account so we can verify identity. Once verified, we delete or anonymize eligible personal data within 30 days, except where longer retention is required for legal, tax, accounting, billing, security, fraud-prevention, or dispute-resolution purposes.',
             rightsTitle: '6. Your Rights',
