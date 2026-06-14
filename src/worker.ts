@@ -107,7 +107,6 @@ export default {
             const noIndexPath = /^\/(api|uploads|files|dashboard|owner|brand|login|signup|verify-email|forgot-password|reset-password|select-establishment)(\/|$)/.test(url.pathname);
             const isProxyPath = url.pathname.startsWith('/api/') || url.pathname.startsWith('/reports/') || url.pathname.startsWith('/app-settings/') || url.pathname.startsWith('/files/') || url.pathname.startsWith('/customers/') || url.pathname.startsWith('/uploads/');
             const isRealtimePath = url.pathname.startsWith('/realtime') || url.pathname.startsWith('/socket.io/');
-            const isPrivacyPolicyPath = url.pathname === '/legal/privacy' || url.pathname === '/legal/privacy/';
 
             if ((isProxyPath || isRealtimePath) && !isAllowedProxyOrigin(request.headers.get('Origin'), url)) {
                 return withSecurityHeaders(new Response('Forbidden', { status: 403 }), true);
@@ -126,15 +125,6 @@ export default {
                 const newUrl = new URL(url.pathname + url.search, targetBase);
 
                 return withSecurityHeaders(await fetch(createProxyRequest(request, newUrl)), true);
-            }
-
-            if (isPrivacyPolicyPath) {
-                const privacyRequest = new Request(new URL('/legal/privacy/index.html', request.url), {
-                    headers: request.headers,
-                    method: request.method,
-                });
-
-                return withSecurityHeaders(await env.ASSETS.fetch(privacyRequest), false);
             }
 
             // 3. Try to fetch the asset

@@ -7,8 +7,56 @@ import { Footer } from '../components/Footer';
 
 export const PrivacyPolicyPage = () => {
     const { t } = useTranslation();
+    const isArabic = t('common.locale') === 'ar';
+
+    const appPrivacyAddendum = isArabic
+        ? {
+            permissionsTitle: 'إفصاحات تطبيق الهاتف والأذونات',
+            permissionsIntro: 'لضمان قبول سياسة الخصوصية في متجري App Store وGoogle Play، نوضح أيضاً كيف يستخدم تطبيق Mintcom على الهاتف خصائص الجهاز والخدمات المرتبطة به.',
+            permissions: [
+                'Bluetooth: يُستخدم فقط لاكتشاف الطابعات الحرارية الخارجية وربطها والاتصال بها. لا نستخدم البلوتوث لتتبع الموقع.',
+                'Camera: تُستخدم لمسح رموز QR لإعداد الخادم، ومسح الباركود لإضافة المنتجات إلى السلة، والتقاط صور لعناصر القائمة عند اختيارك لذلك.',
+                'Photos & Media: تُستخدم فقط عندما تختار رفع صورة موجودة على جهازك لمنتج أو عنصر قائمة أو شعار النشاط.',
+                'Local Network: تُستخدم لاكتشاف طابعات الإيصالات أو المطبخ والاتصال بها داخل شبكتك المحلية.',
+                'Local Storage: يُستخدم لتخزين الإعدادات والبيانات المؤقتة والسجلات المؤقتة لتحسين الأداء أثناء ضعف الاتصال.',
+                'Images You Provide: قد نخزن الصور التي ترفعها أو تلتقطها داخل التطبيق لاستخدامها كصور منتجات أو شعارات أو عناصر قائمة.'
+            ],
+            diagnosticsTitle: 'التشخيص والخدمات الخارجية',
+            diagnosticsIntro: 'لا نبيع بياناتك الشخصية أو بيانات نشاطك التجاري. عند الحاجة لتشغيل التطبيق وتحسينه، قد نشارك بيانات محدودة مع مزودي الخدمة التاليين:',
+            diagnostics: [
+                'خادمك الخلفي المرتبط بحسابك أو نشاطك التجاري لمعالجة المبيعات والمخزون والحسابات والتقارير.',
+                'معالجو الدفع إذا قمت بتفعيل وسائل الدفع الإلكتروني.',
+                'Google Firebase Crashlytics لمعالجة سجلات الأعطال وبيانات التشخيص ومعرّف جهاز بهدف مراقبة الاستقرار وتحسين أداء التطبيق، وليس لتتبعك عبر التطبيقات أو الخدمات.'
+            ],
+            deletionNote: 'لطلب حذف الحساب والبيانات، أرسل رسالة من البريد الإلكتروني المسجل في حسابك أو أرفق اسم النشاط التجاري مع البريد الإلكتروني أو رقم الهاتف المرتبط بالحساب حتى نتمكن من التحقق من الهوية. بعد التحقق، نحذف أو نخفي هوية البيانات المؤهلة خلال 30 يوماً، مع الاحتفاظ فقط بما يلزم قانونياً أو ضريبياً أو محاسبياً أو أمنياً أو لتسوية النزاعات.',
+            governingLawTitle: 'القانون الواجب التطبيق',
+            governingLawBody: 'تخضع سياسة الخصوصية هذه واستخدامك لخدمات Mintcom لقوانين المملكة الأردنية الهاشمية، ما لم يفرض القانون المحلي الإلزامي خلاف ذلك.'
+        }
+        : {
+            permissionsTitle: 'Mobile App Disclosures & Permissions',
+            permissionsIntro: 'To ensure the policy clearly covers the Mintcom mobile app for App Store and Google Play review, we also explain how the app uses device features and related services.',
+            permissions: [
+                'Bluetooth: Used only to discover, pair, and connect to external thermal receipt printers. We do not use Bluetooth for location tracking.',
+                'Camera: Used to scan QR codes for server configuration, scan barcodes for adding products to the cart, and capture menu-item images when you choose to do so.',
+                'Photos & Media: Used only when you choose to upload an existing image from your device for a product, menu item, or business logo.',
+                'Local Network: Used to discover and connect to receipt or kitchen printers on your local network.',
+                'Local Storage: Used to store settings, cached data, and temporary logs so the app can remain usable during unstable connectivity.',
+                'Images You Provide: We may store images you capture or upload in the app for use as product photos, menu-item images, or business logos.'
+            ],
+            diagnosticsTitle: 'Diagnostics & Third-Party Services',
+            diagnosticsIntro: 'We do not sell your personal or business data. Where needed to operate and improve the app, limited data may be shared with the following service providers:',
+            diagnostics: [
+                'Your backend server instance associated with your business account so sales, inventory, account, and reporting features can function.',
+                'Payment processors if you choose to enable electronic payment integrations.',
+                'Google Firebase Crashlytics, which processes crash logs, diagnostic data, and a device identifier on our behalf to help us monitor stability and improve app performance, not to track you across apps or services.'
+            ],
+            deletionNote: 'For account and data deletion requests, email us from the address registered to your Mintcom account or include your business name together with the email address or phone number associated with the account so we can verify identity. Once verified, we delete or anonymize eligible personal data within 30 days, except where longer retention is required for legal, tax, accounting, billing, security, fraud-prevention, or dispute-resolution purposes.',
+            governingLawTitle: 'Governing Law',
+            governingLawBody: 'This Privacy Policy and your use of the Mintcom services are governed by the laws of the Hashemite Kingdom of Jordan, unless mandatory local law requires otherwise.'
+        };
+
     return (
-        <div className="min-h-screen bg-white dark:bg-[#0F172A] text-gray-900 dark:text-white font-sans" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
+        <div className="min-h-screen bg-white dark:bg-[#0F172A] text-gray-900 dark:text-white font-sans" dir={isArabic ? 'rtl' : 'ltr'}>
             <Helmet>
                 <title>{t('metadata.privacy.title')}</title>
                 <meta name="description" content={t('metadata.privacy.description')} />
@@ -29,7 +77,7 @@ export const PrivacyPolicyPage = () => {
                         </div>
                         <h1 className="font-magilio text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-4 tracking-tight">{t('legal.privacy.title')}</h1>
                         <p className="label-strong font-outfit">
-                            {t('legal.privacy.lastUpdated')}: {new Date('2026-05-29').toLocaleDateString(t('common.locale') === 'ar' ? 'ar-EG' : 'en-US', { month: 'long', day: 'numeric', year: 'numeric' }).toUpperCase()}
+                            {t('legal.privacy.lastUpdated')}: {new Date('2026-05-29').toLocaleDateString(isArabic ? 'ar-EG' : 'en-US', { month: 'long', day: 'numeric', year: 'numeric' }).toUpperCase()}
                         </p>
                     </motion.div>
                 </div>
@@ -52,7 +100,7 @@ export const PrivacyPolicyPage = () => {
                             <h2 className="font-magilio text-xl font-bold text-gray-900 dark:text-white mb-4">{t('legal.privacy.sections.s1')}</h2>
                             <p className="text-sm font-medium mb-4">{t('legal.privacy.sections.s1_desc')}</p>
 
-                            <div className={`mb-6 ${t('common.locale') === 'ar' ? 'pr-4 border-r-2' : 'pl-4 border-l-2'} border-mintcom-green/20`}>
+                            <div className={`mb-6 ${isArabic ? 'pr-4 border-r-2' : 'pl-4 border-l-2'} border-mintcom-green/20`}>
                                 <h3 className="font-magilio text-lg font-bold text-gray-900 dark:text-white mb-3">{t('legal.privacy.sections.s1_1')}</h3>
                                 <p className="text-sm font-medium mb-2">{t('legal.privacy.sections.s1_1_desc')}:</p>
                                 <ul className="list-disc pr-5 pl-5 space-y-1 text-sm font-medium">
@@ -64,7 +112,7 @@ export const PrivacyPolicyPage = () => {
                                 </ul>
                             </div>
 
-                            <div className={`mb-6 ${t('common.locale') === 'ar' ? 'pr-4 border-r-2' : 'pl-4 border-l-2'} border-mintcom-green/20`}>
+                            <div className={`mb-6 ${isArabic ? 'pr-4 border-r-2' : 'pl-4 border-l-2'} border-mintcom-green/20`}>
                                 <h3 className="font-magilio text-lg font-bold text-gray-900 dark:text-white mb-3">{t('legal.privacy.sections.s1_2')}</h3>
                                 <p className="text-sm font-medium mb-2">{t('legal.privacy.sections.s1_2_desc')}:</p>
                                 <ul className="list-disc pr-5 pl-5 space-y-1 text-sm font-medium mb-4">
@@ -79,7 +127,7 @@ export const PrivacyPolicyPage = () => {
                                 </div>
                             </div>
 
-                            <div className={`mb-6 ${t('common.locale') === 'ar' ? 'pr-4 border-r-2' : 'pl-4 border-l-2'} border-mintcom-green/20`}>
+                            <div className={`mb-6 ${isArabic ? 'pr-4 border-r-2' : 'pl-4 border-l-2'} border-mintcom-green/20`}>
                                 <h3 className="font-magilio text-lg font-bold text-gray-900 dark:text-white mb-3">{t('legal.privacy.sections.s1_3')}</h3>
                                 <p className="text-sm font-medium mb-2">{t('legal.privacy.sections.s1_3_desc')}:</p>
                                 <ul className="list-disc pr-5 pl-5 space-y-1 text-sm font-medium">
@@ -91,7 +139,7 @@ export const PrivacyPolicyPage = () => {
                                 </ul>
                             </div>
 
-                            <div className={`${t('common.locale') === 'ar' ? 'pr-4 border-r-2' : 'pl-4 border-l-2'} border-mintcom-green/20`}>
+                            <div className={`${isArabic ? 'pr-4 border-r-2' : 'pl-4 border-l-2'} border-mintcom-green/20`}>
                                 <h3 className="font-magilio text-lg font-bold text-gray-900 dark:text-white mb-3">{t('legal.privacy.sections.s1_4')}</h3>
                                 <p className="text-sm font-medium mb-2">{t('legal.privacy.sections.s1_4_desc')}:</p>
                                 <ul className="list-disc pr-5 pl-5 space-y-1 text-sm font-medium">
@@ -101,6 +149,16 @@ export const PrivacyPolicyPage = () => {
                                     <li>{t('legal.privacy.fields.cookies')}</li>
                                 </ul>
                             </div>
+                        </section>
+
+                        <section className="bg-gray-50 dark:bg-white/5 p-8 rounded-3xl border border-gray-100 dark:border-white/10">
+                            <h2 className="font-magilio text-xl font-bold text-gray-900 dark:text-white mb-4">{appPrivacyAddendum.permissionsTitle}</h2>
+                            <p className="text-sm font-medium mb-4">{appPrivacyAddendum.permissionsIntro}</p>
+                            <ul className="list-disc pr-5 pl-5 space-y-2 text-sm font-medium">
+                                {appPrivacyAddendum.permissions.map((item) => (
+                                    <li key={item}>{item}</li>
+                                ))}
+                            </ul>
                         </section>
 
                         {/* 2. How We Use Your Information */}
@@ -147,6 +205,15 @@ export const PrivacyPolicyPage = () => {
                             <p className="text-sm font-medium">
                                 {t('legal.privacy.sharing.obligation')}
                             </p>
+                            <div className="mt-6 bg-mintcom-green/5 p-5 rounded-2xl border border-mintcom-green/20">
+                                <h3 className="font-magilio text-lg font-bold text-gray-900 dark:text-white mb-3">{appPrivacyAddendum.diagnosticsTitle}</h3>
+                                <p className="text-sm font-medium mb-4">{appPrivacyAddendum.diagnosticsIntro}</p>
+                                <ul className="list-disc pr-5 pl-5 space-y-2 text-sm font-medium">
+                                    {appPrivacyAddendum.diagnostics.map((item) => (
+                                        <li key={item}>{item}</li>
+                                    ))}
+                                </ul>
+                            </div>
                         </section>
 
                         {/* 5. Multi-Branch & Account Access */}
@@ -170,6 +237,7 @@ export const PrivacyPolicyPage = () => {
                                 <li>{t('legal.privacy.retention.r3')}</li>
                             </ul>
                             <p className="text-sm font-medium">{t('legal.privacy.retention.deletionRequest')}</p>
+                            <p className="text-sm font-medium mt-4">{appPrivacyAddendum.deletionNote}</p>
                         </section>
 
                         {/* 7. Your Rights */}
@@ -222,6 +290,13 @@ export const PrivacyPolicyPage = () => {
                             </p>
                         </section>
 
+                        <section>
+                            <h2 className="font-magilio text-xl font-bold text-gray-900 dark:text-white mb-4">{appPrivacyAddendum.governingLawTitle}</h2>
+                            <p className="text-sm font-medium">
+                                {appPrivacyAddendum.governingLawBody}
+                            </p>
+                        </section>
+
                         {/* 10. Children’s Privacy */}
                         <section>
                             <h2 className="font-magilio text-xl font-bold text-gray-900 dark:text-white mb-4">{t('legal.privacy.sections.s10')}</h2>
@@ -249,11 +324,11 @@ export const PrivacyPolicyPage = () => {
                                     <span className="text-gray-900 dark:text-white">Mintcom LLC</span>
                                 </div>
                                 <div className="flex items-center gap-3 text-sm font-medium text-gray-600 dark:text-gray-300">
-                                    <span className={t('common.locale') === 'ar' ? 'ml-2' : 'w-20'}>{t('common.email')}:</span>
+                                    <span className={isArabic ? 'ml-2' : 'w-20'}>{t('common.email')}:</span>
                                     <a href="mailto:support@mintcompos.com" className="text-mintcom-green hover:underline">support@mintcompos.com</a>
                                 </div>
                                 <div className="flex items-center gap-3 text-sm font-medium text-gray-600 dark:text-gray-300">
-                                    <span className={t('common.locale') === 'ar' ? 'ml-2' : 'w-20'}>{t('common.website')}:</span>
+                                    <span className={isArabic ? 'ml-2' : 'w-20'}>{t('common.website')}:</span>
                                     <a href="https://mintcompos.com" target="_blank" rel="noopener noreferrer" className="text-mintcom-green hover:underline">mintcompos.com</a>
                                 </div>
                             </div>
