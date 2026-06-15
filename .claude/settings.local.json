@@ -12,7 +12,8 @@
       "Bash(node -e:*)",
       "Bash(node:*)",
       "Bash(npx tsc:*)",
-      "Bash(npx vite build:*)"
+      "Bash(npx vite build:*)",
+      "Bash(echo \"---TSC EXIT: $?---\")"
     ]
   }
 }

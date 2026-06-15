@@ -89,21 +89,12 @@
   }
   </script>
 
-  <!-- Google tag (gtag.js) - Consent Mode v2 -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-QHV2SVCG99"></script>
-  <script id="ga-script">
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('consent', 'default', {
-      analytics_storage: 'denied',
-      ad_storage: 'denied',
-      ad_user_data: 'denied',
-      ad_personalization: 'denied',
-      wait_for_update: 2000
-    });
-    gtag('js', new Date());
-    gtag('config', 'G-QHV2SVCG99');
-  </script>
+  <!-- Google Analytics (GA4) is loaded dynamically AFTER the visitor grants
+       analytics consent — see src/utils/analytics.ts (loadGoogleAnalytics) and
+       the CookieConsent component. It is intentionally NOT inlined here: the
+       site's Content-Security-Policy has no 'unsafe-inline' for scripts, so an
+       inline gtag() block is refused. The dynamic loader injects an EXTERNAL
+       googletagmanager.com script instead, which the CSP allows. -->
 
   <!-- DNS Prefetch & Preconnect for Performance -->
   <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
