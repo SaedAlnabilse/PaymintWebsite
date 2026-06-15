@@ -30,7 +30,7 @@ export const TermsPage = () => {
                         </div>
                         <h1 className="font-magilio text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-4 tracking-tight">{t('legal.terms.title')}</h1>
                         <p className="label-strong font-outfit">
-                            {t('legal.terms.lastUpdated')}: {new Date('2026-05-29').toLocaleDateString(t('common.locale') === 'ar' ? 'ar-EG' : 'en-US', { month: 'long', day: 'numeric', year: 'numeric' }).toUpperCase()}
+                            {t('legal.terms.lastUpdated')}: {new Date('2026-06-15').toLocaleDateString(t('common.locale') === 'ar' ? 'ar-EG' : 'en-US', { month: 'long', day: 'numeric', year: 'numeric' }).toUpperCase()}
                         </p>
                     </motion.div>
                 </div>
@@ -52,6 +52,9 @@ export const TermsPage = () => {
                             </p>
                             <p className="text-sm font-medium">
                                 {t('legal.terms.use.u2')}
+                            </p>
+                            <p className="text-sm font-medium mt-4">
+                                {t('legal.terms.use.u3')}
                             </p>
                         </section>
 
