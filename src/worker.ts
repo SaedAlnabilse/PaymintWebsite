@@ -12,6 +12,12 @@ const PRODUCTION_WEB_HOSTS = new Set(
     PRODUCTION_WEB_ORIGINS.map((origin) => new URL(origin).host),
 );
 
+// Apex is the canonical host (matches VITE_SITE_URL, <link rel="canonical">,
+// and OG urls). Serving the same SPA on both apex and www splits analytics
+// across two hostnames (the "a new domain loaded your tag" GA warning) and
+// duplicates SEO signals, so www navigations are permanently redirected here.
+const CANONICAL_HOST = 'mintcompos.com';
+
 const SECURITY_HEADERS: Record<string, string> = {
     'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
     'X-Content-Type-Options': 'nosniff',
@@ -101,6 +107,18 @@ export default {
             if (shouldForceHttps(url)) {
                 url.protocol = 'https:';
                 return Response.redirect(url.toString(), 308);
+            }
+
+            // Canonicalize host: send www navigations to the apex domain so
+            // analytics/SEO are not split across two hostnames. Only GET/HEAD
+            // navigations are redirected; API/proxy/realtime calls keep their
+            // host so request methods and CORS are never altered.
+            if (
+                url.host === `www.${CANONICAL_HOST}` &&
+                (request.method === 'GET' || request.method === 'HEAD')
+            ) {
+                url.host = CANONICAL_HOST;
+                return Response.redirect(url.toString(), 301);
             }
 
             const targetBase = env.API_TARGET || 'https://grateful-liberation-production-d036.up.railway.app';
