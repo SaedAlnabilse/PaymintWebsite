@@ -12,7 +12,6 @@ import {
   Edit2,
   Trash2,
   MoreVertical,
-  Download,
   Key,
   UserCheck,
   Star,
@@ -23,7 +22,9 @@ import toast from 'react-hot-toast';
 import { ConfirmModal } from '../../components/ConfirmModal';
 import { SecurityVerificationModal } from '../../components/SecurityVerificationModal';
 import { EmployeeFormModal } from '../../components/forms/EmployeeFormModal';
-import { exportToCSV } from '../../utils/export';
+import { exportTable } from '../../utils/export';
+import type { ExportFormat } from '../../utils/export';
+import { ExportMenu } from '../../components/ExportMenu';
 import { SearchInput, SelectInput, Pagination } from '../../components/ui';
 import { StatValue } from '../../components/ui/StatValue';
 import { usePermissionGuard } from '../../hooks/usePermissionGuard';
@@ -318,7 +319,7 @@ export function StaffPage() {
     }
   };
 
-  const handleExport = () => {
+  const handleExport = (format: ExportFormat) => {
     const exportData = staff.map(s => ({
       username: s.username,
       name: s.name,
@@ -329,14 +330,25 @@ export function StaffPage() {
       joined: new Date(s.createdAt).toLocaleDateString(t('common.locale') === 'ar' ? 'ar-EG' : 'en-US')
     }));
 
-    exportToCSV(exportData, 'staff_directory', {
-      username: t('staff.form.usernameLabel'),
-      name: t('staff.form.nameLabel'),
-      role: t('staff.form.roleLabel'),
-      email: t('staff.form.emailLabel'),
-      phone: t('staff.form.phoneLabel'),
-      status: t('staff.table.status'),
-      joined: t('staff.table.joined')
+    if (exportData.length === 0) {
+      toast.error(t('dashboard.messages.noData', { defaultValue: 'No data to export' }));
+      return;
+    }
+
+    return exportTable(format, {
+      filename: 'staff_directory',
+      title: t('staff.title', { defaultValue: 'Staff' }),
+      meta: currentEstablishment?.name ? [{ label: t('common.location'), value: currentEstablishment.name }] : undefined,
+      columns: [
+        { key: 'username', label: t('staff.form.usernameLabel') },
+        { key: 'name', label: t('staff.form.nameLabel') },
+        { key: 'role', label: t('staff.form.roleLabel') },
+        { key: 'email', label: t('staff.form.emailLabel') },
+        { key: 'phone', label: t('staff.form.phoneLabel') },
+        { key: 'status', label: t('staff.table.status') },
+        { key: 'joined', label: t('staff.table.joined') },
+      ],
+      rows: exportData,
     });
   };
 
@@ -466,13 +478,7 @@ export function StaffPage() {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          <button
-            onClick={handleExport}
-            className="hidden sm:flex items-center gap-2 px-5 py-3 rounded-xl bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white font-bold text-sm hover:bg-gray-50 dark:hover:bg-white/10 transition-all shadow-sm"
-          >
-            <Download size={18} />
-            <span>{t('orders.export')}</span>
-          </button>
+          <ExportMenu onExport={handleExport} className="hidden sm:flex" />
           <button
             onClick={handleOpenAddEmployeeModal}
             className="flex items-center gap-2 px-3 sm:px-5 py-2.5 sm:py-3 rounded-xl bg-mintcom-green text-black font-bold text-sm hover:bg-[#5fa888] transition-all shadow-sm touch-target"

@@ -8,7 +8,6 @@ import {
     Plus,
     Grid,
     List,
-    Download,
     Trash2,
     Edit2,
     Package,
@@ -36,6 +35,9 @@ import { useAuth } from '../../context/AuthContext';
 import { checkPermission, usePermissionGuard } from '../../hooks/usePermissionGuard';
 import { formatInputPlaceholder } from '../../utils/textCase';
 import { withExcelBom } from '../../utils/csvBom';
+import { exportTable } from '../../utils/export';
+import type { ExportFormat } from '../../utils/export';
+import { ExportMenu } from '../../components/ExportMenu';
 import { useRealtime } from '../../hooks/useRealtime';
 import { DataChangeEventTypes } from '../../services/realtimeService';
 
@@ -477,7 +479,42 @@ export function ProductsPage() {
         }
     };
 
-    const handleExport = () => {
+    // CSV export keeps stable English headers matching the import schema, so an
+    // exported file re-imports without remapping (round-trip safe). XLSX/PDF are
+    // for sharing and use localized, human-friendly labels instead.
+    const handleExport = (format: ExportFormat) => {
+        if (format !== 'csv') {
+            const rows = (Array.isArray(filteredProducts) ? filteredProducts : []).map(p => {
+                const catName = (Array.isArray(categories) ? categories : []).find(c => c.id === p.categoryId)?.name || t('categories.uncategorized');
+                return {
+                    name: p.name,
+                    price: p.price,
+                    category: catName,
+                    cost_price: p.costPrice ?? '',
+                    stock: p.trackStock ? (p.availableStock ?? 0) : t('products.table.unlimited'),
+                    description: p.description ?? '',
+                };
+            });
+            if (rows.length === 0) {
+                toast.error(t('dashboard.messages.noData', { defaultValue: 'No data to export' }));
+                return;
+            }
+            return exportTable(format, {
+                filename: 'products_export',
+                title: t('products.title', { defaultValue: 'Products' }),
+                meta: currentEstablishment?.name ? [{ label: t('common.location'), value: currentEstablishment.name }] : undefined,
+                columns: [
+                    { key: 'name', label: t('common.name', { defaultValue: 'Name' }) },
+                    { key: 'price', label: `${t('products.form.priceLabel')} (${currencySymbol})` },
+                    { key: 'category', label: t('products.form.categoryLabel') },
+                    { key: 'cost_price', label: `${t('products.form.costLabel')} (${currencySymbol})` },
+                    { key: 'stock', label: t('products.table.stock') },
+                    { key: 'description', label: t('products.form.descriptionLabel') },
+                ],
+                rows,
+            });
+        }
+
         // Stable English headers that match the import schema exactly, so an
         // exported file can be re-imported without remapping (round-trip safe).
         const headers = ['name', 'price', 'category', 'description', 'cost_price', 'track_stock', 'available_stock'];
@@ -873,14 +910,7 @@ export function ProductsPage() {
                 </div>
 
                 <div className="flex items-center gap-2 sm:gap-3">
-                    <button
-                        onClick={handleExport}
-                        className="flex items-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl bg-white dark:bg-white/5 text-gray-900 dark:text-white border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/10 transition-all shadow-sm group"
-                        title={t('orders.export')}
-                    >
-                        <Download size={18} className="group-hover:text-mintcom-green transition-colors" />
-                        <span className="font-bold text-xs sm:text-sm hidden sm:inline">{t('orders.export')}</span>
-                    </button>
+                    <ExportMenu onExport={handleExport} formats={['xlsx', 'pdf', 'csv']} className="!px-3 sm:!px-4 !py-2.5 sm:!py-3" />
                     <button
                         onClick={() => setShowCsvImport(true)}
                         className="flex items-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl bg-white dark:bg-white/5 text-gray-900 dark:text-white border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/10 transition-all shadow-sm group"

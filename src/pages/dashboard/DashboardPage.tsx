@@ -37,6 +37,10 @@ import { TopSellingProducts } from '../../components/dashboard/overview/TopSelli
 import { PeakHoursChart } from '../../components/dashboard/overview/PeakHoursChart';
 import { PayInPayOutLogModal } from '../../components/dashboard/reports/PayInPayOutLogModal';
 import { SectionLoader } from '../../components/LoadingState';
+import { ExportMenu } from '../../components/ExportMenu';
+import { exportSections } from '../../utils/export';
+import type { ExportFormat, ExportSection, ExportMeta } from '../../utils/export';
+import { useCurrency } from '../../context/CurrencyContext';
 import {
   emptyDashboardStats,
   normalizeDashboardStats,
@@ -102,6 +106,7 @@ const setupSessionDismissedKey = (version: string, scope: string, locationKey: s
 export const DashboardPage = () => {
   const { t } = useTranslation();
   const isRTL = t('common.locale') === 'ar';
+  const { currencySymbol } = useCurrency();
   const { resolvedTheme } = useTheme();
   const { locationSlug } = useParams();
   const location = useLocation();
@@ -880,6 +885,99 @@ export const DashboardPage = () => {
     return `${emp.firstName || ''} ${emp.lastName || ''}`.trim() || emp.username;
   };
 
+  // Export the current overview, reflecting the active view-mode filter.
+  const handleExportOverview = (format: ExportFormat) => {
+    const localeTag = t('common.locale') === 'ar' ? 'ar-EG' : 'en-US';
+    const money = (n: number) => (Number(n) || 0).toLocaleString(localeTag, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const numFmt = (n: number) => (Number(n) || 0).toLocaleString(localeTag);
+    const fmtDate = (iso: string) => { try { return new Date(iso).toLocaleString(localeTag); } catch { return iso; } };
+
+    const cur = (label: string) => `${label} (${currencySymbol})`;
+    const title = `${t('dashboard.menu.salesAndReporting')} — ${currentViewModeInfo?.label || ''}`.trim();
+
+    const meta: ExportMeta = [
+      { label: t('orders.exportFields.date'), value: `${fmtDate(activeDateRange.start)} — ${fmtDate(activeDateRange.end)}` },
+    ];
+    if (currentEstablishment?.name) meta.push({ label: t('common.location'), value: currentEstablishment.name });
+    if (currentViewModeInfo?.label) meta.push({ label: t('dashboard.viewMode.last24Hours'), value: currentViewModeInfo.label });
+
+    const sections: ExportSection[] = [];
+
+    // KPI summary as label/value rows.
+    if (stats) {
+      sections.push({
+        name: t('dashboard.menu.salesSummary'),
+        columns: [
+          { key: 'metric', label: t('common.name', { defaultValue: 'Metric' }) },
+          { key: 'value', label: t('orders.reports.shifts.variance', { defaultValue: 'Value' }) },
+        ],
+        rows: [
+          { metric: cur(t('dashboard.stats.revenue')), value: money(stats.totalRevenue) },
+          { metric: t('dashboard.stats.orders', { defaultValue: 'Orders' }), value: numFmt(stats.totalOrders) },
+          { metric: cur(t('dashboard.stats.avgOrderValue', { defaultValue: 'Average Order Value' })), value: money(stats.averageOrderValue) },
+          { metric: cur(t('dashboard.stats.grossProfit', { defaultValue: 'Gross Profit' })), value: money(stats.grossProfit) },
+          { metric: cur(t('dashboard.stats.tax', { defaultValue: 'Tax Collected' })), value: money(stats.taxCollected) },
+          { metric: cur(t('dashboard.stats.refunds', { defaultValue: 'Refunds' })), value: money(stats.totalRefunds) },
+          { metric: cur(t('dashboard.stats.payIn', { defaultValue: 'Pay In' })), value: money(stats.totalPayIn) },
+          { metric: cur(t('dashboard.stats.payOut', { defaultValue: 'Pay Out' })), value: money(stats.totalPayOut) },
+        ],
+      });
+    }
+
+    if (stats?.paymentMethodBreakdown?.length) {
+      sections.push({
+        name: t('dashboard.menu.paymentsReports'),
+        columns: [
+          { key: 'name', label: t('orders.exportFields.paymentMethod') },
+          { key: 'value', label: cur(t('dashboard.stats.revenue')) },
+        ],
+        rows: stats.paymentMethodBreakdown.map(p => ({ name: p.name, value: money(p.value) })),
+      });
+    }
+
+    if (topProducts?.length) {
+      sections.push({
+        name: t('dashboard.menu.salesByItems'),
+        columns: [
+          { key: 'name', label: t('orders.table.order') },
+          { key: 'orders', label: t('orders.reports.items.unitsSold') },
+          { key: 'revenue', label: cur(t('orders.reports.items.grossRevenue')) },
+        ],
+        rows: topProducts.map(p => ({ name: p.name, orders: numFmt(p.orders), revenue: money(p.revenue) })),
+      });
+    }
+
+    if (stats?.categoryBreakdown?.length) {
+      sections.push({
+        name: t('dashboard.menu.salesByItems'),
+        columns: [
+          { key: 'name', label: t('categories.title', { defaultValue: 'Categories' }) },
+          { key: 'value', label: cur(t('dashboard.stats.revenue')) },
+          { key: 'count', label: t('orders.exportFields.orderNumber') },
+        ],
+        rows: stats.categoryBreakdown.map(c => ({ name: c.name, value: money(c.value), count: numFmt(c.count || 0) })),
+      });
+    }
+
+    if (peakHours?.length) {
+      sections.push({
+        name: t('dashboard.stats.peakHours'),
+        columns: [
+          { key: 'hour', label: t('orders.reports.sales.hours') },
+          { key: 'total', label: cur(t('dashboard.stats.revenue')) },
+          { key: 'count', label: t('orders.exportFields.orderNumber') },
+        ],
+        rows: peakHours.map(p => ({ hour: p.hour, total: money(p.total), count: numFmt(p.count) })),
+      });
+    }
+
+    if (sections.length === 0) {
+      return;
+    }
+
+    return exportSections(format, { filename: `dashboard_overview_${viewMode}`, title, meta, sections });
+  };
+
   return (
     <>
       <AnimatePresence mode="wait">
@@ -973,6 +1071,9 @@ export const DashboardPage = () => {
 
                 {/* Action buttons row */}
                 <div className="flex items-center gap-2 sm:gap-3">
+                  {canViewDashboardAnalytics && (
+                    <ExportMenu onExport={handleExportOverview} className="flex-1 sm:flex-none justify-center" />
+                  )}
                   {canOpenReportsPage && (
                     <button
                       onClick={() => navigate(`/dashboard/${locationSlug}/reports/sales`)}

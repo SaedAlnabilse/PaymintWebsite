@@ -1,0 +1,133 @@
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Download, ChevronDown, FileSpreadsheet, FileText, FileDown } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import toast from 'react-hot-toast';
+import type { ExportFormat } from '../utils/export';
+
+interface ExportMenuProps {
+  onExport: (format: ExportFormat) => void | Promise<void>;
+  /** Which formats to offer. Defaults to Excel + PDF. */
+  formats?: ExportFormat[];
+  disabled?: boolean;
+  /** Override the button label (defaults to the localized "Export"). */
+  label?: string;
+  className?: string;
+}
+
+const FORMAT_META: Record<ExportFormat, { icon: typeof FileSpreadsheet; i18nKey: string }> = {
+  xlsx: { icon: FileSpreadsheet, i18nKey: 'common.exportTo.xlsx' },
+  pdf: { icon: FileText, i18nKey: 'common.exportTo.pdf' },
+  csv: { icon: FileDown, i18nKey: 'common.exportTo.csv' },
+};
+
+export function ExportMenu({
+  onExport,
+  formats = ['xlsx', 'pdf'],
+  disabled = false,
+  label,
+  className = '',
+}: ExportMenuProps) {
+  const { t } = useTranslation();
+  const isRTL = t('common.locale') === 'ar';
+  const [open, setOpen] = useState(false);
+  const [coords, setCoords] = useState({ top: 0, left: 0, width: 0 });
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Position the portal menu under the button.
+  const updateCoords = () => {
+    const rect = buttonRef.current?.getBoundingClientRect();
+    if (rect) {
+      setCoords({ top: rect.bottom + 8, left: rect.left, width: rect.width });
+    }
+  };
+
+  useEffect(() => {
+    if (!open) return;
+    updateCoords();
+    const handlePointer = (e: MouseEvent) => {
+      if (
+        buttonRef.current?.contains(e.target as Node) ||
+        menuRef.current?.contains(e.target as Node)
+      ) {
+        return;
+      }
+      setOpen(false);
+    };
+    const handleScrollOrResize = () => updateCoords();
+    document.addEventListener('mousedown', handlePointer);
+    window.addEventListener('resize', handleScrollOrResize);
+    window.addEventListener('scroll', handleScrollOrResize, true);
+    return () => {
+      document.removeEventListener('mousedown', handlePointer);
+      window.removeEventListener('resize', handleScrollOrResize);
+      window.removeEventListener('scroll', handleScrollOrResize, true);
+    };
+  }, [open]);
+
+  const handleSelect = (format: ExportFormat) => {
+    setOpen(false);
+    Promise.resolve(onExport(format)).catch(() => {
+      toast.error(t('common.error', { defaultValue: 'Something went wrong' }));
+    });
+  };
+
+  return (
+    <>
+      <button
+        ref={buttonRef}
+        type="button"
+        disabled={disabled}
+        onClick={() => setOpen(o => !o)}
+        title={label || t('common.export')}
+        className={`flex items-center gap-2 px-5 py-3 rounded-xl bg-white dark:bg-white/5 text-gray-900 dark:text-white font-bold text-sm border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${open ? 'ring-[3px] ring-mintcom-green/10 border-mintcom-green' : ''} ${className}`}
+      >
+        <Download size={18} className="text-gray-900 dark:text-white" />
+        <span>{label || t('common.export')}</span>
+        <ChevronDown size={16} className={`transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+      </button>
+
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {open && (
+            <motion.div
+              ref={menuRef}
+              dir={isRTL ? 'rtl' : 'ltr'}
+              initial={{ opacity: 0, y: -6, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -6, scale: 0.97 }}
+              transition={{ duration: 0.12 }}
+              style={{
+                position: 'fixed',
+                top: coords.top,
+                left: coords.left,
+                minWidth: Math.max(coords.width, 220),
+                zIndex: 9999,
+              }}
+              className="bg-white dark:bg-[#1E293B] rounded-xl border border-gray-200 dark:border-white/10 shadow-2xl overflow-hidden py-1"
+            >
+              {formats.map(format => {
+                const meta = FORMAT_META[format];
+                const Icon = meta.icon;
+                return (
+                  <button
+                    key={format}
+                    type="button"
+                    onClick={() => handleSelect(format)}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors text-start"
+                  >
+                    <Icon size={16} className="text-mintcom-green flex-shrink-0" />
+                    <span>{t(meta.i18nKey)}</span>
+                  </button>
+                );
+              })}
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body,
+      )}
+    </>
+  );
+}

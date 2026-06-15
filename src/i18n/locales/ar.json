@@ -86,7 +86,7 @@
     "customRange": "فترة مخصصة",
     "data": "البيانات",
     "details": "التفاصيل",
-    "export": "تصدير إلى CSV",
+    "export": "تصدير",
     "history": "السجل",
     "internal": "داخلي",
     "ip": "عنوان IP",
@@ -717,6 +717,12 @@
     }
   },
   "common": {
+    "export": "تصدير",
+    "exportTo": {
+      "xlsx": "تصدير إلى Excel ‏(.xlsx)",
+      "pdf": "تصدير إلى PDF ‏(.pdf)",
+      "csv": "تصدير إلى CSV ‏(لإعادة الاستيراد)"
+    },
     "actions": "إجراءات",
     "retry": "إعادة المحاولة",
     "active": "نشط",
@@ -1445,6 +1451,7 @@
       "viewCustomerOrders": "عرض طلبات العملاء"
     },
     "messages": {
+      "noData": "لا توجد بيانات للتصدير",
       "configSaved": "تم حفظ الإعدادات بنجاح",
       "deleteMsg": "هل أنت متأكد من حذف هذه المكافأة؟",
       "deleteTitle": "حذف المكافأة",
@@ -1553,6 +1560,7 @@
       "payIn": "إيداع",
       "paymentMethods": "طرق الدفع",
       "payOut": "صرف",
+      "grossProfit": "إجمالي الربح",
       "peakHours": "ساعات الذروة",
       "pendingOrders": "طلبات معلقة",
       "perfect": "متطابق",
@@ -3144,7 +3152,7 @@
       "title": "تفاصيل الطلب",
       "total": "الإجمالي"
     },
-    "export": "تصدير إلى CSV",
+    "export": "تصدير",
     "exportFields": {
       "customer": "العميل",
       "date": "التاريخ",

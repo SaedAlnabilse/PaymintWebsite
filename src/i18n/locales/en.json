@@ -86,7 +86,7 @@
     "customRange": "Custom range",
     "data": "Data",
     "details": "Details",
-    "export": "Export to CSV",
+    "export": "Export",
     "history": "History",
     "internal": "Internal",
     "ip": "IP address",
@@ -717,6 +717,12 @@
     }
   },
   "common": {
+    "export": "Export",
+    "exportTo": {
+      "xlsx": "Export to Excel (.xlsx)",
+      "pdf": "Export to PDF (.pdf)",
+      "csv": "Export to CSV (re-import)"
+    },
     "actions": "Actions",
     "retry": "Try again",
     "active": "Active",
@@ -1445,6 +1451,7 @@
       "viewCustomerOrders": "View Customer Orders"
     },
     "messages": {
+      "noData": "No data to export",
       "configSaved": "Configuration Saved Successfully",
       "deleteMsg": "Are You Sure You Want To Delete This Reward?",
       "deleteTitle": "Delete Reward",
@@ -1553,6 +1560,7 @@
       "payIn": "PAY-IN",
       "paymentMethods": "Payment Methods",
       "payOut": "PAY-OUT",
+      "grossProfit": "Gross Profit",
       "peakHours": "Peak Hours",
       "pendingOrders": "Pending Orders",
       "perfect": "Perfect",
@@ -3144,7 +3152,7 @@
       "title": "Order Details",
       "total": "Total"
     },
-    "export": "Export to CSV",
+    "export": "Export",
     "exportFields": {
       "customer": "Customer",
       "date": "Date",
