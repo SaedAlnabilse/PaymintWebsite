@@ -2779,7 +2779,8 @@
       "title": "Terms of Service",
       "use": {
         "u1": "Mintcom grants you a limited, non-exclusive, non-transferable license to use our services for your business operations.",
-        "u2": "You may not sublicense, sell, or redistribute access to our services without our written consent."
+        "u2": "You may not sublicense, sell, or redistribute access to our services without our written consent.",
+        "u3": "Product image generation is limited to 200 generations per account each calendar month across the website and backoffice applications. The allowance resets at the start of the next month, and unused generations do not roll over."
       }
     }
   },
@@ -3130,6 +3131,8 @@
       "refundItems": "Refund Items",
       "remaining": "Remaining",
       "selectedItems": "{{count}} item(s)",
+      "changed": "Changed",
+      "customized": "Customized",
       "serviceCharge": "Service Charge",
       "staff": "Staff",
       "staffTip": "Staff member who processed this order",
@@ -3137,6 +3140,7 @@
       "statusTip": "Current order status",
       "subtotal": "Subtotal",
       "tax": "Tax",
+      "taxWithRate": "Tax ({{rate}}%)",
       "title": "Order Details",
       "total": "Total"
     },
@@ -4273,6 +4277,10 @@
       "pollinationsOnly": "A high-quality product photo is added automatically. If none is found, a clean designed image is used instead.",
       "pollinationsReady": "Your product image is ready.",
       "preview": "Preview",
+      "quotaExceededMessage": "You have used all {{limit}} image generations for this month. Please wait until {{resetDate}} to generate more images.",
+      "quotaExceededTitle": "Monthly image limit reached",
+      "quotaLoading": "Checking monthly image generation balance...",
+      "quotaRemaining": "{{remaining}} of {{limit}} image generations left this month. Resets {{resetDate}}.",
       "refresh": "Refresh image",
       "saved": "Saved",
       "savedReady": "Saved image will be kept unless you replace it.",
@@ -4759,7 +4767,8 @@
       "selectDay": "Select a day to edit",
       "setServiceTimes": "Set service times",
       "taxId": "Tax ID / TRN",
-      "taxIdPlaceholder": "Enter Tax ID..."
+      "taxIdDisclaimer": "This may be legally required in your country. Check your local tax rules and add it if needed.",
+      "taxIdPlaceholder": "e.g., 100123456700003 or GB123456789"
     },
     "receipts": {
       "footerMessage": "Footer Message",

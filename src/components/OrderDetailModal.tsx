@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
@@ -36,6 +36,8 @@ export interface Order {
     paymentStatus?: string;
     orderType?: 'PAID' | 'PAID_TAX_CHANGED' | 'REFUNDED';
     isTaxChanged?: boolean;
+    isTaxCustomized?: boolean;
+    taxRate?: number;
     paymentMethod: string;
     cardType?: string;
     otherPaymentMethod?: string;
@@ -52,6 +54,13 @@ export interface Order {
     serviceChargeAmount?: number;
     serviceChargeName?: string;
     serviceChargeNameSnapshot?: string;
+    serviceChargeType?: 'PERCENTAGE' | 'FIXED';
+    serviceChargeValue?: number;
+    serviceChargeTypeSnapshot?: 'PERCENTAGE' | 'FIXED';
+    serviceChargeValueSnapshot?: number;
+    serviceChargeOverrideMode?: 'DEFAULT' | 'NONE' | 'CUSTOM';
+    isServiceChargeChanged?: boolean;
+    serviceChargeReason?: string;
     tax?: number;
     total?: number;
     note?: string;
@@ -76,6 +85,67 @@ export function OrderDetailModal({ order, onClose, onRefundSuccess, canRefund = 
     const { formatAmount } = useCurrency();
     const formatCurrency = (value: number) => formatAmount(value);
     const isNegativeTotal = (order.total || 0) < 0;
+
+    // Tax & Service Charge summary labels — mirror the POS receipt / order
+    // details: show the rate, plus "(Customized)" for tax and "(Changed)" for
+    // service charge when overridden, with the change reason.
+    const summaryLabels = useMemo(() => {
+        // ── Tax rate (%) ──────────────────────────────────────────────────
+        const explicitRate = Number(order.taxRate);
+        let taxRatePercent: number;
+        if (Number.isFinite(explicitRate) && explicitRate >= 0) {
+            taxRatePercent = Number(
+                (explicitRate <= 1 ? explicitRate * 100 : explicitRate).toFixed(2),
+            );
+        } else {
+            const taxableBase = Math.max(
+                0,
+                Number(order.subtotal || 0) - Number(order.discount || 0),
+            );
+            taxRatePercent =
+                taxableBase > 0
+                    ? Number(((Number(order.tax || 0) / taxableBase) * 100).toFixed(2))
+                    : 0;
+        }
+        const taxChanged =
+            Boolean(order.isTaxChanged) ||
+            order.orderType === 'PAID_TAX_CHANGED' ||
+            Boolean(order.isTaxCustomized);
+        const taxLabel =
+            t('orders.details.taxWithRate', {
+                rate: taxRatePercent,
+                defaultValue: 'Tax ({{rate}}%)',
+            }) +
+            (taxChanged
+                ? ` (${t('orders.details.customized', { defaultValue: 'Customized' })})`
+                : '');
+
+        // ── Service charge ────────────────────────────────────────────────
+        let serviceChargeLabel =
+            order.serviceChargeName ||
+            order.serviceChargeNameSnapshot ||
+            t('orders.details.serviceCharge', { defaultValue: 'Service Charge' });
+        const scType = order.serviceChargeType || order.serviceChargeTypeSnapshot;
+        const scValue = Number(
+            order.serviceChargeValue ?? order.serviceChargeValueSnapshot,
+        );
+        // serviceChargeValue is already a percent (e.g. 15 → "(15%)") — show as-is.
+        if (scType === 'PERCENTAGE' && Number.isFinite(scValue) && scValue > 0) {
+            serviceChargeLabel += ` (${Number(scValue.toFixed(2))}%)`;
+        }
+        const serviceChargeChanged =
+            order.serviceChargeOverrideMode === 'CUSTOM' ||
+            order.serviceChargeOverrideMode === 'NONE' ||
+            Boolean(order.isServiceChargeChanged);
+        if (serviceChargeChanged) {
+            serviceChargeLabel += ` (${t('orders.details.changed', {
+                defaultValue: 'Changed',
+            })})`;
+        }
+        const serviceChargeReason = (order.serviceChargeReason || '').trim();
+
+        return { taxLabel, serviceChargeLabel, serviceChargeReason };
+    }, [order, t]);
 
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleString(t('common.locale') === 'ar' ? 'ar-EG' : 'en-US', {
@@ -286,19 +356,28 @@ export function OrderDetailModal({ order, onClose, onRefundSuccess, canRefund = 
                                 </div>
                             )}
                             {(order.serviceChargeAmount || 0) > 0 && (
-                                <div className="flex justify-between text-gray-400">
-                                    <span className="label-strong font-outfit flex items-center gap-1">
-                                        {order.serviceChargeName || order.serviceChargeNameSnapshot || t('orders.details.serviceCharge', { defaultValue: 'Service Charge' })}
-                                    </span>
-                                    <span className="text-sm font-bold">{formatCurrency(order.serviceChargeAmount || 0)}</span>
+                                <div>
+                                    <div className="flex justify-between text-gray-400">
+                                        <span className="label-strong font-outfit flex items-center gap-1">
+                                            {summaryLabels.serviceChargeLabel}
+                                        </span>
+                                        <span className="text-sm font-bold">{formatCurrency(order.serviceChargeAmount || 0)}</span>
+                                    </div>
+                                    {summaryLabels.serviceChargeReason && (
+                                        <div className="text-xs italic text-gray-500 pl-3 mt-1">
+                                            {`› ${summaryLabels.serviceChargeReason}`}
+                                        </div>
+                                    )}
                                 </div>
                             )}
-                            <div className="flex justify-between text-gray-400">
-                                <span className="label-strong font-outfit flex items-center gap-1">
-                                    {t('orders.details.tax')}
-                                </span>
-                                <span className="text-sm font-bold">{formatCurrency(order.tax || 0)}</span>
-                            </div>
+                            {(order.tax || 0) > 0 && (
+                                <div className="flex justify-between text-gray-400">
+                                    <span className="label-strong font-outfit flex items-center gap-1">
+                                        {summaryLabels.taxLabel}
+                                    </span>
+                                    <span className="text-sm font-bold">{formatCurrency(order.tax || 0)}</span>
+                                </div>
+                            )}
                             <div className="flex justify-between text-white font-bold text-xl pt-6 border-t border-white/10 mt-2">
                                 <span className="flex items-center gap-2">
                                     <div className={`w-2 h-2 rounded-full animate-pulse ${isNegativeTotal ? 'bg-mintcom-red' : 'bg-mintcom-green'}`} />

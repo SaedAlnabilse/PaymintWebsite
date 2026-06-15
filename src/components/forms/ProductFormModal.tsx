@@ -84,6 +84,13 @@ interface ProductFormModalProps {
 }
 
 type ProductImageSource = 'existing' | 'upload' | 'generated' | 'fallback' | null;
+type ImageGenerationQuota = {
+  limit: number;
+  used: number;
+  remaining: number;
+  periodStart: string;
+  resetAt: string;
+};
 
 const isInactiveCategory = (category?: Category | null) =>
   !category ||
@@ -150,6 +157,8 @@ export function ProductFormModal({
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [generationElapsedMs, setGenerationElapsedMs] = useState(0);
+  const [imageQuota, setImageQuota] = useState<ImageGenerationQuota | null>(null);
+  const [showImageQuotaExceeded, setShowImageQuotaExceeded] = useState(false);
   const [isImageDeleted, setIsImageDeleted] = useState(false);
   const categoryRef = useRef<HTMLDivElement>(null);
   const addonsRef = useRef<HTMLDivElement>(null);
@@ -380,6 +389,23 @@ export function ProductFormModal({
     }
   };
 
+  const syncImageQuota = (quota: unknown) => {
+    if (!quota || typeof quota !== 'object') {
+      return;
+    }
+
+    const nextQuota = quota as Partial<ImageGenerationQuota>;
+    if (
+      typeof nextQuota.limit === 'number' &&
+      typeof nextQuota.used === 'number' &&
+      typeof nextQuota.remaining === 'number' &&
+      typeof nextQuota.periodStart === 'string' &&
+      typeof nextQuota.resetAt === 'string'
+    ) {
+      setImageQuota(nextQuota as ImageGenerationQuota);
+    }
+  };
+
   const generateBackendProductImage = async (signal: AbortSignal) => {
     const prompt = buildProductImagePrompt(currentImageContext);
     const response = await api.post('/api/items/generate-image', {
@@ -415,12 +441,18 @@ export function ProductFormModal({
       file,
       previewUrl: imageSource,
       source: response.data?.fallback ? 'fallback' as const : 'generated' as const,
+      quota: response.data?.quota,
     };
   };
 
   const handleGenerateImage = async () => {
     if (!name.trim()) {
       toast.error(t('products.messages.nameRequired'));
+      return;
+    }
+
+    if (imageQuota && imageQuota.remaining <= 0) {
+      setShowImageQuotaExceeded(true);
       return;
     }
 
@@ -441,6 +473,7 @@ export function ProductFormModal({
         return;
       }
 
+      syncImageQuota(generatedImage.quota);
       applyImageSelection(generatedImage.file, generatedImage.previewUrl, generatedImage.source, currentImageSignature);
       toast.success(
         generatedImage.source === 'fallback'
@@ -461,6 +494,16 @@ export function ProductFormModal({
       }
 
       console.error('Failed to generate backend product image:', error);
+
+      const errorPayload = error?.response?.data;
+      if (
+        error?.response?.status === 429 &&
+        errorPayload?.code === 'IMAGE_GENERATION_LIMIT_EXCEEDED'
+      ) {
+        syncImageQuota(errorPayload.quota);
+        setShowImageQuotaExceeded(true);
+        return;
+      }
 
       // The backend already falls back to a designed image, so this path only
       // runs when the request itself fails (e.g. offline). Render the same
@@ -490,6 +533,31 @@ export function ProductFormModal({
       setIsGeneratingImage(false);
     }
   };
+
+  useEffect(() => {
+    if (!isOpen) {
+      setShowImageQuotaExceeded(false);
+      return;
+    }
+
+    let cancelled = false;
+    const fetchImageQuota = async () => {
+      try {
+        const response = await api.get('/api/items/image-generation-quota');
+        if (!cancelled) {
+          syncImageQuota(response.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch image generation quota:', error);
+      }
+    };
+
+    fetchImageQuota();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -766,6 +834,22 @@ export function ProductFormModal({
   const previewImage = imagePreview || draftImagePreview;
   const hasDraftPreview = !imagePreview && Boolean(draftImagePreview);
   const generationElapsedLabel = `${(generationElapsedMs / 1000).toFixed(2)}s`;
+  const imageQuotaResetDate = imageQuota
+    ? new Date(imageQuota.resetAt).toLocaleDateString(
+        t('common.locale') === 'ar' ? 'ar-EG' : 'en-US',
+        { month: 'short', day: 'numeric', year: 'numeric' },
+      )
+    : '';
+  const imageQuotaLabel = imageQuota
+    ? t('products.image.quotaRemaining', {
+        remaining: imageQuota.remaining,
+        limit: imageQuota.limit,
+        resetDate: imageQuotaResetDate,
+        defaultValue: `${imageQuota.remaining} of ${imageQuota.limit} image generations left this month. Resets ${imageQuotaResetDate}.`,
+      })
+    : t('products.image.quotaLoading', {
+        defaultValue: 'Checking monthly image generation balance...',
+      });
   const generateButtonLabel = isGeneratingImage
     ? t('products.image.generatingTimed', { elapsed: generationElapsedLabel })
     : generatedImageNeedsRefresh
@@ -968,6 +1052,14 @@ export function ProductFormModal({
                           )}
                           <span>{generateButtonLabel}</span>
                         </button>
+                      </div>
+
+                      <div className={`flex items-center justify-between gap-3 rounded-2xl border px-3 py-2 text-[11px] font-semibold ${
+                        imageQuota && imageQuota.remaining <= 0
+                          ? 'border-red-200 bg-red-50 text-red-700 dark:border-red-400/30 dark:bg-red-500/10 dark:text-red-200'
+                          : 'border-mintcom-green/20 bg-mintcom-green/5 text-mintcom-green dark:bg-mintcom-green/10'
+                      }`}>
+                        <span>{imageQuotaLabel}</span>
                       </div>
 
                       <div className={`flex items-start gap-2 rounded-2xl border px-3 py-2 text-[11px] ${
@@ -1672,6 +1764,24 @@ export function ProductFormModal({
           message={t('products.messages.discardMessage')}
           confirmText={t('products.messages.discardConfirm')}
           cancelText={t('common.cancel')}
+          type="warning"
+        />
+
+        <ConfirmModal
+          key="image-quota-exceeded"
+          isOpen={showImageQuotaExceeded}
+          onClose={() => setShowImageQuotaExceeded(false)}
+          onConfirm={() => setShowImageQuotaExceeded(false)}
+          title={t('products.image.quotaExceededTitle', {
+            defaultValue: 'Monthly image limit reached',
+          })}
+          message={t('products.image.quotaExceededMessage', {
+            limit: imageQuota?.limit ?? 200,
+            resetDate: imageQuotaResetDate,
+            defaultValue: `You have used all ${imageQuota?.limit ?? 200} image generations for this month. Please wait until ${imageQuotaResetDate || 'next month'} to generate more images.`,
+          })}
+          confirmText={t('common.ok', { defaultValue: 'OK' })}
+          showCancel={false}
           type="warning"
         />
 

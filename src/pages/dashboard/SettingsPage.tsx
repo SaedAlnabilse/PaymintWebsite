@@ -35,7 +35,7 @@ import {
   getChangedAppSettingsKeys,
   normalizeBackendTaxRateForForm,
   normalizeHoldOrderTableCount,
-  sanitizeDigits,
+  sanitizeTaxId,
   sanitizeLimitedText,
 } from '../../utils/settingsPayload';
 
@@ -293,7 +293,7 @@ export function SettingsPage() {
   });
   const taxIdField = register('taxIdNumber', {
     maxLength: { value: MAX_ESTABLISHMENT_TAX_ID_LENGTH, message: t('common.maxLength', { count: MAX_ESTABLISHMENT_TAX_ID_LENGTH }) },
-    setValueAs: (value) => sanitizeDigits(value, MAX_ESTABLISHMENT_TAX_ID_LENGTH),
+    setValueAs: (value) => sanitizeTaxId(value, MAX_ESTABLISHMENT_TAX_ID_LENGTH),
   });
   const farewellMessageField = register('farewellMessage', {
     maxLength: { value: MAX_RECEIPT_FAREWELL_LENGTH, message: t('common.maxLength', { count: MAX_RECEIPT_FAREWELL_LENGTH }) },
@@ -426,7 +426,7 @@ export function SettingsPage() {
         restaurantDescription: sanitizeLimitedText(data.restaurantDescription, MAX_ESTABLISHMENT_TAGLINE_LENGTH),
         restaurantAddress: sanitizeLimitedText(data.restaurantAddress, MAX_ESTABLISHMENT_ADDRESS_LENGTH),
         email: sanitizeLimitedText(data.email, MAX_ESTABLISHMENT_EMAIL_LENGTH),
-        taxIdNumber: sanitizeDigits(data.taxIdNumber, MAX_ESTABLISHMENT_TAX_ID_LENGTH),
+        taxIdNumber: sanitizeTaxId(data.taxIdNumber, MAX_ESTABLISHMENT_TAX_ID_LENGTH),
         farewellMessage: sanitizeLimitedText(data.farewellMessage, MAX_RECEIPT_FAREWELL_LENGTH),
         taxRate: normalizeBackendTaxRateForForm(data.taxRate),
         serviceChargeEnabled: Boolean(data.serviceChargeEnabled),
@@ -987,7 +987,8 @@ export function SettingsPage() {
               </div>
               <div className="space-y-2">
                 <label className="label-strong font-outfit  block">{formatInputLabel(t('settings.profile.taxId'), t('common.locale'))}</label>
-                <input type="text" {...taxIdField} inputMode="numeric" maxLength={MAX_ESTABLISHMENT_TAX_ID_LENGTH} onInput={(e) => { const target = e.target as HTMLInputElement; target.value = sanitizeDigits(target.value, MAX_ESTABLISHMENT_TAX_ID_LENGTH); }} className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-mintcom-green/20 focus:border-mintcom-green transition-all font-normal" />
+                <input type="text" {...taxIdField} autoCapitalize="characters" maxLength={MAX_ESTABLISHMENT_TAX_ID_LENGTH} onInput={(e) => { const target = e.target as HTMLInputElement; target.value = sanitizeTaxId(target.value, MAX_ESTABLISHMENT_TAX_ID_LENGTH); }} className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-mintcom-green/20 focus:border-mintcom-green transition-all font-normal" />
+                <p className="text-xs text-gray-400 mt-1">{t('settings.profile.taxIdDisclaimer')}</p>
               </div>
             </div>
           </motion.div>
@@ -1430,15 +1431,16 @@ export function SettingsPage() {
                       type="text"
                       {...taxIdField}
                       disabled={!showTaxId}
-                      inputMode="numeric"
+                      autoCapitalize="characters"
                       maxLength={MAX_ESTABLISHMENT_TAX_ID_LENGTH}
                       onInput={(e) => {
                         const target = e.target as HTMLInputElement;
-                        target.value = sanitizeDigits(target.value, MAX_ESTABLISHMENT_TAX_ID_LENGTH);
+                        target.value = sanitizeTaxId(target.value, MAX_ESTABLISHMENT_TAX_ID_LENGTH);
                       }}
                       className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-sm font-normal focus:outline-none focus:ring-2 focus:ring-mintcom-green/20 focus:border-mintcom-green transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100 dark:disabled:bg-white/5"
                       placeholder={formatInputPlaceholder(t('settings.profile.taxIdPlaceholder'), t('common.locale'))}
                     />
+                    <p className="text-xs text-gray-400 mt-2">{t('settings.profile.taxIdDisclaimer')}</p>
                   </div>
 
                   {/* Footer */}

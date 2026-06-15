@@ -56,7 +56,7 @@ interface Order {
   serviceChargeAmount?: number;
   serviceChargeName?: string;
   serviceChargeNameSnapshot?: string;
-  serviceChargeType?: string;
+  serviceChargeType?: 'PERCENTAGE' | 'FIXED';
   serviceChargeValue?: number;
   serviceChargeTaxable?: boolean;
   isServiceChargeChanged?: boolean;

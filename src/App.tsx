@@ -15,6 +15,7 @@ import { ConsentReprompt } from './components/ConsentReprompt';
 import { env } from './config/env';
 import { usePreventNumberInputScroll } from './hooks/usePreventNumberInputScroll';
 import { useTextInputLimits } from './hooks/useTextInputLimits';
+import { usePageTracking } from './hooks/usePageTracking';
 
 // ============================================================================
 // Eager Imports (Critical path - always needed)
@@ -236,6 +237,10 @@ function SecretAccessHandler() {
 function MaintenanceWrapper() {
   const hasAccess = localStorage.getItem('mintcom_preview_access') === 'true';
   const { pathname } = useLocation();
+
+  // Report client-side route changes to GA4 (the initial load is tracked by
+  // gtag('config') in index.html). Without this, SPA navigations are invisible.
+  usePageTracking();
 
   // Always allow access to the secret bypass route
   if (pathname === '/qa-access') {

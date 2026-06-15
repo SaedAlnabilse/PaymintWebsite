@@ -2,7 +2,7 @@ export const MAX_ESTABLISHMENT_NAME_LENGTH = 50;
 export const MAX_ESTABLISHMENT_TAGLINE_LENGTH = 120;
 export const MAX_ESTABLISHMENT_ADDRESS_LENGTH = 120;
 export const MAX_ESTABLISHMENT_EMAIL_LENGTH = 80;
-export const MAX_ESTABLISHMENT_TAX_ID_LENGTH = 20;
+export const MAX_ESTABLISHMENT_TAX_ID_LENGTH = 32;
 export const MAX_RECEIPT_FAREWELL_LENGTH = 80;
 export const MAX_TAX_RATE_PERCENT = 100;
 export const MAX_TAX_RATE_INPUT_DIGITS = 5;
@@ -92,6 +92,17 @@ export const sanitizeLimitedText = (value: unknown, maxLength: number) =>
 export const sanitizeDigits = (value: unknown, maxLength: number) =>
   String(value ?? '')
     .replace(/\D/g, '')
+    .slice(0, maxLength);
+
+// Tax ID / TRN / VAT / GSTIN are alphanumeric and vary by country (e.g. "DE123456789",
+// "22AAAAA0000A1Z5", "GB999999973"). Keep letters, digits and common separators rather than
+// forcing digits-only — uppercase + trim for a consistent stored form.
+export const sanitizeTaxId = (value: unknown, maxLength: number) =>
+  String(value ?? '')
+    .toUpperCase()
+    .replace(/[^A-Z0-9 \-/.]/g, '')
+    .replace(/\s+/g, ' ')
+    .trimStart()
     .slice(0, maxLength);
 
 export const clampTaxRatePercent = (value: unknown) => {
@@ -213,7 +224,7 @@ export const buildAppSettingsUpdatePayload = (
   }
 
   if (shouldInclude('taxIdNumber')) {
-    payload.taxIdNumber = sanitizeDigits(
+    payload.taxIdNumber = sanitizeTaxId(
       read(data, 'taxIdNumber'),
       MAX_ESTABLISHMENT_TAX_ID_LENGTH,
     );

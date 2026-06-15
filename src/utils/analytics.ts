@@ -130,6 +130,40 @@ const removeScript = (id: string) => {
   }
 };
 
+/**
+ * Report a single-page-app page view.
+ *
+ * GA4's `gtag('config', ...)` only emits ONE `page_view` — on the initial
+ * document load. Client-side route changes in this React Router app are
+ * invisible to GA unless we send them explicitly, which is why the dashboard
+ * showed ~1 page per session and an inflated bounce rate. Call this on every
+ * route change (see `usePageTracking`). Consent Mode still applies: if the
+ * user hasn't granted analytics storage, GA downgrades this to a cookieless
+ * (modeled) ping rather than dropping it.
+ */
+export const trackPageView = (path: string, title?: string) => {
+  if (!isConfiguredValue(GA_MEASUREMENT_ID)) return;
+
+  const gtag = getGtag();
+  gtag('event', 'page_view', {
+    page_path: path,
+    page_location: window.location.href,
+    page_title: title ?? document.title,
+    send_to: GA_MEASUREMENT_ID,
+  });
+};
+
+/**
+ * Generic GA4 event helper for business / interaction events
+ * (e.g. sign-up started, trial requested, plan selected).
+ */
+export const trackEvent = (name: string, params: Record<string, unknown> = {}) => {
+  if (!isConfiguredValue(GA_MEASUREMENT_ID)) return;
+
+  const gtag = getGtag();
+  gtag('event', name, params);
+};
+
 export const updateConsentState = (prefs: { analytics: boolean; marketing: boolean; functional: boolean }) => {
   console.group('🍪 Cookie Consent Update');
   
