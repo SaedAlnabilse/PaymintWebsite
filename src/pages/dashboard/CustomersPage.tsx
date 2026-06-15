@@ -18,7 +18,6 @@ import {
   X,
   ShoppingBag,
   MoreVertical,
-  Download,
   Eye
 } from 'lucide-react';
 import api from '../../config/api';
@@ -26,7 +25,9 @@ import toast from 'react-hot-toast';
 import { ConfirmModal } from '../../components/ConfirmModal';
 import { SecurityVerificationModal } from '../../components/SecurityVerificationModal';
 import { PortalDropdown } from '../../components/PortalDropdown';
-import { exportToCSV } from '../../utils/export';
+import { exportTable } from '../../utils/export';
+import type { ExportFormat } from '../../utils/export';
+import { ExportMenu } from '../../components/ExportMenu';
 import { SearchInput, Pagination } from '../../components/ui';
 import { usePermissionGuard } from '../../hooks/usePermissionGuard';
 import { useCurrency } from '../../context/CurrencyContext';
@@ -392,9 +393,9 @@ export function CustomersPage() {
     setShowModal(true);
   };
 
-  const handleExport = async () => {
+  const handleExport = async (format: ExportFormat) => {
     try {
-      toast.loading('Exporting...', { id: 'export' });
+      toast.loading(`${t('common.export')}...`, { id: 'export' });
       // Page through every customer so the export isn't truncated at a fixed cap.
       // The endpoint caps `limit` at 100, so request that and advance by page;
       // stop on an empty page or once we've collected every row `total` reports
@@ -421,14 +422,25 @@ export function CustomersPage() {
         visits: c.totalVisits
       }));
 
-      exportToCSV(exportData, 'customers_registry', {
-        name: t('common.name', { defaultValue: 'Name' }),
-        phone: t('customers.form.phone'),
-        email: t('customers.form.email'),
-        tier: t('rewards.items.tier', { defaultValue: 'Tier' }),
-        points: t('customers.details.points'),
-        totalSpent: `${t('customers.details.spent')} (${currencySymbol})`,
-        visits: t('customers.details.visits')
+      if (exportData.length === 0) {
+        toast.error(t('dashboard.messages.noData', { defaultValue: 'No data to export' }), { id: 'export' });
+        return;
+      }
+
+      await exportTable(format, {
+        filename: 'customers_registry',
+        title: t('customers.title', { defaultValue: 'Customers' }),
+        meta: currentEstablishment?.name ? [{ label: t('common.location'), value: currentEstablishment.name }] : undefined,
+        columns: [
+          { key: 'name', label: t('common.name', { defaultValue: 'Name' }) },
+          { key: 'phone', label: t('customers.form.phone') },
+          { key: 'email', label: t('customers.form.email') },
+          { key: 'tier', label: t('rewards.items.tier', { defaultValue: 'Tier' }) },
+          { key: 'points', label: t('customers.details.points') },
+          { key: 'totalSpent', label: `${t('customers.details.spent')} (${currencySymbol})` },
+          { key: 'visits', label: t('customers.details.visits') },
+        ],
+        rows: exportData,
       });
       toast.success(t('customers.messages.exportComplete'), { id: 'export' });
     } catch {
@@ -453,13 +465,7 @@ export function CustomersPage() {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          <button
-            onClick={handleExport}
-            className="hidden sm:flex items-center gap-2 px-5 py-3 rounded-xl bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white font-bold text-sm hover:bg-gray-50 dark:hover:bg-white/10 transition-all shadow-sm"
-          >
-            <Download size={18} />
-            <span>{t('orders.export')}</span>
-          </button>
+          <ExportMenu onExport={handleExport} className="hidden sm:flex" />
           <button
             onClick={() => { setEditingCustomer(null); reset({ name: '', phone: '', email: '', address: '' }); setShowModal(true); }}
             className="flex items-center gap-2 px-3 sm:px-5 py-2.5 sm:py-3 rounded-xl bg-mintcom-green text-black font-bold text-sm hover:bg-[#5fa888] transition-all shadow-sm touch-target"

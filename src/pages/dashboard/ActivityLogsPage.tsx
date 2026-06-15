@@ -6,13 +6,14 @@ import {
   History,
   X,
   Shield,
-  FileText,
-  Download
+  FileText
 } from 'lucide-react';
 
 import api from '../../config/api';
 import toast from 'react-hot-toast';
-import { exportToCSV } from '../../utils/export';
+import { exportTable } from '../../utils/export';
+import type { ExportFormat } from '../../utils/export';
+import { ExportMenu } from '../../components/ExportMenu';
 import { SingleSelect } from '../../components/SingleSelect';
 import { DateRangePicker } from '../../components/DateRangePicker';
 import { DATE_PERIOD_OPTIONS, calculateDateRange, formatDateForInput } from '../../utils/datePeriods';
@@ -252,7 +253,7 @@ export function ActivityLogsPage() {
     return actorName?.charAt(0)?.toUpperCase() || 'A';
   };
 
-  const handleExport = () => {
+  const handleExport = (format: ExportFormat) => {
     const logsToExport = Array.isArray(logs) ? logs : [];
     const exportData = logsToExport.map(l => ({
       time: formatDate(l.timestamp),
@@ -262,12 +263,23 @@ export function ActivityLogsPage() {
       ip: l.ipAddress
     }));
 
-    exportToCSV(exportData, 'activity_log', {
-      time: t('activity.time'),
-      user: t('activity.user'),
-      action: t('activity.action'),
-      desc: t('activity.details'),
-      ip: t('activity.ip')
+    if (exportData.length === 0) {
+      toast.error(t('dashboard.messages.noData', { defaultValue: 'No data to export' }));
+      return;
+    }
+
+    return exportTable(format, {
+      filename: 'activity_log',
+      title: t('activity.title'),
+      meta: currentEstablishment?.name ? [{ label: t('common.location'), value: currentEstablishment.name }] : undefined,
+      columns: [
+        { key: 'time', label: t('activity.time') },
+        { key: 'user', label: t('activity.user') },
+        { key: 'action', label: t('activity.action') },
+        { key: 'desc', label: t('activity.details') },
+        { key: 'ip', label: t('activity.ip') },
+      ],
+      rows: exportData,
     });
   };
 
@@ -289,13 +301,7 @@ export function ActivityLogsPage() {
 
         <div className="flex items-center gap-3">
           {canExport && (
-            <button
-              onClick={handleExport}
-              className="flex items-center gap-2 px-5 py-3 rounded-xl bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white font-bold text-sm hover:bg-gray-50 dark:hover:bg-white/10 transition-all"
-            >
-              <Download size={18} />
-              <span>{t('activity.export')}</span>
-            </button>
+            <ExportMenu onExport={handleExport} />
           )}
         </div>
       </div>

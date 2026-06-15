@@ -5,7 +5,7 @@ import { endOfDay, startOfDay, format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   TrendingUp, Clock, ShoppingBag,
-  Download, CreditCard, Percent, Scale,
+  CreditCard, Percent, Scale,
   Users, PlusCircle
 } from 'lucide-react';
 import api from '../../config/api';
@@ -18,7 +18,9 @@ import { checkPermission, usePermissionGuard } from '../../hooks/usePermissionGu
 
 import { ReceiptsReport } from '../../components/dashboard/reports/ReceiptsReport';
 import { SingleSelect } from '../../components/SingleSelect';
-import { exportToCSV } from '../../utils/export';
+import { ExportMenu } from '../../components/ExportMenu';
+import { exportTable, exportSections } from '../../utils/export';
+import type { ExportFormat, ExportColumn, ExportMeta, ExportSection } from '../../utils/export';
 import { DateRangePicker } from '../../components/DateRangePicker';
 import { CustomTimePicker } from '../../components/CustomTimePicker';
 import { DATE_PERIOD_OPTIONS, calculateDateRange, formatDateForInput } from '../../utils/datePeriods';
@@ -443,72 +445,198 @@ export function ReportsPage() {
     setEndTime('23:59');
   };
 
-  const handleExport = () => {
-    let dataToExport: any[] = [];
-    const filename = `report_${reportType}`;
-    let headers = {};
+  const localeTag = t('common.locale') === 'ar' ? 'ar-EG' : 'en-US';
+  const money = (n: number) => (Number(n) || 0).toLocaleString(localeTag, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const num = (n: number) => (Number(n) || 0).toLocaleString(localeTag);
 
+  // Human-readable title for the current report selection.
+  const reportTitle = (): string => {
     switch (reportType) {
-      case 'sales':
-      case 'payments':
-      case 'discounts':
-      case 'taxes':
-        dataToExport = salesData?.dailyBreakdown || [];
-        headers = {
-          date: t('orders.exportFields.date'),
-          revenue: `${t('dashboard.stats.revenue')} (${currencySymbol})`,
-          count: t('orders.exportFields.orderNumber')
-        };
-        break;
+      case 'sales': return t('dashboard.menu.salesSummary');
       case 'top-items':
-        dataToExport = itemReportData?.breakdown || [];
-        headers = {
-          itemName: t('orders.table.order'),
-          quantity: t('orders.reports.items.unitsSold'),
-          totalSales: t('orders.reports.items.grossRevenue')
+        if (itemReportTab === 'categories') return t('dashboard.menu.salesByItems');
+        if (itemReportTab === 'modifiers' || itemReportTab === 'attributes') return t('dashboard.menu.salesByAddons');
+        return t('dashboard.menu.salesByItems');
+      case 'staff-sales': return t('dashboard.menu.salesByStaff');
+      case 'shifts': return t('dashboard.menu.shiftsReports');
+      case 'cash-discrepancy': return t('dashboard.menu.cashGapReports');
+      case 'payments': return t('dashboard.menu.paymentsReports');
+      case 'discounts': return t('dashboard.menu.discountReports');
+      case 'taxes': return t('dashboard.menu.salesSummary');
+      default: return t('dashboard.menu.salesAndReporting');
+    }
+  };
+
+  const buildMeta = (): ExportMeta => {
+    const fmt = (iso: string) => {
+      try { return new Date(iso).toLocaleString(localeTag); } catch { return iso; }
+    };
+    const meta: ExportMeta = [
+      { label: t('orders.exportFields.date'), value: `${fmt(effectiveDateRange.start)} — ${fmt(effectiveDateRange.end)}` },
+    ];
+    if (currentEstablishment?.name) {
+      meta.push({ label: t('common.location'), value: currentEstablishment.name });
+    }
+    if (selectedEmployeeId) {
+      const emp = employees.find(e => e.value === selectedEmployeeId);
+      if (emp) meta.push({ label: t('orders.table.staff'), value: emp.label });
+    }
+    return meta;
+  };
+
+  // Map the current shift list into export rows (shared by staff-sales / shifts / cash-discrepancy).
+  const shiftRows = () => shifts.map(s => {
+    const start = new Date(s.startTime);
+    const end = s.endTime ? new Date(s.endTime) : new Date();
+    const hoursWorked = ((end.getTime() - start.getTime()) / (1000 * 60 * 60)).toLocaleString(localeTag, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    const variance = s.discrepancy ?? s.variance ?? 0;
+    const cashOverShort = s.endTime
+      ? (variance > 0.001 ? `+${money(variance)} ${t('dashboard.stats.over')}` : variance < -0.001 ? `${money(variance)} ${t('dashboard.stats.short')}` : money(0))
+      : t('dashboard.shiftStatus.live');
+    return {
+      username: s.user?.username || t('common.pos'),
+      period: `${start.toLocaleString(localeTag)} - ${s.endTime ? end.toLocaleString(localeTag) : t('dashboard.shiftStatus.live')}`,
+      hoursWorked,
+      opening: money(s.openingBalance),
+      sales: money(s.totalSales),
+      orders: num(s.orderCount),
+      refunds: money(s.totalRefunds),
+      closing: s.closingBalance !== null && s.closingBalance !== undefined ? money(s.closingBalance) : t('dashboard.shiftStatus.live'),
+      cashOverShort,
+      status: s.status,
+    };
+  });
+
+  // Resolve the columns + rows (+ extra sections) for the active report.
+  const buildReport = (): { columns: ExportColumn[]; rows: any[]; sections?: ExportSection[] } => {
+    switch (reportType) {
+      case 'sales': {
+        return {
+          columns: [
+            { key: 'date', label: t('orders.exportFields.date') },
+            { key: 'revenue', label: `${t('dashboard.stats.revenue')} (${currencySymbol})` },
+            { key: 'count', label: t('orders.exportFields.orderNumber') },
+          ],
+          rows: (salesData?.dailyBreakdown || []).map(d => ({ date: d.date, revenue: money(d.revenue), count: num(d.count) })),
         };
-        break;
-      case 'peak-hours':
-        dataToExport = peakHours;
-        headers = {
-          hour: t('orders.reports.sales.hours'),
-          total: t('dashboard.stats.revenue'),
-          count: t('orders.exportFields.orderNumber')
+      }
+      case 'payments': {
+        return {
+          columns: [
+            { key: 'name', label: t('orders.exportFields.paymentMethod') },
+            { key: 'value', label: `${t('dashboard.stats.revenue')} (${currencySymbol})` },
+          ],
+          rows: (salesData?.paymentMethodBreakdown || []).map(p => ({ name: p.name, value: money(p.value) })),
         };
-        break;
-      case 'shifts':
-        dataToExport = shifts.map(s => {
-          const start = new Date(s.startTime);
-          const end = s.endTime ? new Date(s.endTime) : new Date();
-          const hoursWorked = ((end.getTime() - start.getTime()) / (1000 * 60 * 60)).toLocaleString(t('common.locale'), { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-          const cashOverShort = s.discrepancy !== null && s.discrepancy !== undefined
-            ? (s.discrepancy > 0.001 ? `+${s.discrepancy.toLocaleString(t('common.locale'), { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${t('dashboard.stats.over')}` : s.discrepancy < -0.001 ? `${s.discrepancy.toLocaleString(t('common.locale'), { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${t('dashboard.stats.short')}` : '0')
-            : t('dashboard.shiftStatus.live');
-          return {
-            username: s.user?.username,
-            period: `${start.toLocaleTimeString()} - ${s.endTime ? end.toLocaleTimeString() : t('dashboard.shiftStatus.live')}`,
-            hoursWorked: hoursWorked,
-            opening: s.openingBalance,
-            sales: s.totalSales,
-            closing: s.closingBalance !== null && s.closingBalance !== undefined ? s.closingBalance : t('dashboard.shiftStatus.live'),
-            cashOverShort: cashOverShort,
-            status: s.status
-          };
-        });
-        headers = {
-          username: t('orders.table.staff'),
-          period: t('orders.reports.shifts.time'),
-          hoursWorked: t('orders.reports.sales.hours'),
-          opening: t('orders.reports.shifts.opening'),
-          sales: t('orders.reports.shifts.sales'),
-          closing: t('orders.reports.shifts.closing'),
-          cashOverShort: t('orders.reports.shifts.variance'),
-          status: t('orders.reports.shifts.status')
+      }
+      case 'taxes': {
+        return {
+          columns: [
+            { key: 'name', label: t('orders.reports.taxes.tax') },
+            { key: 'rate', label: t('orders.reports.taxes.rate') },
+            { key: 'taxable', label: `${t('orders.reports.taxes.taxable')} (${currencySymbol})` },
+            { key: 'collected', label: `${t('orders.reports.taxes.totalTax')} (${currencySymbol})` },
+            { key: 'transactions', label: t('orders.reports.taxes.txns') },
+          ],
+          rows: (salesData?.taxBreakdown || []).map(tx => ({
+            name: tx.name,
+            rate: `${num(tx.rate)}%`,
+            taxable: money(tx.taxableAmount),
+            collected: money(tx.collected),
+            transactions: num(tx.transactions),
+          })),
         };
-        break;
+      }
+      case 'discounts': {
+        return {
+          columns: [
+            { key: 'name', label: t('dashboard.menu.discountReports') },
+            { key: 'count', label: t('orders.exportFields.orderNumber') },
+            { key: 'value', label: `${t('orders.reports.shifts.variance', { defaultValue: 'Amount' })} (${currencySymbol})` },
+          ],
+          rows: (salesData?.discountBreakdown || []).map(d => ({ name: d.name, count: num(d.count), value: money(d.value) })),
+        };
+      }
+      case 'top-items': {
+        const nameLabel = itemReportTab === 'categories'
+          ? t('dashboard.menu.salesByItems')
+          : itemReportTab === 'modifiers' || itemReportTab === 'attributes'
+            ? t('dashboard.menu.salesByAddons')
+            : t('orders.table.order');
+        return {
+          columns: [
+            { key: 'name', label: nameLabel },
+            { key: 'quantity', label: t('orders.reports.items.unitsSold') },
+            { key: 'totalSales', label: `${t('orders.reports.items.grossRevenue')} (${currencySymbol})` },
+          ],
+          rows: (itemReportData?.breakdown || []).map(it => ({
+            name: it.itemName || it.name || t('common.unknown'),
+            quantity: num(it.quantity),
+            totalSales: money((it.totalSales ?? it.revenue ?? 0) as number),
+          })),
+        };
+      }
+      case 'peak-hours': {
+        return {
+          columns: [
+            { key: 'hour', label: t('orders.reports.sales.hours') },
+            { key: 'total', label: `${t('dashboard.stats.revenue')} (${currencySymbol})` },
+            { key: 'count', label: t('orders.exportFields.orderNumber') },
+          ],
+          rows: (peakHours || []).map(p => ({ hour: p.hour, total: money(p.total), count: num(p.count) })),
+        };
+      }
+      case 'staff-sales':
+      case 'shifts': {
+        return {
+          columns: [
+            { key: 'username', label: t('orders.table.staff') },
+            { key: 'period', label: t('orders.reports.shifts.time') },
+            { key: 'hoursWorked', label: t('orders.reports.sales.hours') },
+            { key: 'opening', label: `${t('orders.reports.shifts.opening')} (${currencySymbol})` },
+            { key: 'sales', label: `${t('orders.reports.shifts.sales')} (${currencySymbol})` },
+            { key: 'orders', label: t('orders.exportFields.orderNumber') },
+            { key: 'closing', label: `${t('orders.reports.shifts.closing')} (${currencySymbol})` },
+            { key: 'cashOverShort', label: t('orders.reports.shifts.variance') },
+            { key: 'status', label: t('orders.reports.shifts.status') },
+          ],
+          rows: shiftRows(),
+        };
+      }
+      case 'cash-discrepancy': {
+        return {
+          columns: [
+            { key: 'username', label: t('orders.table.staff') },
+            { key: 'period', label: t('orders.reports.shifts.time') },
+            { key: 'opening', label: `${t('orders.reports.shifts.opening')} (${currencySymbol})` },
+            { key: 'sales', label: `${t('orders.reports.shifts.sales')} (${currencySymbol})` },
+            { key: 'closing', label: `${t('orders.reports.shifts.closing')} (${currencySymbol})` },
+            { key: 'cashOverShort', label: t('orders.reports.shifts.variance') },
+            { key: 'status', label: t('orders.reports.shifts.status') },
+          ],
+          rows: shiftRows(),
+        };
+      }
+      default:
+        return { columns: [], rows: [] };
+    }
+  };
+
+  const handleExport = (format: ExportFormat) => {
+    const { columns, rows, sections } = buildReport();
+    const title = reportTitle();
+    const meta = buildMeta();
+    const filename = `report_${reportType}${reportType === 'top-items' ? `_${itemReportTab}` : ''}`;
+
+    if (!rows || rows.length === 0) {
+      toast.error(t('dashboard.messages.noData', { defaultValue: 'No data to export' }));
+      return;
     }
 
-    exportToCSV(dataToExport, filename, headers);
+    if (sections && sections.length) {
+      return exportSections(format, { filename, title, meta, sections });
+    }
+    return exportTable(format, { filename, title, meta, columns, rows });
   };
 
   // Any in-flight (non-silent) request mutes and blocks the entire reports UI.
@@ -532,13 +660,7 @@ export function ReportsPage() {
 
         <div className="flex items-center gap-3">
           {canExport && (
-            <button
-              onClick={handleExport}
-              className="flex items-center gap-2 px-5 py-3 rounded-xl bg-white dark:bg-white/5 text-gray-900 dark:text-white font-bold text-sm border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/10 transition-all"
-            >
-              <Download size={18} className="text-gray-900 dark:text-white" />
-              <span>{t('orders.export')}</span>
-            </button>
+            <ExportMenu onExport={handleExport} />
           )}
         </div>
       </div>

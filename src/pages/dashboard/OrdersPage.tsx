@@ -14,7 +14,6 @@ import {
   ChevronLeft,
   ChevronRight,
   TrendingUp,
-  Download,
   MoreVertical,
   PlayCircle,
   History,
@@ -27,7 +26,9 @@ import api from '../../config/api';
 import { ConfirmModal } from '../../components/ConfirmModal';
 import { OrderDetailModal } from '../../components/OrderDetailModal';
 import { OrderRefundModal } from '../../components/OrderRefundModal';
-import { exportToCSV } from '../../utils/export';
+import { exportTable } from '../../utils/export';
+import type { ExportFormat } from '../../utils/export';
+import { ExportMenu } from '../../components/ExportMenu';
 import { toast } from 'react-hot-toast';
 import { DateRangePicker } from '../../components/DateRangePicker';
 import { DATE_PERIOD_OPTIONS, calculateDateRange, formatDateForInput } from '../../utils/datePeriods';
@@ -1125,7 +1126,7 @@ export function OrdersPage() {
     return t(`orders.status.${statusKey}` as any);
   };
 
-  const handleExport = () => {
+  const handleExport = (format: ExportFormat) => {
     const exportData = orders.map(o => ({
       orderNumber: o.orderNumber,
       date: formatDate(o.createdAt),
@@ -1136,14 +1137,25 @@ export function OrdersPage() {
       paymentMethod: o.paymentMethod
     }));
 
-    exportToCSV(exportData, 'orders_history', {
-      orderNumber: t('orders.exportFields.orderNumber'),
-      date: t('orders.exportFields.date'),
-      customer: t('orders.exportFields.customer'),
-      total: t('orders.exportFields.total', { currency: currencySymbol }),
-      serviceChargeAmount: t('orders.exportFields.serviceCharge', { defaultValue: 'Service Charge' }),
-      status: t('orders.exportFields.status'),
-      paymentMethod: t('orders.exportFields.paymentMethod')
+    if (exportData.length === 0) {
+      toast.error(t('dashboard.messages.noData', { defaultValue: 'No data to export' }));
+      return;
+    }
+
+    return exportTable(format, {
+      filename: 'orders_history',
+      title: t('orders.title'),
+      meta: currentEstablishment?.name ? [{ label: t('common.location'), value: currentEstablishment.name }] : undefined,
+      columns: [
+        { key: 'orderNumber', label: t('orders.exportFields.orderNumber') },
+        { key: 'date', label: t('orders.exportFields.date') },
+        { key: 'customer', label: t('orders.exportFields.customer') },
+        { key: 'total', label: t('orders.exportFields.total', { currency: currencySymbol }) },
+        { key: 'serviceChargeAmount', label: t('orders.exportFields.serviceCharge', { defaultValue: 'Service Charge' }) },
+        { key: 'status', label: t('orders.exportFields.status') },
+        { key: 'paymentMethod', label: t('orders.exportFields.paymentMethod') },
+      ],
+      rows: exportData,
     });
   };
 
@@ -1198,13 +1210,7 @@ export function OrdersPage() {
           )}
 
           {canExport && (
-            <button
-              onClick={handleExport}
-              className="flex items-center gap-2 px-3 sm:px-5 py-2.5 sm:py-3 rounded-xl bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white font-bold text-sm hover:bg-gray-50 dark:hover:bg-white/10 transition-all touch-target"
-            >
-              <Download size={18} />
-              <span className="hidden xs:inline">{t('orders.export')}</span>
-            </button>
+            <ExportMenu onExport={handleExport} />
           )}
         </div>
       </div>
