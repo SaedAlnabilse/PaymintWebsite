@@ -229,6 +229,7 @@ export function LinkLocationModal({
                                     <div className="relative group">
                                         <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-mintcom-green transition-colors" size={20} />
                                         <input
+                                            maxLength={255}
                                             type="text"
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}

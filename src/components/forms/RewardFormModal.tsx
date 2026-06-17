@@ -194,6 +194,7 @@ export function RewardFormModal({ isOpen, onClose, onSave, initialData, categori
               <label className="label-strong block">{formatInputLabel(t('rewards.form.pointsCostLabel'), t('common.locale'))}</label>
               <div className="relative group">
                 <input
+                  maxLength={255}
                   type="number"
                   min="0"
                   onKeyDown={(e) => {

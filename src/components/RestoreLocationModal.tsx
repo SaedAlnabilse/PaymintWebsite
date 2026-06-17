@@ -98,6 +98,7 @@ export function RestoreLocationModal({ isOpen, onClose, onRestore, isRestoring }
                                                 <User size={18} />
                                             </div>
                                             <input
+                                                maxLength={255}
                                                 required
                                                 type="email"
                                                 value={formData.accountEmail}
@@ -117,6 +118,7 @@ export function RestoreLocationModal({ isOpen, onClose, onRestore, isRestoring }
                                                 <Lock size={18} />
                                             </div>
                                             <input
+                                                maxLength={255}
                                                 required
                                                 type="password"
                                                 value={formData.password}
@@ -157,6 +159,7 @@ export function RestoreLocationModal({ isOpen, onClose, onRestore, isRestoring }
                                                 <User size={18} />
                                             </div>
                                             <input
+                                                maxLength={255}
                                                 required
                                                 type="text"
                                                 value={formData.newLocationLoginId}
@@ -176,6 +179,7 @@ export function RestoreLocationModal({ isOpen, onClose, onRestore, isRestoring }
                                                 <Lock size={18} />
                                             </div>
                                             <input
+                                                maxLength={255}
                                                 required
                                                 type="password"
                                                 value={formData.newLocationPassword}
