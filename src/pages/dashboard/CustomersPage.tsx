@@ -971,6 +971,7 @@ export function CustomersPage() {
                   <div className="relative">
                     <Award size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
+                      maxLength={255}
                       type="number"
                       min={1}
                       max={MAX_POINTS_ADJUSTMENT}

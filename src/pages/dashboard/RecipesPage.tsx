@@ -980,6 +980,7 @@ export function RecipesPage() {
                       <QuickInfo text={t('manufacturing.tips.yield', {defaultValue: 'How much of the Prep this recipe makes (e.g., 5 Liters of sauce).'})} />
                     </label>
                     <input
+                      maxLength={255}
                       type="number"
                       min="0"
                       value={subRecipeForm.yield}
@@ -1053,6 +1054,7 @@ export function RecipesPage() {
 
                             <div className="flex bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-300 dark:border-white/10 overflow-hidden w-40">
                               <input
+                                maxLength={255}
                                 type="number"
                                 min="0"
                                 onKeyDown={(e) => {
@@ -1302,6 +1304,7 @@ export function RecipesPage() {
                               {(ing.rawMaterialId || ing.subRecipeId) && (
                               <div className="flex flex-1 bg-white dark:bg-[#1a1a1a] rounded-2xl border border-gray-300 dark:border-white/10 transition-all hover:border-gray-400 dark:hover:border-white/20 focus-within:border-mintcom-green/50 focus-within:ring-2 focus-within:ring-mintcom-green/20 relative group/input">
                                 <input
+                                  maxLength={255}
                                   type="number"
                                   min="0"
                                   onKeyDown={(e) => {
