@@ -148,10 +148,20 @@ export interface SalesSummary {
   }>;
   taxBreakdown?: Array<{
     name: string;
+    taxName?: string;
+    taxType?: string;
+    taxTypeLabel?: string;
+    description?: string;
     rate: number;
+    rateLabel?: string;
+    isChanged?: boolean;
     taxableAmount: number;
     collected: number;
+    taxAmount?: number;
     transactions: number;
+    orderCount?: number;
+    refundCount?: number;
+    netTransactions?: number;
   }>;
   taxExemptSales?: number;
   totalDiscountGiven?: number;
@@ -295,4 +305,3 @@ export interface ItemPriceHistory {
   createdAt: string;
   inSelectedRange?: boolean;
 }
-

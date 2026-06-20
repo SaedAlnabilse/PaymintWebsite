@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   TrendingUp, Clock, ShoppingBag,
   CreditCard, Percent, Scale,
-  Users, PlusCircle
+  Users, PlusCircle, FileText
 } from 'lucide-react';
 import api from '../../config/api';
 import toast from 'react-hot-toast';
@@ -460,9 +460,10 @@ export function ReportsPage() {
       case 'staff-sales': return t('dashboard.menu.salesByStaff');
       case 'shifts': return t('dashboard.menu.shiftsReports');
       case 'cash-discrepancy': return t('dashboard.menu.cashGapReports');
+      case 'peak-hours': return t('orders.reports.peakHours.title', { defaultValue: 'Busy Times' });
       case 'payments': return t('dashboard.menu.paymentsReports');
       case 'discounts': return t('dashboard.menu.discountReports');
-      case 'taxes': return t('dashboard.menu.salesSummary');
+      case 'taxes': return t('reports.taxes', { defaultValue: 'Taxes Report' });
       default: return t('dashboard.menu.salesAndReporting');
     }
   };
@@ -537,13 +538,15 @@ export function ReportsPage() {
             { key: 'taxable', label: `${t('orders.reports.taxes.taxable')} (${currencySymbol})` },
             { key: 'collected', label: `${t('orders.reports.taxes.totalTax')} (${currencySymbol})` },
             { key: 'transactions', label: t('orders.reports.taxes.txns') },
+            { key: 'refunds', label: t('orders.reports.taxes.refunds', { defaultValue: 'Refunds' }) },
           ],
           rows: (salesData?.taxBreakdown || []).map(tx => ({
-            name: tx.name,
-            rate: `${num(tx.rate)}%`,
+            name: tx.name || tx.taxName || t('orders.reports.taxes.tax'),
+            rate: tx.rateLabel || `${num(tx.rate)}%`,
             taxable: money(tx.taxableAmount),
-            collected: money(tx.collected),
-            transactions: num(tx.transactions),
+            collected: money(tx.collected ?? tx.taxAmount ?? 0),
+            transactions: num(tx.transactions ?? tx.orderCount ?? 0),
+            refunds: num(tx.refundCount ?? 0),
           })),
         };
       }
@@ -676,8 +679,10 @@ export function ReportsPage() {
             { id: 'staff-sales', label: t('dashboard.menu.salesByStaff'), icon: Users },
             { id: 'shifts', label: t('dashboard.menu.shiftsReports'), icon: Clock },
             { id: 'cash-discrepancy', label: t('dashboard.menu.cashGapReports'), icon: Scale },
+            { id: 'peak-hours', label: t('orders.reports.peakHours.title', { defaultValue: 'Busy Times' }), icon: Clock },
             { id: 'payments', label: t('dashboard.menu.paymentsReports'), icon: CreditCard },
             { id: 'discounts', label: t('dashboard.menu.discountReports'), icon: Percent },
+            { id: 'taxes', label: t('reports.taxes', { defaultValue: 'Taxes Report' }), icon: FileText },
           ].map((type) => {
             const isSelected = type.id === 'items-categories'
               ? (reportType === 'top-items' && (itemReportTab === 'items' || itemReportTab === 'categories'))
@@ -744,8 +749,10 @@ export function ReportsPage() {
                     { id: 'staff-sales', label: t('dashboard.menu.salesByStaff') },
                     { id: 'shifts', label: t('dashboard.menu.shiftsReports') },
                     { id: 'cash-discrepancy', label: t('dashboard.menu.cashGapReports') },
+                    { id: 'peak-hours', label: t('orders.reports.peakHours.title', { defaultValue: 'Busy Times' }) },
                     { id: 'payments', label: t('dashboard.menu.paymentsReports') },
                     { id: 'discounts', label: t('dashboard.menu.discountReports') },
+                    { id: 'taxes', label: t('reports.taxes', { defaultValue: 'Taxes Report' }) },
                   ].find(r => r.id === hoveredReportId)?.label}
                   {/* Arrow */}
                   <div className="absolute top-full left-1/2 -translate-x-1/2 border-[4px] border-transparent border-t-gray-900 dark:border-t-white"></div>
@@ -875,7 +882,7 @@ export function ReportsPage() {
         ) : (
           <motion.div key={reportType} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
 
-            {(reportType === 'sales' || reportType === 'taxes') && (
+            {reportType === 'sales' && (
               <SalesView
                 salesData={salesData}
                 selectedDateRange={selectedDateRange}
@@ -972,5 +979,3 @@ export function ReportsPage() {
     </div>
   );
 }
-
-
