@@ -10,20 +10,70 @@ interface TaxesViewProps {
   salesData: SalesSummary;
 }
 
+const toNumber = (value: unknown) => {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : 0;
+};
+
+const ratePct = (rate: number) => {
+  if (!Number.isFinite(rate) || rate === 0) return 0;
+  return rate > 1 ? rate : rate * 100;
+};
+
 export const TaxesView = React.memo(function TaxesView({ salesData }: TaxesViewProps) {
   const { t } = useTranslation();
   const { currencySymbol } = useCurrency();
-  const taxBreakdown = salesData.taxBreakdown || [];
-  const totalTax = salesData.taxCollected ?? 0;
-  const grossSales = salesData.totalRevenue ?? 0;
-  const taxableSales = Math.max(grossSales - totalTax, 0);
+  const taxBreakdown = React.useMemo(() => (
+    (salesData.taxBreakdown || []).map((tax: any) => {
+      const rawRate = ratePct(toNumber(tax.rate ?? tax.taxRate));
+      const rateLabel = tax.rateLabel || (rawRate > 0 ? `${Number(rawRate.toFixed(2))}%` : '');
+      const isChanged = Boolean(tax.isChanged);
+      const baseName = isChanged
+        ? t('orders.reports.taxes.changedTaxRate', { defaultValue: 'Changed tax rate' })
+        : t('orders.reports.taxes.standardTaxRate', { defaultValue: 'Standard tax rate' });
+      const name = rateLabel ? `${baseName} ${rateLabel}` : (tax.name || tax.taxName || baseName);
+      const description = isChanged
+        ? t('orders.reports.taxes.changedTaxDescription', { defaultValue: 'Edited in POS before payment' })
+        : t('orders.reports.taxes.standardTaxDescription', { defaultValue: 'Used the location tax setting' });
+
+      return {
+        ...tax,
+        name,
+        description,
+        ratePercent: rawRate,
+        rateLabel,
+        isChanged,
+        taxableAmount: toNumber(tax.taxableAmount ?? tax.taxable),
+        collected: toNumber(tax.collected ?? tax.taxAmount ?? tax.amount),
+        transactions: toNumber(tax.transactions ?? tax.orderCount),
+        refundCount: toNumber(tax.refundCount),
+      };
+    })
+  ), [salesData.taxBreakdown, t]);
+
+  const totalTax = toNumber(salesData.taxCollected);
+  const taxableFromRows = taxBreakdown.reduce((sum, tax) => sum + tax.taxableAmount, 0);
+  const grossSales = toNumber(salesData.totalRevenue);
+  const taxableSales = Math.max(
+    taxableFromRows || toNumber(salesData.netSalesBeforeTaxAndServiceCharge) || grossSales - totalTax,
+    0,
+  );
   const averageTaxRate = taxableSales > 0 ? totalTax / taxableSales : 0;
   const hasTaxBreakdown = taxBreakdown.length > 0;
+  const changedRows = taxBreakdown.filter((tax) => tax.isChanged);
+  const changedTax = changedRows.reduce((sum, tax) => sum + tax.collected, 0);
+  const changedOrders = changedRows.reduce((sum, tax) => sum + tax.transactions, 0);
+  const changedRefunds = changedRows.reduce((sum, tax) => sum + tax.refundCount, 0);
   const hasTaxActivity =
-    taxBreakdown.some((tax: any) => Number(tax?.collected ?? 0) > 0 || Number(tax?.taxableAmount ?? 0) > 0) ||
-    totalTax > 0 ||
+    taxBreakdown.some((tax) =>
+      tax.collected !== 0 ||
+      tax.taxableAmount !== 0 ||
+      tax.transactions > 0 ||
+      tax.refundCount > 0
+    ) ||
+    totalTax !== 0 ||
     grossSales > 0 ||
-    (salesData.totalOrders ?? 0) > 0;
+    toNumber(salesData.totalOrders) > 0;
 
   const formatCurrency = (value: number) => (
     <StatValue 
@@ -35,8 +85,7 @@ export const TaxesView = React.memo(function TaxesView({ salesData }: TaxesViewP
 
   return (
     <div className="space-y-6" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
-      {/* Summary Cards for Taxes */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <div className="p-4 sm:p-5 bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.03] relative overflow-hidden flex flex-col transition-all duration-300">
           <div className="relative z-10">
             <p className="dashboard-stat-title mb-1">{t('orders.reports.taxes.totalTax')}</p>
@@ -73,10 +122,27 @@ export const TaxesView = React.memo(function TaxesView({ salesData }: TaxesViewP
           </div>
           <div className="absolute end-0 top-0 w-32 h-32 bg-mintcom-green/10 rounded-full blur-3xl -me-10 -mt-10 pointer-events-none" />
         </div>
+
+        <div className="p-4 sm:p-5 bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.03] relative overflow-hidden flex flex-col transition-all duration-300">
+          <div className="relative z-10">
+            <p className="dashboard-stat-title mb-1">{t('orders.reports.taxes.changedTaxOrders', { defaultValue: 'Changed-tax orders' })}</p>
+            <StatValue value={changedOrders} isInteger={true} className="text-2xl" />
+            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mt-1">
+              {changedRefunds > 0
+                ? t('orders.reports.taxes.changedTaxRefundsDesc', {
+                    defaultValue: '{{count}} refunds also affected changed-tax rows',
+                    count: changedRefunds,
+                  })
+                : t('orders.reports.taxes.changedTaxOrdersDesc', {
+                    defaultValue: 'POS tax edits in this period',
+                  })}
+            </p>
+          </div>
+          <div className="absolute end-0 top-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl -me-10 -mt-10 pointer-events-none" />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Tax Breakdown Main Card */}
         <div className="lg:col-span-2 bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.03] shadow-sm overflow-hidden flex flex-col">
           <div className="p-6 border-b border-gray-100 dark:border-white/5">
             <div className="flex items-center gap-3">
@@ -87,7 +153,7 @@ export const TaxesView = React.memo(function TaxesView({ salesData }: TaxesViewP
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white">
                   {t('orders.reports.taxes.details')}
                 </h3>
-                <p className="text-xs text-gray-500 mt-1">{t('orders.reports.taxes.share')}</p>
+                <p className="text-xs text-gray-500 mt-1">{t('orders.reports.taxes.detailsDesc', { defaultValue: 'Net tax grouped by applied rate and POS tax changes' })}</p>
               </div>
             </div>
           </div>
@@ -98,46 +164,61 @@ export const TaxesView = React.memo(function TaxesView({ salesData }: TaxesViewP
                   <th className="px-6 py-4 text-start label-strong font-outfit">{t('orders.reports.taxes.type')}</th>
                   <th className="px-6 py-4 text-end label-strong font-outfit">{t('orders.reports.taxes.rate')}</th>
                   <th className="px-6 py-4 text-end label-strong font-outfit">{t('orders.reports.taxes.taxable')}</th>
-                  <th className="px-6 py-4 text-end label-strong font-outfit">{t('orders.reports.taxes.tax')}</th>
+                  <th className="px-6 py-4 text-end label-strong font-outfit">{t('orders.reports.taxes.netTax', { defaultValue: 'Net tax' })}</th>
                   <th className="px-6 py-4 text-center label-strong font-outfit">{t('orders.reports.taxes.share')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-white/5">
-                {/* NOTE: If backend doesn't provide granular tax breakdown, we reconstruct a "Sales Tax" default row */}
                 {hasTaxBreakdown ? (
-                  taxBreakdown.map((tax: any, i: number) => {
-                    const taxName = String(tax.name ?? tax.taxName ?? tax.category ?? 'Tax');
-                    const rawRate = Number(tax.rate ?? 0);
-                    const displayRate = Number.isFinite(rawRate) ? (rawRate > 1 ? rawRate / 100 : rawRate) : 0;
-                    const taxableAmount = Number(tax.taxableAmount ?? tax.amount ?? 0);
-                    const collected = Number(tax.collected ?? tax.taxAmount ?? tax.value ?? 0);
-                    const contribution = totalTax > 0 ? (collected / totalTax) * 100 : 0;
+                  taxBreakdown.map((tax, i: number) => {
+                    const contribution = totalTax > 0 ? (tax.collected / totalTax) * 100 : 0;
+                    const contributionWidth = Math.max(0, Math.min(100, contribution));
                     return (
                       <tr key={i} className="group hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
                         <td className="px-6 py-4 text-start">
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-gray-100 dark:bg-white/5 text-gray-500 font-bold">
-                              {taxName.charAt(0)}
+                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold ${tax.isChanged ? 'bg-indigo-500/10 text-indigo-500' : 'bg-orange-500/10 text-orange-500'}`}>
+                              {tax.isChanged ? 'C' : 'S'}
                             </div>
                             <div className="flex flex-col">
-                              <span className="font-bold text-sm text-gray-900 dark:text-white">{taxName}</span>
-                              <StatValue value={tax.transactions ?? 0} isInteger={true} className="text-xs text-gray-400 font-bold inline-flex" /> <span className="text-xs text-gray-400 font-bold">{t('orders.reports.taxes.txns')}</span>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-bold text-sm text-gray-900 dark:text-white">{tax.name}</span>
+                                {tax.isChanged && (
+                                  <span className="px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-500 text-[10px] font-black uppercase tracking-wide">
+                                    {t('orders.reports.taxes.changed', { defaultValue: 'Changed' })}
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-xs text-gray-400 font-bold">{tax.description}</span>
+                              <span className="text-xs text-gray-400 font-bold">
+                                <StatValue value={tax.transactions} isInteger={true} className="text-xs text-gray-400 font-bold inline-flex" /> {t('orders.reports.taxes.txns')}
+                                {tax.refundCount > 0 && (
+                                  <>
+                                    {' / '}
+                                    <StatValue value={tax.refundCount} isInteger={true} className="text-xs text-gray-400 font-bold inline-flex" /> {t('orders.reports.taxes.refunds', { defaultValue: 'refunds' })}
+                                  </>
+                                )}
+                              </span>
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-center">
-                          <StatValue value={displayRate} isPercentage={true} className="text-sm" />
+                        <td className="px-6 py-4 text-end">
+                          {tax.ratePercent > 0 ? (
+                            <StatValue value={tax.ratePercent / 100} isPercentage={true} className="text-sm" />
+                          ) : (
+                            <span className="text-sm font-bold text-gray-400">-</span>
+                          )}
                         </td>
                         <td className="px-6 py-4 text-end font-bold text-gray-900 dark:text-white">
-                          {formatCurrency(Number.isFinite(taxableAmount) ? taxableAmount : 0)}
+                          {formatCurrency(tax.taxableAmount)}
                         </td>
                         <td className="px-6 py-4 text-end font-bold text-orange-500">
-                          {formatCurrency(Number.isFinite(collected) ? collected : 0)}
+                          {formatCurrency(tax.collected)}
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2 max-w-[100px] mx-auto">
                             <div className="flex-1 h-1.5 bg-gray-100 dark:bg-white/10 rounded-full overflow-hidden">
-                              <div className="h-full bg-orange-500 rounded-full" style={{ width: `${contribution}%` }} />
+                              <div className="h-full bg-orange-500 rounded-full" style={{ width: `${contributionWidth}%` }} />
                             </div>
                           </div>
                         </td>
@@ -192,41 +273,41 @@ export const TaxesView = React.memo(function TaxesView({ salesData }: TaxesViewP
           </div>
         </div>
 
-        {/* Exemptions Panel */}
-        <div className="bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.03] shadow-sm p-6 flex flex-col">
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
-            {t('orders.reports.taxes.exemptions')}
-          </h3>
-          <p className="text-xs text-gray-500 mb-6">{t('orders.reports.taxes.exemptionsDesc')}</p>
+        <div className="bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.03] shadow-sm p-6 flex flex-col gap-5">
+          <div>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
+              {t('orders.reports.taxes.auditSummary', { defaultValue: 'Tax Audit Summary' })}
+            </h3>
+            <p className="text-xs text-gray-500">{t('orders.reports.taxes.auditSummaryDesc', { defaultValue: 'Quick checks for tax-free sales and POS tax edits' })}</p>
+          </div>
 
-          <div className="flex-1 flex flex-col items-center justify-center text-center space-y-4 py-8">
-            <div className="w-16 h-16 rounded-full bg-gray-50 dark:bg-white/5 flex items-center justify-center text-gray-300 dark:text-white/20">
-              <Scale size={24} />
+          <div className="rounded-2xl border border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-white/[0.02] p-5">
+            <div className="w-12 h-12 rounded-xl bg-gray-200/60 dark:bg-white/5 flex items-center justify-center text-gray-400 dark:text-white/30 mb-4">
+              <Scale size={22} />
             </div>
-            <div>
-              <StatValue 
-                value={salesData.taxExemptSales ?? 0} 
-                currency={currencySymbol} 
-                className="text-2xl"
-              />
-              <p className="text-xs font-bold text-gray-400 tracking-widest mt-1">{t('orders.reports.taxes.taxFreeSales')}</p>
-            </div>
-            <div className="w-full h-px bg-gray-100 dark:bg-white/5 my-4" />
-            <div className="w-full space-y-3">
-              {/* Mock list of exemptions or actual data if available */}
-              <div className="flex justify-between items-center text-xs">
-                <span className="font-bold text-gray-500">{t('orders.reports.taxes.resaleCertificates')}</span>
-                <span className="font-bold text-gray-900 dark:text-white">—</span>
-              </div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="font-bold text-gray-500">{t('orders.reports.taxes.nonProfit')}</span>
-                <span className="font-bold text-gray-900 dark:text-white">—</span>
-              </div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="font-bold text-gray-500">{t('orders.reports.taxes.govEntities')}</span>
-                <span className="font-bold text-gray-900 dark:text-white">—</span>
-              </div>
-            </div>
+            <StatValue
+              value={toNumber(salesData.taxExemptSales)}
+              currency={currencySymbol}
+              className="text-2xl"
+            />
+            <p className="text-xs font-bold text-gray-400 tracking-widest mt-1">{t('orders.reports.taxes.taxFreeSales')}</p>
+            <p className="text-xs text-gray-500 mt-3">{t('orders.reports.taxes.taxFreeSalesDesc', { defaultValue: 'Completed sales where no tax was collected after refunds are netted out.' })}</p>
+          </div>
+
+          <div className={`rounded-2xl border p-5 ${changedOrders > 0 || changedTax !== 0 ? 'border-indigo-500/20 bg-indigo-500/5' : 'border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-white/[0.02]'}`}>
+            <p className="text-xs font-black uppercase tracking-wide text-gray-400 mb-2">
+              {t('orders.reports.taxes.changedTaxCollected', { defaultValue: 'Changed tax collected' })}
+            </p>
+            <StatValue value={changedTax} currency={currencySymbol} className="text-2xl text-indigo-500" />
+            <p className="text-xs text-gray-500 mt-3">
+              {changedOrders > 0 || changedTax !== 0
+                ? t('orders.reports.taxes.changedTaxNote', {
+                    defaultValue: 'Changed tax rows are orders where the POS tax rate was edited before payment.',
+                  })
+                : t('orders.reports.taxes.noChangedTax', {
+                    defaultValue: 'No POS tax-rate edits were recorded in this period.',
+                  })}
+            </p>
           </div>
         </div>
       </div>
