@@ -89,7 +89,10 @@ const SIDEBAR_STATE_KEY = 'dashboard_sidebar_expanded';
 export function DashboardLayout() {
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === 'ar';
-  const { account, currentEstablishment, logout } = useAuth();
+  const { account, currentEstablishment, establishments, logout } = useAuth();
+  // Switching locations only makes sense when there is more than one to move
+  // between. A single-location user (owner or employee) has nothing to switch to.
+  const canSwitchLocation = (establishments?.length || 0) > 1;
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -631,8 +634,8 @@ export function DashboardLayout() {
         {sidebarOpen ? (
           <div className="px-2 pb-2 pt-0">
             <div
-              className="p-3.5 bg-white dark:bg-[#0D0D0D] border border-gray-200 dark:border-white/10 rounded-2xl shadow-sm relative overflow-hidden group cursor-pointer transition-all duration-300 hover:border-mintcom-green/30"
-              onClick={() => navigate('/select-establishment')}
+              className={`p-3.5 bg-white dark:bg-[#0D0D0D] border border-gray-200 dark:border-white/10 rounded-2xl shadow-sm relative overflow-hidden group transition-all duration-300 ${canSwitchLocation ? 'cursor-pointer hover:border-mintcom-green/30' : ''}`}
+              onClick={canSwitchLocation ? () => navigate('/select-establishment') : undefined}
             >
               <div className="absolute top-0 right-0 w-32 h-32 bg-mintcom-green/5 dark:bg-mintcom-green/10 rounded-full blur-3xl pointer-events-none transition-transform duration-1000" />
               <div className="relative z-10">
@@ -654,14 +657,16 @@ export function DashboardLayout() {
                   <div className="flex items-center gap-1.5">
                     <RealtimeStatusIndicator />
                   </div>
-                  <div className="flex items-center gap-1 text-xs font-medium text-gray-400 tracking-widest group-hover:text-gray-900 dark:group-hover:text-white transition-colors">
-                    {t('dashboard.menu.switchLocation')} <ChevronRight size={10} className={`mt-0.5 ${t('common.locale') === 'ar' ? 'rotate-180' : ''}`} />
-                  </div>
+                  {canSwitchLocation && (
+                    <div className="flex items-center gap-1 text-xs font-medium text-gray-400 tracking-widest group-hover:text-gray-900 dark:group-hover:text-white transition-colors">
+                      {t('dashboard.menu.switchLocation')} <ChevronRight size={10} className={`mt-0.5 ${t('common.locale') === 'ar' ? 'rotate-180' : ''}`} />
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           </div>
-        ) : (
+        ) : canSwitchLocation ? (
           <div className="px-2 flex flex-col items-center gap-4 mb-1.5">
 
             <button
@@ -674,7 +679,7 @@ export function DashboardLayout() {
               </div>
             </button>
           </div>
-        )}
+        ) : null}
 
         {/* Navigation */}
         <nav
