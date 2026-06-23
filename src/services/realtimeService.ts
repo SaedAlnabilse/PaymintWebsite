@@ -87,6 +87,7 @@ export type ConnectionStatus = 'connected' | 'disconnected' | 'connecting' | 'er
  * Event callbacks
  */
 type EventCallback<T> = (event: DataChangeEvent<T>) => void;
+type RawEventCallback<T = any> = (payload: T) => void;
 
 /**
  * Real-time Service for Website
@@ -107,6 +108,8 @@ class RealtimeService {
   private connectionStatus: ConnectionStatus = 'disconnected';
   private statusChangeCallbacks: Set<(status: ConnectionStatus) => void> = new Set();
   private refreshCallbacks: Set<(type: string) => void> = new Set();
+  private rawEventCallbacks: Map<string, Set<RawEventCallback>> = new Map();
+  private boundRawEvents: Set<string> = new Set();
 
   private createSyntheticEvent<T>(
     type: DataChangeEventType,
@@ -190,8 +193,25 @@ class RealtimeService {
     }
 
     this.socket = io(`${wsUrl}/realtime`, connectionOptions);
+    this.boundRawEvents.clear();
 
     this.setupEventHandlers();
+  }
+
+  private bindRawEvent(eventName: string): void {
+    if (!this.socket || this.boundRawEvents.has(eventName)) return;
+
+    this.boundRawEvents.add(eventName);
+    this.socket.on(eventName, (payload: any) => {
+      const callbacks = this.rawEventCallbacks.get(eventName);
+      callbacks?.forEach(callback => {
+        try {
+          callback(payload);
+        } catch (error) {
+          console.error(`[Realtime] Error in ${eventName} callback:`, error);
+        }
+      });
+    });
   }
 
   /**
@@ -285,6 +305,10 @@ class RealtimeService {
     this.socket.on('pong', (data) => {
       console.log('[Realtime] Pong received:', data);
     });
+
+    this.rawEventCallbacks.forEach((_callbacks, eventName) => {
+      this.bindRawEvent(eventName);
+    });
   }
 
   /**
@@ -343,6 +367,26 @@ class RealtimeService {
   onRefreshRequest(callback: (type: string) => void): () => void {
     this.refreshCallbacks.add(callback);
     return () => this.refreshCallbacks.delete(callback);
+  }
+
+  /**
+   * Subscribe to direct socket events that are not data:change payloads.
+   */
+  onRaw<T = any>(eventName: string, callback: RawEventCallback<T>): () => void {
+    if (!this.rawEventCallbacks.has(eventName)) {
+      this.rawEventCallbacks.set(eventName, new Set());
+    }
+
+    this.rawEventCallbacks.get(eventName)!.add(callback as RawEventCallback);
+    this.bindRawEvent(eventName);
+
+    return () => {
+      const callbacks = this.rawEventCallbacks.get(eventName);
+      callbacks?.delete(callback as RawEventCallback);
+      if (callbacks?.size === 0) {
+        this.rawEventCallbacks.delete(eventName);
+      }
+    };
   }
 
   /**
@@ -617,6 +661,8 @@ class RealtimeService {
     this.eventCallbacks.clear();
     this.statusChangeCallbacks.clear();
     this.refreshCallbacks.clear();
+    this.rawEventCallbacks.clear();
+    this.boundRawEvents.clear();
   }
 }
 

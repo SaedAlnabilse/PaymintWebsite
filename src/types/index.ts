@@ -146,6 +146,9 @@ export interface SalesSummary {
     name: string;
     value: number;
   }>;
+  currentTaxRate?: number;
+  currentTaxRatePercent?: number;
+  currentTaxRateLabel?: string;
   taxBreakdown?: Array<{
     name: string;
     taxName?: string;
@@ -155,6 +158,8 @@ export interface SalesSummary {
     rate: number;
     rateLabel?: string;
     isChanged?: boolean;
+    isCurrent?: boolean;
+    isPrevious?: boolean;
     taxableAmount: number;
     collected: number;
     taxAmount?: number;

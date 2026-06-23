@@ -64,6 +64,9 @@ export function ResetPasswordPage() {
         token,
         newPassword: data.password,
       });
+      localStorage.removeItem('account');
+      localStorage.removeItem('accessToken');
+      sessionStorage.removeItem('currentEstablishment');
       setIsSuccess(true);
       toast.success(t('auth.resetPassword.success'));
     } catch (err: any) {
@@ -212,4 +215,3 @@ export function ResetPasswordPage() {
     </div>
   );
 }
-

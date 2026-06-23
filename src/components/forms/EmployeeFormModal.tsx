@@ -33,6 +33,9 @@ interface StaffMember {
   backofficeAccess?: boolean;
   backofficePermissions?: string[];
   assignments?: EmployeeAssignment[];
+  isAccountOwner?: boolean;
+  isOwnerAccount?: boolean;
+  isProtected?: boolean;
 }
 
 interface EmployeeAssignment {
@@ -167,6 +170,13 @@ export function EmployeeFormModal({
   const { t } = useTranslation();
   // Get current establishment from context (for dashboard-level pages)
   const { currentEstablishment, account } = useAuth();
+  const isOwnerMode = Boolean(
+    initialData &&
+      (initialData.isAccountOwner ||
+        initialData.isOwnerAccount ||
+        initialData.isProtected ||
+        initialData.role?.toUpperCase() === 'ACCOUNT_OWNER'),
+  );
 
   const POS_PERMISSIONS = useMemo(() => {
     return CANONICAL_POS_PERMISSIONS.map(({ id, label, description }) => ({
@@ -500,6 +510,11 @@ export function EmployeeFormModal({
   );
 
   const fetchCustomRoles = useCallback(async () => {
+    if (isOwnerMode) {
+      setCustomRoles([]);
+      return;
+    }
+
     // In Owner/Brand mode - fetch global roles + establishment roles
     if (establishments && establishments.length > 0) {
       if (selectedEstablishmentIds.length === 0) {
@@ -578,7 +593,7 @@ export function EmployeeFormModal({
     } catch (error) {
       console.error('Error fetching custom roles:', error);
     }
-  }, [currentEstablishment, establishments, initialData?.establishmentIds, selectedEstablishmentIds, t]);
+  }, [currentEstablishment, establishments, initialData?.establishmentIds, isOwnerMode, selectedEstablishmentIds, t]);
 
   // Fetch roles whenever the modal is open and relevant role scope changes
   useEffect(() => {
@@ -633,7 +648,7 @@ export function EmployeeFormModal({
         setUsername(initialData.username || '');
         setEmail(initialData.email || '');
         setPhone(initialData.phone || '');
-        setRole(initialData.role.toUpperCase() === 'ADMIN' ? 'ADMIN' : 'USER');
+        setRole(isOwnerMode ? 'ACCOUNT_OWNER' : initialData.role.toUpperCase() === 'ADMIN' ? 'ADMIN' : 'USER');
         setPassword('');
         setConfirmPassword('');
         const initialBackofficeAccess = initialData.backofficeAccess || false;
@@ -669,7 +684,9 @@ export function EmployeeFormModal({
 
         // Populate establishments from initialData if available
         if (establishments) {
-          if (initialData.establishmentIds && initialData.establishmentIds.length > 0) {
+          if (isOwnerMode) {
+            setSelectedEstablishmentIds(establishments.map((establishment) => establishment.id));
+          } else if (initialData.establishmentIds && initialData.establishmentIds.length > 0) {
             setSelectedEstablishmentIds(initialData.establishmentIds);
           } else if (establishments.length === 1) {
             // If there is only one establishment, pre-select it
@@ -736,6 +753,7 @@ export function EmployeeFormModal({
     sanitizeAssignablePosPermissions,
     builtInRoleOptionId,
     customRoleOptionId,
+    isOwnerMode,
   ]);
 
   const toggleSection = (sectionId: string, e: React.MouseEvent<HTMLButtonElement>) => {
@@ -918,22 +936,23 @@ export function EmployeeFormModal({
     const newErrors: Record<string, string> = {};
     if (!username.trim()) newErrors.username = t('staff.errors.usernameRequired');
     if (usernameAvailabilityError) newErrors.username = usernameAvailabilityError;
-    if (requiresEmail && !email.trim()) {
+    if (!isOwnerMode && requiresEmail && !email.trim()) {
       newErrors.email = t('staff.errors.emailRequired');
     }
 
-    if (role === 'ADMIN' && !canAssignAdminRole) {
+    if (!isOwnerMode && role === 'ADMIN' && !canAssignAdminRole) {
       newErrors.role = t('staff.errors.roleNotAllowed', {
         defaultValue: 'You cannot assign the admin role.',
       });
     }
 
     // Validate role selection - must be ADMIN or have a custom role selected
-    if (role !== 'ADMIN' && !selectedCustomRoleId) {
+    if (!isOwnerMode && role !== 'ADMIN' && !selectedCustomRoleId) {
       newErrors.role = t('staff.errors.roleRequired');
     }
 
     if (
+      !isOwnerMode &&
       selectedCustomRoleId &&
       !assignableCustomRoles.some((customRole) => customRole.id === selectedCustomRoleId)
     ) {
@@ -958,11 +977,11 @@ export function EmployeeFormModal({
     }
 
     // Validate establishment selection if in Owner Mode
-    if (establishments && selectedEstablishmentIds.length === 0) {
+    if (!isOwnerMode && establishments && selectedEstablishmentIds.length === 0) {
       newErrors.establishments = t('staff.errors.selectLocation');
     }
 
-    if (establishments && !sameRoleForAllLocations) {
+    if (!isOwnerMode && establishments && !sameRoleForAllLocations) {
       const missingLocationRole = selectedEstablishmentIds.some(
         (establishmentId) => !getRoleOptionForTarget(establishmentId),
       );
@@ -992,6 +1011,20 @@ export function EmployeeFormModal({
     const nameParts = name.trim().split(/\s+/).filter(Boolean);
     const firstName = nameParts[0] || '';
     const lastName = nameParts.slice(1).join(' ');
+
+    if (isOwnerMode) {
+      const ownerPayload: Partial<StaffMember> & { password?: string } = {
+        firstName,
+        lastName,
+        username: username.trim(),
+      };
+      if (password) {
+        ownerPayload.password = password;
+      }
+      await onSubmit(ownerPayload);
+      return;
+    }
+
     const sanitizedPosPermissions = sanitizeAssignablePosPermissions(
       normalizeAndFilterPermissions(permissions, ALLOWED_POS_PERMISSION_IDS),
     );
@@ -1135,26 +1168,37 @@ export function EmployeeFormModal({
                   <label className="block text-sm font-normal text-gray-900 dark:text-white flex items-center gap-1 tracking-tight">
                     {t('staff.form.accessLabel')} <span className="text-mintcom-red">*</span>
                   </label>
-                  <button
-                    ref={establishmentButtonRef}
-                    type="button"
-                    onClick={() => setActiveDropdown(activeDropdown === 'ESTABLISHMENT' ? null : 'ESTABLISHMENT')}
-                    className={`w-full bg-gray-50 dark:bg-white/5 border ${errors.establishments ? 'border-mintcom-red ring-2 ring-mintcom-red/20' : 'border-gray-200 dark:border-white/10'} rounded-xl px-4 py-3 text-left flex items-center justify-between transition-colors`}
-                  >
-                    <span className={`text-sm font-bold ${selectedEstablishmentIds.length ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'}`}>
-                      {selectedEstablishmentIds.length === 0
-                        ? t('staff.form.selectLocation')
-                        : selectedEstablishmentIds.length === establishments.length
-                          ? t('staff.form.allLocations')
-                          : t('staff.form.locationsCount', { count: selectedEstablishmentIds.length })}
-                    </span>
-                    <ChevronDown size={16} className={`text-gray-400 transition-transform ${activeDropdown === 'ESTABLISHMENT' ? 'rotate-180' : ''}`} />
-                  </button>
+                  {isOwnerMode ? (
+                    <div className="w-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-left flex items-center justify-between">
+                      <span className="text-sm font-bold text-gray-900 dark:text-white">
+                        {t('staff.form.allLocations')}
+                      </span>
+                      <span className="text-[11px] font-black uppercase tracking-wide text-gray-400">
+                        {t('common.locked', { defaultValue: 'Locked' })}
+                      </span>
+                    </div>
+                  ) : (
+                    <button
+                      ref={establishmentButtonRef}
+                      type="button"
+                      onClick={() => setActiveDropdown(activeDropdown === 'ESTABLISHMENT' ? null : 'ESTABLISHMENT')}
+                      className={`w-full bg-gray-50 dark:bg-white/5 border ${errors.establishments ? 'border-mintcom-red ring-2 ring-mintcom-red/20' : 'border-gray-200 dark:border-white/10'} rounded-xl px-4 py-3 text-left flex items-center justify-between transition-colors`}
+                    >
+                      <span className={`text-sm font-bold ${selectedEstablishmentIds.length ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'}`}>
+                        {selectedEstablishmentIds.length === 0
+                          ? t('staff.form.selectLocation')
+                          : selectedEstablishmentIds.length === establishments.length
+                            ? t('staff.form.allLocations')
+                            : t('staff.form.locationsCount', { count: selectedEstablishmentIds.length })}
+                      </span>
+                      <ChevronDown size={16} className={`text-gray-400 transition-transform ${activeDropdown === 'ESTABLISHMENT' ? 'rotate-180' : ''}`} />
+                    </button>
+                  )}
                   {errors.establishments && <p className="mt-1 text-xs font-bold text-mintcom-red">{errors.establishments}</p>}
 
                   {/* Portal Dropdown */}
                   <AnimatePresence>
-                    {activeDropdown === 'ESTABLISHMENT' && (
+                    {!isOwnerMode && activeDropdown === 'ESTABLISHMENT' && (
                       <motion.div
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -1242,12 +1286,21 @@ export function EmployeeFormModal({
               <div className="relative space-y-2">
                 <label className="block text-sm font-normal text-gray-600 dark:text-gray-300 flex items-center justify-between tracking-normal">
                   <span className="flex items-center gap-1">{t('staff.form.roleLabel')} <span className="text-mintcom-red">*</span></span>
-                  {isModifiedFromTemplate() && (
+                  {!isOwnerMode && isModifiedFromTemplate() && (
                     <span className="text-mintcom-red lowercase font-bold tracking-normal">{t('staff.form.modified')}</span>
                   )}
                 </label>
                 {/* Show hint if no establishments selected in owner mode */}
-                {establishments && selectedEstablishmentIds.length === 0 ? (
+                {isOwnerMode ? (
+                  <div className="w-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-left flex items-center justify-between">
+                    <span className="text-sm font-bold text-gray-900 dark:text-white">
+                      {t('common.owner', { defaultValue: 'Owner' })}
+                    </span>
+                    <span className="text-[11px] font-black uppercase tracking-wide text-gray-400">
+                      {t('common.locked', { defaultValue: 'Locked' })}
+                    </span>
+                  </div>
+                ) : establishments && selectedEstablishmentIds.length === 0 ? (
                   <div className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-left">
                     <span className="text-sm font-bold text-gray-400 dark:text-gray-500">{t('staff.form.selectLocation')}</span>
                   </div>
@@ -1525,26 +1578,28 @@ export function EmployeeFormModal({
               </div>
 
               {/* Email - required when the selected role has website/backoffice access */}
-              <div className="space-y-2">
-                <label className="block text-sm font-normal text-gray-900 dark:text-white flex items-center gap-1 tracking-tight">
-                  {t('staff.form.emailLabel')} {requiresEmail ? <span className="text-mintcom-red">*</span> : t('staff.form.emailOptional')}
-                </label>
-                <input maxLength={255}
-                  type="email"
-                  value={email}
-                  onChange={(e) => { setEmail(e.target.value); if (errors.email) setErrors({ ...errors, email: '' }); }}
-                  placeholder={formatInputPlaceholder(t('staff.form.emailPlaceholder'), t('common.locale'))}
-                  className={`w-full bg-gray-50 dark:bg-white/5 border ${errors.email ? 'border-mintcom-red ring-2 ring-mintcom-red/20' : 'border-gray-200 dark:border-white/10'} rounded-xl px-4 py-3 text-sm font-bold text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:border-mintcom-green focus:ring-1 focus:ring-mintcom-green transition-colors`}
-                />
-                {requiresEmail && (
-                  <p className="mt-1 text-xs font-bold text-gray-500 dark:text-gray-400">
-                    {t('staff.form.emailRequiredHint', {
-                      defaultValue: 'This role can access the website and Back Office app, so an email is required to sign in.',
-                    })}
-                  </p>
-                )}
-                {errors.email && <p className="mt-1 text-xs font-bold text-mintcom-red">{errors.email}</p>}
-              </div>
+              {!isOwnerMode && (
+                <div className="space-y-2">
+                  <label className="block text-sm font-normal text-gray-900 dark:text-white flex items-center gap-1 tracking-tight">
+                    {t('staff.form.emailLabel')} {requiresEmail ? <span className="text-mintcom-red">*</span> : t('staff.form.emailOptional')}
+                  </label>
+                  <input maxLength={255}
+                    type="email"
+                    value={email}
+                    onChange={(e) => { setEmail(e.target.value); if (errors.email) setErrors({ ...errors, email: '' }); }}
+                    placeholder={formatInputPlaceholder(t('staff.form.emailPlaceholder'), t('common.locale'))}
+                    className={`w-full bg-gray-50 dark:bg-white/5 border ${errors.email ? 'border-mintcom-red ring-2 ring-mintcom-red/20' : 'border-gray-200 dark:border-white/10'} rounded-xl px-4 py-3 text-sm font-bold text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:border-mintcom-green focus:ring-1 focus:ring-mintcom-green transition-colors`}
+                  />
+                  {requiresEmail && (
+                    <p className="mt-1 text-xs font-bold text-gray-500 dark:text-gray-400">
+                      {t('staff.form.emailRequiredHint', {
+                        defaultValue: 'This role can access the website and Back Office app, so an email is required to sign in.',
+                      })}
+                    </p>
+                  )}
+                  {errors.email && <p className="mt-1 text-xs font-bold text-mintcom-red">{errors.email}</p>}
+                </div>
+              )}
 
               {/* Username */}
               <div className="space-y-2">
@@ -1575,18 +1630,20 @@ export function EmployeeFormModal({
               </div>
 
               {/* Phone */}
-              <div className="space-y-2">
-                <label className="block text-sm font-normal text-gray-900 dark:text-white flex items-center gap-1 tracking-tight">
-                  {t('staff.form.phoneLabel')} {t('staff.form.phoneOptional')}
-                </label>
-                <input maxLength={255}
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder={formatInputPlaceholder(t('staff.form.phonePlaceholder'), t('common.locale'))}
-                  className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:border-mintcom-green focus:ring-1 focus:ring-mintcom-green transition-colors"
-                />
-              </div>
+              {!isOwnerMode && (
+                <div className="space-y-2">
+                  <label className="block text-sm font-normal text-gray-900 dark:text-white flex items-center gap-1 tracking-tight">
+                    {t('staff.form.phoneLabel')} {t('staff.form.phoneOptional')}
+                  </label>
+                  <input maxLength={255}
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder={formatInputPlaceholder(t('staff.form.phonePlaceholder'), t('common.locale'))}
+                    className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:border-mintcom-green focus:ring-1 focus:ring-mintcom-green transition-colors"
+                  />
+                </div>
+              )}
 
               {/* Password wrapper start (to match existing indentation/structure) */}
               <div className="pt-4 border-t border-gray-100 dark:border-white/5 space-y-2">
@@ -1645,7 +1702,7 @@ export function EmployeeFormModal({
 
           {/* Footer */}
           <div className="p-4 sm:p-8 pt-4 border-t border-gray-100 dark:border-white/5 flex items-center gap-3 sm:gap-4 bg-white dark:bg-[#1E293B] sticky bottom-0 pb-safe">
-            {initialData && onDelete && (
+            {initialData && onDelete && !isOwnerMode && (
               <button
                 type="button"
                 onClick={() => onDelete(initialData.id)}
@@ -1681,5 +1738,3 @@ export function EmployeeFormModal({
     document.body
   );
 }
-
-

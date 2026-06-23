@@ -188,6 +188,8 @@ api.interceptors.response.use(
 
     if (
       (error.response?.status === 402 || error.response?.status === 423) &&
+      error.response?.data?.code !== 'DASHBOARD_SESSION_KICKED' &&
+      error.response?.data?.code !== 'DASHBOARD_SESSION_ENDED' &&
       !isLoginPage &&
       !isOwnerBillingPage &&
       !isBillingRequest
