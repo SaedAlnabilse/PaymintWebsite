@@ -72,20 +72,23 @@ export function SelectEstablishmentPage() {
       {/* Header */}
       <div className="p-8 flex justify-between items-center relative z-10">
         <div className="flex items-center gap-4">
-          {/* Owner Portal Button */}
-          <button
-            onClick={() => navigate('/owner')}
-            className="group flex items-center gap-3 px-4 py-3 rounded-2xl bg-gradient-to-r from-amber-500/10 to-yellow-500/10 border border-amber-500/20 hover:border-amber-500/40 hover:from-amber-500/20 hover:to-yellow-500/20 transition-all duration-300"
-          >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-yellow-500 flex items-center justify-center shadow-lg shadow-amber-500/20 transition-transform">
-              <Crown size={18} className="text-white" />
-            </div>
-            <div className="hidden sm:block text-left">
-              <p className="text-xs font-sans font-bold text-gray-400">{t('onboarding.step5.ownerPortal')}</p>
-              <p className="text-sm font-sans font-bold text-gray-900 dark:text-white truncate max-w-[120px]">{account?.firstName} {account?.lastName}</p>
-            </div>
-            <ArrowLeft size={16} className={`text-amber-500 group-hover:${t('common.locale') === 'ar' ? 'translate-x-1' : '-translate-x-1'} transition-transform hidden sm:block`} />
-          </button>
+          {/* Owner Portal Button — owner-only. Employees / secondary admins are
+              not the account owner, so they never see this shortcut. */}
+          {!account?.isSecondaryAdmin && (
+            <button
+              onClick={() => navigate('/owner')}
+              className="group flex items-center gap-3 px-4 py-3 rounded-2xl bg-gradient-to-r from-amber-500/10 to-yellow-500/10 border border-amber-500/20 hover:border-amber-500/40 hover:from-amber-500/20 hover:to-yellow-500/20 transition-all duration-300"
+            >
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-yellow-500 flex items-center justify-center shadow-lg shadow-amber-500/20 transition-transform">
+                <Crown size={18} className="text-white" />
+              </div>
+              <div className="hidden sm:block text-left">
+                <p className="text-xs font-sans font-bold text-gray-400">{t('onboarding.step5.ownerPortal')}</p>
+                <p className="text-sm font-sans font-bold text-gray-900 dark:text-white truncate max-w-[120px]">{account?.firstName} {account?.lastName}</p>
+              </div>
+              <ArrowLeft size={16} className={`text-amber-500 group-hover:${t('common.locale') === 'ar' ? 'translate-x-1' : '-translate-x-1'} transition-transform hidden sm:block`} />
+            </button>
+          )}
 
           {/* Logo */}
           <div className="flex items-center gap-3">
