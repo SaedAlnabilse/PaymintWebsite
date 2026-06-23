@@ -20,26 +20,75 @@ const ratePct = (rate: number) => {
   return rate > 1 ? rate : rate * 100;
 };
 
+type TaxRowType = 'current' | 'changed' | 'previous' | 'standard';
+
 export const TaxesView = React.memo(function TaxesView({ salesData }: TaxesViewProps) {
   const { t } = useTranslation();
   const { currencySymbol } = useCurrency();
-  const taxBreakdown = React.useMemo(() => (
-    (salesData.taxBreakdown || []).map((tax: any) => {
+  const taxBreakdown = React.useMemo(() => {
+    const currentTaxRate = ratePct(
+      toNumber(salesData.currentTaxRate ?? salesData.currentTaxRatePercent),
+    );
+    const isCurrentRate = (rate: number) =>
+      currentTaxRate > 0 && Math.abs(rate - currentTaxRate) < 0.01;
+    const taxTypeSortRank: Record<TaxRowType, number> =
+      currentTaxRate > 0
+        ? { current: 0, changed: 1, previous: 2, standard: 3 }
+        : { current: 0, standard: 0, changed: 1, previous: 2 };
+    const getTaxType = (tax: any, isChanged: boolean, rate: number): TaxRowType => {
+      const explicitType = String(tax?.taxType ?? '').toLowerCase();
+      if (
+        explicitType === 'current' ||
+        explicitType === 'changed' ||
+        explicitType === 'previous' ||
+        explicitType === 'standard'
+      ) {
+        return explicitType;
+      }
+      if (isChanged) return 'changed';
+      if (currentTaxRate > 0) return isCurrentRate(rate) ? 'current' : 'previous';
+      return 'standard';
+    };
+    const getTaxTypeLabel = (taxType: TaxRowType) => {
+      switch (taxType) {
+        case 'current':
+          return t('orders.reports.taxes.currentTaxRate', { defaultValue: 'Current tax rate' });
+        case 'changed':
+          return t('orders.reports.taxes.changedTaxRate', { defaultValue: 'Changed order tax rate' });
+        case 'previous':
+          return t('orders.reports.taxes.previousTaxRate', { defaultValue: 'Previous tax rate' });
+        default:
+          return t('orders.reports.taxes.standardTaxRate', { defaultValue: 'Standard tax rate' });
+      }
+    };
+    const getTaxTypeDescription = (taxType: TaxRowType) => {
+      switch (taxType) {
+        case 'current':
+          return t('orders.reports.taxes.currentTaxDescription', { defaultValue: 'Used the current location tax setting' });
+        case 'changed':
+          return t('orders.reports.taxes.changedTaxDescription', { defaultValue: 'Edited in the order before payment' });
+        case 'previous':
+          return t('orders.reports.taxes.previousTaxDescription', { defaultValue: 'Used a location tax setting before it changed' });
+        default:
+          return t('orders.reports.taxes.standardTaxDescription', { defaultValue: 'Used the location tax setting' });
+      }
+    };
+
+    return (salesData.taxBreakdown || []).map((tax: any) => {
       const rawRate = ratePct(toNumber(tax.rate ?? tax.taxRate));
       const rateLabel = tax.rateLabel || (rawRate > 0 ? `${Number(rawRate.toFixed(2))}%` : '');
       const isChanged = Boolean(tax.isChanged);
-      const baseName = isChanged
-        ? t('orders.reports.taxes.changedTaxRate', { defaultValue: 'Changed tax rate' })
-        : t('orders.reports.taxes.standardTaxRate', { defaultValue: 'Standard tax rate' });
+      const taxType = getTaxType(tax, isChanged, rawRate);
+      const baseName = getTaxTypeLabel(taxType);
       const name = rateLabel ? `${baseName} ${rateLabel}` : (tax.name || tax.taxName || baseName);
-      const description = isChanged
-        ? t('orders.reports.taxes.changedTaxDescription', { defaultValue: 'Edited in POS before payment' })
-        : t('orders.reports.taxes.standardTaxDescription', { defaultValue: 'Used the location tax setting' });
+      const description = getTaxTypeDescription(taxType);
 
       return {
         ...tax,
         name,
         description,
+        taxType,
+        sortRank: taxTypeSortRank[taxType],
         ratePercent: rawRate,
         rateLabel,
         isChanged,
@@ -48,8 +97,8 @@ export const TaxesView = React.memo(function TaxesView({ salesData }: TaxesViewP
         transactions: toNumber(tax.transactions ?? tax.orderCount),
         refundCount: toNumber(tax.refundCount),
       };
-    })
-  ), [salesData.taxBreakdown, t]);
+    }).sort((a, b) => a.sortRank - b.sortRank || Math.abs(b.collected) - Math.abs(a.collected));
+  }, [salesData.currentTaxRate, salesData.currentTaxRatePercent, salesData.taxBreakdown, t]);
 
   const totalTax = toNumber(salesData.taxCollected);
   const taxableFromRows = taxBreakdown.reduce((sum, tax) => sum + tax.taxableAmount, 0);
@@ -61,7 +110,6 @@ export const TaxesView = React.memo(function TaxesView({ salesData }: TaxesViewP
   const averageTaxRate = taxableSales > 0 ? totalTax / taxableSales : 0;
   const hasTaxBreakdown = taxBreakdown.length > 0;
   const changedRows = taxBreakdown.filter((tax) => tax.isChanged);
-  const changedTax = changedRows.reduce((sum, tax) => sum + tax.collected, 0);
   const changedOrders = changedRows.reduce((sum, tax) => sum + tax.transactions, 0);
   const changedRefunds = changedRows.reduce((sum, tax) => sum + tax.refundCount, 0);
   const hasTaxActivity =
@@ -173,19 +221,41 @@ export const TaxesView = React.memo(function TaxesView({ salesData }: TaxesViewP
                   taxBreakdown.map((tax, i: number) => {
                     const contribution = totalTax > 0 ? (tax.collected / totalTax) * 100 : 0;
                     const contributionWidth = Math.max(0, Math.min(100, contribution));
+                    const markerClass = tax.taxType === 'changed'
+                      ? 'bg-indigo-500/10 text-indigo-500'
+                      : tax.taxType === 'previous'
+                        ? 'bg-gray-500/10 text-gray-500'
+                        : 'bg-orange-500/10 text-orange-500';
+                    const markerLetter = tax.taxType === 'changed'
+                      ? 'E'
+                      : tax.taxType === 'previous'
+                        ? 'P'
+                        : 'C';
+                    const badgeClass = tax.taxType === 'changed'
+                      ? 'bg-indigo-500/10 text-indigo-500'
+                      : tax.taxType === 'previous'
+                        ? 'bg-gray-500/10 text-gray-500'
+                        : 'bg-orange-500/10 text-orange-500';
+                    const badgeLabel = tax.taxType === 'current'
+                      ? t('orders.reports.taxes.current', { defaultValue: 'Current' })
+                      : tax.taxType === 'changed'
+                        ? t('orders.reports.taxes.changed', { defaultValue: 'Changed' })
+                        : tax.taxType === 'previous'
+                          ? t('orders.reports.taxes.previous', { defaultValue: 'Previous' })
+                          : '';
                     return (
                       <tr key={i} className="group hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
                         <td className="px-6 py-4 text-start">
                           <div className="flex items-center gap-3">
-                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold ${tax.isChanged ? 'bg-indigo-500/10 text-indigo-500' : 'bg-orange-500/10 text-orange-500'}`}>
-                              {tax.isChanged ? 'C' : 'S'}
+                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold ${markerClass}`}>
+                              {markerLetter}
                             </div>
                             <div className="flex flex-col">
                               <div className="flex items-center gap-2 flex-wrap">
                                 <span className="font-bold text-sm text-gray-900 dark:text-white">{tax.name}</span>
-                                {tax.isChanged && (
-                                  <span className="px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-500 text-[10px] font-black uppercase tracking-wide">
-                                    {t('orders.reports.taxes.changed', { defaultValue: 'Changed' })}
+                                {badgeLabel && (
+                                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wide ${badgeClass}`}>
+                                    {badgeLabel}
                                   </span>
                                 )}
                               </div>
@@ -292,22 +362,6 @@ export const TaxesView = React.memo(function TaxesView({ salesData }: TaxesViewP
             />
             <p className="text-xs font-bold text-gray-400 tracking-widest mt-1">{t('orders.reports.taxes.taxFreeSales')}</p>
             <p className="text-xs text-gray-500 mt-3">{t('orders.reports.taxes.taxFreeSalesDesc', { defaultValue: 'Completed sales where no tax was collected after refunds are netted out.' })}</p>
-          </div>
-
-          <div className={`rounded-2xl border p-5 ${changedOrders > 0 || changedTax !== 0 ? 'border-indigo-500/20 bg-indigo-500/5' : 'border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-white/[0.02]'}`}>
-            <p className="text-xs font-black uppercase tracking-wide text-gray-400 mb-2">
-              {t('orders.reports.taxes.changedTaxCollected', { defaultValue: 'Changed tax collected' })}
-            </p>
-            <StatValue value={changedTax} currency={currencySymbol} className="text-2xl text-indigo-500" />
-            <p className="text-xs text-gray-500 mt-3">
-              {changedOrders > 0 || changedTax !== 0
-                ? t('orders.reports.taxes.changedTaxNote', {
-                    defaultValue: 'Changed tax rows are orders where the POS tax rate was edited before payment.',
-                  })
-                : t('orders.reports.taxes.noChangedTax', {
-                    defaultValue: 'No POS tax-rate edits were recorded in this period.',
-                  })}
-            </p>
           </div>
         </div>
       </div>

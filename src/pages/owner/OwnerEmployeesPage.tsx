@@ -255,12 +255,6 @@ export function OwnerEmployeesPage() {
     };
 
     const openEditEmployee = (emp: Employee) => {
-        if (isOwnerEmployee(emp)) {
-            toast.error(t('owner.staff.ownerEditProtected', {
-                defaultValue: 'Owner profiles can only be edited through Account Management in the Owner Portal',
-            }));
-            return;
-        }
         setEditingEmployee(emp);
         setIsFormModalOpen(true);
     };
@@ -281,7 +275,11 @@ export function OwnerEmployeesPage() {
                 return;
             }
             if (editingEmployee) {
-                await api.put(`/api/accounts/employees/${editingEmployee.id}`, data);
+                if (isOwnerEmployee(editingEmployee)) {
+                    await api.put('/api/accounts/owner-employee', data);
+                } else {
+                    await api.put(`/api/accounts/employees/${editingEmployee.id}`, data);
+                }
                 toast.success(t('common.success'));
             } else {
                 await api.post('/api/accounts/employees', data);
@@ -1045,6 +1043,9 @@ export function OwnerEmployeesPage() {
                     allowedDiscounts: (editingEmployee as any).allowedDiscounts || [],
                     establishmentIds: getActiveAssignments(editingEmployee).map(a => a.establishmentId),
                     assignments: getActiveAssignments(editingEmployee),
+                    isAccountOwner: editingEmployee.isAccountOwner,
+                    isOwnerAccount: editingEmployee.isOwnerAccount,
+                    isProtected: editingEmployee.isProtected,
                 } : null}
             />
 
@@ -1217,7 +1218,6 @@ export function OwnerEmployeesPage() {
         </div>
     );
 }
-
 
 
 

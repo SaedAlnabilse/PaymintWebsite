@@ -520,7 +520,7 @@ export function OnboardingPage() {
 
     setIsLoading(false);
     updateFormData((prev: any) => ({ ...prev, ...data }));
-    goToStep(3);
+    goToStep(isAdditionalLocation ? 4 : 3);
   };
 
   const onStep3Submit = (data: any) => {
@@ -538,20 +538,14 @@ export function OnboardingPage() {
     ) || null;
   };
 
-  const createOnboardingAdminEmployee = async (establishmentId: string) => {
-    await api.post('/api/employees', {
+  const saveOwnerLoginCredentials = async () => {
+    if (isAdditionalLocation) return;
+
+    await api.put('/api/accounts/owner-employee', {
       username: formData.username,
       password: formData.password,
       firstName: formData.firstName,
       lastName: formData.lastName,
-      establishmentId,
-      role: 'ADMIN',
-      permissions: [],
-      allowedDiscounts: []
-    }, {
-      headers: {
-        'X-Establishment-Id': establishmentId
-      }
     });
   };
 
@@ -619,7 +613,7 @@ export function OnboardingPage() {
       if (!response.data?.available) {
           const existingOwnedEstablishment = await findOwnedEstablishmentByLoginId(formData.establishmentLoginId);
           if (existingOwnedEstablishment) {
-            await createOnboardingAdminEmployee(existingOwnedEstablishment.id);
+            await saveOwnerLoginCredentials();
             await finishOnboardingWithEstablishment(existingOwnedEstablishment);
             return;
           }
@@ -721,7 +715,7 @@ export function OnboardingPage() {
         }
       }
 
-      await createOnboardingAdminEmployee(createdEstablishment.id);
+      await saveOwnerLoginCredentials();
       await finishOnboardingWithEstablishment(createdEstablishment);
     } catch (err: any) {
       const errorData = err.response?.data?.message;
@@ -2075,4 +2069,3 @@ export function OnboardingPage() {
     </div>
   );
 }
-

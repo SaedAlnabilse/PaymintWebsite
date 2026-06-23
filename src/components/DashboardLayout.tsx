@@ -5,6 +5,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
+import { useRealtime } from '../hooks/useRealtime';
 import { ThemeToggle } from './ThemeToggle';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { DeletionRestorationBanner } from './DeletionRestorationBanner';
@@ -46,6 +47,18 @@ import MintcomLeafIcon from '../assets/small-logo.svg';
 import { ConfirmModal } from './ConfirmModal';
 import { getBusinessTypeIcon } from '../utils/businessTypeIcons';
 import { RealtimeStatusIndicator } from './RealtimeStatusIndicator';
+import toast from 'react-hot-toast';
+import realtimeService from '../services/realtimeService';
+import {
+  dashboardSessionService,
+  getDashboardClientId,
+  getDashboardSessionErrorMessage,
+  isDashboardSessionConflict,
+  isDashboardSessionEnded,
+  type DashboardSession,
+  type DashboardSessionConflict,
+  type DashboardSessionKickPayload,
+} from '../services/dashboardSessionService';
 
 interface MenuItem {
   path: string;
@@ -86,6 +99,17 @@ export function DashboardLayout() {
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
   const [settingsMenuOpen, setSettingsMenuOpen] = useState(false);
+  const [dashboardSession, setDashboardSession] = useState<DashboardSession | null>(null);
+  const [sessionConflict, setSessionConflict] = useState<DashboardSessionConflict | null>(null);
+  const [isTakingOverDashboard, setIsTakingOverDashboard] = useState(false);
+  const dashboardSessionRef = useRef<DashboardSession | null>(null);
+  const forcedLogoutRef = useRef(false);
+  const takeoverInFlightRef = useRef(false);
+
+  useRealtime({
+    establishmentId: currentEstablishment?.id || null,
+    enabled: Boolean(account && currentEstablishment?.id),
+  });
 
   useEffect(() => {
     document.body.classList.add('dashboard-font-unified');
@@ -111,6 +135,152 @@ export function DashboardLayout() {
 
     return checkPerms(account.permissions, required);
   }, [account?.isSecondaryAdmin, account?.permissions]);
+
+  const forceDashboardLogout = useCallback(async (message?: string) => {
+    if (forcedLogoutRef.current) return;
+    forcedLogoutRef.current = true;
+    toast.error(
+      message ||
+        'You were signed out because this location dashboard was opened somewhere else.',
+      { duration: 5000 },
+    );
+    await logout();
+  }, [logout]);
+
+  const closeDashboardConflict = useCallback(() => {
+    if (takeoverInFlightRef.current) return;
+    setSessionConflict(null);
+    navigate('/select-establishment', { replace: true });
+  }, [navigate]);
+
+  const handleTakeOverDashboard = useCallback(async () => {
+    if (!sessionConflict || !currentEstablishment?.id) return;
+
+    takeoverInFlightRef.current = true;
+    setIsTakingOverDashboard(true);
+    try {
+      await dashboardSessionService.kick(
+        currentEstablishment.id,
+        sessionConflict.activeSession.id,
+      );
+      const result = await dashboardSessionService.enter(currentEstablishment.id);
+      dashboardSessionRef.current = result.session;
+      setDashboardSession(result.session);
+      setSessionConflict(null);
+      toast.success('You now have control of this location dashboard.');
+    } catch (error: any) {
+      if (isDashboardSessionConflict(error)) {
+        setSessionConflict(error.response.data);
+      } else if (isDashboardSessionEnded(error)) {
+        await forceDashboardLogout(getDashboardSessionErrorMessage(error));
+      } else {
+        toast.error(getDashboardSessionErrorMessage(error));
+      }
+    } finally {
+      takeoverInFlightRef.current = false;
+      setIsTakingOverDashboard(false);
+    }
+  }, [currentEstablishment?.id, forceDashboardLogout, sessionConflict]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const establishmentId = currentEstablishment?.id;
+
+    setDashboardSession(null);
+    setSessionConflict(null);
+    dashboardSessionRef.current = null;
+
+    if (!account || !establishmentId) {
+      return;
+    }
+
+    const enterDashboard = async () => {
+      try {
+        const result = await dashboardSessionService.enter(establishmentId);
+        if (cancelled) return;
+        dashboardSessionRef.current = result.session;
+        setDashboardSession(result.session);
+      } catch (error: any) {
+        if (cancelled) return;
+        if (isDashboardSessionConflict(error)) {
+          setSessionConflict(error.response.data);
+          return;
+        }
+        if (isDashboardSessionEnded(error)) {
+          await forceDashboardLogout(getDashboardSessionErrorMessage(error));
+          return;
+        }
+        toast.error(getDashboardSessionErrorMessage(error));
+        navigate('/select-establishment', { replace: true });
+      }
+    };
+
+    enterDashboard();
+
+    return () => {
+      cancelled = true;
+      const sessionId = dashboardSessionRef.current?.id;
+      dashboardSessionRef.current = null;
+      if (sessionId) {
+        dashboardSessionService.leave(sessionId).catch(() => undefined);
+      }
+    };
+  }, [account, currentEstablishment?.id, forceDashboardLogout, navigate]);
+
+  useEffect(() => {
+    const sessionId = dashboardSession?.id;
+    if (!sessionId) return;
+
+    const intervalId = window.setInterval(async () => {
+      try {
+        const result = await dashboardSessionService.heartbeat(sessionId);
+        dashboardSessionRef.current = result.session;
+        setDashboardSession(result.session);
+      } catch (error: any) {
+        if (isDashboardSessionEnded(error)) {
+          await forceDashboardLogout(getDashboardSessionErrorMessage(error));
+        }
+      }
+    }, 25_000);
+
+    return () => window.clearInterval(intervalId);
+  }, [dashboardSession?.id, forceDashboardLogout]);
+
+  useEffect(() => {
+    const unsubscribe = realtimeService.onRaw<DashboardSessionKickPayload>(
+      'dashboard-session:kicked',
+      payload => {
+        const activeSession = dashboardSessionRef.current;
+        if (!activeSession) return;
+
+        if (
+          payload.sessionId === activeSession.id ||
+          payload.clientId === getDashboardClientId()
+        ) {
+          void forceDashboardLogout(payload.message);
+        }
+      },
+    );
+
+    return unsubscribe;
+  }, [forceDashboardLogout]);
+
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      const activeSession = dashboardSessionRef.current;
+      if (!activeSession) return;
+
+      const body = JSON.stringify({
+        sessionId: activeSession.id,
+        clientId: getDashboardClientId(),
+      });
+      const payload = new Blob([body], { type: 'application/json' });
+      navigator.sendBeacon?.('/api/dashboard-sessions/leave', payload);
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, []);
 
   // Filter menu based on permissions
   const filteredMenu = useMemo(() => {
@@ -346,6 +516,15 @@ export function DashboardLayout() {
   const toggleGroup = (label: string) => {
     setExpandedGroup(prev => prev === label ? null : label);
   };
+
+  const isDashboardContentLocked = Boolean(
+    currentEstablishment?.id && (!dashboardSession || sessionConflict),
+  );
+  const conflictActorName =
+    sessionConflict?.activeSession?.actorName || t('common.someone', { defaultValue: 'Someone' });
+  const conflictMessage = sessionConflict
+    ? `${conflictActorName} is currently inside ${currentEstablishment?.name || 'this location'} dashboard.`
+    : '';
 
   return (
     <div
@@ -830,7 +1009,29 @@ export function DashboardLayout() {
         <main className="flex-1 relative bg-gray-50 dark:bg-mintcom-dark overflow-hidden">
           <div ref={mainContentRef} className="h-full overflow-y-auto relative z-10 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-white/10">
             <div className="p-4 md:p-6 lg:p-8 pb-24 max-w-[1920px] mx-auto">
-              <Outlet context={{ sidebarOpen }} />
+              {isDashboardContentLocked ? (
+                <div className="min-h-[60vh] flex items-center justify-center">
+                  <div className="w-full max-w-sm text-center">
+                    <div className="mx-auto mb-5 h-12 w-12 rounded-2xl bg-mintcom-green/10 border border-mintcom-green/20 flex items-center justify-center">
+                      <Shield size={24} className="text-mintcom-green" />
+                    </div>
+                    <h2 className="text-lg font-black text-gray-900 dark:text-white">
+                      {sessionConflict
+                        ? t('dashboard.session.inUseTitle', { defaultValue: 'Dashboard in use' })
+                        : t('dashboard.session.securingTitle', { defaultValue: 'Securing dashboard' })}
+                    </h2>
+                    <p className="mt-2 text-sm font-bold text-gray-500 dark:text-gray-400 leading-relaxed">
+                      {sessionConflict
+                        ? conflictMessage
+                        : t('dashboard.session.securingMessage', {
+                            defaultValue: 'Checking this location before opening it.',
+                          })}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <Outlet context={{ sidebarOpen }} />
+              )}
             </div>
           </div>
         </main>
@@ -944,6 +1145,36 @@ export function DashboardLayout() {
       />
 
       <ConfirmModal
+        isOpen={!!sessionConflict}
+        onClose={sessionConflict?.canKick ? closeDashboardConflict : () => void forceDashboardLogout(conflictMessage)}
+        onConfirm={
+          sessionConflict?.canKick
+            ? handleTakeOverDashboard
+            : () => void forceDashboardLogout(conflictMessage)
+        }
+        title={
+          sessionConflict?.canKick
+            ? t('dashboard.session.ownerConflictTitle', { defaultValue: 'Someone is inside' })
+            : t('dashboard.session.inUseTitle', { defaultValue: 'Dashboard in use' })
+        }
+        message={
+          sessionConflict?.canKick
+            ? `${conflictMessage} You can kick them out and continue here.`
+            : `${conflictMessage} Please log out here or ask them to exit first.`
+        }
+        confirmText={
+          sessionConflict?.canKick
+            ? isTakingOverDashboard
+              ? t('common.loading', { defaultValue: 'Working...' })
+              : t('dashboard.session.kickAndEnter', { defaultValue: 'Kick out and enter' })
+            : t('dashboard.menu.logout')
+        }
+        cancelText={t('common.cancel')}
+        type={sessionConflict?.canKick ? 'warning' : 'danger'}
+        showCancel={!!sessionConflict?.canKick}
+      />
+
+      <ConfirmModal
         isOpen={isLogoutModalOpen}
         onClose={() => setIsLogoutModalOpen(false)}
         onConfirm={confirmLogout}
@@ -962,4 +1193,3 @@ export function DashboardLayout() {
     </div>
   );
 }
-

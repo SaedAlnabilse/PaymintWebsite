@@ -61,11 +61,43 @@ interface AppleAuthData {
 interface AuthResult {
   success: boolean;
   error?: string;
+  code?: string;
   message?: string;
   isSecondaryAdmin?: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+const OWNER_SESSION_ACTIVE_CODE = 'OWNER_SESSION_ACTIVE';
+const OWNER_SESSION_ACTIVE_MESSAGE =
+  'Another device is already logged in to this owner account. Please log out from that device to continue here, or reset your password to sign out everywhere.';
+
+const getAuthErrorCode = (error: any): string | undefined => {
+  const responseData = error?.response?.data;
+  return typeof responseData?.code === 'string' ? responseData.code : undefined;
+};
+
+const getAuthErrorMessage = (error: any, fallback: string): string => {
+  const responseData = error?.response?.data;
+
+  if (responseData?.code === OWNER_SESSION_ACTIVE_CODE) {
+    return OWNER_SESSION_ACTIVE_MESSAGE;
+  }
+
+  if (typeof responseData?.message === 'string') {
+    return responseData.message;
+  }
+
+  if (Array.isArray(responseData?.message)) {
+    return responseData.message.join('\n');
+  }
+
+  if (typeof responseData?.error === 'string') {
+    return responseData.error;
+  }
+
+  return fallback;
+};
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [account, setAccount] = useState<Account | null>(null);
@@ -241,7 +273,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       return {
         success: false,
-        error: error.response?.data?.message || 'Invalid email or password',
+        code: getAuthErrorCode(error),
+        error: getAuthErrorMessage(error, 'Invalid email or password'),
       };
     }
   };
@@ -296,7 +329,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoggingIn(false);
       return {
         success: false,
-        error: error.response?.data?.message || 'Google authentication failed. Please try again.',
+        code: getAuthErrorCode(error),
+        error: getAuthErrorMessage(error, 'Google authentication failed. Please try again.'),
       };
     }
   };
@@ -359,7 +393,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoggingIn(false);
       return {
         success: false,
-        error: error.response?.data?.message || 'Apple authentication failed. Please try again.',
+        code: getAuthErrorCode(error),
+        error: getAuthErrorMessage(error, 'Apple authentication failed. Please try again.'),
       };
     }
   };
@@ -440,6 +475,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const resetPassword = async (token: string, newPassword: string): Promise<AuthResult> => {
     try {
       const response = await api.post('/api/accounts/reset-password', { token, newPassword });
+      localStorage.removeItem('account');
+      localStorage.removeItem('accessToken');
+      sessionStorage.removeItem('currentEstablishment');
       return {
         success: response.data.success,
         message: response.data.message,
