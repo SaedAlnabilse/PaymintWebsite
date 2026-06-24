@@ -140,9 +140,13 @@
   "attributes": {
     "confirm": {
       "deleteGroupMessage": "Are you sure you want to archive add-on group \"{{name}}\"? This will archive its options as well, remove it from POS add-on selection, and it can only be reactivated from Location Portal website (back-office).",
+      "deleteGroupMessageHard": "Delete add-on group \"{{name}}\"? It hasn't been used in any sales, so it and its options will be permanently removed.",
       "deleteGroupTitle": "Archive Add-On Group",
+      "deleteGroupTitleHard": "Delete Add-On Group",
       "deleteOptionMessage": "Are you sure you want to archive add-on option \"{{name}}\"? It will be removed from POS add-on selection and can only be reactivated from Location Portal website (back-office).",
+      "deleteOptionMessageHard": "Delete add-on option \"{{name}}\"? It hasn't been used in any sales, so it will be permanently removed.",
       "deleteOptionTitle": "Archive Option",
+      "deleteOptionTitleHard": "Delete Option",
       "reactivateGroupMessage": "Reactivate \"{{name}}\" and restore the options archived with this group? Historical order option snapshots stay unchanged.",
       "reactivateOptionMessage": "Reactivate \"{{name}}\" so it can be selected in new sales again? Historical order option snapshots stay unchanged."
     },
@@ -210,12 +214,16 @@
       "singleChoice": "Single Choice"
     },
     "messages": {
+      "groupArchived": "Group archived",
       "groupCreated": "Group created",
       "groupDeleted": "Group archived",
+      "groupHardDeleted": "Group deleted",
       "groupReactivated": "Add-on group reactivated",
       "groupUpdated": "Group updated",
+      "optionArchived": "Option archived",
       "optionCreated": "Option created",
       "optionDeleted": "Option archived",
+      "optionHardDeleted": "Option deleted",
       "optionReactivated": "Add-on option reactivated",
       "optionUpdated": "Option updated"
     },
@@ -1624,6 +1632,8 @@
     "confirm": {
       "deleteMessage": "Deactivate \"{{name}}\"? It will no longer be available for new sales, while previous orders and reports keep the original discount snapshot.",
       "deleteTitle": "Deactivate Discount",
+      "hardDeleteMessage": "Delete \"{{name}}\"? It hasn't been used in any orders, so it will be permanently removed.",
+      "hardDeleteTitle": "Delete Discount",
       "reactivateMessage": "Reactivate \"{{name}}\" so it can be used in new sales again? Historical discounts on old receipts stay unchanged."
     },
     "editDiscount": "Edit Discount",
@@ -4288,7 +4298,9 @@
     "all": "All Categories",
     "delete": {
       "message": "Are you sure you want to archive product \"{{name}}\"? The product will remain visible here briefly as inactive, then move to the end after you leave and return. Historical orders, receipts, and reports keep the original item details.",
-      "title": "Archive Product"
+      "messageHard": "Delete product \"{{name}}\"? It hasn't been used in any sales, so it will be permanently removed.",
+      "title": "Archive Product",
+      "titleHard": "Delete Product"
     },
     "editProduct": "Edit Product",
     "form": {
@@ -4361,12 +4373,16 @@
       "addonCreated": "Add-on created successfully",
       "addonFailed": "Failed to create add-on",
       "aiOverloaded": "AI services are currently overloaded. Please try again in a few seconds.",
+      "archived": "Product archived",
       "created": "Product created",
       "createHere": "Create here",
       "deleted": "Product archived",
       "deleteFailed": "Failed to archive product",
       "deleteMessage": "Are you sure you want to archive product \"{{name}}\"? The product will remain visible here briefly as inactive, then move to the end after you leave and return. Historical orders, receipts, and reports keep the original item details.",
       "deleteTitle": "Archive Product",
+      "hardDeleted": "Product deleted",
+      "hardDeleteMessage": "Delete product \"{{name}}\"? It hasn't been used in any sales, so it will be permanently removed.",
+      "hardDeleteTitle": "Delete Product",
       "discardConfirm": "Continue & discard",
       "discardMessage": "Navigating to the add-ons section will discard your current product details.",
       "discardTitle": "Discard Unsaved Product?",
