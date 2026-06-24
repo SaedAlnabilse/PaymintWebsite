@@ -179,11 +179,34 @@ export function ProductFormModal({
   const [isCategorySubmitting, setIsCategorySubmitting] = useState(false);
   const [categoryError, setCategoryError] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  // True when removing this product permanently deletes it (unused) vs.
+  // archives it (has sales/report history). Drives Delete-vs-Archive copy.
+  const [willHardDelete, setWillHardDelete] = useState(false);
   const [showReactivateConfirm, setShowReactivateConfirm] = useState(false);
   const isInitialLoad = useRef(true);
   const hydratedFormKeyRef = useRef<string | null>(null);
 
   useScrollLock(isOpen);
+
+  // When editing an active product, resolve whether removing it will permanently
+  // delete it (unused) or archive it (has sales/report history) so the delete
+  // button and confirm dialog show the right wording.
+  useEffect(() => {
+    if (!isOpen || !initialData?.id || isReactivationMode || !onDelete) {
+      setWillHardDelete(false);
+      return;
+    }
+    let active = true;
+    api
+      .get(`/api/items/${initialData.id}/deletion-info`)
+      .then(({ data }) => {
+        if (active) setWillHardDelete(Boolean(data?.willHardDelete));
+      })
+      .catch(() => {
+        if (active) setWillHardDelete(false);
+      });
+    return () => { active = false; };
+  }, [isOpen, initialData?.id, isReactivationMode, onDelete]);
 
   useEffect(() => {
     setLocalCategories((currentCategories) => mergeCategoriesById(currentCategories, categories));
@@ -1721,7 +1744,7 @@ export function ProductFormModal({
                       className="flex-1 h-12 sm:h-14 border border-mintcom-red/20 text-mintcom-red font-bold text-sm rounded-xl hover:bg-mintcom-red/5 transition-all flex items-center justify-center gap-2 shadow-sm"
                     >
                       <Trash2 size={18} />
-                      <span>{t('common.archive')}</span>
+                      <span>{willHardDelete ? t('common.delete') : t('common.archive')}</span>
                     </button>
                   )}
 
@@ -1794,9 +1817,9 @@ export function ProductFormModal({
               onDelete(initialData.id!);
               onClose();
             }}
-            title={t('products.messages.deleteTitle')}
-            message={t('products.messages.deleteMessage', { name: initialData.name })}
-            confirmText={t('common.archive')}
+            title={willHardDelete ? t('products.messages.hardDeleteTitle') : t('products.messages.deleteTitle')}
+            message={willHardDelete ? t('products.messages.hardDeleteMessage', { name: initialData.name }) : t('products.messages.deleteMessage', { name: initialData.name })}
+            confirmText={willHardDelete ? t('common.delete') : t('common.archive')}
             type="danger"
           />
         )}

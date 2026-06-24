@@ -293,13 +293,25 @@ export function ProductsPage() {
     };
 
     const handleDelete = async (id: string, name: string) => {
+        // Ask the server whether removing this product permanently deletes it
+        // (unused) or archives it (has sales/report history), so the dialog and
+        // toast show the right wording. Fall back to archive wording on failure
+        // — the server still enforces the real rule.
+        let willHardDelete = false;
+        try {
+            const { data } = await api.get(`/api/items/${id}/deletion-info`);
+            willHardDelete = Boolean(data?.willHardDelete);
+        } catch {
+            willHardDelete = false;
+        }
+
         setConfirmConfig({
             isOpen: true,
-            title: t('products.delete.title'),
-            message: t('products.delete.message', { name }),
+            title: willHardDelete ? t('products.delete.titleHard') : t('products.delete.title'),
+            message: willHardDelete ? t('products.delete.messageHard', { name }) : t('products.delete.message', { name }),
             productName: name,
             type: 'danger',
-            confirmText: t('common.archive'),
+            confirmText: willHardDelete ? t('common.delete') : t('common.archive'),
             onConfirm: async () => {
                 try {
                     const response = await api.delete(`/api/items/${id}`);
@@ -334,7 +346,7 @@ export function ProductsPage() {
                         });
                         setProducts((currentProducts) => currentProducts.filter((product) => product.id !== id));
                     }
-                    toast.success(t('products.messages.deleted'));
+                    toast.success(shouldKeepArchived ? t('products.messages.archived') : t('products.messages.hardDeleted'));
                     setShowModal(false); // Close modal if open
                 } catch (err) {
                     console.error('Archive error', err);

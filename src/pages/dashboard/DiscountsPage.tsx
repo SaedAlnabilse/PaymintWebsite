@@ -251,12 +251,23 @@ export function DiscountsPage() {
   const handleDelete = async (discountId: string, name: string) => {
     setShowModal(false);
     setEditingDiscount(null);
+    // Resolve whether removing this discount permanently deletes it (unused) or
+    // deactivates it (used by historical orders) so the dialog matches.
+    let willHardDelete = false;
+    try {
+      const { data } = await api.get(`/app-settings/discounts/${discountId}/delete-impact`);
+      willHardDelete = Boolean(data?.hardDeleted);
+    } catch {
+      willHardDelete = false;
+    }
     setConfirmConfig({
       isOpen: true,
-      title: t('discounts.confirm.deleteTitle'),
-      message: t('discounts.confirm.deleteMessage', { name }),
+      title: willHardDelete ? t('discounts.confirm.hardDeleteTitle') : t('discounts.confirm.deleteTitle'),
+      message: willHardDelete
+        ? t('discounts.confirm.hardDeleteMessage', { name })
+        : t('discounts.confirm.deleteMessage', { name }),
       type: 'danger',
-      confirmText: t('common.deactivate'),
+      confirmText: willHardDelete ? t('common.delete') : t('common.deactivate'),
       onConfirm: async () => {
         try {
           await api.delete(`/app-settings/discounts/${discountId}`);

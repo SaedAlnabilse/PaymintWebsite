@@ -436,12 +436,23 @@ export function AddonsPage() {
     }
   };
 
-  const handleDeleteAttribute = (attribute: Attribute) => {
+  const handleDeleteAttribute = async (attribute: Attribute) => {
+    // Resolve whether removing this group permanently deletes it (unused) or
+    // archives it (has sales/report history) so the dialog/toast match.
+    let willHardDelete = false;
+    try {
+      const { data } = await api.get(`/api/attributes/${attribute.id}/delete-impact`);
+      willHardDelete = Boolean(data?.hardDeleted);
+    } catch {
+      willHardDelete = false;
+    }
     setConfirmConfig({
       isOpen: true,
-      title: t('attributes.confirm.deleteGroupTitle'),
-      message: t('attributes.confirm.deleteGroupMessage', { name: attribute.name }),
-      confirmText: t('common.archive'),
+      title: willHardDelete ? t('attributes.confirm.deleteGroupTitleHard') : t('attributes.confirm.deleteGroupTitle'),
+      message: willHardDelete
+        ? t('attributes.confirm.deleteGroupMessageHard', { name: attribute.name })
+        : t('attributes.confirm.deleteGroupMessage', { name: attribute.name }),
+      confirmText: willHardDelete ? t('common.delete') : t('common.archive'),
       type: 'danger',
       onConfirm: async () => {
         try {
@@ -486,7 +497,7 @@ export function AddonsPage() {
               currentAttributes.filter((currentAttribute) => currentAttribute.id !== attribute.id),
             );
           }
-          toast.success(t('attributes.messages.groupDeleted'));
+          toast.success(shouldKeepArchived ? t('attributes.messages.groupArchived') : t('attributes.messages.groupHardDeleted'));
         } catch {
           toast.error(t('attributes.errors.deleteFailed'));
         }
@@ -495,12 +506,23 @@ export function AddonsPage() {
     });
   };
 
-  const handleDeleteSubAttribute = (sub: SubAttribute) => {
+  const handleDeleteSubAttribute = async (sub: SubAttribute) => {
+    // Resolve whether removing this add-on permanently deletes it (unused) or
+    // archives it (has sales/report history) so the dialog/toast match.
+    let willHardDelete = false;
+    try {
+      const { data } = await api.get(`/api/attributes/sub-attributes/${sub.id}/delete-impact`);
+      willHardDelete = Boolean(data?.hardDeleted);
+    } catch {
+      willHardDelete = false;
+    }
     setConfirmConfig({
       isOpen: true,
-      title: t('attributes.confirm.deleteOptionTitle'),
-      message: t('attributes.confirm.deleteOptionMessage', { name: sub.name }),
-      confirmText: t('common.archive'),
+      title: willHardDelete ? t('attributes.confirm.deleteOptionTitleHard') : t('attributes.confirm.deleteOptionTitle'),
+      message: willHardDelete
+        ? t('attributes.confirm.deleteOptionMessageHard', { name: sub.name })
+        : t('attributes.confirm.deleteOptionMessage', { name: sub.name }),
+      confirmText: willHardDelete ? t('common.delete') : t('common.archive'),
       type: 'danger',
       onConfirm: async () => {
         try {
@@ -533,7 +555,7 @@ export function AddonsPage() {
                 : (attribute.subAttributes || []).filter((currentSubAttribute) => currentSubAttribute.id !== sub.id),
             })),
           );
-          toast.success(t('attributes.messages.optionDeleted'));
+          toast.success(shouldKeepArchived ? t('attributes.messages.optionArchived') : t('attributes.messages.optionHardDeleted'));
         } catch {
           toast.error(t('attributes.errors.deleteFailed'));
         }
