@@ -112,7 +112,7 @@
     },
     "editAdmin": "Edit Admin",
     "form": {
-      "email": "Email / Login ID",
+      "email": "Email/Login ID",
       "emailPlaceholder": "email@enterprise.com",
       "firstName": "First name",
       "lastName": "Last name",
@@ -1414,6 +1414,7 @@
       "inUseTitle": "Dashboard in use",
       "kickAndEnter": "Kick out and enter",
       "ownerConflictTitle": "Someone is inside",
+      "ownerDeviceConflictTitle": "Another device is inside",
       "securingMessage": "Checking this location before opening it.",
       "securingTitle": "Securing dashboard"
     },
@@ -1553,9 +1554,11 @@
       "completedOrders": "Completed orders",
       "discounts": "Discounts",
       "excludingTax": "Excluding Tax",
+      "excludingTaxServiceCharge": "Excludes tax and service charge",
       "expected": "Expected",
       "grossSales": "Gross Sales",
       "includingTax": "Including Tax",
+      "includingTaxServiceCharge": "Includes tax and service charge",
       "last24h": "Last 24h",
       "live": "LIVE",
       "netSales": "Total Sales",
@@ -2987,8 +2990,8 @@
       "locationName": "Location Name",
       "locationNamePlaceholder": "e.g. The Coffee House",
       "locationNameTip": "The name of your business.",
-      "menu": "Products, categories and addons",
-      "menuDesc": "Copy menu items, categories and their addons",
+      "menu": "Products, categories and add-ons",
+      "menuDesc": "Copy menu items, categories and their add-ons",
       "paymentMethods": "Payment Methods",
       "paymentMethodsDesc": "Card types and custom payment options",
       "quickSetup": "Quick Setup",
@@ -3176,7 +3179,7 @@
       "serviceCharge": "Service Charge",
       "serviceChargeAll": "All orders",
       "serviceChargeApplied": "Applied",
-      "serviceChargeChanged": "Changed / removed",
+      "serviceChargeChanged": "Changed/removed",
       "serviceChargeNotApplied": "Not applied"
     },
     "kpi": {
@@ -3328,7 +3331,7 @@
       "receipts": {
         "heldOrders": "Held Orders",
         "receiptsCount": "Receipts Count",
-        "refundsHeld": "Refunds / Held",
+        "refundsHeld": "Refunds/Held",
         "revenueSelected": "Revenue (Selected Period)",
         "searchReceiptPlaceholder": "Search by receipt #..."
       },
@@ -4289,7 +4292,7 @@
     },
     "editProduct": "Edit Product",
     "form": {
-      "addonsLabel": "Add-Ons",
+      "addonsLabel": "Add-ons",
       "addonsTip": "Extras.",
       "categoryLabel": "Category",
       "categoryTip": "Group.",
@@ -4827,7 +4830,7 @@
       "passwordResetNote": "Password reset can only be done from the Owner Portal",
       "selectDay": "Select a day to edit",
       "setServiceTimes": "Set service times",
-      "taxId": "Tax ID / TRN",
+      "taxId": "Tax ID/TRN",
       "taxIdDisclaimer": "This may be legally required in your country. Check your local tax rules and add it if needed.",
       "taxIdPlaceholder": "e.g., 100123456700003 or GB123456789"
     },
@@ -5259,7 +5262,7 @@
       "ft7_excerpt": "Manage establishments, brands, employees, roles, billing, and brand teams.",
       "ft8": "Payment Methods Setup",
       "ft8_excerpt": "Configure accepted payment methods including cards and digital wallets.",
-      "ft9": "Add-Ons & Modifiers Guide",
+      "ft9": "Add-ons & Modifiers Guide",
       "ft9_excerpt": "Create product add-ons and modifiers for customizable orders.",
       "gs1": {
         "h1": "Getting Started with Mintcom",

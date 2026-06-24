@@ -14,7 +14,6 @@ import {
 import { useTheme } from '../../../../context/ThemeContext';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { AnalyticsEmptyState } from '../AnalyticsEmptyState';
 import { StatValue } from '../../../../components/ui/StatValue';
 
 interface PeakHoursViewProps {
@@ -93,27 +92,13 @@ export const PeakHoursView = React.memo(function PeakHoursView({ peakHours }: Pe
   }, [peakHours, locale]);
 
   const activeRows = rows.filter((row) => row.count > 0 || Math.abs(row.total) > 0.005);
-  const hasData = activeRows.length > 0;
-
-  if (!hasData) {
-    return (
-      <div className="p-6 bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.03] shadow-sm">
-        <AnalyticsEmptyState
-          icon={Clock}
-          title={t('orders.reports.peakHours.noData')}
-          description={t('orders.reports.peakHours.noDataDesc')}
-          className="min-h-[360px] rounded-2xl bg-gray-50/50 dark:bg-white/[0.02] border border-dashed border-gray-200 dark:border-white/[0.05]"
-        />
-      </div>
-    );
-  }
 
   const peak = activeRows.reduce(
     (best, row) =>
       row.count > best.count || (row.count === best.count && row.total > best.total)
         ? row
         : best,
-    activeRows[0],
+    activeRows[0] ?? rows[0],
   );
 
   const quietest = activeRows.reduce(
@@ -121,7 +106,7 @@ export const PeakHoursView = React.memo(function PeakHoursView({ peakHours }: Pe
       row.count < worst.count || (row.count === worst.count && row.total < worst.total)
         ? row
         : worst,
-    activeRows[0],
+    activeRows[0] ?? peak,
   );
 
   const totalOrders = activeRows.reduce((sum, row) => sum + row.count, 0);

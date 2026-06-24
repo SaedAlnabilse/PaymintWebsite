@@ -110,7 +110,7 @@ export const AppStrings = {
       ADDRESS: "Address",
       CITY: "City",
       COUNTRY: "Country",
-      ZIP: "Zip / Postal Code",
+      ZIP: "Zip/Postal Code",
       DESCRIPTION: "Description",
       PRICE: "Price",
       COST: "Cost",

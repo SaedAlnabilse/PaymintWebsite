@@ -1315,7 +1315,7 @@ export function OrdersPage() {
                 options={[
                   { label: t('orders.filters.serviceChargeApplied', { defaultValue: 'Applied' }), value: 'applied' },
                   { label: t('orders.filters.serviceChargeNotApplied', { defaultValue: 'Not applied' }), value: 'not_applied' },
-                  { label: t('orders.filters.serviceChargeChanged', { defaultValue: 'Changed / removed' }), value: 'changed' },
+                  { label: t('orders.filters.serviceChargeChanged', { defaultValue: 'Changed/removed' }), value: 'changed' },
                 ]}
                 showAllOption={true}
                 allOptionLabel={t('orders.filters.serviceChargeAll', { defaultValue: 'All orders' })}
@@ -1955,4 +1955,3 @@ export function OrdersPage() {
     </div>
   );
 }
-

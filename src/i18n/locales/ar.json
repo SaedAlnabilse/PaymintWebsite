@@ -112,7 +112,7 @@
     },
     "editAdmin": "تعديل مسؤول",
     "form": {
-      "email": "البريد الإلكتروني / معرف الدخول",
+      "email": "البريد الإلكتروني/معرف الدخول",
       "emailPlaceholder": "email@enterprise.com",
       "firstName": "الاسم الأول",
       "lastName": "اسم العائلة",
@@ -222,7 +222,7 @@
     "newAttribute": "إضافة جديدة",
     "newGroup": "مجموعة جديدة",
     "stats": {
-      "groups": "السمات / المجموعات",
+      "groups": "السمات/المجموعات",
       "options": "خيارات الإضافات",
       "sales": "المبيعات من الإضافات المدفوعة",
       "withPrice": "بسعر"
@@ -1414,6 +1414,7 @@
       "inUseTitle": "لوحة التحكم قيد الاستخدام",
       "kickAndEnter": "إخراجه والدخول",
       "ownerConflictTitle": "يوجد شخص داخل اللوحة",
+      "ownerDeviceConflictTitle": "يوجد جهاز آخر داخل اللوحة",
       "securingMessage": "يتم التحقق من هذا الموقع قبل فتحه.",
       "securingTitle": "تأمين لوحة التحكم"
     },
@@ -1553,9 +1554,11 @@
       "completedOrders": "الطلبات المكتملة",
       "discounts": "الخصومات",
       "excludingTax": "بدون ضريبة",
+      "excludingTaxServiceCharge": "لا يشمل الضريبة ورسوم الخدمة",
       "expected": "المتوقع",
       "grossSales": "إجمالي المبيعات",
       "includingTax": "شامل الضريبة",
+      "includingTaxServiceCharge": "يشمل الضريبة ورسوم الخدمة",
       "last24h": "آخر 24 ساعة",
       "live": "مباشر",
       "netSales": "صافي المبيعات",
@@ -3017,7 +3020,7 @@
       "expiry": "تاريخ الانتهاء",
       "freeDays": "30 يومًا مجانًا",
       "monthly": "شهرياً",
-      "priceMonth": "20 USD / شهرياً",
+      "priceMonth": "20 USD/شهرياً",
       "startTrialButton": "ابدأ التجربة المجانية",
       "totalDue": "الإجمالي المستحق اليوم",
       "trialDesc": "لن يتم تحصيل أي رسوم منك اليوم. يمكنك الإلغاء في أي وقت قبل انتهاء الفترة التجريبية.",
@@ -3176,7 +3179,7 @@
       "serviceCharge": "رسوم الخدمة",
       "serviceChargeAll": "كل الطلبات",
       "serviceChargeApplied": "مطبقة",
-      "serviceChargeChanged": "معدلة / محذوفة",
+      "serviceChargeChanged": "معدلة/محذوفة",
       "serviceChargeNotApplied": "غير مطبقة"
     },
     "kpi": {
@@ -3328,7 +3331,7 @@
       "receipts": {
         "heldOrders": "الطلبات المعلقة",
         "receiptsCount": "عدد الإيصالات",
-        "refundsHeld": "المرتجعات / المعلقة",
+        "refundsHeld": "المرتجعات/المعلقة",
         "revenueSelected": "الإيرادات (للفترة المختارة)",
         "searchReceiptPlaceholder": "بحث برقم الإيصال..."
       },

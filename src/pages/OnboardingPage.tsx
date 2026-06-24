@@ -1496,7 +1496,7 @@ export function OnboardingPage() {
                               form4.clearErrors('expiryDate');
                             }}
                             maxLength={5}
-                            placeholder="MM / YY"
+                            placeholder="MM/YY"
                             className="h-10 min-w-0 flex-1 bg-transparent text-base font-medium tracking-normal text-slate-900 placeholder:text-slate-400 focus:outline-none"
                           />
                         </EmbeddedCardField>

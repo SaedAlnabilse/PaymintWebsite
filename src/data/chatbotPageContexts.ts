@@ -714,7 +714,7 @@ const PAGE_CONTEXTS: ChatbotPageContextDefinition[] = [
     defaultSuggestions: [
       text('How do I log in to my account?', 'كيف أسجل الدخول إلى حسابي؟'),
       text('I forgot my password. How can I reset it?', 'نسيت كلمة المرور. كيف أعيد تعيينها؟'),
-      text('I got logged out / session expired. Why?', 'تم تسجيل خروجي أو انتهت الجلسة. لماذا؟'),
+      text('I got logged out/session expired. Why?', 'تم تسجيل خروجي أو انتهت الجلسة. لماذا؟'),
     ],
     quickActions: [
       {

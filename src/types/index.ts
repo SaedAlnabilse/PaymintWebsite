@@ -247,6 +247,13 @@ export interface DashboardStats {
   completedOrders: number;
   activeEmployees: number;
   taxCollected: number;
+  serviceChargeCollected?: number;
+  serviceChargeRefunded?: number;
+  netServiceChargeCollected?: number;
+  serviceChargeOrderCount?: number;
+  averageServiceChargePerOrder?: number;
+  netSalesBeforeTaxAndServiceCharge?: number;
+  grossSalesIncludingTaxAndCharges?: number;
   totalRefunds: number;
   grossProfit: number;
   totalPayIn: number;

@@ -112,6 +112,13 @@ export const emptyDashboardStats = (): DashboardStats => ({
   completedOrders: 0,
   activeEmployees: 0,
   taxCollected: 0,
+  serviceChargeCollected: 0,
+  serviceChargeRefunded: 0,
+  netServiceChargeCollected: 0,
+  serviceChargeOrderCount: 0,
+  averageServiceChargePerOrder: 0,
+  netSalesBeforeTaxAndServiceCharge: 0,
+  grossSalesIncludingTaxAndCharges: 0,
   totalRefunds: 0,
   grossProfit: 0,
   totalPayIn: 0,
@@ -123,6 +130,7 @@ export const emptyDashboardStats = (): DashboardStats => ({
 
 export const normalizeDashboardStats = (payload: any, overrides: Partial<DashboardStats> = {}): DashboardStats => {
   const source = payload && typeof payload === 'object' ? payload : {};
+  const netSalesBeforeTaxAndServiceCharge = firstPresent(source.netSalesBeforeTaxAndServiceCharge);
 
   return {
     ...emptyDashboardStats(),
@@ -133,6 +141,14 @@ export const normalizeDashboardStats = (payload: any, overrides: Partial<Dashboa
     completedOrders: toNumber(firstPresent(source.completedOrders, source.totalOrders)),
     activeEmployees: toNumber(source.activeEmployees),
     taxCollected: toNumber(firstPresent(source.taxCollected, source.totalTaxCollected, source.totalTax)),
+    serviceChargeCollected: toNumber(source.serviceChargeCollected),
+    serviceChargeRefunded: toNumber(source.serviceChargeRefunded),
+    netServiceChargeCollected: toNumber(firstPresent(source.netServiceChargeCollected, source.serviceChargeCollected)),
+    serviceChargeOrderCount: toNumber(source.serviceChargeOrderCount),
+    averageServiceChargePerOrder: toNumber(source.averageServiceChargePerOrder),
+    netSalesBeforeTaxAndServiceCharge:
+      netSalesBeforeTaxAndServiceCharge === undefined ? undefined : toNumber(netSalesBeforeTaxAndServiceCharge),
+    grossSalesIncludingTaxAndCharges: toNumber(firstPresent(source.grossSalesIncludingTaxAndCharges, source.totalRevenue)),
     totalRefunds: toNumber(source.totalRefunds),
     grossProfit: toNumber(source.grossProfit),
     totalPayIn: toNumber(source.totalPayIn),

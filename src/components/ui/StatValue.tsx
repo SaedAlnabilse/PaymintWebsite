@@ -82,6 +82,34 @@ const hasTextColorClass = (className: string) => (
     ))
 );
 
+const TEXT_SIZE_PX: Record<string, number> = {
+  'text-xs': 12,
+  'text-sm': 14,
+  'text-base': 16,
+  'text-lg': 18,
+  'text-xl': 20,
+  'text-2xl': 24,
+  'text-3xl': 30,
+  'text-4xl': 36,
+  'text-5xl': 48,
+  'text-6xl': 60,
+  'text-7xl': 72,
+  'text-8xl': 96,
+  'text-9xl': 128,
+};
+
+const getTextSizePx = (textSizeClass: string) => {
+  if (textSizeClass in TEXT_SIZE_PX) return TEXT_SIZE_PX[textSizeClass];
+
+  const arbitraryPx = textSizeClass.match(/^text-\[(\d+(?:\.\d+)?)px\]$/);
+  if (arbitraryPx) return Number(arbitraryPx[1]);
+
+  const arbitraryRem = textSizeClass.match(/^text-\[(\d+(?:\.\d+)?)rem\]$/);
+  if (arbitraryRem) return Number(arbitraryRem[1]) * 16;
+
+  return TEXT_SIZE_PX['text-2xl'];
+};
+
 /**
  * Reusable component for displaying statistical values (numbers/currency/percentages).
  * Handles font-scaling for large numbers, truncation with ellipsis,
@@ -131,7 +159,7 @@ export const StatValue: React.FC<StatValueProps> = ({
   const length = valueString.length;
 
   // Determine font size class based on string length to prevent overflow
-  const getFontSize = () => {
+  const fontSizeClass = React.useMemo(() => {
     const baseSize = getBaseTextSize(className);
     const baseRank = TEXT_SIZE_RANK[baseSize] ?? TEXT_SIZE_RANK['text-2xl'];
     const maxRank = length > 18
@@ -143,7 +171,11 @@ export const StatValue: React.FC<StatValueProps> = ({
           : baseRank;
 
     return TEXT_SIZE_BY_RANK[Math.min(baseRank, maxRank)] || baseSize;
-  };
+  }, [className, length]);
+
+  const amountFontPx = getTextSizePx(fontSizeClass);
+  const currencyFontPx = Math.max(8, Math.round(amountFontPx * 0.45));
+  const currencyLiftPx = Math.max(2, Math.round(amountFontPx * 0.15));
 
   // Truncation logic for extreme safety (e.g. 100 quadrillion)
   const isTruncated = length > 22;
@@ -224,13 +256,16 @@ export const StatValue: React.FC<StatValueProps> = ({
       tabIndex={shouldShowTooltip ? 0 : undefined}
     >
       <span 
-        className={`${valueClassName} ${getFontSize()} ${defaultColorClassName} block min-w-0 max-w-full overflow-hidden text-ellipsis whitespace-nowrap font-bold tracking-tight transition-all duration-200`}
+        className={`${valueClassName} ${fontSizeClass} ${defaultColorClassName} block min-w-0 max-w-full overflow-hidden text-ellipsis whitespace-nowrap font-bold tracking-tight transition-all duration-200`}
       >
         {finalDisplay}
       </span>
       
       {currency && (
-        <span className="text-[11px] font-black text-gray-400 dark:text-gray-500 uppercase self-end mb-[3px] select-none">
+        <span
+          className="self-end font-black uppercase text-gray-400 select-none dark:text-gray-500"
+          style={{ fontSize: currencyFontPx, marginBottom: currencyLiftPx }}
+        >
           {currency}
         </span>
       )}

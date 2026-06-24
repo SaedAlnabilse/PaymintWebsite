@@ -264,7 +264,7 @@ export const TaxesView = React.memo(function TaxesView({ salesData }: TaxesViewP
                                 <StatValue value={tax.transactions} isInteger={true} className="text-xs text-gray-400 font-bold inline-flex" /> {t('orders.reports.taxes.txns')}
                                 {tax.refundCount > 0 && (
                                   <>
-                                    {' / '}
+                                    {'/'}
                                     <StatValue value={tax.refundCount} isInteger={true} className="text-xs text-gray-400 font-bold inline-flex" /> {t('orders.reports.taxes.refunds', { defaultValue: 'refunds' })}
                                   </>
                                 )}

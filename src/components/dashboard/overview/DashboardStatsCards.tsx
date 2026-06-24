@@ -25,6 +25,9 @@ interface DashboardStats {
   completedOrders: number;
   activeEmployees: number;
   taxCollected: number;
+  netServiceChargeCollected?: number;
+  serviceChargeCollected?: number;
+  netSalesBeforeTaxAndServiceCharge?: number;
   totalRefunds: number;
   grossProfit: number;
   totalPayIn: number;
@@ -51,13 +54,17 @@ export const DashboardStatsCards = React.memo(function DashboardStatsCards({ sta
   const { currencySymbol } = useCurrency();
   const grossSales = stats?.totalRevenue ?? 0;
   const taxCollected = stats?.taxCollected ?? 0;
-  const netSales = Math.max(grossSales - taxCollected, 0);
+  const serviceChargeCollected = stats?.netServiceChargeCollected ?? stats?.serviceChargeCollected ?? 0;
+  const netSales = Math.max(
+    stats?.netSalesBeforeTaxAndServiceCharge ?? (grossSales - taxCollected - serviceChargeCollected),
+    0
+  );
 
   const statCards: any[] = [
     {
       label: t('dashboard.stats.totalSales'),
       value: grossSales,
-      sub: t('dashboard.stats.includingTax'),
+      sub: t('dashboard.stats.includingTaxServiceCharge'),
       icon: Wallet,
       color: 'text-mintcom-green',
       bg: 'bg-mintcom-green/10',
@@ -66,7 +73,7 @@ export const DashboardStatsCards = React.memo(function DashboardStatsCards({ sta
     {
       label: t('dashboard.stats.netSales'),
       value: netSales,
-      sub: t('dashboard.stats.excludingTax'),
+      sub: t('dashboard.stats.excludingTaxServiceCharge'),
       icon: DollarSign,
       color: 'text-mintcom-green',
       bg: 'bg-mintcom-green/10',
