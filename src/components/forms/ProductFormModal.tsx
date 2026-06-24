@@ -1212,7 +1212,7 @@ export function ProductFormModal({
                       <QuickInfo text="Describe your product for customers and employees." />
                     </label>
                     <span className={`label-strong font-outfit ${description.length >= TEXT_INPUT_LIMITS.ITEM_DESCRIPTION ? 'text-mintcom-red' : 'text-gray-400'}`}>
-                      {description.length.toLocaleString(t('common.locale'))} / {TEXT_INPUT_LIMITS.ITEM_DESCRIPTION.toLocaleString(t('common.locale'))}
+                      {description.length.toLocaleString(t('common.locale'))}/{TEXT_INPUT_LIMITS.ITEM_DESCRIPTION.toLocaleString(t('common.locale'))}
                     </span>
                   </div>
                   <textarea
@@ -1845,4 +1845,3 @@ export function ProductFormModal({
     document.body
   );
 }
-

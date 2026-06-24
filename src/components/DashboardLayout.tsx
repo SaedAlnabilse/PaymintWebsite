@@ -524,7 +524,10 @@ export function DashboardLayout() {
     currentEstablishment?.id && (!dashboardSession || sessionConflict),
   );
   const conflictActorName =
-    sessionConflict?.activeSession?.actorName || t('common.someone', { defaultValue: 'Someone' });
+    sessionConflict?.activeSession?.displayName ||
+    sessionConflict?.activeSession?.actorName ||
+    t('common.someone', { defaultValue: 'Someone' });
+  const isAnotherOwnerDeviceConflict = conflictActorName === 'another device';
   const conflictMessage = sessionConflict
     ? `${conflictActorName} is currently inside ${currentEstablishment?.name || 'this location'} dashboard.`
     : '';
@@ -1159,7 +1162,9 @@ export function DashboardLayout() {
         }
         title={
           sessionConflict?.canKick
-            ? t('dashboard.session.ownerConflictTitle', { defaultValue: 'Someone is inside' })
+            ? isAnotherOwnerDeviceConflict
+              ? t('dashboard.session.ownerDeviceConflictTitle', { defaultValue: 'Another device is inside' })
+              : t('dashboard.session.ownerConflictTitle', { defaultValue: 'Someone is inside' })
             : t('dashboard.session.inUseTitle', { defaultValue: 'Dashboard in use' })
         }
         message={

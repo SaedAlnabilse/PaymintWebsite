@@ -549,7 +549,7 @@ const DeviceMockup = ({ t }: { t: any }) => {
             <div className="flex-1 flex flex-col gap-1">
               {[
                 { Ic: ShoppingCart, label: t('landing.cloudControl.scope.preview.orders', 'Orders'), val: '142' },
-                { Ic: Users, label: t('landing.cloudControl.scope.preview.team', 'Staff'), val: '8 / 12' },
+                { Ic: Users, label: t('landing.cloudControl.scope.preview.team', 'Staff'), val: '8/12' },
                 { Ic: Tags, label: t('landing.cloudControl.scope.preview.discounts', 'Discounts'), val: '12' },
                 { Ic: TrendingUp, label: t('landing.cloudControl.scope.preview.profit', 'Profit'), val: '+18%' },
               ].map((row, i) => (

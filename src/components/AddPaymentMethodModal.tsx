@@ -226,7 +226,7 @@ export function AddPaymentMethodModal({ isOpen, onClose, onSuccess }: AddPayment
                                                 setExpiry(formatExpiryInput(e.target.value));
                                                 clearError('expiry');
                                             }}
-                                            placeholder="MM / YY"
+                                            placeholder="MM/YY"
                                             inputMode="numeric"
                                             autoComplete="cc-exp"
                                             maxLength={5}

@@ -969,8 +969,8 @@ Supports: Epson TM series, Star TSP series, Bluetooth thermal printers.`,
   {
     id: 'session-expired',
     keywords: ['session expired', 'logged out', 'login again', 'session timeout', 'انتهت الجلسة', 'تسجيل خروج تلقائي', 'مهلة الجلسة'],
-    question: 'I got logged out / session expired. Why?',
-    questionAr: 'تم تسجيل خروجي / انتهت الجلسة. لماذا؟',
+    question: 'I got logged out/session expired. Why?',
+    questionAr: 'تم تسجيل خروجي/انتهت الجلسة. لماذا؟',
     answer: `Sessions expire for security (inactivity, network issues). Just log back in. Enable "Keep me logged in" on trusted devices to prevent this.`,
     answerAr: `الجلسات تنتهي للأمان (عدم نشاط، مشاكل شبكة). سجل الدخول مجدداً. فعّل "تذكرني" على الأجهزة الموثوقة لمنع ذلك.`,
     category: 'troubleshooting'
@@ -1106,4 +1106,3 @@ export const QUICK_ACTIONS = [
   { label: 'Start shift', icon: 'clock', query: 'How do I start a shift?' },
   { label: 'Settings', icon: 'settings', query: 'Where are the settings?' },
 ];
-

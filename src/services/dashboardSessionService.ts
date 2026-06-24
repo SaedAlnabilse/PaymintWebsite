@@ -13,6 +13,7 @@ export interface DashboardSession {
   actorId: string;
   actorType: string;
   actorName: string;
+  displayName?: string;
   actorEmail?: string | null;
   sourceApp?: string | null;
   status: string;

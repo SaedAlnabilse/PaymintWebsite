@@ -20,7 +20,7 @@ export const PrivacyPolicyPage = () => {
                 'Local Network: تُستخدم لاكتشاف طابعات الإيصالات أو المطبخ والاتصال بها داخل شبكتك المحلية.',
                 'Local Storage: يُستخدم لتخزين الإعدادات والبيانات المؤقتة والسجلات المؤقتة لتحسين الأداء أثناء ضعف الاتصال.',
                 'Images You Provide: قد نخزن الصور التي ترفعها أو تلتقطها داخل التطبيق لاستخدامها كصور منتجات أو شعارات أو عناصر قائمة.',
-                'Biometric Authentication (Face ID / Touch ID / Fingerprint): يُستخدم فقط لفتح التطبيق وتسجيل دخولك على جهازك. تُعالَج بيانات السمات الحيوية داخل الأجهزة الآمنة في جهازك ولا تغادره مطلقاً، ولا نقوم بإرسالها أو تخزينها لدينا.',
+                'Biometric Authentication (Face ID/Touch ID/Fingerprint): يُستخدم فقط لفتح التطبيق وتسجيل دخولك على جهازك. تُعالَج بيانات السمات الحيوية داخل الأجهزة الآمنة في جهازك ولا تغادره مطلقاً، ولا نقوم بإرسالها أو تخزينها لدينا.',
                 'Push Notifications: بعد إذنك، نُسجّل رمز إشعارات للجهاز عبر Google Firebase Cloud Messaging وخدمة إشعارات Apple لإرسال تنبيهات تشغيلية (مثل إشعارات الطلبات والحساب والأمان). يمكنك تعطيل الإشعارات في أي وقت من إعدادات جهازك.'
             ],
             diagnosticsTitle: 'التشخيص والخدمات الخارجية',
@@ -56,7 +56,7 @@ export const PrivacyPolicyPage = () => {
                 'Local Network: Used to discover and connect to receipt or kitchen printers on your local network.',
                 'Local Storage: Used to store settings, cached data, and temporary logs so the app can remain usable during unstable connectivity.',
                 'Images You Provide: We may store images you capture or upload in the app for use as product photos, menu-item images, or business logos.',
-                'Biometric Authentication (Face ID / Touch ID / Fingerprint): Used only to unlock the app and sign you in on your device. Biometric data is processed by your device\'s secure hardware, never leaves your device, and is never transmitted to or stored by us.',
+                'Biometric Authentication (Face ID/Touch ID/Fingerprint): Used only to unlock the app and sign you in on your device. Biometric data is processed by your device\'s secure hardware, never leaves your device, and is never transmitted to or stored by us.',
                 'Push Notifications: With your permission, we register a device push token via Google Firebase Cloud Messaging and the Apple Push Notification service to send operational alerts (such as order, account, and security notifications). You can disable notifications at any time in your device settings.'
             ],
             diagnosticsTitle: 'Diagnostics & Third-Party Services',
@@ -369,4 +369,3 @@ export const PrivacyPolicyPage = () => {
         </div>
     );
 };
-

@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useScrollLock } from '../hooks/useScrollLock';
 import { useCurrency } from '../context/CurrencyContext';
 import { OrderRefundModal } from './OrderRefundModal';
+import { StatValue } from './ui/StatValue';
 
 export interface OrderItem {
     id: string;
@@ -82,7 +83,7 @@ export function OrderDetailModal({ order, onClose, onRefundSuccess, canRefund = 
     useScrollLock(!!order);
 
     // Use global currency context instead of hardcoded JOD
-    const { formatAmount } = useCurrency();
+    const { currencySymbol, formatAmount } = useCurrency();
     const formatCurrency = (value: number) => formatAmount(value);
     const isNegativeTotal = (order.total || 0) < 0;
 
@@ -330,7 +331,12 @@ export function OrderDetailModal({ order, onClose, onRefundSuccess, canRefund = 
                                                     {t('orders.details.qty')}: {item.quantity.toLocaleString(t('common.locale'))} x {formatCurrency(item.price || item.basePrice || 0)}
                                                 </p>
                                             </div>
-                                            <p className="text-sm font-bold text-gray-900 dark:text-white">{formatCurrency(item.total || item.finalPrice || 0)}</p>
+                                            <StatValue
+                                                value={item.total || item.finalPrice || 0}
+                                                currency={currencySymbol}
+                                                className="text-sm font-bold text-gray-900 dark:text-white"
+                                                containerClassName="justify-end"
+                                            />
                                         </div>
                                     ))}
                                 </div>
@@ -345,14 +351,25 @@ export function OrderDetailModal({ order, onClose, onRefundSuccess, canRefund = 
                                 <span className="label-strong font-outfit flex items-center gap-1">
                                     {t('orders.details.subtotal')}
                                 </span>
-                                <span className="text-sm font-bold">{formatCurrency(order.subtotal || 0)}</span>
+                                <StatValue
+                                    value={order.subtotal || 0}
+                                    currency={currencySymbol}
+                                    className="text-sm font-bold text-gray-400"
+                                    containerClassName="justify-end"
+                                />
                             </div>
                             {(order.discount || 0) > 0 && (
                                 <div className="flex justify-between text-mintcom-red">
                                     <span className="label-strong font-outfit flex items-center gap-1">
                                         {t('orders.details.discount')}
                                     </span>
-                                    <span className="text-sm font-bold">-{formatCurrency(order.discount || 0)}</span>
+                                    <StatValue
+                                        value={order.discount || 0}
+                                        currency={currencySymbol}
+                                        prefix="-"
+                                        className="text-sm font-bold text-mintcom-red"
+                                        containerClassName="justify-end"
+                                    />
                                 </div>
                             )}
                             {(order.serviceChargeAmount || 0) > 0 && (
@@ -361,7 +378,12 @@ export function OrderDetailModal({ order, onClose, onRefundSuccess, canRefund = 
                                         <span className="label-strong font-outfit flex items-center gap-1">
                                             {summaryLabels.serviceChargeLabel}
                                         </span>
-                                        <span className="text-sm font-bold">{formatCurrency(order.serviceChargeAmount || 0)}</span>
+                                        <StatValue
+                                            value={order.serviceChargeAmount || 0}
+                                            currency={currencySymbol}
+                                            className="text-sm font-bold text-gray-400"
+                                            containerClassName="justify-end"
+                                        />
                                     </div>
                                     {summaryLabels.serviceChargeReason && (
                                         <div className="text-xs italic text-gray-500 pl-3 mt-1">
@@ -375,7 +397,12 @@ export function OrderDetailModal({ order, onClose, onRefundSuccess, canRefund = 
                                     <span className="label-strong font-outfit flex items-center gap-1">
                                         {summaryLabels.taxLabel}
                                     </span>
-                                    <span className="text-sm font-bold">{formatCurrency(order.tax || 0)}</span>
+                                    <StatValue
+                                        value={order.tax || 0}
+                                        currency={currencySymbol}
+                                        className="text-sm font-bold text-gray-400"
+                                        containerClassName="justify-end"
+                                    />
                                 </div>
                             )}
                             <div className="flex justify-between text-white font-bold text-xl pt-6 border-t border-white/10 mt-2">
@@ -383,9 +410,12 @@ export function OrderDetailModal({ order, onClose, onRefundSuccess, canRefund = 
                                     <div className={`w-2 h-2 rounded-full animate-pulse ${isNegativeTotal ? 'bg-mintcom-red' : 'bg-mintcom-green'}`} />
                                     <span className="text-xs font-black tracking-[0.2em]">{t('orders.details.total')}</span>
                                 </span>
-                                <span className={`text-2xl tracking-tighter ${isNegativeTotal ? 'text-mintcom-red' : 'text-mintcom-green'}`}>
-                                    {formatCurrency(order.total || 0)}
-                                </span>
+                                <StatValue
+                                    value={order.total || 0}
+                                    currency={currencySymbol}
+                                    className={`text-2xl tracking-tighter ${isNegativeTotal ? 'text-mintcom-red' : 'text-mintcom-green'}`}
+                                    containerClassName="justify-end"
+                                />
                             </div>
                         </div>
 
@@ -446,5 +476,4 @@ export function OrderDetailModal({ order, onClose, onRefundSuccess, canRefund = 
         document.body
     );
 }
-
 
