@@ -2,8 +2,9 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { useBlocker, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Store, Save, CreditCard, Receipt, Trash2, AlertTriangle, DollarSign, Copy, Key, Shield } from 'lucide-react';
+import { Store, Save, CreditCard, Receipt, Trash2, AlertTriangle, DollarSign, Copy, Key, Shield, ShieldCheck } from 'lucide-react';
 import api, { extractErrorMessage } from '../../config/api';
+import { FiscalComplianceCard } from '../../components/FiscalComplianceCard';
 import toast from 'react-hot-toast';
 import { ConfirmModal } from '../../components/ConfirmModal';
 import { EstablishmentDeletionWizard, PendingDeletionBanner } from '../../components/EstablishmentDeletionWizard';
@@ -76,6 +77,13 @@ interface AppSettings {
   showTaxId?: boolean;
   showFarewellMessage?: boolean;
   holdOrderTableCount?: number;
+  // E-Invoicing & Tax Compliance (universal fiscal compliance)
+  fiscalEnabled?: boolean;
+  fiscalCountryCode?: string | null;
+  fiscalCredentials?: string | null;
+  fiscalAutoSubmit?: boolean;
+  fiscalBlockOnFailure?: boolean;
+  fiscalTaxPresets?: string | null;
   openingTime?: string;
   closingTime?: string;
   operatingSchedule?: {
@@ -91,7 +99,7 @@ interface AppSettings {
 
 
 
-type SettingsTab = 'profile' | 'sales' | 'receipt' | 'loyalty' | 'danger';
+type SettingsTab = 'profile' | 'sales' | 'receipt' | 'tax' | 'loyalty' | 'danger';
 
 interface DeletionStatus {
   id: string;
@@ -141,6 +149,7 @@ export function SettingsPage() {
       { id: 'profile', label: t('settings.tabs.profile'), icon: Store, permission: 'manage_establishment_profile' },
       { id: 'sales', label: t('settings.tabs.sales'), icon: CreditCard, permission: 'manage_tax_currency' },
       { id: 'receipt', label: t('settings.tabs.receipts'), icon: Receipt, permission: 'manage_receipt_settings' },
+      { id: 'tax', label: t('settings.tabs.tax', 'E-Invoicing'), icon: ShieldCheck, permission: 'manage_settings' },
       { id: 'danger', label: t('settings.tabs.danger'), icon: Trash2, isDanger: true, permission: 'delete_establishment' },
     ];
 
@@ -324,6 +333,28 @@ export function SettingsPage() {
   const changedSettingKeys = useMemo(
     () => (initialSettings ? getChangedAppSettingsKeys(watchedValues, initialSettings) : new Set<string>()),
     [watchedValues, initialSettings],
+  );
+
+  // Stable initial snapshot for the self-contained E-Invoicing card. Only changes
+  // when a fiscal field actually changes (e.g. after the card saves and we refetch),
+  // so the card doesn't reset the owner's in-progress edits on every render.
+  const fiscalInitial = useMemo(
+    () => ({
+      fiscalEnabled: settings?.fiscalEnabled,
+      fiscalCountryCode: settings?.fiscalCountryCode,
+      fiscalCredentials: settings?.fiscalCredentials,
+      fiscalAutoSubmit: settings?.fiscalAutoSubmit,
+      fiscalBlockOnFailure: settings?.fiscalBlockOnFailure,
+      fiscalTaxPresets: settings?.fiscalTaxPresets,
+    }),
+    [
+      settings?.fiscalEnabled,
+      settings?.fiscalCountryCode,
+      settings?.fiscalCredentials,
+      settings?.fiscalAutoSubmit,
+      settings?.fiscalBlockOnFailure,
+      settings?.fiscalTaxPresets,
+    ],
   );
 
   // Compare operating schedule separately with deep equality
@@ -827,15 +858,17 @@ export function SettingsPage() {
                     </p>
         </div>
 
-        <button
-          type="button"
-          onClick={handleSubmit(onSubmit, showFormValidationError)}
-          disabled={isSaving || !hasUnsavedChanges}
-          className="flex items-center gap-2 px-6 py-3 rounded-xl bg-mintcom-green text-black font-bold text-sm hover:bg-[#5fa888] transition-all shadow-sm disabled:opacity-50 disabled:shadow-none"
-        >
-          {isSaving ? <div className="w-[18px] h-[18px] border-2 border-black/20 border-t-black rounded-full animate-spin" /> : <Save size={18} />}
-          <span>{t('settings.saveChanges')}</span>
-        </button>
+        {activeTab !== 'tax' && (
+          <button
+            type="button"
+            onClick={handleSubmit(onSubmit, showFormValidationError)}
+            disabled={isSaving || !hasUnsavedChanges}
+            className="flex items-center gap-2 px-6 py-3 rounded-xl bg-mintcom-green text-black font-bold text-sm hover:bg-[#5fa888] transition-all shadow-sm disabled:opacity-50 disabled:shadow-none"
+          >
+            {isSaving ? <div className="w-[18px] h-[18px] border-2 border-black/20 border-t-black rounded-full animate-spin" /> : <Save size={18} />}
+            <span>{t('settings.saveChanges')}</span>
+          </button>
+        )}
       </div>
 
       <div className="flex flex-wrap gap-1 p-1.5 bg-gray-100 dark:bg-black/40 rounded-xl border border-gray-200 dark:border-white/[0.1] w-full relative isolate shadow-sm backdrop-blur-xl ring-1 ring-black/20">
@@ -1473,6 +1506,13 @@ export function SettingsPage() {
 
 
 
+
+        {activeTab === 'tax' && (
+          <FiscalComplianceCard
+            initial={fiscalInitial}
+            onSaved={() => fetchSettings(false)}
+          />
+        )}
 
         {activeTab === 'danger' && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-red-50/30 dark:bg-red-900/5 rounded-2xl border border-red-200/50 dark:border-red-900/20 p-8 space-y-10 shadow-sm">
