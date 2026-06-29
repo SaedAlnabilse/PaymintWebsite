@@ -2,23 +2,10 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import type { ReactNode } from 'react';
 import api from '../config/api';
 import { useAuth } from './AuthContext';
+import { CURRENCIES as GLOBAL_CURRENCIES } from '../data/globalLocaleOptions';
 import { formatCurrencyCode, normalizeCurrencyCode } from '../utils/currency';
 
-// Supported currencies. Display uses ISO currency codes, not symbols.
-export const CURRENCIES = [
-  { code: 'JOD', name: 'Jordanian Dinar', symbol: 'JOD' },
-  { code: 'USD', name: 'US Dollar', symbol: 'USD' },
-  { code: 'EUR', name: 'Euro', symbol: 'EUR' },
-  { code: 'GBP', name: 'British Pound', symbol: 'GBP' },
-  { code: 'SAR', name: 'Saudi Riyal', symbol: 'SAR' },
-  { code: 'AED', name: 'UAE Dirham', symbol: 'AED' },
-  { code: 'KWD', name: 'Kuwaiti Dinar', symbol: 'KWD' },
-  { code: 'BHD', name: 'Bahraini Dinar', symbol: 'BHD' },
-  { code: 'OMR', name: 'Omani Rial', symbol: 'OMR' },
-  { code: 'QAR', name: 'Qatari Riyal', symbol: 'QAR' },
-  { code: 'EGP', name: 'Egyptian Pound', symbol: 'EGP' },
-  { code: 'IQD', name: 'Iraqi Dinar', symbol: 'IQD' },
-];
+export { CURRENCIES } from '../data/globalLocaleOptions';
 
 interface CurrencyContextType {
   currency: string;
@@ -40,7 +27,7 @@ export const CurrencyProvider: React.FC<CurrencyProviderProps> = ({ children }) 
   const [loading, setLoading] = useState(true);
 
   // Kept as currencySymbol for existing consumers, but it intentionally stores the ISO code.
-  const currencySymbol = normalizeCurrencyCode(CURRENCIES.find(c => c.code === currency)?.symbol || currency);
+  const currencySymbol = normalizeCurrencyCode(GLOBAL_CURRENCIES.find(c => c.code === currency)?.symbol || currency);
 
   // Refresh currency from backend
   const refreshCurrency = useCallback(async () => {

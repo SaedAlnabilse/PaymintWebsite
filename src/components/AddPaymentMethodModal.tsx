@@ -29,9 +29,11 @@ interface AddPaymentMethodModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSuccess: () => void | Promise<void>;
+    linkEstablishmentId?: string | null;
+    linkEstablishmentName?: string | null;
 }
 
-export function AddPaymentMethodModal({ isOpen, onClose, onSuccess }: AddPaymentMethodModalProps) {
+export function AddPaymentMethodModal({ isOpen, onClose, onSuccess, linkEstablishmentId, linkEstablishmentName }: AddPaymentMethodModalProps) {
     const { t } = useTranslation();
     const [cardNumber, setCardNumber] = useState('');
     const [expiry, setExpiry] = useState('');
@@ -113,17 +115,24 @@ export function AddPaymentMethodModal({ isOpen, onClose, onSuccess }: AddPayment
         try {
             setIsSubmitting(true);
 
-            await api.post('/api/accounts/cards', {
+            const response = await api.post('/api/accounts/cards', {
                 last4: cardDigits.slice(-4),
                 brand: PAYMENT_CARD_API_BRAND[brand],
                 expMonth: parsedExpiry.month,
                 expYear: parsedExpiry.year,
                 cardholderName: name.trim(),
                 saveForFuturePurchases,
-                setAsDefault: saveForFuturePurchases,
+                setAsDefault: false,
             });
 
-            toast.success(t('paymentMethods.messages.added', { defaultValue: 'Card added' }));
+            const cardId = response.data?.card?.id;
+            if (linkEstablishmentId && cardId) {
+                await api.post(`/api/accounts/cards/${encodeURIComponent(cardId)}/link/${encodeURIComponent(linkEstablishmentId)}`);
+            }
+
+            toast.success(linkEstablishmentId
+                ? t('owner.billing.card_added_and_assigned', { defaultValue: 'Card added and assigned to this location' })
+                : t('paymentMethods.messages.added', { defaultValue: 'Card added' }));
             resetForm();
             await onSuccess();
             onClose();
@@ -169,9 +178,14 @@ export function AddPaymentMethodModal({ isOpen, onClose, onSuccess }: AddPayment
                                     <div className="mt-1 flex items-center gap-1.5 text-sm font-medium tracking-normal text-slate-600">
                                         <Lock size={13} />
                                         <span>
-                                            {t('paymentMethods.modal.subtitle', {
-                                                defaultValue: 'Secure - 256-bit encrypted',
-                                            })}
+                                            {linkEstablishmentName
+                                                ? t('owner.billing.add_card_for_location', {
+                                                    defaultValue: 'New card will be used for {{name}}',
+                                                    name: linkEstablishmentName,
+                                                })
+                                                : t('paymentMethods.modal.subtitle', {
+                                                    defaultValue: 'Secure - 256-bit encrypted',
+                                                })}
                                         </span>
                                     </div>
                                 </div>

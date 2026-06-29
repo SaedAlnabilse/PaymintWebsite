@@ -220,7 +220,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     try {
       // Run Api call
-      const response = await api.post('/api/accounts/login', { email, password });
+      const response = await api.post('/api/accounts/login', { email, password, platform: 'web' });
 
       // The accessToken is now set as an HttpOnly cookie by the server
       // We only receive account and establishments data in the response body
@@ -285,7 +285,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     try {
       // Send the Google ID token to our backend for verification
-      const response = await api.post('/api/accounts/google-auth', { credential, subscribeToNews });
+      const response = await api.post('/api/accounts/google-auth', { credential, subscribeToNews, platform: 'web' });
 
       if (response.data.account) {
         // Success state
@@ -349,6 +349,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         firstName: data.firstName,
         lastName: data.lastName,
         subscribeToNews: data.subscribeToNews,
+        platform: 'web',
       });
 
       if (response.data.account) {

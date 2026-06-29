@@ -16,6 +16,7 @@ import { ConfirmModal } from '../../components/ConfirmModal';
 import { SearchInput, Pagination } from '../../components/ui';
 import { useTranslation } from 'react-i18next';
 import { formatInputPlaceholder } from '../../utils/textCase';
+import { formatBusinessTypeLabel } from '../../utils/businessTypeLabel';
 
 interface Establishment {
   id: string;
@@ -220,7 +221,7 @@ export function EstablishmentsPage() {
                     <div className="w-8 h-8 rounded-lg bg-gray-50 dark:bg-white/5 flex items-center justify-center border border-gray-100 dark:border-white/10">
                       <ShieldCheck size={14} className="text-blue-500" />
                     </div>
-                    <span className="truncate">{t(`establishments.types.${est.type.toLowerCase()}`, { defaultValue: est.type.replace('_', ' ') })}</span>
+                    <span className="truncate">{formatBusinessTypeLabel(est.type)}</span>
                   </div>
                 </div>
 
@@ -327,7 +328,6 @@ export function EstablishmentsPage() {
     </div>
   );
 }
-
 
 
 

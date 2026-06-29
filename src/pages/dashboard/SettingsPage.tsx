@@ -17,6 +17,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useRealtime } from '../../hooks/useRealtime';
 import { DataChangeEventTypes } from '../../services/realtimeService';
 import { SectionLoader } from '../../components/LoadingState';
+import { CURRENCIES } from '../../data/globalLocaleOptions';
 import { formatInputPlaceholder, formatInputLabel } from '../../utils/textCase';
 import {
   MAX_ESTABLISHMENT_NAME_LENGTH,
@@ -1099,20 +1100,10 @@ export function SettingsPage() {
                       value={watch('currency')}
                       disabled={true}
                       onChange={(val) => { setValue('currency', String(val), { shouldDirty: true }); }}
-                      options={[
-                        { label: t('onboarding.step1.currencies.JOD'), value: 'JOD' },
-                        { label: t('onboarding.step1.currencies.USD'), value: 'USD' },
-                        { label: t('onboarding.step1.currencies.AED'), value: 'AED' },
-                        { label: t('onboarding.step1.currencies.SAR'), value: 'SAR' },
-                        { label: t('onboarding.step1.currencies.KWD'), value: 'KWD' },
-                        { label: t('onboarding.step1.currencies.QAR'), value: 'QAR' },
-                        { label: t('onboarding.step1.currencies.BHD'), value: 'BHD' },
-                        { label: t('onboarding.step1.currencies.OMR'), value: 'OMR' },
-                        { label: t('onboarding.step1.currencies.EGP'), value: 'EGP' },
-                        { label: t('onboarding.step1.currencies.GBP'), value: 'GBP' },
-                        { label: t('onboarding.step1.currencies.EUR'), value: 'EUR' },
-                        { label: t('onboarding.step1.currencies.TRY'), value: 'TRY' },
-                      ]}
+                      options={CURRENCIES.map((currencyOption) => ({
+                        label: currencyOption.label,
+                        value: currencyOption.code,
+                      }))}
                     />
                   </div>
                   <p className="text-[11px] font-medium text-gray-400 leading-snug">
@@ -1583,5 +1574,4 @@ export function SettingsPage() {
     </div>
   );
 }
-
 

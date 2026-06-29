@@ -22,6 +22,7 @@ export interface Establishment {
   name: string;
   type: string;
   currency: string;
+  timezone?: string;
   subscriptionStatus: string;
   createdAt?: string;
   establishmentLoginId?: string;

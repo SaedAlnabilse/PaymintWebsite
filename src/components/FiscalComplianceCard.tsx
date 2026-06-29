@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -97,7 +97,6 @@ export function FiscalComplianceCard({ initial, disabled, onSaved }: FiscalCompl
     setCreds(parsed.values);
     setStoredSecretKeys(parsed.storedSecretKeys);
     setCredentialsDirty(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initial, parsed]);
 
   const countryConfig = useMemo(() => getCountryConfig(countryCode), [countryCode]);

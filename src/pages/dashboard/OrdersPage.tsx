@@ -694,6 +694,7 @@ export function OrdersPage() {
           params: {
             startDate: start.toISOString(),
             endDate: end.toISOString(),
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
             ...(selectedEmployeeId ? { employeeId: selectedEmployeeId } : {}),
           },
         })

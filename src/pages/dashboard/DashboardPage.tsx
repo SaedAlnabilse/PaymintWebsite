@@ -679,7 +679,7 @@ export const DashboardPage = () => {
       const pendingOrdersEnd = nowForPendingOrders.toISOString();
 
       const [summaryRes, topItemsRes, peakRes, categoryRes, pendingOrdersRes] = await Promise.all([
-        api.get('/reports/historical-summary', { params: { startDate: start, endDate: end } }).catch((err) => { hasError = true; console.error('Summary API error:', err); return { data: null }; }),
+        api.get('/reports/historical-summary', { params: { startDate: start, endDate: end, timezone: browserTimeZone } }).catch((err) => { hasError = true; console.error('Summary API error:', err); return { data: null }; }),
         api.get('/reports/top-selling-items', { params: { startDate: start, endDate: end, limit: 5 } }).catch((err) => { hasError = true; console.error('Top items API error:', err); return { data: [] }; }),
         api.get('/reports/peak-hours', { params: { startDate: start, endDate: end, timezone: browserTimeZone } }).catch((err) => { hasError = true; console.error('Peak hours API error:', err); return { data: [] }; }),
         api.get('/reports/category-report', { params: { startDate: start, endDate: end } }).catch((err) => { hasError = true; console.error('Category API error:', err); return { data: { breakdown: [] } }; }),
