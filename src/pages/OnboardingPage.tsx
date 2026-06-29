@@ -42,7 +42,8 @@ import {
   Shield,
   Scale,
   Info,
-  Globe
+  Globe,
+  RefreshCw
 } from 'lucide-react';
 import api from '../config/api';
 import toast from 'react-hot-toast';
@@ -318,6 +319,12 @@ export function OnboardingPage() {
     ? t('onboarding.step2.yearly')
     : t('onboarding.step2.monthly');
   const selectedPriceWithPeriod = `${formatWholeUsd(displayPrice)} ${selectedPeriodLabel}`;
+  // Stacked-pricing helpers: show the standard price struck-through above the discounted price
+  const primaryDisplayPrice = getMintcomPrice(billingCycle, false);
+  const hasLocationDiscount = isAdditionalLocation && primaryDisplayPrice > displayPrice;
+  const formatWholeNumber = (amount: number) =>
+    amount.toLocaleString(t('common.locale'), { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  const selectedUnitLabel = `${MINTCOM_PRICING.currency} ${selectedPeriodLabel}`;
 
   // Password Visibility State
   const [showEstablishmentPassword, setShowEstablishmentPassword] = useState(false);
@@ -1524,57 +1531,106 @@ export function OnboardingPage() {
                 <form onSubmit={form4.handleSubmit(onStep4Submit)} autoComplete="off" className="space-y-6" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
                   {/* Billing Cycle Toggle */}
                   {!isTrialFlow && (
-                    <div className="flex items-center justify-center">
-                      <div className="inline-flex items-center gap-1.5 bg-gray-100 dark:bg-black/30 border border-gray-200 dark:border-white/10 rounded-2xl p-1">
-                        <button
-                          type="button"
-                          onClick={() => setBillingCycle(BILLING_CYCLES.MONTHLY)}
-                          className={`px-8 py-2.5 rounded-xl text-xs font-sans font-bold transition-all duration-300 ${billingCycle === BILLING_CYCLES.MONTHLY
-                            ? 'bg-mintcom-green text-black shadow-lg shadow-mintcom-green/20'
-                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                            }`}
-                        >
-                          {t('onboarding.step2.monthly')}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setBillingCycle(BILLING_CYCLES.YEARLY)}
-                          className={`px-8 py-2.5 rounded-xl text-xs font-sans font-bold transition-all duration-300 relative ${billingCycle === BILLING_CYCLES.YEARLY
-                            ? 'bg-mintcom-green text-black shadow-lg shadow-mintcom-green/20'
-                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                            }`}
-                        >
-                          {t('onboarding.step2.yearly')}
-                          <span className={`absolute -top-2 -right-2 px-1.5 py-0.5 rounded-full text-[8px] font-sans font-bold ${billingCycle === BILLING_CYCLES.YEARLY ? 'bg-black text-mintcom-green' : 'bg-mintcom-green text-black'
-                            } shadow`}>
-                            {t('common.save', { defaultValue: 'Save' })}
-                          </span>
-                        </button>
-                      </div>
+                    <div className="grid grid-cols-2 gap-1.5 bg-gray-100 dark:bg-black/30 border border-gray-200 dark:border-white/10 rounded-2xl p-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setBillingCycle(BILLING_CYCLES.MONTHLY)}
+                        className={`py-3 rounded-xl text-sm font-sans font-bold transition-all duration-300 ${billingCycle === BILLING_CYCLES.MONTHLY
+                          ? 'bg-mintcom-green text-black shadow-lg shadow-mintcom-green/20'
+                          : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                          }`}
+                      >
+                        {t('onboarding.step2.monthly')}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setBillingCycle(BILLING_CYCLES.YEARLY)}
+                        className={`py-3 rounded-xl text-sm font-sans font-bold transition-all duration-300 flex items-center justify-center gap-2 ${billingCycle === BILLING_CYCLES.YEARLY
+                          ? 'bg-mintcom-green text-black shadow-lg shadow-mintcom-green/20'
+                          : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                          }`}
+                      >
+                        {t('onboarding.step2.yearly')}
+                        <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-sans font-bold leading-none ${billingCycle === BILLING_CYCLES.YEARLY ? 'bg-black text-mintcom-green' : 'bg-mintcom-green/15 text-mintcom-green'
+                          }`}>
+                          {t('common.save', { defaultValue: 'Save' })}
+                        </span>
+                      </button>
                     </div>
                   )}
 
-                  <div className="p-4 bg-gray-50 dark:bg-black/20 rounded-2xl border border-dashed border-gray-300 dark:border-white/10">
-                    <div className="flex justify-between items-center mb-4">
-                      <span className="text-xs text-gray-400">{t('onboarding.step2.totalDue')}</span>
-                      <span className="font-barlow text-xl font-bold text-gray-900 dark:text-white">
+                  <div className="p-5 bg-gray-50 dark:bg-black/20 rounded-2xl border border-dashed border-gray-300 dark:border-white/10">
+                    <span className="block text-[11px] font-sans font-bold uppercase tracking-[0.12em] text-gray-400 mb-3">
+                      {t('onboarding.step2.totalDue')}
+                    </span>
+
+                    {isTrialFlow ? (
+                      <div className="flex items-end gap-2">
+                        <span className="font-barlow text-5xl font-extrabold leading-none text-gray-900 dark:text-white">
+                          {formatWholeNumber(0)}
+                        </span>
+                        <span className="pb-1 text-sm font-sans font-bold text-gray-500">{selectedUnitLabel}</span>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-start">
+                        {/* Standard price, struck-through (only when a benefit applies) */}
+                        {hasLocationDiscount && (
+                          <>
+                            <span className="font-barlow text-lg font-bold text-gray-400 line-through decoration-2">
+                              {formatWholeNumber(primaryDisplayPrice)}{' '}
+                              <span className="text-xs font-sans no-underline">{selectedUnitLabel}</span>
+                            </span>
+                            <ChevronDown size={18} className="my-0.5 text-mintcom-green" />
+                          </>
+                        )}
+                        {/* Actual price, stacked below */}
+                        <div className="flex items-end gap-2">
+                          <span className="font-barlow text-5xl font-extrabold leading-none text-gray-900 dark:text-white">
+                            {formatWholeNumber(displayPrice)}
+                          </span>
+                          <span className="pb-1 text-sm font-sans font-bold text-gray-500">{selectedUnitLabel}</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Billing cadence */}
+                    <div className="mt-3 flex items-center gap-2 text-mintcom-green">
+                      <RefreshCw size={14} />
+                      <span className="text-sm font-sans font-bold">
                         {isTrialFlow
-                          ? formatWholeUsd(0)
-                          : formatWholeUsd(displayPrice)
-                        }
+                          ? t('onboarding.step2.afterTrial')
+                          : t('onboarding.step2.billedCycle', {
+                              defaultValue: `Billed ${selectedPlanLabel.toLowerCase()}`,
+                              cycle: selectedPlanLabel.toLowerCase(),
+                            })}
                       </span>
                     </div>
-                    <div className="flex justify-between items-center text-xs font-sans text-gray-500">
-                      <span>{isTrialFlow ? t('onboarding.step2.afterTrial') : selectedPlanLabel}</span>
-                      <span>{selectedPriceWithPeriod}</span>
-                    </div>
+
+                    {/* Yearly savings note */}
                     {billingCycle === BILLING_CYCLES.YEARLY && !isTrialFlow && (
-                      <div className="mt-3 flex items-center justify-center gap-2">
+                      <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1">
                         <Sparkles size={12} className="text-mintcom-green" />
                         <span className="text-xs font-bold text-mintcom-green tracking-wider uppercase">
                           {t('landing.pricing.save')} {formatWholeUsd(yearlySavings)} {t('landing.pricing.perYear')}
                         </span>
                         <span className="text-xs text-gray-400 line-through">{formatWholeUsd(currentMonthlyPrice * 12)} {t('landing.pricing.perYear')}</span>
+                      </div>
+                    )}
+
+                    {/* Existing-account benefit badge */}
+                    {hasLocationDiscount && (
+                      <div className="mt-4 flex items-center gap-3 rounded-xl border border-mintcom-green/20 bg-mintcom-green/10 p-3">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-mintcom-green/20">
+                          <Tags size={16} className="text-mintcom-green" />
+                        </div>
+                        <div className="leading-tight">
+                          <p className="text-sm font-sans font-bold text-gray-900 dark:text-white">
+                            {t('onboarding.step2.addedLocation', { defaultValue: 'Added location' })}
+                          </p>
+                          <p className="text-xs font-sans text-gray-500">
+                            {t('onboarding.step2.existingAccountBenefit', { defaultValue: 'Existing account benefit' })}
+                          </p>
+                        </div>
                       </div>
                     )}
                   </div>
