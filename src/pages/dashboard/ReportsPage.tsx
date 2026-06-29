@@ -285,7 +285,7 @@ export function ReportsPage() {
         case 'sales':
         case 'payments':
         case 'taxes': {
-          const salesRes = await api.get('/reports/historical-summary', { params: commonParams });
+          const salesRes = await api.get('/reports/historical-summary', { params: { ...commonParams, timezone: browserTimeZone } });
           if (isStale()) return;
           setSalesData(normalizeSalesSummary(salesRes.data));
           break;

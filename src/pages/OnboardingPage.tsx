@@ -1,4 +1,4 @@
-import { useState, useEffect, type ReactNode } from 'react';
+import { useState, useEffect, useMemo, type ReactNode } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -71,6 +71,12 @@ import MintcomLogoWhite from '../assets/white-green-full-logo.svg';
 import AppStoreBadge from '../assets/app-store-badge.svg';
 import GooglePlayBadge from '../assets/google-play-badge.svg';
 import { formatInputPlaceholder, formatInputLabel } from '../utils/textCase';
+import {
+  getBestTimeZoneForCountry,
+  getCountryOptions,
+  getCurrencyOptions,
+  getDeviceTimeZone,
+} from '../data/globalLocaleOptions';
 import {
   detectCardBrand,
   formatCardNumberInput,
@@ -188,6 +194,9 @@ function CardBrandMark({ brand }: { brand: 'mastercard' | 'visa' | 'amex' }) {
 export function OnboardingPage() {
   const { t } = useTranslation();
   const isRTL = t('common.locale') === 'ar';
+  const locale = t('common.locale');
+  const countryOptions = useMemo(() => getCountryOptions(locale), [locale]);
+  const currencyOptions = useMemo(() => getCurrencyOptions(locale), [locale]);
   const hasAndroidDownload = Boolean(ANDROID_DOWNLOAD_URL);
   const hasIosDownload = Boolean(IOS_DOWNLOAD_URL);
   const hasOwnerAndroidDownload = Boolean(OWNER_ANDROID_DOWNLOAD_URL);
@@ -319,6 +328,13 @@ export function OnboardingPage() {
   const [duplicateInventory, setDuplicateInventory] = useState(true);
   const [duplicateDiscounts, setDuplicateDiscounts] = useState(true);
   const [duplicatePaymentMethods, setDuplicatePaymentMethods] = useState(true);
+  const [ownerLogin, setOwnerLogin] = useState<{
+    firstName?: string;
+    lastName?: string;
+    username?: string;
+    email?: string | null;
+  } | null>(null);
+  const [isOwnerLoginLoading, setIsOwnerLoginLoading] = useState(false);
 
   const handleDuplicateSourceChange = (sourceId: string) => {
     setDuplicateFromId(sourceId);
@@ -454,6 +470,69 @@ export function OnboardingPage() {
     },
   });
 
+  useEffect(() => {
+    if (isAdditionalLocation) return;
+
+    const currentValues = form3.getValues();
+    if (!currentValues.firstName && account?.firstName) {
+      form3.setValue('firstName', account.firstName);
+    }
+    if (!currentValues.lastName && account?.lastName) {
+      form3.setValue('lastName', account.lastName);
+    }
+    if (!currentValues.username && account?.email) {
+      const fallbackUsername =
+        account.email
+          .split('@')[0]
+          ?.toLowerCase()
+          .replace(/[^a-z0-9_-]/g, '_')
+          .replace(/_+/g, '_')
+          .replace(/^_+|_+$/g, '') || 'owner';
+      form3.setValue('username', fallbackUsername);
+    }
+  }, [account?.email, account?.firstName, account?.lastName, form3, isAdditionalLocation]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadOwnerLogin = async () => {
+      if (!isAdditionalLocation) {
+        setOwnerLogin(null);
+        return;
+      }
+
+      setIsOwnerLoginLoading(true);
+      try {
+        const response = await api.get('/api/accounts/all-employees', {
+          headers: { 'X-Skip-Establishment-Header': 'true' },
+        });
+        const employees = Array.isArray(response.data) ? response.data : [];
+        const owner = employees.find((employee: any) =>
+          employee?.isAccountOwner || employee?.isOwnerAccount || employee?.isProtected
+        );
+
+        if (isMounted) {
+          setOwnerLogin(owner || null);
+        }
+      } catch (error) {
+        console.warn('[Onboarding] Failed to load owner login:', error);
+        if (isMounted) {
+          setOwnerLogin(null);
+        }
+      } finally {
+        if (isMounted) {
+          setIsOwnerLoginLoading(false);
+        }
+      }
+    };
+
+    loadOwnerLogin();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [establishments.length, isAdditionalLocation]);
+
   // Set default currency for additional locations
   useEffect(() => {
     if (establishments.length > 0) {
@@ -520,7 +599,7 @@ export function OnboardingPage() {
 
     setIsLoading(false);
     updateFormData((prev: any) => ({ ...prev, ...data }));
-    goToStep(isAdditionalLocation ? 4 : 3);
+    goToStep(3);
   };
 
   const onStep3Submit = (data: any) => {
@@ -681,6 +760,7 @@ export function OnboardingPage() {
         address: formData.address,
         currency: formData.currency,
         country: formData.country,
+        timezone: getBestTimeZoneForCountry(formData.country, getDeviceTimeZone()),
         establishmentLoginId: formData.establishmentLoginId, // User-provided unique ID for this establishment
         establishmentPassword: formData.establishmentPassword, // User-provided password
         paymentMethodToken: paymentMethodToken,
@@ -751,6 +831,13 @@ export function OnboardingPage() {
       .replace(/\b\w/g, (character) => character.toUpperCase());
 
     return t(`onboarding.step1.businessTypes.${typeKey}`, { defaultValue: fallback });
+  };
+
+  const ownerLoginDisplay = {
+    firstName: ownerLogin?.firstName || account?.firstName || '',
+    lastName: ownerLogin?.lastName || account?.lastName || '',
+    username: ownerLogin?.username || account?.email || '',
+    email: ownerLogin?.email || account?.email || '',
   };
 
   const totalSteps = 4;
@@ -864,18 +951,11 @@ export function OnboardingPage() {
                           disabled={establishments.length > 0}
                           className={`w-full bg-gray-50 dark:bg-black/20 border ${form1.formState.errors.currency ? 'border-mintcom-red ring-2 ring-mintcom-red/20' : 'border-gray-200 dark:border-white/10'} rounded-2xl py-4 ${isRTL ? 'pr-12 pl-4' : 'pl-12 pr-4'} text-sm font-sans font-bold text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-mintcom-green/50 transition-all appearance-none ${establishments.length > 0 ? 'opacity-60 cursor-not-allowed bg-gray-100 dark:bg-white/5' : ''}`}
                         >
-                          <option value="JOD">JOD - {t('common.currencies.jod', { defaultValue: 'Jordanian Dinar' })}</option>
-                          <option value="USD">USD - {t('common.currencies.usd', { defaultValue: 'US Dollar' })}</option>
-                          <option value="AED">AED - {t('common.currencies.aed', { defaultValue: 'UAE Dirham' })}</option>
-                          <option value="SAR">SAR - {t('common.currencies.sar', { defaultValue: 'Saudi Riyal' })}</option>
-                          <option value="KWD">KWD - {t('common.currencies.kwd', { defaultValue: 'Kuwaiti Dinar' })}</option>
-                          <option value="QAR">QAR - {t('common.currencies.qar', { defaultValue: 'Qatari Riyal' })}</option>
-                          <option value="BHD">BHD - {t('common.currencies.bhd', { defaultValue: 'Bahraini Dinar' })}</option>
-                          <option value="OMR">OMR - {t('common.currencies.omr', { defaultValue: 'Omani Rial' })}</option>
-                          <option value="EGP">EGP - {t('common.currencies.egp', { defaultValue: 'Egyptian Pound' })}</option>
-                          <option value="GBP">GBP - {t('common.currencies.gbp', { defaultValue: 'British Pound' })}</option>
-                          <option value="EUR">EUR - {t('common.currencies.eur', { defaultValue: 'Euro' })}</option>
-                          <option value="TRY">TRY - {t('common.currencies.try', { defaultValue: 'Turkish Lira' })}</option>
+                          {currencyOptions.map((currencyOption) => (
+                            <option key={currencyOption.code} value={currencyOption.code}>
+                              {currencyOption.label}
+                            </option>
+                          ))}
                         </select>
                         <ChevronDown className={`absolute ${isRTL ? 'left-4' : 'right-4'} top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none`} size={16} />
                         {establishments.length > 0 && (
@@ -903,18 +983,11 @@ export function OnboardingPage() {
                           {...form1.register('country')}
                           className={`w-full bg-gray-50 dark:bg-black/20 border ${form1.formState.errors.country ? 'border-mintcom-red ring-2 ring-mintcom-red/20' : 'border-gray-200 dark:border-white/10'} rounded-2xl py-4 ${isRTL ? 'pr-12 pl-4' : 'pl-12 pr-4'} text-sm font-sans font-bold text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-mintcom-green/50 transition-all appearance-none`}
                         >
-                          <option value="JO">{t('common.countries.jo', { defaultValue: 'Jordan' })}</option>
-                          <option value="US">{t('common.countries.us', { defaultValue: 'United States' })}</option>
-                          <option value="AE">{t('common.countries.ae', { defaultValue: 'United Arab Emirates' })}</option>
-                          <option value="SA">{t('common.countries.sa', { defaultValue: 'Saudi Arabia' })}</option>
-                          <option value="KW">{t('common.countries.kw', { defaultValue: 'Kuwait' })}</option>
-                          <option value="QA">{t('common.countries.qa', { defaultValue: 'Qatar' })}</option>
-                          <option value="BH">{t('common.countries.bh', { defaultValue: 'Bahrain' })}</option>
-                          <option value="OM">{t('common.countries.om', { defaultValue: 'Oman' })}</option>
-                          <option value="EG">{t('common.countries.eg', { defaultValue: 'Egypt' })}</option>
-                          <option value="GB">{t('common.countries.gb', { defaultValue: 'United Kingdom' })}</option>
-                          <option value="DE">{t('common.countries.de', { defaultValue: 'Germany' })}</option>
-                          <option value="TR">{t('common.countries.tr', { defaultValue: 'Turkey' })}</option>
+                          {countryOptions.map((countryOption) => (
+                            <option key={countryOption.code} value={countryOption.code}>
+                              {countryOption.label}
+                            </option>
+                          ))}
                         </select>
                         <ChevronDown className={`absolute ${isRTL ? 'left-4' : 'right-4'} top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none`} size={16} />
                       </div>
@@ -1173,13 +1246,125 @@ export function OnboardingPage() {
                       </button>
                     )}
                   </div>
-                  <h2 className="font-magilio text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tight mb-2">{t('onboarding.step4.title')}</h2>
-                  <p className="text-sm font-sans text-gray-600 dark:text-gray-300">{t('onboarding.step4.subtitle')}</p>
+                  <h2 className="font-magilio text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tight mb-2">
+                    {isAdditionalLocation
+                      ? t('onboarding.step4.lockedTitle', { defaultValue: 'Owner Login Ready' })
+                      : t('onboarding.step4.title')}
+                  </h2>
+                  <p className="text-sm font-sans text-gray-600 dark:text-gray-300">
+                    {isAdditionalLocation
+                      ? t('onboarding.step4.lockedSubtitle', { defaultValue: 'Your universal owner account is already linked to this account.' })
+                      : t('onboarding.step4.subtitle')}
+                  </p>
                   <div className="mt-4 p-3 bg-mintcom-green/10 text-mintcom-green text-sm rounded-xl font-sans border border-mintcom-green/20">
-                    <p>✨ {t('onboarding.step4.step2Note')}</p>
+                    <p>
+                      {isAdditionalLocation
+                        ? t('onboarding.step4.lockedNote', {
+                            defaultValue:
+                              'Your previous universal owner account already has access to all locations. These details are locked here to prevent duplicate owner accounts.',
+                          })
+                        : t('onboarding.step4.step2Note')}
+                    </p>
                   </div>
                 </div>
 
+                {isAdditionalLocation ? (
+                  <div className="space-y-6" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
+                    <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4 text-blue-900 dark:border-blue-400/20 dark:bg-blue-400/10 dark:text-blue-100">
+                      <div className="flex items-start gap-3">
+                        <ShieldCheck className="mt-0.5 shrink-0 text-mintcom-green" size={20} />
+                        <p className="text-sm font-sans font-semibold leading-6">
+                          {t('onboarding.step4.universalOwnerNotice', {
+                            defaultValue:
+                              'This owner login is universal. It will manage POS and Back Office access for this new location automatically after launch.',
+                          })}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-xs font-sans text-gray-400 ml-1">
+                          {t('onboarding.step4.firstName')}
+                        </label>
+                        <div className="relative">
+                          <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                          <input
+                            value={ownerLoginDisplay.firstName}
+                            readOnly
+                            className="w-full bg-gray-100 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-2xl py-4 pl-12 pr-4 text-sm font-sans font-normal text-gray-600 dark:text-gray-300"
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-sans text-gray-400 ml-1">
+                          {t('onboarding.step4.lastName')}
+                        </label>
+                        <div className="relative">
+                          <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                          <input
+                            value={ownerLoginDisplay.lastName}
+                            readOnly
+                            className="w-full bg-gray-100 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-2xl py-4 pl-12 pr-4 text-sm font-sans font-normal text-gray-600 dark:text-gray-300"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-xs font-sans text-gray-400 ml-1">
+                        {t('onboarding.step4.username')}
+                      </label>
+                      <div className="relative">
+                        <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                        <input
+                          value={
+                            isOwnerLoginLoading
+                              ? t('onboarding.step4.loadingOwnerLogin', { defaultValue: 'Loading owner login...' })
+                              : ownerLoginDisplay.username
+                          }
+                          readOnly
+                          className="w-full bg-gray-100 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-2xl py-4 pl-12 pr-12 text-sm font-sans font-normal text-gray-600 dark:text-gray-300"
+                        />
+                        <Lock className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-xs font-sans text-gray-400 ml-1">
+                        {t('onboarding.step4.ownerEmail', { defaultValue: 'Owner Email' })}
+                      </label>
+                      <div className="relative">
+                        <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                        <input
+                          value={ownerLoginDisplay.email}
+                          readOnly
+                          className="w-full bg-gray-100 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-2xl py-4 pl-12 pr-12 text-sm font-sans font-normal text-gray-600 dark:text-gray-300"
+                        />
+                        <Lock className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                      </div>
+                      <p className="text-xs font-sans text-gray-500 dark:text-gray-400 ml-1">
+                        {t('onboarding.step4.lockedHelper', {
+                          defaultValue:
+                            'Edit the universal owner login from Employees or Account Settings, not from location setup.',
+                        })}
+                      </p>
+                    </div>
+
+                    <div className="pt-4">
+                      <button
+                        type="button"
+                        onClick={() => goToStep(4)}
+                        disabled={isOwnerLoginLoading}
+                        className="w-full py-5 bg-mintcom-green text-black text-base font-sans font-bold rounded-2xl hover:bg-mintcom-green/90 transition-all shadow-xl shadow-mintcom-green/20 disabled:opacity-50 flex items-center justify-center gap-3 active:scale-[0.98]"
+                      >
+                        {isRTL && <ArrowRight size={24} />}
+                        {t('onboarding.nextStep')}
+                        {!isRTL && <ArrowRight size={24} />}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
                 <form onSubmit={form3.handleSubmit(onStep3Submit)} autoComplete="off" className="space-y-6" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
@@ -1276,6 +1461,7 @@ export function OnboardingPage() {
                     </button>
                   </div>
                 </form>
+                )}
               </div>
             </motion.div>
           )}

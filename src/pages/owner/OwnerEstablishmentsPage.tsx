@@ -22,6 +22,7 @@ import { CustomSelect } from '../../components/CustomSelect';
 import { Pagination } from '../../components/ui';
 import { StatValue } from '../../components/ui/StatValue';
 import { getBusinessTypeIcon } from '../../utils/businessTypeIcons';
+import { formatBusinessTypeLabel } from '../../utils/businessTypeLabel';
 import { formatInputPlaceholder } from '../../utils/textCase';
 
 type ViewMode = 'grid' | 'list';
@@ -384,7 +385,7 @@ export function OwnerEstablishmentsPage() {
                                                     {est.name}
                                                 </h3>
                                                     <div className="flex items-center gap-2 mt-1">
-                                                        <span className="text-xs font-bold text-gray-500">{est.type ? est.type.charAt(0).toUpperCase() + est.type.slice(1).toLowerCase() : t('owner.locations.standard')}</span>
+                                                        <span className="text-xs font-bold text-gray-500">{formatBusinessTypeLabel(est.type) || t('owner.locations.standard')}</span>
                                                         <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-white/20" />
                                                         <span className="text-xs font-bold text-gray-500">{est.currency?.toUpperCase() || 'JOD'}</span>
                                                     </div>
@@ -502,7 +503,7 @@ export function OwnerEstablishmentsPage() {
                                             <div>
                                                 <h3 className="font-bold tracking-tight text-gray-900 dark:text-white text-sm">{est.name}</h3>
                                                 <div className="flex items-center gap-2 mt-1">
-                                                    <span className="text-xs text-gray-500">{est.type ? est.type.charAt(0).toUpperCase() + est.type.slice(1).toLowerCase() : t('owner.locations.standard')}</span>
+                                                    <span className="text-xs text-gray-500">{formatBusinessTypeLabel(est.type) || t('owner.locations.standard')}</span>
                                                     {est.id === highlightId && (
                                                         <span className="text-xs text-mintcom-green font-bold tracking-wider">{t('owner.locations.new')}</span>
                                                     )}
@@ -596,7 +597,7 @@ export function OwnerEstablishmentsPage() {
                                     {/* Type */}
                                     <div className="col-span-2 flex items-center justify-center text-center">
                                         <span className="text-sm font-bold text-gray-900 dark:text-white text-center">
-                                            {est.type ? est.type.charAt(0).toUpperCase() + est.type.slice(1).toLowerCase() : t('owner.locations.standard')}
+                                            {formatBusinessTypeLabel(est.type) || t('owner.locations.standard')}
                                         </span>
                                     </div>
 
@@ -654,7 +655,6 @@ export function OwnerEstablishmentsPage() {
         </div>
     );
 }
-
 
 
 

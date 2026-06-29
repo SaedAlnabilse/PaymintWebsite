@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { useTheme } from '../../../context/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { getDateLocale } from '../../../utils/dateLocale';
+import { parseChartDate } from '../../../utils/chartDate';
 
 interface RevenueChartProps {
   dailyBreakdown: { date: string; revenue: number; count?: number }[];
@@ -263,8 +264,9 @@ export const RevenueChart = React.memo(function RevenueChart({ dailyBreakdown, v
                         tickFormatter={(val) => {
                             // If it's already a display value (like "Mon" or "Jan 5"), return as-is
                             if (needsDailyAggregation) return val;
-                            // Otherwise format the date
-                            const date = new Date(val);
+                            // Otherwise format the date (parse as local day to
+                            // avoid a UTC-midnight off-by-one in the label)
+                            const date = parseChartDate(val);
                             const dateLocale = getDateLocale(t('common.locale'));
                             return !isNaN(date.getTime()) ? format(date, 'MMM d', { locale: dateLocale }) : val;
                         }}
@@ -294,7 +296,7 @@ export const RevenueChart = React.memo(function RevenueChart({ dailyBreakdown, v
                                 return !isNaN(date.getTime()) ? format(date, 'EEEE, MMM d, yyyy', { locale: dateLocale }) : val;
                             }
                             }
-                            const date = new Date(val);
+                            const date = parseChartDate(val);
                             return !isNaN(date.getTime()) ? format(date, 'MMM d, yyyy', { locale: dateLocale }) : val;
                         }}
                         />

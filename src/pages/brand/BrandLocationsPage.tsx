@@ -29,6 +29,7 @@ import { DATE_PERIOD_OPTIONS, calculateDateRange, formatDateForInput } from '../
 import type { DatePeriod } from '../../utils/datePeriods';
 import { LinkLocationModal } from '../../components/LinkLocationModal';
 import { SectionLoader } from '../../components/LoadingState';
+import { formatBusinessTypeLabel } from '../../utils/businessTypeLabel';
 import { formatInputPlaceholder } from '../../utils/textCase';
 import { StatValue } from '../../components/ui/StatValue';
 
@@ -613,7 +614,7 @@ export function BrandLocationsPage() {
                                                 <h3 className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-mintcom-green transition-colors truncate" title={loc.name}>
                                                     {loc.name}
                                                 </h3>
-                                                <p className="text-xs text-gray-500 mt-0.5 truncate">{loc.type ? loc.type.charAt(0).toUpperCase() + loc.type.slice(1).toLowerCase() : t('onboarding.step1.businessTypes.restaurant')} - {loc.currency ? loc.currency.toUpperCase() : 'USD'}</p>
+                                                <p className="text-xs text-gray-500 mt-0.5 truncate">{formatBusinessTypeLabel(loc.type) || t('onboarding.step1.businessTypes.restaurant')} - {loc.currency ? loc.currency.toUpperCase() : 'USD'}</p>
                                             </div>
                                         </div>
 
@@ -748,7 +749,6 @@ export function BrandLocationsPage() {
         </div >
     );
 }
-
 
 
 

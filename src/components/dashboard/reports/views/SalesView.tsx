@@ -16,6 +16,7 @@ import { ComposedChart, Area, Bar, ResponsiveContainer, XAxis, YAxis, Tooltip, C
 import { format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 import { getDateLocale } from '../../../../utils/dateLocale';
+import { parseChartDate } from '../../../../utils/chartDate';
 import { useCurrency } from '../../../../context/CurrencyContext';
 import { useTheme } from '../../../../context/ThemeContext';
 import type { SalesSummary } from '../../../../types';
@@ -401,7 +402,7 @@ export const SalesView = React.memo(function SalesView({ salesData, selectedDate
                                 const dateLocale = getDateLocale(t('common.locale'));
                                 if (needsDailyAggregation) return val;
                                 if (val.length === 5 && val.includes(':')) return val;
-                                const date = new Date(val);
+                                const date = parseChartDate(val);
                                 return !isNaN(date.getTime()) ? (val.includes(':') ? format(date, 'HH:00', { locale: dateLocale }) : format(date, 'MMM d', { locale: dateLocale })) : val;
                               }}
                               dy={15}
@@ -427,7 +428,7 @@ export const SalesView = React.memo(function SalesView({ salesData, selectedDate
                                   return !isNaN(new Date(dateStr).getTime()) ? format(new Date(dateStr), 'EEEE, MMM d, yyyy', { locale: dateLocale }) : val;
                                 }
                                 if (val.length === 5 && val.includes(':')) return val;
-                                const date = new Date(val);
+                                const date = parseChartDate(val);
                                 return !isNaN(date.getTime()) ? format(date, 'MMM d, yyyy HH:mm', { locale: dateLocale }) : val;
                               }}
                             />

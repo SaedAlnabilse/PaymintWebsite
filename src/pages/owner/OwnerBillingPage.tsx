@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { Plus, CreditCard, DollarSign, Trash2, Star, AlertCircle, Calendar, CheckCircle2, XCircle, Zap, MoreVertical, Eye, ArrowUpDown, RotateCcw } from 'lucide-react';
+import { Plus, CreditCard, DollarSign, Trash2, AlertCircle, Calendar, CheckCircle2, XCircle, Zap, MoreVertical, Eye, ArrowUpDown, RotateCcw, Check } from 'lucide-react';
 import api from '../../config/api';
 import { AddPaymentMethodModal } from '../../components/AddPaymentMethodModal';
 import { SecurityVerificationModal } from '../../components/SecurityVerificationModal';
@@ -34,7 +34,7 @@ interface EstablishmentBilling {
     billingCycle?: 'monthly' | 'yearly';
     yearlyPrice?: number;
     nextBillDate?: string;
-    paymentCard: { id: string; brand: string; last4: string } | null;
+    paymentCard: { id: string; brand: string; last4: string; isInherited?: boolean } | null;
 }
 
 
@@ -68,6 +68,10 @@ export function OwnerBillingPage() {
     });
     const [activeMenu, setActiveMenu] = useState<string | null>(null);
     const [nextBillSortOrder, setNextBillSortOrder] = useState<'asc' | 'desc'>('asc');
+    const [cardAssignmentEstablishment, setCardAssignmentEstablishment] = useState<EstablishmentBilling | null>(null);
+    const [addCardEstablishmentId, setAddCardEstablishmentId] = useState<string | null>(null);
+    const [addCardEstablishmentName, setAddCardEstablishmentName] = useState<string | null>(null);
+    const [isAssigningCard, setIsAssigningCard] = useState(false);
 
     const { refreshEstablishments } = useAuth();
 
@@ -141,13 +145,23 @@ export function OwnerBillingPage() {
         }
     };
 
-    const handleSetDefaultCard = async (cardId: string) => {
+    const openAddCardModal = (establishmentId?: string | null, establishmentName?: string | null) => {
+        setAddCardEstablishmentId(establishmentId || null);
+        setAddCardEstablishmentName(establishmentName || null);
+        setIsAddCardModalOpen(true);
+    };
+
+    const handleAssignCardToEstablishment = async (cardId: string, establishmentId: string) => {
         try {
-            await api.post(`/api/accounts/cards/${cardId}/set-default`);
+            setIsAssigningCard(true);
+            await api.post(`/api/accounts/cards/${encodeURIComponent(cardId)}/link/${encodeURIComponent(establishmentId)}`);
             toast.success(t('owner.billing.cardUpdated'));
-            fetchBillingInfo();
+            setCardAssignmentEstablishment(null);
+            await fetchBillingInfo();
         } catch (err: any) {
             toast.error(err.response?.data?.message || t('owner.billing.cardUpdateFailed'));
+        } finally {
+            setIsAssigningCard(false);
         }
     };
 
@@ -408,7 +422,7 @@ export function OwnerBillingPage() {
                     )}
                     <div className="w-px h-10 bg-gray-200 dark:bg-white/10 hidden sm:block" />
                     <button
-                        onClick={() => setIsAddCardModalOpen(true)}
+                        onClick={() => openAddCardModal()}
                         className="flex items-center gap-2 px-5 py-3 rounded-xl bg-mintcom-green text-black font-bold text-sm hover:bg-[#5fa888] transition-all shadow-sm"
                     >
                         <Plus size={18} />
@@ -477,7 +491,7 @@ export function OwnerBillingPage() {
                         </div>
                     ) : billingData?.savedCards.length === 0 ? (
                         <motion.button
-                            onClick={() => setIsAddCardModalOpen(true)}
+                            onClick={() => openAddCardModal()}
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             className="w-full p-8 rounded-2xl border-2 border-dashed border-gray-200 dark:border-white/10 text-gray-400 hover:text-mintcom-green hover:border-mintcom-green/30 transition-all flex flex-col items-center gap-3 bg-gray-50 dark:bg-white/[0.02]"
@@ -506,12 +520,9 @@ export function OwnerBillingPage() {
                                     <div className="relative z-10">
                                         <div className="flex justify-between items-start mb-1.5">
                                             <p className="dashboard-card-label">{t('owner.billing.addCard')}</p>
-                                            {card.isDefault && (
-                                                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-mintcom-green text-black text-[8px] font-black rounded-[12px] tracking-widest shadow-lg shadow-mintcom-green/20">
-                                                    <div className="w-1 h-1 rounded-full bg-black animate-pulse" />
-                                                    {t('owner.billing.primary')}
-                                                </div>
-                                            )}
+                                            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-gray-100 text-gray-500 dark:bg-white/10 dark:text-gray-300 text-[8px] font-black rounded-[12px] tracking-widest">
+                                                {t('owner.billing.saved_card', { defaultValue: 'Saved' })}
+                                            </div>
                                         </div>
                                         
                                         <p className="text-xl font-bold tracking-[0.15em] text-gray-900 dark:text-white">
@@ -532,15 +543,6 @@ export function OwnerBillingPage() {
 
                                     {/* Actions Overlay - Visible on hover or when primary action button is clicked on mobile */}
                                     <div className="absolute inset-0 bg-white/60 dark:bg-black/60 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-4 z-20 pointer-events-none group-hover:pointer-events-auto">
-                                        {!card.isDefault && (
-                                            <button
-                                                onClick={(e) => { e.stopPropagation(); handleSetDefaultCard(card.id); }}
-                                                className="w-12 h-12 rounded-2xl bg-white dark:bg-[#1E293B] border border-gray-200 dark:border-white/10 text-gray-400 hover:text-mintcom-green hover:border-mintcom-green/50 flex items-center justify-center transition-all shadow-xl hover:scale-110 active:scale-95 pointer-events-auto"
-                                                title={t('owner.billing.setDefault')}
-                                            >
-                                                <Star size={20} />
-                                            </button>
-                                        )}
                                         {card.canDelete ? (
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); handleDeleteCard(card.id, card.last4); }}
@@ -666,8 +668,21 @@ export function OwnerBillingPage() {
                                         {/* Payment */}
                                         <div className="col-span-2 text-center flex justify-center">
                                             <span className="dashboard-card-meta truncate text-center">
-                                                {est.paymentCard ? `•••• ${est.paymentCard.last4}` : t('owner.billing.noCard')}
+                                                {est.paymentCard ? `${est.paymentCard.brand} •••• ${est.paymentCard.last4}` : t('owner.billing.noCard')}
                                             </span>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    if ((billingData?.savedCards.length || 0) === 0) {
+                                                        openAddCardModal(est.id, est.name);
+                                                        return;
+                                                    }
+                                                    setCardAssignmentEstablishment(est);
+                                                }}
+                                                className="ml-2 rounded-lg border border-gray-200 px-2 py-1 text-[10px] font-black tracking-wide text-gray-500 transition hover:border-mintcom-green/40 hover:text-mintcom-green dark:border-white/10 dark:text-gray-400"
+                                            >
+                                                {t('owner.billing.change_card', { defaultValue: 'Change' })}
+                                            </button>
                                         </div>
 
                                         {/* Actions */}
@@ -697,6 +712,20 @@ export function OwnerBillingPage() {
                                                         >
                                                             <Eye size={14} />
                                                             {t('owner.billing.viewDashboard')}
+                                                        </button>
+                                                        <button
+                                                            onClick={() => {
+                                                                setActiveMenu(null);
+                                                                if ((billingData?.savedCards.length || 0) === 0) {
+                                                                    openAddCardModal(est.id, est.name);
+                                                                    return;
+                                                                }
+                                                                setCardAssignmentEstablishment(est);
+                                                            }}
+                                                            className="w-full px-4 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 tracking-wide transition-colors flex items-center gap-2"
+                                                        >
+                                                            <CreditCard size={14} />
+                                                            {t('owner.billing.change_card', { defaultValue: 'Change card' })}
                                                         </button>
                                                         {est.subscriptionStatus === 'TRIAL' && !est.cancelAtPeriodEnd && (
                                                             <button
@@ -760,9 +789,98 @@ export function OwnerBillingPage() {
 
             <AddPaymentMethodModal
                 isOpen={isAddCardModalOpen}
-                onClose={() => setIsAddCardModalOpen(false)}
+                onClose={() => {
+                    setIsAddCardModalOpen(false);
+                    setAddCardEstablishmentId(null);
+                    setAddCardEstablishmentName(null);
+                }}
                 onSuccess={fetchBillingInfo}
+                linkEstablishmentId={addCardEstablishmentId}
+                linkEstablishmentName={addCardEstablishmentName}
             />
+
+            <AnimatePresence>
+                {cardAssignmentEstablishment && billingData && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[9998] flex items-end justify-center bg-black/45 p-0 sm:items-center sm:p-4"
+                        onClick={() => !isAssigningCard && setCardAssignmentEstablishment(null)}
+                    >
+                        <motion.div
+                            initial={{ opacity: 0, y: 24 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 24 }}
+                            className="w-full max-w-md rounded-t-2xl border border-gray-200 bg-white p-5 shadow-2xl dark:border-white/10 dark:bg-[#1E293B] sm:rounded-2xl"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="mb-4 flex items-start justify-between gap-4">
+                                <div>
+                                    <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                                        {t('owner.billing.change_card', { defaultValue: 'Change card' })}
+                                    </h3>
+                                    <p className="mt-1 text-sm font-medium text-gray-500 dark:text-gray-400">
+                                        {cardAssignmentEstablishment.name}
+                                    </p>
+                                </div>
+                                <button
+                                    type="button"
+                                    disabled={isAssigningCard}
+                                    onClick={() => setCardAssignmentEstablishment(null)}
+                                    className="rounded-lg p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50 dark:hover:bg-white/5 dark:hover:text-white"
+                                >
+                                    <XCircle size={18} />
+                                </button>
+                            </div>
+
+                            <div className="space-y-2">
+                                {billingData.savedCards.map((card) => {
+                                    const isCurrent = cardAssignmentEstablishment.paymentCard?.id === card.id;
+                                    return (
+                                        <button
+                                            key={card.id}
+                                            type="button"
+                                            disabled={isAssigningCard || isCurrent}
+                                            onClick={() => handleAssignCardToEstablishment(card.id, cardAssignmentEstablishment.id)}
+                                            className={`flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left transition ${
+                                                isCurrent
+                                                    ? 'border-mintcom-green/40 bg-mintcom-green/10'
+                                                    : 'border-gray-200 hover:border-mintcom-green/40 hover:bg-gray-50 dark:border-white/10 dark:hover:bg-white/5'
+                                            } disabled:cursor-default`}
+                                        >
+                                            <span>
+                                                <span className="block text-sm font-bold text-gray-900 dark:text-white">
+                                                    {card.brand} •••• {card.last4}
+                                                </span>
+                                                <span className="block text-xs font-medium text-gray-500 dark:text-gray-400">
+                                                    {card.cardholderName || t('owner.billing.cardholder', { defaultValue: 'Cardholder' })}
+                                                </span>
+                                            </span>
+                                            {isCurrent && <Check size={18} className="text-mintcom-green" />}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            <button
+                                type="button"
+                                disabled={isAssigningCard}
+                                onClick={() => {
+                                    const establishmentId = cardAssignmentEstablishment.id;
+                                    const establishmentName = cardAssignmentEstablishment.name;
+                                    setCardAssignmentEstablishment(null);
+                                    openAddCardModal(establishmentId, establishmentName);
+                                }}
+                                className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-mintcom-green px-4 py-3 text-sm font-bold text-black transition hover:bg-[#5fa888] disabled:opacity-60"
+                            >
+                                <Plus size={16} />
+                                {t('owner.billing.add_new_card', { defaultValue: 'Add new card' })}
+                            </button>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             <SecurityVerificationModal
                 isOpen={securityModal.isOpen}
@@ -777,8 +895,6 @@ export function OwnerBillingPage() {
         </div>
     );
 };
-
-
 
 
 

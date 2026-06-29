@@ -747,6 +747,10 @@
     "owner": "Owner",
     "someone": "Someone",
     "locked": "Locked",
+    "expand": "Expand",
+    "collapse": "Collapse",
+    "show": "Show",
+    "hide": "Hide",
     "aria": {
       "changeLanguage": "Change language",
       "closeMenu": "Close menu",
@@ -1716,7 +1720,7 @@
       "cafe": "Cafe",
       "other": "Other",
       "restaurant": "Restaurant",
-      "retail": "Retail"
+      "retail": "Retail Store"
     }
   },
   "feedback": {
@@ -2965,7 +2969,7 @@
         "cafe": "Cafe",
         "other": "Other",
         "restaurant": "Restaurant",
-        "retail": "Retail"
+        "retail": "Retail Store"
       },
       "businessTypeTip": "Select your business type.",
       "copySettings": "Copy Settings",
@@ -3069,12 +3073,19 @@
       "firstNamePlaceholder": "John",
       "lastName": "Last Name",
       "lastNamePlaceholder": "Doe",
+      "loadingOwnerLogin": "Loading owner login...",
+      "lockedHelper": "Edit the universal owner login from Employees or Account Settings, not from location setup.",
+      "lockedNote": "Your previous universal owner account already has access to all locations. These details are locked here to prevent duplicate owner accounts.",
+      "lockedSubtitle": "Your universal owner account is already linked to this account.",
+      "lockedTitle": "Owner Login Ready",
+      "ownerEmail": "Owner Email",
       "password": "Personal Password",
       "passwordPlaceholder": "••••••••",
       "passwordTip": "At least 8 characters with uppercase, lowercase, and a number.",
       "step2Note": "This owner login works across all of your locations.",
       "subtitle": "Create the universal owner login for every location.",
       "title": "Create Owner Login",
+      "universalOwnerNotice": "This owner login is universal. It will manage POS and Back Office access for this new location automatically after launch.",
       "username": "Owner Username",
       "usernamePlaceholder": "admin",
       "usernameTip": "Your username."
