@@ -9,6 +9,7 @@ import {
     Grid,
     List,
     Trash2,
+    Archive,
     Edit2,
     Package,
     Infinity as InfinityIcon,
@@ -69,6 +70,9 @@ interface Product {
     type?: 'ITEM' | 'ADDON';
     deletedAt?: string | null;
     deactivatedAt?: string | null;
+    // True when removing this item permanently deletes it (no sales/report
+    // history) vs. archiving it. Provided by the items list for management views.
+    willHardDelete?: boolean;
     category?: Category;
 }
 
@@ -1231,7 +1235,7 @@ export function ProductsPage() {
                                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent transition-opacity duration-300 flex items-end justify-between p-3">
                                                 <button onClick={(e) => { e.stopPropagation(); handleEdit(p); }} aria-label={t('products.editProduct')} className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center bg-white rounded-lg text-gray-900 hover:bg-mintcom-green hover:text-black transition-colors shadow-sm"><Edit2 size={18} /></button>
                                                 {isProductActive(p) ? (
-                                                    <button onClick={(e) => { e.stopPropagation(); handleDelete(p.id, p.name); }} aria-label={t('products.delete.title')} className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center bg-white rounded-lg text-mintcom-red hover:bg-red-500 hover:text-white transition-colors shadow-sm"><Trash2 size={18} /></button>
+                                                    <button onClick={(e) => { e.stopPropagation(); handleDelete(p.id, p.name); }} aria-label={p.willHardDelete ? t('products.delete.title') : t('common.archive', { defaultValue: 'Archive' })} className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center bg-white rounded-lg text-mintcom-red hover:bg-red-500 hover:text-white transition-colors shadow-sm">{p.willHardDelete ? <Trash2 size={18} /> : <Archive size={18} />}</button>
                                                 ) : (
                                                     <button onClick={(e) => { e.stopPropagation(); handleReactivate(p); }} aria-label={t('common.reactivate', { defaultValue: 'Reactivate' })} className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center bg-white rounded-lg text-mintcom-green hover:bg-mintcom-green hover:text-black transition-colors shadow-sm"><RotateCcw size={18} /></button>
                                                 )}
@@ -1401,7 +1405,7 @@ export function ProductsPage() {
                                                     <div className="flex items-center justify-center gap-1 sm:gap-2">
                                                         <button onClick={(e) => { e.stopPropagation(); handleEdit(p); }} aria-label={t('products.editProduct')} className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-400 hover:text-mintcom-green hover:bg-mintcom-green/10 rounded-lg transition-colors"><Edit2 size={18} /></button>
                                                         {isProductActive(p) ? (
-                                                            <button onClick={(e) => { e.stopPropagation(); handleDelete(p.id, p.name); }} aria-label={t('products.delete.title')} className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-400 hover:text-mintcom-red hover:bg-mintcom-red/10 rounded-lg transition-colors"><Trash2 size={18} /></button>
+                                                            <button onClick={(e) => { e.stopPropagation(); handleDelete(p.id, p.name); }} aria-label={p.willHardDelete ? t('products.delete.title') : t('common.archive', { defaultValue: 'Archive' })} className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-400 hover:text-mintcom-red hover:bg-mintcom-red/10 rounded-lg transition-colors">{p.willHardDelete ? <Trash2 size={18} /> : <Archive size={18} />}</button>
                                                         ) : (
                                                             <button onClick={(e) => { e.stopPropagation(); handleReactivate(p); }} aria-label={t('common.reactivate', { defaultValue: 'Reactivate' })} className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-400 hover:text-mintcom-green hover:bg-mintcom-green/10 rounded-lg transition-colors"><RotateCcw size={18} /></button>
                                                         )}
