@@ -13,6 +13,18 @@ import { getDateLocale } from '../../../../utils/dateLocale';
 import { AnalyticsEmptyState } from '../AnalyticsEmptyState';
 import { StatValue } from '../../../../components/ui/StatValue';
 
+// Report names arrive with inline status markers baked into the string, e.g.
+// "Tea Type > Black Tea [History]". Strip them for display and lift [Deleted]
+// out so it renders as the dedicated badge instead of literal text.
+const DELETED_MARKER_RE = /\[\s*deleted\s*\]/i;
+const NAME_MARKER_RE = /\[\s*(?:history|deleted)\s*\]/gi;
+const stripNameMarkers = (raw: string) =>
+  raw
+    .replace(NAME_MARKER_RE, '')
+    .replace(/\s{2,}/g, ' ')
+    .replace(/\s+>/g, ' >')
+    .trim();
+
 interface ItemsViewProps {
   itemReportData: ItemReportData;
   itemReportTab: 'items' | 'categories' | 'modifiers' | 'attributes';
@@ -68,6 +80,7 @@ export const ItemsView = React.memo(function ItemsView({
           ),
         ),
         subAttributeIds: [] as string[],
+        attributeIds: [] as string[],
       };
     }
 
@@ -81,10 +94,29 @@ export const ItemsView = React.memo(function ItemsView({
               .filter((value): value is string => Boolean(value)),
           ),
         ),
+        attributeIds: [] as string[],
       };
     }
 
-    return { itemIds: [] as string[], subAttributeIds: [] as string[] };
+    if (itemReportTab === 'attributes') {
+      return {
+        itemIds: [] as string[],
+        subAttributeIds: [] as string[],
+        attributeIds: Array.from(
+          new Set(
+            breakdown
+              .map((item: any) => item.attributeId || item.id)
+              .filter((value: unknown): value is string => Boolean(value)),
+          ),
+        ),
+      };
+    }
+
+    return {
+      itemIds: [] as string[],
+      subAttributeIds: [] as string[],
+      attributeIds: [] as string[],
+    };
   }, [itemReportData?.breakdown, itemReportTab]);
 
   // Fetch Price History when report content changes
@@ -102,7 +134,8 @@ export const ItemsView = React.memo(function ItemsView({
 
       if (
         historyTargets.itemIds.length === 0 &&
-        historyTargets.subAttributeIds.length === 0
+        historyTargets.subAttributeIds.length === 0 &&
+        historyTargets.attributeIds.length === 0
       ) {
         setPriceHistory([]);
         return;
@@ -118,6 +151,9 @@ export const ItemsView = React.memo(function ItemsView({
               : {}),
             ...(historyTargets.subAttributeIds.length > 0
               ? { subAttributeIds: historyTargets.subAttributeIds.join(',') }
+              : {}),
+            ...(historyTargets.attributeIds.length > 0
+              ? { attributeIds: historyTargets.attributeIds.join(',') }
               : {}),
           }
         });
@@ -136,6 +172,7 @@ export const ItemsView = React.memo(function ItemsView({
     itemReportTab,
     historyTargets.itemIds,
     historyTargets.subAttributeIds,
+    historyTargets.attributeIds,
   ]);
 
   useEffect(() => {
@@ -167,7 +204,7 @@ export const ItemsView = React.memo(function ItemsView({
     if (itemSearchQuery.trim()) {
       const query = itemSearchQuery.toLowerCase();
       items = items.filter(item => {
-        const name = (item.itemName || item.name || '').toLowerCase();
+        const name = stripNameMarkers(item.itemName || item.name || '').toLowerCase();
         return name.includes(query);
       });
     }
@@ -258,7 +295,9 @@ export const ItemsView = React.memo(function ItemsView({
     return priceHistory.filter((historyEntry) => {
       const matchesId =
         historyEntry.type === type &&
-        (historyEntry.itemId === id || historyEntry.subAttributeId === id);
+        (historyEntry.itemId === id ||
+          historyEntry.subAttributeId === id ||
+          historyEntry.attributeId === id);
 
       if (!matchesId) {
         return false;
@@ -499,10 +538,17 @@ export const ItemsView = React.memo(function ItemsView({
                     const itemId =
                       itemReportTab === 'items'
                         ? (item.itemId || item.id)
-                        : (item.modifierId || item.id);
-                    const itemType = itemReportTab === 'modifiers' ? 'ADDON' : 'ITEM';
+                        : itemReportTab === 'attributes'
+                          ? (item.attributeId || item.id)
+                          : (item.modifierId || item.id);
+                    const itemType =
+                      itemReportTab === 'modifiers' || itemReportTab === 'attributes'
+                        ? 'ADDON'
+                        : 'ITEM';
                     const canShowHistory =
-                      (itemReportTab === 'items' || itemReportTab === 'modifiers') &&
+                      (itemReportTab === 'items' ||
+                        itemReportTab === 'modifiers' ||
+                        itemReportTab === 'attributes') &&
                       Boolean(itemId);
                     const itemHist =
                       canShowHistory
@@ -514,11 +560,15 @@ export const ItemsView = React.memo(function ItemsView({
                         : [];
                     const hasHistory = itemHist.length > 0;
                     const hasHistoryInRange = periodHist.length > 0;
+                    const rawName = item.itemName || item.name || t('common.unknown');
+                    const displayName = stripNameMarkers(rawName) || rawName;
                     const isDeleted =
                       Boolean(item.deletedAt) ||
                       Boolean(item.deactivatedAt) ||
                       item.isActive === false ||
-                      item.deleted === true;
+                      item.deleted === true ||
+                      item.isDeleted === true ||
+                      DELETED_MARKER_RE.test(rawName);
 
                     return (
                       <motion.tr
@@ -529,9 +579,8 @@ export const ItemsView = React.memo(function ItemsView({
                         onClick={() => {
                           if (itemReportTab === 'categories') {
                             const categoryId = item.id || item.categoryId;
-                            const categoryName = item.itemName || item.name || t('common.unknown');
                             if (categoryId) {
-                              fetchCategoryBreakdown(categoryId, categoryName);
+                              fetchCategoryBreakdown(categoryId, displayName);
                             }
                           }
                         }}
@@ -543,7 +592,7 @@ export const ItemsView = React.memo(function ItemsView({
                               <StatValue value={(currentPage - 1) * itemsPerPage + idx + 1} isInteger={true} className="text-xs" />
                             </div>
                             <div className="flex items-center gap-2">
-                              <span className="font-bold text-gray-900 dark:text-white text-sm">{item.itemName || item.name || t('common.unknown')}</span>
+                              <span className="font-bold text-gray-900 dark:text-white text-sm">{displayName}</span>
                               {isDeleted && (
                                 <span className="text-[11px] font-black uppercase tracking-wider text-paymint-red">
                                   {t('reports.deletedBadge', { defaultValue: '[Deleted]' })}
@@ -557,9 +606,9 @@ export const ItemsView = React.memo(function ItemsView({
                                    onClick={(e) => {
                                      e.stopPropagation();
                                      setHistoryScope('all');
-                                     setSelectedHistoryItem({ 
+                                     setSelectedHistoryItem({
                                        id: itemId,
-                                       name: item.itemName || item.name || t('common.unknown'),
+                                       name: displayName,
                                        type: itemType,
                                      });
                                    }}
@@ -722,6 +771,15 @@ export const ItemsView = React.memo(function ItemsView({
                             {t('reports.history.updatedLabel', { defaultValue: 'Updated' })}
                           </div>
                         </div>
+
+                        {history.name &&
+                          !selectedHistoryItem.name
+                            .toLowerCase()
+                            .includes(history.name.toLowerCase()) && (
+                          <div className="text-sm font-bold text-gray-900 dark:text-white">
+                            {history.name}
+                          </div>
+                        )}
 
                         {(history.changedByName || history.changedById) && (
                           <div className="px-3 py-2 rounded-xl bg-white dark:bg-black/20 border border-gray-100 dark:border-white/5 text-xs font-bold text-gray-500 dark:text-gray-400">
@@ -899,7 +957,7 @@ export const ItemsView = React.memo(function ItemsView({
                                 <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-white/5 flex items-center justify-center font-black text-[10px] text-gray-400 border border-gray-100 dark:border-white/5">
                                   <StatValue value={idx + 1} isInteger={true} className="text-[10px]" />
                                 </div>
-                                <span className="font-bold text-gray-900 dark:text-white text-sm">{item.itemName || item.name || t('common.unknown')}</span>
+                                <span className="font-bold text-gray-900 dark:text-white text-sm">{stripNameMarkers(item.itemName || item.name || '') || t('common.unknown')}</span>
                               </div>
                             </td>
                             <td className="px-8 py-5 text-end font-bold text-gray-700 dark:text-gray-300">

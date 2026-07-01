@@ -1305,6 +1305,8 @@
     "importRows": "Import {{count}} Rows",
     "importSuccessful": "Import Successful!",
     "issuesFound": "Issues Found",
+    "newAddonAutoCreated": "1 new add-on group auto-created:",
+    "newAddonsAutoCreated": "{{count}} new add-on groups auto-created:",
     "newCategoriesAutoCreated": "{{count}} new categories auto-created:",
     "newCategoryAutoCreated": "1 new category auto-created:",
     "partialImport": "Partial Import",

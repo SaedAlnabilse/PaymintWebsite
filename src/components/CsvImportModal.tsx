@@ -22,6 +22,7 @@ export interface ImportResult {
     failed: number;
     errors: string[];
     createdCategories?: string[];
+    createdAddons?: string[];
 }
 
 interface CsvImportModalProps {
@@ -646,6 +647,27 @@ export function CsvImportModal({
                                             {importResult.createdCategories.map((cat, i) => (
                                                 <span key={i} className="px-2 py-0.5 rounded-md bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-300 text-xs font-bold">
                                                     {cat}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Created Add-ons */}
+                                {importResult.createdAddons && importResult.createdAddons.length > 0 && (
+                                    <div className="p-4 rounded-xl bg-purple-50 dark:bg-purple-900/10 border border-purple-200 dark:border-purple-500/20">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <CheckCircle2 size={14} className="text-purple-500" />
+                                            <p className="text-xs font-bold text-purple-600 dark:text-purple-400">
+                                                {importResult.createdAddons.length === 1
+                                                    ? t('csv.newAddonAutoCreated', { defaultValue: '1 new add-on group auto-created:' })
+                                                    : t('csv.newAddonsAutoCreated', { count: importResult.createdAddons.length, defaultValue: `${importResult.createdAddons.length} new add-on groups auto-created:` })}
+                                            </p>
+                                        </div>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {importResult.createdAddons.map((addon, i) => (
+                                                <span key={i} className="px-2 py-0.5 rounded-md bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-300 text-xs font-bold">
+                                                    {addon}
                                                 </span>
                                             ))}
                                         </div>
