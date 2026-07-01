@@ -1305,6 +1305,8 @@
     "importRows": "استيراد {{count}} صفوف",
     "importSuccessful": "تم الاستيراد بنجاح!",
     "issuesFound": "تم العثور على أخطاء",
+    "newAddonAutoCreated": "تم إنشاء مجموعة إضافات جديدة واحدة تلقائيًا:",
+    "newAddonsAutoCreated": "تم إنشاء {{count}} مجموعات إضافات جديدة تلقائيًا:",
     "newCategoriesAutoCreated": "تم إنشاء {{count}} فئات جديدة تلقائيًا:",
     "newCategoryAutoCreated": "تم إنشاء فئة جديدة واحدة تلقائيًا:",
     "partialImport": "استيراد جزئي",

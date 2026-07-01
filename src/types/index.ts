@@ -299,6 +299,7 @@ export interface ItemPriceHistory {
   id: string;
   itemId?: string;
   subAttributeId?: string;
+  attributeId?: string;
   type: 'ITEM' | 'ADDON';
   name: string;
   establishmentId?: string;

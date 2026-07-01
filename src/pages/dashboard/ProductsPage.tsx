@@ -74,7 +74,69 @@ interface Product {
     // history) vs. archiving it. Provided by the items list for management views.
     willHardDelete?: boolean;
     category?: Category;
+    // Linked add-on groups (attributes), included by the items list API.
+    itemAttributes?: {
+        attribute?: {
+            name?: string | null;
+            subAttributes?: { name?: string | null; price?: number | string | null }[] | null;
+        } | null;
+    }[];
 }
+
+// Add-on groups with their options and prices, for exports. Format:
+// "Size: Small | Medium +0.50 | Large +1; Extra Shot" — groups separated by
+// ";", options after ":" separated by "|", paid options suffixed with "+price".
+// The CSV import parses this same syntax back (see parseAddonsCell).
+const getAddonNames = (product: Product): string =>
+    (Array.isArray(product.itemAttributes) ? product.itemAttributes : [])
+        .map(ia => {
+            const attr = ia?.attribute;
+            const groupName = typeof attr?.name === 'string' ? attr.name.trim() : '';
+            if (!groupName) return '';
+            const options = (Array.isArray(attr?.subAttributes) ? attr.subAttributes : [])
+                .map(sub => {
+                    const optName = typeof sub?.name === 'string' ? sub.name.trim() : '';
+                    if (!optName) return '';
+                    const price = Number(sub?.price) || 0;
+                    return price > 0 ? `${optName} +${price}` : optName;
+                })
+                .filter(Boolean);
+            return options.length > 0 ? `${groupName}: ${options.join(' | ')}` : groupName;
+        })
+        .filter(Boolean)
+        .join('; ');
+
+// One add-on group parsed from a CSV cell: its name plus any options with prices.
+interface AddonSpec {
+    name: string;
+    options: { name: string; price: number }[];
+}
+
+// Parse an addons CSV cell. Supports the detailed export syntax above and the
+// legacy plain comma-separated list of group names ("Size, Extra Shot").
+const parseAddonsCell = (cell: string): AddonSpec[] => {
+    const raw = (cell || '').trim();
+    if (!raw) return [];
+    const entries = /[;:|]/.test(raw) ? raw.split(';') : raw.split(',');
+    const specs: AddonSpec[] = [];
+    for (const entry of entries) {
+        const [namePart, ...rest] = entry.split(':');
+        const name = namePart.trim();
+        if (!name) continue;
+        const options = rest.join(':').split('|')
+            .map(part => part.trim())
+            .filter(Boolean)
+            .map(part => {
+                const priceMatch = part.match(/\+\s*([\d.]+)\s*$/);
+                const price = priceMatch ? Number(priceMatch[1]) : 0;
+                const optName = priceMatch ? part.slice(0, priceMatch.index).trim() : part;
+                return { name: optName, price: isNaN(price) ? 0 : price };
+            })
+            .filter(opt => opt.name.length > 0);
+        specs.push({ name, options });
+    }
+    return specs;
+};
 
 type ProductSortKey = keyof Product | 'category' | 'status';
 type StatusFilterValue = 'ALL' | 'ACTIVE' | 'INACTIVE';
@@ -505,9 +567,10 @@ export function ProductsPage() {
                 return {
                     name: p.name,
                     price: p.price,
-                    category: catName,
                     cost_price: p.costPrice ?? '',
                     stock: p.trackStock ? (p.availableStock ?? 0) : t('products.table.unlimited'),
+                    category: catName,
+                    addons: getAddonNames(p),
                     description: p.description ?? '',
                 };
             });
@@ -522,9 +585,10 @@ export function ProductsPage() {
                 columns: [
                     { key: 'name', label: t('common.name', { defaultValue: 'Name' }) },
                     { key: 'price', label: `${t('products.form.priceLabel')} (${currencySymbol})` },
-                    { key: 'category', label: t('products.form.categoryLabel') },
                     { key: 'cost_price', label: `${t('products.form.costLabel')} (${currencySymbol})` },
                     { key: 'stock', label: t('products.table.stock') },
+                    { key: 'category', label: t('products.form.categoryLabel') },
+                    { key: 'addons', label: t('products.form.addonsLabel', { defaultValue: 'Add-ons' }) },
                     { key: 'description', label: t('products.form.descriptionLabel') },
                 ],
                 rows,
@@ -533,7 +597,7 @@ export function ProductsPage() {
 
         // Stable English headers that match the import schema exactly, so an
         // exported file can be re-imported without remapping (round-trip safe).
-        const headers = ['name', 'price', 'category', 'description', 'cost_price', 'track_stock', 'available_stock'];
+        const headers = ['name', 'price', 'cost_price', 'track_stock', 'available_stock', 'category', 'addons', 'description'];
 
         // Escape a value for CSV: wrap in quotes and double any inner quotes.
         const esc = (val: unknown): string => {
@@ -555,11 +619,12 @@ export function ProductsPage() {
                 return [
                     esc(p.name),
                     esc(p.price),
-                    esc(catName),
-                    esc(p.description ?? ''),
                     esc(p.costPrice ?? ''),
                     esc(p.trackStock ? 'true' : 'false'),
                     esc(stockVal),
+                    esc(catName),
+                    esc(getAddonNames(p)),
+                    esc(p.description ?? ''),
                 ].join(',');
             })
         ].join('\n');
@@ -582,18 +647,19 @@ export function ProductsPage() {
     const productCsvColumns: CsvColumn[] = [
         { key: 'name', label: 'Name', required: true, type: 'string' },
         { key: 'price', label: 'Price', required: true, type: 'number' },
-        { key: 'category', label: 'Category', required: true, type: 'string' },
-        { key: 'description', label: 'Description', required: false, type: 'string' },
         { key: 'cost_price', label: 'Cost Price', required: false, type: 'number' },
         { key: 'track_stock', label: 'Track Stock', required: false, type: 'string' },
         { key: 'available_stock', label: 'Available Stock', required: false, type: 'number' },
+        { key: 'category', label: 'Category', required: true, type: 'string' },
+        { key: 'addons', label: 'Add-ons', required: false, type: 'string' },
+        { key: 'description', label: 'Description', required: false, type: 'string' },
     ];
 
     const productSampleData = [
-        { name: 'Cappuccino', price: '4.50', category: 'Hot Drinks', description: 'Classic Italian coffee', cost_price: '1.20', track_stock: 'false', available_stock: '' },
-        { name: 'Iced Latte', price: '5.00', category: 'Cold Drinks', description: 'Chilled espresso with milk', cost_price: '1.50', track_stock: 'false', available_stock: '' },
-        { name: 'Chocolate Cake', price: '6.00', category: 'Desserts', description: 'Rich chocolate slice', cost_price: '2.00', track_stock: 'true', available_stock: '25' },
-        { name: 'Chicken Burger', price: '8.50', category: 'Food', description: 'Grilled chicken with lettuce', cost_price: '3.50', track_stock: 'true', available_stock: '40' },
+        { name: 'Cappuccino', price: '4.50', cost_price: '1.20', track_stock: 'false', available_stock: '', category: 'Hot Drinks', addons: 'Size: Small | Medium +0.50 | Large +1.00; Extra Shot', description: 'Classic Italian coffee' },
+        { name: 'Iced Latte', price: '5.00', cost_price: '1.50', track_stock: 'false', available_stock: '', category: 'Cold Drinks', addons: 'Size', description: 'Chilled espresso with milk' },
+        { name: 'Chocolate Cake', price: '6.00', cost_price: '2.00', track_stock: 'true', available_stock: '25', category: 'Desserts', addons: '', description: 'Rich chocolate slice' },
+        { name: 'Chicken Burger', price: '8.50', cost_price: '3.50', track_stock: 'true', available_stock: '40', category: 'Food', addons: 'Extras: Cheese +0.75 | Bacon +1.25; Sauces', description: 'Grilled chicken with lettuce' },
     ];
 
     const handleProductCsvImport = useCallback(async (rows: Record<string, string>[]): Promise<ImportResult> => {
@@ -601,6 +667,7 @@ export function ProductsPage() {
         let failed = 0;
         const errors: string[] = [];
         const createdCategories: string[] = [];
+        const createdAddons: string[] = [];
 
         // Build a mapping of category name â†’ ID (case-insensitive)
         // Refresh categories first to get latest state
@@ -612,6 +679,70 @@ export function ProductsPage() {
         } catch {
             categoryMap = new Map(categories.map(c => [c.name.toLowerCase().trim(), c.id]));
         }
+
+        // Add-on group (attribute) name → { id, existing option names }, all
+        // case-insensitive. Only active groups are returned, matching what a
+        // product can link to.
+        type AddonApiShape = { id: string; name: string; subAttributes?: { name?: string }[] };
+        type AddonEntry = { id: string; options: Set<string> };
+        const toAddonEntry = (a: AddonApiShape): [string, AddonEntry] => [
+            a.name.toLowerCase().trim(),
+            {
+                id: a.id,
+                options: new Set(
+                    (Array.isArray(a.subAttributes) ? a.subAttributes : [])
+                        .map(s => (s?.name || '').toLowerCase().trim())
+                        .filter(Boolean)
+                ),
+            },
+        ];
+        let addonMap: Map<string, AddonEntry>;
+        try {
+            const attrRes = await api.get('/api/attributes');
+            const attrs = Array.isArray(attrRes.data) ? attrRes.data : [];
+            addonMap = new Map(attrs.map(toAddonEntry));
+        } catch {
+            addonMap = new Map();
+        }
+
+        // Resolve one add-on group name, auto-creating it when missing (same
+        // pattern as categories). Returns null when it cannot be resolved.
+        const resolveAddon = async (addonName: string): Promise<AddonEntry | null> => {
+            const lookupKey = addonName.toLowerCase();
+            const known = addonMap.get(lookupKey);
+            if (known) return known;
+            try {
+                const res = await api.post('/api/attributes', {
+                    name: addonName,
+                    inputType: 'MULTI_SELECT',
+                    isRequired: false,
+                });
+                const id = res.data?.id as string | undefined;
+                if (id) {
+                    const entry: AddonEntry = { id, options: new Set() };
+                    addonMap.set(lookupKey, entry);
+                    createdAddons.push(addonName);
+                    return entry;
+                }
+            } catch {
+                // Name conflict (race or different casing) — refetch and match.
+                try {
+                    const refresh = await api.get('/api/attributes');
+                    const refreshed = Array.isArray(refresh.data) ? refresh.data : [];
+                    const found = refreshed.find((a: AddonApiShape) =>
+                        a.name.toLowerCase().trim() === lookupKey
+                    );
+                    if (found) {
+                        const entry = toAddonEntry(found)[1];
+                        addonMap.set(lookupKey, entry);
+                        return entry;
+                    }
+                } catch {
+                    // ignore - reported below
+                }
+            }
+            return null;
+        };
 
         // Build a set of existing product names for duplicate detection
         // Key: "productName|categoryId" (lowercase) to detect duplicates per category
@@ -724,11 +855,45 @@ export function ProductsPage() {
             // isAvailable defaults to true
             formData.append('isAvailable', 'true');
 
+            // Link add-on groups, auto-created (with their options and prices)
+            // when missing. Existing options are left untouched — the import
+            // never overwrites a price that was edited in the app.
+            // Unresolvable add-ons are reported as warnings without failing the row.
+            const addonSpecs = parseAddonsCell(row.addons || '');
+            const attributeIds: string[] = [];
+            const addonWarnings: string[] = [];
+            for (const spec of addonSpecs) {
+                const addonEntry = await resolveAddon(spec.name);
+                if (!addonEntry) {
+                    addonWarnings.push(`Row ${i + 1}: Add-on "${spec.name}" could not be linked to "${name}", skipped`);
+                    continue;
+                }
+                if (!attributeIds.includes(addonEntry.id)) attributeIds.push(addonEntry.id);
+                for (const opt of spec.options) {
+                    const optKey = opt.name.toLowerCase();
+                    if (addonEntry.options.has(optKey)) continue;
+                    try {
+                        await api.post(`/api/attributes/${addonEntry.id}/sub-attributes`, {
+                            name: opt.name,
+                            price: opt.price,
+                            isAvailable: true,
+                        });
+                        addonEntry.options.add(optKey);
+                    } catch {
+                        addonWarnings.push(`Row ${i + 1}: Option "${opt.name}" could not be added to add-on "${spec.name}", skipped`);
+                    }
+                }
+            }
+            if (attributeIds.length > 0) {
+                formData.append('attributeIds', JSON.stringify(attributeIds));
+            }
+
             try {
                 await api.post('/api/items', formData, {
                     headers: { 'Content-Type': 'multipart/form-data' },
                 });
                 existingProducts.add(dupKey); // Track newly created to catch duplicates within same CSV
+                errors.push(...addonWarnings);
                 success++;
             } catch (err: any) {
                 const msg = err.response?.data?.message || err.message || 'Unknown error';
@@ -741,7 +906,7 @@ export function ProductsPage() {
             fetchData(true); // Refresh silently so the CSV modal stays open
         }
 
-        return { success, failed, errors, createdCategories };
+        return { success, failed, errors, createdCategories, createdAddons };
     }, [categories, products, fetchData]);
 
     const handleSort = (key: ProductSortKey) => {
