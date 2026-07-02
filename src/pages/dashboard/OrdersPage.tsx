@@ -437,7 +437,6 @@ export function OrdersPage() {
             employeeId: selectedEmployeeId,
             startDate: startOfDay(new Date(startDate)).toISOString(),
             endDate: endOfDay(new Date(endDate)).toISOString(),
-            limit: 50,
           },
         });
 
