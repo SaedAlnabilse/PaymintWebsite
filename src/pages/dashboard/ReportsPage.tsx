@@ -211,7 +211,6 @@ export function ReportsPage() {
             employeeId: selectedEmployeeId,
             startDate: startOfDay(new Date(startDate)).toISOString(),
             endDate: endOfDay(new Date(endDate)).toISOString(),
-            limit: 50
           }
         });
         const sortedShifts = (res.data || []).sort((a: any, b: any) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
@@ -337,7 +336,7 @@ export function ReportsPage() {
           break;
         }
         case 'shifts': {
-          const shiftsRes = await api.get('/reports/shifts', { params: { ...commonParams, limit: 20 } });
+          const shiftsRes = await api.get('/reports/shifts', { params: { ...commonParams, limit: 100 } });
           if (isStale()) return;
           setShifts(normalizeShifts(shiftsRes.data));
           break;
