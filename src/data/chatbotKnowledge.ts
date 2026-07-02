@@ -594,7 +594,7 @@ Admin authorization may be required. All refunds are logged.`,
     questionAr: 'كيف أنشئ وأطبق الخصومات؟',
     answer: `Discounts can be applied at checkout!
 
-**Creating:** Go to **Dashboard > Discounts**, click "Add Discount", choose type (Percentage or Fixed Amount), set conditions, save.
+**Creating:** Go to **Dashboard > Discounts**, click "Create Discount", choose type (Percentage or Fixed Amount), set conditions, save.
 
 **Applying:** During sale, tap "Discount", select from available discounts, tap "Apply".
 
