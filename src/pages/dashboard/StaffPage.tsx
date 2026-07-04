@@ -20,6 +20,7 @@ import {
 import api, { extractErrorMessage } from '../../config/api';
 import toast from 'react-hot-toast';
 import { ConfirmModal } from '../../components/ConfirmModal';
+import { BusyOverlay } from '../../components/BusyOverlay';
 import { SecurityVerificationModal } from '../../components/SecurityVerificationModal';
 import { EmployeeFormModal } from '../../components/forms/EmployeeFormModal';
 import { exportTable } from '../../utils/export';
@@ -175,15 +176,17 @@ export function StaffPage() {
     }
   }, [location.state]);
 
-  const fetchStaff = async () => {
+  // `silent` skips the blocking loading state — used for realtime background
+  // refreshes so the busy overlay doesn't flash on every incoming event.
+  const fetchStaff = async (silent = false) => {
     try {
-      setIsLoading(true);
+      if (!silent) setIsLoading(true);
       const response = await api.get('/api/users');
       setStaff(response.data || []);
     } catch {
       toast.error(t('staff.messages.loadFailed'));
     } finally {
-      setIsLoading(false);
+      if (!silent) setIsLoading(false);
     }
   };
 
@@ -289,7 +292,8 @@ export function StaffPage() {
 
     const unsubscribe = onRefresh((eventType) => {
       if (staffEvents.has(eventType)) {
-        fetchStaff();
+        // Background refresh: don't block the UI for realtime events.
+        fetchStaff(true);
         return;
       }
 
@@ -463,6 +467,9 @@ export function StaffPage() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 pb-24 sm:pb-10" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
+      {/* Full-screen blocker while a user-triggered load is in flight —
+          realtime refreshes stay silent. */}
+      <BusyOverlay visible={isLoading} />
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
         <div>

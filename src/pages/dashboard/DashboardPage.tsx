@@ -37,6 +37,7 @@ import { TopSellingProducts } from '../../components/dashboard/overview/TopSelli
 import { PeakHoursChart } from '../../components/dashboard/overview/PeakHoursChart';
 import { PayInPayOutLogModal } from '../../components/dashboard/reports/PayInPayOutLogModal';
 import { SectionLoader } from '../../components/LoadingState';
+import { BusyOverlay } from '../../components/BusyOverlay';
 import { ExportMenu } from '../../components/ExportMenu';
 import { exportSections } from '../../utils/export';
 import type { ExportFormat, ExportSection, ExportMeta } from '../../utils/export';
@@ -624,10 +625,12 @@ export const DashboardPage = () => {
     }
   }, []);
 
-  // Fetch dashboard data based on view mode
-  const fetchDashboardData = useCallback(async () => {
+  // Fetch dashboard data based on view mode. `silent` skips the blocking
+  // loading state — used for background refreshes (realtime events, hourly
+  // auto-refresh) so the user isn't interrupted by the busy overlay.
+  const fetchDashboardData = useCallback(async (silent = false) => {
     try {
-      setIsLoading(true);
+      if (!silent) setIsLoading(true);
 
       let start: string;
       let end: string;
@@ -738,7 +741,7 @@ export const DashboardPage = () => {
       setTopProducts([]);
       setPeakHours([]);
     } finally {
-      setIsLoading(false);
+      if (!silent) setIsLoading(false);
     }
   }, [browserTimeZone, canViewDashboardAnalytics, t, viewMode, shiftStatus]);
 
@@ -747,18 +750,23 @@ export const DashboardPage = () => {
     fetchShiftStatus();
   }, [currentEstablishment?.id, fetchShiftStatus]);
 
-  // Fetch dashboard data when view mode or shift status changes
+  // Fetch dashboard data when view mode or shift status changes. Only a real
+  // view-mode switch (or the first load) blocks the UI — shiftStatus identity
+  // changes from background refreshes refetch silently.
+  const prevViewModeRef = useRef<ViewMode | null>(null);
   useEffect(() => {
     if (shiftStatus !== null) {
-      fetchDashboardData();
+      const isUserSwitch = prevViewModeRef.current !== viewMode;
+      fetchDashboardData(!isUserSwitch);
+      prevViewModeRef.current = viewMode;
     }
   }, [viewMode, shiftStatus, fetchDashboardData]);
 
-  // Auto-refresh every hour for 24-hour data
+  // Auto-refresh every hour for 24-hour data (background, non-blocking)
   useEffect(() => {
     const interval = setInterval(() => {
       fetchShiftStatus();
-      fetchDashboardData();
+      fetchDashboardData(true);
     }, AUTO_REFRESH_INTERVAL);
 
     return () => clearInterval(interval);
@@ -807,7 +815,8 @@ export const DashboardPage = () => {
           eventType === DataChangeEventTypes.HELD_ORDER_UPDATED ||
           eventType === DataChangeEventTypes.HELD_ORDER_DELETED) {
         refreshShiftStatusRef.current();
-        fetchDashboardDataRef.current();
+        // Background refresh: don't block the UI for realtime events.
+        fetchDashboardDataRef.current(true);
       }
       // Special handling for shift events - auto-switch to current shift view when shift starts
       if (eventType === DataChangeEventTypes.SHIFT_STARTED) {
@@ -980,6 +989,9 @@ export const DashboardPage = () => {
 
   return (
     <>
+      {/* Full-screen blocker while a user-triggered load (view-mode switch)
+          is in flight — background/realtime refreshes stay silent. */}
+      <BusyOverlay visible={isLoading && !!stats} />
       <AnimatePresence mode="wait">
         {isLoading && !stats ? (
           <motion.div key="loader" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>

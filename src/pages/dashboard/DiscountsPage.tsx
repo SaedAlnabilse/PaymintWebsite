@@ -5,6 +5,7 @@ import api from '../../config/api';
 import { useCurrency } from '../../context/CurrencyContext';
 import toast from 'react-hot-toast';
 import { ConfirmModal } from '../../components/ConfirmModal';
+import { BusyOverlay } from '../../components/BusyOverlay';
 import { DiscountFormModal } from '../../components/forms/DiscountFormModal';
 import { SearchInput, SelectInput, Pagination } from '../../components/ui';
 import { StatValue } from '../../components/ui/StatValue';
@@ -78,9 +79,11 @@ export function DiscountsPage() {
     setCurrentPage(1);
   }, [searchQuery, sortConfig, filterStatus]);
 
-  const fetchDiscounts = async () => {
+  // `silent` skips the blocking loading state — used for realtime background
+  // refreshes so the busy overlay doesn't flash on every incoming event.
+  const fetchDiscounts = async (silent = false) => {
     try {
-      setIsLoading(true);
+      if (!silent) setIsLoading(true);
       const response = await api.get('/app-settings/discounts', {
         params: { includeInactive: true },
       });
@@ -98,14 +101,15 @@ export function DiscountsPage() {
     } catch {
       toast.error(t('discounts.messages.loadFailed'));
     } finally {
-      setIsLoading(false);
+      if (!silent) setIsLoading(false);
     }
   };
 
   useEffect(() => {
     const unsubscribe = onRefresh((eventType) => {
       if (eventType === DataChangeEventTypes.SETTINGS_UPDATED) {
-        fetchDiscounts();
+        // Background refresh: don't block the UI for realtime events.
+        fetchDiscounts(true);
       }
     });
 
@@ -324,6 +328,9 @@ export function DiscountsPage() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-10" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
+      {/* Full-screen blocker while a user-triggered load is in flight —
+          realtime refreshes stay silent. */}
+      <BusyOverlay visible={isLoading} />
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
         <div>

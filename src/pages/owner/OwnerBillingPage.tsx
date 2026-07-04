@@ -5,6 +5,7 @@ import { Plus, CreditCard, DollarSign, Trash2, AlertCircle, Calendar, CheckCircl
 import api from '../../config/api';
 import { AddPaymentMethodModal } from '../../components/AddPaymentMethodModal';
 import { SecurityVerificationModal } from '../../components/SecurityVerificationModal';
+import { BusyOverlay } from '../../components/BusyOverlay';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 import { Pagination } from '../../components/ui';
@@ -379,6 +380,9 @@ export function OwnerBillingPage() {
 
     return (
         <div className="max-w-7xl mx-auto space-y-8 pb-10">
+            {/* Full-screen blocker while data loads, so no second action can
+                be stacked on an in-flight request. */}
+            <BusyOverlay visible={isLoading} />
             {/* Header */}
             <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
                 <div>

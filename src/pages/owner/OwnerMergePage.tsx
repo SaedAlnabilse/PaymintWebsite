@@ -7,6 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 import api from '../../config/api';
 import toast from 'react-hot-toast';
 import { formatInputPlaceholder, formatInputLabel } from '../../utils/textCase';
+import { BusyOverlay } from '../../components/BusyOverlay';
 
 export function OwnerMergePage() {
     const { t } = useTranslation();
@@ -58,6 +59,9 @@ export function OwnerMergePage() {
 
     return (
         <div className="space-y-10 pb-20 max-w-5xl">
+            {/* Full-screen blocker while the merge request runs — creating a
+                brand is heavyweight and must not be double-submitted. */}
+            <BusyOverlay visible={isSubmitting} />
             {/* Ultra Premium Header */}
             <div className="relative overflow-hidden rounded-[4rem] bg-white dark:bg-[#1E293B] p-12 border border-gray-200 dark:border-white/5 shadow-2xl shadow-gray-200/50 dark:shadow-none">
                 <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-mintcom-green/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3 pointer-events-none" />

@@ -40,6 +40,7 @@ import { CURRENCIES } from '../../context/CurrencyContext';
 import { useAuth } from '../../context/AuthContext';
 import { PasswordResetOtpModal } from '../../components/PasswordResetOtpModal';
 import { ConfirmModal } from '../../components/ConfirmModal';
+import { BusyOverlay } from '../../components/BusyOverlay';
 import { StatValue } from '../../components/ui/StatValue';
 import toast from 'react-hot-toast';
 import { getBusinessTypeIcon } from '../../utils/businessTypeIcons';
@@ -497,6 +498,9 @@ export function OwnerAccountManagementPage() {
 
     return (
         <div className="space-y-8">
+            {/* Full-screen blocker while data loads, so no second action can
+                be stacked on an in-flight request. */}
+            <BusyOverlay visible={isLoading} />
             {/* Header */}
             <motion.div
                 initial={{ opacity: 0, y: -20 }}

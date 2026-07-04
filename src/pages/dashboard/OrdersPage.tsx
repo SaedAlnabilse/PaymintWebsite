@@ -36,6 +36,7 @@ import type { DatePeriod } from '../../utils/datePeriods';
 import { SearchInput, SelectInput, Pagination } from '../../components/ui';
 import { StatValue } from '../../components/ui/StatValue';
 import { SingleSelect } from '../../components/SingleSelect';
+import { BusyOverlay } from '../../components/BusyOverlay';
 import { checkPermission, usePermissionGuard } from '../../hooks/usePermissionGuard';
 import { PortalDropdown } from '../../components/PortalDropdown';
 import { formatInputPlaceholder } from '../../utils/textCase';
@@ -618,12 +619,14 @@ export function OrdersPage() {
   const previousShiftEndTime =
     selectedDateRange === 'previous_shift' ? lastShiftSnapshot?.timestamp : null;
 
-  // Memoize fetchOrders to prevent stale closures
-  const fetchOrders = useCallback(async () => {
+  // Memoize fetchOrders to prevent stale closures. `silent` skips the blocking
+  // loading state — used for realtime background refreshes so the busy overlay
+  // doesn't flash on every incoming order event.
+  const fetchOrders = useCallback(async (silent = false) => {
     const requestId = ++fetchRequestIdRef.current;
 
     try {
-      setIsLoading(true);
+      if (!silent) setIsLoading(true);
       const effectiveStatusFilter =
         !canUsePosFeatures && statusFilter === 'HELD' ? 'all' : statusFilter;
 
@@ -857,7 +860,7 @@ export function OrdersPage() {
       console.error('Orders fetch error:', err);
       setError((err as ApiError).response?.data?.message || t('orders.messages.loadFailed'));
     } finally {
-      if (requestId === fetchRequestIdRef.current) {
+      if (requestId === fetchRequestIdRef.current && !silent) {
         setIsLoading(false);
       }
     }
@@ -943,7 +946,8 @@ export function OrdersPage() {
     }
 
     realtimeRefreshTimeoutRef.current = window.setTimeout(() => {
-      fetchOrders();
+      // Background refresh: don't block the UI for realtime events.
+      fetchOrders(true);
     }, delayMs);
   }, [fetchOrders]);
 
@@ -1161,6 +1165,9 @@ export function OrdersPage() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 pb-24 sm:pb-10">
+      {/* Full-screen blocker while a user-triggered load (filters, search,
+          pagination, date range) is in flight — realtime refreshes stay silent. */}
+      <BusyOverlay visible={isLoading} />
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
         <div>

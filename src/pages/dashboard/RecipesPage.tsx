@@ -18,6 +18,7 @@ import api, { extractErrorMessage } from '../../config/api';
 import { fetchAllPages } from '../../utils/fetchAllPages';
 import toast from 'react-hot-toast';
 import { ConfirmModal } from '../../components/ConfirmModal';
+import { BusyOverlay } from '../../components/BusyOverlay';
 import { CustomSelect } from '../../components/CustomSelect';
 import { QuickInfo } from '../../components/QuickInfo';
 import { SearchInput, Pagination } from '../../components/ui';
@@ -548,6 +549,9 @@ export function RecipesPage() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-10 font-sans">
+      {/* Full-screen blocker while data loads, so no second action can be
+          stacked on an in-flight request. */}
+      <BusyOverlay visible={isLoading} />
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">{t('manufacturing.title')}</h1>

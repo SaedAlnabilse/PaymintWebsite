@@ -15,6 +15,7 @@ import { exportTable } from '../../utils/export';
 import type { ExportFormat } from '../../utils/export';
 import { ExportMenu } from '../../components/ExportMenu';
 import { SingleSelect } from '../../components/SingleSelect';
+import { BusyOverlay } from '../../components/BusyOverlay';
 import { DateRangePicker } from '../../components/DateRangePicker';
 import { DATE_PERIOD_OPTIONS, calculateDateRange, formatDateForInput } from '../../utils/datePeriods';
 import type { DatePeriod } from '../../utils/datePeriods';
@@ -285,6 +286,9 @@ export function ActivityLogsPage() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-10" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
+      {/* Full-screen blocker while logs load, so filters/pagination can't be
+          stacked on top of an in-flight request. */}
+      <BusyOverlay visible={isLoading} />
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
         <div>
