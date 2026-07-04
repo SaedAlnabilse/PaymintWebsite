@@ -180,12 +180,28 @@ export const ShiftsView = React.memo(function ShiftsView({ shifts }: ShiftsViewP
                       )}
                     </td>
                     <td className="px-5 py-5 text-center">
-                      <span className={`px-2.5 py-1 rounded-lg label-strong font-outfit border transition-all ${shift.status === 'OPEN'
-                        ? 'bg-mintcom-green/10 text-mintcom-green border-mintcom-green/20'
-                        : 'bg-gray-100 dark:bg-white/5 text-gray-500 border-gray-200 dark:border-white/10'
-                        }`}>
-                        {shift.status === 'OPEN' ? t('orders.reports.shifts.active') : t('orders.status.completed')}
-                      </span>
+                      <div className="flex flex-col items-center gap-1.5">
+                        <span className={`px-2.5 py-1 rounded-lg label-strong font-outfit border transition-all ${shift.status === 'OPEN'
+                          ? 'bg-mintcom-green/10 text-mintcom-green border-mintcom-green/20'
+                          : 'bg-gray-100 dark:bg-white/5 text-gray-500 border-gray-200 dark:border-white/10'
+                          }`}>
+                          {shift.status === 'OPEN' ? t('orders.reports.shifts.active') : t('orders.status.completed')}
+                        </span>
+                        {/* Show how a closed shift was closed so owners can tell an
+                            automatic close (logout / inactivity / user-switch) from a
+                            manual cash-out. */}
+                        {shift.status === 'CLOSED' && (
+                          shift.autoClose ? (
+                            <span className="px-2 py-0.5 rounded-md text-[10px] label-strong font-outfit border bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20">
+                              {t('orders.reports.shifts.autoClosed')}
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded-md text-[10px] label-strong font-outfit border bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20">
+                              {t('orders.reports.shifts.manualClose')}
+                            </span>
+                          )
+                        )}
+                      </div>
                     </td>
                   </motion.tr>
                 ))

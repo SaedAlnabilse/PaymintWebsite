@@ -3396,6 +3396,8 @@
         "active": "نشط",
         "activeShifts": "{{count}} ورديات نشطة",
         "audited": "تم التدقيق",
+        "autoClosed": "إغلاق تلقائي",
+        "manualClose": "جرد نقدي",
         "cashVariance": "فروقات النقد",
         "closing": "الإغلاق",
         "noActivity": "لم يتم العثور على نشاط ورديات",
