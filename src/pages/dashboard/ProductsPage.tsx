@@ -84,6 +84,17 @@ interface Product {
     }[];
 }
 
+// Profit = price − cost, only when a cost is actually set (both numbers
+// present). Returns '' when cost is missing so the export cell stays blank
+// instead of showing the full price as "profit". Rounded to 2 decimals to
+// avoid floating-point noise like 3.299999999.
+const getProfit = (price: number, cost: number | undefined | null): number | '' => {
+    const c = Number(cost);
+    const p = Number(price);
+    if (!Number.isFinite(c) || c <= 0 || !Number.isFinite(p)) return '';
+    return Number((p - c).toFixed(2));
+};
+
 // Add-on groups with their options and prices, for exports. Format:
 // "Size: Small | Medium +0.50 | Large +1; Extra Shot" — groups separated by
 // ";", options after ":" separated by "|", paid options suffixed with "+price".
@@ -165,7 +176,7 @@ const sortArchivedLastByNewest = <T extends { id?: string; deletedAt?: string | 
 export function ProductsPage() {
     const { t } = useTranslation();
     usePermissionGuard(['manage_inventory']);
-    const { currencySymbol } = useCurrency();
+    const { currency, currencySymbol } = useCurrency();
     const { account , currentEstablishment } = useAuth();
     const { onRefresh } = useRealtime({
         establishmentId: currentEstablishment?.id || null,
@@ -569,6 +580,8 @@ export function ProductsPage() {
                     name: p.name,
                     price: p.price,
                     cost_price: p.costPrice ?? '',
+                    profit: getProfit(p.price, p.costPrice),
+                    currency,
                     stock: p.trackStock ? (p.availableStock ?? 0) : t('products.table.unlimited'),
                     category: catName,
                     addons: getAddonNames(p),
@@ -587,6 +600,8 @@ export function ProductsPage() {
                     { key: 'name', label: t('common.name', { defaultValue: 'Name' }) },
                     { key: 'price', label: `${t('products.form.priceLabel')} (${currencySymbol})` },
                     { key: 'cost_price', label: `${t('products.form.costLabel')} (${currencySymbol})` },
+                    { key: 'profit', label: `${t('products.form.profitLabel', { defaultValue: 'Profit' })} (${currencySymbol})` },
+                    { key: 'currency', label: t('products.form.currencyLabel', { defaultValue: 'Currency' }) },
                     { key: 'stock', label: t('products.table.stock') },
                     { key: 'category', label: t('products.form.categoryLabel') },
                     { key: 'addons', label: t('products.form.addonsLabel', { defaultValue: 'Add-ons' }) },
@@ -598,7 +613,9 @@ export function ProductsPage() {
 
         // Stable English headers that match the import schema exactly, so an
         // exported file can be re-imported without remapping (round-trip safe).
-        const headers = ['name', 'price', 'cost_price', 'track_stock', 'available_stock', 'category', 'addons', 'description'];
+        // `profit` and `currency` are informational export-only columns; the
+        // importer ignores unknown headers, so re-import stays round-trip safe.
+        const headers = ['name', 'price', 'cost_price', 'profit', 'currency', 'track_stock', 'available_stock', 'category', 'addons', 'description'];
 
         // Escape a value for CSV: wrap in quotes and double any inner quotes.
         const esc = (val: unknown): string => {
@@ -621,6 +638,8 @@ export function ProductsPage() {
                     esc(p.name),
                     esc(p.price),
                     esc(p.costPrice ?? ''),
+                    esc(getProfit(p.price, p.costPrice)),
+                    esc(currency),
                     esc(p.trackStock ? 'true' : 'false'),
                     esc(stockVal),
                     esc(catName),

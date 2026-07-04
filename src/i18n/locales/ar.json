@@ -4326,6 +4326,8 @@
       "costLabel": "التكلفة",
       "costTip": "تكلفة العنصر.",
       "createAddon": "إنشاء إضافة",
+      "currencyLabel": "العملة",
+      "profitLabel": "الربح",
       "descriptionLabel": "الوصف",
       "descriptionPlaceholder": "لخص خصائص المنتج...",
       "descriptionTip": "تفاصيل.",
