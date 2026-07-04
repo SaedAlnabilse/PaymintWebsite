@@ -1931,7 +1931,7 @@ export function OrdersPage() {
         <OrderDetailModal
           order={selectedOrder}
           onClose={() => setSelectedOrder(null)}
-          onRefundSuccess={fetchOrders}
+          onRefundSuccess={() => fetchOrders()}
           canRefund={canCancelReceipts}
           canRestock={canRestockRefundItems}
         />
@@ -1942,7 +1942,7 @@ export function OrdersPage() {
           order={selectedRefundOrder}
           isOpen={Boolean(selectedRefundOrder)}
           onClose={() => setSelectedRefundOrder(null)}
-          onRefundSuccess={fetchOrders}
+          onRefundSuccess={() => fetchOrders()}
           canRefund={canCancelReceipts}
           canRestock={canRestockRefundItems}
         />

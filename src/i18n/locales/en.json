@@ -4326,6 +4326,8 @@
       "costLabel": "Cost",
       "costTip": "Item cost.",
       "createAddon": "Create Add-on",
+      "currencyLabel": "Currency",
+      "profitLabel": "Profit",
       "descriptionLabel": "Description",
       "descriptionPlaceholder": "Summarize product characteristics...",
       "descriptionTip": "Details.",
