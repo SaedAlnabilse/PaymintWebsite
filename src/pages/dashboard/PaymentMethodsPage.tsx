@@ -23,6 +23,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import api, { API_BASE_URL } from '../../config/api';
 import toast from 'react-hot-toast';
 import { ConfirmModal } from '../../components/ConfirmModal';
+import { BusyOverlay } from '../../components/BusyOverlay';
 import { useAuth } from '../../context/AuthContext';
 import { usePermissionGuard } from '../../hooks/usePermissionGuard';
 import { formatInputPlaceholder } from '../../utils/textCase';
@@ -202,9 +203,11 @@ export function PaymentMethodsPage() {
     }
   }, [location.state, reset]);
 
-  const fetchPaymentMethods = async () => {
+  // `silent` skips the blocking loading state — used for realtime background
+  // refreshes so the busy overlay doesn't flash on every incoming event.
+  const fetchPaymentMethods = async (silent = false) => {
     try {
-      setIsLoading(true);
+      if (!silent) setIsLoading(true);
       const response = await api.get('/app-settings/payment-methods', {
         params: { includeInactive: true },
       });
@@ -213,7 +216,7 @@ export function PaymentMethodsPage() {
       toast.error(t('paymentMethods.messages.failedToLoad'));
       setPaymentMethods([]);
     } finally {
-      setIsLoading(false);
+      if (!silent) setIsLoading(false);
     }
   };
 
@@ -232,7 +235,8 @@ export function PaymentMethodsPage() {
   useEffect(() => {
     const unsubscribe = onRefresh((eventType) => {
       if (eventType === DataChangeEventTypes.SETTINGS_UPDATED) {
-        fetchPaymentMethods();
+        // Background refresh: don't block the UI for realtime events.
+        fetchPaymentMethods(true);
         fetchCardTypes();
       }
     });
@@ -478,6 +482,9 @@ export function PaymentMethodsPage() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-10 pb-16" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
+      {/* Full-screen blocker while a user-triggered load is in flight —
+          realtime refreshes stay silent. */}
+      <BusyOverlay visible={isLoading} />
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
         <div>

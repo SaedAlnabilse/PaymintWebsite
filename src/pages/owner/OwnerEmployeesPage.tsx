@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import api from '../../config/api';
 import { EmployeeFormModal } from '../../components/forms/EmployeeFormModal';
+import { BusyOverlay } from '../../components/BusyOverlay';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 import { SearchInput, SelectInput, Pagination } from '../../components/ui';
@@ -467,6 +468,9 @@ export function OwnerEmployeesPage() {
 
     return (
         <div className="space-y-8 pb-20">
+            {/* Full-screen blocker while data loads, so no second action can
+                be stacked on an in-flight request. */}
+            <BusyOverlay visible={isLoading} />
             {/* Header */}
             <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
                 <div>

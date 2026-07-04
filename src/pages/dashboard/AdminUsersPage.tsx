@@ -18,6 +18,7 @@ import api from '../../config/api';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import { ConfirmModal } from '../../components/ConfirmModal';
+import { BusyOverlay } from '../../components/BusyOverlay';
 import { SearchInput, Pagination } from '../../components/ui';
 import { useTranslation } from 'react-i18next';
 import { formatInputPlaceholder, formatInputLabel } from '../../utils/textCase';
@@ -188,6 +189,9 @@ export function AdminUsersPage() {
 
     return (
         <div className="space-y-8 pb-12" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
+            {/* Full-screen blocker while data loads, so no second action can
+                be stacked on an in-flight request. */}
+            <BusyOverlay visible={isLoading} />
             {/* Header */}
             <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-[#1E293B] p-8 border border-gray-200 dark:border-white/5 shadow-sm">
                 <div className="absolute top-0 right-0 w-96 h-96 bg-mintcom-green/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />

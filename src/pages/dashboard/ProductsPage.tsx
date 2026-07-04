@@ -39,6 +39,7 @@ import { withExcelBom } from '../../utils/csvBom';
 import { exportTable } from '../../utils/export';
 import type { ExportFormat } from '../../utils/export';
 import { ExportMenu } from '../../components/ExportMenu';
+import { BusyOverlay } from '../../components/BusyOverlay';
 import { useRealtime } from '../../hooks/useRealtime';
 import { DataChangeEventTypes } from '../../services/realtimeService';
 
@@ -1076,6 +1077,9 @@ export function ProductsPage() {
     return (
         <div className="max-w-7xl mx-auto space-y-8 pb-10 font-sans" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
             <div ref={topRef} className="scroll-mt-24" />
+            {/* Full-screen blocker while a user-triggered load is in flight —
+                background/realtime refreshes stay silent. */}
+            <BusyOverlay visible={isLoading} />
             {/* Header */}
             <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
                 <div>

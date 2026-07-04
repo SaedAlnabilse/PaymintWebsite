@@ -30,6 +30,7 @@ import { z } from 'zod';
 import toast from 'react-hot-toast';
 import api from '../../config/api';
 import { SecurityVerificationModal } from '../../components/SecurityVerificationModal';
+import { BusyOverlay } from '../../components/BusyOverlay';
 import { useAuth } from '../../context/AuthContext';
 import { CustomSelect } from '../../components/CustomSelect';
 import { getBusinessTypeIcon } from '../../utils/businessTypeIcons';
@@ -476,6 +477,9 @@ export function OwnerBrandsPage() {
 
     return (
         <div className="space-y-8 pb-20">
+            {/* Full-screen blocker while data loads, so no second action can
+                be stacked on an in-flight request. */}
+            <BusyOverlay visible={isLoading} />
             {/* Header */}
             <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
                 <div>

@@ -25,6 +25,7 @@ import {
 import api from '../../config/api';
 import { useAuth } from '../../context/AuthContext';
 import { SingleSelect } from '../../components/SingleSelect';
+import { BusyOverlay } from '../../components/BusyOverlay';
 import { DateRangePicker } from '../../components/DateRangePicker';
 import { CustomTimePicker } from '../../components/CustomTimePicker';
 import { DATE_PERIOD_OPTIONS, calculateDateRange, formatDateForInput } from '../../utils/datePeriods';
@@ -66,6 +67,7 @@ export function OwnerOverviewPage() {
     const [endDate, setEndDate] = useState<string>(formatDateForInput(calculateDateRange('this_week').end));
     const [startTime, setStartTime] = useState<string>('00:00');
     const [endTime, setEndTime] = useState<string>('23:59');
+    const [isLoading, setIsLoading] = useState(true);
 
     const setQuickDate = (period: DatePeriod) => {
         setSelectedDateRange(period);
@@ -82,6 +84,7 @@ export function OwnerOverviewPage() {
 
     const fetchOverviewStats = useCallback(async () => {
         try {
+            setIsLoading(true);
             const params = new URLSearchParams();
             params.append('range', 'custom');
             params.append('startDate', `${startDate}T${startTime}:00Z`);
@@ -119,6 +122,8 @@ export function OwnerOverviewPage() {
 
         } catch (err) {
             console.error('Failed to fetch overview stats:', err);
+        } finally {
+            setIsLoading(false);
         }
     }, [startDate, endDate, startTime, endTime, establishments.length]);
 
@@ -136,6 +141,9 @@ export function OwnerOverviewPage() {
 
     return (
         <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 pb-10">
+            {/* Full-screen blocker while a filter-triggered load is in flight,
+                so filters can't be stacked on an in-flight request. */}
+            <BusyOverlay visible={isLoading} />
             {/* Header with Integrated Filter */}
             <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
                 <div>

@@ -17,6 +17,7 @@ import { useAuth } from '../../context/AuthContext';
 import { checkPermission, usePermissionGuard } from '../../hooks/usePermissionGuard';
 
 import { ReceiptsReport } from '../../components/dashboard/reports/ReceiptsReport';
+import { BusyOverlay } from '../../components/BusyOverlay';
 import { SingleSelect } from '../../components/SingleSelect';
 import { ExportMenu } from '../../components/ExportMenu';
 import { exportTable, exportSections } from '../../utils/export';
@@ -952,27 +953,9 @@ export function ReportsPage() {
         )}
       </AnimatePresence>
 
-      {/* Global busy overlay: a full-screen blocker portaled to <body> so it
-          sits ABOVE the dropdown menus (SingleSelect / DateRangePicker /
-          CustomTimePicker all portal their popovers at z-index 9999). While any
-          non-silent report request is in flight, every click — tabs, filters,
-          open dropdowns, sidebar — is swallowed here, so the user can't stack
-          a second action on top of a load and race the responses. */}
-      {busy && typeof document !== 'undefined' && createPortal(
-        <div
-          className="fixed inset-0 z-[10000] flex items-center justify-center cursor-wait bg-white/60 dark:bg-[#0F172A]/60 backdrop-blur-[2px]"
-          role="status"
-          aria-live="polite"
-          onMouseDown={(e) => e.preventDefault()}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="flex flex-col items-center">
-            <div className="w-12 h-12 border-4 border-mintcom-green/10 border-t-mintcom-green rounded-full animate-spin mb-3" />
-            <p className="label-strong font-outfit">{t('dashboard.processing')}</p>
-          </div>
-        </div>,
-        document.body
-      )}
+      {/* Global busy overlay: full-screen blocker while any non-silent report
+          request is in flight — see BusyOverlay for the rationale. */}
+      <BusyOverlay visible={busy} />
 
       <PayInPayOutLogModal
         isOpen={showPayInOutModal}

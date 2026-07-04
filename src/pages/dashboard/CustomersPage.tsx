@@ -23,6 +23,7 @@ import {
 import api from '../../config/api';
 import toast from 'react-hot-toast';
 import { ConfirmModal } from '../../components/ConfirmModal';
+import { BusyOverlay } from '../../components/BusyOverlay';
 import { SecurityVerificationModal } from '../../components/SecurityVerificationModal';
 import { PortalDropdown } from '../../components/PortalDropdown';
 import { exportTable } from '../../utils/export';
@@ -216,9 +217,11 @@ export function CustomersPage() {
     resolver: zodResolver(customerSchema),
   });
 
-  const fetchCustomers = async () => {
+  // `silent` skips the blocking loading state — used for realtime background
+  // refreshes so the busy overlay doesn't flash on every incoming event.
+  const fetchCustomers = async (silent = false) => {
     try {
-      setIsLoading(true);
+      if (!silent) setIsLoading(true);
       const [customersResponse, statsResponse] = await Promise.all([
         api.get('/customers', {
           params: {
@@ -240,7 +243,7 @@ export function CustomersPage() {
     } catch {
       toast.error(t('customers.messages.loadFailed'));
     } finally {
-      setIsLoading(false);
+      if (!silent) setIsLoading(false);
     }
   };
 
@@ -255,7 +258,8 @@ export function CustomersPage() {
 
     const unsubscribe = onRefresh((eventType) => {
       if (customerEvents.has(eventType)) {
-        fetchCustomers();
+        // Background refresh: don't block the UI for realtime events.
+        fetchCustomers(true);
       }
     });
 
@@ -450,6 +454,9 @@ export function CustomersPage() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 pb-24 sm:pb-10" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
+      {/* Full-screen blocker while a user-triggered load (search, pagination)
+          is in flight — realtime refreshes stay silent. */}
+      <BusyOverlay visible={isLoading} />
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
         <div>

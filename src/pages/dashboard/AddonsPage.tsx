@@ -24,6 +24,7 @@ import toast from 'react-hot-toast';
 import api from '../../config/api';
 import { useCurrency } from '../../context/CurrencyContext';
 import { ConfirmModal } from '../../components/ConfirmModal';
+import { BusyOverlay } from '../../components/BusyOverlay';
 import { Pagination, SelectInput } from '../../components/ui';
 import { StatValue } from '../../components/ui/StatValue';
 import { usePermissionGuard } from '../../hooks/usePermissionGuard';
@@ -638,6 +639,9 @@ export function AddonsPage() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-10 font-sans">
+      {/* Full-screen blocker while data loads, so no second action can be
+          stacked on an in-flight request. */}
+      <BusyOverlay visible={isLoading} />
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
         <div>

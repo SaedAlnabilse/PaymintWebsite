@@ -7,6 +7,7 @@ import api, { extractErrorMessage } from '../../config/api';
 import { FiscalComplianceCard } from '../../components/FiscalComplianceCard';
 import toast from 'react-hot-toast';
 import { ConfirmModal } from '../../components/ConfirmModal';
+import { BusyOverlay } from '../../components/BusyOverlay';
 import { EstablishmentDeletionWizard, PendingDeletionBanner } from '../../components/EstablishmentDeletionWizard';
 import { RestoreLocationModal } from '../../components/RestoreLocationModal';
 import { CustomSelect } from '../../components/CustomSelect';
@@ -846,6 +847,9 @@ export function SettingsPage() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-10 font-sans">
+      {/* Full-screen blocker while settings load or save, so no second action
+          can be stacked on an in-flight request. */}
+      <BusyOverlay visible={isLoading || isSaving} />
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">{t('settings.title')}</h1>
