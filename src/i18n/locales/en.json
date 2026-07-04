@@ -3396,6 +3396,8 @@
         "active": "Active",
         "activeShifts": "{{count}} active shifts",
         "audited": "Audited",
+        "autoClosed": "Auto-closed",
+        "manualClose": "Cashed out",
         "cashVariance": "Cash Variance",
         "closing": "Closing",
         "noActivity": "No shift activity found",
