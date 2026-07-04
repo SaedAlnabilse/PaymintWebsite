@@ -59,17 +59,15 @@ const CUSTOMER_FIELD_LIMITS = {
 const MAX_POINTS_ADJUSTMENT = 1000000;
 
 const createCustomerSchema = (requiredMessage: string, invalidEmailMessage: string) => z.object({
-  name: z.string().max(CUSTOMER_FIELD_LIMITS.name).optional().or(z.literal('')),
+  // Name is mandatory; phone is optional.
+  name: z.string().trim().min(1, requiredMessage).max(CUSTOMER_FIELD_LIMITS.name),
   phone: z.string().max(CUSTOMER_FIELD_LIMITS.phone).optional().or(z.literal('')),
   email: z.string().email(invalidEmailMessage).max(CUSTOMER_FIELD_LIMITS.email).optional().or(z.literal('')),
   address: z.string().max(CUSTOMER_FIELD_LIMITS.address).optional().or(z.literal('')),
-}).refine((data) => data.name?.trim() || data.phone?.trim(), {
-  message: requiredMessage,
-  path: ['name'],
 });
 
 type CustomerFormData = {
-  name?: string;
+  name: string;
   phone?: string;
   email?: string;
   address?: string;
@@ -167,7 +165,7 @@ function TableActionMenu({ customer, onViewProfile, onDelete }: TableActionMenuP
 export function CustomersPage() {
   const { t } = useTranslation();
   const customerSchema = createCustomerSchema(
-    t('customers.errors.nameOrPhoneRequired'),
+    t('customers.errors.nameRequired', { defaultValue: 'Name is required' }),
     t('customers.errors.invalidEmail'),
   );
   const { currentEstablishment } = useAuth();
@@ -282,7 +280,7 @@ export function CustomersPage() {
     setIsSubmitting(true);
     try {
       const payload = {
-        name: data.name?.trim() || undefined,
+        name: data.name?.trim(),
         phone: data.phone?.trim() || undefined,
         email: data.email?.trim() || undefined,
         address: data.address?.trim() || undefined,
@@ -681,7 +679,7 @@ export function CustomersPage() {
                       <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
                         {formatInputLabel(t('common.name', { defaultValue: 'Name' }), t('common.locale'))}
                       </label>
-                      <FieldStatusBadge tone="required" text={t('customers.form.oneOfTwoRequired')} />
+                      <FieldStatusBadge tone="required" text={t('common.required', { defaultValue: 'Required' })} />
                     </div>
                     <div className="relative">
                       <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -698,7 +696,7 @@ export function CustomersPage() {
                       <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
                         {formatInputLabel(t('customers.form.phone'), t('common.locale'))}
                       </label>
-                      <FieldStatusBadge tone="required" text={t('customers.form.oneOfTwoRequired')} />
+                      <FieldStatusBadge tone="optional" text={t('common.optional', { defaultValue: 'Optional' })} />
                     </div>
                     <div className="relative">
                       <Phone size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />

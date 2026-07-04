@@ -1358,7 +1358,7 @@
       "email": "البريد الإلكتروني",
       "emailPlaceholder": "client@example.com",
       "name": "الاسم الكامل",
-      "namePhoneHelper": "إلزامي: يجب تعبئة حقل واحد على الأقل من الحقلين أعلاه.",
+      "namePhoneHelper": "اسم العميل مطلوب. رقم الهاتف اختياري.",
       "namePlaceholder": "مثال: أحمد محمد",
       "oneOfTwoRequired": "واحد من اثنين مطلوب",
       "optional": "اختياري",

@@ -1358,7 +1358,7 @@
       "email": "Email Address",
       "emailPlaceholder": "client@example.com",
       "name": "Full Name",
-      "namePhoneHelper": "Mandatory: fill at least one of the two fields above.",
+      "namePhoneHelper": "The customer name is required. Phone is optional.",
       "namePlaceholder": "E.g. Alexander Hamilton",
       "oneOfTwoRequired": "1 of 2 required",
       "optional": "Optional",
