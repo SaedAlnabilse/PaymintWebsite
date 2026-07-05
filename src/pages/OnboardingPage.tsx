@@ -234,8 +234,8 @@ export function OnboardingPage() {
   // Step 3: Admin Access
   const step3Schema = z.object({
     username: z.string()
-      .min(3, t('onboarding.step4.errors.usernameMin'))
-      .regex(/^[a-zA-Z0-9_-]+$/, t('onboarding.step4.errors.usernameRegex')),
+      .trim()
+      .min(1, t('onboarding.step4.errors.usernameMin')),
     password: z.string()
       .min(8, t('auth.validation.passwordMin'))
       .regex(/[A-Z]/, t('auth.validation.passwordUppercase'))
@@ -487,16 +487,7 @@ export function OnboardingPage() {
     if (!currentValues.lastName && account?.lastName) {
       form3.setValue('lastName', account.lastName);
     }
-    if (!currentValues.username && account?.email) {
-      const fallbackUsername =
-        account.email
-          .split('@')[0]
-          ?.toLowerCase()
-          .replace(/[^a-z0-9_-]/g, '_')
-          .replace(/_+/g, '_')
-          .replace(/^_+|_+$/g, '') || 'owner';
-      form3.setValue('username', fallbackUsername);
-    }
+    // Owner username is left empty on purpose so the owner can choose their own.
   }, [account?.email, account?.firstName, account?.lastName, form3, isAdditionalLocation]);
 
   useEffect(() => {
