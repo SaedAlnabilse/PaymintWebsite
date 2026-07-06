@@ -205,7 +205,13 @@ api.interceptors.response.use(
     }
 
     // Handle 403 Forbidden - Permission denied
-    if (error.response?.status === 403) {
+    //
+    // A "missing X-Establishment-Id header" 403 is NOT a real permission problem:
+    // it just means no establishment is selected yet (e.g. during onboarding, before
+    // the first location exists). normalizeEstablishmentHeaderError() flags those on
+    // the error object. Routing/guards already handle that state, so surfacing a
+    // scary "You do not have permission" toast for it is wrong — skip it.
+    if (error.response?.status === 403 && !error.isMissingEstablishmentHeader) {
       const errorMessage = error.response?.data?.message || 'You do not have permission to perform this action';
       // Dispatch a custom event that components can listen to for showing toast
       window.dispatchEvent(new CustomEvent('permission-denied', {
