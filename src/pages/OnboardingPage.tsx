@@ -88,6 +88,7 @@ import {
   isValidCardNumber,
   parseExpiryDate,
   PAYMENT_CARD_API_BRAND,
+  MAX_FORMATTED_CARD_NUMBER_LENGTH,
 } from '../utils/paymentCard';
 
 const ONBOARDING_LAUNCH_STORAGE_KEY = 'mintcom.onboarding.launch.v1';
@@ -1759,7 +1760,7 @@ export function OnboardingPage() {
                             });
                             form4.clearErrors('cardNumber');
                           }}
-                          maxLength={23}
+                          maxLength={MAX_FORMATTED_CARD_NUMBER_LENGTH}
                           inputMode="numeric"
                           placeholder="0000 0000 0000 0000"
                           className="h-10 min-w-0 flex-1 bg-transparent text-base font-medium tracking-normal text-slate-900 placeholder:text-slate-400 focus:outline-none"

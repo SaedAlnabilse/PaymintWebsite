@@ -8,6 +8,9 @@ export const PAYMENT_CARD_API_BRAND: Record<DetectedCardBrand, string> = {
   discover: 'DISCOVER',
 };
 
+export const MAX_CARD_NUMBER_DIGITS = 16;
+export const MAX_FORMATTED_CARD_NUMBER_LENGTH = 19; // 16 digits + 3 spaces
+
 export const getCardDigits = (value: string) => value.replace(/\D/g, '');
 
 export function detectCardBrand(digits: string): DetectedCardBrand {
@@ -18,10 +21,18 @@ export function detectCardBrand(digits: string): DetectedCardBrand {
   return 'card';
 }
 
-export function formatCardNumberInput(value: string) {
-  const digits = getCardDigits(value).slice(0, 19);
+export function formatCardNumberInput(
+  value: string,
+  maxDigits = MAX_CARD_NUMBER_DIGITS,
+) {
+  const digits = getCardDigits(value).slice(0, maxDigits);
   const brand = detectCardBrand(digits);
-  const groupSizes = brand === 'amex' ? [4, 6, 5] : [4, 4, 4, 4, 3];
+  const groupSizes =
+    maxDigits === MAX_CARD_NUMBER_DIGITS
+      ? [4, 4, 4, 4]
+      : brand === 'amex'
+      ? [4, 6, 5]
+      : [4, 4, 4, 4, 3];
   const parts: string[] = [];
   let cursor = 0;
 
@@ -58,7 +69,11 @@ export function luhnCheck(digits: string) {
 }
 
 export function isValidCardNumber(digits: string) {
-  return digits.length >= 13 && digits.length <= 19 && luhnCheck(digits);
+  // Local saved cards are not tokenized with a live gateway yet, so do not run
+  // card-network/Luhn validation here. The UI only needs a complete 16-digit
+  // display number so the API can save card metadata safely. (Matches the admin
+  // portal's paymentCard util.)
+  return digits.length === MAX_CARD_NUMBER_DIGITS;
 }
 
 export function getCardCvvLength(brand: DetectedCardBrand) {

@@ -15,6 +15,7 @@ import {
     isValidCardNumber,
     parseExpiryDate,
     PAYMENT_CARD_API_BRAND,
+    MAX_FORMATTED_CARD_NUMBER_LENGTH,
 } from '../utils/paymentCard';
 
 interface ApiError {
@@ -221,7 +222,7 @@ export function AddPaymentMethodModal({ isOpen, onClose, onSuccess, linkEstablis
                                         placeholder="0000 0000 0000 0000"
                                         inputMode="numeric"
                                         autoComplete="cc-number"
-                                        maxLength={23}
+                                        maxLength={MAX_FORMATTED_CARD_NUMBER_LENGTH}
                                         data-error={errors.cardNumber ? 'true' : undefined}
                                         className="h-10 min-w-0 flex-1 bg-transparent text-base font-medium tracking-normal text-slate-900 placeholder:text-slate-400 focus:outline-none"
                                     />
