@@ -47,7 +47,7 @@ export function LoginPage() {
       const result = await loginWithGoogle(credential);
       if (result.success) {
         toast.success(result.message || t('common.welcome'));
-        navigate(redirectTo || '/');
+        navigate(result.needsOnboarding ? '/onboarding' : (redirectTo || '/'));
       } else {
         toast.error(result.error || t('auth.login.failed'));
       }
@@ -63,7 +63,7 @@ export function LoginPage() {
       const result = await loginWithApple(credential);
       if (result.success) {
         toast.success(result.message || t('common.welcome'));
-        navigate(redirectTo || '/');
+        navigate(result.needsOnboarding ? '/onboarding' : (redirectTo || '/'));
       } else {
         toast.error(result.error || t('auth.login.failed'));
       }
@@ -82,7 +82,7 @@ export function LoginPage() {
       const result = await login(data.email, data.password);
       if (result.success) {
         toast.success(t('common.welcomeBack'));
-        navigate(redirectTo || '/');
+        navigate(result.needsOnboarding ? '/onboarding' : (redirectTo || '/'));
       } else {
         if (result.error === 'Email not verified') {
           setUnverifiedEmail(data.email);

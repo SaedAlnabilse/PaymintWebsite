@@ -43,7 +43,8 @@ import {
   Scale,
   Info,
   Globe,
-  RefreshCw
+  RefreshCw,
+  CalendarClock
 } from 'lucide-react';
 import api from '../config/api';
 import toast from 'react-hot-toast';
@@ -325,6 +326,21 @@ export function OnboardingPage() {
   const formatWholeNumber = (amount: number) =>
     amount.toLocaleString(t('common.locale'), { minimumFractionDigits: 0, maximumFractionDigits: 0 });
   const selectedUnitLabel = `${MINTCOM_PRICING.currency} ${selectedPeriodLabel}`;
+
+  // The backend gives the first establishment a 30-day free trial (TRIAL_DAYS = 30),
+  // billing from now + 30 days. Compute the same date here so the disclosure shows
+  // the exact day the card will first be charged.
+  const TRIAL_DAYS = 30;
+  const trialEndDate = useMemo(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + TRIAL_DAYS);
+    return d;
+  }, []);
+  const trialEndDateLabel = trialEndDate.toLocaleDateString(t('common.locale'), {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
 
   // Password Visibility State
   const [showEstablishmentPassword, setShowEstablishmentPassword] = useState(false);
@@ -711,7 +727,9 @@ export function OnboardingPage() {
     if (hasSavedCard && useSavedCard) {
       paymentMethodToken = 'use_saved_card';
       savedCardId = account?.defaultCardId || '';
-    } else if (!isTrialFlow) {
+    } else {
+      // A card is required to start, even for the free trial (first establishment),
+      // matching the admin portal where billing card capture is always required.
       // Save only safe card metadata. A gateway token/id will replace this flow later.
       const parsedExpiry = parseExpiryDate(data.expiryDate || '');
       const cardDigits = getCardDigits(data.cardNumber || '');
@@ -734,6 +752,7 @@ export function OnboardingPage() {
         });
 
         savedCardId = response.data.card?.id;
+        paymentMethodToken = 'use_saved_card';
         const newDefaultPaymentMethod = response.data.card?.last4 || cardDigits.slice(-4);
 
         if (savedCardId) {
@@ -1520,8 +1539,16 @@ export function OnboardingPage() {
                 </div>
 
                 <form onSubmit={form4.handleSubmit(onStep4Submit)} autoComplete="off" className="space-y-6" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
-                  {/* Billing Cycle Toggle */}
-                  {!isTrialFlow && (
+                  {/* Billing Cycle Toggle - shown for the trial too, so the owner
+                      picks what they'll be billed once the free trial ends. */}
+                  <div>
+                    {isTrialFlow && (
+                      <p className="mb-2 text-xs font-sans font-bold text-gray-500 dark:text-gray-400">
+                        {t('onboarding.step2.trialChooseCycleHint', {
+                          defaultValue: "Pick what you'll be billed after your free trial",
+                        })}
+                      </p>
+                    )}
                     <div className="grid grid-cols-2 gap-1.5 bg-gray-100 dark:bg-black/30 border border-gray-200 dark:border-white/10 rounded-2xl p-1.5">
                       <button
                         type="button"
@@ -1548,7 +1575,7 @@ export function OnboardingPage() {
                         </span>
                       </button>
                     </div>
-                  )}
+                  </div>
 
                   <div className="p-5 bg-gray-50 dark:bg-black/20 rounded-2xl border border-dashed border-gray-300 dark:border-white/10">
                     <span className="block text-[11px] font-sans font-bold uppercase tracking-[0.12em] text-gray-400 mb-3">
@@ -1589,7 +1616,10 @@ export function OnboardingPage() {
                       <RefreshCw size={14} />
                       <span className="text-sm font-sans font-bold">
                         {isTrialFlow
-                          ? t('onboarding.step2.afterTrial')
+                          ? t('onboarding.step2.trialThenPrice', {
+                              defaultValue: `Then ${selectedPriceWithPeriod}, billed after your 30-day trial`,
+                              price: selectedPriceWithPeriod,
+                            })
                           : t('onboarding.step2.billedCycle', {
                               defaultValue: `Billed ${selectedPlanLabel.toLowerCase()}`,
                               cycle: selectedPlanLabel.toLowerCase(),
@@ -1598,7 +1628,7 @@ export function OnboardingPage() {
                     </div>
 
                     {/* Yearly savings note */}
-                    {billingCycle === BILLING_CYCLES.YEARLY && !isTrialFlow && (
+                    {billingCycle === BILLING_CYCLES.YEARLY && (
                       <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1">
                         <Sparkles size={12} className="text-mintcom-green" />
                         <span className="text-xs font-bold text-mintcom-green tracking-wider uppercase">
@@ -1626,8 +1656,34 @@ export function OnboardingPage() {
                     )}
                   </div>
 
+                  {/* Trial billing disclosure (ChatGPT-style): exact charge date,
+                      the amount that starts after the trial, and cancel-anytime. */}
+                  {isTrialFlow && (
+                    <div className="flex items-start gap-3 rounded-2xl border border-mintcom-green/20 bg-mintcom-green/5 p-4">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-mintcom-green/15">
+                        <CalendarClock size={18} className="text-mintcom-green" />
+                      </div>
+                      <div className="leading-snug">
+                        <p className="text-sm font-sans font-bold text-gray-900 dark:text-white">
+                          {t('onboarding.step2.trialDisclosureTitle', {
+                            defaultValue: `Free until ${trialEndDateLabel}`,
+                            date: trialEndDateLabel,
+                          })}
+                        </p>
+                        <p className="mt-1 text-xs font-sans text-gray-600 dark:text-gray-300">
+                          {t('onboarding.step2.trialDisclosureBody', {
+                            defaultValue: `After your 30-day free trial ends on ${trialEndDateLabel}, you'll start paying ${selectedPriceWithPeriod} for this location. Cancel anytime before then and you won't be charged.`,
+                            date: trialEndDateLabel,
+                            price: selectedPriceWithPeriod,
+                            days: TRIAL_DAYS,
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Saved Card Option */}
-                  {!isTrialFlow && hasSavedCard && (
+                  {hasSavedCard && (
                     <div className="space-y-4 mb-6">
                       <div
                         onClick={() => setUseSavedCard(true)}
@@ -1676,7 +1732,7 @@ export function OnboardingPage() {
                   )}
 
                   {/* New Card Form - Only show if no saved card OR user chose to add new */}
-                  {!isTrialFlow && (!hasSavedCard || !useSavedCard) && (
+                  {(!hasSavedCard || !useSavedCard) && (
                     <div className="space-y-4 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
                       <div className="flex items-center gap-1.5 text-sm font-medium tracking-normal text-slate-600">
                         <Lock size={13} />
@@ -1797,8 +1853,8 @@ export function OnboardingPage() {
 
                   <div className="pt-2">
                     <button
-                      type={isTrialFlow || (hasSavedCard && useSavedCard) ? 'button' : 'submit'}
-                      onClick={isTrialFlow || (hasSavedCard && useSavedCard) ? () => onStep4Submit({}) : undefined}
+                      type={hasSavedCard && useSavedCard ? 'button' : 'submit'}
+                      onClick={hasSavedCard && useSavedCard ? () => onStep4Submit({}) : undefined}
                       disabled={isLoading}
                       className="w-full py-5 bg-mintcom-green text-black text-base font-sans font-bold rounded-2xl hover:bg-mintcom-green/90 transition-all shadow-xl shadow-mintcom-green/20 disabled:opacity-50 flex items-center justify-center gap-3 active:scale-[0.98]"
                     >

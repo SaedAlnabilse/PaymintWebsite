@@ -64,6 +64,9 @@ interface AuthResult {
   code?: string;
   message?: string;
   isSecondaryAdmin?: boolean;
+  // True when the account has no establishments yet, so the user must be sent
+  // straight into onboarding instead of the marketing/landing page.
+  needsOnboarding?: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -255,7 +258,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         return {
           success: true,
-          isSecondaryAdmin: !!accountData.isSecondaryAdmin
+          isSecondaryAdmin: !!accountData.isSecondaryAdmin,
+          needsOnboarding: !(estList && estList.length > 0),
         };
       }
 
@@ -318,6 +322,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return {
           success: true,
           isSecondaryAdmin: !!accountData.isSecondaryAdmin,
+          needsOnboarding: !(estList && estList.length > 0),
           message: response.data.isNewUser ? 'Account created successfully!' : 'Welcome back!'
         };
       }
@@ -383,6 +388,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return {
           success: true,
           isSecondaryAdmin: !!accountData.isSecondaryAdmin,
+          needsOnboarding: !(estList && estList.length > 0),
           message: response.data.isNewUser ? 'Account created successfully!' : 'Welcome back!'
         };
       }

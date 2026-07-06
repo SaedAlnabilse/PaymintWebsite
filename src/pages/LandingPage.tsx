@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Helmet } from 'react-helmet-async';
+import { useAuth } from '../context/AuthContext';
 import { Navbar } from '../components/Navbar';
 import { Hero } from '../components/Hero';
 import { WhyChooseUs } from '../components/WhyChooseUs';
@@ -14,7 +16,15 @@ import { Footer } from '../components/Footer';
 
 export const LandingPage = () => {
   const { t } = useTranslation();
+  const { isLoading, needsOnboarding } = useAuth();
   const [isVideoOpen, setIsVideoOpen] = useState(false);
+
+  // A signed-in owner who hasn't created an establishment yet must finish
+  // onboarding before anything else — send them straight there instead of the
+  // marketing page (mirrors the post-login redirect and the ProtectedRoute).
+  if (!isLoading && needsOnboarding) {
+    return <Navigate to="/onboarding" replace />;
+  }
 
   return (
     <div className="min-h-screen bg-white dark:bg-mintcom-dark font-sans text-gray-900 dark:text-mintcom-light selection:bg-mintcom-green selection:text-black" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>

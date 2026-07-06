@@ -252,7 +252,7 @@ export function OwnerBillingPage() {
         switch (est.subscriptionStatus?.toUpperCase()) {
             case 'TRIAL':
                 return (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-mintcom-green/ border border-mintcom-green/ rounded-lg text-xs font-bold tracking-widest text-mintcom-green">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-mintcom-green/10 border border-mintcom-green/20 rounded-lg text-xs font-bold tracking-widest text-mintcom-green">
                         <Zap size={12} />
                         {t('owner.locations.trial')}
                     </span>
