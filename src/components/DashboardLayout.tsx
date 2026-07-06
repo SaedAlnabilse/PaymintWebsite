@@ -2,7 +2,7 @@ import { MobileAppModal } from './MobileAppModal';
 import { ANDROID_DOWNLOAD_URL, IOS_DOWNLOAD_URL } from '../config/downloads';
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 
-import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useRealtime } from '../hooks/useRealtime';
@@ -95,8 +95,22 @@ export function DashboardLayout() {
   const canSwitchLocation = (establishments?.length || 0) > 1;
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [mobileAppModalOpen, setMobileAppModalOpen] = useState(false);
+
+  // Deep-link support: the "Get the app" CTA in the welcome email points here
+  // with ?getApp=1 so it opens the cashier-app download modal right away. We
+  // strip the param afterwards so a refresh doesn't keep re-opening it.
+  useEffect(() => {
+    if (searchParams.get('getApp') === '1') {
+      setMobileAppModalOpen(true);
+      const next = new URLSearchParams(searchParams);
+      next.delete('getApp');
+      setSearchParams(next, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
