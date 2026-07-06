@@ -3,6 +3,13 @@ import { TEXT_INPUT_LIMITS, type TextInputLimitKey } from '../config/textLimits'
 type LimitInput = TextInputLimitKey | number | undefined | null;
 const IMAGE_DATA_URL_PATTERN = /^data:image\/[a-z0-9.+-]+[;,]/i;
 
+// Opaque machine-generated values that must be sent to the API byte-for-byte.
+// Truncating these silently corrupts them — e.g. a 64-char email-verification
+// or password-reset token would be clipped to the 60-char DEFAULT limit and
+// never match the record, so every verify/reset link would look "expired".
+const OPAQUE_FIELD_PATTERN =
+  /token|otp|code|secret|hash|signature|nonce|jwt|captcha|credential|refresh|challenge|verifier/i;
+
 const ATTRIBUTE_MATCHERS: Array<[RegExp, TextInputLimitKey]> = [
   [/(refund|return).*reason|reason.*(refund|return)/, 'REFUND_REASON'],
   [/(cash|pay.?in|pay.?out|drawer|shift).*reason|reason.*(cash|pay.?in|pay.?out|drawer|shift)/, 'CASH_REASON'],
@@ -76,6 +83,11 @@ export function getLimitForField(fieldName?: string | null, inputType?: string |
 
 function sanitizeStringValue(key: string, value: string): string {
   if (IMAGE_DATA_URL_PATTERN.test(value)) {
+    return value;
+  }
+
+  // Never truncate opaque security tokens/codes — they must reach the API intact.
+  if (OPAQUE_FIELD_PATTERN.test(key)) {
     return value;
   }
 
