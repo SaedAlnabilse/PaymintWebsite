@@ -53,3 +53,8 @@ playwright-report/
 *.sln
 *.sw?
 nul
+
+# Sensitive keys and credentials
+mintcom-new-upload-key.jks
+KEYSTORE_CREDENTIALS.md
+
