@@ -46,9 +46,8 @@ declare global {
 const APPLE_JS_SRC =
   'https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js';
 
-// These mirror the mobile backoffice configuration so both platforms hit the
-// same Apple Service ID and callback. The env vars win when provided.
-const DEFAULT_APPLE_SERVICE_ID = 'com.mintcombackoffice.service';
+// The env vars win when provided; these are just the fallback defaults.
+const DEFAULT_APPLE_SERVICE_ID = 'com.mintcom.website.service';
 const DEFAULT_APPLE_REDIRECT_URI =
   'https://grateful-liberation-production-d036.up.railway.app/api/accounts/apple-callback';
 

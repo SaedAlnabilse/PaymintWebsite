@@ -401,9 +401,9 @@ export function SignUpPage() {
                     {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                   </button>
                 </div>
-                {errors.password?.message && (
-                  <p id="password-error" role="alert" className="text-xs font-bold text-red-500">{errors.password.message}</p>
-                )}
+                <p id="password-error" role="alert" className="min-h-[1em] text-xs font-bold text-red-500">
+                  {errors.password?.message || ' '}
+                </p>
               </div>
 
               {/* Confirm password */}
@@ -556,7 +556,7 @@ export function SignUpPage() {
       </div>
 
       {/* ── Right: Benefits panel ── */}
-      <div className="relative hidden overflow-hidden bg-gradient-to-br from-gray-50 via-white to-gray-50 lg:flex lg:flex-1 lg:items-center lg:justify-center dark:from-[#050505] dark:via-[#0a0a0a] dark:to-[#050505]">
+      <div className="relative hidden overflow-hidden bg-gradient-to-br from-gray-50 via-white to-gray-50 lg:flex lg:flex-1 lg:items-center lg:justify-center lg:h-screen lg:self-start dark:from-[#050505] dark:via-[#0a0a0a] dark:to-[#050505]">
         {/* Background ambient */}
         <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="absolute -top-20 right-[10%] h-[400px] w-[400px] rounded-full bg-mintcom-green/10 blur-[120px]" />
