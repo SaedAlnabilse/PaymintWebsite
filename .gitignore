@@ -58,3 +58,7 @@ nul
 mintcom-new-upload-key.jks
 KEYSTORE_CREDENTIALS.md
 
+# Build and deploy logs
+build_logs/
+*.log
+
