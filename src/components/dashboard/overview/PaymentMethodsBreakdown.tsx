@@ -6,6 +6,7 @@ import { useTheme } from '../../../context/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { StatValue } from '../../ui/StatValue';
 import { useCurrency } from '../../../context/CurrencyContext';
+import { formatPaymentBrandName } from '../../../utils/paymentCard';
 
 interface PaymentMethodsBreakdownProps {
   paymentMethodBreakdown: { name: string; value: number }[];
@@ -28,7 +29,7 @@ export const PaymentMethodsBreakdown = React.memo(function PaymentMethodsBreakdo
     if (nameStr === 'CARD') return t('orders.payment.allCards');
     if (nameStr === 'CASH') return t('orders.payment.cash');
     if (nameStr === 'OTHER') return t('orders.payment.allOther');
-    return nameStr;
+    return formatPaymentBrandName(name);
   };
 
   return (

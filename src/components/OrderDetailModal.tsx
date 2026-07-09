@@ -9,6 +9,7 @@ import { useScrollLock } from '../hooks/useScrollLock';
 import { useCurrency } from '../context/CurrencyContext';
 import { OrderRefundModal } from './OrderRefundModal';
 import { StatValue } from './ui/StatValue';
+import { formatPaymentBrandName } from '../utils/paymentCard';
 
 export interface OrderItem {
     id: string;
@@ -198,144 +199,158 @@ export function OrderDetailModal({ order, onClose, onRefundSuccess, canRefund = 
         return t(`orders.status.${statusKey}` as any);
     };
 
+    const paymentLabel =
+        order.paymentMethod === 'CARD' && order.cardType
+            ? t('orders.payment.cardWithBrand', { brand: formatPaymentBrandName(order.cardType) })
+            : order.paymentMethod === 'CASH'
+                ? t('orders.payment.cash')
+                : order.otherPaymentMethod
+                    ? formatPaymentBrandName(order.otherPaymentMethod)
+                    : formatPaymentBrandName(order.paymentMethod);
+
     return createPortal(
         <AnimatePresence>
             <div
                 dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}
-                className="fixed inset-0 z-[9999] popup-surface flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/30 dark:bg-black/80 backdrop-blur-sm font-sans"
+                className="fixed inset-0 z-[9999] popup-surface flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/40 dark:bg-black/70 font-sans"
+                onClick={(e) => {
+                    if (e.target === e.currentTarget) onClose();
+                }}
             >
                 <motion.div
-                    initial={{ opacity: 0, y: 100 }}
+                    initial={{ opacity: 0, y: 24 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 100 }}
-                    transition={{ type: "spring", duration: 0.4, bounce: 0.2 }}
-                    className="bg-white dark:bg-[#1E293B] rounded-t-3xl sm:rounded-2xl border border-gray-200 dark:border-white/5 w-full sm:max-w-2xl max-h-[92vh] sm:max-h-[85vh] overflow-y-auto overflow-x-hidden relative scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-white/10 scrollbar-track-transparent hover:scrollbar-thumb-gray-300 dark:hover:scrollbar-thumb-white/20 custom-scrollbar-modal"
+                    exit={{ opacity: 0, y: 24 }}
+                    transition={{ duration: 0.2 }}
+                    className="bg-white dark:bg-[#1E293B] rounded-t-2xl sm:rounded-2xl border border-gray-200 dark:border-white/10 w-full sm:max-w-2xl max-h-[92vh] sm:max-h-[85vh] flex flex-col overflow-hidden shadow-xl"
                 >
-                    {/* Mobile drag handle */}
-                    <div className="sm:hidden flex justify-center pt-3 pb-1 sticky top-0 bg-white dark:bg-[#1E293B] z-10">
-                        <div className="w-10 h-1 bg-gray-300 dark:bg-white/20 rounded-full" />
-                    </div>
-
-                    <div className="p-4 sm:p-8 border-b border-gray-100 dark:border-white/5 flex items-center justify-between relative isolate">
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-mintcom-green/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 -z-10" />
-                        <div>
-                            <div className="flex items-center gap-2 mb-1">
-                                <span className="label-strong font-outfit">{t('orders.details.title')}</span>
-                                <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-white/20" />
-                                <span className="label-strong font-outfit text-mintcom-green">{t('orders.details.processed')}</span>
-                            </div>
-                            <h2 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">{t('orders.table.order')} #{order.orderNumber}</h2>
+                    {/* Header — sticky */}
+                    <div className="shrink-0 border-b border-gray-100 dark:border-white/10">
+                        <div className="sm:hidden flex justify-center pt-2.5 pb-1">
+                            <div className="w-10 h-1 bg-gray-300 dark:bg-white/20 rounded-full" />
                         </div>
-                        <button
-                            onClick={onClose}
-                            className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all p-2 hover:bg-gray-100 dark:hover:bg-white/5 rounded-xl border border-gray-200 dark:border-white/5 shadow-sm active:scale-90"
-                        >
-                            <X size={20} />
-                        </button>
+                        <div className="px-4 sm:px-6 py-4 flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">
+                                    {t('orders.details.title')}
+                                </p>
+                                <h2 className="text-xl font-bold text-gray-900 dark:text-white truncate">
+                                    {t('orders.table.order')} #{order.orderNumber}
+                                </h2>
+                            </div>
+                            <button
+                                onClick={onClose}
+                                aria-label={t('common.close')}
+                                className="shrink-0 p-2 rounded-lg text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
                     </div>
 
-                    <div className="p-8 space-y-10">
-                        {/* Order Info */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-                            <div>
-                                <p className="label-strong font-outfit mb-2 flex items-center gap-1">
+                    {/* Scrollable body */}
+                    <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4 sm:p-6 space-y-5 custom-scrollbar-modal">
+                        {/* Meta grid */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+                            <div className="rounded-xl border border-gray-100 dark:border-white/10 bg-gray-50/80 dark:bg-white/[0.03] p-3">
+                                <p className="text-xs text-gray-500 mb-1 flex items-center gap-1">
                                     {t('orders.details.date')}
                                     <QuickInfo text={t('orders.details.dateTip')} />
                                 </p>
-                                <p className="text-sm font-bold text-gray-900 dark:text-white">{formatDate(order.createdAt)}</p>
+                                <p className="text-sm font-semibold text-gray-900 dark:text-white leading-snug">
+                                    {formatDate(order.createdAt)}
+                                </p>
                             </div>
-                            <div>
-                                <p className="label-strong font-outfit mb-2 flex items-center gap-1">
+                            <div className="rounded-xl border border-gray-100 dark:border-white/10 bg-gray-50/80 dark:bg-white/[0.03] p-3">
+                                <p className="text-xs text-gray-500 mb-1 flex items-center gap-1">
                                     {t('orders.details.status')}
                                     <QuickInfo text={t('orders.details.statusTip')} />
                                 </p>
                                 <span
-                                    className={`inline-flex px-2 py-0.5 label-strong font-outfit rounded-md border ${getStatusColor(
+                                    className={`inline-flex px-2 py-0.5 text-xs font-semibold rounded-md border ${getStatusColor(
                                         order.paymentStatus || order.status,
                                     )}`}
                                 >
                                     {getOrderStatusLabel()}
                                 </span>
                             </div>
-                            <div>
-                                <p className="label-strong font-outfit mb-2 flex items-center gap-1">
+                            <div className="rounded-xl border border-gray-100 dark:border-white/10 bg-gray-50/80 dark:bg-white/[0.03] p-3">
+                                <p className="text-xs text-gray-500 mb-1 flex items-center gap-1">
                                     {t('orders.details.payment')}
                                     <QuickInfo text={t('orders.details.paymentTip')} />
                                 </p>
-                                <p className="text-sm font-bold text-gray-900 dark:text-white">
-                                    {order.paymentMethod === 'CARD' && order.cardType
-                                        ? t('orders.payment.cardWithBrand', { brand: order.cardType })
-                                        : order.paymentMethod === 'CASH'
-                                            ? t('orders.payment.cash')
-                                            : order.otherPaymentMethod || order.paymentMethod}
+                                <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                                    {paymentLabel}
                                 </p>
                             </div>
-                            <div>
-                                <p className="label-strong font-outfit mb-2 flex items-center gap-1">
+                            <div className="rounded-xl border border-gray-100 dark:border-white/10 bg-gray-50/80 dark:bg-white/[0.03] p-3">
+                                <p className="text-xs text-gray-500 mb-1 flex items-center gap-1">
                                     {t('orders.details.staff')}
                                     <QuickInfo text={t('orders.details.staffTip')} />
                                 </p>
-                                <p className="text-sm font-bold text-gray-900 dark:text-white">{order.employeeName || order.user?.username || t('common.pos')}</p>
+                                <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                                    {order.employeeName || order.user?.username || t('common.pos')}
+                                </p>
                             </div>
                             {order.refundedByName && (
-                                <div>
-                                    <p className="label-strong font-outfit mb-2 flex items-center gap-1">
+                                <div className="rounded-xl border border-red-100 dark:border-red-500/20 bg-red-50/50 dark:bg-red-500/5 p-3">
+                                    <p className="text-xs text-gray-500 mb-1 flex items-center gap-1">
                                         {t('orders.details.refundedBy')}
                                         <QuickInfo text={t('orders.details.refundedByTip')} />
                                     </p>
-                                    <p className="text-sm font-bold text-mintcom-red">{order.refundedByName}</p>
+                                    <p className="text-sm font-semibold text-mintcom-red">{order.refundedByName}</p>
                                 </div>
                             )}
                             {((order.paymentStatus || order.status) === 'REFUNDED') && (
-                                <div className="col-span-2 md:col-span-4">
-                                    <p className="label-strong font-outfit mb-2">
-                                        Refund Reason
+                                <div className="col-span-2 sm:col-span-4 rounded-xl border border-red-100 dark:border-red-500/20 bg-red-50/50 dark:bg-red-500/5 p-3">
+                                    <p className="text-xs text-gray-500 mb-1">
+                                        {t('orders.details.refundReason', { defaultValue: 'Refund Reason' })}
                                     </p>
-                                    <p className="text-sm font-bold text-mintcom-red break-words">
+                                    <p className="text-sm font-semibold text-mintcom-red break-words">
                                         {order.refundReason || order.reason || order.refund_reason || 'N/A'}
                                     </p>
                                 </div>
                             )}
                             {order.customer && (
                                 <>
-                                    <div className="col-span-2">
-                                        <p className="label-strong font-outfit mb-2 flex items-center gap-1">
+                                    <div className="col-span-2 rounded-xl border border-gray-100 dark:border-white/10 bg-gray-50/80 dark:bg-white/[0.03] p-3">
+                                        <p className="text-xs text-gray-500 mb-1 flex items-center gap-1">
                                             {t('orders.details.customer')}
                                             <QuickInfo text={t('orders.details.customerTip')} />
                                         </p>
-                                        <p className="text-sm font-bold text-gray-900 dark:text-white">{order.customer.name}</p>
+                                        <p className="text-sm font-semibold text-gray-900 dark:text-white">{order.customer.name}</p>
                                     </div>
-                                    <div className="col-span-2">
-                                        <p className="label-strong font-outfit mb-2 flex items-center gap-1">
+                                    <div className="col-span-2 rounded-xl border border-gray-100 dark:border-white/10 bg-gray-50/80 dark:bg-white/[0.03] p-3">
+                                        <p className="text-xs text-gray-500 mb-1 flex items-center gap-1">
                                             {t('orders.details.contact')}
                                             <QuickInfo text={t('orders.details.contactTip')} />
                                         </p>
-                                        <p className="text-sm font-bold text-gray-900 dark:text-white">{order.customer.phone}</p>
+                                        <p className="text-sm font-semibold text-gray-900 dark:text-white">{order.customer.phone}</p>
                                     </div>
                                 </>
                             )}
                         </div>
 
-                        {/* Order Items */}
+                        {/* Items */}
                         <div>
-                            <div className="flex items-center gap-2 mb-4">
-                                <h3 className="text-sm font-black text-gray-900 dark:text-white tracking-widest">{t('orders.details.items')}</h3>
-                            </div>
-                            <div className="bg-gray-50 dark:bg-black/20 rounded-2xl border border-gray-100 dark:border-white/5 overflow-hidden shadow-inner">
-                                <div className="divide-y divide-gray-100 dark:divide-white/5">
+                            <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
+                                {t('orders.details.items')}
+                            </h3>
+                            <div className="rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden">
+                                <div className="divide-y divide-gray-100 dark:divide-white/10">
                                     {order.items?.map((item) => (
-                                        <div key={item.id} className="p-4 flex items-center justify-between group hover:bg-white dark:hover:bg-white/[0.02] transition-colors">
-                                            <div>
-                                                <p className="text-gray-900 dark:text-white font-bold text-sm">{item.name}</p>
-                                                <p className="label-strong font-outfit mt-0.5">
-                                                    {t('orders.details.qty')}: {item.quantity.toLocaleString(t('common.locale'))} x {formatCurrency(item.price || item.basePrice || 0)}
+                                        <div key={item.id} className="px-3.5 py-3 flex items-start justify-between gap-3">
+                                            <div className="min-w-0">
+                                                <p className="text-sm font-semibold text-gray-900 dark:text-white">{item.name}</p>
+                                                <p className="text-xs text-gray-500 mt-0.5">
+                                                    {t('orders.details.qty')}: {item.quantity.toLocaleString(t('common.locale'))} × {formatCurrency(item.price || item.basePrice || 0)}
                                                 </p>
                                             </div>
                                             <StatValue
                                                 value={item.total || item.finalPrice || 0}
                                                 currency={currencySymbol}
-                                                className="text-sm font-bold text-gray-900 dark:text-white"
-                                                containerClassName="justify-end"
+                                                className="text-sm font-semibold text-gray-900 dark:text-white"
+                                                containerClassName="justify-end shrink-0"
                                             />
                                         </div>
                                     ))}
@@ -343,77 +358,66 @@ export function OrderDetailModal({ order, onClose, onRefundSuccess, canRefund = 
                             </div>
                         </div>
 
-                        {/* Order Summary */}
-                        <div className="bg-gray-900 dark:bg-black p-8 rounded-2xl space-y-4 shadow-xl relative overflow-hidden isolate">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-mintcom-green/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 -z-10" />
-
-                            <div className="flex justify-between text-gray-400">
-                                <span className="label-strong font-outfit flex items-center gap-1">
-                                    {t('orders.details.subtotal')}
-                                </span>
+                        {/* Totals — clean receipt style */}
+                        <div className="rounded-xl border border-gray-200 dark:border-white/10 p-4 space-y-2.5">
+                            <div className="flex justify-between text-sm">
+                                <span className="text-gray-500">{t('orders.details.subtotal')}</span>
                                 <StatValue
                                     value={order.subtotal || 0}
                                     currency={currencySymbol}
-                                    className="text-sm font-bold text-gray-400"
+                                    className="text-sm font-medium text-gray-700 dark:text-gray-300"
                                     containerClassName="justify-end"
                                 />
                             </div>
                             {(order.discount || 0) > 0 && (
-                                <div className="flex justify-between text-mintcom-red">
-                                    <span className="label-strong font-outfit flex items-center gap-1">
-                                        {t('orders.details.discount')}
-                                    </span>
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-mintcom-red">{t('orders.details.discount')}</span>
                                     <StatValue
                                         value={order.discount || 0}
                                         currency={currencySymbol}
                                         prefix="-"
-                                        className="text-sm font-bold text-mintcom-red"
+                                        className="text-sm font-medium text-mintcom-red"
                                         containerClassName="justify-end"
                                     />
                                 </div>
                             )}
                             {(order.serviceChargeAmount || 0) > 0 && (
                                 <div>
-                                    <div className="flex justify-between text-gray-400">
-                                        <span className="label-strong font-outfit flex items-center gap-1">
-                                            {summaryLabels.serviceChargeLabel}
-                                        </span>
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-gray-500">{summaryLabels.serviceChargeLabel}</span>
                                         <StatValue
                                             value={order.serviceChargeAmount || 0}
                                             currency={currencySymbol}
-                                            className="text-sm font-bold text-gray-400"
+                                            className="text-sm font-medium text-gray-700 dark:text-gray-300"
                                             containerClassName="justify-end"
                                         />
                                     </div>
                                     {summaryLabels.serviceChargeReason && (
-                                        <div className="text-xs italic text-gray-500 pl-3 mt-1">
-                                            {`› ${summaryLabels.serviceChargeReason}`}
-                                        </div>
+                                        <p className="text-xs text-gray-400 mt-1 ps-1">
+                                            {summaryLabels.serviceChargeReason}
+                                        </p>
                                     )}
                                 </div>
                             )}
                             {(order.tax || 0) > 0 && (
-                                <div className="flex justify-between text-gray-400">
-                                    <span className="label-strong font-outfit flex items-center gap-1">
-                                        {summaryLabels.taxLabel}
-                                    </span>
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-gray-500">{summaryLabels.taxLabel}</span>
                                     <StatValue
                                         value={order.tax || 0}
                                         currency={currencySymbol}
-                                        className="text-sm font-bold text-gray-400"
+                                        className="text-sm font-medium text-gray-700 dark:text-gray-300"
                                         containerClassName="justify-end"
                                     />
                                 </div>
                             )}
-                            <div className="flex justify-between text-white font-bold text-xl pt-6 border-t border-white/10 mt-2">
-                                <span className="flex items-center gap-2">
-                                    <div className={`w-2 h-2 rounded-full animate-pulse ${isNegativeTotal ? 'bg-mintcom-red' : 'bg-mintcom-green'}`} />
-                                    <span className="text-xs font-black tracking-[0.2em]">{t('orders.details.total')}</span>
+                            <div className="flex justify-between items-center pt-3 mt-1 border-t border-gray-100 dark:border-white/10">
+                                <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                                    {t('orders.details.total')}
                                 </span>
                                 <StatValue
                                     value={order.total || 0}
                                     currency={currencySymbol}
-                                    className={`text-2xl tracking-tighter ${isNegativeTotal ? 'text-mintcom-red' : 'text-mintcom-green'}`}
+                                    className={`text-lg font-bold ${isNegativeTotal ? 'text-mintcom-red' : 'text-gray-900 dark:text-white'}`}
                                     containerClassName="justify-end"
                                 />
                             </div>
@@ -422,18 +426,20 @@ export function OrderDetailModal({ order, onClose, onRefundSuccess, canRefund = 
                         {/* Notes */}
                         {order.note && (
                             <div>
-                                <p className="label-strong font-outfit mb-2 px-1">{t('orders.details.notes')}</p>
-                                <p className="text-sm text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-white/[0.02] p-4 rounded-xl border border-gray-100 dark:border-white/5 font-medium leading-relaxed italic">
-                                    "{order.note}"
+                                <p className="text-xs font-medium text-gray-500 mb-1.5">{t('orders.details.notes')}</p>
+                                <p className="text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-white/[0.03] p-3 rounded-xl border border-gray-100 dark:border-white/10 leading-relaxed">
+                                    {order.note}
                                 </p>
                             </div>
                         )}
+                    </div>
 
-                        {/* Actions */}
-                        <div className="flex items-start gap-4 pt-4">
+                    {/* Sticky footer actions */}
+                    <div className="shrink-0 border-t border-gray-100 dark:border-white/10 bg-white dark:bg-[#1E293B] px-4 sm:px-6 py-3 sm:py-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+                        <div className="flex items-center gap-3">
                             <button
                                 onClick={onClose}
-                                className="flex-1 py-4 px-6 bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-black tracking-[0.2em] text-xs rounded-2xl transition-all border border-gray-200 dark:border-white/5 active:scale-95 shadow-sm"
+                                className="flex-1 py-2.5 px-4 rounded-xl text-sm font-semibold bg-gray-100 dark:bg-white/5 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-white/10 border border-gray-200 dark:border-white/10 transition-colors"
                             >
                                 {t('common.close')}
                             </button>
@@ -445,15 +451,15 @@ export function OrderDetailModal({ order, onClose, onRefundSuccess, canRefund = 
                                             handleRefund();
                                         }}
                                         disabled={!canRefund}
-                                        className={`w-full py-4 px-6 font-black tracking-[0.2em] text-xs rounded-2xl transition-all border active:scale-95 ${canRefund
-                                            ? 'bg-mintcom-red/10 text-mintcom-red hover:bg-mintcom-red hover:text-white border-mintcom-red/20 shadow-lg shadow-mintcom-red/10'
+                                        className={`w-full py-2.5 px-4 rounded-xl text-sm font-semibold border transition-colors ${canRefund
+                                            ? 'bg-mintcom-red text-white border-mintcom-red hover:bg-mintcom-red/90'
                                             : 'bg-gray-100 dark:bg-white/5 text-gray-400 border-gray-200 dark:border-white/10 cursor-not-allowed'
                                             }`}
                                     >
                                         {t('orders.actions.refund')}
                                     </button>
                                     {!canRefund && (
-                                        <p className="mt-2 text-xs font-semibold text-red-600">
+                                        <p className="mt-1.5 text-xs font-medium text-red-600 text-center">
                                             {t('orders.messages.noRefundPermission')}
                                         </p>
                                     )}

@@ -1,4 +1,4 @@
-import { Wallet, CreditCard, PieChart as PieChartIcon, ChevronRight, Activity } from 'lucide-react';
+import { Wallet, CreditCard, PieChart as PieChartIcon, ChevronRight } from 'lucide-react';
 import { useCurrency } from '../../../../context/CurrencyContext';
 import type { SalesSummary } from '../../../../types';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Label } from 'recharts';
@@ -8,6 +8,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { AnalyticsEmptyState } from '../AnalyticsEmptyState';
 import { StatValue } from '../../../../components/ui/StatValue';
+import { formatPaymentBrandName } from '../../../../utils/paymentCard';
 
 const COLORS = ['#7dc6a2', '#3b82f6', '#f59e0b', '#D55263', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
 
@@ -29,6 +30,7 @@ const FormatCurrency = ({ value }: { value: number }) => {
       value={value} 
       currency={currencySymbol} 
       className="text-sm"
+      containerClassName="justify-end w-full"
     />
   );
 };
@@ -56,11 +58,11 @@ export const PaymentsView = React.memo(function PaymentsView({ salesData, effect
 
   const getMethodName = (name: any) => {
     if (!name) return '—';
-    const nameStr = String(name);
+    const nameStr = String(name).toUpperCase();
     if (nameStr === 'CARD') return t('orders.payment.allCards');
     if (nameStr === 'CASH') return t('orders.payment.cash');
     if (nameStr === 'OTHER') return t('orders.payment.allOther');
-    return nameStr;
+    return formatPaymentBrandName(String(name));
   };
 
   return (
@@ -104,229 +106,236 @@ export const PaymentsView = React.memo(function PaymentsView({ salesData, effect
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Detailed Distribution Chart */}
-        <div className="p-6 bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.03] shadow-sm flex flex-col">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-xl bg-mintcom-green/10 flex items-center justify-center text-mintcom-green">
+      {/* Distribution + Details — one combined card */}
+      <div className="bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.03] shadow-sm overflow-hidden">
+        <div className="p-5 sm:p-6 border-b border-gray-100 dark:border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-mintcom-green/10 flex items-center justify-center text-mintcom-green shrink-0">
               <PieChartIcon size={20} />
             </div>
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-              {t('orders.reports.payments.distribution')}
-            </h3>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                {t('orders.reports.payments.distribution')}
+              </h3>
+              <p className="text-xs text-gray-500 mt-0.5">{t('orders.reports.payments.detailsDesc')}</p>
+            </div>
           </div>
-          <div className="h-[300px] w-full relative">
-            {paymentMethodBreakdown.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={paymentMethodBreakdown}
-                    innerRadius={80}
-                    outerRadius={120}
-                    paddingAngle={4}
-                    dataKey="value"
-                    animationDuration={1000}
-                    stroke="none"
-                    nameKey="name"
-                  >
-                    {paymentMethodBreakdown.map((_: any, index: number) => (
-                      <Cell key={index} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                    <Label
-                      content={({ viewBox }: any) => {
-                        const { cx, cy } = viewBox;
-                        return (
-                          <g>
-                            <text
-                              x={cx}
-                              y={cy - 10}
-                              fill={isDark ? '#ffffff' : '#111827'}
-                              className="text-3xl font-black"
-                              textAnchor="middle"
-                              dominantBaseline="central"
-                            >
-                              <StatValue value={paymentMethodBreakdown.length} isInteger={true} className="text-3xl" />
-                            </text>
-                            <text
-                              x={cx}
-                              y={cy + 15}
-                              fill="#6b7280"
-                              className="text-[10px] font-bold tracking-widest uppercase"
-                              textAnchor="middle"
-                              dominantBaseline="central"
-                            >
-                              {t('orders.reports.payments.methods')}
-                            </text>
-                          </g>
-                        );
-                      }}
-                    />
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: isDark ? '#0B1120' : '#fff',
-                      borderRadius: '16px',
-                      border: 'none',
-                      padding: '12px',
-                      boxShadow: '0 10px 30px rgba(0,0,0,0.2)'
-                    }}
-                    itemStyle={{
-                      color: isDark ? '#fff' : '#111',
-                      fontWeight: '800',
-                      fontSize: '12px'
-                    }}
-                    formatter={(val: any) => (
-                      <StatValue 
-                        value={Number(val)} 
-                        currency={currencySymbol} 
-                        className="text-sm font-bold"
-                      />
-                    )}
-                    labelFormatter={(name: any) => getMethodName(name)}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <AnalyticsEmptyState
-                icon={CreditCard}
-                title={t('orders.reports.payments.noData')}
-                description={t('orders.reports.payments.detailsDesc')}
-                compact
-                className="h-full rounded-2xl bg-gray-50/50 dark:bg-black/20 border border-dashed border-gray-200 dark:border-white/[0.03]"
-              />
-            )}
-          </div>
+          <button
+            onClick={() => navigate(`/dashboard/${locationSlug}/orders`, {
+              state: {
+                startDate: effectiveDateRange.start,
+                endDate: effectiveDateRange.end,
+                selectedDateRange: selectedDateRange
+              }
+            })}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-white/10 transition-all label-strong font-outfit border border-gray-200 dark:border-white/10 shrink-0"
+          >
+            <span>{t('orders.reports.payments.viewAllOrders')}</span>
+            <ChevronRight size={14} className={`text-mintcom-green transition-transform ${t('common.locale') === 'ar' ? 'rotate-180' : ''}`} />
+          </button>
         </div>
 
-        {/* Breakdown Table */}
-        <div className="bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.03] shadow-sm overflow-hidden flex flex-col h-[400px]">
-          <div className="p-6 border-b border-gray-100 dark:border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 flex-shrink-0">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-mintcom-green/10 flex items-center justify-center text-mintcom-green">
-                <Activity size={20} />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                  {t('orders.reports.payments.details')}
-                </h3>
-                <p className="text-xs text-gray-500 mt-1">{t('orders.reports.payments.detailsDesc')}</p>
-              </div>
-            </div>
-            <button
-              onClick={() => navigate(`/dashboard/${locationSlug}/orders`, {
-                state: {
-                  startDate: effectiveDateRange.start,
-                  endDate: effectiveDateRange.end,
-                  selectedDateRange: selectedDateRange
-                }
-              })}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-white/10 transition-all label-strong font-outfit border border-gray-200 dark:border-white/10"
-            >
-              <span>{t('orders.reports.payments.viewAllOrders')}</span>
-              <ChevronRight size={14} className={`text-mintcom-green transition-transform ${t('common.locale') === 'ar' ? 'rotate-180' : ''}`} />
-            </button>
-          </div>
-          <div className="flex-1 overflow-auto custom-scrollbar">
-            <table className="w-full relative">
-              <thead className="bg-gray-50 dark:bg-white/[0.02] sticky top-0 z-10">
-                <tr>
-                  <th className="px-6 py-4 text-start label-strong font-outfit bg-gray-50 dark:bg-[#1E293B] border-b border-gray-100 dark:border-white/5">{t('orders.reports.payments.method')}</th>
-                  <th className="px-6 py-4 text-end label-strong font-outfit bg-gray-50 dark:bg-[#1E293B] border-b border-gray-100 dark:border-white/5">{t('orders.reports.payments.revenue')}</th>
-                  <th className="px-6 py-4 text-end label-strong font-outfit bg-gray-50 dark:bg-[#1E293B] border-b border-gray-100 dark:border-white/5">{t('orders.reports.payments.share')}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-white/5">
-                {paymentMethodBreakdown.length > 0 ? (
-                  paymentMethodBreakdown.map((item: any, i: number) => {
-                    const total = paymentTotal || 1;
-                    const percentage = (item.value / total);
-
-                    const isCard = item.name === 'CARD';
-                    const isOther = item.name === 'OTHER';
-                    const hasDetails = (isCard && (salesData.cardTypeBreakdown?.length || 0) > 0) ||
-                                     (isOther && (salesData.otherPaymentBreakdown?.length || 0) > 0);
-                    const isExpanded = expandedPaymentMethod === item.name;
-
-                    return (
-                      <React.Fragment key={i}>
-                        <tr
-                          className={`group transition-colors ${hasDetails ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-white/[0.02]' : ''} ${isExpanded ? 'bg-gray-50 dark:bg-white/[0.02]' : ''}`}
-                          onClick={() => {
-                            if (hasDetails) {
-                              setExpandedPaymentMethod(isExpanded ? null : item.name);
-                            }
-                          }}
-                        >
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-gray-100 dark:bg-white/5 text-gray-500" style={{ color: COLORS[i % COLORS.length], backgroundColor: `${COLORS[i % COLORS.length]}20` }}>
-                                {isCard ? <CreditCard size={16} /> : <Wallet size={16} />}
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <span className="font-bold text-sm text-gray-900 dark:text-white">{getMethodName(item.name)}</span>
-                                {hasDetails && (
-                                  <ChevronRight size={16} className={`text-gray-400 transition-transform ${isExpanded ? (t('common.locale') === 'ar' ? '-rotate-90' : 'rotate-90') : (t('common.locale') === 'ar' ? 'rotate-180' : '')}`} />
-                                )}
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 text-end font-black text-gray-900 dark:text-white">
-                            <FormatCurrency value={item.value} />
-                          </td>
-                          <td className="px-6 py-4 text-end">
-                            <div className="flex items-center justify-end gap-2">
-                              <div className="w-16 h-1.5 bg-gray-100 dark:bg-white/10 rounded-full overflow-hidden">
-                                <div className="h-full rounded-full" style={{ width: `${(percentage * 100)}%`, backgroundColor: COLORS[i % COLORS.length] }} />
-                              </div>
-                              <StatValue value={percentage} isPercentage={true} className="text-xs font-bold text-gray-500" />
-                            </div>
-                          </td>
-                        </tr>
-
-                        {isExpanded && isCard && salesData.cardTypeBreakdown?.map((card: any, ci: number) => (
-                          <tr key={`card-${ci}`} className="bg-gray-50/50 dark:bg-white/[0.01]">
-                            <td className="px-6 py-3 ps-16">
-                              <span className="text-xs font-bold text-gray-500">{card.name}</span>
-                            </td>
-                            <td className="px-6 py-3 text-end text-xs font-bold text-gray-700 dark:text-gray-300">
-                              <FormatCurrency value={card.value} />
-                            </td>
-                            <td className="px-6 py-3 text-end text-xs font-medium text-gray-400">
-                              <StatValue value={card.value / item.value} isPercentage={true} className="text-xs font-medium text-gray-400" />
-                            </td>
-                          </tr>
-                        ))}
-
-                        {isExpanded && isOther && salesData.otherPaymentBreakdown?.map((op: any, oi: number) => (
-                          <tr key={`other-${oi}`} className="bg-gray-50/50 dark:bg-white/[0.01]">
-                            <td className="px-6 py-3 ps-16">
-                              <span className="text-xs font-bold text-gray-500">{op.name}</span>
-                            </td>
-                            <td className="px-6 py-3 text-end text-xs font-bold text-gray-700 dark:text-gray-300">
-                              <FormatCurrency value={op.value} />
-                            </td>
-                            <td className="px-6 py-3 text-end text-xs font-medium text-gray-400">
-                              <StatValue value={op.value / item.value} isPercentage={true} className="text-xs font-medium text-gray-400" />
-                            </td>
-                          </tr>
-                        ))}
-                      </React.Fragment>
-                    );
-                  })
-                ) : (
-                  <tr>
-                    <td colSpan={3} className="px-6 py-14">
-                      <AnalyticsEmptyState
-                        icon={CreditCard}
-                        title={t('orders.reports.payments.noData')}
-                        description={t('orders.reports.payments.detailsDesc')}
-                        compact
+        <div className="grid grid-cols-1 lg:grid-cols-5 lg:items-stretch">
+          {/* Compact pie chart */}
+          <div className="lg:col-span-2 p-5 sm:p-6 flex flex-col items-center justify-center border-b lg:border-b-0 lg:border-e border-gray-100 dark:border-white/5">
+            <div className="h-[200px] w-full max-w-[240px] relative">
+              {paymentMethodBreakdown.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart margin={{ top: 4, right: 4, bottom: 4, left: 4 }}>
+                    <Pie
+                      data={paymentMethodBreakdown}
+                      innerRadius={52}
+                      outerRadius={78}
+                      paddingAngle={3}
+                      dataKey="value"
+                      animationDuration={1000}
+                      stroke="none"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                    >
+                      {paymentMethodBreakdown.map((_: any, index: number) => (
+                        <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                      <Label
+                        content={({ viewBox }: any) => {
+                          const { cx, cy } = viewBox;
+                          return (
+                            <g>
+                              <text
+                                x={cx}
+                                y={cy - 6}
+                                fill={isDark ? '#ffffff' : '#111827'}
+                                textAnchor="middle"
+                                dominantBaseline="central"
+                                style={{ fontSize: 22, fontWeight: 800 }}
+                              >
+                                {paymentMethodBreakdown.length}
+                              </text>
+                              <text
+                                x={cx}
+                                y={cy + 14}
+                                fill="#6b7280"
+                                textAnchor="middle"
+                                dominantBaseline="central"
+                                style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em' }}
+                              >
+                                {t('orders.reports.payments.methods').toUpperCase()}
+                              </text>
+                            </g>
+                          );
+                        }}
                       />
-                    </td>
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: isDark ? '#0B1120' : '#fff',
+                        borderRadius: '16px',
+                        border: 'none',
+                        padding: '12px',
+                        boxShadow: '0 10px 30px rgba(0,0,0,0.2)'
+                      }}
+                      itemStyle={{
+                        color: isDark ? '#fff' : '#111',
+                        fontWeight: '800',
+                        fontSize: '12px'
+                      }}
+                      formatter={(val: any) => (
+                        <StatValue
+                          value={Number(val)}
+                          currency={currencySymbol}
+                          className="text-sm font-bold"
+                        />
+                      )}
+                      labelFormatter={(name: any) => getMethodName(name)}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <AnalyticsEmptyState
+                  icon={CreditCard}
+                  title={t('orders.reports.payments.noData')}
+                  description={t('orders.reports.payments.detailsDesc')}
+                  compact
+                  className="h-full"
+                />
+              )}
+            </div>
+          </div>
+
+          {/* Breakdown table */}
+          <div className="lg:col-span-3 flex flex-col min-h-0 max-h-[360px]">
+            <div className="flex-1 overflow-auto custom-scrollbar">
+              <table className="w-full relative">
+                <thead className="bg-gray-50 dark:bg-white/[0.02] sticky top-0 z-10">
+                  <tr>
+                    <th className="px-5 py-3.5 text-start label-strong font-outfit whitespace-nowrap bg-gray-50 dark:bg-[#1E293B] border-b border-gray-100 dark:border-white/5">
+                      {t('orders.reports.payments.method')}
+                    </th>
+                    <th className="px-5 py-3.5 text-end label-strong font-outfit whitespace-nowrap bg-gray-50 dark:bg-[#1E293B] border-b border-gray-100 dark:border-white/5">
+                      {t('orders.reports.payments.revenue')}
+                    </th>
+                    <th className="px-5 py-3.5 text-end label-strong font-outfit whitespace-nowrap bg-gray-50 dark:bg-[#1E293B] border-b border-gray-100 dark:border-white/5">
+                      {t('orders.reports.payments.share')}
+                    </th>
                   </tr>
-                )}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-gray-100 dark:divide-white/5">
+                  {paymentMethodBreakdown.length > 0 ? (
+                    paymentMethodBreakdown.map((item: any, i: number) => {
+                      const total = paymentTotal || 1;
+                      const percentage = (item.value / total);
+
+                      const isCard = item.name === 'CARD';
+                      const isOther = item.name === 'OTHER';
+                      const hasDetails = (isCard && (salesData.cardTypeBreakdown?.length || 0) > 0) ||
+                                       (isOther && (salesData.otherPaymentBreakdown?.length || 0) > 0);
+                      const isExpanded = expandedPaymentMethod === item.name;
+
+                      return (
+                        <React.Fragment key={i}>
+                          <tr
+                            className={`group transition-colors ${hasDetails ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-white/[0.02]' : ''} ${isExpanded ? 'bg-gray-50 dark:bg-white/[0.02]' : ''}`}
+                            onClick={() => {
+                              if (hasDetails) {
+                                setExpandedPaymentMethod(isExpanded ? null : item.name);
+                              }
+                            }}
+                          >
+                            <td className="px-5 py-3.5 text-start">
+                              <div className="flex items-center gap-3">
+                                <div
+                                  className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                                  style={{ color: COLORS[i % COLORS.length], backgroundColor: `${COLORS[i % COLORS.length]}20` }}
+                                >
+                                  {isCard ? <CreditCard size={16} /> : <Wallet size={16} />}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-bold text-sm text-gray-900 dark:text-white">{getMethodName(item.name)}</span>
+                                  {hasDetails && (
+                                    <ChevronRight size={16} className={`text-gray-400 transition-transform ${isExpanded ? (t('common.locale') === 'ar' ? '-rotate-90' : 'rotate-90') : (t('common.locale') === 'ar' ? 'rotate-180' : '')}`} />
+                                  )}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-5 py-3.5 text-end font-black text-gray-900 dark:text-white">
+                              <FormatCurrency value={item.value} />
+                            </td>
+                            <td className="px-5 py-3.5 text-end">
+                              <div className="flex items-center justify-end gap-2">
+                                <div className="w-16 h-1.5 bg-gray-100 dark:bg-white/10 rounded-full overflow-hidden">
+                                  <div className="h-full rounded-full" style={{ width: `${(percentage * 100)}%`, backgroundColor: COLORS[i % COLORS.length] }} />
+                                </div>
+                                <StatValue value={percentage} isPercentage={true} className="text-xs font-bold text-gray-500" />
+                              </div>
+                            </td>
+                          </tr>
+
+                          {isExpanded && isCard && salesData.cardTypeBreakdown?.map((card: any, ci: number) => (
+                            <tr key={`card-${ci}`} className="bg-gray-50/50 dark:bg-white/[0.01]">
+                              <td className="px-5 py-2.5 ps-16">
+                                <span className="text-xs font-bold text-gray-500">{formatPaymentBrandName(card.name)}</span>
+                              </td>
+                              <td className="px-5 py-2.5 text-end text-xs font-bold text-gray-700 dark:text-gray-300">
+                                <FormatCurrency value={card.value} />
+                              </td>
+                              <td className="px-5 py-2.5 text-end text-xs font-medium text-gray-400">
+                                <StatValue value={card.value / item.value} isPercentage={true} className="text-xs font-medium text-gray-400" />
+                              </td>
+                            </tr>
+                          ))}
+
+                          {isExpanded && isOther && salesData.otherPaymentBreakdown?.map((op: any, oi: number) => (
+                            <tr key={`other-${oi}`} className="bg-gray-50/50 dark:bg-white/[0.01]">
+                              <td className="px-5 py-2.5 ps-16">
+                                <span className="text-xs font-bold text-gray-500">{formatPaymentBrandName(op.name)}</span>
+                              </td>
+                              <td className="px-5 py-2.5 text-end text-xs font-bold text-gray-700 dark:text-gray-300">
+                                <FormatCurrency value={op.value} />
+                              </td>
+                              <td className="px-5 py-2.5 text-end text-xs font-medium text-gray-400">
+                                <StatValue value={op.value / item.value} isPercentage={true} className="text-xs font-medium text-gray-400" />
+                              </td>
+                            </tr>
+                          ))}
+                        </React.Fragment>
+                      );
+                    })
+                  ) : (
+                    <tr>
+                      <td colSpan={3} className="px-6 py-14">
+                        <AnalyticsEmptyState
+                          icon={CreditCard}
+                          title={t('orders.reports.payments.noData')}
+                          description={t('orders.reports.payments.detailsDesc')}
+                          compact
+                        />
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>

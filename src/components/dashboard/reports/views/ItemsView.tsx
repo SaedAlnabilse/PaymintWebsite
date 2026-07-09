@@ -180,11 +180,12 @@ export const ItemsView = React.memo(function ItemsView({
     setHistoryScope('all');
   }, [itemReportTab, startDate, endDate]);
 
-  const formatCurrency = (value: number) => (
-    <StatValue 
-      value={value} 
-      currency={currencySymbol} 
+  const formatCurrency = (value: number, align: 'start' | 'end' = 'end') => (
+    <StatValue
+      value={value}
+      currency={currencySymbol}
       className="text-sm font-bold"
+      containerClassName={align === 'end' ? 'justify-end w-full' : 'justify-start w-full'}
     />
   );
 
@@ -586,7 +587,7 @@ export const ItemsView = React.memo(function ItemsView({
                         }}
                         className={`group hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors ${itemReportTab === 'categories' ? 'cursor-pointer select-none active:scale-[0.995]' : ''}`}
                       >
-                        <td className="px-8 py-5">
+                        <td className="px-8 py-5 text-start">
                           <div className="flex items-center gap-4">
                             <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-white/5 flex items-center justify-center font-black text-xs text-gray-500 border border-gray-200 dark:border-white/5 shadow-sm">
                               <StatValue value={(currentPage - 1) * itemsPerPage + idx + 1} isInteger={true} className="text-xs" />
@@ -642,6 +643,7 @@ export const ItemsView = React.memo(function ItemsView({
                             value={item.quantity} 
                             isInteger={true}
                             className="text-sm"
+                            containerClassName="justify-end w-full"
                           />
                         </td>
                         <td className="px-8 py-5 text-end font-bold text-mintcom-green">
@@ -952,7 +954,7 @@ export const ItemsView = React.memo(function ItemsView({
                       ) : filteredBreakdown.length > 0 ? (
                         filteredBreakdown.map((item, idx) => (
                           <tr key={idx} className="group hover:bg-gray-50/50 dark:hover:bg-white/[0.02] transition-colors">
-                            <td className="px-8 py-5">
+                            <td className="px-8 py-5 text-start">
                               <div className="flex items-center gap-4">
                                 <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-white/5 flex items-center justify-center font-black text-[10px] text-gray-400 border border-gray-100 dark:border-white/5">
                                   <StatValue value={idx + 1} isInteger={true} className="text-[10px]" />
@@ -961,10 +963,11 @@ export const ItemsView = React.memo(function ItemsView({
                               </div>
                             </td>
                             <td className="px-8 py-5 text-end font-bold text-gray-700 dark:text-gray-300">
-                               <StatValue 
-                                value={item.quantity} 
+                               <StatValue
+                                value={item.quantity}
                                 isInteger={true}
                                 className="text-sm"
+                                containerClassName="justify-end w-full"
                               />
                             </td>
                             <td className="px-8 py-5 text-end font-bold text-mintcom-green">
@@ -1001,7 +1004,7 @@ export const ItemsView = React.memo(function ItemsView({
                     <div className="text-start">
                       <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">{t('orders.reports.items.totalRevenue')}</p>
                       <p className="text-lg font-black text-mintcom-green">
-                        {formatCurrency(filteredBreakdown.reduce((acc, curr) => acc + (curr.totalSales || curr.revenue || 0), 0))}
+                        {formatCurrency(filteredBreakdown.reduce((acc, curr) => acc + (curr.totalSales || curr.revenue || 0), 0), 'start')}
                       </p>
                     </div>
                   </div>

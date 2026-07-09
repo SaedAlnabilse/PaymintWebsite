@@ -553,7 +553,7 @@ export function DiscountsPage() {
                   <thead className="bg-gray-50 dark:bg-white/[0.02] border-b border-gray-100 dark:border-white/5">
                     <tr>
                       <th
-                        className="px-6 py-4 text-left label-strong font-outfit cursor-pointer hover:text-mintcom-green transition-colors"
+                        className="px-6 py-4 text-start label-strong font-outfit cursor-pointer hover:text-mintcom-green transition-colors whitespace-nowrap"
                         onClick={() => handleSort('name')}
                       >
                         <div className="flex items-center gap-1">
@@ -562,16 +562,16 @@ export function DiscountsPage() {
                         </div>
                       </th>
                       <th
-                        className="px-6 py-4 text-center label-strong font-outfit cursor-pointer hover:text-mintcom-green transition-colors"
+                        className="px-6 py-4 text-end label-strong font-outfit cursor-pointer hover:text-mintcom-green transition-colors whitespace-nowrap"
                         onClick={() => handleSort('value')}
                       >
-                        <div className="flex items-center justify-center gap-1">
+                        <div className="flex items-center justify-end gap-1">
                           {t('products.table.price')}
                           {sortConfig?.key === 'value' && <ArrowUpDown size={12} className={sortConfig.direction === 'asc' ? 'rotate-0' : 'rotate-180'} />}
                         </div>
                       </th>
                       <th
-                        className="px-6 py-4 text-center label-strong font-outfit cursor-pointer hover:text-mintcom-green transition-colors"
+                        className="px-6 py-4 text-center label-strong font-outfit cursor-pointer hover:text-mintcom-green transition-colors whitespace-nowrap"
                         onClick={() => handleSort('status')}
                       >
                         <div className="flex items-center justify-center gap-1">
@@ -580,7 +580,7 @@ export function DiscountsPage() {
                         </div>
                       </th>
                       <th
-                        className="px-6 py-4 text-center label-strong font-outfit cursor-pointer hover:text-mintcom-green transition-colors"
+                        className="px-6 py-4 text-center label-strong font-outfit cursor-pointer hover:text-mintcom-green transition-colors whitespace-nowrap"
                         onClick={() => handleSort('adminOnly')}
                       >
                         <div className="flex items-center justify-center gap-1">
@@ -588,7 +588,7 @@ export function DiscountsPage() {
                           {sortConfig?.key === 'adminOnly' && <ArrowUpDown size={12} className={sortConfig.direction === 'asc' ? 'rotate-0' : 'rotate-180'} />}
                         </div>
                       </th>
-                      <th className="px-6 py-4 text-center label-strong font-outfit">{t('orders.table.actions')}</th>
+                      <th className="px-6 py-4 text-end label-strong font-outfit whitespace-nowrap">{t('orders.table.actions')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 dark:divide-white/5">
@@ -597,9 +597,9 @@ export function DiscountsPage() {
                         key={discount.id}
                         className="group hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors"
                       >
-                          <td className="px-6 py-4 text-left">
+                          <td className="px-6 py-4 text-start">
                             <div className="flex items-center gap-4">
-                              <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110 ${discount.type === 'percentage' ? 'bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400' : 'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400'}`}>
+                              <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110 shrink-0 ${discount.type === 'percentage' ? 'bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400' : 'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400'}`}>
                                 {discount.type === 'percentage' ? <Percent size={18} /> : <DollarSign size={18} />}
                               </div>
                               <div>
@@ -607,7 +607,7 @@ export function DiscountsPage() {
                               </div>
                             </div>
                           </td>
-                          <td className="px-6 py-4 text-center">
+                          <td className="px-6 py-4 text-end">
                             <span className="text-lg font-black text-mintcom-green">{formatValue(discount)}</span>
                           </td>
                           <td className="px-6 py-4 text-center">
@@ -631,8 +631,8 @@ export function DiscountsPage() {
                               </span>
                             )}
                           </td>
-                          <td className="px-6 py-4 text-center">
-                            <div className="flex items-center justify-center gap-2">
+                          <td className="px-6 py-4 text-end">
+                            <div className="flex items-center justify-end gap-2">
                               <button
                                 onClick={() => openEditModal(discount)}
                                 className="p-2.5 rounded-xl bg-white dark:bg-white/5 border border-gray-100 dark:border-white/5 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all shadow-sm active:scale-90"

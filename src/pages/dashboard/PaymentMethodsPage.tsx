@@ -27,6 +27,7 @@ import { BusyOverlay } from '../../components/BusyOverlay';
 import { useAuth } from '../../context/AuthContext';
 import { usePermissionGuard } from '../../hooks/usePermissionGuard';
 import { formatInputPlaceholder } from '../../utils/textCase';
+import { formatPaymentBrandName } from '../../utils/paymentCard';
 import { SelectInput } from '../../components/ui';
 import { OptimizedImage } from '../../components/OptimizedImage';
 import { useRealtime } from '../../hooks/useRealtime';
@@ -577,7 +578,7 @@ export function PaymentMethodsPage() {
                 {/* Info & Actions */}
                 <div className="p-5 flex flex-col gap-4 border-t border-gray-100 dark:border-white/5">
                   <div className="flex items-start justify-between gap-3">
-                    <h3 className="text-base font-bold text-gray-900 dark:text-white truncate px-1">{card.name}</h3>
+                    <h3 className="text-base font-bold text-gray-900 dark:text-white truncate px-1">{formatPaymentBrandName(card.name)}</h3>
                     <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-black tracking-wide ${
                       card.isActive === false
                         ? 'bg-mintcom-red/10 text-mintcom-red'

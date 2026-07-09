@@ -35,8 +35,9 @@ export const LanguageSwitcher = ({
     : 'en';
 
   const languages = [
-    { code: 'en', nativeName: t('common.languages.en'), shortName: 'EN' },
-    { code: 'ar', nativeName: t('common.languages.ar'), shortName: 'AR' },
+    { code: 'en', nativeName: t('common.languages.en'), shortName: 'EN', comingSoon: false },
+    { code: 'ar', nativeName: t('common.languages.ar'), shortName: 'AR', comingSoon: false },
+    { code: 'zh', nativeName: t('common.languages.zh'), shortName: 'ZH', comingSoon: true },
   ];
 
   const currentLanguage = languages.find((lang) => lang.code === normalizedLanguage) || languages[0];
@@ -55,6 +56,11 @@ export const LanguageSwitcher = ({
   const changeLanguage = (langCode: string) => {
     i18n.changeLanguage(langCode);
     setIsOpen(false);
+  };
+
+  const handleLanguageClick = (lang: (typeof languages)[number]) => {
+    if (lang.comingSoon) return;
+    changeLanguage(lang.code);
   };
 
   const menuPositionClass =
@@ -97,18 +103,28 @@ export const LanguageSwitcher = ({
             {languages.map((lang) => (
               <button
                 key={lang.code}
-                onClick={() => changeLanguage(lang.code)}
+                onClick={() => handleLanguageClick(lang)}
+                disabled={lang.comingSoon}
+                aria-disabled={lang.comingSoon}
                 className={`w-full flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl label-strong font-outfit transition-all ${
-                  normalizedLanguage === lang.code
-                    ? 'bg-mintcom-green/10 text-mintcom-green'
-                    : 'text-gray-500 hover:bg-gray-50 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white'
+                  lang.comingSoon
+                    ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-60'
+                    : normalizedLanguage === lang.code
+                      ? 'bg-mintcom-green/10 text-mintcom-green'
+                      : 'text-gray-500 hover:bg-gray-50 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white'
                 }`}
               >
                 <div className="flex items-center gap-2">
                   <span className="opacity-70">{lang.shortName}</span>
                   <span>{lang.nativeName}</span>
                 </div>
-                {normalizedLanguage === lang.code && <Check size={16} className="text-mintcom-green" />}
+                {lang.comingSoon ? (
+                  <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-gray-100 dark:bg-white/10 text-gray-400 dark:text-gray-500">
+                    {t('common.comingSoon')}
+                  </span>
+                ) : (
+                  normalizedLanguage === lang.code && <Check size={16} className="text-mintcom-green" />
+                )}
               </button>
             ))}
           </motion.div>

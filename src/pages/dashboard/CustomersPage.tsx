@@ -547,12 +547,12 @@ export function CustomersPage() {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.02]">
-                    <th className="px-6 py-4 text-[11px] font-bold text-gray-400 tracking-widest uppercase">{t('common.name', { defaultValue: 'Name' })}</th>
-                    <th className="px-6 py-4 text-[11px] font-bold text-gray-400 tracking-widest uppercase">{t('customers.form.phone')}</th>
-                    <th className="px-6 py-4 text-[11px] font-bold text-gray-400 tracking-widest uppercase">{t('rewards.items.tier', { defaultValue: 'Tier' })}</th>
-                    <th className="px-6 py-4 text-[11px] font-bold text-gray-400 tracking-widest uppercase">{t('customers.details.points')}</th>
-                    <th className="px-6 py-4 text-[11px] font-bold text-gray-400 tracking-widest uppercase text-right">{t('customers.details.spent')}</th>
-                    <th className="px-6 py-4 text-[11px] font-bold text-gray-400 tracking-widest uppercase text-right">{t('common.actions')}</th>
+                    <th className="px-6 py-4 text-start text-[11px] font-bold text-gray-400 tracking-widest uppercase whitespace-nowrap">{t('common.name', { defaultValue: 'Name' })}</th>
+                    <th className="px-6 py-4 text-start text-[11px] font-bold text-gray-400 tracking-widest uppercase whitespace-nowrap">{t('customers.form.phone')}</th>
+                    <th className="px-6 py-4 text-start text-[11px] font-bold text-gray-400 tracking-widest uppercase whitespace-nowrap">{t('rewards.items.tier', { defaultValue: 'Tier' })}</th>
+                    <th className="px-6 py-4 text-end text-[11px] font-bold text-gray-400 tracking-widest uppercase whitespace-nowrap">{t('customers.details.points')}</th>
+                    <th className="px-6 py-4 text-end text-[11px] font-bold text-gray-400 tracking-widest uppercase whitespace-nowrap">{t('customers.details.spent')}</th>
+                    <th className="px-6 py-4 text-end text-[11px] font-bold text-gray-400 tracking-widest uppercase whitespace-nowrap">{t('common.actions')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-white/5">
@@ -563,9 +563,9 @@ export function CustomersPage() {
                       animate={{ opacity: 1 }}
                       className="group hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors"
                     >
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 text-start">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-mintcom-green/10 text-mintcom-green flex items-center justify-center font-bold text-sm">
+                          <div className="w-10 h-10 rounded-full bg-mintcom-green/10 text-mintcom-green flex items-center justify-center font-bold text-sm shrink-0">
                             {customer.name.charAt(0).toUpperCase()}
                           </div>
                           <span className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-mintcom-green transition-colors">
@@ -573,8 +573,8 @@ export function CustomersPage() {
                           </span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400 font-medium">{customer.phone || '—'}</td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 text-start text-sm text-gray-500 dark:text-gray-400 font-medium">{customer.phone || '—'}</td>
+                      <td className="px-6 py-4 text-start">
                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold tracking-wider uppercase border ${
                           customer.tier === 'GOLD' 
                             ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' 
@@ -586,17 +586,17 @@ export function CustomersPage() {
                           {customer.tier}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-1">
+                      <td className="px-6 py-4 text-end">
+                        <div className="inline-flex items-center gap-1 justify-end">
                           <span className="text-sm font-bold text-gray-900 dark:text-white">{customer.points.toLocaleString()}</span>
                           <span className="text-[10px] font-bold text-gray-400">{t('customers.details.points')}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-right">
+                      <td className="px-6 py-4 text-end">
                         <p className="text-sm font-bold text-gray-900 dark:text-white">{formatAmount(customer.totalSpent)}</p>
                         <p className="text-[10px] font-bold text-gray-400">{customer.totalVisits} {t('customers.details.visits')}</p>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 text-end">
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => openEditModal(customer)}

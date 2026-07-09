@@ -517,7 +517,7 @@ export function CustomRolesPage() {
                 <thead className="bg-gray-50 dark:bg-white/[0.02]">
                   <tr className="border-b border-gray-200 dark:border-white/5">
                     <th
-                      className="px-6 py-4 text-left label-strong font-outfit cursor-pointer hover:text-mintcom-green transition-colors"
+                      className="px-6 py-4 text-start label-strong font-outfit cursor-pointer hover:text-mintcom-green transition-colors whitespace-nowrap"
                       onClick={() => handleSort('name')}
                     >
                       <div className="flex items-center gap-1">
@@ -526,7 +526,7 @@ export function CustomRolesPage() {
                       </div>
                     </th>
                     <th
-                      className="px-6 py-4 text-center label-strong font-outfit cursor-pointer hover:text-mintcom-green transition-colors"
+                      className="px-6 py-4 text-center label-strong font-outfit cursor-pointer hover:text-mintcom-green transition-colors whitespace-nowrap"
                       onClick={() => handleSort('baseRole')}
                     >
                       <div className="flex items-center justify-center gap-1">
@@ -534,17 +534,17 @@ export function CustomRolesPage() {
                         {sortConfig?.key === 'baseRole' && <ArrowUpDown size={12} className={sortConfig.direction === 'asc' ? 'rotate-0' : 'rotate-180'} />}
                       </div>
                     </th>
-                    <th className="px-6 py-4 text-center label-strong font-outfit">{t('dashboard.roles.access')}</th>
+                    <th className="px-6 py-4 text-center label-strong font-outfit whitespace-nowrap">{t('dashboard.roles.access')}</th>
                     <th
-                      className="px-6 py-4 text-center label-strong font-outfit cursor-pointer hover:text-mintcom-green transition-colors"
+                      className="px-6 py-4 text-start label-strong font-outfit cursor-pointer hover:text-mintcom-green transition-colors whitespace-nowrap"
                       onClick={() => handleSort('createdAt')}
                     >
-                      <div className="flex items-center justify-center gap-1">
+                      <div className="flex items-center gap-1">
                         {t('dashboard.roles.date')}
                         {sortConfig?.key === 'createdAt' && <ArrowUpDown size={12} className={sortConfig.direction === 'asc' ? 'rotate-0' : 'rotate-180'} />}
                       </div>
                     </th>
-                    <th className="px-6 py-4 text-center label-strong font-outfit">{t('dashboard.roles.actions')}</th>
+                    <th className="px-6 py-4 text-end label-strong font-outfit whitespace-nowrap">{t('dashboard.roles.actions')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-white/5">
@@ -553,9 +553,9 @@ export function CustomRolesPage() {
                       key={role.id}
                       className="group hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors"
                     >
-                        <td className="px-6 py-4">
+                        <td className="px-6 py-4 text-start">
                           <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-xl bg-mintcom-green/10 text-mintcom-green flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                            <div className="w-10 h-10 rounded-xl bg-mintcom-green/10 text-mintcom-green flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shrink-0">
                               <Shield size={20} />
                             </div>
                             <div>
@@ -569,7 +569,7 @@ export function CustomRolesPage() {
                             {role.baseRole ? (t(`staff.roles.${role.baseRole.toLowerCase()}`) !== `staff.roles.${role.baseRole.toLowerCase()}` ? t(`staff.roles.${role.baseRole.toLowerCase()}`) : role.baseRole.charAt(0) + role.baseRole.slice(1).toLowerCase()) : ''}
                           </span>
                         </td>
-                        <td className="px-6 py-4">
+                        <td className="px-6 py-4 text-center">
                           <div className="flex flex-col items-center gap-1">
                             <div className="flex items-center gap-2">
                               <span className="w-1.5 h-1.5 rounded-full bg-mintcom-green"></span>
@@ -581,13 +581,13 @@ export function CustomRolesPage() {
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-center">
+                        <td className="px-6 py-4 text-start">
                           <p className="text-xs text-gray-500 font-medium">
                             {new Date(role.createdAt).toLocaleDateString(t('common.locale') === 'ar' ? 'ar-EG' : 'en-US')}
                           </p>
                         </td>
-                        <td className="px-8 py-5 text-center">
-                          <div className="flex items-center justify-center gap-2">
+                        <td className="px-8 py-5 text-end">
+                          <div className="flex items-center justify-end gap-2">
                             <button
                               onClick={() => handleEdit(role)}
                               className="p-2.5 rounded-xl bg-white dark:bg-white/5 border border-gray-100 dark:border-white/5 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all shadow-sm active:scale-90"

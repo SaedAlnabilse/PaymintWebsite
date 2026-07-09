@@ -344,8 +344,9 @@ export const DashboardPage = () => {
           titleColor: '#fff',
           messageColor: '#CBD5E1',
           iconBg: 'rgba(124, 195, 159, 0.14)',
-          closeBg: 'rgba(255, 255, 255, 0.08)',
-          closeColor: '#CBD5E1',
+          closeBg: 'transparent',
+          closeBorder: '1px solid rgba(255, 255, 255, 0.05)',
+          closeColor: '#9CA3AF',
         }
       : {
           overlayBg: 'rgba(15, 23, 42, 0.45)',
@@ -355,8 +356,9 @@ export const DashboardPage = () => {
           titleColor: '#0F172A',
           messageColor: '#475569',
           iconBg: 'rgba(124, 195, 159, 0.18)',
-          closeBg: 'rgba(15, 23, 42, 0.06)',
-          closeColor: '#475569',
+          closeBg: '#FFFFFF',
+          closeBorder: '1px solid #E5E7EB',
+          closeColor: '#9CA3AF',
         };
 
     const overlay = document.createElement('div');
@@ -458,19 +460,27 @@ export const DashboardPage = () => {
 
     const closeButton = document.createElement('button');
     closeButton.type = 'button';
-    closeButton.textContent = 'x';
+    closeButton.innerHTML = `
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M18 6 6 18" />
+        <path d="m6 6 12 12" />
+      </svg>
+    `;
     closeButton.setAttribute('aria-label', t('common.close'));
     closeButton.style.position = 'absolute';
     closeButton.style.top = '14px';
     closeButton.style.right = isRTL ? 'auto' : '14px';
     closeButton.style.left = isRTL ? '14px' : 'auto';
-    closeButton.style.width = '34px';
-    closeButton.style.height = '34px';
-    closeButton.style.border = '0';
-    closeButton.style.borderRadius = '999px';
+    closeButton.style.width = '36px';
+    closeButton.style.height = '36px';
+    closeButton.style.display = 'flex';
+    closeButton.style.alignItems = 'center';
+    closeButton.style.justifyContent = 'center';
+    closeButton.style.border = palette.closeBorder;
+    closeButton.style.borderRadius = '12px';
     closeButton.style.background = palette.closeBg;
     closeButton.style.color = palette.closeColor;
-    closeButton.style.fontSize = '18px';
+    closeButton.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)';
     closeButton.style.lineHeight = '1';
     closeButton.style.cursor = 'pointer';
 

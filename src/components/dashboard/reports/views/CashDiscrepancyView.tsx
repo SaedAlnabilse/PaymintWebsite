@@ -22,11 +22,22 @@ export const CashDiscrepancyView = React.memo(function CashDiscrepancyView({ shi
   const [statusFilter, setStatusFilter] = useState<'all' | 'short' | 'over' | 'balanced'>('all');
   const itemsPerPage = 10;
 
-  const formatCurrency = (value: number, className?: string) => (
-    <StatValue 
-      value={value} 
-      currency={currencySymbol} 
-      className={className || "text-sm font-bold"}
+  const formatCurrency = (
+    value: number,
+    className?: string,
+    align: 'start' | 'center' | 'end' = 'end',
+  ) => (
+    <StatValue
+      value={value}
+      currency={currencySymbol}
+      className={className || 'text-sm font-bold'}
+      containerClassName={
+        align === 'center'
+          ? 'justify-center w-full'
+          : align === 'end'
+            ? 'justify-end w-full'
+            : 'justify-start w-full'
+      }
     />
   );
   const toNumber = (value: unknown) => Number(value || 0);
@@ -231,39 +242,42 @@ export const CashDiscrepancyView = React.memo(function CashDiscrepancyView({ shi
           </div>
           <h3 className="text-lg font-bold text-gray-900 dark:text-white">{t('orders.reports.cashGap.overview')}</h3>
         </div>
-        <div className="grid grid-cols-3 gap-4">
-          <div className="text-center p-4 rounded-xl bg-amber-50 dark:bg-amber-500/5 border border-amber-100 dark:border-amber-500/10">
-            <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-amber-500/10 flex items-center justify-center">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="flex flex-col items-center text-center p-5 rounded-xl bg-amber-50 dark:bg-amber-500/5 border border-amber-100 dark:border-amber-500/10">
+            <div className="w-12 h-12 mb-3 rounded-full bg-amber-500/10 flex items-center justify-center">
               <TrendingUp size={24} className="text-amber-500" />
             </div>
-            <StatValue 
-              value={stats.overCount} 
-              className="text-2xl font-black text-amber-600 dark:text-amber-400"
-              isInteger={true}
+            <StatValue
+              value={stats.overCount}
+              className="text-3xl font-black text-amber-600 dark:text-amber-400"
+              isInteger
+              containerClassName="justify-center w-full"
             />
-            <p className="text-xs font-bold text-gray-500">{t('orders.reports.cashGap.cashOver')}</p>
+            <p className="text-xs font-bold text-gray-500 mt-1.5">{t('orders.reports.cashGap.cashOver')}</p>
           </div>
-          <div className="text-center p-4 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10">
-            <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-gray-200 dark:bg-white/10 flex items-center justify-center">
+          <div className="flex flex-col items-center text-center p-5 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10">
+            <div className="w-12 h-12 mb-3 rounded-full bg-gray-200 dark:bg-white/10 flex items-center justify-center">
               <Scale size={24} className="text-gray-500" />
             </div>
-            <StatValue 
-              value={stats.balancedCount} 
-              className="text-2xl font-black text-gray-700 dark:text-gray-300"
-              isInteger={true}
+            <StatValue
+              value={stats.balancedCount}
+              className="text-3xl font-black text-gray-700 dark:text-gray-300"
+              isInteger
+              containerClassName="justify-center w-full"
             />
-            <p className="text-xs font-bold text-gray-500">{t('orders.reports.cashGap.balanced')}</p>
+            <p className="text-xs font-bold text-gray-500 mt-1.5">{t('orders.reports.cashGap.balanced')}</p>
           </div>
-          <div className="text-center p-4 rounded-xl bg-red-50 dark:bg-red-500/5 border border-red-100 dark:border-red-500/10">
-            <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-red-500/10 flex items-center justify-center">
+          <div className="flex flex-col items-center text-center p-5 rounded-xl bg-red-50 dark:bg-red-500/5 border border-red-100 dark:border-red-500/10">
+            <div className="w-12 h-12 mb-3 rounded-full bg-red-500/10 flex items-center justify-center">
               <TrendingDown size={24} className="text-red-500" />
             </div>
-            <StatValue 
-              value={stats.shortCount} 
-              className="text-2xl font-black text-red-600 dark:text-red-400"
-              isInteger={true}
+            <StatValue
+              value={stats.shortCount}
+              className="text-3xl font-black text-red-600 dark:text-red-400"
+              isInteger
+              containerClassName="justify-center w-full"
             />
-            <p className="text-xs font-bold text-gray-500">{t('orders.reports.cashGap.cashShort')}</p>
+            <p className="text-xs font-bold text-gray-500 mt-1.5">{t('orders.reports.cashGap.cashShort')}</p>
           </div>
         </div>
       </div>
@@ -282,8 +296,12 @@ export const CashDiscrepancyView = React.memo(function CashDiscrepancyView({ shi
               </p>
             </div>
           </div>
-          <span className="text-xs font-bold text-gray-400">
-            {t('common.showing')} <StatValue value={Math.min(paginatedShifts.length, itemsPerPage)} isInteger={true} className="text-xs inline-flex" /> {t('common.of')} <StatValue value={sortedShifts.length} isInteger={true} className="text-xs inline-flex" /> {t('dashboard.menu.shiftsReports')}
+          <span className="text-xs font-bold text-gray-400 whitespace-nowrap shrink-0">
+            {t('common.showing')}{' '}
+            {Math.min(paginatedShifts.length, itemsPerPage).toLocaleString(t('common.locale'))}
+            {' '}{t('common.of')}{' '}
+            {sortedShifts.length.toLocaleString(t('common.locale'))}
+            {' '}{t('dashboard.menu.shiftsReports')}
           </span>
         </div>
 
@@ -307,7 +325,7 @@ export const CashDiscrepancyView = React.memo(function CashDiscrepancyView({ shi
                       : filter.color === 'red'
                         ? 'bg-red-500 text-white border-red-500 shadow-lg shadow-red-500/20'
                         : filter.color === 'blue'
-                          ? 'bg-blue-500 text-white border-blue-500 shadow-lg shadow-blue-500/20'
+                          ? 'bg-gray-500 text-white border-gray-500 shadow-lg shadow-gray-500/20'
                           : 'bg-gray-900 dark:bg-white text-white dark:text-black border-gray-900 dark:border-white shadow-lg shadow-gray-900/20 dark:shadow-white/20'
                     : 'bg-white dark:bg-white/5 text-gray-500 border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/10'
                 }`}
@@ -338,14 +356,14 @@ export const CashDiscrepancyView = React.memo(function CashDiscrepancyView({ shi
               <table className="w-full">
                 <thead className="bg-gray-50 dark:bg-white/[0.02]">
                   <tr className="border-b border-gray-200 dark:border-white/5">
-                    <th className="px-5 py-4 text-start label-strong font-outfit">{t('orders.reports.cashGap.staff')}</th>
-                    <th className="px-5 py-4 text-start label-strong font-outfit">{t('orders.reports.cashGap.period')}</th>
-                    <th className="px-5 py-4 text-end label-strong font-outfit">{t('orders.reports.cashGap.opening')}</th>
-                    <th className="px-5 py-4 text-end label-strong font-outfit">{t('orders.reports.cashGap.sales')}</th>
-                    <th className="px-5 py-4 text-end label-strong font-outfit">{t('orders.reports.cashGap.closing')}</th>
-                    <th className="px-5 py-4 text-center label-strong font-outfit">{t('orders.reports.cashGap.expected')}</th>
-                    <th className="px-5 py-4 text-center label-strong font-outfit">{t('orders.reports.cashGap.variance')}</th>
-                    <th className="px-5 py-4 text-center label-strong font-outfit">{t('orders.reports.cashGap.status')}</th>
+                    <th className="px-5 py-4 text-start label-strong font-outfit whitespace-nowrap">{t('orders.reports.cashGap.staff')}</th>
+                    <th className="px-5 py-4 text-start label-strong font-outfit whitespace-nowrap">{t('orders.reports.cashGap.period')}</th>
+                    <th className="px-5 py-4 text-end label-strong font-outfit whitespace-nowrap">{t('orders.reports.cashGap.opening')}</th>
+                    <th className="px-5 py-4 text-end label-strong font-outfit whitespace-nowrap">{t('orders.reports.cashGap.sales')}</th>
+                    <th className="px-5 py-4 text-end label-strong font-outfit whitespace-nowrap">{t('orders.reports.cashGap.closing')}</th>
+                    <th className="px-5 py-4 text-end label-strong font-outfit whitespace-nowrap">{t('orders.reports.cashGap.expected')}</th>
+                    <th className="px-5 py-4 text-end label-strong font-outfit whitespace-nowrap">{t('orders.reports.cashGap.variance')}</th>
+                    <th className="px-5 py-4 text-end label-strong font-outfit whitespace-nowrap">{t('orders.reports.cashGap.status')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-white/5">
@@ -363,9 +381,9 @@ export const CashDiscrepancyView = React.memo(function CashDiscrepancyView({ shi
                         transition={{ delay: idx * 0.05 }}
                         className="group hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors"
                       >
-                        <td className="px-5 py-4">
+                        <td className="px-5 py-4 text-start">
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-mintcom-green/10 text-mintcom-green flex items-center justify-center font-black text-xs">
+                            <div className="w-8 h-8 rounded-lg bg-mintcom-green/10 text-mintcom-green flex items-center justify-center font-black text-xs shrink-0">
                               <User size={14} />
                             </div>
                             <span className="font-bold text-gray-900 dark:text-white text-sm">
@@ -373,7 +391,7 @@ export const CashDiscrepancyView = React.memo(function CashDiscrepancyView({ shi
                             </span>
                           </div>
                         </td>
-                        <td className="px-5 py-4">
+                        <td className="px-5 py-4 text-start">
                           <div className="flex flex-col">
                             <span className="text-xs font-bold text-gray-900 dark:text-white">
                               {format(new Date(shift.startTime), 'MMM d, yyyy', { locale: getDateLocale(t('common.locale')) })}
@@ -383,52 +401,58 @@ export const CashDiscrepancyView = React.memo(function CashDiscrepancyView({ shi
                             </span>
                           </div>
                         </td>
-                        <td className="px-5 py-4 text-end font-medium text-gray-600 dark:text-gray-400">
-                          {formatCurrency(shift.openingBalance || 0)}
+                        <td className="px-5 py-4 text-end">
+                          {formatCurrency(shift.openingBalance || 0, 'text-sm font-medium text-gray-600 dark:text-gray-400', 'end')}
                         </td>
                         <td className="px-5 py-4 text-end">
-                          <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                            +{formatCurrency(cashSales)}
-                          </span>
+                          <StatValue
+                            value={cashSales}
+                            currency={currencySymbol}
+                            prefix="+"
+                            className="text-sm font-bold text-emerald-600 dark:text-emerald-400"
+                            containerClassName="justify-end w-full"
+                          />
                         </td>
-                        <td className="px-5 py-4 text-end font-bold text-gray-900 dark:text-white">
-                          {formatCurrency(shift.closingBalance || 0)}
+                        <td className="px-5 py-4 text-end">
+                          {formatCurrency(getClosingBalance(shift), 'text-sm font-bold text-gray-900 dark:text-white', 'end')}
                         </td>
-                        <td className="px-5 py-4 text-center">
-                          <span className="text-xs font-medium text-gray-500">
-                            {formatCurrency(expected)}
-                          </span>
+                        <td className="px-5 py-4 text-end">
+                          {formatCurrency(expected, 'text-sm font-medium text-gray-500', 'end')}
                         </td>
-                        <td className="px-5 py-4 text-center">
-                          <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-black tracking-wider border ${
-                            isOver
-                              ? 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20'
-                              : isShort
-                                ? 'bg-red-100 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20'
-                                : 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20'
-                          }`}>
-                            {isOver ? (
-                              <><TrendingUp size={12} /> <StatValue value={discrepancy} currency={currencySymbol} className="text-xs" /></>
-                            ) : isShort ? (
-                              <><TrendingDown size={12} /> <StatValue value={discrepancy} currency={currencySymbol} className="text-xs" /></>
-                            ) : (
-                              <><Scale size={12} /> <StatValue value={0} currency={currencySymbol} className="text-xs" /></>
-                            )}
-                          </span>
+                        <td className="px-5 py-4 text-end">
+                          <div className="flex justify-end">
+                            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-black tracking-wider border ${
+                              isOver
+                                ? 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20'
+                                : isShort
+                                  ? 'bg-red-100 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20'
+                                  : 'bg-gray-100 text-gray-700 border-gray-200 dark:bg-white/10 dark:text-gray-300 dark:border-white/10'
+                            }`}>
+                              {isOver ? <TrendingUp size={12} className="shrink-0" /> : isShort ? <TrendingDown size={12} className="shrink-0" /> : <Scale size={12} className="shrink-0" />}
+                              <StatValue
+                                value={isShort || isOver ? discrepancy : 0}
+                                currency={currencySymbol}
+                                className="text-xs"
+                                containerClassName="inline-flex"
+                              />
+                            </span>
+                          </div>
                         </td>
-                        <td className="px-5 py-4 text-center">
-                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${
-                            isOver 
-                              ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400' 
-                              : isShort 
-                                ? 'bg-red-500/10 text-red-600 dark:text-red-400' 
-                                : 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
-                          }`}>
-                            <span className={`w-1.5 h-1.5 rounded-full ${
-                              isOver ? 'bg-amber-500' : isShort ? 'bg-red-500' : 'bg-blue-500'
-                            }`} />
-                            {isOver ? t('orders.reports.cashGap.over') : isShort ? t('orders.reports.cashGap.short') : t('orders.reports.cashGap.isBalanced')}
-                          </span>
+                        <td className="px-5 py-4 text-end">
+                          <div className="flex justify-end">
+                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${
+                              isOver
+                                ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                                : isShort
+                                  ? 'bg-red-500/10 text-red-600 dark:text-red-400'
+                                  : 'bg-gray-500/10 text-gray-600 dark:text-gray-300'
+                            }`}>
+                              <span className={`w-1.5 h-1.5 rounded-full ${
+                                isOver ? 'bg-amber-500' : isShort ? 'bg-red-500' : 'bg-gray-400'
+                              }`} />
+                              {isOver ? t('orders.reports.cashGap.over') : isShort ? t('orders.reports.cashGap.short') : t('orders.reports.cashGap.isBalanced')}
+                            </span>
+                          </div>
                         </td>
                       </motion.tr>
                     );

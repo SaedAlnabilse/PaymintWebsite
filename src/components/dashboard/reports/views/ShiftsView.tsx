@@ -10,13 +10,14 @@ import { Pagination } from '../../../ui';
 import { AnalyticsEmptyState } from '../AnalyticsEmptyState';
 import { StatValue } from '../../../../components/ui/StatValue';
 
-const CurrencyAmount = ({ amount, className = "", size = "text-2xl", color = "text-gray-900 dark:text-white" }: { amount: number, className?: string, size?: string, color?: string }) => {
+const CurrencyAmount = ({ amount, className = "", size = "text-2xl", color = "text-gray-900 dark:text-white", containerClassName = "" }: { amount: number, className?: string, size?: string, color?: string, containerClassName?: string }) => {
   const { currencySymbol } = useCurrency();
   return (
     <StatValue 
       value={amount} 
       currency={currencySymbol} 
       className={`${size} ${color} ${className}`}
+      containerClassName={containerClassName}
     />
   );
 };
@@ -28,6 +29,7 @@ const FormatCurrency = ({ value }: { value: number }) => {
       value={value} 
       currency={currencySymbol} 
       className="text-sm"
+      containerClassName="justify-end w-full"
     />
   );
 };
@@ -103,13 +105,13 @@ export const ShiftsView = React.memo(function ShiftsView({ shifts }: ShiftsViewP
           <table className="w-full">
             <thead className="bg-gray-50 dark:bg-white/[0.02]">
               <tr className="border-b border-gray-200 dark:border-white/5">
-                <th className="px-5 py-5 text-start label-strong font-outfit">{t('orders.reports.shifts.staff')}</th>
-                <th className="px-5 py-5 text-start label-strong font-outfit">{t('orders.reports.shifts.time')}</th>
-                <th className="px-5 py-5 text-center label-strong font-outfit">{t('orders.reports.shifts.opening')}</th>
-                <th className="px-5 py-5 text-center label-strong font-outfit">{t('orders.stats.totalSales')}</th>
-                <th className="px-5 py-5 text-center label-strong font-outfit">{t('orders.reports.shifts.closing')}</th>
-                <th className="px-5 py-5 text-center label-strong font-outfit">{t('orders.reports.shifts.variance')}</th>
-                <th className="px-5 py-5 text-center label-strong font-outfit">{t('orders.reports.shifts.status')}</th>
+                <th className="px-5 py-5 text-start label-strong font-outfit whitespace-nowrap">{t('orders.reports.shifts.staff')}</th>
+                <th className="px-5 py-5 text-start label-strong font-outfit whitespace-nowrap">{t('orders.reports.shifts.time')}</th>
+                <th className="px-5 py-5 text-end label-strong font-outfit whitespace-nowrap">{t('orders.reports.shifts.opening')}</th>
+                <th className="px-5 py-5 text-end label-strong font-outfit whitespace-nowrap">{t('orders.stats.totalSales')}</th>
+                <th className="px-5 py-5 text-end label-strong font-outfit whitespace-nowrap">{t('orders.reports.shifts.closing')}</th>
+                <th className="px-5 py-5 text-end label-strong font-outfit whitespace-nowrap">{t('orders.reports.shifts.variance')}</th>
+                <th className="px-5 py-5 text-end label-strong font-outfit whitespace-nowrap">{t('orders.reports.shifts.status')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-white/5">
@@ -119,15 +121,15 @@ export const ShiftsView = React.memo(function ShiftsView({ shifts }: ShiftsViewP
                     key={shift.id}
                     className="group hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors"
                   >
-                    <td className="px-5 py-5">
+                    <td className="px-5 py-5 text-start">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-mintcom-green/10 text-mintcom-green flex items-center justify-center font-black text-xs">
+                        <div className="w-8 h-8 rounded-lg bg-mintcom-green/10 text-mintcom-green flex items-center justify-center font-black text-xs shrink-0">
                           {shift.user?.username?.charAt(0).toUpperCase()}
                         </div>
                         <span className="font-bold text-gray-900 dark:text-white text-sm">{shift.user?.username || t('common.unknown')}</span>
                       </div>
                     </td>
-                    <td className="px-5 py-5">
+                    <td className="px-5 py-5 text-start">
                       <div className="flex flex-col">
                         <span className="text-xs font-bold text-gray-900 dark:text-white">
                           {format(new Date(shift.startTime), 'MMM d, HH:mm', { locale: getDateLocale(t('common.locale')) })}
@@ -137,50 +139,47 @@ export const ShiftsView = React.memo(function ShiftsView({ shifts }: ShiftsViewP
                         </span>
                       </div>
                     </td>
-                    <td className="px-5 py-5">
-                      <div className="flex justify-center font-medium text-gray-500">
-                        <FormatCurrency value={shift.openingBalance} />
-                      </div>
+                    <td className="px-5 py-5 text-end font-medium text-gray-500">
+                      <FormatCurrency value={shift.openingBalance} />
                     </td>
-                    <td className="px-5 py-5">
-                      <div className="flex justify-center font-bold text-mintcom-green">
-                        <FormatCurrency value={shift.totalSales} />
-                      </div>
+                    <td className="px-5 py-5 text-end font-bold text-mintcom-green">
+                      <FormatCurrency value={shift.totalSales} />
                     </td>
-                    <td className="px-5 py-5">
+                    <td className="px-5 py-5 text-end font-bold text-mintcom-green">
                       {shift.status === 'CLOSED' ? (
-                        <div className="flex justify-center font-bold text-mintcom-green">
-                          {shift.closingBalance !== null && shift.closingBalance !== undefined
-                            ? <FormatCurrency value={shift.closingBalance} />
-                            : <span className="text-gray-400">-</span>}
-                        </div>
+                        shift.closingBalance !== null && shift.closingBalance !== undefined
+                          ? <FormatCurrency value={shift.closingBalance} />
+                          : <span className="text-gray-400">-</span>
                       ) : (
-                        <div className="flex justify-center label-strong font-outfit">{t('orders.reports.shifts.active')}</div>
+                        <span className="label-strong font-outfit">{t('orders.reports.shifts.active')}</span>
                       )}
                     </td>
-                    <td className="px-5 py-5 text-center">
+                    <td className="px-5 py-5 text-end">
                       {shift.status === 'CLOSED' && shift.discrepancy !== null && shift.discrepancy !== undefined ? (
-                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-black tracking-wider border ${shift.discrepancy > 0.001
-                          ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
-                          : shift.discrepancy < -0.001
-                            ? 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20'
-                            : 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20'
-                          }`}>
-                          <CurrencyAmount
-                            amount={shift.discrepancy}
-                            size="text-xs"
-                            color={shift.discrepancy > 0.001 ? 'text-amber-600 dark:text-amber-400' : shift.discrepancy < -0.001 ? 'text-red-600 dark:text-red-400' : 'text-blue-600 dark:text-blue-400'}
-                          />
-                          <span className="uppercase">
-                            {shift.discrepancy > 0.001 ? t('orders.reports.shifts.over') : shift.discrepancy < -0.001 ? t('orders.reports.shifts.short') : t('orders.reports.cashGap.isBalanced')}
+                        <div className="flex justify-end">
+                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-black tracking-wider border ${shift.discrepancy > 0.001
+                            ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
+                            : shift.discrepancy < -0.001
+                              ? 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20'
+                              : 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20'
+                            }`}>
+                            <CurrencyAmount
+                              amount={shift.discrepancy}
+                              size="text-xs"
+                              color={shift.discrepancy > 0.001 ? 'text-amber-600 dark:text-amber-400' : shift.discrepancy < -0.001 ? 'text-red-600 dark:text-red-400' : 'text-blue-600 dark:text-blue-400'}
+                              containerClassName="inline-flex"
+                            />
+                            <span className="uppercase">
+                              {shift.discrepancy > 0.001 ? t('orders.reports.shifts.over') : shift.discrepancy < -0.001 ? t('orders.reports.shifts.short') : t('orders.reports.cashGap.isBalanced')}
+                            </span>
                           </span>
-                        </span>
+                        </div>
                       ) : (
                         <span className="label-strong font-outfit text-gray-400">-</span>
                       )}
                     </td>
-                    <td className="px-5 py-5 text-center">
-                      <div className="flex flex-col items-center gap-1.5">
+                    <td className="px-5 py-5 text-end">
+                      <div className="inline-flex flex-col items-end gap-1.5">
                         <span className={`px-2.5 py-1 rounded-lg label-strong font-outfit border transition-all ${shift.status === 'OPEN'
                           ? 'bg-mintcom-green/10 text-mintcom-green border-mintcom-green/20'
                           : 'bg-gray-100 dark:bg-white/5 text-gray-500 border-gray-200 dark:border-white/10'

@@ -37,7 +37,9 @@ import {
   Scale,
   ArrowLeft,
   PlusCircle,
-  ShoppingBag
+  ShoppingBag,
+  Clock,
+  FileText
 } from 'lucide-react';
 
 // Mintcom Logo imports
@@ -314,8 +316,10 @@ export function DashboardLayout() {
           { path: 'reports/staff-sales', label: t('dashboard.menu.salesByStaff'), icon: Users },
           { path: 'reports/shifts', label: t('dashboard.menu.shiftsReports'), icon: FileBarChart },
           { path: 'reports/cash-discrepancy', label: t('dashboard.menu.cashGapReports'), icon: Scale },
+          { path: 'reports/peak-hours', label: t('orders.reports.peakHours.title', { defaultValue: 'Busy Times' }), icon: Clock },
           { path: 'reports/payments', label: t('dashboard.menu.paymentsReports'), icon: CreditCard },
           { path: 'reports/discounts', label: t('dashboard.menu.discountReports'), icon: Percent },
+          { path: 'reports/taxes', label: t('reports.taxes', { defaultValue: 'Taxes Report' }), icon: FileText },
         ],
       },
       { path: 'orders', label: t('dashboard.menu.viewCustomerOrders'), icon: ShoppingCart },
@@ -829,7 +833,7 @@ export function DashboardLayout() {
           >
             {collapsedNavOverlay.type === "group" ? (
               <div
-                className="min-w-[200px] max-h-[420px] overflow-y-auto bg-white dark:bg-[#0D0D0D] border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xl"
+                className="min-w-[200px] max-h-[calc(100vh-1rem)] overflow-y-auto bg-white dark:bg-[#0D0D0D] border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xl scrollbar-none"
                 onMouseEnter={clearCollapsedNavOverlayHide}
                 onMouseLeave={scheduleHideCollapsedNavOverlay}
               >

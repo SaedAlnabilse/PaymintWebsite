@@ -26,6 +26,7 @@ export const DiscountsView = React.memo(function DiscountsView({ salesData, isFe
       value={value} 
       currency={currencySymbol} 
       className="text-sm font-bold"
+      containerClassName="justify-end w-full"
     />
   );
 
@@ -106,19 +107,19 @@ export const DiscountsView = React.memo(function DiscountsView({ salesData, isFe
             <thead className="bg-gray-50 dark:bg-white/[0.02]">
               <tr className="border-b border-gray-200 dark:border-white/5">
                 <th
-                  className="px-6 py-4 text-start label-strong font-outfit cursor-pointer hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                  className="px-6 py-4 text-start label-strong font-outfit whitespace-nowrap cursor-pointer hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                   onClick={() => requestSort('name')}
                 >
                   {t('orders.reports.discounts.name')}
                 </th>
                 <th
-                  className="px-6 py-4 text-center label-strong font-outfit cursor-pointer hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                  className="px-6 py-4 text-end label-strong font-outfit whitespace-nowrap cursor-pointer hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                   onClick={() => requestSort('count')}
                 >
                   {t('orders.reports.discounts.count')}
                 </th>
                 <th
-                  className="px-6 py-4 text-center label-strong font-outfit cursor-pointer hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                  className="px-6 py-4 text-end label-strong font-outfit whitespace-nowrap cursor-pointer hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                   onClick={() => requestSort('value')}
                 >
                   {t('orders.reports.discounts.value')}
@@ -140,10 +141,10 @@ export const DiscountsView = React.memo(function DiscountsView({ salesData, isFe
                       <td className="px-6 py-4 text-start">
                         <span className="font-bold text-gray-900 dark:text-white text-sm">{item.name}</span>
                       </td>
-                      <td className="px-6 py-4 text-center font-bold text-gray-700 dark:text-gray-300 flex justify-center">
-                        <StatValue value={item.count} isInteger={true} className="text-sm" />
+                      <td className="px-6 py-4 text-end font-bold text-gray-700 dark:text-gray-300">
+                        <StatValue value={item.count} isInteger={true} className="text-sm" containerClassName="justify-end w-full" />
                       </td>
-                      <td className="px-6 py-4 text-center font-black text-orange-500">
+                      <td className="px-6 py-4 text-end font-black text-orange-500">
                         {formatCurrency(item.value)}
                       </td>
                     </motion.tr>

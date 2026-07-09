@@ -24,6 +24,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import React from 'react';
 import { AnalyticsEmptyState } from '../AnalyticsEmptyState';
 import { StatValue } from '../../../../components/ui/StatValue';
+import { formatPaymentBrandName } from '../../../../utils/paymentCard';
 
 const COLORS = ['#7dc6a2', '#3b82f6', '#f59e0b', '#D55263', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
 
@@ -72,7 +73,7 @@ export const SalesView = React.memo(function SalesView({ salesData, selectedDate
     if (nameStr === 'CARD') return t('orders.payment.allCards');
     if (nameStr === 'CASH') return t('orders.payment.cash');
     if (nameStr === 'OTHER') return t('orders.payment.allOther');
-    return nameStr;
+    return formatPaymentBrandName(String(name));
   };
 
   const netSales = Math.max(

@@ -833,7 +833,7 @@ export function OwnerEmployeesPage() {
                                     <thead className="bg-gray-50 dark:bg-white/[0.02]">
                                         <tr className="border-b border-gray-200 dark:border-white/5">
                                             <th
-                                                className="px-6 py-4 text-left dashboard-card-label cursor-pointer hover:text-mintcom-green transition-colors"
+                                                className="px-6 py-4 text-start dashboard-card-label cursor-pointer hover:text-mintcom-green transition-colors whitespace-nowrap"
                                                 onClick={() => handleSort('name')}
                                             >
                                                 <div className="flex items-center gap-1">
@@ -850,7 +850,7 @@ export function OwnerEmployeesPage() {
                                                     {sortConfig?.key === 'role' && <ArrowUpDown size={12} className={sortConfig.direction === 'asc' ? 'rotate-0' : 'rotate-180'} />}
                                                 </div>
                                             </th>
-                                            <th className="px-6 py-4 text-center dashboard-card-label">{t('staff.table.contact')}</th>
+                                            <th className="px-6 py-4 text-center dashboard-card-label whitespace-nowrap">{t('staff.table.contact')}</th>
                                             <th
                                                 className="px-6 py-4 text-center dashboard-card-label cursor-pointer hover:text-mintcom-green transition-colors"
                                                 onClick={() => handleSort('status')}
@@ -878,7 +878,7 @@ export function OwnerEmployeesPage() {
                                                     {sortConfig?.key === 'access' && <ArrowUpDown size={12} className={sortConfig.direction === 'asc' ? 'rotate-0' : 'rotate-180'} />}
                                                 </div>
                                             </th>
-                                            <th className="px-6 py-4 text-center dashboard-card-label">{t('owner.locations.actions')}</th>
+                                            <th className="px-6 py-4 text-end dashboard-card-label whitespace-nowrap">{t('owner.locations.actions')}</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-100 dark:divide-white/5">
@@ -891,9 +891,9 @@ export function OwnerEmployeesPage() {
                                                     key={emp.id}
                                                     className={`group hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors ${isOwnerEmployee(emp) ? 'bg-amber-50/40 dark:bg-amber-500/[0.04]' : ''}`}
                                                 >
-                                                    <td className="px-6 py-4">
+                                                    <td className="px-6 py-4 text-start">
                                                         <div className="flex items-center gap-4">
-                                                            <div className="w-10 h-10 rounded-xl bg-mintcom-green/10 text-mintcom-green flex items-center justify-center font-black text-sm group-hover:scale-110 transition-transform duration-300">
+                                                            <div className="w-10 h-10 rounded-xl bg-mintcom-green/10 text-mintcom-green flex items-center justify-center font-black text-sm group-hover:scale-110 transition-transform duration-300 shrink-0">
                                                                 {getDisplayInitial(emp.firstName, emp.username)}
                                                             </div>
                                                             <div>
@@ -941,8 +941,8 @@ export function OwnerEmployeesPage() {
                                                             })}
                                                         </button>
                                                     </td>
-                                                    <td className="px-8 py-5 text-center">
-                                                        <div className="flex items-center justify-center gap-1 sm:gap-2">
+                                                    <td className="px-8 py-5 text-end">
+                                                        <div className="flex items-center justify-end gap-1 sm:gap-2">
                                                             <button
                                                                 onClick={() => {
                                                                     openEditEmployee(emp);

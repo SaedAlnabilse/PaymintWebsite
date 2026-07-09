@@ -704,10 +704,10 @@ export function RecipesPage() {
                   <table className="w-full">
                     <thead className="bg-gray-50 dark:bg-white/[0.02]">
                       <tr className="border-b border-gray-200 dark:border-white/5">
-                        <th className="px-6 py-4 text-left label-strong font-outfit">{t('inventory.form.name', {defaultValue: 'NAME'})}</th>
-                        <th className="px-6 py-4 text-center label-strong font-outfit">{t('inventory.quantity', {defaultValue: 'QUANTITY'})}</th>
-                        <th className="px-6 py-4 text-center label-strong font-outfit">{t('common.status_title', {defaultValue: 'STATUS'})}</th>
-                        <th className="px-6 py-4 text-center label-strong font-outfit">{t('orders.table.actions', {defaultValue: 'ACTIONS'})}</th>
+                        <th className="px-6 py-4 text-start label-strong font-outfit whitespace-nowrap">{t('inventory.form.name', {defaultValue: 'NAME'})}</th>
+                        <th className="px-6 py-4 text-end label-strong font-outfit whitespace-nowrap">{t('inventory.quantity', {defaultValue: 'QUANTITY'})}</th>
+                        <th className="px-6 py-4 text-center label-strong font-outfit whitespace-nowrap">{t('common.status_title', {defaultValue: 'STATUS'})}</th>
+                        <th className="px-6 py-4 text-end label-strong font-outfit whitespace-nowrap">{t('orders.table.actions', {defaultValue: 'ACTIONS'})}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100 dark:divide-white/5">
@@ -717,15 +717,15 @@ export function RecipesPage() {
                         const active = isEntityActive(m);
                         return (
                           <tr key={m.id} className="group hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
-                            <td className="px-6 py-4 text-left">
+                            <td className="px-6 py-4 text-start">
                               <div className="flex items-center gap-3">
-                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-black text-xs border ${isLow ? 'bg-red-500/10 text-red-500 border-red-500/20' : 'bg-mintcom-green/10 text-mintcom-green border-mintcom-green/20'}`}>
+                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-black text-xs border shrink-0 ${isLow ? 'bg-red-500/10 text-red-500 border-red-500/20' : 'bg-mintcom-green/10 text-mintcom-green border-mintcom-green/20'}`}>
                                   {m.name.charAt(0).toUpperCase()}
                                 </div>
                                 <span className="font-bold text-gray-900 dark:text-white text-sm">{m.name}</span>
                               </div>
                             </td>
-                            <td className="px-6 py-4 text-center">
+                            <td className="px-6 py-4 text-end">
                               <span className="font-bold text-gray-900 dark:text-white">{(Number(m.quantity || 0)).toLocaleString(t('common.locale'), { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                               <span className="ml-1 text-xs font-medium text-gray-500">{m.unit}</span>
                             </td>
@@ -734,8 +734,8 @@ export function RecipesPage() {
                                 {active ? t('common.active', { defaultValue: 'Active' }) : t('common.inactive', { defaultValue: 'Inactive' })}
                               </span>
                             </td>
-                            <td className="px-6 py-4 text-center">
-                              <div className="flex items-center justify-center gap-2 transition-opacity">
+                            <td className="px-6 py-4 text-end">
+                              <div className="flex items-center justify-end gap-2 transition-opacity">
                                 {active ? (
                                   <>
                                     <button onClick={() => { setEditingMaterial(m); setMaterialForm({ name: m.name, unit: m.unit, quantity: m.quantity, costPerUnit: m.costPerUnit, lowStockThreshold: m.lowStockThreshold || 0 }); setShowMaterialModal(true); }} className="p-1.5 rounded-lg bg-gray-100 dark:bg-white/5 text-gray-500 hover:text-mintcom-green transition-colors"><Edit2 size={14} /></button>

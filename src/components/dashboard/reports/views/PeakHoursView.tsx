@@ -1,4 +1,4 @@
-import { Activity, Clock, Gauge, ShoppingBag, TrendingUp } from 'lucide-react';
+import { Activity, Clock, Info, Moon, ShoppingBag, TrendingUp, Wallet, Zap } from 'lucide-react';
 import { useCurrency } from '../../../../context/CurrencyContext';
 import type { PeakHour } from '../../../../types';
 import {
@@ -19,6 +19,13 @@ import { StatValue } from '../../../../components/ui/StatValue';
 interface PeakHoursViewProps {
   peakHours: PeakHour[];
 }
+
+type HourRow = {
+  hour: number;
+  total: number;
+  count: number;
+  hourLabel: string;
+};
 
 const toNumber = (value: unknown) => {
   const numeric = Number(value);
@@ -92,31 +99,52 @@ export const PeakHoursView = React.memo(function PeakHoursView({ peakHours }: Pe
   }, [peakHours, locale]);
 
   const activeRows = rows.filter((row) => row.count > 0 || Math.abs(row.total) > 0.005);
+  const hasData = activeRows.length > 0;
 
-  const peak = activeRows.reduce(
-    (best, row) =>
-      row.count > best.count || (row.count === best.count && row.total > best.total)
-        ? row
-        : best,
-    activeRows[0] ?? rows[0],
-  );
+  // Keep full UI with zeros when empty (same pattern as other report tabs).
+  const emptyHour: HourRow = { hour: -1, total: 0, count: 0, hourLabel: '—' };
 
-  const quietest = activeRows.reduce(
-    (worst, row) =>
-      row.count < worst.count || (row.count === worst.count && row.total < worst.total)
-        ? row
-        : worst,
-    activeRows[0] ?? peak,
-  );
+  const peak = hasData
+    ? activeRows.reduce(
+        (best, row) =>
+          row.count > best.count || (row.count === best.count && row.total > best.total)
+            ? row
+            : best,
+        activeRows[0],
+      )
+    : emptyHour;
+
+  const quietest = hasData
+    ? activeRows.reduce(
+        (worst, row) =>
+          row.count < worst.count || (row.count === worst.count && row.total < worst.total)
+            ? row
+            : worst,
+        activeRows[0],
+      )
+    : emptyHour;
 
   const totalOrders = activeRows.reduce((sum, row) => sum + row.count, 0);
   const totalRevenue = activeRows.reduce((sum, row) => sum + row.total, 0);
   const peakShare = totalOrders > 0 ? peak.count / totalOrders : 0;
   const peakAverageTicket = peak.count > 0 ? peak.total / peak.count : 0;
+  const avgOrdersPerActiveHour = activeRows.length > 0 ? totalOrders / activeRows.length : 0;
   const maxCount = Math.max(...rows.map((row) => row.count), 1);
-  const topHours = [...activeRows]
-    .sort((a, b) => (b.count - a.count) || (b.total - a.total))
-    .slice(0, 5);
+
+  // Always render exactly 5 slots. Fill ranked hours from the top; remaining stay empty (0 / —).
+  const rankedHours: HourRow[] = hasData
+    ? [...activeRows]
+        .sort((a, b) => (b.count - a.count) || (b.total - a.total))
+        .slice(0, 5)
+    : [];
+  const topHours: HourRow[] = Array.from({ length: 5 }, (_, index) =>
+    rankedHours[index] ?? {
+      hour: -100 - index, // never matches a real peak hour id
+      total: 0,
+      count: 0,
+      hourLabel: '—',
+    },
+  );
 
   const rushWindows = rows.slice(0, 22).map((row, index) => {
     const span = rows.slice(index, index + 3);
@@ -135,100 +163,129 @@ export const PeakHoursView = React.memo(function PeakHoursView({ peakHours }: Pe
     rushWindows[0],
   );
 
+  const rushShare = totalOrders > 0 ? rushWindow.count / totalOrders : 0;
+  const peakHourId = hasData ? peak.hour : -1;
+
   const statCards = [
     {
-      icon: Clock,
-      label: t('orders.reports.peakHours.busiestHour', { defaultValue: 'Busiest Hour' }),
-      value: peak.hourLabel,
-      detail: `${peak.count.toLocaleString(locale)} ${t('orders.reports.peakHours.orders', { defaultValue: 'orders' })}`,
-      color: 'text-orange-500',
-      bg: 'bg-orange-500/10',
-    },
-    {
-      icon: TrendingUp,
-      label: t('orders.reports.peakHours.revenue', { defaultValue: 'Revenue' }),
-      value: peak.total,
-      currency: true,
-      detail: t('orders.reports.peakHours.peakRevenueDesc', { defaultValue: 'During the busiest hour' }),
-      color: 'text-mintcom-green',
-      bg: 'bg-mintcom-green/10',
-    },
-    {
-      icon: ShoppingBag,
-      label: t('orders.reports.peakHours.orders', { defaultValue: 'Orders' }),
-      value: peak.count,
-      integer: true,
-      detail: t('orders.reports.peakHours.ofOrders', {
-        defaultValue: '{{percent}} of period orders',
+      icon: Zap,
+      label: t('orders.reports.peakHours.busiestHour'),
+      value: hasData ? peak.hourLabel : '—',
+      detail: t('orders.reports.peakHours.busiestHourDesc', {
+        count: hasData ? peak.count : 0,
         percent: `${Math.round(peakShare * 100)}%`,
       }),
-      color: 'text-blue-500',
-      bg: 'bg-blue-500/10',
+      color: 'text-orange-500',
+      bg: 'bg-orange-500/10',
+      ring: 'ring-orange-500/10',
     },
     {
-      icon: Gauge,
-      label: t('orders.reports.peakHours.avgTicket', { defaultValue: 'Avg. Ticket' }),
-      value: peakAverageTicket,
-      currency: true,
-      detail: t(`orders.reports.peakHours.${dayPartKey(peak.hour)}`, {
-        defaultValue: t('orders.reports.peakHours.rushPeriod', { defaultValue: 'Rush period' }),
+      icon: Moon,
+      label: t('orders.reports.peakHours.quietestHour'),
+      value: hasData ? quietest.hourLabel : '—',
+      detail: t('orders.reports.peakHours.quietestHourDesc', {
+        count: hasData ? quietest.count : 0,
+      }),
+      color: 'text-slate-500',
+      bg: 'bg-slate-500/10',
+      ring: 'ring-slate-500/10',
+    },
+    {
+      icon: Clock,
+      label: t('orders.reports.peakHours.rushWindow'),
+      value: hasData
+        ? `${buildHourLabel(rushWindow.start, locale)} – ${buildHourLabel(rushWindow.end, locale)}`
+        : '—',
+      detail: t('orders.reports.peakHours.rushWindowDesc', {
+        count: hasData ? rushWindow.count : 0,
+        percent: `${Math.round(rushShare * 100)}%`,
       }),
       color: 'text-violet-500',
       bg: 'bg-violet-500/10',
+      ring: 'ring-violet-500/10',
+    },
+    {
+      icon: ShoppingBag,
+      label: t('orders.reports.peakHours.totalOrders'),
+      value: totalOrders,
+      integer: true,
+      detail: t('orders.reports.peakHours.activeHoursDesc', {
+        hours: activeRows.length,
+        avg: avgOrdersPerActiveHour.toLocaleString(locale, { maximumFractionDigits: 1 }),
+      }),
+      color: 'text-blue-500',
+      bg: 'bg-blue-500/10',
+      ring: 'ring-blue-500/10',
     },
   ];
 
   return (
-    <div className="space-y-6" dir={locale === 'ar' ? 'rtl' : 'ltr'}>
+    <div className="space-y-5" dir={locale === 'ar' ? 'rtl' : 'ltr'}>
+      {/* Summary info boxes */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         {statCards.map((card) => (
           <div
             key={card.label}
-            className="p-4 sm:p-5 bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.03] flex flex-col"
+            className={`p-4 sm:p-5 bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.03] shadow-sm ring-1 ${card.ring}`}
           >
-            <div className={`w-10 h-10 rounded-xl ${card.bg} ${card.color} flex items-center justify-center mb-4`}>
-              <card.icon size={20} />
+            <div className="flex items-start justify-between gap-3 mb-3">
+              <div className={`w-10 h-10 rounded-xl ${card.bg} ${card.color} flex items-center justify-center shrink-0`}>
+                <card.icon size={20} />
+              </div>
             </div>
             <p className="dashboard-stat-title mb-1">{card.label}</p>
-            {card.currency ? (
-              <StatValue value={Number(card.value) || 0} currency={currencySymbol} className={`text-2xl ${card.color}`} />
-            ) : card.integer ? (
-              <StatValue value={Number(card.value) || 0} isInteger={true} className="text-2xl" />
+            {card.integer ? (
+              <StatValue value={Number(card.value) || 0} isInteger className={`text-2xl ${card.color}`} />
             ) : (
-              <p className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">{card.value}</p>
+              <p className={`text-2xl font-bold tracking-tight ${card.color}`}>{card.value}</p>
             )}
-            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mt-1">{card.detail}</p>
+            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mt-1.5 leading-relaxed">
+              {card.detail}
+            </p>
           </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <div className="xl:col-span-2 p-6 bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.03] shadow-sm">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+      {/* Chart + Top hours — equal height when both cards are full */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-5 xl:items-stretch">
+        <div className="xl:col-span-2 p-5 sm:p-6 bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.03] shadow-sm flex flex-col h-full min-h-0">
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4 shrink-0">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500">
+              <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500 shrink-0">
                 <Activity size={20} />
               </div>
               <div>
                 <h3 className="text-base font-bold text-gray-900 dark:text-white">
-                  {t('orders.reports.peakHours.title')}
+                  {t('orders.reports.peakHours.chartTitle')}
                 </h3>
-                <p className="card-subtitle">{t('orders.reports.peakHours.subtitle')}</p>
+                <p className="card-subtitle">{t('orders.reports.peakHours.chartSubtitle')}</p>
               </div>
             </div>
-            <div className="rounded-xl border border-gray-100 dark:border-white/[0.05] bg-gray-50 dark:bg-white/[0.02] px-4 py-2">
-              <p className="text-[10px] font-black uppercase tracking-wide text-gray-400">
-                {t('orders.reports.peakHours.rushWindow', { defaultValue: 'Rush window' })}
-              </p>
-              <p className="text-sm font-black text-gray-900 dark:text-white">
-                {buildHourLabel(rushWindow.start, locale)} - {buildHourLabel(rushWindow.end, locale)}
-              </p>
+
+            {/* Color legend */}
+            <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-[11px] font-bold text-gray-500 dark:text-gray-400">
+              <span className="inline-flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-sm bg-orange-500" />
+                {t('orders.reports.peakHours.legendPeak')}
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-sm bg-mintcom-green" />
+                {t('orders.reports.peakHours.legendActive')}
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className={`w-2.5 h-2.5 rounded-sm ${isDark ? 'bg-slate-600' : 'bg-gray-200'}`} />
+                {t('orders.reports.peakHours.legendQuiet')}
+              </span>
             </div>
           </div>
 
-          <div className="h-[360px]" dir="ltr">
+          <div className="h-[260px] sm:h-[280px] xl:h-auto xl:flex-1 xl:min-h-[260px]" dir="ltr">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={rows} margin={{ top: 16, right: 16, left: 0, bottom: 0 }}>
+              <BarChart
+                data={rows}
+                margin={{ top: 8, right: 8, left: 0, bottom: 4 }}
+                barCategoryGap="32%"
+              >
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDark ? '#ffffff10' : '#00000010'} />
                 <XAxis
                   dataKey="hourLabel"
@@ -236,8 +293,9 @@ export const PeakHoursView = React.memo(function PeakHoursView({ peakHours }: Pe
                   fontSize={10}
                   tickLine={false}
                   axisLine={false}
-                  dy={10}
+                  dy={8}
                   interval={1}
+                  minTickGap={8}
                 />
                 <YAxis
                   stroke="#94a3b8"
@@ -245,7 +303,7 @@ export const PeakHoursView = React.memo(function PeakHoursView({ peakHours }: Pe
                   tickLine={false}
                   axisLine={false}
                   allowDecimals={false}
-                  width={28}
+                  width={32}
                 />
                 <Tooltip
                   cursor={{ fill: isDark ? '#ffffff08' : '#00000006' }}
@@ -258,124 +316,208 @@ export const PeakHoursView = React.memo(function PeakHoursView({ peakHours }: Pe
                   }}
                   itemStyle={{ color: '#f97316', fontWeight: 'bold', fontSize: '12px' }}
                   labelStyle={{ color: isDark ? '#fff' : '#000', fontWeight: 'bold', marginBottom: '4px', fontSize: '11px' }}
-                  formatter={(val: any, name: any, props: any) => {
+                  formatter={(val: any, _name: any, props: any) => {
                     const payload = props?.payload;
-                    if (name === 'count') {
-                      return [
-                        `${Number(val || 0).toLocaleString(locale)} ${t('orders.reports.peakHours.orders', { defaultValue: 'orders' })}`,
-                        t('orders.reports.peakHours.orders', { defaultValue: 'Orders' }),
-                      ];
-                    }
+                    const orders = Number(val || 0).toLocaleString(locale);
+                    const revenue = Number(payload?.total || 0).toLocaleString(locale, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    });
                     return [
-                      <StatValue value={Number(payload?.total || 0)} currency={currencySymbol} className="text-xs font-bold" />,
-                      t('orders.reports.peakHours.revenue', { defaultValue: 'Revenue' }),
+                      `${orders} ${t('orders.reports.peakHours.orders')} · ${revenue} ${currencySymbol}`,
+                      t('orders.reports.peakHours.hourActivity'),
                     ];
                   }}
                 />
-                <Bar dataKey="count" name="count" radius={[6, 6, 0, 0]} barSize={28} animationDuration={900}>
+                <Bar
+                  dataKey="count"
+                  name="count"
+                  radius={[5, 5, 0, 0]}
+                  maxBarSize={18}
+                  animationDuration={900}
+                >
                   {rows.map((row) => (
                     <Cell
                       key={row.hour}
-                      fill={row.hour === peak.hour ? '#f97316' : row.count > 0 ? '#7dc6a2' : isDark ? '#334155' : '#e5e7eb'}
+                      fill={
+                        row.hour === peakHourId
+                          ? '#f97316'
+                          : row.count > 0
+                            ? '#7dc6a2'
+                            : isDark
+                              ? '#334155'
+                              : '#e5e7eb'
+                      }
                     />
                   ))}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>
+
+          {/* Peak insight strip under chart */}
+          <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3 shrink-0">
+            <div className="rounded-xl bg-orange-500/5 border border-orange-500/15 px-3.5 py-3">
+              <p className="text-[10px] font-black uppercase tracking-wide text-orange-500/80 mb-0.5">
+                {t('orders.reports.peakHours.peakRevenue')}
+              </p>
+              <StatValue value={peak.total} currency={currencySymbol} className="text-base text-orange-600 dark:text-orange-400" />
+              <p className="text-[11px] font-medium text-gray-500 mt-0.5">
+                {t('orders.reports.peakHours.peakRevenueDesc')}
+              </p>
+            </div>
+            <div className="rounded-xl bg-mintcom-green/5 border border-mintcom-green/15 px-3.5 py-3">
+              <p className="text-[10px] font-black uppercase tracking-wide text-mintcom-green mb-0.5">
+                {t('orders.reports.peakHours.avgTicket')}
+              </p>
+              <StatValue value={peakAverageTicket} currency={currencySymbol} className="text-base text-mintcom-green" />
+              <p className="text-[11px] font-medium text-gray-500 mt-0.5">
+                {hasData
+                  ? t(`orders.reports.peakHours.${dayPartKey(peak.hour)}`)
+                  : t('orders.reports.peakHours.noData')}
+              </p>
+            </div>
+            <div className="rounded-xl bg-blue-500/5 border border-blue-500/15 px-3.5 py-3">
+              <p className="text-[10px] font-black uppercase tracking-wide text-blue-500 mb-0.5">
+                {t('orders.reports.peakHours.totalRevenue')}
+              </p>
+              <StatValue value={totalRevenue} currency={currencySymbol} className="text-base text-blue-600 dark:text-blue-400" />
+              <p className="text-[11px] font-medium text-gray-500 mt-0.5">
+                {t('orders.reports.peakHours.totalRevenueDesc')}
+              </p>
+            </div>
+          </div>
         </div>
 
-        <div className="space-y-6">
-          <div className="p-6 bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.03] shadow-sm">
-            <h3 className="text-base font-bold text-gray-900 dark:text-white mb-1">
-              {t('orders.reports.peakHours.topHours', { defaultValue: 'Top Rush Hours' })}
-            </h3>
-            <p className="card-subtitle mb-5">
-              {t('orders.reports.peakHours.topHoursDesc', { defaultValue: 'Ranked by order volume' })}
-            </p>
-            <div className="space-y-3">
-              {topHours.map((row, index) => {
-                const width = Math.max(8, Math.round((row.count / maxCount) * 100));
-                return (
-                  <div key={row.hour} className="rounded-xl border border-gray-100 dark:border-white/[0.05] p-3">
-                    <div className="flex items-center justify-between gap-3 mb-2">
-                      <div>
-                        <p className="text-sm font-black text-gray-900 dark:text-white">{index + 1}. {row.hourLabel}</p>
-                        <p className="text-xs font-bold text-gray-400">
-                          {row.count.toLocaleString(locale)} {t('orders.reports.peakHours.orders', { defaultValue: 'orders' })}
-                        </p>
-                      </div>
-                      <StatValue value={row.total} currency={currencySymbol} className="text-sm text-orange-500" />
-                    </div>
-                    <div className="h-2 rounded-full bg-gray-100 dark:bg-white/10 overflow-hidden">
-                      <div className="h-full rounded-full bg-orange-500" style={{ width: `${width}%` }} />
-                    </div>
-                  </div>
-                );
-              })}
+        {/* Top rush hours — same card height as Orders by Hour */}
+        <div className="p-5 sm:p-6 bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.03] shadow-sm flex flex-col h-full min-h-0">
+          <div className="flex items-center gap-3 mb-1 shrink-0">
+            <div className="w-9 h-9 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500">
+              <TrendingUp size={18} />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-gray-900 dark:text-white">
+                {t('orders.reports.peakHours.topHours')}
+              </h3>
+              <p className="card-subtitle">{t('orders.reports.peakHours.topHoursDesc')}</p>
             </div>
           </div>
 
-          <div className="p-6 bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.03] shadow-sm">
-            <div className="flex items-center justify-between gap-3 mb-4">
-              <div>
-                <h3 className="text-base font-bold text-gray-900 dark:text-white">
-                  {t('orders.reports.peakHours.dayMap', { defaultValue: 'Day Load Map' })}
-                </h3>
-                <p className="card-subtitle">
-                  {t('orders.reports.peakHours.dayMapDesc', { defaultValue: 'Darker blocks mean more orders' })}
-                </p>
-              </div>
-              {quietest.hour !== peak.hour && (
-                <div className="text-end">
-                  <p className="text-[10px] font-black uppercase tracking-wide text-gray-400">
-                    {t('orders.reports.peakHours.quietest', { defaultValue: 'Quietest' })}
-                  </p>
-                  <p className="text-xs font-black text-gray-900 dark:text-white">{quietest.hourLabel}</p>
-                </div>
-              )}
-            </div>
-            <div className="grid grid-cols-6 gap-2">
-              {rows.map((row) => {
-                const opacity = row.count > 0 ? 0.2 + (row.count / maxCount) * 0.8 : 0.08;
-                const isPeak = row.hour === peak.hour;
-                return (
-                  <div
-                    key={row.hour}
-                    className={`aspect-square rounded-xl border flex flex-col items-center justify-center ${isPeak ? 'border-orange-500' : 'border-gray-100 dark:border-white/[0.05]'}`}
-                    style={{
-                      backgroundColor: isPeak
-                        ? '#f97316'
-                        : `rgba(125, 198, 162, ${opacity})`,
-                    }}
-                    title={`${row.hourLabel}: ${row.count} orders`}
-                  >
-                    <span className={`text-[10px] font-black ${isPeak ? 'text-white' : 'text-gray-700 dark:text-white'}`}>
-                      {row.hourLabel.replace(/\s/g, '')}
-                    </span>
-                    <span className={`text-[10px] font-bold ${isPeak ? 'text-white/80' : 'text-gray-500 dark:text-gray-300'}`}>
-                      {row.count}
-                    </span>
+          <div className="mt-4 flex-1 min-h-0 flex flex-col gap-2.5">
+            {topHours.map((row, index) => {
+              const isFilled = row.hour >= 0;
+              const isPeak = isFilled && row.hour === peakHourId;
+              const width = isFilled
+                ? Math.max(8, Math.round((row.count / maxCount) * 100))
+                : 0;
+              return (
+                <div
+                  key={`${row.hour}-${index}`}
+                  className={`rounded-xl border p-3 flex-1 min-h-0 flex flex-col justify-center ${
+                    isPeak
+                      ? 'border-orange-500/30 bg-orange-500/5'
+                      : 'border-gray-100 dark:border-white/[0.05]'
+                  } ${!isFilled ? 'opacity-60' : ''}`}
+                >
+                  <div className="flex items-center justify-between gap-3 mb-2">
+                    <div className="min-w-0">
+                      <p className="text-sm font-black text-gray-900 dark:text-white truncate">
+                        <span className={isPeak ? 'text-orange-500' : 'text-gray-400'}>{index + 1}.</span>{' '}
+                        {row.hourLabel}
+                      </p>
+                      <p className="text-xs font-bold text-gray-400">
+                        {row.count.toLocaleString(locale)} {t('orders.reports.peakHours.orders')}
+                        {isFilled && totalOrders > 0 && (
+                          <span className="text-gray-300 dark:text-gray-600">
+                            {' '}· {Math.round((row.count / totalOrders) * 100)}%
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                    <StatValue value={row.total} currency={currencySymbol} className="text-sm text-orange-500" />
                   </div>
-                );
-              })}
-            </div>
+                  <div className="h-1.5 rounded-full bg-gray-100 dark:bg-white/10 overflow-hidden">
+                    <div
+                      className={`h-full rounded-full ${isPeak ? 'bg-orange-500' : 'bg-mintcom-green'}`}
+                      style={{ width: `${width}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="p-4 bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.03]">
-          <p className="dashboard-stat-title mb-1">{t('orders.reports.peakHours.totalOrders', { defaultValue: 'Total Orders' })}</p>
-          <StatValue value={totalOrders} isInteger={true} className="text-xl" />
+      {/* Day load map — full width, compact */}
+      <div className="p-5 sm:p-6 bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.03] shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-mintcom-green/10 flex items-center justify-center text-mintcom-green shrink-0">
+              <Wallet size={20} />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-gray-900 dark:text-white">
+                {t('orders.reports.peakHours.dayMap')}
+              </h3>
+              <p className="card-subtitle">{t('orders.reports.peakHours.dayMapDesc')}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4 text-[11px] font-bold text-gray-500">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded-md bg-mintcom-green/20 border border-mintcom-green/30" />
+              {t('orders.reports.peakHours.legendQuiet')}
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded-md bg-mintcom-green" />
+              {t('orders.reports.peakHours.legendBusy')}
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded-md bg-orange-500" />
+              {t('orders.reports.peakHours.legendPeak')}
+            </span>
+          </div>
         </div>
-        <div className="p-4 bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.03]">
-          <p className="dashboard-stat-title mb-1">{t('orders.reports.peakHours.totalRevenue', { defaultValue: 'Total Revenue' })}</p>
-          <StatValue value={totalRevenue} currency={currencySymbol} className="text-xl" />
+
+        <div className="grid grid-cols-6 sm:grid-cols-8 lg:grid-cols-12 gap-2">
+          {rows.map((row) => {
+            const intensity = row.count > 0 ? 0.18 + (row.count / maxCount) * 0.82 : 0.06;
+            const isPeak = row.hour === peakHourId;
+            return (
+              <div
+                key={row.hour}
+                className={`rounded-xl border px-1.5 py-2.5 flex flex-col items-center justify-center min-h-[64px] ${
+                  isPeak ? 'border-orange-500 shadow-sm shadow-orange-500/20' : 'border-gray-100 dark:border-white/[0.05]'
+                }`}
+                style={{
+                  backgroundColor: isPeak
+                    ? '#f97316'
+                    : `rgba(125, 198, 162, ${intensity})`,
+                }}
+                title={`${row.hourLabel}: ${row.count} ${t('orders.reports.peakHours.orders')}`}
+              >
+                <span className={`text-[10px] font-black leading-tight ${isPeak ? 'text-white' : 'text-gray-700 dark:text-white'}`}>
+                  {row.hourLabel.replace(/\s/g, '')}
+                </span>
+                <span className={`text-[11px] font-bold mt-0.5 ${isPeak ? 'text-white/90' : 'text-gray-600 dark:text-gray-200'}`}>
+                  {row.count}
+                </span>
+              </div>
+            );
+          })}
         </div>
-        <div className="p-4 bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.03]">
-          <p className="dashboard-stat-title mb-1">{t('orders.reports.peakHours.rushWindowOrders', { defaultValue: 'Rush Window Orders' })}</p>
-          <StatValue value={rushWindow.count} isInteger={true} className="text-xl" />
+      </div>
+
+      {/* How to read this report */}
+      <div className="bg-mintcom-green/5 dark:bg-mintcom-green/5 border border-mintcom-green/20 dark:border-mintcom-green/10 rounded-xl p-4 flex items-start gap-3">
+        <Info size={20} className="text-mintcom-green flex-shrink-0 mt-0.5" />
+        <div>
+          <p className="text-sm font-bold text-mintcom-green">
+            {t('orders.reports.peakHours.understandingTitle')}
+          </p>
+          <p className="text-xs text-mintcom-green/80 dark:text-mintcom-green/70 mt-1 leading-relaxed">
+            {t('orders.reports.peakHours.understandingDesc')}
+          </p>
         </div>
       </div>
     </div>
