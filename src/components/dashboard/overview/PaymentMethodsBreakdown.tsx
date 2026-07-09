@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Wallet, CreditCard } from 'lucide-react';
+import { Wallet } from 'lucide-react';
 import { PieChart as RechartsPie, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { useTheme } from '../../../context/ThemeContext';
 import { useTranslation } from 'react-i18next';
@@ -22,7 +22,22 @@ export const PaymentMethodsBreakdown = React.memo(function PaymentMethodsBreakdo
   const { resolvedTheme } = useTheme();
   const { currencySymbol } = useCurrency();
   const isDark = resolvedTheme === 'dark';
-  const paymentTotal = (paymentMethodBreakdown || []).reduce((sum, item) => sum + Math.max(Number(item.value) || 0, 0), 0);
+  const rows = paymentMethodBreakdown || [];
+  const paymentTotal = rows.reduce((sum, item) => sum + Math.max(Number(item.value) || 0, 0), 0);
+  const hasPaymentData = paymentTotal > 0.005;
+  // Recharts hides zero-value slices — use a single gray ring when empty.
+  const emptyFill = isDark ? '#334155' : '#e5e7eb';
+  const pieData = hasPaymentData
+    ? rows.map((item) => ({ ...item, value: Math.max(Number(item.value) || 0, 0) }))
+    : [{ name: '__empty__', value: 1 }];
+  const legendRows =
+    rows.length > 0
+      ? rows.slice(0, 3)
+      : [
+          { name: 'CASH', value: 0 },
+          { name: 'CARD', value: 0 },
+          { name: 'OTHER', value: 0 },
+        ];
 
   const getMethodName = (name: string) => {
     const nameStr = String(name).toUpperCase();
@@ -55,66 +70,61 @@ export const PaymentMethodsBreakdown = React.memo(function PaymentMethodsBreakdo
         </div>
 
         <div className="flex-1 flex flex-col justify-center">
-          {paymentMethodBreakdown && paymentMethodBreakdown.length > 0 ? (
-            <>
-              <div className="h-[160px] w-full" dir="ltr">
-                <ResponsiveContainer width="100%" height="100%">
-                  <RechartsPie>
-                    <Pie
-                      data={paymentMethodBreakdown}
-                      innerRadius={45}
-                      outerRadius={70}
-                      paddingAngle={4}
-                      dataKey="value"
-                      stroke="none"
-                    >
-                      {paymentMethodBreakdown.map((_, index) => (
-                        <Cell key={index} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: isDark ? '#0B1120' : '#fff',
-                        borderRadius: '12px',
-                        border: 'none',
-                        boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
-                        fontSize: '12px'
-                      }}
-                      itemStyle={{ color: isDark ? '#fff' : '#111', fontWeight: 'bold' }}
+          <div className="h-[160px] w-full" dir="ltr">
+            <ResponsiveContainer width="100%" height="100%">
+              <RechartsPie>
+                <Pie
+                  data={pieData}
+                  innerRadius={45}
+                  outerRadius={70}
+                  paddingAngle={hasPaymentData ? 4 : 0}
+                  dataKey="value"
+                  stroke="none"
+                  isAnimationActive={hasPaymentData}
+                >
+                  {pieData.map((_, index) => (
+                    <Cell
+                      key={index}
+                      fill={hasPaymentData ? COLORS[index % COLORS.length] : emptyFill}
                     />
-                  </RechartsPie>
-                </ResponsiveContainer>
-              </div>
-              <div className="space-y-2 mt-4">
-                {paymentMethodBreakdown.slice(0, 3).map((item, i) => {
-                  const percentage = paymentTotal > 0 ? item.value / paymentTotal : 0;
+                  ))}
+                </Pie>
+                {hasPaymentData && (
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: isDark ? '#0B1120' : '#fff',
+                      borderRadius: '12px',
+                      border: 'none',
+                      boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
+                      fontSize: '12px'
+                    }}
+                    itemStyle={{ color: isDark ? '#fff' : '#111', fontWeight: 'bold' }}
+                  />
+                )}
+              </RechartsPie>
+            </ResponsiveContainer>
+          </div>
+          <div className="space-y-2 mt-4">
+            {legendRows.map((item, i) => {
+              const percentage = paymentTotal > 0 ? item.value / paymentTotal : 0;
 
-                  return (
-                  <div key={i} className="flex items-center justify-between gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
-                      <span className="text-xs font-bold text-gray-700 dark:text-gray-300">{getMethodName(item.name)}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <StatValue value={item.value} currency={currencySymbol} className="text-xs" />
-                      <StatValue value={percentage} isPercentage={true} className="text-xs font-bold text-gray-500 min-w-[36px] text-end" />
-                    </div>
+              return (
+                <div key={`${item.name}-${i}`} className="flex items-center justify-between gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-2 h-2 rounded-full"
+                      style={{ backgroundColor: hasPaymentData ? COLORS[i % COLORS.length] : emptyFill }}
+                    />
+                    <span className="text-xs font-bold text-gray-700 dark:text-gray-300">{getMethodName(item.name)}</span>
                   </div>
-                  );
-                })}
-              </div>
-            </>
-          ) : (
-            <div className="h-full w-full flex items-center justify-center bg-gray-50/50 dark:bg-black/20 rounded-2xl border border-dashed border-gray-200 dark:border-white/[0.03] min-h-[200px]">
-              <div className="flex flex-col items-center gap-2 text-center">
-                <CreditCard size={32} className="text-gray-300 dark:text-gray-600 mb-1" />
-                <div>
-                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400 tracking-wide">{t('dashboard.paymentMethods.noData')}</p>
-                  <p className="text-xs text-gray-400 mt-1">{t('dashboard.paymentMethods.noDataDesc')}</p>
+                  <div className="flex items-center gap-2">
+                    <StatValue value={item.value} currency={currencySymbol} className="text-xs" />
+                    <StatValue value={percentage} isPercentage={true} className="text-xs font-bold text-gray-500 min-w-[36px] text-end" />
+                  </div>
                 </div>
-              </div>
-            </div>
-          )}
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>
