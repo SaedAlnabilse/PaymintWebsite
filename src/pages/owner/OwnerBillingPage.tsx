@@ -146,13 +146,38 @@ export function OwnerBillingPage() {
         }
     };
 
+    const isCanceledEstablishment = (est: Pick<EstablishmentBilling, 'subscriptionStatus'>) =>
+        est.subscriptionStatus?.toUpperCase() === 'CANCELED';
+
     const openAddCardModal = (establishmentId?: string | null, establishmentName?: string | null) => {
         setAddCardEstablishmentId(establishmentId || null);
         setAddCardEstablishmentName(establishmentName || null);
         setIsAddCardModalOpen(true);
     };
 
+    const openChangeCardForEstablishment = (est: EstablishmentBilling) => {
+        if (isCanceledEstablishment(est)) {
+            toast.error(t('owner.billing.cannotChangeCardCanceled', {
+                defaultValue: 'You cannot change the card for a canceled location.',
+            }));
+            return;
+        }
+        if ((billingData?.savedCards.length || 0) === 0) {
+            openAddCardModal(est.id, est.name);
+            return;
+        }
+        setCardAssignmentEstablishment(est);
+    };
+
     const handleAssignCardToEstablishment = async (cardId: string, establishmentId: string) => {
+        const est = billingData?.establishments.find((e) => e.id === establishmentId);
+        if (est && isCanceledEstablishment(est)) {
+            toast.error(t('owner.billing.cannotChangeCardCanceled', {
+                defaultValue: 'You cannot change the card for a canceled location.',
+            }));
+            setCardAssignmentEstablishment(null);
+            return;
+        }
         try {
             setIsAssigningCard(true);
             await api.post(`/api/accounts/cards/${encodeURIComponent(cardId)}/link/${encodeURIComponent(establishmentId)}`);
@@ -670,23 +695,19 @@ export function OwnerBillingPage() {
                                         </div>
 
                                         {/* Payment */}
-                                        <div className="col-span-2 text-center flex justify-center">
+                                        <div className="col-span-2 text-center flex justify-center items-center">
                                             <span className="dashboard-card-meta truncate text-center">
                                                 {est.paymentCard ? `${est.paymentCard.brand} •••• ${est.paymentCard.last4}` : t('owner.billing.noCard')}
                                             </span>
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    if ((billingData?.savedCards.length || 0) === 0) {
-                                                        openAddCardModal(est.id, est.name);
-                                                        return;
-                                                    }
-                                                    setCardAssignmentEstablishment(est);
-                                                }}
-                                                className="ml-2 rounded-lg border border-gray-200 px-2 py-1 text-[10px] font-black tracking-wide text-gray-500 transition hover:border-mintcom-green/40 hover:text-mintcom-green dark:border-white/10 dark:text-gray-400"
-                                            >
-                                                {t('owner.billing.change_card', { defaultValue: 'Change' })}
-                                            </button>
+                                            {!isCanceledEstablishment(est) && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => openChangeCardForEstablishment(est)}
+                                                    className="ml-2 rounded-lg border border-gray-200 px-2 py-1 text-[10px] font-black tracking-wide text-gray-500 transition hover:border-mintcom-green/40 hover:text-mintcom-green dark:border-white/10 dark:text-gray-400"
+                                                >
+                                                    {t('owner.billing.change_card', { defaultValue: 'Change' })}
+                                                </button>
+                                            )}
                                         </div>
 
                                         {/* Actions */}
@@ -717,20 +738,18 @@ export function OwnerBillingPage() {
                                                             <Eye size={14} />
                                                             {t('owner.billing.viewDashboard')}
                                                         </button>
-                                                        <button
-                                                            onClick={() => {
-                                                                setActiveMenu(null);
-                                                                if ((billingData?.savedCards.length || 0) === 0) {
-                                                                    openAddCardModal(est.id, est.name);
-                                                                    return;
-                                                                }
-                                                                setCardAssignmentEstablishment(est);
-                                                            }}
-                                                            className="w-full px-4 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 tracking-wide transition-colors flex items-center gap-2"
-                                                        >
-                                                            <CreditCard size={14} />
-                                                            {t('owner.billing.change_card', { defaultValue: 'Change card' })}
-                                                        </button>
+                                                        {!isCanceledEstablishment(est) && (
+                                                            <button
+                                                                onClick={() => {
+                                                                    setActiveMenu(null);
+                                                                    openChangeCardForEstablishment(est);
+                                                                }}
+                                                                className="w-full px-4 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 tracking-wide transition-colors flex items-center gap-2"
+                                                            >
+                                                                <CreditCard size={14} />
+                                                                {t('owner.billing.change_card', { defaultValue: 'Change card' })}
+                                                            </button>
+                                                        )}
                                                         {est.subscriptionStatus === 'TRIAL' && !est.cancelAtPeriodEnd && (
                                                             <button
                                                                 onClick={() => handleStopTrial(est.id, est.name)}

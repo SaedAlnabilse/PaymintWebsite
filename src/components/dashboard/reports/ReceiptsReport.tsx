@@ -281,11 +281,11 @@ export function ReceiptsReport({ startDate, endDate, employeeId }: ReceiptsRepor
                             <table className="w-full">
                                 <thead className="bg-gray-50/50 dark:bg-white/[0.02] border-b border-gray-100 dark:border-white/5">
                                     <tr>
-                                        <th className="px-6 py-4 text-left label-strong font-outfit uppercase">{t('orders.table.order')}</th>
-                                        <th className="px-6 py-4 text-left label-strong font-outfit uppercase">{t('orders.table.customer')}</th>
-                                        <th className="px-6 py-4 text-left label-strong font-outfit uppercase">{t('orders.table.amount')}</th>
-                                        <th className="px-6 py-4 text-left label-strong font-outfit uppercase">{t('orders.table.status')}</th>
-                                        <th className="px-6 py-4 text-right label-strong font-outfit uppercase">{t('orders.table.actions')}</th>
+                                        <th className="px-6 py-4 text-start label-strong font-outfit whitespace-nowrap">{t('orders.table.order')}</th>
+                                        <th className="px-6 py-4 text-start label-strong font-outfit whitespace-nowrap">{t('orders.table.customer')}</th>
+                                        <th className="px-6 py-4 text-end label-strong font-outfit whitespace-nowrap">{t('orders.table.amount')}</th>
+                                        <th className="px-6 py-4 text-end label-strong font-outfit whitespace-nowrap">{t('orders.table.status')}</th>
+                                        <th className="px-6 py-4 text-end label-strong font-outfit whitespace-nowrap">{t('orders.table.actions')}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100 dark:divide-white/5">
@@ -299,9 +299,9 @@ export function ReceiptsReport({ startDate, endDate, employeeId }: ReceiptsRepor
                                                 onClick={() => setSelectedOrder(order)}
                                                 className="group hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors cursor-pointer"
                                             >
-                                                <td className="px-6 py-4">
+                                                <td className="px-6 py-4 text-start">
                                                     <div className="flex items-center gap-3">
-                                                        <div className="w-9 h-9 rounded-lg bg-mintcom-green/10 flex items-center justify-center text-mintcom-green">
+                                                        <div className="w-9 h-9 rounded-lg bg-mintcom-green/10 flex items-center justify-center text-mintcom-green shrink-0">
                                                             <Receipt size={16} />
                                                         </div>
                                                         <div>
@@ -310,21 +310,25 @@ export function ReceiptsReport({ startDate, endDate, employeeId }: ReceiptsRepor
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td className="px-6 py-4">
+                                                <td className="px-6 py-4 text-start">
                                                     <p className="font-bold text-gray-700 dark:text-gray-300 text-xs">{order.customer?.name || t('orders.table.walkIn')}</p>
                                                     <p className="text-xs text-gray-400">{order.user?.username ? `${t('orders.table.staff')}: ${order.user.username}` : t('common.pos')}</p>
                                                 </td>
-                                                <td className="px-6 py-4">
+                                                <td className="px-6 py-4 text-end">
                                                     <div className="font-bold text-gray-900 dark:text-white text-xs">{formatCurrency(order.total || 0)}</div>
                                                     <p className="text-xs text-gray-400 uppercase">{order.paymentMethod}</p>
                                                 </td>
-                                                <td className="px-6 py-4">
-                                                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-black border ${getStatusStyle(order.paymentStatus || order.status || 'PENDING')}`}>
-                                                        {getOrderStatusLabel(order)}
-                                                    </span>
+                                                <td className="px-6 py-4 text-end">
+                                                    <div className="flex justify-end">
+                                                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-black border ${getStatusStyle(order.paymentStatus || order.status || 'PENDING')}`}>
+                                                            {getOrderStatusLabel(order)}
+                                                        </span>
+                                                    </div>
                                                 </td>
-                                                <td className="px-6 py-4 text-right">
-                                                    <button className="text-xs font-bold text-mintcom-green hover:underline">{t('common.viewDetails')}</button>
+                                                <td className="px-6 py-4 text-end">
+                                                    <div className="flex justify-end">
+                                                        <button className="text-xs font-bold text-mintcom-green hover:underline">{t('common.viewDetails')}</button>
+                                                    </div>
                                                 </td>
                                             </motion.tr>
                                         ))}

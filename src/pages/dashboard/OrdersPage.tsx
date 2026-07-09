@@ -40,6 +40,7 @@ import { BusyOverlay } from '../../components/BusyOverlay';
 import { checkPermission, usePermissionGuard } from '../../hooks/usePermissionGuard';
 import { PortalDropdown } from '../../components/PortalDropdown';
 import { formatInputPlaceholder } from '../../utils/textCase';
+import { formatPaymentBrandName } from '../../utils/paymentCard';
 
 interface ApiError {
   response?: {
@@ -188,19 +189,16 @@ export function OrdersPage() {
   // Helper function to format payment method display
   const formatPaymentMethod = (order: Order): string => {
     if (order.paymentMethod === 'CARD' && order.cardType) {
-      return t('orders.payment.cardWithBrand', { brand: order.cardType });
+      return t('orders.payment.cardWithBrand', { brand: formatPaymentBrandName(order.cardType) });
     }
     if (order.paymentMethod === 'OTHER' && order.otherPaymentMethod) {
-      return order.otherPaymentMethod;
+      return formatPaymentBrandName(order.otherPaymentMethod);
     }
     if (order.paymentMethod === 'CASH') {
       return t('orders.payment.cash');
     }
-    // Format enum values nicely
-    return order.paymentMethod
-      .split('_')
-      .map(w => w.charAt(0) + w.slice(1).toLowerCase())
-      .join(' ');
+    // Format enum values / brands nicely (Visa, Mastercard, …)
+    return formatPaymentBrandName(order.paymentMethod);
   };
 
   const [startDate, setStartDate] = useState(() => {
@@ -512,7 +510,7 @@ export function OrdersPage() {
             if (cardTypes && cardTypes.length > 0) {
               cardTypes.forEach((cardType: string) => {
                 options.push({
-                  label: cardType,
+                  label: formatPaymentBrandName(cardType),
                   value: `CARD_TYPE:${cardType}`,
                   group: t('orders.payment.allCards')
                 });
@@ -527,7 +525,7 @@ export function OrdersPage() {
 
             otherMethods.forEach((method: string) => {
               options.push({
-                label: method,
+                label: formatPaymentBrandName(method),
                 value: `OTHER_METHOD:${method}`,
                 group: t('orders.payment.allOther')
               });
@@ -1224,11 +1222,11 @@ export function OrdersPage() {
 
       {/* Unified Filter Control Deck */}
       <div className="bg-white dark:bg-[#1E293B] rounded-2xl sm:rounded-[24px] border border-gray-100 dark:border-white/5 p-2 shadow-sm">
-        {/* Mobile: Stack vertically, Desktop: Flex wrap */}
-        <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch gap-2">
+        {/* Even responsive grid so controls align in tidy rows/columns */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 items-stretch [&>*]:min-w-0">
 
           {/* Search Bar - full width on mobile */}
-          <div className="w-full sm:flex-1 sm:min-w-[200px] lg:w-64 lg:flex-none">
+          <div className="col-span-2 sm:col-span-1">
             <SearchInput
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -1239,8 +1237,8 @@ export function OrdersPage() {
             />
           </div>
 
-          {/* Quick Date Select - half width on mobile */}
-          <div className="flex-1 sm:flex-none sm:w-44 relative z-[70]">
+          {/* Quick Date Select */}
+          <div className="relative z-[70]">
             <SelectInput
               value={selectedDateRange === 'custom' ? null : selectedDateRange}
               onChange={(val) => setQuickDate(val || 'today')}
@@ -1252,7 +1250,7 @@ export function OrdersPage() {
           </div>
 
           {/* Date Range Group - hidden on mobile, show on desktop */}
-          <div className="hidden sm:block flex-none min-w-[180px] sm:min-w-[220px] relative z-[60]">
+          <div className="hidden sm:block relative z-[60]">
             <DateRangePicker
               startDate={startDate}
               endDate={endDate}
@@ -1269,106 +1267,100 @@ export function OrdersPage() {
             />
           </div>
 
-          {/* Vertical Divider - desktop only */}
-          <div className="hidden 2xl:block w-px self-stretch bg-gray-100 dark:bg-white/10 my-1" />
+          {/* Status Select */}
+          <div className="relative z-[50]">
+            <SelectInput
+              value={statusFilter === 'all' ? null : statusFilter}
+              onChange={(val) => {
+                setStatusFilter(val || 'all');
+                setPage(1);
+                if (val === 'HELD') {
+                  setPaymentFilter('all');
+                  setServiceChargeFilter('all');
+                }
+              }}
+              options={[
+                { label: t('orders.status.completed'), value: 'COMPLETED' },
+                { label: t('orders.status.paidTaxChanged'), value: 'PAID_TAX_CHANGED' },
+                { label: t('orders.status.onHold'), value: 'HELD' },
+                { label: t('orders.status.refunded'), value: 'REFUNDED' },
+              ]}
+              showAllOption={true}
+              allOptionLabel={t('orders.status.all')}
+              placeholder={formatInputPlaceholder(t('orders.table.status') || 'Status', t('common.locale'))}
+              className="w-full h-full"
+            />
+          </div>
 
-          {/* Status & Payment filters - side by side on mobile */}
-          <div className="flex flex-wrap gap-2 w-full sm:w-auto sm:flex-1 sm:min-w-[260px]">
-            {/* Status Select */}
-            <div className="flex-1 min-w-[140px] relative z-[50]">
-              <SelectInput
-                value={statusFilter === 'all' ? null : statusFilter}
-                onChange={(val) => {
-                  setStatusFilter(val || 'all');
-                  setPage(1);
-                  if (val === 'HELD') {
-                    setPaymentFilter('all');
-                    setServiceChargeFilter('all');
-                  }
-                }}
-                options={[
-                  { label: t('orders.status.completed'), value: 'COMPLETED' },
-                  { label: t('orders.status.paidTaxChanged'), value: 'PAID_TAX_CHANGED' },
-                  { label: t('orders.status.onHold'), value: 'HELD' },
-                  { label: t('orders.status.refunded'), value: 'REFUNDED' },
-                ]}
-                showAllOption={true}
-                allOptionLabel={t('orders.status.all')}
-                placeholder={formatInputPlaceholder(t('orders.table.status') || 'Status', t('common.locale'))}
-                className="w-full h-full"
-              />
-            </div>
+          {/* Payment Method Select */}
+          <div className="relative z-[40]">
+            <SelectInput
+              value={paymentFilter === 'all' ? null : paymentFilter}
+              onChange={(val) => { setPaymentFilter(val || 'all'); setPage(1); }}
+              disabled={statusFilter === 'HELD'}
+              placeholder={formatInputPlaceholder(t('orders.table.payment') || 'Payment', t('common.locale'))}
+              options={paymentOptions}
+              showAllOption={true}
+              allOptionLabel={t('orders.payment.all')}
+              className="w-full h-full"
+            />
+          </div>
 
-            {/* Payment Method Select */}
-            <div className="flex-1 min-w-[140px] relative z-[40]">
-              <SelectInput
-                value={paymentFilter === 'all' ? null : paymentFilter}
-                onChange={(val) => { setPaymentFilter(val || 'all'); setPage(1); }}
-                disabled={statusFilter === 'HELD'}
-                placeholder={formatInputPlaceholder(t('orders.table.payment') || 'Payment', t('common.locale'))}
-                options={paymentOptions}
-                showAllOption={true}
-                allOptionLabel={t('orders.payment.all')}
-                className="w-full h-full"
-              />
-            </div>
+          <div className="relative z-[30]">
+            <SelectInput
+              value={serviceChargeFilter === 'all' ? null : serviceChargeFilter}
+              onChange={(val) => { setServiceChargeFilter(val || 'all'); setPage(1); }}
+              disabled={statusFilter === 'HELD'}
+              placeholder={formatInputPlaceholder(t('orders.filters.serviceCharge', { defaultValue: 'Service Charge' }), t('common.locale'))}
+              options={[
+                { label: t('orders.filters.serviceChargeApplied', { defaultValue: 'Applied' }), value: 'applied' },
+                { label: t('orders.filters.serviceChargeNotApplied', { defaultValue: 'Not applied' }), value: 'not_applied' },
+                { label: t('orders.filters.serviceChargeChanged', { defaultValue: 'Changed/removed' }), value: 'changed' },
+              ]}
+              showAllOption={true}
+              allOptionLabel={t('orders.filters.serviceChargeAll', { defaultValue: 'All orders' })}
+              className="w-full h-full"
+            />
+          </div>
 
-            <div className="flex-1 min-w-[160px] relative z-[30]">
-              <SelectInput
-                value={serviceChargeFilter === 'all' ? null : serviceChargeFilter}
-                onChange={(val) => { setServiceChargeFilter(val || 'all'); setPage(1); }}
-                disabled={statusFilter === 'HELD'}
-                placeholder={formatInputPlaceholder(t('orders.filters.serviceCharge', { defaultValue: 'Service Charge' }), t('common.locale'))}
-                options={[
-                  { label: t('orders.filters.serviceChargeApplied', { defaultValue: 'Applied' }), value: 'applied' },
-                  { label: t('orders.filters.serviceChargeNotApplied', { defaultValue: 'Not applied' }), value: 'not_applied' },
-                  { label: t('orders.filters.serviceChargeChanged', { defaultValue: 'Changed/removed' }), value: 'changed' },
-                ]}
-                showAllOption={true}
-                allOptionLabel={t('orders.filters.serviceChargeAll', { defaultValue: 'All orders' })}
-                className="w-full h-full"
-              />
-            </div>
+          <div className="relative z-[20]">
+            <SingleSelect
+              value={selectedEmployeeId}
+              onChange={(val) => {
+                setSelectedEmployeeId(val);
+                setSelectedShiftId(null);
+                setPage(1);
+              }}
+              options={employees}
+              placeholder={formatInputPlaceholder(t('common.allStaff', { defaultValue: 'All Staff' }), t('common.locale'))}
+              allOptionLabel={t('common.allStaff', { defaultValue: 'All Staff' })}
+              showAllOption={true}
+              className="w-full h-full"
+              buttonClassName={`!h-full !min-h-[48px] !rounded-xl !px-4 !text-xs sm:!text-sm !font-bold border transition-all ${selectedEmployeeId
+                ? '!bg-mintcom-green/5 !border-mintcom-green !text-mintcom-green ring-2 ring-mintcom-green shadow-lg shadow-mintcom-green/10'
+                : '!bg-white dark:!bg-[#1E293B] !border-gray-200 dark:!border-white/10 hover:!bg-gray-50 dark:hover:!bg-white/10'
+                }`}
+            />
+          </div>
 
-            <div className="flex-1 min-w-[160px] relative z-[20]">
-              <SingleSelect
-                value={selectedEmployeeId}
-                onChange={(val) => {
-                  setSelectedEmployeeId(val);
-                  setSelectedShiftId(null);
-                  setPage(1);
-                }}
-                options={employees}
-                placeholder={formatInputPlaceholder(t('common.allStaff', { defaultValue: 'All Staff' }), t('common.locale'))}
-                allOptionLabel={t('common.allStaff', { defaultValue: 'All Staff' })}
-                showAllOption={true}
-                className="w-full h-full"
-                buttonClassName={`!h-full !min-h-[48px] !rounded-xl !px-4 !text-xs sm:!text-sm !font-bold border transition-all ${selectedEmployeeId
-                  ? '!bg-mintcom-green/5 !border-mintcom-green !text-mintcom-green ring-2 ring-mintcom-green shadow-lg shadow-mintcom-green/10'
-                  : '!bg-white dark:!bg-[#1E293B] !border-gray-200 dark:!border-white/10 hover:!bg-gray-50 dark:hover:!bg-white/10'
-                  }`}
-              />
-            </div>
-
-            <div className={`flex-1 min-w-[160px] relative z-[10] ${!selectedEmployeeId ? 'opacity-50 pointer-events-none grayscale' : ''}`}>
-              <SingleSelect
-                value={selectedShiftId}
-                onChange={(val) => {
-                  setSelectedShiftId(val);
-                  setPage(1);
-                }}
-                options={employeeShifts}
-                placeholder={formatInputPlaceholder(t('common.selectShift', { defaultValue: 'Select Shift' }), t('common.locale'))}
-                allOptionLabel={t('common.allShifts', { defaultValue: 'All Shifts' })}
-                showAllOption={true}
-                disabled={!selectedEmployeeId}
-                className="w-full h-full"
-                buttonClassName={`!h-full !min-h-[48px] !rounded-xl !px-4 !text-xs sm:!text-sm !font-bold border transition-all ${selectedShiftId
-                  ? '!bg-mintcom-green/5 !border-mintcom-green !text-mintcom-green ring-2 ring-mintcom-green shadow-lg shadow-mintcom-green/10'
-                  : '!bg-white dark:!bg-[#1E293B] !border-gray-200 dark:!border-white/10 hover:!bg-gray-50 dark:hover:!bg-white/10'
-                  }`}
-              />
-            </div>
+          <div className={`relative z-[10] ${!selectedEmployeeId ? 'opacity-50 pointer-events-none grayscale' : ''}`}>
+            <SingleSelect
+              value={selectedShiftId}
+              onChange={(val) => {
+                setSelectedShiftId(val);
+                setPage(1);
+              }}
+              options={employeeShifts}
+              placeholder={formatInputPlaceholder(t('common.selectShift', { defaultValue: 'Select Shift' }), t('common.locale'))}
+              allOptionLabel={t('common.allShifts', { defaultValue: 'All Shifts' })}
+              showAllOption={true}
+              disabled={!selectedEmployeeId}
+              className="w-full h-full"
+              buttonClassName={`!h-full !min-h-[48px] !rounded-xl !px-4 !text-xs sm:!text-sm !font-bold border transition-all ${selectedShiftId
+                ? '!bg-mintcom-green/5 !border-mintcom-green !text-mintcom-green ring-2 ring-mintcom-green shadow-lg shadow-mintcom-green/10'
+                : '!bg-white dark:!bg-[#1E293B] !border-gray-200 dark:!border-white/10 hover:!bg-gray-50 dark:hover:!bg-white/10'
+                }`}
+            />
           </div>
 
         </div>
@@ -1507,6 +1499,19 @@ export function OrdersPage() {
               <Clock size={16} className="text-orange-500" />
               {t('orders.status.onHold')} ({heldOrders.length})
             </h2>
+            {heldOrders.length > 3 && (
+              <button
+                type="button"
+                onClick={() => {
+                  setStatusFilter('HELD');
+                  setPaymentFilter('all');
+                  setPage(1);
+                }}
+                className="text-sm font-bold text-mintcom-green hover:underline"
+              >
+                {t('common.viewMore')}
+              </button>
+            )}
           </div>
 
           <div className="relative">
@@ -1564,7 +1569,7 @@ export function OrdersPage() {
               onScroll={updateHeldOrdersScrollIndicators}
               className="flex flex-nowrap gap-4 overflow-x-auto scrollbar-none pb-2"
             >
-              {heldOrders.slice(0, 3).map((order) => (
+              {heldOrders.map((order) => (
                 <div
                   key={order.id}
                   onClick={() => {
@@ -1608,24 +1613,6 @@ export function OrdersPage() {
                   </div>
                 </div>
               ))}
-
-              {heldOrders.length > 3 && (
-                <div
-                  onClick={() => {
-                    setStatusFilter('HELD');
-                    setPaymentFilter('all');
-                    setPage(1);
-                  }}
-                  className="group flex-none basis-full sm:basis-1/2 lg:basis-1/3 xl:basis-1/4 bg-white dark:bg-[#1E293B] p-5 rounded-2xl border border-dashed border-orange-300 dark:border-orange-500/30 shadow-sm hover:shadow-md hover:border-orange-500/50 hover:bg-orange-500/5 transition-all cursor-pointer relative overflow-hidden flex flex-col items-center justify-center min-h-[140px]"
-                >
-                  <div className="w-12 h-12 rounded-full bg-orange-50 dark:bg-orange-500/10 flex items-center justify-center text-orange-400 group-hover:text-orange-500 group-hover:bg-orange-500/20 transition-colors mb-3">
-                    <ChevronRight size={24} />
-                  </div>
-                  <p className="font-bold text-gray-600 dark:text-gray-300 group-hover:text-orange-500 transition-colors">
-                    {t('common.more')} ({heldOrders.length - 3})
-                  </p>
-                </div>
-              )}
             </div>
           </div>
         </div>
@@ -1772,7 +1759,7 @@ export function OrdersPage() {
               <thead className="bg-gray-50 dark:bg-white/[0.02]">
                 <tr className="border-b border-gray-200 dark:border-white/5">
                   <th
-                    className={`px-6 py-4 text-left label-strong font-outfit cursor-pointer select-none transition-colors group ${sortConfig?.key === 'date' ? 'text-mintcom-green' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
+                    className={`px-6 py-4 text-start label-strong font-outfit whitespace-nowrap cursor-pointer select-none transition-colors group ${sortConfig?.key === 'date' ? 'text-mintcom-green' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
                     onClick={() => requestSort('date')}
                   >
                     <div className="flex items-center gap-2">
@@ -1781,33 +1768,33 @@ export function OrdersPage() {
                     </div>
                   </th>
                   <th
-                    className={`px-6 py-4 text-center label-strong font-outfit cursor-pointer select-none transition-colors group ${sortConfig?.key === 'customer' ? 'text-mintcom-green' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
+                    className={`px-6 py-4 text-start label-strong font-outfit whitespace-nowrap cursor-pointer select-none transition-colors group ${sortConfig?.key === 'customer' ? 'text-mintcom-green' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
                     onClick={() => requestSort('customer')}
                   >
-                    <div className="flex items-center justify-center gap-2">
+                    <div className="flex items-center gap-2">
                       {t('orders.table.customer')}
                       <ArrowUpDown size={14} className={`transition-all ${sortConfig?.key === 'customer' ? 'opacity-100 scale-110' : 'opacity-20 group-hover:opacity-100'}`} />
                     </div>
                   </th>
                   <th
-                    className={`px-6 py-4 text-center label-strong font-outfit cursor-pointer select-none transition-colors group ${sortConfig?.key === 'total' ? 'text-mintcom-green' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
+                    className={`px-6 py-4 text-end label-strong font-outfit whitespace-nowrap cursor-pointer select-none transition-colors group ${sortConfig?.key === 'total' ? 'text-mintcom-green' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
                     onClick={() => requestSort('total')}
                   >
-                    <div className="flex items-center justify-center gap-2">
+                    <div className="flex items-center justify-end gap-2">
                       {t('orders.table.amount')}
                       <ArrowUpDown size={14} className={`transition-all ${sortConfig?.key === 'total' ? 'opacity-100 scale-110' : 'opacity-20 group-hover:opacity-100'}`} />
                     </div>
                   </th>
                   <th
-                    className={`px-6 py-4 text-center label-strong font-outfit cursor-pointer select-none transition-colors group ${sortConfig?.key === 'status' ? 'text-mintcom-green' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
+                    className={`px-6 py-4 text-end label-strong font-outfit whitespace-nowrap cursor-pointer select-none transition-colors group ${sortConfig?.key === 'status' ? 'text-mintcom-green' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
                     onClick={() => requestSort('status')}
                   >
-                    <div className="flex items-center justify-center gap-2">
+                    <div className="flex items-center justify-end gap-2">
                       {t('orders.table.status')}
                       <ArrowUpDown size={14} className={`transition-all ${sortConfig?.key === 'status' ? 'opacity-100 scale-110' : 'opacity-20 group-hover:opacity-100'}`} />
                     </div>
                   </th>
-                  <th className="px-6 py-4 text-center dashboard-card-label">{t('orders.table.actions')}</th>
+                  <th className="px-6 py-4 text-end dashboard-card-label whitespace-nowrap">{t('orders.table.actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-white/5">
@@ -1818,9 +1805,9 @@ export function OrdersPage() {
                     onClick={() => void openOrderDetails(order)}
                     className="group hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-all cursor-pointer"
                   >
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 text-start">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-white/5 flex items-center justify-center text-gray-500 group-hover:text-mintcom-green transition-colors">
+                        <div className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-white/5 flex items-center justify-center text-gray-500 group-hover:text-mintcom-green transition-colors shrink-0">
                           <ShoppingCart size={16} />
                         </div>
                         <div>
@@ -1829,21 +1816,23 @@ export function OrdersPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-center">
+                    <td className="px-6 py-4 text-start">
                       <p className="font-bold text-gray-800 dark:text-gray-300 text-sm">{order.customer?.name || t('orders.table.walkIn')}</p>
                       <p className="text-xs text-gray-500">{order.user?.username ? `${t('orders.table.staff')}: ${order.user.username}` : t('common.pos')}</p>
                     </td>
-                    <td className="px-6 py-4 text-center">
-                      <StatValue value={order.total} currency={currencySymbol} className="text-base" containerClassName="justify-center" />
+                    <td className="px-6 py-4 text-end">
+                      <StatValue value={order.total} currency={currencySymbol} className="text-base" containerClassName="justify-end w-full" />
                       <p className="text-xs text-gray-500 font-bold tracking-wider">{formatPaymentMethod(order)}</p>
                     </td>
-                    <td className="px-6 py-4 text-center">
-                      <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-black tracking-wide border ${getStatusStyle(order.paymentStatus || order.status || 'PENDING')}`}>
-                        {getOrderStatusLabel(order)}
-                      </span>
+                    <td className="px-6 py-4 text-end">
+                      <div className="flex justify-end">
+                        <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-black tracking-wide border ${getStatusStyle(order.paymentStatus || order.status || 'PENDING')}`}>
+                          {getOrderStatusLabel(order)}
+                        </span>
+                      </div>
                     </td>
-                    <td className="px-6 py-4 text-center">
-                      <div className="flex items-center justify-center gap-2 relative">
+                    <td className="px-6 py-4 text-end">
+                      <div className="flex items-center justify-end gap-2 relative">
                         <div className="relative" data-action-menu>
                           <button
                             onClick={(e) => {

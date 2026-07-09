@@ -500,11 +500,11 @@ export function ActivityLogsPage() {
           <table className="w-full">
             <thead className="bg-gray-50 dark:bg-white/[0.02]">
               <tr className="border-b border-gray-200 dark:border-white/5">
-                <th className="px-8 py-4 text-left label-strong font-outfit">{t('activity.time')}</th>
-                <th className="px-8 py-4 text-center label-strong font-outfit">{t('activity.user')}</th>
-                <th className="px-8 py-4 text-center label-strong font-outfit">{t('activity.action')}</th>
-                <th className="px-8 py-4 text-center label-strong font-outfit">{t('activity.details')}</th>
-                <th className="px-8 py-4 text-center label-strong font-outfit">{t('activity.data')}</th>
+                <th className="px-8 py-4 text-start label-strong font-outfit whitespace-nowrap">{t('activity.time')}</th>
+                <th className="px-8 py-4 text-start label-strong font-outfit whitespace-nowrap">{t('activity.user')}</th>
+                <th className="px-8 py-4 text-start label-strong font-outfit whitespace-nowrap">{t('activity.action')}</th>
+                <th className="px-8 py-4 text-start label-strong font-outfit whitespace-nowrap">{t('activity.details')}</th>
+                <th className="px-8 py-4 text-end label-strong font-outfit whitespace-nowrap">{t('activity.data')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-white/5">
@@ -547,7 +547,7 @@ export function ActivityLogsPage() {
                       key={log.id}
                       className="group hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors"
                     >
-                      <td className="px-8 py-4">
+                      <td className="px-8 py-4 text-start">
                         <div className="flex flex-col">
                           <span className="text-sm font-bold text-gray-900 dark:text-white whitespace-nowrap">
                             {new Date(log.timestamp).toLocaleTimeString(t('common.locale') === 'ar' ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
@@ -557,9 +557,9 @@ export function ActivityLogsPage() {
                           </span>
                         </div>
                       </td>
-                      <td className="px-8 py-4 text-center">
-                        <div className="flex items-center justify-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-mintcom-green/10 text-mintcom-green flex items-center justify-center font-black group-hover:scale-110 transition-transform">
+                      <td className="px-8 py-4 text-start">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-mintcom-green/10 text-mintcom-green flex items-center justify-center font-black group-hover:scale-110 transition-transform shrink-0">
                             {getActorInitial(log)}
                           </div>
                           <div>
@@ -568,19 +568,19 @@ export function ActivityLogsPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-8 py-4 text-center">
+                      <td className="px-8 py-4 text-start">
                         <span className={`inline-flex px-2 py-0.5 rounded-lg label-strong font-outfit border ${getActionColor(log.action)}`}>
                           {getActionLabel(log.action)}
                         </span>
                       </td>
-                      <td className="px-8 py-4 text-center">
-                        <p className="text-sm font-medium text-gray-600 dark:text-gray-300 max-w-sm line-clamp-1 group-hover:line-clamp-none transition-all text-center">
+                      <td className="px-8 py-4 text-start">
+                        <p className="text-sm font-medium text-gray-600 dark:text-gray-300 max-w-sm line-clamp-1 group-hover:line-clamp-none transition-all text-start">
                           {log.description}
                         </p>
                       </td>
-                      <td className="px-8 py-4 text-center">
+                      <td className="px-8 py-4 text-end">
                         {log.metadata ? (
-                          <div className="flex justify-center">
+                          <div className="flex justify-end">
                             <button
                               onClick={() => setSelectedLog(log)}
                               className="p-2 rounded-lg bg-gray-50 dark:bg-white/5 text-gray-400 hover:text-mintcom-green transition-all"

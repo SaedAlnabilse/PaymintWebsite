@@ -8,6 +8,60 @@ export const PAYMENT_CARD_API_BRAND: Record<DetectedCardBrand, string> = {
   discover: 'DISCOVER',
 };
 
+/** Canonical display labels for known card brands / payment names. */
+const PAYMENT_BRAND_LABELS: Record<string, string> = {
+  visa: 'Visa',
+  mastercard: 'Mastercard',
+  master: 'Mastercard',
+  'master card': 'Mastercard',
+  mc: 'Mastercard',
+  amex: 'Amex',
+  'american express': 'American Express',
+  discover: 'Discover',
+  mada: 'Mada',
+  jcb: 'JCB',
+  unionpay: 'UnionPay',
+  'union pay': 'UnionPay',
+  diners: 'Diners Club',
+  'diners club': 'Diners Club',
+  maestro: 'Maestro',
+  applepay: 'Apple Pay',
+  'apple pay': 'Apple Pay',
+  googlepay: 'Google Pay',
+  'google pay': 'Google Pay',
+};
+
+/**
+ * Format a card brand or payment-method name for UI display.
+ * Examples: "MASTERCARD" / "mastercard" → "Mastercard", "visa" → "Visa".
+ */
+export function formatPaymentBrandName(name: string | null | undefined): string {
+  if (name == null || String(name).trim() === '') return '—';
+
+  const raw = String(name).trim();
+  const key = raw
+    .toLowerCase()
+    .replace(/[_-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (PAYMENT_BRAND_LABELS[key]) {
+    return PAYMENT_BRAND_LABELS[key];
+  }
+
+  // Title-case each word for custom methods / unknown brands.
+  return key
+    .split(' ')
+    .map((word) => {
+      if (!word) return word;
+      if (word.length <= 3 && word === word.toUpperCase()) {
+        // Keep short codes like "POS" if already all-caps input was mixed; we lowercased already
+      }
+      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    })
+    .join(' ');
+}
+
 export const MAX_CARD_NUMBER_DIGITS = 16;
 export const MAX_FORMATTED_CARD_NUMBER_LENGTH = 19; // 16 digits + 3 spaces
 

@@ -58,6 +58,14 @@ const TITLE_CASE_PRESERVED_WORDS = new Map<string, string>([
   ['yoy', 'YoY'],
   ['csat', 'CSAT'],
   ['ai', 'AI'],
+  ['visa', 'Visa'],
+  ['mastercard', 'Mastercard'],
+  ['amex', 'Amex'],
+  ['discover', 'Discover'],
+  ['mada', 'Mada'],
+  ['jcb', 'JCB'],
+  ['unionpay', 'UnionPay'],
+  ['maestro', 'Maestro'],
 ]);
 
 const TITLE_CASE_PRESERVED_PHRASES = new Map<string, string>([

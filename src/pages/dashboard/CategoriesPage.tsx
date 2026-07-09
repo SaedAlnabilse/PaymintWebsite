@@ -777,11 +777,11 @@ export function CategoriesPage() {
                 <table className="w-full">
                   <thead className="bg-gray-50 dark:bg-white/[0.02] border-b border-gray-100 dark:border-white/5">
                     <tr>
-                      <th className="px-6 py-4 text-center dashboard-card-label w-16">{t('categories.table.icon')}</th>
-                      <th className="px-6 py-4 text-left dashboard-card-label">{t('categories.table.name')}</th>
-                      <th className="px-6 py-4 text-center dashboard-card-label">{t('common.status.label', 'Status')}</th>
-                      <th className="px-6 py-4 text-center dashboard-card-label">{t('categories.table.items')}</th>
-                      <th className="px-6 py-4 text-center dashboard-card-label w-32">{t('owner.locations.actions')}</th>
+                      <th className="px-6 py-4 text-center dashboard-card-label w-16 whitespace-nowrap">{t('categories.table.icon')}</th>
+                      <th className="px-6 py-4 text-start dashboard-card-label whitespace-nowrap">{t('categories.table.name')}</th>
+                      <th className="px-6 py-4 text-center dashboard-card-label whitespace-nowrap">{t('common.status.label', 'Status')}</th>
+                      <th className="px-6 py-4 text-end dashboard-card-label whitespace-nowrap">{t('categories.table.items')}</th>
+                      <th className="px-6 py-4 text-end dashboard-card-label w-32 whitespace-nowrap">{t('owner.locations.actions')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 dark:divide-white/5">
@@ -798,7 +798,7 @@ export function CategoriesPage() {
                               <IconComponent size={20} />
                             </div>
                           </td>
-                          <td className="px-6 py-4 text-left">
+                          <td className="px-6 py-4 text-start">
                             <p className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-mintcom-green transition-colors">{category.name}</p>
                           </td>
                           <td className="px-6 py-4 text-center">
@@ -810,14 +810,14 @@ export function CategoriesPage() {
                               {isCategoryActive(category) ? t('common.active', 'Active') : t('common.inactive', 'Inactive')}
                             </span>
                           </td>
-                          <td className="px-6 py-4 text-center">
+                          <td className="px-6 py-4 text-end">
                             <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-gray-100 dark:bg-white/5 dashboard-card-meta">
                               <Package size={12} />
                               {category._count?.items || 0}
                             </span>
                           </td>
-                          <td className="px-6 py-4 text-center">
-                            <div className="flex items-center justify-center gap-2">
+                          <td className="px-6 py-4 text-end">
+                            <div className="flex items-center justify-end gap-2">
                               {isCategoryActive(category) && (
                                 <>
                                   <button

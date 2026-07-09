@@ -247,7 +247,7 @@ export const StatValue: React.FC<StatValueProps> = ({
   return (
     <div
       ref={containerRef}
-      className={`relative flex max-w-full min-w-0 items-baseline gap-1.5 ${containerClassName}`}
+      className={`relative inline-flex max-w-full min-w-0 items-baseline gap-1.5 ${containerClassName}`}
       aria-label={shouldShowTooltip ? fullDisplay : undefined}
       onMouseEnter={showTooltip}
       onMouseLeave={hideTooltip}

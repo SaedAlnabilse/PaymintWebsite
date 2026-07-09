@@ -1492,9 +1492,9 @@ export function ProductsPage() {
                                 <table className="w-full">
                                     <thead className="bg-gray-50 dark:bg-white/[0.02] border-b border-gray-100 dark:border-white/5">
                                         <tr>
-                                            <th className="px-6 py-4 text-center text-[11px] font-bold text-gray-400 w-16">{t('products.table.image')}</th>
+                                            <th className="px-6 py-4 text-center text-[11px] font-bold text-gray-400 w-16 whitespace-nowrap">{t('products.table.image')}</th>
                                             <th
-                                                className="px-6 py-4 text-left text-[11px] font-bold text-gray-400 cursor-pointer hover:text-mintcom-green transition-colors"
+                                                className="px-6 py-4 text-start text-[11px] font-bold text-gray-400 cursor-pointer hover:text-mintcom-green transition-colors whitespace-nowrap"
                                                 onClick={() => handleSort('name')}
                                             >
                                                 <div className="flex items-center gap-1">
@@ -1521,30 +1521,30 @@ export function ProductsPage() {
                                                 </div>
                                             </th>
                                             <th
-                                                className="px-6 py-4 text-center text-[11px] font-bold text-gray-400 cursor-pointer hover:text-mintcom-green transition-colors"
+                                                className="px-6 py-4 text-end text-[11px] font-bold text-gray-400 cursor-pointer hover:text-mintcom-green transition-colors whitespace-nowrap"
                                                 onClick={() => handleSort('availableStock')}
                                             >
-                                                <div className="flex items-center justify-center gap-1">
+                                                <div className="flex items-center justify-end gap-1">
                                                     {t('products.table.stock')}
                                                     {sortConfig?.key === 'availableStock' && <ArrowUpDown size={12} className={sortConfig.direction === 'asc' ? 'rotate-0' : 'rotate-180'} />}
                                                 </div>
                                             </th>
                                             <th
-                                                className="px-6 py-4 text-center text-[11px] font-bold text-gray-400 cursor-pointer hover:text-mintcom-green transition-colors"
+                                                className="px-6 py-4 text-end text-[11px] font-bold text-gray-400 cursor-pointer hover:text-mintcom-green transition-colors whitespace-nowrap"
                                                 onClick={() => handleSort('price')}
                                             >
-                                                <div className="flex items-center justify-center gap-1">
+                                                <div className="flex items-center justify-end gap-1">
                                                     {t('products.table.price')}
                                                     {sortConfig?.key === 'price' && <ArrowUpDown size={12} className={sortConfig.direction === 'asc' ? 'rotate-0' : 'rotate-180'} />}
                                                 </div>
                                             </th>
-                                            <th className="px-6 py-4 text-center text-[11px] font-bold text-gray-400 w-24">{t('owner.locations.actions')}</th>
+                                            <th className="px-6 py-4 text-end text-[11px] font-bold text-gray-400 w-24 whitespace-nowrap">{t('owner.locations.actions')}</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-100 dark:divide-white/5">
                                         {paginatedProducts.map((p, idx) => (
                                             <tr key={p.id || `table-row-${idx}`} className="group hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors cursor-pointer" onClick={() => handleEdit(p)}>
-                                                <td className="px-6 py-4">
+                                                <td className="px-6 py-4 text-center">
                                                     <div className="flex justify-center">
                                                         <div className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 overflow-hidden">
                                                             <ThumbnailImage
@@ -1556,7 +1556,7 @@ export function ProductsPage() {
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td className="px-6 py-4">
+                                                <td className="px-6 py-4 text-start">
                                                     <p title={p.name} className="text-sm font-bold text-gray-900 dark:text-white">{p.name}</p>
                                                 </td>
                                                 <td className="px-6 py-4 text-center">
@@ -1573,24 +1573,24 @@ export function ProductsPage() {
                                                         {isProductActive(p) ? t('common.active', 'Active') : t('common.inactive', 'Inactive')}
                                                     </span>
                                                 </td>
-                                                <td className="px-6 py-4 text-center">
+                                                <td className="px-6 py-4 text-end">
                                                     {p.trackStock ? (
                                                         <span className={`text-xs font-bold ${getStockColor(p.availableStock || 0, p.lowStockThresholdRed, p.lowStockThresholdYellow, true)}`}>
                                                             {t('products.table.units', { count: p.availableStock || 0 })}
                                                         </span>
                                                     ) : (
-                                                        <div className="inline-flex items-center px-2 py-1 rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-200/50 dark:border-white/5">
+                                                        <div className="inline-flex items-center justify-end px-2 py-1 rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-200/50 dark:border-white/5">
                                                             <InfinityIcon size={16} className="text-gray-400" strokeWidth={2.5} />
                                                         </div>
                                                     )}
                                                 </td>
-                                                <td className="px-6 py-4 text-center">
+                                                <td className="px-6 py-4 text-end">
                                                     <span className="font-bold text-gray-900 dark:text-white">
                                                         {p.price.toLocaleString(t('common.locale'), { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currencySymbol}
                                                     </span>
                                                 </td>
-                                                <td className="px-6 py-4 text-center">
-                                                    <div className="flex items-center justify-center gap-1 sm:gap-2">
+                                                <td className="px-6 py-4 text-end">
+                                                    <div className="flex items-center justify-end gap-1 sm:gap-2">
                                                         <button onClick={(e) => { e.stopPropagation(); handleEdit(p); }} aria-label={t('products.editProduct')} className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-400 hover:text-mintcom-green hover:bg-mintcom-green/10 rounded-lg transition-colors"><Edit2 size={18} /></button>
                                                         {isProductActive(p) ? (
                                                             <button onClick={(e) => { e.stopPropagation(); handleDelete(p.id, p.name); }} aria-label={p.willHardDelete ? t('products.delete.title') : t('common.archive', { defaultValue: 'Archive' })} className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-400 hover:text-mintcom-red hover:bg-mintcom-red/10 rounded-lg transition-colors">{p.willHardDelete ? <Trash2 size={18} /> : <Archive size={18} />}</button>

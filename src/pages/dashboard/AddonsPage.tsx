@@ -837,36 +837,36 @@ export function AddonsPage() {
                       {attr.name.charAt(0).toUpperCase()}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-3">
-                        <h3 className="min-w-0 flex-1 overflow-safe-wrap line-clamp-2 font-bold text-gray-900 dark:text-white text-lg leading-snug" title={attr.name}>{attr.name}</h3>
-                        {attr.isRequired && (
-                          <span className="label-strong font-outfit shrink-0 px-2 py-0.5 bg-mintcom-green/10 text-mintcom-green rounded-md border border-mintcom-green/20">{t('attributes.list.mandatory')}</span>
-                        )}
-                        <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-black tracking-wide ${
-                          isAttributeActive(attr)
-                            ? 'bg-mintcom-green/10 text-mintcom-green'
-                            : 'bg-mintcom-red/10 text-mintcom-red'
-                        } shrink-0`}>
-                          {isAttributeActive(attr) ? t('common.active', 'Active') : t('common.inactive', 'Inactive')}
-                        </span>
-                      </div>
+                      <h3 className="min-w-0 overflow-safe-wrap line-clamp-2 font-bold text-gray-900 dark:text-white text-lg leading-snug" title={attr.name}>{attr.name}</h3>
                       <p className="text-xs font-medium text-gray-400 tracking-widest mt-1 uppercase capitalize-none">
                         {attr.inputType === 'SINGLE_SELECT' ? t('attributes.list.singleChoice') : t('attributes.list.multipleChoice')} &bull; {attr.subAttributes?.length || 0}
                       </p>
                     </div>
                   </div>
-                  <div className="flex shrink-0 items-center gap-4">
-                    <div className="flex gap-3">
+                  <div className="flex shrink-0 items-center gap-3">
+                    <div className="flex items-center gap-2">
+                      {attr.isRequired && (
+                        <span className="label-strong font-outfit shrink-0 px-2 py-0.5 bg-mintcom-green/10 text-mintcom-green rounded-md border border-mintcom-green/20">{t('attributes.list.mandatory')}</span>
+                      )}
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-black tracking-wide ${
+                        isAttributeActive(attr)
+                          ? 'bg-mintcom-green/10 text-mintcom-green'
+                          : 'bg-mintcom-red/10 text-mintcom-red'
+                      } shrink-0`}>
+                        {isAttributeActive(attr) ? t('common.active', 'Active') : t('common.inactive', 'Inactive')}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
                       {isAttributeActive(attr) && (
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             openSubAttributeModal(attr.id);
                           }}
-                          className="w-10 h-10 flex items-center justify-center bg-mintcom-green text-black rounded-xl hover:bg-[#5fa888] transition-all shadow-lg shadow-mintcom-green/20 group active:scale-90"
+                          className="w-10 h-10 flex items-center justify-center bg-mintcom-green text-black rounded-xl hover:bg-[#5fa888] transition-all shadow-lg shadow-mintcom-green/20 active:scale-90"
                           title={t('attributes.list.addOption')}
                         >
-                          <Plus size={20} strokeWidth={3} className="transition-transform group-hover:rotate-90" />
+                          <Plus size={20} strokeWidth={3} />
                         </button>
                       )}
                       <button onClick={(e) => { e.stopPropagation(); openAttributeModal(attr); }} className="p-2 rounded-xl bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:text-mintcom-green hover:border-mintcom-green/30 transition-colors" title={t('common.edit')}>
@@ -903,10 +903,10 @@ export function AddonsPage() {
                       {isAttributeActive(attr) && (
                         <button
                           onClick={() => openSubAttributeModal(attr.id)}
-                          className="w-8 h-8 flex items-center justify-center bg-mintcom-green text-black rounded-lg hover:bg-[#5fa888] transition-all shadow-md shadow-mintcom-green/10 group active:scale-90"
+                          className="w-8 h-8 flex items-center justify-center bg-mintcom-green text-black rounded-lg hover:bg-[#5fa888] transition-all shadow-md shadow-mintcom-green/10 active:scale-90"
                           title={t('attributes.list.addOption')}
                         >
-                          <Plus size={16} strokeWidth={3} className="transition-transform group-hover:rotate-90" />
+                          <Plus size={16} strokeWidth={3} />
                         </button>
                       )}
                     </div>

@@ -4,11 +4,13 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 
 import en from './locales/en.json';
 import ar from './locales/ar.json';
+import zh from './locales/zh.json';
 import { toSentenceCase } from '../utils/textCase';
 
 const resources = {
   en: { translation: en },
   ar: { translation: ar },
+  zh: { translation: zh },
 };
 
 const sentenceCaseTranslationKeys = new Set([

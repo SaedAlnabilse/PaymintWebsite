@@ -29,6 +29,7 @@ const FormatCurrency = ({ value }: { value: number }) => {
       value={value} 
       currency={currencySymbol} 
       className="text-sm"
+      containerClassName="justify-end w-full"
     />
   );
 };
@@ -397,7 +398,7 @@ export const StaffView = React.memo(function StaffView({ shifts, selectedEmploye
                               />
                             </div>
                           </td>
-                          <td className="px-6 py-4">
+                          <td className="px-6 py-4 text-start">
                             <span className="font-bold text-gray-900 dark:text-white text-sm" title={emp.username}>{emp.username}</span>
                           </td>
                           <td className="px-6 py-4 text-end font-black text-gray-900 dark:text-white">
