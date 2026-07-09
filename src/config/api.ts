@@ -169,13 +169,21 @@ api.interceptors.response.use(
       console.error('[API] Check: 1) CORS credentials, 2) Cookie sameSite/secure settings');
     }
     
+    // A 401 that only means "no establishment selected yet" (e.g. a fresh tab
+    // whose sessionStorage has no currentEstablishment) is NOT a dead session.
+    // Wiping storage + redirecting here logs the user out "randomly".
+    const isMissingEstablishment401 =
+      error.response?.status === 401 &&
+      getApiErrorMessage(error).includes('Establishment ID not found');
+
     // Only auto-redirect on 401 if NOT on login page and NOT a login/logout request
     // AND only if we're not in the initialization phase (to avoid loops)
-    const shouldRedirect = error.response?.status === 401 && 
-                          !isLoginRequest && 
-                          !isLogoutRequest && 
+    const shouldRedirect = error.response?.status === 401 &&
+                          !isLoginRequest &&
+                          !isLogoutRequest &&
                           !isLoginPage &&
                           !skipAuthRedirect &&
+                          !isMissingEstablishment401 &&
                           localStorage.getItem('account'); // Only if we think we're logged in
 
     if (shouldRedirect) {
