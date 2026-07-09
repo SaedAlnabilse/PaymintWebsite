@@ -52,6 +52,7 @@ import { RealtimeStatusIndicator } from './RealtimeStatusIndicator';
 import toast from 'react-hot-toast';
 import realtimeService from '../services/realtimeService';
 import {
+  DASHBOARD_SESSION_KICKED_CODE,
   dashboardSessionService,
   getDashboardClientId,
   getDashboardSessionErrorMessage,
@@ -248,22 +249,77 @@ export function DashboardLayout() {
 
   useEffect(() => {
     const sessionId = dashboardSession?.id;
+    const establishmentId = currentEstablishment?.id;
     if (!sessionId) return;
 
-    const intervalId = window.setInterval(async () => {
+    let heartbeatInFlight = false;
+
+    const runHeartbeat = async () => {
+      if (heartbeatInFlight) return;
+      heartbeatInFlight = true;
       try {
         const result = await dashboardSessionService.heartbeat(sessionId);
         dashboardSessionRef.current = result.session;
         setDashboardSession(result.session);
       } catch (error: any) {
-        if (isDashboardSessionEnded(error)) {
-          await forceDashboardLogout(getDashboardSessionErrorMessage(error));
-        }
-      }
-    }, 25_000);
+        if (!isDashboardSessionEnded(error)) return;
 
-    return () => window.clearInterval(intervalId);
-  }, [dashboardSession?.id, forceDashboardLogout]);
+        // Only an explicit takeover by someone else warrants a logout.
+        if (error?.response?.data?.code === DASHBOARD_SESSION_KICKED_CODE) {
+          await forceDashboardLogout(getDashboardSessionErrorMessage(error));
+          return;
+        }
+
+        // The seat merely EXPIRED (laptop sleep, throttled background tab,
+        // brief offline period). Nobody took it over — re-claim it silently
+        // instead of logging the user out "from nowhere".
+        if (!establishmentId) return;
+        try {
+          const result = await dashboardSessionService.enter(establishmentId);
+          dashboardSessionRef.current = result.session;
+          setDashboardSession(result.session);
+        } catch (reenterError: any) {
+          if (isDashboardSessionConflict(reenterError)) {
+            // Someone claimed the seat while we were away: show the normal
+            // takeover dialog instead of nuking the whole login.
+            dashboardSessionRef.current = null;
+            setDashboardSession(null);
+            setSessionConflict(reenterError.response.data);
+          } else if (isDashboardSessionEnded(reenterError)) {
+            await forceDashboardLogout(
+              getDashboardSessionErrorMessage(reenterError),
+            );
+          }
+          // Transient errors (network blips): keep the interval running and
+          // retry on the next tick.
+        }
+      } finally {
+        heartbeatInFlight = false;
+      }
+    };
+
+    const intervalId = window.setInterval(runHeartbeat, 25_000);
+
+    // After waking from sleep or returning to a throttled background tab,
+    // refresh the seat immediately rather than waiting for the next tick.
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') {
+        void runHeartbeat();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('online', onVisible);
+
+    return () => {
+      window.clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('online', onVisible);
+    };
+  }, [
+    dashboardSession?.id,
+    currentEstablishment?.id,
+    forceDashboardLogout,
+  ]);
 
   useEffect(() => {
     const unsubscribe = realtimeService.onRaw<DashboardSessionKickPayload>(
