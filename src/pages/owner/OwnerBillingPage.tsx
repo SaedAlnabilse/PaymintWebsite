@@ -422,14 +422,12 @@ export function OwnerBillingPage() {
                         <p className="text-[10px] font-bold text-gray-400 tracking-widest capitalize mb-1">
                             {t('owner.billing.monthly')}
                         </p>
-                        <div className="flex items-baseline justify-end">
-                            <StatValue 
-                                value={totalMonthlyCost} 
-                                currency="USD"
-                                className="text-xl"
-                            />
-                            <span className="text-xs font-bold text-gray-400 ml-0.5">{t('common.monthly')}</span>
-                        </div>
+                        <StatValue
+                            value={totalMonthlyCost}
+                            currency="USD"
+                            className="text-xl"
+                            containerClassName="justify-end"
+                        />
                     </div>
                     {hasYearlyPlan && (
                         <>
@@ -438,14 +436,12 @@ export function OwnerBillingPage() {
                                 <p className="text-[10px] font-bold text-mintcom-green tracking-widest capitalize mb-1">
                                     {t('owner.billing.yearly')}
                                 </p>
-                                <div className="flex items-baseline justify-end">
-                                    <StatValue 
-                                        value={totalYearlyCost} 
-                                        currency="USD"
-                                        className="text-xl text-mintcom-green"
-                                    />
-                                    <span className="text-xs font-bold text-gray-400 ml-0.5">{t('common.yearly')}</span>
-                                </div>
+                                <StatValue
+                                    value={totalYearlyCost}
+                                    currency="USD"
+                                    className="text-xl text-mintcom-green"
+                                    containerClassName="justify-end"
+                                />
                             </div>
                         </>
                     )}
@@ -604,7 +600,7 @@ export function OwnerBillingPage() {
                         <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-4 bg-gray-50 dark:bg-white/[0.02] border-b border-gray-200 dark:border-white/5 table-header-row items-center">
                             <div className="col-span-4 flex items-center gap-3">
                                 <div className="w-10" />
-                                <span>{toHeaderCase(t('owner.billing.service'))}</span>
+                                <span>{toHeaderCase(t('owner.billing.location'))}</span>
                             </div>
                             <div className="col-span-2 text-center flex justify-center">{toHeaderCase(t('owner.billing.status'))}</div>
                             <div className="col-span-1 text-center flex justify-center">{toHeaderCase(t('owner.billing.cost'))}</div>
@@ -640,7 +636,7 @@ export function OwnerBillingPage() {
                                         key={est.id}
                                         className="grid grid-cols-1 md:grid-cols-12 gap-4 px-6 py-5 hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors items-center group relative"
                                     >
-                                        {/* Service */}
+                                        {/* Location */}
                                         <div className="col-span-4 flex items-center gap-3 min-w-0">
                                             <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-white/5 flex items-center justify-center text-sm font-bold text-gray-400 group-hover:text-mintcom-green transition-colors shrink-0">
                                                 {est.name.charAt(0)}
@@ -695,19 +691,10 @@ export function OwnerBillingPage() {
                                         </div>
 
                                         {/* Payment */}
-                                        <div className="col-span-2 text-center flex justify-center items-center">
-                                            <span className="dashboard-card-meta truncate text-center">
+                                        <div className="col-span-2 text-center flex justify-center items-center min-w-0">
+                                            <span className="dashboard-card-meta truncate text-center" title={est.paymentCard ? `${est.paymentCard.brand} •••• ${est.paymentCard.last4}` : undefined}>
                                                 {est.paymentCard ? `${est.paymentCard.brand} •••• ${est.paymentCard.last4}` : t('owner.billing.noCard')}
                                             </span>
-                                            {!isCanceledEstablishment(est) && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => openChangeCardForEstablishment(est)}
-                                                    className="ml-2 rounded-lg border border-gray-200 px-2 py-1 text-[10px] font-black tracking-wide text-gray-500 transition hover:border-mintcom-green/40 hover:text-mintcom-green dark:border-white/10 dark:text-gray-400"
-                                                >
-                                                    {t('owner.billing.change_card', { defaultValue: 'Change' })}
-                                                </button>
-                                            )}
                                         </div>
 
                                         {/* Actions */}

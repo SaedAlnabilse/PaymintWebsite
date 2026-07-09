@@ -55,9 +55,18 @@ export const PaymentsView = React.memo(function PaymentsView({ salesData, effect
       value: Number(item.value) || 0
     }));
   const paymentTotal = paymentMethodBreakdown.reduce((sum: number, item: any) => sum + item.value, 0);
+  const hasPaymentData = paymentTotal > 0.005;
+  // Zero-value pie slices don't render — show a solid gray ring when empty.
+  const emptyPieFill = isDark ? '#334155' : '#e5e7eb';
+  const pieChartData = hasPaymentData
+    ? paymentMethodBreakdown.map((item: any) => ({
+        ...item,
+        value: Math.max(Number(item.value) || 0, 0),
+      }))
+    : [{ name: '__empty__', value: 1 }];
 
   const getMethodName = (name: any) => {
-    if (!name) return '—';
+    if (!name || name === '__empty__') return '—';
     const nameStr = String(name).toUpperCase();
     if (nameStr === 'CARD') return t('orders.payment.allCards');
     if (nameStr === 'CASH') return t('orders.payment.cash');
@@ -139,54 +148,61 @@ export const PaymentsView = React.memo(function PaymentsView({ salesData, effect
           {/* Compact pie chart */}
           <div className="lg:col-span-2 p-5 sm:p-6 flex flex-col items-center justify-center border-b lg:border-b-0 lg:border-e border-gray-100 dark:border-white/5">
             <div className="h-[200px] w-full max-w-[240px] relative">
-              {paymentMethodBreakdown.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart margin={{ top: 4, right: 4, bottom: 4, left: 4 }}>
-                    <Pie
-                      data={paymentMethodBreakdown}
-                      innerRadius={52}
-                      outerRadius={78}
-                      paddingAngle={3}
-                      dataKey="value"
-                      animationDuration={1000}
-                      stroke="none"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                    >
-                      {paymentMethodBreakdown.map((_: any, index: number) => (
-                        <Cell key={index} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                      <Label
-                        content={({ viewBox }: any) => {
-                          const { cx, cy } = viewBox;
-                          return (
-                            <g>
-                              <text
-                                x={cx}
-                                y={cy - 6}
-                                fill={isDark ? '#ffffff' : '#111827'}
-                                textAnchor="middle"
-                                dominantBaseline="central"
-                                style={{ fontSize: 22, fontWeight: 800 }}
-                              >
-                                {paymentMethodBreakdown.length}
-                              </text>
-                              <text
-                                x={cx}
-                                y={cy + 14}
-                                fill="#6b7280"
-                                textAnchor="middle"
-                                dominantBaseline="central"
-                                style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em' }}
-                              >
-                                {t('orders.reports.payments.methods').toUpperCase()}
-                              </text>
-                            </g>
-                          );
-                        }}
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart margin={{ top: 4, right: 4, bottom: 4, left: 4 }}>
+                  <Pie
+                    data={pieChartData}
+                    innerRadius={52}
+                    outerRadius={78}
+                    paddingAngle={hasPaymentData ? 3 : 0}
+                    dataKey="value"
+                    animationDuration={hasPaymentData ? 1000 : 0}
+                    stroke="none"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    isAnimationActive={hasPaymentData}
+                  >
+                    {pieChartData.map((_: any, index: number) => (
+                      <Cell
+                        key={index}
+                        fill={hasPaymentData ? COLORS[index % COLORS.length] : emptyPieFill}
                       />
-                    </Pie>
+                    ))}
+                    <Label
+                      content={({ viewBox }: any) => {
+                        const { cx, cy } = viewBox;
+                        const centerCount = hasPaymentData
+                          ? paymentMethodBreakdown.filter((r: any) => Number(r.value) > 0).length || paymentMethodBreakdown.length
+                          : 0;
+                        return (
+                          <g>
+                            <text
+                              x={cx}
+                              y={cy - 6}
+                              fill={isDark ? '#ffffff' : '#111827'}
+                              textAnchor="middle"
+                              dominantBaseline="central"
+                              style={{ fontSize: 22, fontWeight: 800 }}
+                            >
+                              {centerCount}
+                            </text>
+                            <text
+                              x={cx}
+                              y={cy + 14}
+                              fill="#6b7280"
+                              textAnchor="middle"
+                              dominantBaseline="central"
+                              style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em' }}
+                            >
+                              {t('orders.reports.payments.methods').toUpperCase()}
+                            </text>
+                          </g>
+                        );
+                      }}
+                    />
+                  </Pie>
+                  {hasPaymentData && (
                     <Tooltip
                       contentStyle={{
                         backgroundColor: isDark ? '#0B1120' : '#fff',
@@ -209,17 +225,9 @@ export const PaymentsView = React.memo(function PaymentsView({ salesData, effect
                       )}
                       labelFormatter={(name: any) => getMethodName(name)}
                     />
-                  </PieChart>
-                </ResponsiveContainer>
-              ) : (
-                <AnalyticsEmptyState
-                  icon={CreditCard}
-                  title={t('orders.reports.payments.noData')}
-                  description={t('orders.reports.payments.detailsDesc')}
-                  compact
-                  className="h-full"
-                />
-              )}
+                  )}
+                </PieChart>
+              </ResponsiveContainer>
             </div>
           </div>
 
