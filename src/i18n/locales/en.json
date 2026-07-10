@@ -4758,7 +4758,7 @@
       "cancel": {
         "button": "Confirm Cancellation",
         "title": "Cancel Subscription",
-        "warning": "Canceling locks access. Your data for \"{{name}}\" will be deleted in 30 days."
+        "warning": "You keep full access to \"{{name}}\" until the end of the paid period. After that it is locked, and its data is deleted 30 days later. You can resume anytime before then."
       },
       "deleteCard": {
         "button": "Delete Card",

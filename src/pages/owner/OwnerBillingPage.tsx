@@ -117,17 +117,21 @@ export function OwnerBillingPage() {
         const targetId = securityModal.targetId;
         const mode = securityModal.mode;
 
-        // Optimistic update for cancellation
+        // Optimistic update for cancellation. Paid subscriptions cancel at the
+        // end of the paid period ("Cancels Soon"); anything else (trial,
+        // past-due) is canceled immediately. fetchBillingInfo below replaces
+        // this with the server's real state either way.
         if (mode === 'cancel') {
             setBillingData(prev => {
                 if (!prev) return prev;
                 return {
                     ...prev,
-                    establishments: prev.establishments.map(est =>
-                        est.id === targetId
-                            ? { ...est, subscriptionStatus: 'CANCELED', cancelAtPeriodEnd: false }
-                            : est
-                    )
+                    establishments: prev.establishments.map(est => {
+                        if (est.id !== targetId) return est;
+                        return est.subscriptionStatus === 'ACTIVE'
+                            ? { ...est, cancelAtPeriodEnd: true, canceledAt: new Date().toISOString() }
+                            : { ...est, subscriptionStatus: 'CANCELED', cancelAtPeriodEnd: false };
+                    })
                 };
             });
         }

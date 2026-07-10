@@ -3,9 +3,15 @@ import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { useTheme } from '../context/ThemeContext';
 
-// Google Icon SVG Component
-const GoogleIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+// Official multicolor Google "G" mark (brand colors).
+const GoogleIcon = ({ size = 18 }: { size?: number }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 18 18"
+    xmlns="http://www.w3.org/2000/svg"
+    aria-hidden
+  >
     <path
       d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"
       fill="#4285F4"
@@ -91,6 +97,7 @@ export const GoogleAuthButton = forwardRef<GoogleAuthButtonHandle, GoogleAuthBut
     const [isLoading, setIsLoading] = useState(false);
     const [isScriptLoaded, setIsScriptLoaded] = useState(false);
     const buttonRef = useRef<HTMLDivElement>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
 
     // Load Google Identity Services script
     useEffect(() => {
@@ -129,7 +136,9 @@ export const GoogleAuthButton = forwardRef<GoogleAuthButtonHandle, GoogleAuthBut
       };
     }, [onError, t]);
 
-    // Initialize Google Sign-In when script is loaded
+    // Initialize Google Sign-In when script is loaded.
+    // Official GIS button is rendered invisibly over our custom UI so clicks
+    // still go through Google's iframe (required for credential / One Tap flow).
     useEffect(() => {
       if (!isScriptLoaded || !window.google || !GOOGLE_CLIENT_ID) return;
 
@@ -139,7 +148,6 @@ export const GoogleAuthButton = forwardRef<GoogleAuthButtonHandle, GoogleAuthBut
       };
       const buttonElement = buttonRef.current;
 
-      // Small delay to ensure the buttonRef div is rendered in the DOM
       const timeoutId = setTimeout(() => {
         try {
           activeGoogleCredentialCallback = credentialCallback;
@@ -158,22 +166,23 @@ export const GoogleAuthButton = forwardRef<GoogleAuthButtonHandle, GoogleAuthBut
             initializedGoogleClientId = GOOGLE_CLIENT_ID;
           }
 
-          // Use renderButton for correct incognito/strict cookie support
           if (buttonElement) {
             buttonElement.replaceChildren();
-            window.google!.accounts.id.renderButton(
-              buttonElement,
-              {
-                type: 'standard',
-                theme: resolvedTheme === 'dark' ? 'filled_black' : 'outline',
-                size: 'large',
-                text: text,
-                shape: 'rectangular',
-                logo_alignment: 'center',
-                width: buttonElement.parentElement?.offsetWidth || 400,
-                locale: i18n.language,
-              }
+            const width = Math.max(
+              containerRef.current?.offsetWidth || 0,
+              buttonElement.parentElement?.offsetWidth || 0,
+              320
             );
+            window.google!.accounts.id.renderButton(buttonElement, {
+              type: 'standard',
+              theme: resolvedTheme === 'dark' ? 'filled_black' : 'outline',
+              size: 'large',
+              text: text,
+              shape: 'rectangular',
+              logo_alignment: 'left',
+              width,
+              locale: i18n.language,
+            });
           }
         } catch (error) {
           console.error('[GoogleAuth] Failed to initialize:', error);
@@ -209,7 +218,6 @@ export const GoogleAuthButton = forwardRef<GoogleAuthButtonHandle, GoogleAuthBut
 
             if (reason === 'opt_out_or_no_session') {
               onError?.(t('auth.errors.googleNoSession'));
-              // Instruct user since programmatic popup is blocked
               toast.error(t('auth.errors.clickGoogleDirectly', 'Please click the "Sign in with Google" button directly to continue.'));
             } else if (reason === 'suppressed_by_user') {
               onError?.(t('auth.errors.googleCancelled'));
@@ -242,28 +250,38 @@ export const GoogleAuthButton = forwardRef<GoogleAuthButtonHandle, GoogleAuthBut
       signin: t('auth.google.signIn'),
     }[text];
 
-    return (
-      <div className={`relative w-full ${disabled || isLoading ? 'opacity-50 pointer-events-none' : ''}`}>
-        {!isScriptLoaded && (
-          <div
-            className="group relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700 shadow-sm transition-all dark:border-white/10 dark:bg-white/[0.04] dark:text-gray-100"
-          >
-            <GoogleIcon />
-            <span>{t('common.connecting')}</span>
-          </div>
-        )}
+    const showLoading = isLoading || !isScriptLoaded;
 
+    return (
+      <div
+        ref={containerRef}
+        className={`relative w-full ${disabled || isLoading ? 'opacity-50 pointer-events-none' : ''}`}
+      >
+        {/* Custom UI — correct multicolor G + layout matching AppleAuthButton */}
+        <div
+          className="pointer-events-none flex w-full items-center justify-center gap-3 overflow-hidden rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-900 shadow-sm dark:border-white/10 dark:bg-white/[0.04] dark:text-white"
+          aria-hidden
+        >
+          <span className="flex h-5 w-5 shrink-0 items-center justify-center">
+            <GoogleIcon size={18} />
+          </span>
+          <span>{showLoading ? t('common.connecting') : buttonText}</span>
+        </div>
+
+        {/* Invisible official GIS button on top so OAuth clicks still work */}
         {isScriptLoaded && (
           <div
             ref={buttonRef}
             aria-label={buttonText}
-            className="google-auth-button overflow-hidden rounded-xl [&>div]:!w-full [&_iframe]:!w-full"
+            className="google-auth-button absolute inset-0 z-10 overflow-hidden opacity-0 [&>div]:!h-full [&>div]:!w-full [&_iframe]:!h-full [&_iframe]:!w-full [&_iframe]:!min-h-full"
           />
         )}
       </div>
     );
   }
 );
+
+GoogleAuthButton.displayName = 'GoogleAuthButton';
 
 // Divider component for "or" separator
 export function AuthDivider() {
@@ -278,4 +296,3 @@ export function AuthDivider() {
     </div>
   );
 }
-
