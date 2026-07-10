@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -69,16 +69,16 @@ export function SignUpPage() {
     { label: t('auth.validation.passwordNumber'), met: /[0-9]/.test(password) },
   ];
 
-  const handleGoogleAuthClick = (e: React.MouseEvent) => {
+  const handleGoogleAuthClick = useCallback((e: React.MouseEvent) => {
     if (!agreed) {
       e.stopPropagation();
       setModalAgreed(false);
       setModalSubscribeToNews(false);
       setShowGoogleTermsModal(true);
     }
-  };
+  }, [agreed]);
 
-  const handleGoogleSuccess = async (credential: string) => {
+  const handleGoogleSuccess = useCallback(async (credential: string) => {
     if (!agreed) {
       setError('agreeToTerms', { type: 'manual', message: t('auth.validation.termsRequired') });
       return;
@@ -94,9 +94,9 @@ export function SignUpPage() {
     } catch {
       toast.error(t('common.error'));
     }
-  };
+  }, [agreed, subscribeToNews, loginWithGoogle, navigate, setError, t]);
 
-  const handleGoogleError = (error: string) => toast.error(error);
+  const handleGoogleError = useCallback((error: string) => toast.error(error), []);
 
   // Gate the Apple popup behind the terms checkbox, mirroring the Google flow.
   const handleAppleBeforeSignIn = () => {
