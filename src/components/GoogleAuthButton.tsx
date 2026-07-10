@@ -255,11 +255,11 @@ export const GoogleAuthButton = forwardRef<GoogleAuthButtonHandle, GoogleAuthBut
     return (
       <div
         ref={containerRef}
-        className={`relative w-full ${disabled || isLoading ? 'opacity-50 pointer-events-none' : ''}`}
+        className={`relative isolate h-[48px] w-full overflow-hidden rounded-xl ${disabled || isLoading ? 'opacity-50 pointer-events-none' : ''}`}
       >
-        {/* Custom UI — correct multicolor G + layout matching AppleAuthButton */}
+        {/* Visible branded look (under the GIS hit-target) */}
         <div
-          className="pointer-events-none flex w-full items-center justify-center gap-3 overflow-hidden rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-900 shadow-sm dark:border-white/10 dark:bg-white/[0.04] dark:text-white"
+          className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center gap-3 border border-gray-200 bg-white px-4 text-sm font-semibold text-gray-900 shadow-sm dark:border-white/10 dark:bg-white/[0.04] dark:text-white"
           aria-hidden
         >
           <span className="flex h-5 w-5 shrink-0 items-center justify-center">
@@ -268,12 +268,16 @@ export const GoogleAuthButton = forwardRef<GoogleAuthButtonHandle, GoogleAuthBut
           <span>{showLoading ? t('common.connecting') : buttonText}</span>
         </div>
 
-        {/* Invisible official GIS button on top so OAuth clicks still work */}
+        {/*
+          Official GIS control — clipped to this 48px box only.
+          Must stay on top so Google receives a real user gesture; fixed height
+          prevents the iframe from expanding and blocking the rest of the form.
+        */}
         {isScriptLoaded && (
           <div
             ref={buttonRef}
             aria-label={buttonText}
-            className="google-auth-button absolute inset-0 z-10 overflow-hidden opacity-0 [&>div]:!h-full [&>div]:!w-full [&_iframe]:!h-full [&_iframe]:!w-full [&_iframe]:!min-h-full"
+            className="google-auth-button absolute inset-0 z-10 overflow-hidden opacity-0 [&>div]:!h-full [&>div]:!w-full [&>div]:!max-h-full [&_iframe]:!h-full [&_iframe]:!max-h-full [&_iframe]:!w-full"
           />
         )}
       </div>
