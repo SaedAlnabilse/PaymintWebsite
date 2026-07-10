@@ -121,7 +121,7 @@ export const PrivacyPolicyPage = () => {
                         </div>
                         <h1 className="font-magilio text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-4 tracking-tight">{t('legal.privacy.title')}</h1>
                         <p className="label-strong font-outfit">
-                            {t('legal.privacy.lastUpdated')}: {new Date('2026-06-14').toLocaleDateString(isArabic ? 'ar-EG' : 'en-US', { month: 'long', day: 'numeric', year: 'numeric' }).toUpperCase()}
+                            {t('legal.privacy.lastUpdated')}: {new Date('2026-07-11').toLocaleDateString(isArabic ? 'ar-EG' : 'en-US', { month: 'long', day: 'numeric', year: 'numeric' }).toUpperCase()}
                         </p>
                     </motion.div>
                 </div>
