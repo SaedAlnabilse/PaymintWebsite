@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -28,7 +28,7 @@ import { LanguageSwitcher } from '../components/LanguageSwitcher';
 import { ThemeToggle } from '../components/ThemeToggle';
 
 export function SignUpPage() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const isRtl = t('common.locale') === 'ar';
 
   const signUpSchema = getSignUpSchema(t);
@@ -44,42 +44,9 @@ export function SignUpPage() {
   const [subscribeToNews, setSubscribeToNews] = useState(false);
   const [modalSubscribeToNews, setModalSubscribeToNews] = useState(false);
   const googleAuthRef = useRef<GoogleAuthButtonHandle>(null);
-  const leftCardRef = useRef<HTMLDivElement>(null);
-  const rightColRef = useRef<HTMLDivElement>(null);
-  const [matchedCardHeight, setMatchedCardHeight] = useState<number | null>(null);
-  const [rightCardTop, setRightCardTop] = useState<number | null>(null);
 
   const navigate = useNavigate();
   const { register: registerAccount, loginWithGoogle, loginWithApple, resendVerification } = useAuth();
-
-  // Pin right board to the same top edge + height as the left form card
-  useEffect(() => {
-    const left = leftCardRef.current;
-    const col = rightColRef.current;
-    if (!left || !col) return;
-
-    const sync = () => {
-      const leftRect = left.getBoundingClientRect();
-      const colRect = col.getBoundingClientRect();
-      setMatchedCardHeight(leftRect.height);
-      // Absolute top relative to the column border-box (no padding math)
-      setRightCardTop(Math.max(0, leftRect.top - colRect.top));
-    };
-
-    // Wait a frame so layout/fonts settle before measuring
-    const raf = requestAnimationFrame(sync);
-    const ro = new ResizeObserver(sync);
-    ro.observe(left);
-    ro.observe(col);
-    window.addEventListener('resize', sync);
-    window.addEventListener('scroll', sync, true);
-    return () => {
-      cancelAnimationFrame(raf);
-      ro.disconnect();
-      window.removeEventListener('resize', sync);
-      window.removeEventListener('scroll', sync, true);
-    };
-  }, [registrationSuccess, isSubmitting, i18n.language]);
 
   const {
     register, handleSubmit, watch, setError, setValue,
@@ -270,10 +237,13 @@ export function SignUpPage() {
     { title: t('auth.signup.feature4Title'), desc: t('auth.signup.feature4Desc'), icon: UserCog },
   ];
 
+  const rightPanelBg =
+    'bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-[#070707] dark:via-[#0a0a0a] dark:to-[#070707]';
+
   return (
     <div
       dir={isRtl ? 'rtl' : 'ltr'}
-      className="relative flex min-h-screen bg-white transition-colors duration-300 dark:bg-[#050505]"
+      className="relative min-h-screen bg-white transition-colors duration-300 dark:bg-[#050505]"
     >
       <Helmet>
         <title>{t('metadata.signup.title')}</title>
@@ -308,49 +278,81 @@ export function SignUpPage() {
       </AnimatePresence>
 
       {/* ── Minimal top bar ── */}
-      <div className="absolute inset-x-0 top-0 z-40 flex items-center justify-between px-6 py-4 md:px-10">
-        <Link to="/" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-40 flex items-center justify-between px-6 py-4 md:px-10">
+        <Link
+          to="/"
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className="pointer-events-auto"
+        >
           <img src={MintcomLogoGreen} alt="Mintcom" className="h-8 w-auto object-contain dark:hidden" />
           <img src={MintcomLogoWhite} alt="Mintcom" className="hidden h-8 w-auto object-contain dark:block" />
         </Link>
-        <div className="flex items-center gap-3">
+        <div className="pointer-events-auto flex items-center gap-3">
           <LanguageSwitcher />
           <ThemeToggle />
         </div>
       </div>
 
-      {/* ── Left: Form ── */}
-      <div className="flex flex-1 flex-col items-center justify-center overflow-y-auto px-6 py-12 pt-24 md:px-10">
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-          className="w-full max-w-md"
-        >
-          {/* Back link */}
-          <a
-            href="/"
-            className="group mb-8 inline-flex items-center gap-2 text-sm font-semibold text-gray-500 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+      {/*
+        CSS grid: row1 = headers (left title / right empty), row2 = cards.
+        Both cards share the same top edge and stretch to the same height.
+        No absolute positioning — form stays fully clickable.
+      */}
+      <div className="grid min-h-screen grid-cols-1 lg:grid-cols-2 lg:grid-rows-[auto_minmax(0,1fr)]">
+        {/* ── Row 1 / Col 1: Back + title ── */}
+        <div className="flex justify-center px-6 pt-24 md:px-10 lg:px-10">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+            className="w-full max-w-md"
           >
-            <ArrowLeft size={15} className={`transition-transform group-hover:-translate-x-0.5 ${isRtl ? 'rotate-180' : ''}`} />
-            {t('auth.signup.backButton')}
-          </a>
+            <a
+              href="/"
+              className="group mb-8 inline-flex items-center gap-2 text-sm font-semibold text-gray-500 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+            >
+              <ArrowLeft size={15} className={`transition-transform group-hover:-translate-x-0.5 ${isRtl ? 'rotate-180' : ''}`} />
+              {t('auth.signup.backButton')}
+            </a>
+            <div className="mb-8">
+              <h1 className="font-magilio text-3xl font-bold tracking-tight text-gray-900 dark:text-white md:text-4xl">
+                {t('auth.signup.title')}
+              </h1>
+              <p className="mt-2 text-sm font-medium text-gray-500 dark:text-gray-400">
+                {t('auth.signup.subtitle')}
+              </p>
+            </div>
+          </motion.div>
+        </div>
 
-          {/* Heading */}
-          <div className="mb-8">
-            <h1 className="font-magilio text-3xl font-bold tracking-tight text-gray-900 dark:text-white md:text-4xl">
-              {t('auth.signup.title')}
-            </h1>
-            <p className="mt-2 text-sm font-medium text-gray-500 dark:text-gray-400">
-              {t('auth.signup.subtitle')}
-            </p>
+        {/* ── Row 1 / Col 2: right column top (same row height as left header) ── */}
+        <div className={`relative hidden border-s border-gray-100 lg:block dark:border-white/5 ${rightPanelBg}`}>
+          <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+            <div className="absolute -top-24 right-[8%] h-[360px] w-[360px] rounded-full bg-mintcom-green/12 blur-[110px]" />
+            <div
+              className="absolute inset-0 opacity-[0.05] dark:opacity-[0.07]"
+              style={{
+                backgroundImage:
+                  'linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)',
+                backgroundSize: '48px 48px',
+                color: '#7dc6a2',
+                maskImage: 'radial-gradient(ellipse at center, black 35%, transparent 78%)',
+                WebkitMaskImage: 'radial-gradient(ellipse at center, black 35%, transparent 78%)',
+              }}
+            />
           </div>
+        </div>
 
-          {/* Glass card */}
-          <div
-            ref={leftCardRef}
-            className="relative overflow-hidden rounded-3xl border border-gray-200/70 bg-white/90 p-8 shadow-[0_4px_15px_-6px_rgba(0,0,0,0.06)] backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.03] dark:shadow-none"
+        {/* ── Row 2 / Col 1: Form card ── */}
+        <div className="flex justify-center px-6 pb-12 md:px-10 lg:px-10">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}
+            className="flex w-full max-w-md lg:h-full"
           >
+          {/* Glass card */}
+          <div className="relative flex w-full flex-col overflow-hidden rounded-3xl border border-gray-200/70 bg-white/90 p-8 shadow-[0_4px_15px_-6px_rgba(0,0,0,0.06)] backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.03] dark:shadow-none lg:min-h-full">
             {/* Subtle corner glow */}
             <div aria-hidden className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-mintcom-green/10 blur-3xl" />
 
@@ -602,127 +604,101 @@ export function SignUpPage() {
               </p>
             </div>
           </div>
-        </motion.div>
-      </div>
-
-      {/* ── Right: Benefits board (mirrors left form card weight) ── */}
-      <aside className="relative hidden min-h-screen shrink-0 overflow-hidden border-s border-gray-100 bg-gradient-to-br from-gray-50 via-white to-gray-50 lg:flex lg:w-[46%] lg:max-w-xl lg:flex-col lg:self-stretch dark:border-white/5 dark:from-[#070707] dark:via-[#0a0a0a] dark:to-[#070707]">
-        {/* Background ambient */}
-        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute -top-24 right-[8%] h-[360px] w-[360px] rounded-full bg-mintcom-green/12 blur-[110px]" />
-          <div className="absolute -bottom-28 left-[5%] h-[320px] w-[320px] rounded-full bg-emerald-400/8 blur-[110px]" />
-          <div
-            className="absolute inset-0 opacity-[0.05] dark:opacity-[0.07]"
-            style={{
-              backgroundImage:
-                'linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)',
-              backgroundSize: '48px 48px',
-              color: '#7dc6a2',
-              maskImage: 'radial-gradient(ellipse at center, black 35%, transparent 78%)',
-              WebkitMaskImage: 'radial-gradient(ellipse at center, black 35%, transparent 78%)',
-            }}
-          />
+          </motion.div>
         </div>
 
-        {/* Absolute-positioned board locked to left card top + height */}
-        <div ref={rightColRef} className="relative z-10 h-full w-full">
-          <div
-            style={{
-              position: 'absolute',
-              top: rightCardTop ?? 0,
-              left: 0,
-              right: 0,
-              height: matchedCardHeight ?? undefined,
-            }}
-            className="px-6 md:px-8"
-          >
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
-            className="mx-auto flex h-full w-full max-w-[440px] flex-col overflow-hidden rounded-3xl border border-gray-200/70 bg-white/90 p-6 shadow-[0_4px_15px_-6px_rgba(0,0,0,0.06)] backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.03] dark:shadow-none xl:p-7"
-          >
-              {/* Corner glow — matches left form card */}
-              <div aria-hidden className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-mintcom-green/10 blur-3xl" />
-
-              <div className="relative flex min-h-0 flex-1 flex-col">
-                {/* Badge */}
-                <div className="mb-4 inline-flex w-fit items-center gap-2 rounded-full border border-mintcom-green/25 bg-mintcom-green/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-mintcom-green">
-                  <Zap size={11} fill="currentColor" />
-                  <span>{t('auth.signup.allFeaturesIncluded')}</span>
-                </div>
-
-                <h2 className="font-magilio text-[1.65rem] font-bold leading-[1.08] tracking-tight text-gray-900 dark:text-white xl:text-[2rem]">
-                  {t('landing.features.title')}{' '}
-                  <span className="bg-gradient-to-r from-mintcom-green via-emerald-400 to-mintcom-green bg-clip-text text-transparent">
-                    {t('landing.features.titleHighlight')}
-                  </span>
-                </h2>
-                <p className="mt-2 text-xs font-light leading-relaxed text-gray-600 line-clamp-2 dark:text-gray-400">
-                  {t('landing.features.subtitle')}
-                </p>
-
-                {/* Feature rows — title + description, evenly fill height */}
-                <ul className="mt-5 flex min-h-0 flex-1 flex-col gap-2">
-                  {signupFeatures.map((item, i) => {
-                    const Icon = item.icon;
-                    const index = String(i + 1).padStart(2, '0');
-                    return (
-                      <motion.li
-                        key={item.title}
-                        initial={{ opacity: 0, x: 12 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.16 + i * 0.04, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                        className="group relative flex min-h-0 flex-1 items-center gap-3 overflow-hidden rounded-2xl border border-gray-100/90 bg-gradient-to-r from-gray-50/90 to-white/60 px-3 py-2.5 transition-all duration-300 hover:border-mintcom-green/30 hover:from-mintcom-green/[0.07] hover:to-mintcom-green/[0.02] dark:border-white/[0.07] dark:from-white/[0.04] dark:to-white/[0.015] dark:hover:border-mintcom-green/25 dark:hover:from-mintcom-green/[0.08] dark:hover:to-transparent"
-                      >
-                        {/* Soft mint accent edge */}
-                        <span
-                          aria-hidden
-                          className="absolute inset-y-2 start-0 w-0.5 rounded-full bg-mintcom-green/0 transition-all duration-300 group-hover:bg-mintcom-green"
-                        />
-
-                        {/* Icon */}
-                        <span className="relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-mintcom-green/10 text-mintcom-green shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] ring-1 ring-mintcom-green/15 transition-all duration-300 group-hover:scale-105 group-hover:bg-mintcom-green group-hover:text-black group-hover:ring-mintcom-green/40">
-                          <Icon size={16} strokeWidth={2.25} />
-                        </span>
-
-                        {/* Text */}
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2">
-                            <p className="truncate text-[13px] font-bold tracking-tight text-gray-900 dark:text-white">
-                              {item.title}
-                            </p>
-                            <span className="hidden shrink-0 font-mono text-[9px] font-semibold tracking-wider text-mintcom-green/50 sm:inline">
-                              {index}
-                            </span>
-                          </div>
-                          <p className="mt-0.5 line-clamp-1 text-[11px] font-light leading-snug text-gray-500 dark:text-gray-400">
-                            {item.desc}
-                          </p>
-                        </div>
-
-                        {/* Subtle trailing check on hover */}
-                        <Check
-                          size={14}
-                          strokeWidth={2.5}
-                          className="flex-shrink-0 text-mintcom-green opacity-0 transition-all duration-300 group-hover:opacity-100"
-                          aria-hidden
-                        />
-                      </motion.li>
-                    );
-                  })}
-                </ul>
-
-                {/* Trust footer */}
-                <div className="mt-4 flex shrink-0 items-center gap-2 border-t border-gray-100 pt-4 text-xs font-medium text-gray-500 dark:border-white/10 dark:text-gray-400">
-                  <CheckCircle2 size={14} className="flex-shrink-0 text-mintcom-green" />
-                  <span>{t('auth.signup.allFeaturesIncluded')}</span>
-                </div>
-              </div>
-            </motion.div>
+        {/* ── Row 2 / Col 2: Benefits board (same top + height as form card via grid) ── */}
+        <div className={`relative hidden border-s border-gray-100 lg:flex lg:justify-center lg:px-8 lg:pb-12 dark:border-white/5 ${rightPanelBg}`}>
+          <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+            <div className="absolute -bottom-28 left-[5%] h-[320px] w-[320px] rounded-full bg-emerald-400/8 blur-[110px]" />
+            <div
+              className="absolute inset-0 opacity-[0.05] dark:opacity-[0.07]"
+              style={{
+                backgroundImage:
+                  'linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)',
+                backgroundSize: '48px 48px',
+                color: '#7dc6a2',
+                maskImage: 'radial-gradient(ellipse at center, black 35%, transparent 78%)',
+                WebkitMaskImage: 'radial-gradient(ellipse at center, black 35%, transparent 78%)',
+              }}
+            />
           </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+            className="relative z-10 flex w-full max-w-[440px] flex-col overflow-hidden rounded-3xl border border-gray-200/70 bg-white/90 p-6 shadow-[0_4px_15px_-6px_rgba(0,0,0,0.06)] backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.03] dark:shadow-none xl:p-7 lg:min-h-full"
+          >
+            <div aria-hidden className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-mintcom-green/10 blur-3xl" />
+
+            <div className="relative flex min-h-0 flex-1 flex-col">
+              <div className="mb-4 inline-flex w-fit items-center gap-2 rounded-full border border-mintcom-green/25 bg-mintcom-green/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-mintcom-green">
+                <Zap size={11} fill="currentColor" />
+                <span>{t('auth.signup.allFeaturesIncluded')}</span>
+              </div>
+
+              <h2 className="font-magilio text-[1.65rem] font-bold leading-[1.08] tracking-tight text-gray-900 dark:text-white xl:text-[2rem]">
+                {t('landing.features.title')}{' '}
+                <span className="bg-gradient-to-r from-mintcom-green via-emerald-400 to-mintcom-green bg-clip-text text-transparent">
+                  {t('landing.features.titleHighlight')}
+                </span>
+              </h2>
+              <p className="mt-2 text-xs font-light leading-relaxed text-gray-600 line-clamp-2 dark:text-gray-400">
+                {t('landing.features.subtitle')}
+              </p>
+
+              <ul className="mt-5 flex min-h-0 flex-1 flex-col gap-2">
+                {signupFeatures.map((item, i) => {
+                  const Icon = item.icon;
+                  const index = String(i + 1).padStart(2, '0');
+                  return (
+                    <motion.li
+                      key={item.title}
+                      initial={{ opacity: 0, x: 12 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.16 + i * 0.04, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                      className="group relative flex min-h-0 flex-1 items-center gap-3 overflow-hidden rounded-2xl border border-gray-100/90 bg-gradient-to-r from-gray-50/90 to-white/60 px-3 py-2.5 transition-all duration-300 hover:border-mintcom-green/30 hover:from-mintcom-green/[0.07] hover:to-mintcom-green/[0.02] dark:border-white/[0.07] dark:from-white/[0.04] dark:to-white/[0.015] dark:hover:border-mintcom-green/25 dark:hover:from-mintcom-green/[0.08] dark:hover:to-transparent"
+                    >
+                      <span
+                        aria-hidden
+                        className="absolute inset-y-2 start-0 w-0.5 rounded-full bg-mintcom-green/0 transition-all duration-300 group-hover:bg-mintcom-green"
+                      />
+                      <span className="relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-mintcom-green/10 text-mintcom-green shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] ring-1 ring-mintcom-green/15 transition-all duration-300 group-hover:scale-105 group-hover:bg-mintcom-green group-hover:text-black group-hover:ring-mintcom-green/40">
+                        <Icon size={16} strokeWidth={2.25} />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="truncate text-[13px] font-bold tracking-tight text-gray-900 dark:text-white">
+                            {item.title}
+                          </p>
+                          <span className="hidden shrink-0 font-mono text-[9px] font-semibold tracking-wider text-mintcom-green/50 sm:inline">
+                            {index}
+                          </span>
+                        </div>
+                        <p className="mt-0.5 line-clamp-1 text-[11px] font-light leading-snug text-gray-500 dark:text-gray-400">
+                          {item.desc}
+                        </p>
+                      </div>
+                      <Check
+                        size={14}
+                        strokeWidth={2.5}
+                        className="flex-shrink-0 text-mintcom-green opacity-0 transition-all duration-300 group-hover:opacity-100"
+                        aria-hidden
+                      />
+                    </motion.li>
+                  );
+                })}
+              </ul>
+
+              <div className="mt-4 flex shrink-0 items-center gap-2 border-t border-gray-100 pt-4 text-xs font-medium text-gray-500 dark:border-white/10 dark:text-gray-400">
+                <CheckCircle2 size={14} className="flex-shrink-0 text-mintcom-green" />
+                <span>{t('auth.signup.allFeaturesIncluded')}</span>
+              </div>
+            </div>
+          </motion.div>
         </div>
-      </aside>
+      </div>
 
       {/* ── Google Terms Modal ── */}
       <AnimatePresence>
