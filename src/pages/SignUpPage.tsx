@@ -237,13 +237,10 @@ export function SignUpPage() {
     { title: t('auth.signup.feature4Title'), desc: t('auth.signup.feature4Desc'), icon: UserCog },
   ];
 
-  const rightPanelBg =
-    'bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-[#070707] dark:via-[#0a0a0a] dark:to-[#070707]';
-
   return (
     <div
       dir={isRtl ? 'rtl' : 'ltr'}
-      className="relative min-h-screen bg-white transition-colors duration-300 dark:bg-[#050505]"
+      className="relative min-h-screen bg-white transition-colors duration-300 dark:bg-[#050505] lg:flex lg:items-stretch"
     >
       <Helmet>
         <title>{t('metadata.signup.title')}</title>
@@ -294,19 +291,20 @@ export function SignUpPage() {
       </div>
 
       {/*
-        CSS grid: row1 = headers (left title / right empty), row2 = cards.
-        Both cards share the same top edge and stretch to the same height.
-        No absolute positioning — form stays fully clickable.
+        Two equal-height columns (lg:items-stretch).
+        Each column: same header block + card with flex-1 → cards share top edge & height.
+        Right header is an invisible clone so spacing matches exactly. No absolute overlays.
       */}
-      <div className="grid min-h-screen grid-cols-1 lg:grid-cols-2 lg:grid-rows-[auto_minmax(0,1fr)]">
-        {/* ── Row 1 / Col 1: Back + title ── */}
-        <div className="flex justify-center px-6 pt-24 md:px-10 lg:px-10">
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-            className="w-full max-w-md"
-          >
+      {/* ── Left column (defines page height; form stays fully interactive) ── */}
+      <div className="relative z-10 flex w-full flex-1 flex-col items-center px-6 pb-12 pt-24 md:px-10">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+          className="flex w-full max-w-md flex-col"
+        >
+          {/* Header */}
+          <div className="mb-8 shrink-0">
             <a
               href="/"
               className="group mb-8 inline-flex items-center gap-2 text-sm font-semibold text-gray-500 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
@@ -314,46 +312,16 @@ export function SignUpPage() {
               <ArrowLeft size={15} className={`transition-transform group-hover:-translate-x-0.5 ${isRtl ? 'rotate-180' : ''}`} />
               {t('auth.signup.backButton')}
             </a>
-            <div className="mb-8">
-              <h1 className="font-magilio text-3xl font-bold tracking-tight text-gray-900 dark:text-white md:text-4xl">
-                {t('auth.signup.title')}
-              </h1>
-              <p className="mt-2 text-sm font-medium text-gray-500 dark:text-gray-400">
-                {t('auth.signup.subtitle')}
-              </p>
-            </div>
-          </motion.div>
-        </div>
-
-        {/* ── Row 1 / Col 2: right column top (same row height as left header) ── */}
-        <div className={`relative hidden border-s border-gray-100 lg:block dark:border-white/5 ${rightPanelBg}`}>
-          <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-            <div className="absolute -top-24 right-[8%] h-[360px] w-[360px] rounded-full bg-mintcom-green/12 blur-[110px]" />
-            <div
-              className="absolute inset-0 opacity-[0.05] dark:opacity-[0.07]"
-              style={{
-                backgroundImage:
-                  'linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)',
-                backgroundSize: '48px 48px',
-                color: '#7dc6a2',
-                maskImage: 'radial-gradient(ellipse at center, black 35%, transparent 78%)',
-                WebkitMaskImage: 'radial-gradient(ellipse at center, black 35%, transparent 78%)',
-              }}
-            />
+            <h1 className="font-magilio text-3xl font-bold tracking-tight text-gray-900 dark:text-white md:text-4xl">
+              {t('auth.signup.title')}
+            </h1>
+            <p className="mt-2 text-sm font-medium text-gray-500 dark:text-gray-400">
+              {t('auth.signup.subtitle')}
+            </p>
           </div>
-        </div>
 
-        {/* ── Row 2 / Col 1: Form card ── */}
-        <div className="flex justify-center px-6 pb-12 md:px-10 lg:px-10">
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}
-            className="flex w-full max-w-md lg:h-full"
-          >
-          {/* Glass card */}
-          <div className="relative flex w-full flex-col overflow-hidden rounded-3xl border border-gray-200/70 bg-white/90 p-8 shadow-[0_4px_15px_-6px_rgba(0,0,0,0.06)] backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.03] dark:shadow-none lg:min-h-full">
-            {/* Subtle corner glow */}
+          {/* Form glass card — natural height (never clips inputs) */}
+          <div className="relative overflow-hidden rounded-3xl border border-gray-200/70 bg-white/90 p-8 shadow-[0_4px_15px_-6px_rgba(0,0,0,0.06)] backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.03] dark:shadow-none">
             <div aria-hidden className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-mintcom-green/10 blur-3xl" />
 
             <form onSubmit={handleSubmit(onSubmit)} className="relative space-y-5">
@@ -604,32 +572,50 @@ export function SignUpPage() {
               </p>
             </div>
           </div>
-          </motion.div>
+        </motion.div>
+      </div>
+
+      {/* ── Right column (stretches with left; cards top-align via matching header) ── */}
+      <aside className="relative z-0 hidden w-full max-w-xl shrink-0 flex-col items-center self-stretch border-s border-gray-100 bg-gradient-to-br from-gray-50 via-white to-gray-50 px-6 pb-12 pt-24 dark:border-white/5 dark:from-[#070707] dark:via-[#0a0a0a] dark:to-[#070707] lg:flex xl:px-10">
+        {/* Ambient (never captures clicks) */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -top-24 right-[8%] h-[360px] w-[360px] rounded-full bg-mintcom-green/12 blur-[110px]" />
+          <div className="absolute -bottom-28 left-[5%] h-[320px] w-[320px] rounded-full bg-emerald-400/8 blur-[110px]" />
+          <div
+            className="absolute inset-0 opacity-[0.05] dark:opacity-[0.07]"
+            style={{
+              backgroundImage:
+                'linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)',
+              backgroundSize: '48px 48px',
+              color: '#7dc6a2',
+              maskImage: 'radial-gradient(ellipse at center, black 35%, transparent 78%)',
+              WebkitMaskImage: 'radial-gradient(ellipse at center, black 35%, transparent 78%)',
+            }}
+          />
         </div>
 
-        {/* ── Row 2 / Col 2: Benefits board (same top + height as form card via grid) ── */}
-        <div className={`relative hidden border-s border-gray-100 lg:flex lg:justify-center lg:px-8 lg:pb-12 dark:border-white/5 ${rightPanelBg}`}>
-          <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-            <div className="absolute -bottom-28 left-[5%] h-[320px] w-[320px] rounded-full bg-emerald-400/8 blur-[110px]" />
-            <div
-              className="absolute inset-0 opacity-[0.05] dark:opacity-[0.07]"
-              style={{
-                backgroundImage:
-                  'linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)',
-                backgroundSize: '48px 48px',
-                color: '#7dc6a2',
-                maskImage: 'radial-gradient(ellipse at center, black 35%, transparent 78%)',
-                WebkitMaskImage: 'radial-gradient(ellipse at center, black 35%, transparent 78%)',
-              }}
-            />
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.65, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
+          className="relative z-10 flex h-full w-full max-w-[440px] flex-col"
+        >
+          {/* Invisible clone of left header — identical spacing so cards share a top edge */}
+          <div className="invisible mb-8 shrink-0 select-none" aria-hidden>
+            <div className="mb-8 inline-flex items-center gap-2 text-sm font-semibold">
+              <ArrowLeft size={15} />
+              {t('auth.signup.backButton')}
+            </div>
+            <h2 className="font-magilio text-3xl font-bold tracking-tight md:text-4xl">
+              {t('auth.signup.title')}
+            </h2>
+            <p className="mt-2 text-sm font-medium">
+              {t('auth.signup.subtitle')}
+            </p>
           </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-            className="relative z-10 flex w-full max-w-[440px] flex-col overflow-hidden rounded-3xl border border-gray-200/70 bg-white/90 p-6 shadow-[0_4px_15px_-6px_rgba(0,0,0,0.06)] backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.03] dark:shadow-none xl:p-7 lg:min-h-full"
-          >
+          {/* Benefits card fills remaining column height (= left form card) */}
+          <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-3xl border border-gray-200/70 bg-white/90 p-6 shadow-[0_4px_15px_-6px_rgba(0,0,0,0.06)] backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.03] dark:shadow-none xl:p-7">
             <div aria-hidden className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-mintcom-green/10 blur-3xl" />
 
             <div className="relative flex min-h-0 flex-1 flex-col">
@@ -653,18 +639,15 @@ export function SignUpPage() {
                   const Icon = item.icon;
                   const index = String(i + 1).padStart(2, '0');
                   return (
-                    <motion.li
+                    <li
                       key={item.title}
-                      initial={{ opacity: 0, x: 12 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.16 + i * 0.04, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
                       className="group relative flex min-h-0 flex-1 items-center gap-3 overflow-hidden rounded-2xl border border-gray-100/90 bg-gradient-to-r from-gray-50/90 to-white/60 px-3 py-2.5 transition-all duration-300 hover:border-mintcom-green/30 hover:from-mintcom-green/[0.07] hover:to-mintcom-green/[0.02] dark:border-white/[0.07] dark:from-white/[0.04] dark:to-white/[0.015] dark:hover:border-mintcom-green/25 dark:hover:from-mintcom-green/[0.08] dark:hover:to-transparent"
                     >
                       <span
                         aria-hidden
                         className="absolute inset-y-2 start-0 w-0.5 rounded-full bg-mintcom-green/0 transition-all duration-300 group-hover:bg-mintcom-green"
                       />
-                      <span className="relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-mintcom-green/10 text-mintcom-green shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] ring-1 ring-mintcom-green/15 transition-all duration-300 group-hover:scale-105 group-hover:bg-mintcom-green group-hover:text-black group-hover:ring-mintcom-green/40">
+                      <span className="relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-mintcom-green/10 text-mintcom-green ring-1 ring-mintcom-green/15 transition-all duration-300 group-hover:scale-105 group-hover:bg-mintcom-green group-hover:text-black group-hover:ring-mintcom-green/40">
                         <Icon size={16} strokeWidth={2.25} />
                       </span>
                       <div className="min-w-0 flex-1">
@@ -686,7 +669,7 @@ export function SignUpPage() {
                         className="flex-shrink-0 text-mintcom-green opacity-0 transition-all duration-300 group-hover:opacity-100"
                         aria-hidden
                       />
-                    </motion.li>
+                    </li>
                   );
                 })}
               </ul>
@@ -696,9 +679,9 @@ export function SignUpPage() {
                 <span>{t('auth.signup.allFeaturesIncluded')}</span>
               </div>
             </div>
-          </motion.div>
-        </div>
-      </div>
+          </div>
+        </motion.div>
+      </aside>
 
       {/* ── Google Terms Modal ── */}
       <AnimatePresence>
