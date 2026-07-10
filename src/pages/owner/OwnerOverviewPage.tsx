@@ -39,12 +39,9 @@ import { QuickInfo } from '../../components/QuickInfo';
 interface OverviewStats {
     /** Gross sales including tax + service charge */
     totalRevenue: number;
-    revenueChange: number;
     /** Net sales excluding tax + service charge */
     netSales: number;
-    netSalesChange: number;
     totalProfit: number;
-    profitChange: number;
     activeLocations: number;
     totalBrands: number;
     totalEmployees: number;
@@ -57,11 +54,8 @@ export function OwnerOverviewPage() {
     const { establishments } = useAuth();
     const [stats, setStats] = useState<OverviewStats>({
         totalRevenue: 0,
-        revenueChange: 0,
         netSales: 0,
-        netSalesChange: 0,
         totalProfit: 0,
-        profitChange: 0,
         activeLocations: 0,
         totalBrands: 0,
         totalEmployees: 0,
@@ -109,11 +103,8 @@ export function OwnerOverviewPage() {
                     0;
                 setStats({
                     totalRevenue: totalSales,
-                    revenueChange: data.revenueChange || 0,
                     netSales,
-                    netSalesChange: data.netSalesChange ?? data.revenueChange ?? 0,
                     totalProfit: data.totalProfit || 0,
-                    profitChange: data.profitChange || 0,
                     activeLocations: establishments.length,
                     totalBrands: data.totalBrands || 0,
                     totalEmployees: data.totalEmployees || 0,
@@ -123,11 +114,8 @@ export function OwnerOverviewPage() {
             } else {
                 setStats({
                     totalRevenue: 0,
-                    revenueChange: 0,
                     netSales: 0,
-                    netSalesChange: 0,
                     totalProfit: 0,
-                    profitChange: 0,
                     activeLocations: establishments.length,
                     totalBrands: 0,
                     totalEmployees: 0,
@@ -268,7 +256,6 @@ export function OwnerOverviewPage() {
                     {
                         label: t('owner.overview.netSales'),
                         value: stats.netSales,
-                        change: stats.netSalesChange,
                         icon: DollarSign,
                         color: 'text-mintcom-green',
                         bg: 'bg-mintcom-green/10',
@@ -280,7 +267,6 @@ export function OwnerOverviewPage() {
                     {
                         label: t('owner.overview.totalSales'),
                         value: stats.totalRevenue,
-                        change: stats.revenueChange,
                         icon: Wallet,
                         color: 'text-mintcom-green',
                         bg: 'bg-mintcom-green/10',
@@ -292,7 +278,6 @@ export function OwnerOverviewPage() {
                     {
                         label: t('owner.overview.totalProfit'),
                         value: stats.totalProfit,
-                        change: stats.profitChange,
                         icon: TrendingUp,
                         color: 'text-blue-500',
                         bg: 'bg-blue-500/10',
@@ -304,7 +289,6 @@ export function OwnerOverviewPage() {
                     {
                         label: t('owner.overview.activeLocations'),
                         value: stats.activeLocations,
-                        change: null,
                         icon: Store,
                         color: 'text-purple-500',
                         bg: 'bg-purple-500/10',
@@ -316,7 +300,6 @@ export function OwnerOverviewPage() {
                     {
                         label: t('owner.overview.totalBrands'),
                         value: stats.totalBrands,
-                        change: null,
                         icon: Building2,
                         color: 'text-orange-500',
                         bg: 'bg-orange-500/10',
@@ -328,7 +311,6 @@ export function OwnerOverviewPage() {
                     {
                         label: t('owner.overview.totalStaff'),
                         value: stats.totalEmployees,
-                        change: null,
                         icon: Users,
                         color: 'text-pink-500',
                         bg: 'bg-pink-500/10',
@@ -364,15 +346,7 @@ export function OwnerOverviewPage() {
                                 <div className={`w-12 h-12 rounded-xl ${stat.bg} ${stat.color} flex items-center justify-center transition-transform duration-300 group-hover:scale-110`}>
                                     <stat.icon size={24} />
                                 </div>
-                                {stat.change !== null && (
-                                    <div className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold ${stat.change >= 0
-                                        ? 'bg-mintcom-green/10 text-mintcom-green'
-                                        : 'bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400'
-                                        }`}>
-                                        {stat.change >= 0 ? '+' : ''}{stat.change}%
-                                    </div>
-                                )}
-                                {stat.change === null && isClickable && (
+                                {isClickable && (
                                     <div className="w-9 h-9 rounded-xl bg-gray-50 dark:bg-white/5 flex items-center justify-center text-gray-400 group-hover:text-mintcom-green group-hover:bg-mintcom-green/10 transition-colors">
                                         <ExternalLink size={16} />
                                     </div>
