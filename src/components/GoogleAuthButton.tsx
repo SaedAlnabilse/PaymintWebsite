@@ -1,7 +1,5 @@
 import { useEffect, useCallback, useState, forwardRef, useImperativeHandle, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import toast from 'react-hot-toast';
-import { useTheme } from '../context/ThemeContext';
 
 // Official multicolor Google "G" mark (brand colors).
 const GoogleIcon = ({ size = 18 }: { size?: number }) => (
@@ -36,45 +34,6 @@ interface GoogleAuthButtonProps {
   onError?: (error: string) => void;
   text?: 'signin_with' | 'signup_with' | 'continue_with' | 'signin';
   disabled?: boolean;
-  isOverlay?: boolean;
-}
-
-declare global {
-  interface Window {
-    google?: {
-      accounts: {
-        id: {
-          initialize: (config: {
-            client_id: string;
-            callback: (response: { credential: string; select_by: string }) => void;
-            auto_select?: boolean;
-            cancel_on_tap_outside?: boolean;
-            use_fedcm_for_prompt?: boolean;
-          }) => void;
-          prompt: (callback?: (notification: {
-            isNotDisplayed: () => boolean;
-            isSkippedMoment: () => boolean;
-            isDismissedMoment?: () => boolean;
-            getNotDisplayedReason: () => string;
-          }) => void) => void;
-          renderButton: (
-            element: HTMLElement,
-            config: {
-              type?: 'standard' | 'icon';
-              theme?: 'outline' | 'filled_blue' | 'filled_black';
-              size?: 'large' | 'medium' | 'small';
-              text?: 'signin_with' | 'signup_with' | 'continue_with' | 'signin';
-              shape?: 'rectangular' | 'pill' | 'circle' | 'square';
-              logo_alignment?: 'left' | 'center';
-              width?: number;
-              locale?: string;
-            }
-          ) => void;
-          disableAutoSelect: () => void;
-        };
-      };
-    };
-  }
 }
 
 // Public OAuth client ID. The env var still wins, but keeping the known public
@@ -87,261 +46,216 @@ export const GOOGLE_CLIENT_ID = (
   import.meta.env.VITE_GOOGLE_CLIENT_ID || DEFAULT_GOOGLE_CLIENT_ID
 ).trim();
 
-type GoogleCredentialCallback = (credential: string) => void;
+/**
+ * OpenID Connect implicit flow in a popup.
+ *
+ * We open accounts.google.com/o/oauth2/v2/auth as a REAL top-level popup from
+ * a REAL <button> we fully own (same styling as AppleAuthButton). Google
+ * redirects the popup back to /google-callback.html on our origin, which posts
+ * the `id_token` to this window and closes itself.
+ *
+ * The id_token is a Google ID token with `aud` = this client ID — the exact
+ * shape the backend's `verifyIdToken` already accepts from the old GIS
+ * credential flow, so POST /api/accounts/google-auth is unchanged.
+ *
+ * The popup callback URL must be listed under "Authorized redirect URIs" for
+ * this OAuth client in Google Cloud Console (per environment):
+ *   https://mintcompos.com/google-callback.html
+ *   https://www.mintcompos.com/google-callback.html
+ *   http://localhost:5173/google-callback.html
+ */
+const GOOGLE_AUTHORIZE_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
+const CALLBACK_PATH = '/google-callback.html';
+// Must match public/google-callback.js
+const MESSAGE_TYPE = 'mintcom:google-auth';
+const RESULT_STORAGE_KEY = 'mintcom:google-auth-result';
 
-// Module-level GIS state shared across button instances (form + terms modal).
-let gisInitializedForClientId: string | null = null;
-// Stack of live instance callbacks so unmounting the modal doesn't kill the form button.
-const credentialListeners = new Set<GoogleCredentialCallback>();
-
-function dispatchCredential(credential: string) {
-  // Prefer the most recently mounted instance (modal > form).
-  const listeners = [...credentialListeners];
-  const latest = listeners[listeners.length - 1];
-  if (latest) {
-    latest(credential);
-    return;
-  }
+interface GoogleAuthResult {
+  type: string;
+  idToken: string;
+  state: string;
+  error: string;
 }
 
 export interface GoogleAuthButtonHandle {
   triggerPrompt: () => void;
 }
 
-function waitForGoogle(): Promise<NonNullable<typeof window.google>> {
-  return new Promise((resolve, reject) => {
-    if (window.google?.accounts?.id) {
-      resolve(window.google);
-      return;
-    }
+function randomString(): string {
+  if (typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes)
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
 
-    const existing = document.querySelector(
-      'script[src="https://accounts.google.com/gsi/client"]'
-    ) as HTMLScriptElement | null;
-
-    const onReady = () => {
-      if (window.google?.accounts?.id) {
-        resolve(window.google);
-      } else {
-        reject(new Error('Google GIS loaded but API missing'));
-      }
-    };
-
-    if (existing) {
-      // Script tag exists — either still loading or already done.
-      if (window.google?.accounts?.id) {
-        onReady();
-        return;
-      }
-      existing.addEventListener('load', onReady, { once: true });
-      existing.addEventListener(
-        'error',
-        () => reject(new Error('Google GIS script failed')),
-        { once: true }
-      );
-      // Poll briefly in case "load" already fired before we attached the listener.
-      let tries = 0;
-      const poll = window.setInterval(() => {
-        tries += 1;
-        if (window.google?.accounts?.id) {
-          window.clearInterval(poll);
-          onReady();
-        } else if (tries > 50) {
-          window.clearInterval(poll);
-          reject(new Error('Google GIS script timeout'));
-        }
-      }, 100);
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.src = 'https://accounts.google.com/gsi/client';
-    script.async = true;
-    script.defer = true;
-    script.onload = onReady;
-    script.onerror = () => reject(new Error('Google GIS script failed'));
-    document.head.appendChild(script);
-  });
+/** Decode a JWT payload without verifying — verification happens on the backend. */
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  try {
+    const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    return JSON.parse(atob(base64));
+  } catch {
+    return null;
+  }
 }
 
 export const GoogleAuthButton = forwardRef<GoogleAuthButtonHandle, GoogleAuthButtonProps>(
   ({ onSuccess, onError, text = 'continue_with', disabled = false }, ref) => {
-    const { t, i18n } = useTranslation();
-    const { resolvedTheme } = useTheme();
+    const { t } = useTranslation();
     const [isLoading, setIsLoading] = useState(false);
-    const [isReady, setIsReady] = useState(false);
-    const buttonRef = useRef<HTMLDivElement>(null);
-    const containerRef = useRef<HTMLDivElement>(null);
 
-    // Keep latest handlers in refs so GIS init effect does NOT re-run (and
-    // destroy the iframe) every time the parent re-renders with new closures.
+    // Keep latest handlers in refs so the message listener never goes stale.
     const onSuccessRef = useRef(onSuccess);
     const onErrorRef = useRef(onError);
     onSuccessRef.current = onSuccess;
     onErrorRef.current = onError;
 
-    // Register this instance's credential listener for the lifetime of the mount.
+    // The state/nonce of the in-flight popup, if any.
+    const pendingRef = useRef<{ state: string; nonce: string } | null>(null);
+    const popupRef = useRef<Window | null>(null);
+    const pollTimerRef = useRef<number | undefined>(undefined);
+
+    const finishFlow = useCallback(() => {
+      pendingRef.current = null;
+      popupRef.current = null;
+      if (pollTimerRef.current) {
+        window.clearInterval(pollTimerRef.current);
+        pollTimerRef.current = undefined;
+      }
+      setIsLoading(false);
+    }, []);
+
+    const handleResult = useCallback(
+      (result: GoogleAuthResult) => {
+        const pending = pendingRef.current;
+        // Ignore results that don't match the popup WE opened (stale/foreign).
+        if (!pending || result.state !== pending.state) return;
+
+        if (result.error) {
+          finishFlow();
+          // User closed Google's consent screen / clicked cancel — stay silent.
+          if (result.error !== 'access_denied' && result.error !== 'interaction_required') {
+            console.error('[GoogleAuth] OAuth error:', result.error);
+            onErrorRef.current?.(t('auth.errors.googleUnavailable'));
+          }
+          return;
+        }
+
+        if (!result.idToken) {
+          finishFlow();
+          onErrorRef.current?.(t('auth.errors.googleUnavailable'));
+          return;
+        }
+
+        // Replay protection: the token must carry the nonce from THIS attempt.
+        const payload = decodeJwtPayload(result.idToken);
+        if (!payload || payload.nonce !== pending.nonce) {
+          finishFlow();
+          console.error('[GoogleAuth] id_token nonce mismatch — dropping token');
+          onErrorRef.current?.(t('auth.errors.googleUnavailable'));
+          return;
+        }
+
+        finishFlow();
+        onSuccessRef.current(result.idToken);
+      },
+      [finishFlow, t]
+    );
+
+    // Listen for the popup's result: postMessage normally, localStorage as a
+    // fallback when COOP severs window.opener.
     useEffect(() => {
-      const listener: GoogleCredentialCallback = (credential) => {
-        setIsLoading(false);
-        onSuccessRef.current(credential);
+      const onMessage = (event: MessageEvent) => {
+        if (event.origin !== window.location.origin) return;
+        const data = event.data as GoogleAuthResult | undefined;
+        if (data?.type !== MESSAGE_TYPE) return;
+        handleResult(data);
       };
-      credentialListeners.add(listener);
+
+      const onStorage = (event: StorageEvent) => {
+        if (event.key !== RESULT_STORAGE_KEY || !event.newValue) return;
+        try {
+          const data = JSON.parse(event.newValue) as GoogleAuthResult;
+          if (data?.type === MESSAGE_TYPE) {
+            handleResult(data);
+            window.localStorage.removeItem(RESULT_STORAGE_KEY);
+          }
+        } catch {
+          // Ignore malformed storage payloads.
+        }
+      };
+
+      window.addEventListener('message', onMessage);
+      window.addEventListener('storage', onStorage);
       return () => {
-        credentialListeners.delete(listener);
+        window.removeEventListener('message', onMessage);
+        window.removeEventListener('storage', onStorage);
+      };
+    }, [handleResult]);
+
+    // Abort cleanly on unmount.
+    useEffect(() => {
+      return () => {
+        if (pollTimerRef.current) window.clearInterval(pollTimerRef.current);
       };
     }, []);
 
-    // Load GIS + render the official button once per mount / theme / locale / text.
-    useEffect(() => {
-      if (!GOOGLE_CLIENT_ID) {
-        console.warn('[GoogleAuth] No Google client ID configured');
+    const handleClick = useCallback(() => {
+      if (!GOOGLE_CLIENT_ID || disabled || isLoading) return;
+
+      const state = randomString();
+      const nonce = randomString();
+
+      const params = new URLSearchParams({
+        client_id: GOOGLE_CLIENT_ID,
+        redirect_uri: `${window.location.origin}${CALLBACK_PATH}`,
+        response_type: 'id_token',
+        scope: 'openid email profile',
+        state,
+        nonce,
+        prompt: 'select_account',
+      });
+
+      const width = 480;
+      const height = 640;
+      const left = Math.max(0, Math.round(window.screenX + (window.outerWidth - width) / 2));
+      const top = Math.max(0, Math.round(window.screenY + (window.outerHeight - height) / 2));
+
+      // window.open must run synchronously inside the click to avoid blockers.
+      const popup = window.open(
+        `${GOOGLE_AUTHORIZE_URL}?${params.toString()}`,
+        'mintcom-google-auth',
+        `popup=yes,width=${width},height=${height},left=${left},top=${top}`
+      );
+
+      if (!popup) {
+        console.error('[GoogleAuth] Popup blocked');
+        onErrorRef.current?.(t('auth.errors.googleUnavailable'));
         return;
       }
 
-      let cancelled = false;
-      let renderAttempts = 0;
-      let lastPaintedWidth = 0;
-      let ro: ResizeObserver | null = null;
-      let retryTimer: number | undefined;
-
-      const paint = (google: NonNullable<typeof window.google>) => {
-        if (cancelled || !buttonRef.current || !containerRef.current) return;
-
-        // Use the real rendered width — GIS paints a dead/narrow iframe when
-        // width is wrong (common in production after late font/layout settle).
-        const measured = Math.floor(containerRef.current.getBoundingClientRect().width);
-        const width = Math.max(measured || 0, 280);
-
-        // Skip redundant paints that thrash the iframe (and kill click handlers).
-        if (Math.abs(width - lastPaintedWidth) < 4 && buttonRef.current.querySelector('iframe')) {
-          setIsReady(true);
-          return;
-        }
-
-        buttonRef.current.replaceChildren();
-        google.accounts.id.renderButton(buttonRef.current, {
-          type: 'standard',
-          theme: resolvedTheme === 'dark' ? 'filled_black' : 'outline',
-          size: 'large',
-          text,
-          shape: 'rectangular',
-          logo_alignment: 'left',
-          width,
-          locale: i18n.language,
-        });
-
-        lastPaintedWidth = width;
-        renderAttempts += 1;
-        const hasIframe = Boolean(buttonRef.current.querySelector('iframe'));
-
-        // Retry if layout wasn't ready or GIS failed to inject an iframe.
-        if ((!hasIframe || measured < 40) && renderAttempts < 8) {
-          retryTimer = window.setTimeout(() => paint(google), 150);
-          return;
-        }
-
-        if (!hasIframe) {
-          console.error('[GoogleAuth] GIS button rendered without iframe — clicks will fail (check CSP frame-src)');
-        }
-
-        setIsReady(true);
-      };
-
-      const mountButton = async () => {
-        try {
-          const google = await waitForGoogle();
-          if (cancelled || !buttonRef.current) return;
-
-          if (gisInitializedForClientId !== GOOGLE_CLIENT_ID) {
-            google.accounts.id.initialize({
-              client_id: GOOGLE_CLIENT_ID,
-              callback: (response) => {
-                if (response.credential) {
-                  dispatchCredential(response.credential);
-                }
-              },
-              auto_select: false,
-              cancel_on_tap_outside: true,
-            });
-            gisInitializedForClientId = GOOGLE_CLIENT_ID;
-          }
-
-          // Double rAF so flex/grid layout has final width before GIS measures.
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              if (!cancelled) paint(google);
-            });
-          });
-
-          // Production fonts/layout can change container width after first paint.
-          ro = new ResizeObserver(() => {
-            if (cancelled) return;
-            const w = Math.floor(containerRef.current?.getBoundingClientRect().width || 0);
-            if (w >= 40 && Math.abs(w - lastPaintedWidth) >= 4) {
-              paint(google);
-            }
-          });
-          if (containerRef.current) {
-            ro.observe(containerRef.current);
-          }
-        } catch (error) {
-          console.error('[GoogleAuth] Failed to initialize:', error);
-          if (!cancelled) {
-            onErrorRef.current?.(t('auth.errors.googleInitFailed'));
-          }
-        }
-      };
-
-      void mountButton();
-
-      return () => {
-        cancelled = true;
-        if (retryTimer) window.clearTimeout(retryTimer);
-        ro?.disconnect();
-        // Only clear THIS instance's host — never touch shared initialize state.
-        if (buttonRef.current) {
-          buttonRef.current.replaceChildren();
-        }
-        setIsReady(false);
-      };
-    }, [text, i18n.language, resolvedTheme, t]);
-
-    const handlePrompt = useCallback(() => {
-      if (!window.google || !GOOGLE_CLIENT_ID || disabled || isLoading) return;
-
+      pendingRef.current = { state, nonce };
+      popupRef.current = popup;
       setIsLoading(true);
-      try {
-        window.google.accounts.id.prompt((notification) => {
-          setIsLoading(false);
-          if (notification.isNotDisplayed()) {
-            const reason = notification.getNotDisplayedReason();
-            console.warn('[GoogleAuth] Prompt not displayed:', reason);
 
-            if (reason === 'opt_out_or_no_session') {
-              onErrorRef.current?.(t('auth.errors.googleNoSession'));
-              toast.error(
-                t(
-                  'auth.errors.clickGoogleDirectly',
-                  'Please click the "Sign in with Google" button directly to continue.'
-                )
-              );
-            } else if (reason === 'suppressed_by_user') {
-              onErrorRef.current?.(t('auth.errors.googleCancelled'));
-            } else {
-              onErrorRef.current?.(t('auth.errors.googleUnavailable'));
-            }
-          }
-        });
-      } catch (error) {
-        setIsLoading(false);
-        console.error('[GoogleAuth] Error showing prompt:', error);
-        onErrorRef.current?.(t('auth.errors.googlePromptFailed'));
-      }
-    }, [disabled, isLoading, t]);
+      // If the user closes the popup without finishing, reset the button.
+      // Grace period: the result message can land shortly after `closed` flips.
+      pollTimerRef.current = window.setInterval(() => {
+        if (popupRef.current && popupRef.current.closed) {
+          window.clearInterval(pollTimerRef.current);
+          pollTimerRef.current = undefined;
+          window.setTimeout(() => {
+            if (pendingRef.current) finishFlow();
+          }, 700);
+        }
+      }, 400);
+    }, [disabled, isLoading, finishFlow, t]);
 
     useImperativeHandle(ref, () => ({
-      triggerPrompt: handlePrompt,
+      triggerPrompt: handleClick,
     }));
 
     if (!GOOGLE_CLIENT_ID) {
@@ -355,44 +269,20 @@ export const GoogleAuthButton = forwardRef<GoogleAuthButtonHandle, GoogleAuthBut
       signin: t('auth.google.signIn'),
     }[text];
 
-    const showLoading = isLoading || !isReady;
-    // Fully opaque solid (no alpha) so signed-in "Sign in as …" chrome never shows through.
-    const solidBg = resolvedTheme === 'dark' ? '#0c0c0c' : '#ffffff';
-    const labelColor = resolvedTheme === 'dark' ? '#ffffff' : '#111827';
-
-    // Match AppleAuthButton: one border, rounded-xl, px-4 py-3, shadow-sm.
-    //
-    // CRITICAL for clicks: GIS iframe must be ON TOP (z-10) with opacity 0.
-    // Cross-origin iframes do NOT receive clicks that pass through
-    // pointer-events:none layers above them — solid masks on top break auth.
-    // User only sees the brand face underneath the transparent GIS layer.
+    // Deliberately identical styling to AppleAuthButton.
     return (
-      <div
-        ref={containerRef}
-        className={`group relative isolate w-full overflow-hidden rounded-xl border border-gray-200 shadow-sm dark:border-white/10 ${
-          disabled || isLoading ? 'pointer-events-none opacity-50' : ''
-        }`}
-        style={{ backgroundColor: solidBg }}
+      <button
+        type="button"
+        onClick={handleClick}
+        disabled={disabled || isLoading}
+        aria-label={buttonText}
+        className="group relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-900 shadow-sm transition-all hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:hover:bg-white/[0.08]"
       >
-        {/* Brand face UNDER the GIS hit layer (what the user sees) */}
-        <div
-          className="pointer-events-none relative z-0 flex w-full items-center justify-center gap-3 px-4 py-3 text-sm font-semibold"
-          style={{ backgroundColor: solidBg, color: labelColor }}
-          aria-hidden
-        >
-          <span className="flex h-[18px] w-[18px] shrink-0 items-center justify-center">
-            <GoogleIcon size={18} />
-          </span>
-          <span>{showLoading ? t('common.connecting') : buttonText}</span>
-        </div>
-
-        {/* Official GIS control — ON TOP, invisible, receives the real click */}
-        <div
-          ref={buttonRef}
-          aria-label={buttonText}
-          className="google-auth-button absolute inset-0 z-10"
-        />
-      </div>
+        <span className="flex h-[18px] w-[18px] shrink-0 items-center justify-center">
+          <GoogleIcon size={18} />
+        </span>
+        <span>{isLoading ? t('common.connecting') : buttonText}</span>
+      </button>
     );
   }
 );
