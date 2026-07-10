@@ -28,6 +28,30 @@ import { formatPaymentBrandName } from '../../../../utils/paymentCard';
 
 const COLORS = ['#7dc6a2', '#3b82f6', '#f59e0b', '#D55263', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
 
+/** Evenly spaced, rounded Y-axis ticks so the scale isn't just 0 and max. */
+function buildYAxisScale(minValue: number, maxValue: number, tickCount = 5) {
+  const min = Number.isFinite(minValue) ? minValue : 0;
+  const max = Number.isFinite(maxValue) && maxValue > min ? maxValue : min + 100;
+  const hasNegative = min < 0;
+  const spanMin = hasNegative ? min : 0;
+  const roughStep = (max - spanMin) / Math.max(tickCount - 1, 1);
+  const magnitude = Math.pow(10, Math.floor(Math.log10(Math.max(Math.abs(roughStep), 1e-9))));
+  const residual = roughStep / magnitude;
+  const niceFactor = residual <= 1 ? 1 : residual <= 2 ? 2 : residual <= 5 ? 5 : 10;
+  const step = niceFactor * magnitude;
+  const niceMin = hasNegative ? Math.floor(spanMin / step) * step : 0;
+  const niceMax = Math.ceil(max / step) * step || step;
+  const ticks: number[] = [];
+  for (let v = niceMin; v <= niceMax + step * 1e-9; v += step) {
+    ticks.push(Math.abs(v) < 1e-9 ? 0 : Number(v.toPrecision(12)));
+  }
+  if (hasNegative && !ticks.some((t) => t === 0)) {
+    ticks.push(0);
+    ticks.sort((a, b) => a - b);
+  }
+  return { domain: [niceMin, niceMax] as [number, number], ticks };
+}
+
 const CurrencyAmount = ({ amount, size = "text-2xl", color = "text-gray-900 dark:text-white" }: { amount: number, size?: string, color?: string }) => {
   const { currencySymbol } = useCurrency();
   return (
@@ -91,6 +115,20 @@ export const SalesView = React.memo(function SalesView({ salesData, selectedDate
       };
     });
   const paymentMethodTotal = paymentMethodBreakdown.reduce((sum, item) => sum + Math.max(item.value, 0), 0);
+  const hasPaymentData = paymentMethodTotal > 0.005;
+  // Recharts hides zero-value slices — use a single gray ring when empty.
+  const emptyFill = isDark ? '#334155' : '#e5e7eb';
+  const pieData = hasPaymentData
+    ? paymentMethodBreakdown
+    : [{ name: '__empty__', value: 0, chartValue: 1 }];
+  const legendRows =
+    paymentMethodBreakdown.length > 0
+      ? paymentMethodBreakdown.slice(0, 3)
+      : [
+          { name: 'CASH', value: 0, chartValue: 0 },
+          { name: 'CARD', value: 0, chartValue: 0 },
+          { name: 'OTHER', value: 0, chartValue: 0 },
+        ];
 
   return (
     <div className="space-y-8" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
@@ -142,7 +180,7 @@ export const SalesView = React.memo(function SalesView({ salesData, selectedDate
             sub: t('orders.reports.sales.serviceChargeSub', {
               defaultValue: '{{count}} orders | avg {{avg}}',
               count: salesData.serviceChargeOrderCount ?? 0,
-              avg: <StatValue value={Number(salesData.averageServiceChargePerOrder ?? 0)} currency={currencySymbol} className="text-xs inline-flex" />,
+              avg: `${Number(salesData.averageServiceChargePerOrder ?? 0).toLocaleString(t('common.locale'), { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currencySymbol}`,
             })
           },
           {
@@ -337,8 +375,12 @@ export const SalesView = React.memo(function SalesView({ salesData, selectedDate
                 });
                 const maxRevenue = revenueValues.length > 0 ? Math.max(...revenueValues) : 0;
                 const minRevenue = revenueValues.length > 0 ? Math.min(...revenueValues) : 0;
-                const maxY = maxRevenue > 0 ? maxRevenue : 100;
-                const minY = minRevenue < 0 ? minRevenue : 0;
+                const { domain: yDomain, ticks: yTicks } = buildYAxisScale(
+                  minRevenue < 0 ? minRevenue : 0,
+                  maxRevenue > 0 ? maxRevenue : 100,
+                  5,
+                );
+                const [minY, maxY] = yDomain;
                 const hasRevenueData = revenueValues.some((value) => Math.abs(value) > 0.005);
 
                 if (!hasRevenueData) {
@@ -354,7 +396,7 @@ export const SalesView = React.memo(function SalesView({ salesData, selectedDate
 
                 return (
                   <>
-                    <div className="absolute start-0 top-0 bottom-0 w-[50px] z-20 pointer-events-none" style={{ background: 'linear-gradient(to ' + (t('common.locale') === 'ar' ? 'left' : 'right') + ', ' + (isDark ? '#1E293B 80%, transparent' : '#FFFFFF 80%, transparent') + ')' }}>
+                    <div className="absolute start-0 top-0 bottom-0 w-[56px] z-20 pointer-events-none" style={{ background: 'linear-gradient(to ' + (t('common.locale') === 'ar' ? 'left' : 'right') + ', ' + (isDark ? '#1E293B 80%, transparent' : '#FFFFFF 80%, transparent') + ')' }}>
                       <ResponsiveContainer width="100%" height="100%">
                         <ComposedChart data={chartData} margin={{ top: 10, right: 0, left: 0, bottom: 20 }}>
                           <YAxis
@@ -363,16 +405,21 @@ export const SalesView = React.memo(function SalesView({ salesData, selectedDate
                             tickLine={false}
                             tick={{ fill: isDark ? "#94a3b8" : "#64748b", fontWeight: '700' }}
                             axisLine={false}
-                            tickFormatter={(val) => val.toLocaleString(t('common.locale'), { maximumFractionDigits: 1 })}
-                            domain={[minY, maxY]}
-                            ticks={minY < 0 ? [minY, 0, maxY] : [0, maxY / 2, maxY]}
-                            width={40}
+                            tickFormatter={(val) =>
+                              Number(val).toLocaleString(t('common.locale'), {
+                                maximumFractionDigits: Number(val) % 1 === 0 ? 0 : 1,
+                              })
+                            }
+                            domain={yDomain}
+                            ticks={yTicks}
+                            interval={0}
+                            width={48}
                           />
                           <Area dataKey="revenue" stroke="none" fill="none" />
                         </ComposedChart>
                       </ResponsiveContainer>
                     </div>
-                    <div className="flex-1 overflow-x-auto overflow-y-hidden ps-[50px] scrollbar-none scroll-smooth" ref={(el) => {
+                    <div className="flex-1 overflow-x-auto overflow-y-hidden ps-[56px] scrollbar-none scroll-smooth" ref={(el) => {
                       // Auto-scroll to the end (latest hours) so recent sales are visible
                       if (el && isHourly && !needsDailyAggregation) {
                         el.scrollLeft = el.scrollWidth;
@@ -492,86 +539,83 @@ export const SalesView = React.memo(function SalesView({ salesData, selectedDate
             </button>
           </div>
           <div className="flex-1 flex flex-col justify-center">
-            {paymentMethodBreakdown.length > 0 ? (
-              <>
-                <div className="h-[180px] w-full">
-                  <ResponsiveContainer
-                    width="100%"
-                    height="100%"
-                    minWidth={1}
-                    minHeight={1}
-                    initialDimension={{ width: 320, height: 180 }}
+            <div className="h-[180px] w-full" dir="ltr">
+              <ResponsiveContainer
+                width="100%"
+                height="100%"
+                minWidth={1}
+                minHeight={1}
+                initialDimension={{ width: 320, height: 180 }}
+              >
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    innerRadius={50}
+                    outerRadius={80}
+                    paddingAngle={hasPaymentData ? 4 : 0}
+                    dataKey="chartValue"
+                    animationDuration={hasPaymentData ? 1500 : 0}
+                    stroke="none"
+                    isAnimationActive={hasPaymentData}
                   >
-                    <PieChart>
-                      <Pie
-                        data={paymentMethodBreakdown}
-                        innerRadius={50}
-                        outerRadius={80}
-                        paddingAngle={4}
-                        dataKey="chartValue"
-                        animationDuration={1500}
-                        stroke="none"
-                      >
-                        {paymentMethodBreakdown.map((_: any, index: number) => (
-                          <Cell key={index} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: isDark ? '#0B1120' : '#fff',
-                          borderRadius: '12px',
-                          border: 'none',
-                          boxShadow: '0 10px 40px -10px rgba(0,0,0,0.15)',
-                          padding: '12px'
-                        }}
-                        itemStyle={{
-                          color: isDark ? '#fff' : '#111',
-                          fontWeight: 'bold',
-                          fontSize: '11px'
-                        }}
-                        formatter={(val: any, _name: any, entry: any) => {
-                          const signedValue = Number(entry?.payload?.value ?? val);
-                          return (
-                            <StatValue 
-                              value={signedValue} 
-                              currency={currencySymbol} 
-                              className="text-sm font-bold"
-                            />
-                          );
-                        }}
-                        position={{ y: -10 }}
+                    {pieData.map((_: any, index: number) => (
+                      <Cell
+                        key={index}
+                        fill={hasPaymentData ? COLORS[index % COLORS.length] : emptyFill}
                       />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-                <div className="space-y-2 mt-4">
-                  {paymentMethodBreakdown.slice(0, 3).map((item, i) => {
-                    const percentage = paymentMethodTotal > 0 ? item.value / paymentMethodTotal : 0;
+                    ))}
+                  </Pie>
+                  {hasPaymentData && (
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: isDark ? '#0B1120' : '#fff',
+                        borderRadius: '12px',
+                        border: 'none',
+                        boxShadow: '0 10px 40px -10px rgba(0,0,0,0.15)',
+                        padding: '12px'
+                      }}
+                      itemStyle={{
+                        color: isDark ? '#fff' : '#111',
+                        fontWeight: 'bold',
+                        fontSize: '11px'
+                      }}
+                      formatter={(val: any, _name: any, entry: any) => {
+                        const signedValue = Number(entry?.payload?.value ?? val);
+                        return (
+                          <StatValue
+                            value={signedValue}
+                            currency={currencySymbol}
+                            className="text-sm font-bold"
+                          />
+                        );
+                      }}
+                      position={{ y: -10 }}
+                    />
+                  )}
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="space-y-2 mt-4">
+              {legendRows.map((item, i) => {
+                const percentage = paymentMethodTotal > 0 ? item.value / paymentMethodTotal : 0;
 
-                    return (
-                    <div key={i} className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
-                        <span className="sentence-case-text text-sm font-bold text-gray-700 dark:text-gray-300">{getMethodName(item.name)}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-bold text-gray-900 dark:text-white"><FormatCurrency value={item.value} /></span>
-                        <StatValue value={percentage} isPercentage={true} className="text-xs font-bold text-gray-500 min-w-[36px] text-end" />
-                      </div>
+                return (
+                  <div key={`${item.name}-${i}`} className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="w-2 h-2 rounded-full"
+                        style={{ backgroundColor: hasPaymentData ? COLORS[i % COLORS.length] : emptyFill }}
+                      />
+                      <span className="sentence-case-text text-sm font-bold text-gray-700 dark:text-gray-300">{getMethodName(item.name)}</span>
                     </div>
-                    );
-                  })}
-                </div>
-              </>
-            ) : (
-              <AnalyticsEmptyState
-                icon={CreditCard}
-                title={t('dashboard.paymentMethods.noData')}
-                description={t('orders.reports.sales.breakdown')}
-                compact
-                className="h-full"
-              />
-            )}
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-gray-900 dark:text-white"><FormatCurrency value={item.value} /></span>
+                      <StatValue value={percentage} isPercentage={true} className="text-xs font-bold text-gray-500 min-w-[36px] text-end" />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>

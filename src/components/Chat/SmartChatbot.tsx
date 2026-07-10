@@ -59,6 +59,15 @@ interface SmartChatbotProps {
   onClose: () => void;
 }
 
+const renderMessageContent = (content: string) =>
+  content.split(/(\*\*[^*]+\*\*)/g).map((part, index) =>
+    part.startsWith('**') && part.endsWith('**') ? (
+      <strong key={index} className="font-bold">{part.slice(2, -2)}</strong>
+    ) : (
+      part
+    )
+  );
+
 const ACTION_ICON_MAP: Record<ChatIconName, ComponentType<{ size?: number; className?: string }>> = {
   package: Package,
   clipboardList: ClipboardList,
@@ -372,7 +381,9 @@ export function SmartChatbot({ isOpen, onClose }: SmartChatbotProps) {
               <div>
                 <h3 className="text-lg font-bold tracking-tight text-white">{t('chat.botName')}</h3>
                 <p className="text-xs font-medium text-white/80">{t('chat.assistantTitle')}</p>
-                <p className="mt-0.5 text-[11px] font-medium text-white/80">{pageContext.title}</p>
+                {pageContext.title !== 'Mintcom' && pageContext.title !== 'مينتكوم' && (
+                  <p className="mt-0.5 text-[11px] font-medium text-white/80">{pageContext.title}</p>
+                )}
               </div>
             </div>
           </div>
@@ -401,11 +412,11 @@ export function SmartChatbot({ isOpen, onClose }: SmartChatbotProps) {
                     <div
                       className={`inline-block rounded-2xl px-4 py-3 ${
                         message.type === 'user'
-                          ? 'rounded-tr-sm bg-[#7dc6a2] text-black'
+                          ? 'rounded-tr-sm bg-gradient-to-br from-[#5BA882] to-[#4A9370] text-white'
                           : 'rounded-tl-sm bg-gray-100 text-gray-800 dark:bg-white/5 dark:text-gray-200'
                       }`}
                     >
-                      <p className="whitespace-pre-wrap text-sm leading-relaxed">{message.content}</p>
+                      <p className="whitespace-pre-wrap text-sm leading-relaxed text-inherit">{renderMessageContent(message.content)}</p>
                     </div>
 
                     {message.actions && message.actions.length > 0 && (

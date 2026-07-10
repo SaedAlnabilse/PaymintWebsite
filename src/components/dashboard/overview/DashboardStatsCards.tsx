@@ -251,7 +251,7 @@ export const DashboardStatsCards = React.memo(function DashboardStatsCards({ sta
                     className="text-2xl"
                     isInteger={!stat.isCurrency}
                   />
-                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mt-1 capitalize">
+                  <p className="sentence-case-text text-xs font-medium text-gray-500 dark:text-gray-400 mt-1">
                     {stat.sub}
                   </p>
                 </>

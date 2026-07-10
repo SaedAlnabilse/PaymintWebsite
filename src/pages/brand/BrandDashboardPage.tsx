@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate, useOutletContext } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { format } from 'date-fns';
 import {
     Users,
     Store,
@@ -40,6 +41,9 @@ import { SectionLoader } from '../../components/LoadingState';
 import { formatInputPlaceholder } from '../../utils/textCase';
 import { formatCompactCurrencyCode, formatCurrencyCode } from '../../utils/currency';
 import { StatValue } from '../../components/ui/StatValue';
+import { parseChartDate } from '../../utils/chartDate';
+import { getDateLocale } from '../../utils/dateLocale';
+import { useTheme } from '../../context/ThemeContext';
 
 interface BrandStats {
     totalRevenue: number;
@@ -82,8 +86,86 @@ type DateRangePreset = DatePeriod;
 
 const CHART_COLORS = ['#7dc6a2', '#8B5CF6', '#F59E0B', '#EF4444', '#3B82F6', '#EC4899'];
 
+const toFiniteNumber = (value: unknown): number => {
+    const n = typeof value === 'number' ? value : Number(value);
+    return Number.isFinite(n) ? n : 0;
+};
+
+/** Format trend X labels as "Jul 6" instead of ambiguous "7/6". */
+const formatTrendLabel = (raw: unknown, locale: string): string => {
+    const value = String(raw ?? '').trim();
+    if (!value) return '—';
+
+    // Already a friendly short label (e.g. "Jul 6", "Mon")
+    if (/^[A-Za-z]{3,}/.test(value) && !value.includes('T')) return value;
+
+    // M/D or MM/DD (optionally with year)
+    const md = value.match(/^(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?$/);
+    if (md) {
+        const month = Number(md[1]);
+        const day = Number(md[2]);
+        const year = md[3] ? Number(md[3].length === 2 ? `20${md[3]}` : md[3]) : new Date().getFullYear();
+        if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+            const date = new Date(year, month - 1, day);
+            if (!isNaN(date.getTime())) {
+                return format(date, 'MMM d', { locale: getDateLocale(locale) });
+            }
+        }
+    }
+
+    // ISO / timestamp / YYYY-MM-DD
+    const parsed = parseChartDate(value);
+    if (!isNaN(parsed.getTime())) {
+        // Hourly bucket like "14:00"
+        if (/^\d{1,2}:\d{2}/.test(value)) {
+            return format(parsed, 'HH:mm', { locale: getDateLocale(locale) });
+        }
+        return format(parsed, 'MMM d', { locale: getDateLocale(locale) });
+    }
+
+    return value;
+};
+
+const normalizeRevenueTrend = (raw: unknown[], locale: string): RevenueDataPoint[] => {
+    if (!Array.isArray(raw)) return [];
+    return raw.map((item: any) => ({
+        name: formatTrendLabel(item?.name ?? item?.date ?? item?.day ?? item?.label, locale),
+        value: toFiniteNumber(item?.value ?? item?.revenue ?? item?.total ?? item?.amount),
+        orders: toFiniteNumber(item?.orders ?? item?.orderCount ?? item?.count),
+    }));
+};
+
+const normalizeCategoryBreakdown = (raw: unknown[], unknownLabel: string): CategoryDataPoint[] => {
+    if (!Array.isArray(raw)) return [];
+    const rows = raw
+        .map((item: any, index: number) => {
+            const value = toFiniteNumber(item?.value ?? item?.revenue ?? item?.total ?? item?.amount);
+            const name = String(item?.name ?? item?.category ?? item?.label ?? '').trim() || unknownLabel;
+            return {
+                name,
+                value,
+                quantity: toFiniteNumber(item?.quantity ?? item?.count ?? item?.qty),
+                color: CHART_COLORS[index % CHART_COLORS.length],
+                share: toFiniteNumber(item?.share ?? item?.percentage),
+            };
+        })
+        // Keep named rows even at 0 so empty states can show a legend; drop totally empty junk
+        .filter((row) => row.name);
+
+    const total = rows.reduce((sum, row) => sum + Math.max(row.value, 0), 0);
+    return rows.map((row) => ({
+        ...row,
+        // Prefer computed share from totals; fall back to API share only when total is 0 and API sent a finite share
+        share: total > 0.005
+            ? row.value / total
+            : (Number.isFinite(row.share) && row.share > 1 ? row.share / 100 : (Number.isFinite(row.share) ? row.share : 0)),
+    }));
+};
+
 export function BrandDashboardPage() {
     const { t } = useTranslation();
+    const { resolvedTheme } = useTheme();
+    const isDark = resolvedTheme === 'dark';
     const { brandId: paramBrandId } = useParams<{ brandId: string }>();
     const { brand } = useOutletContext<{ brand: any }>() || {};
     const brandId = brand?.id || paramBrandId;
@@ -138,8 +220,13 @@ export function BrandDashboardPage() {
 
             setStats(data.stats);
             setLocations(data.locations || []);
-            setRevenueData(data.revenueTrend || []);
-            setCategoryBreakdown(data.categoryBreakdown || []);
+            setRevenueData(normalizeRevenueTrend(data.revenueTrend || data.revenueByDay || [], t('common.locale')));
+            setCategoryBreakdown(
+                normalizeCategoryBreakdown(
+                    data.categoryBreakdown || [],
+                    t('common.unknown', { defaultValue: 'Unknown' }),
+                ),
+            );
             setBrandName(data.brandName || t('brand.dashboard.title'));
         } catch (error) {
             console.error('Failed to fetch brand dashboard data:', error);
@@ -508,7 +595,7 @@ export function BrandDashboardPage() {
                     <div className="h-[300px] w-full">
                         {revenueData.length > 0 && revenueData.some(d => d.value > 0 || d.orders > 0) ? (
                             <ResponsiveContainer width="100%" height="100%">
-                                <ComposedChart data={revenueData}>
+                                <ComposedChart data={revenueData} margin={{ top: 8, right: 12, left: 4, bottom: 4 }}>
                                     <defs>
                                         <linearGradient id="brandRevenue" x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="5%" stopColor="#7dc6a2" stopOpacity={0.2} />
@@ -526,34 +613,59 @@ export function BrandDashboardPage() {
                                         tickLine={false}
                                         tick={{ fill: '#9CA3AF', fontSize: 11 }}
                                         dy={10}
-                                        interval={selectedDateRange === 'last_30' || selectedDateRange === 'last_30_days' || selectedDateRange === 'this_month' || selectedDateRange === 'last_28_days' || selectedDateRange === 'last_90_days' ? 4 : 0}
+                                        minTickGap={24}
+                                        interval={
+                                            selectedDateRange === 'last_30' ||
+                                            selectedDateRange === 'last_30_days' ||
+                                            selectedDateRange === 'this_month' ||
+                                            selectedDateRange === 'last_28_days' ||
+                                            selectedDateRange === 'last_90_days'
+                                                ? 'preserveStartEnd'
+                                                : 0
+                                        }
                                     />
                                     <YAxis
+                                        yAxisId="revenue"
                                         axisLine={false}
                                         tickLine={false}
                                         tick={{ fill: '#9CA3AF', fontSize: 11 }}
                                         tickFormatter={(value) => formatCurrency(value)}
-                                        dx={-10}
+                                        width={56}
+                                        dx={-4}
+                                    />
+                                    <YAxis
+                                        yAxisId="orders"
+                                        orientation="right"
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tick={{ fill: '#93C5FD', fontSize: 11 }}
+                                        allowDecimals={false}
+                                        width={36}
+                                        dx={4}
                                     />
                                     <Tooltip
                                         cursor={revenueData.length > 1 ? { stroke: '#7dc6a2', strokeWidth: 2, strokeDasharray: '6 6' } : false}
                                         contentStyle={{
-                                            backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                                            borderColor: '#E5E7EB',
+                                            backgroundColor: isDark ? 'rgba(15, 23, 42, 0.96)' : 'rgba(255, 255, 255, 0.95)',
+                                            borderColor: isDark ? 'rgba(255,255,255,0.08)' : '#E5E7EB',
                                             borderRadius: '12px',
                                             fontSize: '12px',
-                                            boxShadow: '0 10px 40px -10px rgba(0,0,0,0.2)'
+                                            boxShadow: '0 10px 40px -10px rgba(0,0,0,0.2)',
+                                            color: isDark ? '#fff' : '#111',
                                         }}
                                         formatter={(value, name) => [
-                                            name === 'value' ? formatCurrency(value as number) : String(value),
-                                            name === 'value' ? t('brand.dashboard.revenue') : t('brand.dashboard.orders')
+                                            name === 'value'
+                                                ? formatCurrency(Number(value) || 0)
+                                                : Number(value || 0).toLocaleString(t('common.locale')),
+                                            name === 'value' ? t('brand.dashboard.revenue') : t('brand.dashboard.orders'),
                                         ]}
                                     />
                                     {revenueData.length === 1 ? (
-                                        <Bar dataKey="value" barSize={40} fill="url(#brandRevenue)" radius={[10, 10, 0, 0]} />
+                                        <Bar yAxisId="revenue" dataKey="value" barSize={40} fill="url(#brandRevenue)" radius={[10, 10, 0, 0]} />
                                     ) : (
                                         <>
                                             <Area
+                                                yAxisId="revenue"
                                                 type="monotone"
                                                 dataKey="value"
                                                 stroke="#7dc6a2"
@@ -563,6 +675,7 @@ export function BrandDashboardPage() {
                                                 animationDuration={1500}
                                             />
                                             <Area
+                                                yAxisId="orders"
                                                 type="monotone"
                                                 dataKey="orders"
                                                 stroke="#3B82F6"
@@ -595,58 +708,107 @@ export function BrandDashboardPage() {
                     <h3 className="text-xl font-bold tracking-tight text-gray-900 dark:text-white mb-1">{t('brand.dashboard.revenueDistribution')}</h3>
                     <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 leading-relaxed">{t('brand.dashboard.salesByCategory')}</p>
 
-                    <div className="h-[260px] relative">
-                        {categoryBreakdown.length > 0 ? (
-                            <ResponsiveContainer width="100%" height="100%">
-                                <RechartsPieChart>
-                                    <Pie
-                                        data={categoryBreakdown.slice(0, 6)}
-                                        cx="50%"
-                                        cy="50%"
-                                        innerRadius={65}
-                                        outerRadius={85}
-                                        paddingAngle={5}
-                                        dataKey="value"
-                                        animationDuration={1500}
-                                    >
-                                        {categoryBreakdown.slice(0, 6).map((_entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} stroke="none" />
-                                        ))}
-                                    </Pie>
-                                    <Tooltip
-                                        contentStyle={{
-                                            backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                                            borderColor: '#E5E7EB',
-                                            borderRadius: '12px',
-                                            fontSize: '12px',
-                                            boxShadow: '0 10px 40px -10px rgba(0,0,0,0.2)'
-                                        }}
-                                        formatter={(value) => formatCurrency(value as number)}
-                                    />
-                                </RechartsPieChart>
-                            </ResponsiveContainer>
-                        ) : (
-                            <div className="flex flex-col items-center justify-center h-full text-center">
-                                <div className="w-32 h-32 rounded-full border-4 border-gray-100 dark:border-white/5 flex items-center justify-center">
-                                    <ShoppingBag size={32} className="text-gray-200 dark:text-gray-800" />
-                                </div>
-                            </div>
-                        )}
-                    </div>
+                    {(() => {
+                        const topCategories = categoryBreakdown.slice(0, 6);
+                        const categoryTotal = topCategories.reduce((sum, c) => sum + Math.max(toFiniteNumber(c.value), 0), 0);
+                        const hasCategoryData = categoryTotal > 0.005;
+                        const emptyFill = isDark ? '#334155' : '#e5e7eb';
+                        const pieData = hasCategoryData
+                            ? topCategories.map((c) => ({ ...c, value: Math.max(toFiniteNumber(c.value), 0) }))
+                            : [{ name: '__empty__', value: 1, quantity: 0, color: emptyFill, share: 0 }];
 
-                    <div className="grid grid-cols-2 gap-y-3 mt-6">
-                        {categoryBreakdown.slice(0, 6).map((entry, index) => (
-                            <div key={entry.name} className="flex items-center gap-2">
-                                <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }} />
-                                <div className="min-w-0">
-                                    <p className="text-[11px] font-bold text-gray-900 dark:text-white truncate">{entry.name}</p>
-                                    <p className="text-[10px] text-gray-500 font-medium">
-                                        {((entry.value / categoryBreakdown.reduce((s, c) => s + c.value, 0)) * 100).toFixed(1)}%
-                                    </p>
+                        return (
+                            <>
+                                <div className="h-[260px] relative">
+                                    {topCategories.length > 0 ? (
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <RechartsPieChart>
+                                                <Pie
+                                                    data={pieData}
+                                                    cx="50%"
+                                                    cy="50%"
+                                                    innerRadius={65}
+                                                    outerRadius={85}
+                                                    paddingAngle={hasCategoryData ? 5 : 0}
+                                                    dataKey="value"
+                                                    animationDuration={hasCategoryData ? 1500 : 0}
+                                                    isAnimationActive={hasCategoryData}
+                                                    stroke="none"
+                                                >
+                                                    {pieData.map((_entry, index) => (
+                                                        <Cell
+                                                            key={`cell-${index}`}
+                                                            fill={hasCategoryData ? CHART_COLORS[index % CHART_COLORS.length] : emptyFill}
+                                                            stroke="none"
+                                                        />
+                                                    ))}
+                                                </Pie>
+                                                {hasCategoryData && (
+                                                    <Tooltip
+                                                        contentStyle={{
+                                                            backgroundColor: isDark ? 'rgba(15, 23, 42, 0.96)' : 'rgba(255, 255, 255, 0.95)',
+                                                            borderColor: isDark ? 'rgba(255,255,255,0.08)' : '#E5E7EB',
+                                                            borderRadius: '12px',
+                                                            fontSize: '12px',
+                                                            boxShadow: '0 10px 40px -10px rgba(0,0,0,0.2)',
+                                                            color: isDark ? '#fff' : '#111',
+                                                        }}
+                                                        formatter={(value, _name, item) => [
+                                                            formatCurrency(toFiniteNumber(value)),
+                                                            String((item?.payload as CategoryDataPoint | undefined)?.name ?? ''),
+                                                        ]}
+                                                    />
+                                                )}
+                                            </RechartsPieChart>
+                                        </ResponsiveContainer>
+                                    ) : (
+                                        <div className="flex flex-col items-center justify-center h-full text-center">
+                                            <div className="w-32 h-32 rounded-full border-4 border-gray-100 dark:border-white/5 flex items-center justify-center mb-3">
+                                                <ShoppingBag size={32} className="text-gray-200 dark:text-gray-800" />
+                                            </div>
+                                            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                                {t('brand.dashboard.noCategoryData', { defaultValue: 'No category sales yet' })}
+                                            </p>
+                                        </div>
+                                    )}
                                 </div>
-                            </div>
-                        ))}
-                    </div>
+
+                                {topCategories.length > 0 && (
+                                    <div className="grid grid-cols-2 gap-y-3 gap-x-3 mt-6">
+                                        {topCategories.map((entry, index) => {
+                                            const pct = Number.isFinite(entry.share)
+                                                ? entry.share
+                                                : (categoryTotal > 0 ? entry.value / categoryTotal : 0);
+                                            const safePct = Number.isFinite(pct) ? Math.max(0, pct) : 0;
+
+                                            return (
+                                                <div key={`${entry.name}-${index}`} className="flex items-center gap-2 min-w-0">
+                                                    <div
+                                                        className="w-2.5 h-2.5 rounded-full shrink-0"
+                                                        style={{
+                                                            backgroundColor: hasCategoryData
+                                                                ? CHART_COLORS[index % CHART_COLORS.length]
+                                                                : emptyFill,
+                                                        }}
+                                                    />
+                                                    <div className="min-w-0">
+                                                        <p className="text-[11px] font-bold text-gray-900 dark:text-white truncate">
+                                                            {entry.name}
+                                                        </p>
+                                                        <p className="text-[10px] text-gray-500 font-medium tabular-nums">
+                                                            {(safePct * 100).toFixed(1)}%
+                                                            <span className="mx-1 text-gray-300 dark:text-gray-600">·</span>
+                                                            {formatCurrency(toFiniteNumber(entry.value))}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </>
+                        );
+                    })()}
                 </motion.div>
             </div>
         </div>
