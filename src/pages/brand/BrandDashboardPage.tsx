@@ -139,8 +139,8 @@ const normalizeCategoryBreakdown = (raw: unknown[], unknownLabel: string): Categ
     if (!Array.isArray(raw)) return [];
     const rows = raw
         .map((item: any, index: number) => {
-            const value = toFiniteNumber(item?.value ?? item?.revenue ?? item?.total ?? item?.amount);
-            const name = String(item?.name ?? item?.category ?? item?.label ?? '').trim() || unknownLabel;
+            const value = toFiniteNumber(item?.value ?? item?.totalSales ?? item?.revenue ?? item?.total ?? item?.amount);
+            const name = String(item?.name ?? item?.categoryName ?? item?.category ?? item?.label ?? '').trim() || unknownLabel;
             return {
                 name,
                 value,
@@ -171,7 +171,7 @@ export function BrandDashboardPage() {
     const brandId = brand?.id || paramBrandId;
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(true);
-    const [brandName, setBrandName] = useState(t('brand.dashboard.title'));
+    const [brandName, setBrandName] = useState(brand?.name || t('brand.dashboard.title'));
     const [stats, setStats] = useState<BrandStats | null>(null);
     const [locations, setLocations] = useState<LocationPerformance[]>([]);
     const initialDateRange = useMemo(() => calculateDateRange('this_week'), []);
@@ -218,8 +218,14 @@ export function BrandDashboardPage() {
             const response = await api.get(`/brands/${brandId}/dashboard-stats?${params.toString()}`);
             const data = response.data;
 
-            setStats(data.stats);
-            setLocations(data.locations || []);
+            setStats(data.stats
+                ? {
+                    ...data.stats,
+                    revenueGrowth: toFiniteNumber(data.stats.revenueGrowth ?? data.stats.revenueChange),
+                    orderGrowth: toFiniteNumber(data.stats.orderGrowth ?? data.stats.ordersChange),
+                }
+                : null);
+            setLocations(data.locationPerformance || data.locations || []);
             setRevenueData(normalizeRevenueTrend(data.revenueTrend || data.revenueByDay || [], t('common.locale')));
             setCategoryBreakdown(
                 normalizeCategoryBreakdown(
@@ -227,7 +233,7 @@ export function BrandDashboardPage() {
                     t('common.unknown', { defaultValue: 'Unknown' }),
                 ),
             );
-            setBrandName(data.brandName || t('brand.dashboard.title'));
+            setBrandName(data.brandName || brand?.name || t('brand.dashboard.title'));
         } catch (error) {
             console.error('Failed to fetch brand dashboard data:', error);
             toast.error(t('brand.dashboard.failedToLoad'));
@@ -235,7 +241,7 @@ export function BrandDashboardPage() {
             setIsLoading(false);
             setIsRefreshing(false);
         }
-    }, [brandId, startDate, endDate, startTime, endTime, t]);
+    }, [brandId, brand?.name, startDate, endDate, startTime, endTime, t]);
 
     useEffect(() => {
         fetchBrandData(true);
@@ -265,6 +271,20 @@ export function BrandDashboardPage() {
     const formatCurrency = (value: number) => {
         const locale = t('common.locale') === 'ar' ? 'ar-EG' : 'en-US';
         return formatCompactCurrencyCode(value, 'USD', locale);
+    };
+
+    // Compact number without the currency code for axis ticks — "38.0M USD"
+    // wraps to two lines inside the narrow YAxis and gets clipped.
+    const formatAxisValue = (value: number) => {
+        const locale = t('common.locale') === 'ar' ? 'ar-EG' : 'en-US';
+        const abs = Math.abs(value);
+        if (abs >= 1000000) {
+            return `${(value / 1000000).toLocaleString(locale, { maximumFractionDigits: 1 })}M`;
+        }
+        if (abs >= 1000) {
+            return `${(value / 1000).toLocaleString(locale, { maximumFractionDigits: 1 })}K`;
+        }
+        return value.toLocaleString(locale, { maximumFractionDigits: 0 });
     };
 
     const isTopBrand = brandId === 'cmkek5eme0001vjjqvfm3wjwa';
@@ -595,7 +615,7 @@ export function BrandDashboardPage() {
                     <div className="h-[300px] w-full">
                         {revenueData.length > 0 && revenueData.some(d => d.value > 0 || d.orders > 0) ? (
                             <ResponsiveContainer width="100%" height="100%">
-                                <ComposedChart data={revenueData} margin={{ top: 8, right: 12, left: 4, bottom: 4 }}>
+                                <ComposedChart data={revenueData} margin={{ top: 12, right: 12, left: 4, bottom: 4 }}>
                                     <defs>
                                         <linearGradient id="brandRevenue" x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="5%" stopColor="#7dc6a2" stopOpacity={0.2} />
@@ -629,7 +649,7 @@ export function BrandDashboardPage() {
                                         axisLine={false}
                                         tickLine={false}
                                         tick={{ fill: '#9CA3AF', fontSize: 11 }}
-                                        tickFormatter={(value) => formatCurrency(value)}
+                                        tickFormatter={(value) => formatAxisValue(Number(value))}
                                         width={56}
                                         dx={-4}
                                     />
