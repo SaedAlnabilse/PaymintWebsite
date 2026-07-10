@@ -11,6 +11,14 @@ export const PrivacyPolicyPage = () => {
 
     const appPrivacyAddendum = isArabic
         ? {
+            socialTitle: 'تسجيل الدخول عبر Google أو Apple',
+            socialIntro: 'إذا اخترت تسجيل الدخول أو إنشاء حساب باستخدام Google أو Apple، فإننا نتلقى معلومات ملف شخصي محدودة من ذلك المزود بعد موافقتك على شاشة الإذن الخاصة به:',
+            socialItems: [
+                'من Google: اسمك وعنوان بريدك الإلكتروني ولغتك المفضلة وصورة ملفك الشخصي.',
+                'من Apple: اسمك وعنوان بريدك الإلكتروني (أو عنوان البريد الخاص المخفي من Apple إذا اخترت إخفاء بريدك).',
+                'نستخدم هذه المعلومات فقط لإنشاء حسابك في Mintcom وتسجيل دخولك إليه وتحديث ملفك الشخصي والتواصل معك بشأن الخدمة. لا نتلقى كلمة مرور حسابك في Google أو Apple، ولا نحصل على أي وصول إلى جهات اتصالك أو ملفاتك أو أي بيانات أخرى في تلك الحسابات.',
+                'لا نستخدم هذه المعلومات للإعلانات ولا نبيعها. يمكنك حذفها في أي وقت عبر حذف حسابك (انظر قسم الاحتفاظ بالبيانات وحذف الحساب أدناه).'
+            ],
             permissionsTitle: 'إفصاحات تطبيق الهاتف والأذونات',
             permissionsIntro: 'لضمان قبول سياسة الخصوصية في متجري App Store وGoogle Play، نوضح أيضاً كيف يستخدم تطبيق Mintcom على الهاتف خصائص الجهاز والخدمات المرتبطة به.',
             permissions: [
@@ -47,6 +55,14 @@ export const PrivacyPolicyPage = () => {
             governingLawBody: 'تخضع سياسة الخصوصية هذه واستخدامك لخدمات Mintcom لقوانين المملكة الأردنية الهاشمية، ما لم يفرض القانون المحلي الإلزامي خلاف ذلك.'
         }
         : {
+            socialTitle: 'Sign in with Google or Apple',
+            socialIntro: 'If you choose to sign in or create an account using Google or Apple, we receive limited profile information from that provider after you approve it on their consent screen:',
+            socialItems: [
+                'From Google: your name, email address, language preference, and profile picture.',
+                'From Apple: your name and email address (or Apple\'s private relay email address if you choose to hide yours).',
+                'We use this information only to create and sign you into your Mintcom account, keep your profile up to date, and communicate with you about the service. We never receive your Google or Apple password, and we do not get access to your contacts, files, or any other data in those accounts.',
+                'We do not use this information for advertising and we do not sell it. You can remove it at any time by deleting your account (see Data Retention & Account Deletion below).'
+            ],
             permissionsTitle: 'Mobile App Disclosures & Permissions',
             permissionsIntro: 'To ensure the policy clearly covers the Mintcom mobile app for App Store and Google Play review, we also explain how the app uses device features and related services.',
             permissions: [
@@ -137,6 +153,16 @@ export const PrivacyPolicyPage = () => {
                                     <li>{t('legal.privacy.fields.phone')}</li>
                                     <li>{t('legal.privacy.fields.businessInfo')}</li>
                                     <li>{t('legal.privacy.fields.credentials')}</li>
+                                </ul>
+                            </div>
+
+                            <div className={`mb-6 ${isArabic ? 'pr-4 border-r-2' : 'pl-4 border-l-2'} border-mintcom-green/20`}>
+                                <h3 className="font-magilio text-lg font-bold text-gray-900 dark:text-white mb-3">{appPrivacyAddendum.socialTitle}</h3>
+                                <p className="text-sm font-medium mb-2">{appPrivacyAddendum.socialIntro}</p>
+                                <ul className="list-disc pr-5 pl-5 space-y-1 text-sm font-medium">
+                                    {appPrivacyAddendum.socialItems.map((item) => (
+                                        <li key={item}>{item}</li>
+                                    ))}
                                 </ul>
                             </div>
 
