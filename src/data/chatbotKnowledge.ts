@@ -519,18 +519,12 @@ Go to **Dashboard > Materials** and **Dashboard > Recipes** to get started!`,
     keywords: ['orders', 'view orders', 'order history', 'transactions', 'sales history', 'find order', 'الطلبات', 'عرض الطلبات', 'سجل الطلبات', 'المعاملات', 'تاريخ المبيعات'],
     question: 'How do I view my orders?',
     questionAr: 'كيف أعرض طلباتي؟',
-    answer: `You can view all orders in the Reports section!
+    answer: `You'll find all your orders in the Orders page — just head to your Dashboard and tap Orders. 😊
 
-1. Go to **Dashboard > Orders**
-2. You'll see all orders with number, status, items, total, and payment method
-3. **Search** by order number, **filter** by date, payment method, employee, or status
-4. Click any order for full details`,
-    answerAr: `يمكنك عرض جميع الطلبات في قسم التقارير!
+Everything's there: order number, status, items, total, and how it was paid. Looking for a specific one? Search by order number or filter by date, employee, or payment method. Tap any order to see its full details!`,
+    answerAr: `ستجد جميع طلباتك في صفحة الطلبات — فقط ادخل إلى لوحة التحكم واضغط على الطلبات. 😊
 
-1. اذهب إلى **لوحة التحكم > الطلبات**
-2. سترى جميع الطلبات مع الرقم والحالة والأصناف والمجموع وطريقة الدفع
-3. **ابحث** برقم الطلب، **فلتر** حسب التاريخ أو طريقة الدفع أو الموظف
-4. اضغط على أي طلب لعرض التفاصيل الكاملة`,
+كل شيء موجود هناك: رقم الطلب، الحالة، الأصناف، المجموع، وطريقة الدفع. تبحث عن طلب معين؟ ابحث برقم الطلب أو فلتر حسب التاريخ أو الموظف أو طريقة الدفع. اضغط على أي طلب لعرض تفاصيله الكاملة!`,
     category: 'orders',
     navigationPath: '/dashboard/:location/orders'
   },

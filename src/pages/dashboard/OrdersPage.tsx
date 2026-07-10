@@ -1435,7 +1435,7 @@ export function OrdersPage() {
                   className="text-2xl"
                 />
                 {stat.sub && (
-                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mt-1 capitalize truncate">{stat.sub}</p>
+                  <p className="sentence-case-text text-xs font-medium text-gray-500 dark:text-gray-400 mt-1 truncate">{stat.sub}</p>
                 )}
               </div>
             </div>

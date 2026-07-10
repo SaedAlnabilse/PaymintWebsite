@@ -903,7 +903,7 @@ export const ItemsView = React.memo(function ItemsView({
                   </div>
                   <button
                     onClick={() => setIsBreakdownModalOpen(false)}
-                    className="w-12 h-12 rounded-2xl bg-white dark:bg-white/5 flex items-center justify-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 border border-gray-200 dark:border-white/10 transition-all hover:rotate-90 shadow-sm"
+                    className="w-12 h-12 rounded-2xl bg-white dark:bg-white/5 flex items-center justify-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 border border-gray-200 dark:border-white/10 transition-colors shadow-sm"
                   >
                     <X size={24} />
                   </button>
@@ -992,25 +992,33 @@ export const ItemsView = React.memo(function ItemsView({
                 </div>
 
                 {/* Footer */}
-                <div className="px-8 py-6 border-t border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.02] flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="text-start">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">{t('orders.reports.items.totalItems')}</p>
-                      <p className="text-lg font-black text-gray-900 dark:text-white">
-                        <StatValue value={filteredBreakdown.reduce((acc, curr) => acc + curr.quantity, 0)} isInteger={true} className="text-lg" />
+                <div className="px-8 py-6 border-t border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.02] flex items-center justify-between gap-4">
+                  <div className="flex items-stretch gap-5 min-w-0">
+                    <div className="flex flex-col justify-between gap-1 min-w-0">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 leading-none">
+                        {t('orders.reports.items.totalItems')}
                       </p>
+                      <StatValue
+                        value={filteredBreakdown.reduce((acc, curr) => acc + curr.quantity, 0)}
+                        isInteger={true}
+                        className="text-lg font-black text-gray-900 dark:text-white leading-none"
+                      />
                     </div>
-                    <div className="w-px h-8 bg-gray-200 dark:bg-white/10" />
-                    <div className="text-start">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">{t('orders.reports.items.totalRevenue')}</p>
-                      <p className="text-lg font-black text-mintcom-green">
-                        {formatCurrency(filteredBreakdown.reduce((acc, curr) => acc + (curr.totalSales || curr.revenue || 0), 0), 'start')}
+                    <div className="w-px self-stretch bg-gray-200 dark:bg-white/10" />
+                    <div className="flex flex-col justify-between gap-1 min-w-0">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 leading-none">
+                        {t('orders.reports.items.totalRevenue')}
                       </p>
+                      <StatValue
+                        value={filteredBreakdown.reduce((acc, curr) => acc + (curr.totalSales || curr.revenue || 0), 0)}
+                        currency={currencySymbol}
+                        className="text-lg font-black text-mintcom-green leading-none"
+                      />
                     </div>
                   </div>
                   <button
                     onClick={() => setIsBreakdownModalOpen(false)}
-                    className="px-8 py-3 rounded-2xl bg-gray-900 dark:bg-white text-white dark:text-black font-bold text-sm hover:scale-105 transition-all shadow-lg active:scale-95"
+                    className="px-8 py-3 rounded-2xl bg-gray-900 dark:bg-white text-white dark:text-black font-bold text-sm hover:scale-105 transition-all shadow-lg active:scale-95 shrink-0"
                   >
                     {t('common.done')}
                   </button>
