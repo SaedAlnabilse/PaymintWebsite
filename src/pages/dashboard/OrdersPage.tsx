@@ -11,7 +11,6 @@ import { getDateLocale } from '../../utils/dateLocale';
 import {
   ShoppingCart,
   Clock,
-  ChevronLeft,
   ChevronRight,
   TrendingUp,
   MoreVertical,
@@ -237,13 +236,10 @@ export function OrdersPage() {
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
   const ordersListRef = useRef<HTMLDivElement | null>(null);
   const isInitialMount = useRef(true);
-  const heldOrdersScrollRef = useRef<HTMLDivElement | null>(null);
-  const lastHeldArrowClickRef = useRef(0);
   const actionMenuTriggerRef = useRef<HTMLButtonElement | null>(null);
   const fetchRequestIdRef = useRef(0);
   const realtimeRefreshTimeoutRef = useRef<number | null>(null);
-  const [canScrollHeldLeft, setCanScrollHeldLeft] = useState(false);
-  const [canScrollHeldRight, setCanScrollHeldRight] = useState(false);
+  const HELD_ORDERS_PREVIEW_COUNT = 4;
   const selectedEmployeeName = useMemo(
     () => employees.find((employee) => employee.value === selectedEmployeeId)?.label || null,
     [employees, selectedEmployeeId],
@@ -303,31 +299,6 @@ export function OrdersPage() {
 
     return nextOrders;
   }, [orders, sortConfig, t]);
-
-  const updateHeldOrdersScrollIndicators = useCallback(() => {
-    const el = heldOrdersScrollRef.current;
-    if (!el) {
-      setCanScrollHeldLeft(false);
-      setCanScrollHeldRight(false);
-      return;
-    }
-
-    const hasLeft = el.scrollLeft > 2;
-    const hasRight = el.scrollLeft + el.clientWidth < el.scrollWidth - 2;
-    setCanScrollHeldLeft(hasLeft);
-    setCanScrollHeldRight(hasRight);
-  }, []);
-
-  const scrollHeldOrders = useCallback((direction: 'left' | 'right') => {
-    const el = heldOrdersScrollRef.current;
-    if (!el) return;
-    lastHeldArrowClickRef.current = Date.now();
-    const amount = Math.max(280, Math.floor(el.clientWidth * 0.8));
-    el.scrollBy({
-      left: direction === 'right' ? amount : -amount,
-      behavior: 'smooth',
-    });
-  }, []);
 
   // Shift status for shift-based filtering
   const [shiftStatus, setShiftStatus] = useState<ShiftStatus | null>(null);
@@ -582,13 +553,6 @@ export function OrdersPage() {
 
     return () => window.clearTimeout(timeoutId);
   }, [searchQuery]);
-
-  useEffect(() => {
-    updateHeldOrdersScrollIndicators();
-    const onResize = () => updateHeldOrdersScrollIndicators();
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, [updateHeldOrdersScrollIndicators, heldOrders.length, statusFilter]);
 
   // Sync date range when selectedDateRange changes (for non-custom, non-shift ranges)
   useEffect(() => {
@@ -1491,7 +1455,7 @@ export function OrdersPage() {
         ))}
       </div>
 
-      {/* Held Orders Section */}
+      {/* Held Orders Section — preview only; full list via View More */}
       {heldOrders.length > 0 && statusFilter !== 'HELD' && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
@@ -1499,7 +1463,7 @@ export function OrdersPage() {
               <Clock size={16} className="text-orange-500" />
               {t('orders.status.onHold')} ({heldOrders.length})
             </h2>
-            {heldOrders.length > 3 && (
+            {heldOrders.length > HELD_ORDERS_PREVIEW_COUNT && (
               <button
                 type="button"
                 onClick={() => {
@@ -1514,106 +1478,51 @@ export function OrdersPage() {
             )}
           </div>
 
-          <div className="relative">
-            {canScrollHeldLeft && (
+          {/* Equal-width cards fill the row (up to 4); no horizontal scroll/arrows */}
+          <div className="flex flex-col md:flex-row gap-4">
+            {heldOrders.slice(0, HELD_ORDERS_PREVIEW_COUNT).map((order) => (
               <div
-                className="absolute left-0 top-0 bottom-2 z-30 w-14 bg-gradient-to-r from-white dark:from-[#111827] to-transparent flex items-center justify-start pl-1"
-                onClick={(e) => e.stopPropagation()}
-                onMouseDown={(e) => e.stopPropagation()}
+                key={order.id}
+                onClick={() => {
+                  void openOrderDetails(order);
+                }}
+                className="group flex-1 min-w-0 w-full bg-white dark:bg-[#1E293B] p-5 rounded-2xl border border-orange-200 dark:border-orange-500/20 shadow-sm hover:shadow-md transition-all cursor-pointer relative overflow-hidden"
               >
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    scrollHeldOrders('left');
-                  }}
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }}
-                  className="h-9 w-9 rounded-[12px] border border-orange-200/70 dark:border-orange-500/30 bg-white/90 dark:bg-[#1f2937]/90 backdrop-blur-sm shadow-sm hover:shadow-md hover:border-orange-300 dark:hover:border-orange-500/50 text-orange-500 transition-all flex items-center justify-center"
-                  aria-label="Scroll held orders left"
-                >
-                  <ChevronLeft size={16} />
-                </button>
-              </div>
-            )}
-            {canScrollHeldRight && (
-              <div
-                className="absolute right-0 top-0 bottom-2 z-30 w-14 bg-gradient-to-l from-white dark:from-[#111827] to-transparent flex items-center justify-end pr-1"
-                onClick={(e) => e.stopPropagation()}
-                onMouseDown={(e) => e.stopPropagation()}
-              >
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    scrollHeldOrders('right');
-                  }}
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }}
-                  className="h-9 w-9 rounded-[12px] border border-orange-200/70 dark:border-orange-500/30 bg-white/90 dark:bg-[#1f2937]/90 backdrop-blur-sm shadow-sm hover:shadow-md hover:border-orange-300 dark:hover:border-orange-500/50 text-orange-500 transition-all flex items-center justify-center"
-                  aria-label="Scroll held orders right"
-                >
-                  <ChevronRight size={16} />
-                </button>
-              </div>
-            )}
+                <div className="absolute top-0 right-0 w-20 h-20 bg-orange-500/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
 
-            <div
-              ref={heldOrdersScrollRef}
-              onScroll={updateHeldOrdersScrollIndicators}
-              className="flex flex-nowrap gap-4 overflow-x-auto scrollbar-none pb-2"
-            >
-              {heldOrders.map((order) => (
-                <div
-                  key={order.id}
-                  onClick={() => {
-                    if (Date.now() - lastHeldArrowClickRef.current < 450) return;
-                    void openOrderDetails(order);
-                  }}
-                  className="group flex-none basis-full sm:basis-1/2 lg:basis-1/3 xl:basis-1/4 bg-white dark:bg-[#1E293B] p-5 rounded-2xl border border-orange-200 dark:border-orange-500/20 shadow-sm hover:shadow-md transition-all cursor-pointer relative overflow-hidden"
-                >
-                  <div className="absolute top-0 right-0 w-20 h-20 bg-orange-500/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
-
-                  <div className="relative z-10 space-y-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500 group-hover:scale-110 transition-transform">
-                          <Clock size={18} />
-                        </div>
-                        <div>
-                          <p className="font-black text-gray-900 dark:text-white text-sm">#{order.orderNumber}</p>
-                        </div>
+                <div className="relative z-10 space-y-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500 group-hover:scale-110 transition-transform">
+                        <Clock size={18} />
                       </div>
-                    </div>
-
-                    <div className="space-y-1">
-                      {order.customer?.name && (
-                        <p className="text-sm font-bold text-gray-800 dark:text-gray-200 truncate">
-                          {order.customer.name}
-                        </p>
-                      )}
-                      <div className="flex items-center justify-between">
-                        <span className="dashboard-card-meta">{order.items.length} {t('hero.items')}</span>
-                        <StatValue value={order.total} currency={currencySymbol} className="text-2xl" />
+                      <div>
+                        <p className="font-black text-gray-900 dark:text-white text-sm">#{order.orderNumber}</p>
                       </div>
-                    </div>
-
-                    <div className="pt-3 border-t border-gray-100 dark:border-white/5 flex items-center justify-between">
-                      <span className="text-xs font-bold text-gray-500 dark:text-gray-400 capitalize">
-                        {t('orders.table.staff')}: {order.user?.username}
-                      </span>
-                      <ChevronRight size={14} className="text-orange-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
                   </div>
+
+                  <div className="space-y-1">
+                    {order.customer?.name && (
+                      <p className="text-sm font-bold text-gray-800 dark:text-gray-200 truncate">
+                        {order.customer.name}
+                      </p>
+                    )}
+                    <div className="flex items-center justify-between">
+                      <span className="dashboard-card-meta">{order.items.length} {t('hero.items')}</span>
+                      <StatValue value={order.total} currency={currencySymbol} className="text-2xl" />
+                    </div>
+                  </div>
+
+                  <div className="pt-3 border-t border-gray-100 dark:border-white/5 flex items-center justify-between">
+                    <span className="text-xs font-bold text-gray-500 dark:text-gray-400 capitalize">
+                      {t('orders.table.staff')}: {order.user?.username}
+                    </span>
+                    <ChevronRight size={14} className="text-orange-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
