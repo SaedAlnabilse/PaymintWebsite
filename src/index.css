@@ -904,9 +904,10 @@
   }
 
   /*
-   * Google Identity Services custom-button shell.
-   * Production: fully opacity-0 iframes often fail hit-testing / FedCM under
-   * privacy modes. Keep a tiny opacity and force the iframe to cover the shell.
+   * Google Identity Services hit-target under our branded face.
+   * When the user already has a Google session, GIS paints "Sign in as …"
+   * with avatar + email. We hide ALL of that visually (opacity/filter) while
+   * keeping the iframe full-size and clickable under solid masks in React.
    */
   .google-auth-button {
     overflow: hidden !important;
@@ -922,7 +923,9 @@
     max-height: none !important;
     margin: 0 !important;
     border: 0 !important;
+    padding: 0 !important;
     background: transparent !important;
+    box-shadow: none !important;
   }
 
   .google-auth-button iframe {
@@ -934,7 +937,10 @@
     max-height: none !important;
     margin: 0 !important;
     border: 0 !important;
-    opacity: 0.02 !important; /* not 0 — production browsers still hit-test this */
+    padding: 0 !important;
+    opacity: 0 !important;
+    filter: opacity(0) contrast(0) !important;
+    /* Do not use visibility:hidden — breaks hit-testing in some browsers */
     cursor: pointer !important;
   }
 @keyframes mintcom-spin {

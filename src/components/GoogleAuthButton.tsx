@@ -356,20 +356,46 @@ export const GoogleAuthButton = forwardRef<GoogleAuthButtonHandle, GoogleAuthBut
     }[text];
 
     const showLoading = isLoading || !isReady;
+    // Fully opaque solid (no alpha) so signed-in "Sign in as …" chrome never bleeds when zoomed.
+    const solidBg = resolvedTheme === 'dark' ? '#0c0c0c' : '#ffffff';
 
     // Match AppleAuthButton: one border, rounded-xl, px-4 py-3, shadow-sm.
-    // GIS iframe sits on top (near-invisible) so production browsers still hit-test it.
-    // Fully opacity-0 iframes are flaky under strict production CSP / privacy modes.
+    //
+    // GIS can show "Sign in as Name / email" when a Google session exists.
+    // Cross-origin iframes sometimes composite above siblings when only
+    // opacity-hidden — so we bury GIS under multiple solid masks (pointer-events:
+    // none) and paint our brand face on top. Clicks still hit the GIS host under.
     return (
       <div
         ref={containerRef}
-        className={`group relative isolate w-full overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-white/[0.04] ${
+        className={`group relative isolate w-full overflow-hidden rounded-xl border border-gray-200 shadow-sm dark:border-white/10 ${
           disabled || isLoading ? 'pointer-events-none opacity-50' : ''
         }`}
+        style={{ backgroundColor: solidBg }}
       >
-        {/* Visible face — decorative only */}
+        {/* 1) Official GIS hit-target (under masks) */}
         <div
-          className="pointer-events-none relative z-0 flex w-full items-center justify-center gap-3 px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white"
+          ref={buttonRef}
+          aria-label={buttonText}
+          className="google-auth-button absolute inset-0 z-[1]"
+        />
+
+        {/* 2) Double solid occlusion — kills avatar / email / native G even at high zoom */}
+        <div
+          className="pointer-events-none absolute inset-0 z-[2]"
+          style={{ backgroundColor: solidBg }}
+          aria-hidden
+        />
+        <div
+          className="pointer-events-none absolute inset-[-1px] z-[3]"
+          style={{ backgroundColor: solidBg, transform: 'translateZ(0)' }}
+          aria-hidden
+        />
+
+        {/* 3) Brand face */}
+        <div
+          className="pointer-events-none absolute inset-0 z-[4] flex items-center justify-center gap-3 px-4 py-3 text-sm font-semibold"
+          style={{ backgroundColor: solidBg, color: resolvedTheme === 'dark' ? '#ffffff' : '#111827' }}
           aria-hidden
         >
           <span className="flex h-[18px] w-[18px] shrink-0 items-center justify-center">
@@ -378,12 +404,14 @@ export const GoogleAuthButton = forwardRef<GoogleAuthButtonHandle, GoogleAuthBut
           <span>{showLoading ? t('common.connecting') : buttonText}</span>
         </div>
 
-        {/* Official GIS hit-target — must receive the real click (see .google-auth-button CSS) */}
+        {/* Sizing strut — same height as Apple (py-3) */}
         <div
-          ref={buttonRef}
-          aria-label={buttonText}
-          className="google-auth-button absolute inset-0 z-10"
-        />
+          className="invisible flex items-center justify-center gap-3 px-4 py-3 text-sm font-semibold"
+          aria-hidden
+        >
+          <span className="h-[18px] w-[18px]" />
+          <span>{showLoading ? t('common.connecting') : buttonText}</span>
+        </div>
       </div>
     );
   }
