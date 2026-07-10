@@ -201,6 +201,52 @@ export const GoogleAuthButton = forwardRef<GoogleAuthButtonHandle, GoogleAuthBut
 
       let cancelled = false;
       let renderAttempts = 0;
+      let lastPaintedWidth = 0;
+      let ro: ResizeObserver | null = null;
+      let retryTimer: number | undefined;
+
+      const paint = (google: NonNullable<typeof window.google>) => {
+        if (cancelled || !buttonRef.current || !containerRef.current) return;
+
+        // Use the real rendered width — GIS paints a dead/narrow iframe when
+        // width is wrong (common in production after late font/layout settle).
+        const measured = Math.floor(containerRef.current.getBoundingClientRect().width);
+        const width = Math.max(measured || 0, 280);
+
+        // Skip redundant paints that thrash the iframe (and kill click handlers).
+        if (Math.abs(width - lastPaintedWidth) < 4 && buttonRef.current.querySelector('iframe')) {
+          setIsReady(true);
+          return;
+        }
+
+        buttonRef.current.replaceChildren();
+        google.accounts.id.renderButton(buttonRef.current, {
+          type: 'standard',
+          theme: resolvedTheme === 'dark' ? 'filled_black' : 'outline',
+          size: 'large',
+          text,
+          shape: 'rectangular',
+          logo_alignment: 'left',
+          width,
+          locale: i18n.language,
+        });
+
+        lastPaintedWidth = width;
+        renderAttempts += 1;
+        const hasIframe = Boolean(buttonRef.current.querySelector('iframe'));
+
+        // Retry if layout wasn't ready or GIS failed to inject an iframe.
+        if ((!hasIframe || measured < 40) && renderAttempts < 8) {
+          retryTimer = window.setTimeout(() => paint(google), 150);
+          return;
+        }
+
+        if (!hasIframe) {
+          console.error('[GoogleAuth] GIS button rendered without iframe — clicks will fail (check CSP frame-src)');
+        }
+
+        setIsReady(true);
+      };
 
       const mountButton = async () => {
         try {
@@ -221,38 +267,24 @@ export const GoogleAuthButton = forwardRef<GoogleAuthButtonHandle, GoogleAuthBut
             gisInitializedForClientId = GOOGLE_CLIENT_ID;
           }
 
-          const paint = () => {
-            if (cancelled || !buttonRef.current || !containerRef.current) return;
-
-            const width = Math.max(
-              Math.floor(containerRef.current.getBoundingClientRect().width) || 0,
-              280
-            );
-
-            buttonRef.current.replaceChildren();
-            google.accounts.id.renderButton(buttonRef.current, {
-              type: 'standard',
-              theme: resolvedTheme === 'dark' ? 'filled_black' : 'outline',
-              size: 'large',
-              text,
-              shape: 'rectangular',
-              logo_alignment: 'left',
-              width,
-              locale: i18n.language,
-            });
-
-            // If layout wasn't ready (width 0 → GIS paints a dead button), retry once.
-            renderAttempts += 1;
-            if (width < 40 && renderAttempts < 5) {
-              window.setTimeout(paint, 120);
-              return;
-            }
-
-            setIsReady(true);
-          };
-
           // Double rAF so flex/grid layout has final width before GIS measures.
-          requestAnimationFrame(() => requestAnimationFrame(paint));
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              if (!cancelled) paint(google);
+            });
+          });
+
+          // Production fonts/layout can change container width after first paint.
+          ro = new ResizeObserver(() => {
+            if (cancelled) return;
+            const w = Math.floor(containerRef.current?.getBoundingClientRect().width || 0);
+            if (w >= 40 && Math.abs(w - lastPaintedWidth) >= 4) {
+              paint(google);
+            }
+          });
+          if (containerRef.current) {
+            ro.observe(containerRef.current);
+          }
         } catch (error) {
           console.error('[GoogleAuth] Failed to initialize:', error);
           if (!cancelled) {
@@ -265,6 +297,8 @@ export const GoogleAuthButton = forwardRef<GoogleAuthButtonHandle, GoogleAuthBut
 
       return () => {
         cancelled = true;
+        if (retryTimer) window.clearTimeout(retryTimer);
+        ro?.disconnect();
         // Only clear THIS instance's host — never touch shared initialize state.
         if (buttonRef.current) {
           buttonRef.current.replaceChildren();
@@ -323,8 +357,9 @@ export const GoogleAuthButton = forwardRef<GoogleAuthButtonHandle, GoogleAuthBut
 
     const showLoading = isLoading || !isReady;
 
-    // Match AppleAuthButton exactly: one border, rounded-xl, px-4 py-3, shadow-sm.
-    // Border lives on the outer shell only (no second inner border → no double ring).
+    // Match AppleAuthButton: one border, rounded-xl, px-4 py-3, shadow-sm.
+    // GIS iframe sits on top (near-invisible) so production browsers still hit-test it.
+    // Fully opacity-0 iframes are flaky under strict production CSP / privacy modes.
     return (
       <div
         ref={containerRef}
@@ -332,7 +367,7 @@ export const GoogleAuthButton = forwardRef<GoogleAuthButtonHandle, GoogleAuthBut
           disabled || isLoading ? 'pointer-events-none opacity-50' : ''
         }`}
       >
-        {/* Visible face — same padding/type as Apple; no border here */}
+        {/* Visible face — decorative only */}
         <div
           className="pointer-events-none relative z-0 flex w-full items-center justify-center gap-3 px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white"
           aria-hidden
@@ -343,14 +378,11 @@ export const GoogleAuthButton = forwardRef<GoogleAuthButtonHandle, GoogleAuthBut
           <span>{showLoading ? t('common.connecting') : buttonText}</span>
         </div>
 
-        {/*
-          Official GIS hit-target: clipped to this shell so it never double-borders
-          or spills over neighboring form fields.
-        */}
+        {/* Official GIS hit-target — must receive the real click (see .google-auth-button CSS) */}
         <div
           ref={buttonRef}
           aria-label={buttonText}
-          className="google-auth-button absolute inset-0 z-10 overflow-hidden opacity-0 [&>div]:!h-full [&>div]:!w-full [&>div]:!max-h-full [&>div]:!border-0 [&>div]:!bg-transparent [&_iframe]:!h-full [&_iframe]:!max-h-full [&_iframe]:!w-full [&_iframe]:!border-0"
+          className="google-auth-button absolute inset-0 z-10"
         />
       </div>
     );

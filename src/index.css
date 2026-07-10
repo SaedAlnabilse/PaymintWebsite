@@ -902,6 +902,41 @@
   .cursor-mintcom-wait {
   cursor: url('./assets/green-loading-cursor.svg') 16 16, wait;
   }
+
+  /*
+   * Google Identity Services custom-button shell.
+   * Production: fully opacity-0 iframes often fail hit-testing / FedCM under
+   * privacy modes. Keep a tiny opacity and force the iframe to cover the shell.
+   */
+  .google-auth-button {
+    overflow: hidden !important;
+    cursor: pointer !important;
+    pointer-events: auto !important;
+  }
+
+  .google-auth-button > div,
+  .google-auth-button > div > div {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    margin: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+  }
+
+  .google-auth-button iframe {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    margin: 0 !important;
+    border: 0 !important;
+    opacity: 0.02 !important; /* not 0 — production browsers still hit-test this */
+    cursor: pointer !important;
+  }
 @keyframes mintcom-spin {
   from {
     transform: rotate(0deg);
