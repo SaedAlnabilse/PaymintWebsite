@@ -10,6 +10,7 @@ import {
     Activity,
     Zap,
     DollarSign,
+    Wallet,
     UserPlus,
     ExternalLink
 } from 'lucide-react';
@@ -36,8 +37,12 @@ import { StatValue } from '../../components/ui/StatValue';
 import { QuickInfo } from '../../components/QuickInfo';
 
 interface OverviewStats {
+    /** Gross sales including tax + service charge */
     totalRevenue: number;
     revenueChange: number;
+    /** Net sales excluding tax + service charge */
+    netSales: number;
+    netSalesChange: number;
     totalProfit: number;
     profitChange: number;
     activeLocations: number;
@@ -53,6 +58,8 @@ export function OwnerOverviewPage() {
     const [stats, setStats] = useState<OverviewStats>({
         totalRevenue: 0,
         revenueChange: 0,
+        netSales: 0,
+        netSalesChange: 0,
         totalProfit: 0,
         profitChange: 0,
         activeLocations: 0,
@@ -95,9 +102,16 @@ export function OwnerOverviewPage() {
             const revenueTrend = data.revenueTrend || data.revenueByDay || [];
 
             if (data) {
+                const totalSales = data.totalSales ?? data.totalRevenue ?? 0;
+                const netSales =
+                    data.netSales ??
+                    data.netSalesBeforeTaxAndServiceCharge ??
+                    0;
                 setStats({
-                    totalRevenue: data.totalRevenue || 0,
+                    totalRevenue: totalSales,
                     revenueChange: data.revenueChange || 0,
+                    netSales,
+                    netSalesChange: data.netSalesChange ?? data.revenueChange ?? 0,
                     totalProfit: data.totalProfit || 0,
                     profitChange: data.profitChange || 0,
                     activeLocations: establishments.length,
@@ -110,6 +124,8 @@ export function OwnerOverviewPage() {
                 setStats({
                     totalRevenue: 0,
                     revenueChange: 0,
+                    netSales: 0,
+                    netSalesChange: 0,
                     totalProfit: 0,
                     profitChange: 0,
                     activeLocations: establishments.length,
@@ -246,18 +262,31 @@ export function OwnerOverviewPage() {
                 </div>
             </div>
 
-            {/* KPI Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+            {/* KPI Grid — Net Sales first (left), then Total Sales (includes tax/service) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {[
                     {
-                        label: t('owner.overview.totalSales'),
-                        value: stats.totalRevenue,
-                        change: stats.revenueChange,
+                        label: t('owner.overview.netSales'),
+                        value: stats.netSales,
+                        change: stats.netSalesChange,
                         icon: DollarSign,
                         color: 'text-mintcom-green',
                         bg: 'bg-mintcom-green/10',
                         isCurrency: true,
-                        info: null as string | null,
+                        sub: t('owner.overview.netSalesSub'),
+                        info: t('owner.overview.netSalesInfo'),
+                        route: null as string | null,
+                    },
+                    {
+                        label: t('owner.overview.totalSales'),
+                        value: stats.totalRevenue,
+                        change: stats.revenueChange,
+                        icon: Wallet,
+                        color: 'text-mintcom-green',
+                        bg: 'bg-mintcom-green/10',
+                        isCurrency: true,
+                        sub: t('owner.overview.totalSalesSub'),
+                        info: t('owner.overview.totalSalesInfo'),
                         route: null as string | null,
                     },
                     {
@@ -268,6 +297,7 @@ export function OwnerOverviewPage() {
                         color: 'text-blue-500',
                         bg: 'bg-blue-500/10',
                         isCurrency: true,
+                        sub: null as string | null,
                         info: t('owner.overview.totalProfitInfo'),
                         route: null as string | null,
                     },
@@ -279,6 +309,7 @@ export function OwnerOverviewPage() {
                         color: 'text-purple-500',
                         bg: 'bg-purple-500/10',
                         isCurrency: false,
+                        sub: null as string | null,
                         info: t('owner.overview.activeLocationsInfo'),
                         route: '/owner/establishments',
                     },
@@ -290,6 +321,7 @@ export function OwnerOverviewPage() {
                         color: 'text-orange-500',
                         bg: 'bg-orange-500/10',
                         isCurrency: false,
+                        sub: null as string | null,
                         info: null as string | null,
                         route: '/owner/brands',
                     },
@@ -301,6 +333,7 @@ export function OwnerOverviewPage() {
                         color: 'text-pink-500',
                         bg: 'bg-pink-500/10',
                         isCurrency: false,
+                        sub: null as string | null,
                         info: null as string | null,
                         route: '/owner/employees',
                     },
@@ -359,6 +392,11 @@ export function OwnerOverviewPage() {
                                 className="text-2xl"
                                 isInteger={!stat.isCurrency}
                             />
+                            {stat.sub && (
+                                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mt-1">
+                                    {stat.sub}
+                                </p>
+                            )}
                         </div>
                     </motion.div>
                     );
@@ -375,13 +413,13 @@ export function OwnerOverviewPage() {
                 >
                     <div className="flex items-center justify-between mb-4 shrink-0">
                         <div>
-                            <h3 className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">{t('owner.overview.revenueTrend')}</h3>
+                            <h3 className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">{t('owner.overview.netSalesTrend')}</h3>
                             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t('owner.overview.consolidatedPerf')}</p>
                         </div>
                         <div className="flex items-center gap-2">
                             <div className="w-3 h-3 rounded-full bg-mintcom-green" />
                             <span className="text-xs font-medium text-gray-500">
-                                {t('owner.overview.revenue')} ({currencyCode})
+                                {t('owner.overview.netSales')} ({currencyCode})
                             </span>
                         </div>
                     </div>
@@ -420,7 +458,7 @@ export function OwnerOverviewPage() {
                                             fontSize: '12px',
                                             boxShadow: '0 10px 40px -10px rgba(0,0,0,0.1)'
                                         }}
-                                        formatter={(value) => [formatCurrency(value as number), t('owner.overview.revenue')]}
+                                        formatter={(value) => [formatCurrency(value as number), t('owner.overview.netSales')]}
                                     />
                                     <Area
                                         type="monotone"

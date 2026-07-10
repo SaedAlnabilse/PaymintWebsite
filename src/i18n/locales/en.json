@@ -3964,6 +3964,10 @@
       "managed": "managed",
       "manageLocations": "Manage Locations",
       "mintcom_network_data": "MINTCOM NETWORK DATA",
+      "netSales": "Net Sales",
+      "netSalesInfo": "Sales excluding tax and other service charges.",
+      "netSalesSub": "Excludes tax and other charges",
+      "netSalesTrend": "Net Sales Trend",
       "noData": "No data available for the selected period",
       "noRevenueData": "No revenue data",
       "noSalesRecorded": "No sales recorded for this period.",
@@ -3984,6 +3988,8 @@
       "totalProfitInfo": "The total sales amount minus the total product costs based on the cost set for each item.",
       "totalRevenue": "Total Revenue",
       "totalSales": "Total Sales",
+      "totalSalesInfo": "Gross sales including tax and other service charges.",
+      "totalSalesSub": "Includes tax and other charges",
       "totalStaff": "Total Staff"
     },
     "roles": {
