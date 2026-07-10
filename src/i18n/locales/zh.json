@@ -3984,7 +3984,13 @@
       "totalProfitInfo": "总销售额减去按各商品设定成本计算的商品总成本。",
       "totalRevenue": "总营收",
       "totalSales": "总销售额",
-      "totalStaff": "员工总数"
+      "totalStaff": "员工总数",
+      "netSales": "净销售额",
+      "netSalesInfo": "不含税费及其他服务费的销售额。",
+      "netSalesSub": "不含税费及其他费用",
+      "netSalesTrend": "净销售额趋势",
+      "totalSalesInfo": "含税费及其他服务费的总销售额。",
+      "totalSalesSub": "含税费及其他费用"
     },
     "roles": {
       "actions": "操作",
