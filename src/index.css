@@ -904,10 +904,10 @@
   }
 
   /*
-   * Google Identity Services hit-target under our branded face.
-   * When the user already has a Google session, GIS paints "Sign in as …"
-   * with avatar + email. We hide ALL of that visually (opacity/filter) while
-   * keeping the iframe full-size and clickable under solid masks in React.
+   * Google Identity Services hit-target ON TOP of our branded face.
+   * Must stay full-size + pointer-events so production clicks work.
+   * opacity:0 hides "Sign in as …" / avatar / native G; face underneath shows.
+   * Never put solid masks above this layer — cross-origin iframes won't get clicks.
    */
   .google-auth-button {
     overflow: hidden !important;
@@ -938,9 +938,8 @@
     margin: 0 !important;
     border: 0 !important;
     padding: 0 !important;
+    /* Fully invisible but still hit-testable (must stay on top of brand face) */
     opacity: 0 !important;
-    filter: opacity(0) contrast(0) !important;
-    /* Do not use visibility:hidden — breaks hit-testing in some browsers */
     cursor: pointer !important;
   }
 @keyframes mintcom-spin {
