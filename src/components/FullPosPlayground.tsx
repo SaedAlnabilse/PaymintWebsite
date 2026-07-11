@@ -73,8 +73,12 @@ type HeldTicket = {
   lines: CartLine[];
   discountPct: number;
   note: string;
+  /** Table number or guest nickname — like real POS holdOrder nickname */
+  label: string;
   at: number;
 };
+
+const HOLD_TABLE_COUNT = 12;
 type OrderType = 'dine-in' | 'takeaway' | 'delivery';
 type PayMethod = 'cash' | 'card' | 'cliq' | 'talabat' | 'voucher';
 type Phase = 'welcome' | 'pin' | 'app';
@@ -250,6 +254,7 @@ export function FullPosPlayground() {
   const [promptOpenShift, setPromptOpenShift] = useState(false);
   /** After opening shift from a blocked payment, return here with cart intact */
   const [returnToSalesAfterShift, setReturnToSalesAfterShift] = useState(false);
+  const [showHoldModal, setShowHoldModal] = useState(false);
 
   const shiftOrders = shift.orders;
   const shiftRevenue = shift.cashSales + shift.cardSales + shift.otherSales;
@@ -414,8 +419,14 @@ export function FullPosPlayground() {
     );
   };
 
-  const holdOrder = () => {
+  const openHoldModal = () => {
     if (!cart.length) return;
+    setShowHoldModal(true);
+  };
+
+  const confirmHold = (label: string) => {
+    if (!cart.length || !label.trim()) return;
+    const name = label.trim();
     setHeld((h) => [
       {
         id: `h-${Date.now()}`,
@@ -424,6 +435,7 @@ export function FullPosPlayground() {
         lines: cart,
         discountPct,
         note: orderNote,
+        label: name,
         at: Date.now(),
       },
       ...h,
@@ -434,12 +446,14 @@ export function FullPosPlayground() {
     setOrderNo((n) => n + 1);
     setShowDiscount(false);
     setShowNote(false);
-    ping('Held · see Alerts');
+    setShowHoldModal(false);
+    setMobileCartOpen(false);
+    ping(`Held · ${name}`);
   };
 
   const resumeHeld = (ticket: HeldTicket) => {
     if (cart.length) {
-      // park current first
+      // Park current ticket with a temp label so resume never loses it
       setHeld((h) => [
         {
           id: `h-${Date.now()}`,
@@ -448,6 +462,7 @@ export function FullPosPlayground() {
           lines: cart,
           discountPct,
           note: orderNote,
+          label: `Parked #${orderNo}`,
           at: Date.now(),
         },
         ...h.filter((x) => x.id !== ticket.id),
@@ -462,8 +477,13 @@ export function FullPosPlayground() {
     setOrderNo(ticket.orderNo);
     setScreen('sales');
     setMobileCartOpen(true);
-    ping(`Resumed #${ticket.orderNo}`);
+    ping(`Resumed · ${ticket.label}`);
   };
+
+  const usedHoldLabels = useMemo(
+    () => held.map((h) => h.label),
+    [held],
+  );
 
   const clearOrder = () => {
     setCart([]);
@@ -1023,7 +1043,7 @@ export function FullPosPlayground() {
                 showNote={showNote}
                 setShowNote={setShowNote}
                 setOrderNote={setOrderNote}
-                onHold={holdOrder}
+                onHold={openHoldModal}
                 onClear={clearOrder}
                 onLoyalty={() => setShowLoyalty(true)}
                 onChangeQty={changeQty}
@@ -1036,6 +1056,20 @@ export function FullPosPlayground() {
 
         </div>
         </div>
+
+        {/* Hold order modal — table grid or nickname like real POS HoldOrderModal */}
+        <AnimatePresence>
+          {showHoldModal && (
+            <HoldOrderModal
+              usedLabels={usedHoldLabels}
+              tableCount={HOLD_TABLE_COUNT}
+              itemCount={itemCount}
+              orderTotal={total}
+              onCancel={() => setShowHoldModal(false)}
+              onHold={confirmHold}
+            />
+          )}
+        </AnimatePresence>
 
         {/* Mobile order sheet */}
         <AnimatePresence>
@@ -1085,7 +1119,7 @@ export function FullPosPlayground() {
                   showNote={showNote}
                   setShowNote={setShowNote}
                   setOrderNote={setOrderNote}
-                  onHold={holdOrder}
+                  onHold={openHoldModal}
                   onClear={clearOrder}
                   onLoyalty={() => setShowLoyalty(true)}
                   onChangeQty={changeQty}
@@ -1670,6 +1704,202 @@ function OrderPanel({
         </div>
       </div>
     </aside>
+  );
+}
+
+/** Mirrors mintcom-pos HoldOrderModal — pick a table or enter a guest name */
+function HoldOrderModal({
+  usedLabels,
+  tableCount,
+  itemCount,
+  orderTotal,
+  onCancel,
+  onHold,
+}: {
+  usedLabels: string[];
+  tableCount: number;
+  itemCount: number;
+  orderTotal: number;
+  onCancel: () => void;
+  onHold: (label: string) => void;
+}) {
+  const [selectedTable, setSelectedTable] = useState('');
+  const [nickname, setNickname] = useState('');
+
+  const tables = useMemo(() => {
+    return Array.from({ length: tableCount }, (_, i) => {
+      const name = `Table ${i + 1}`;
+      const used = usedLabels.some((u) => u.toLowerCase() === name.toLowerCase());
+      return { name, num: i + 1, used };
+    });
+  }, [tableCount, usedLabels]);
+
+  const freeCount = tables.filter((t) => !t.used).length;
+  const busyCount = tables.filter((t) => t.used).length;
+  const holdLabel = selectedTable || nickname.trim();
+  const canHold = holdLabel.length > 0;
+  const nicknameMode = nickname.trim() !== '';
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[70] flex items-end justify-center bg-black/55 p-3 backdrop-blur-sm sm:items-center"
+      onClick={onCancel}
+    >
+      <motion.div
+        initial={{ y: 32, opacity: 0, scale: 0.98 }}
+        animate={{ y: 0, opacity: 1, scale: 1 }}
+        exit={{ y: 24, opacity: 0 }}
+        transition={{ type: 'spring', stiffness: 360, damping: 28 }}
+        onClick={(e) => e.stopPropagation()}
+        className="flex max-h-[90dvh] w-full max-w-md flex-col overflow-hidden rounded-[28px] border border-gray-200 bg-white shadow-2xl dark:border-mintcom-tertiary dark:bg-mintcom-surface"
+      >
+        <div className="flex shrink-0 items-center justify-between border-b border-gray-100 px-4 py-3 dark:border-white/8">
+          <div>
+            <p className="text-sm font-black text-text-primary dark:text-white">Hold order</p>
+            <p className="text-[11px] text-text-secondary dark:text-mintcom-textSecondary">
+              Select a table or enter a name · {itemCount} items · {money(orderTotal)}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onCancel}
+            className="flex h-8 w-8 items-center justify-center rounded-lg bg-cream-100 dark:bg-white/10"
+            aria-label="Close"
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
+          <p className="text-xs font-bold text-text-secondary dark:text-mintcom-textSecondary">
+            Choose a free table or type a guest nickname
+          </p>
+
+          <div className="flex flex-wrap gap-1.5">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-mintcom-green/15 px-2.5 py-1 text-[10px] font-bold text-mintcom-green">
+              <span className="h-1.5 w-1.5 rounded-full bg-mintcom-green" />
+              {freeCount} free
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-mintcom-red/10 px-2.5 py-1 text-[10px] font-bold text-mintcom-red">
+              <span className="h-1.5 w-1.5 rounded-full bg-mintcom-red" />
+              {busyCount} held
+            </span>
+          </div>
+
+          <div className={nicknameMode ? 'pointer-events-none opacity-45' : ''}>
+            <p className="mb-1.5 text-[11px] font-bold text-text-primary dark:text-white">Table number</p>
+            <div className="grid grid-cols-4 gap-1.5 sm:grid-cols-4">
+              {tables.map((t) => {
+                const selected = selectedTable === t.name;
+                return (
+                  <button
+                    key={t.name}
+                    type="button"
+                    disabled={t.used}
+                    onClick={() => {
+                      setSelectedTable(t.name);
+                      setNickname('');
+                    }}
+                    className={`flex flex-col items-center rounded-xl border-2 px-1 py-2.5 transition-all ${
+                      t.used
+                        ? 'cursor-not-allowed border-red-200 bg-red-50 dark:border-red-500/30 dark:bg-red-500/10'
+                        : selected
+                          ? 'border-mintcom-green bg-mintcom-green/15 shadow-sm'
+                          : 'border-gray-200 bg-cream-50 hover:border-mintcom-green/40 dark:border-white/10 dark:bg-mintcom-dark'
+                    }`}
+                  >
+                    <span
+                      className={`text-base font-black tabular-nums ${
+                        t.used
+                          ? 'text-mintcom-red'
+                          : selected
+                            ? 'text-mintcom-green'
+                            : 'text-text-primary dark:text-white'
+                      }`}
+                    >
+                      {t.num}
+                    </span>
+                    <span
+                      className={`text-[9px] font-bold ${
+                        t.used
+                          ? 'text-mintcom-red'
+                          : selected
+                            ? 'text-mintcom-green'
+                            : 'text-text-tertiary'
+                      }`}
+                    >
+                      {t.used ? 'Held' : selected ? 'Selected' : 'Free'}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            {selectedTable && (
+              <button
+                type="button"
+                onClick={() => setSelectedTable('')}
+                className="mt-1.5 text-[10px] font-bold text-text-tertiary hover:text-mintcom-green"
+              >
+                Clear table to use a nickname instead
+              </button>
+            )}
+          </div>
+
+          <div className={selectedTable ? 'pointer-events-none opacity-45' : ''}>
+            <p className="mb-1.5 text-[11px] font-bold text-text-primary dark:text-white">
+              Or enter a nickname
+            </p>
+            <div className="relative">
+              <input
+                value={nickname}
+                onChange={(e) => {
+                  const v = e.target.value.slice(0, 40);
+                  setNickname(v);
+                  if (v.trim()) setSelectedTable('');
+                }}
+                placeholder="e.g. Sara, Uber Eats, Walk-in"
+                maxLength={40}
+                disabled={!!selectedTable}
+                className="w-full rounded-2xl border border-gray-200 bg-cream-50 px-3 py-2.5 pe-9 text-sm font-medium outline-none focus:border-mintcom-green dark:border-mintcom-tertiary dark:bg-mintcom-dark dark:text-white"
+              />
+              {nickname && !selectedTable && (
+                <button
+                  type="button"
+                  onClick={() => setNickname('')}
+                  className="absolute end-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-text-tertiary hover:bg-white dark:hover:bg-white/10"
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+            {nickname.trim() && (
+              <p className="mt-1 text-[10px] text-text-tertiary">Clear the name to pick a table instead</p>
+            )}
+          </div>
+        </div>
+
+        <div className="flex shrink-0 gap-2 border-t border-gray-100 p-4 dark:border-white/8">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="flex-1 rounded-xl border border-gray-200 py-3 text-xs font-bold text-text-secondary dark:border-white/10 dark:text-mintcom-textSecondary"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            disabled={!canHold}
+            onClick={() => canHold && onHold(holdLabel)}
+            className="flex-1 rounded-xl bg-mintcom-green py-3 text-xs font-black text-white disabled:opacity-40"
+          >
+            Hold · {canHold ? holdLabel : '…'}
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
