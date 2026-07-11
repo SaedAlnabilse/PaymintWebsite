@@ -1418,7 +1418,7 @@ export function FullPosPlayground() {
                     type="button"
                     onClick={() => {
                       setShowReceipt(false);
-                      setScreen('sales');
+                      goToSales();
                     }}
                     className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-mintcom-green py-3 text-sm font-black text-white"
                   >
