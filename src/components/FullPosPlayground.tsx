@@ -2244,39 +2244,60 @@ function PaymentCheckoutPanel({
   const [tenderedCents, setTenderedCents] = useState(() => Math.round(total * 100));
   const [cardBrand, setCardBrand] = useState<'Visa' | 'Mastercard' | 'Amex'>('Visa');
   const [otherId, setOtherId] = useState<'cliq' | 'talabat' | 'voucher'>('cliq');
-  const [splitParts, setSplitParts] = useState(2);
-  const [splitMethods, setSplitMethods] = useState<Array<'cash' | 'card' | 'other'>>(['cash', 'card']);
+
+  // Split flow — matches POS: choose By Amount | By Item, then allocate
+  type SplitMode = null | 'amount' | 'item' | 'pay';
+  const [splitMode, setSplitMode] = useState<SplitMode>(null);
+  const [splitPayments, setSplitPayments] = useState<Array<{ amount: number; method: 'cash' | 'card' | 'other' }>>([]);
+  const [splitAmountCents, setSplitAmountCents] = useState(0);
+  /** By item: which guest (0..n-1) each cart line is assigned to */
+  const [itemGuest, setItemGuest] = useState<Record<string, number>>({});
+  const [itemGuestCount, setItemGuestCount] = useState(2);
+  const [payStep, setPayStep] = useState(0); // which split share is being paid
 
   useEffect(() => {
     setTab(initialTab);
+    if (initialTab === 'split') {
+      setSplitMode(null);
+      setSplitPayments([]);
+      setSplitAmountCents(0);
+      setPayStep(0);
+      setItemGuest({});
+      setItemGuestCount(2);
+    }
   }, [initialTab]);
 
   useEffect(() => {
     setTenderedCents(Math.round(total * 100));
   }, [total]);
 
+  // Init item assignments when entering by-item
   useEffect(() => {
-    setSplitMethods((prev) => {
-      const next = [...prev];
-      while (next.length < splitParts) next.push(next.length % 2 === 0 ? 'cash' : 'card');
-      return next.slice(0, splitParts);
-    });
-  }, [splitParts]);
+    if (splitMode === 'item' && cart.length) {
+      setItemGuest((prev) => {
+        if (Object.keys(prev).length) return prev;
+        const next: Record<string, number> = {};
+        cart.forEach((l, i) => {
+          next[l.id] = i % itemGuestCount;
+        });
+        return next;
+      });
+    }
+  }, [splitMode, cart, itemGuestCount]);
 
   const tendered = tenderedCents / 100;
   const change = Math.max(0, tendered - total);
   const short = tendered < total;
 
-  const equalShare = total / splitParts;
-  const splitShares = Array.from({ length: splitParts }, (_, i) => {
-    if (i === splitParts - 1) {
-      return Math.round((total - equalShare * (splitParts - 1)) * 100) / 100;
-    }
-    return Math.round(equalShare * 100) / 100;
-  });
+  const splitAllocated = splitPayments.reduce((s, p) => s + p.amount, 0);
+  const splitRemaining = Math.round((total - splitAllocated) * 100) / 100;
+  const splitComplete = Math.abs(splitRemaining) < 0.005 && splitPayments.length > 0;
+  const splitAmount = splitAmountCents / 100;
 
   const typeLabel =
     orderType === 'dine-in' ? 'Dine in' : orderType === 'takeaway' ? 'Takeaway' : 'Delivery';
+
+  const PERSON_COLORS = ['#7dc6a2', '#4A90D9', '#E07A5F', '#9B6FD9', '#F2A65A', '#5FC4C0'];
 
   const confirmCash = () => {
     if (short) return;
@@ -2289,14 +2310,81 @@ function PaymentCheckoutPanel({
     const label = otherId === 'cliq' ? 'CliQ' : otherId === 'talabat' ? 'Talabat' : 'Voucher';
     onComplete(otherId, label, { cash: 0, card: 0, other: total });
   };
-  const confirmSplit = () => {
-    const amounts = { cash: 0, card: 0, other: 0 };
-    splitShares.forEach((amt, i) => {
-      const m = splitMethods[i] ?? 'cash';
-      amounts[m] += amt;
+
+  const applyEqualSplit = (count: number) => {
+    const base = Math.floor((total * 100) / count) / 100;
+    const parts: Array<{ amount: number; method: 'cash' | 'card' | 'other' }> = [];
+    let sum = 0;
+    for (let i = 0; i < count; i++) {
+      if (i === count - 1) {
+        parts.push({
+          amount: Math.round((total - sum) * 100) / 100,
+          method: i % 2 === 0 ? 'cash' : 'card',
+        });
+      } else {
+        parts.push({ amount: base, method: i % 2 === 0 ? 'cash' : 'card' });
+        sum += base;
+      }
+    }
+    setSplitPayments(parts);
+    setSplitAmountCents(0);
+  };
+
+  const addSplitAmount = () => {
+    if (splitAmount <= 0) return;
+    if (splitAmount > splitRemaining + 0.001) return;
+    setSplitPayments((p) => [
+      ...p,
+      { amount: Math.round(splitAmount * 100) / 100, method: p.length % 2 === 0 ? 'cash' : 'card' },
+    ]);
+    setSplitAmountCents(0);
+  };
+
+  const buildItemSplitPayments = () => {
+    const guestTotals = Array.from({ length: itemGuestCount }, () => 0);
+    cart.forEach((line) => {
+      const g = itemGuest[line.id] ?? 0;
+      guestTotals[g] = (guestTotals[g] ?? 0) + line.unitPrice * line.qty;
     });
-    const label = `Split ×${splitParts} (${splitMethods
-      .map((m, i) => `${m} ${money(splitShares[i])}`)
+    // Fix rounding so sum === total
+    const sum = guestTotals.reduce((a, b) => a + b, 0);
+    if (Math.abs(sum - total) > 0.001 && guestTotals.length) {
+      guestTotals[guestTotals.length - 1] += total - sum;
+    }
+    return guestTotals
+      .map((amount, i) => ({
+        amount: Math.round(amount * 100) / 100,
+        method: (i % 2 === 0 ? 'cash' : 'card') as 'cash' | 'card' | 'other',
+      }))
+      .filter((p) => p.amount > 0.001);
+  };
+
+  const startItemPay = () => {
+    const parts = buildItemSplitPayments();
+    if (parts.length < 2) return;
+    setSplitPayments(parts);
+    setSplitMode('pay');
+    setPayStep(0);
+  };
+
+  const startAmountPay = () => {
+    if (!splitComplete) return;
+    setSplitMode('pay');
+    setPayStep(0);
+  };
+
+  const confirmSplitShare = () => {
+    if (payStep < splitPayments.length - 1) {
+      setPayStep((s) => s + 1);
+      return;
+    }
+    // All shares paid
+    const amounts = { cash: 0, card: 0, other: 0 };
+    splitPayments.forEach((p) => {
+      amounts[p.method] += p.amount;
+    });
+    const label = `Split (${splitPayments
+      .map((p, i) => `#${i + 1} ${p.method} ${money(p.amount)}`)
       .join(' + ')})`;
     onComplete('split', label, amounts);
   };
@@ -2315,6 +2403,22 @@ function PaymentCheckoutPanel({
       return;
     }
     setTenderedCents((c) => Math.min(99999999, c * 10 + Number(d)));
+  };
+
+  const appendSplitDigit = (d: string) => {
+    if (d === '⌫') {
+      setSplitAmountCents((c) => Math.floor(c / 10));
+      return;
+    }
+    if (d === 'C') {
+      setSplitAmountCents(0);
+      return;
+    }
+    if (d === 'Rest') {
+      setSplitAmountCents(Math.max(0, Math.round(splitRemaining * 100)));
+      return;
+    }
+    setSplitAmountCents((c) => Math.min(99999999, c * 10 + Number(d)));
   };
 
   return (
@@ -2420,7 +2524,16 @@ function PaymentCheckoutPanel({
               <button
                 key={t.id}
                 type="button"
-                onClick={() => setTab(t.id)}
+                onClick={() => {
+                  setTab(t.id);
+                  if (t.id === 'split') {
+                    setSplitMode(null);
+                    setSplitPayments([]);
+                    setSplitAmountCents(0);
+                    setPayStep(0);
+                    setItemGuest({});
+                  }
+                }}
                 className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-bold ${
                   tab === t.id
                     ? 'bg-mintcom-green text-white'
@@ -2526,68 +2639,324 @@ function PaymentCheckoutPanel({
 
             {tab === 'split' && (
               <div className="space-y-3">
-                <p className="text-xs font-bold text-text-secondary">Equal split across guests</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {[2, 3, 4, 5].map((n) => (
+                {/* Step 0: choose method — like POS main menu */}
+                {splitMode === null && (
+                  <div className="space-y-3">
+                    <p className="text-center text-xs font-bold text-text-secondary">
+                      Choose how to split the bill
+                    </p>
                     <button
-                      key={n}
                       type="button"
-                      onClick={() => setSplitParts(n)}
-                      className={`rounded-full px-3 py-1.5 text-[11px] font-bold ${
-                        splitParts === n
-                          ? 'bg-mintcom-green text-white'
-                          : 'bg-cream-100 text-text-secondary dark:bg-mintcom-dark dark:text-mintcom-textSecondary'
-                      }`}
+                      onClick={() => {
+                        setSplitMode('amount');
+                        setSplitPayments([]);
+                        setSplitAmountCents(0);
+                      }}
+                      className="flex w-full items-center gap-3 rounded-2xl border border-gray-200 bg-cream-50 p-4 text-start transition-all hover:border-mintcom-green/40 dark:border-white/10 dark:bg-mintcom-dark"
                     >
-                      {n} ways
+                      <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-mintcom-green/15 text-xl">
+                        💵
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-sm font-black text-text-primary dark:text-white">
+                          By amount
+                        </span>
+                        <span className="block text-[11px] text-text-secondary dark:text-mintcom-textSecondary">
+                          Equal split or custom amounts with the numpad
+                        </span>
+                        <span className="mt-1 inline-flex gap-1">
+                          <span className="rounded-full bg-mintcom-green/15 px-2 py-0.5 text-[9px] font-bold text-mintcom-green">
+                            Split equally
+                          </span>
+                          <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[9px] font-bold text-text-tertiary dark:bg-white/10">
+                            Custom amounts
+                          </span>
+                        </span>
+                      </span>
+                      <ChevronDown className="-rotate-90 text-text-tertiary" size={18} />
                     </button>
-                  ))}
-                </div>
-                <div className="space-y-2">
-                  {splitShares.map((amt, i) => (
-                    <div
-                      key={i}
-                      className="flex flex-wrap items-center gap-2 rounded-2xl border border-gray-200 bg-cream-50 p-2.5 dark:border-white/10 dark:bg-mintcom-dark"
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSplitMode('item');
+                        setItemGuest({});
+                      }}
+                      className="flex w-full items-center gap-3 rounded-2xl border border-gray-200 bg-cream-50 p-4 text-start transition-all hover:border-mintcom-green/40 dark:border-white/10 dark:bg-mintcom-dark"
                     >
-                      <span
-                        className="flex h-8 w-8 items-center justify-center rounded-full text-[11px] font-black text-white"
-                        style={{
-                          backgroundColor: ['#7dc6a2', '#4A90D9', '#E07A5F', '#9B6FD9', '#F2A65A'][i % 5],
-                        }}
-                      >
-                        {i + 1}
+                      <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-mintcom-green/15 text-xl">
+                        🛍️
                       </span>
-                      <span className="min-w-[4.5rem] text-sm font-black tabular-nums text-text-primary dark:text-white">
-                        {money(amt)}
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-sm font-black text-text-primary dark:text-white">
+                          By item
+                        </span>
+                        <span className="block text-[11px] text-text-secondary dark:text-mintcom-textSecondary">
+                          Assign each product to a guest, then pay per guest
+                        </span>
                       </span>
-                      <div className="flex flex-1 flex-wrap gap-1">
-                        {(['cash', 'card', 'other'] as const).map((m) => (
+                      <ChevronDown className="-rotate-90 text-text-tertiary" size={18} />
+                    </button>
+                  </div>
+                )}
+
+                {/* By amount */}
+                {splitMode === 'amount' && (
+                  <div className="space-y-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSplitMode(null);
+                        setSplitPayments([]);
+                      }}
+                      className="text-[11px] font-bold text-mintcom-green"
+                    >
+                      ← Back to split options
+                    </button>
+                    <div className="rounded-2xl border border-mintcom-green/25 bg-mintcom-green/5 px-3 py-2.5">
+                      <div className="flex justify-between text-[11px] font-bold">
+                        <span className="text-text-secondary">Remaining</span>
+                        <span className="tabular-nums text-mintcom-green">{money(splitRemaining)}</span>
+                      </div>
+                      <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-cream-200 dark:bg-mintcom-dark">
+                        <div
+                          className="h-full rounded-full bg-mintcom-green transition-all"
+                          style={{
+                            width: `${Math.min(100, (splitAllocated / Math.max(total, 0.01)) * 100)}%`,
+                          }}
+                        />
+                      </div>
+                      <p className="mt-1 text-[10px] text-text-tertiary">
+                        Allocated {money(splitAllocated)} of {money(total)}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="mb-1.5 text-[11px] font-bold text-text-secondary">Split equally</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {[2, 3, 4, 5, 6].map((n) => (
                           <button
-                            key={m}
+                            key={n}
                             type="button"
-                            onClick={() =>
-                              setSplitMethods((prev) => {
-                                const next = [...prev];
-                                next[i] = m;
-                                return next;
-                              })
-                            }
-                            className={`rounded-full px-2.5 py-1 text-[10px] font-bold capitalize ${
-                              splitMethods[i] === m
-                                ? 'bg-mintcom-green text-white'
-                                : 'bg-white text-text-secondary ring-1 ring-gray-200 dark:bg-mintcom-surface dark:ring-white/10'
-                            }`}
+                            onClick={() => applyEqualSplit(n)}
+                            className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-[11px] font-black text-text-primary dark:border-white/10 dark:bg-mintcom-dark dark:text-white"
                           >
-                            {m}
+                            {n}× · {money(total / n)}
                           </button>
                         ))}
                       </div>
                     </div>
-                  ))}
-                </div>
-                <p className="text-[10px] text-text-tertiary">
-                  Each share is paid with its own method — tracked on the dashboard like POS split.
-                </p>
+
+                    <div>
+                      <p className="mb-1 text-[11px] font-bold text-text-secondary">Or custom amount</p>
+                      <p className="mb-1 text-center text-2xl font-black tabular-nums text-text-primary dark:text-white">
+                        {money(splitAmount)}
+                      </p>
+                      <div className="grid grid-cols-3 gap-1.5">
+                        {['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', '⌫'].map((k) => (
+                          <button
+                            key={k}
+                            type="button"
+                            onClick={() => appendSplitDigit(k)}
+                            className="rounded-xl border border-gray-200 bg-cream-50 py-2.5 text-sm font-black dark:border-white/10 dark:bg-mintcom-dark dark:text-white"
+                          >
+                            {k}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="mt-1.5 flex gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => appendSplitDigit('Rest')}
+                          className="flex-1 rounded-xl border border-gray-200 py-2 text-[11px] font-bold dark:border-white/10 dark:text-white"
+                        >
+                          Rest · {money(splitRemaining)}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={splitAmount <= 0 || splitAmount > splitRemaining + 0.001}
+                          onClick={addSplitAmount}
+                          className="flex-1 rounded-xl bg-mintcom-green py-2 text-[11px] font-black text-white disabled:opacity-40"
+                        >
+                          + Add payment
+                        </button>
+                      </div>
+                    </div>
+
+                    {splitPayments.length > 0 && (
+                      <div className="space-y-1.5">
+                        <p className="text-[11px] font-bold text-text-secondary">Payments added</p>
+                        {splitPayments.map((p, i) => (
+                          <div
+                            key={i}
+                            className="flex items-center gap-2 rounded-xl bg-cream-50 px-2.5 py-2 dark:bg-mintcom-dark"
+                          >
+                            <span
+                              className="flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-black text-white"
+                              style={{ backgroundColor: PERSON_COLORS[i % PERSON_COLORS.length] }}
+                            >
+                              {i + 1}
+                            </span>
+                            <span className="flex-1 text-sm font-black tabular-nums dark:text-white">
+                              {money(p.amount)}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setSplitPayments((list) => list.filter((_, j) => j !== i))}
+                              className="text-[10px] font-bold text-mintcom-red"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* By item */}
+                {splitMode === 'item' && (
+                  <div className="space-y-3">
+                    <button
+                      type="button"
+                      onClick={() => setSplitMode(null)}
+                      className="text-[11px] font-bold text-mintcom-green"
+                    >
+                      ← Back to split options
+                    </button>
+                    <div className="flex items-center justify-between">
+                      <p className="text-[11px] font-bold text-text-secondary">Guests</p>
+                      <div className="flex gap-1">
+                        {[2, 3, 4].map((n) => (
+                          <button
+                            key={n}
+                            type="button"
+                            onClick={() => {
+                              setItemGuestCount(n);
+                              setItemGuest({});
+                            }}
+                            className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${
+                              itemGuestCount === n
+                                ? 'bg-mintcom-green text-white'
+                                : 'bg-cream-100 dark:bg-mintcom-dark dark:text-white'
+                            }`}
+                          >
+                            {n}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      {cart.map((line) => (
+                        <div
+                          key={line.id}
+                          className="rounded-xl border border-gray-200 bg-cream-50 p-2.5 dark:border-white/10 dark:bg-mintcom-dark"
+                        >
+                          <div className="mb-1.5 flex items-center gap-2">
+                            <span>{line.emoji}</span>
+                            <span className="min-w-0 flex-1 truncate text-xs font-bold dark:text-white">
+                              {line.name} ×{line.qty}
+                            </span>
+                            <span className="text-xs font-black tabular-nums text-mintcom-green">
+                              {money(line.unitPrice * line.qty)}
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap gap-1">
+                            {Array.from({ length: itemGuestCount }, (_, g) => (
+                              <button
+                                key={g}
+                                type="button"
+                                onClick={() => setItemGuest((prev) => ({ ...prev, [line.id]: g }))}
+                                className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${
+                                  (itemGuest[line.id] ?? 0) === g
+                                    ? 'text-white'
+                                    : 'bg-white text-text-secondary ring-1 ring-gray-200 dark:bg-mintcom-surface dark:ring-white/10'
+                                }`}
+                                style={
+                                  (itemGuest[line.id] ?? 0) === g
+                                    ? { backgroundColor: PERSON_COLORS[g % PERSON_COLORS.length] }
+                                    : undefined
+                                }
+                              >
+                                Guest {g + 1}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="rounded-xl bg-mintcom-green/10 px-3 py-2 text-[11px]">
+                      {Array.from({ length: itemGuestCount }, (_, g) => {
+                        const sum = cart.reduce(
+                          (s, l) => s + ((itemGuest[l.id] ?? 0) === g ? l.unitPrice * l.qty : 0),
+                          0,
+                        );
+                        return (
+                          <div key={g} className="flex justify-between font-bold">
+                            <span style={{ color: PERSON_COLORS[g % PERSON_COLORS.length] }}>
+                              Guest {g + 1}
+                            </span>
+                            <span className="tabular-nums dark:text-white">{money(sum)}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Pay each share — like POS process modal */}
+                {splitMode === 'pay' && splitPayments[payStep] && (
+                  <div className="space-y-3">
+                    <p className="text-center text-[11px] font-bold text-text-secondary">
+                      Paying share {payStep + 1} of {splitPayments.length}
+                    </p>
+                    <div className="rounded-2xl border-2 border-mintcom-green/40 bg-mintcom-green/5 px-4 py-4 text-center">
+                      <span
+                        className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full text-sm font-black text-white"
+                        style={{ backgroundColor: PERSON_COLORS[payStep % PERSON_COLORS.length] }}
+                      >
+                        {payStep + 1}
+                      </span>
+                      <p className="text-3xl font-black tabular-nums text-mintcom-green">
+                        {money(splitPayments[payStep].amount)}
+                      </p>
+                    </div>
+                    <p className="text-[11px] font-bold text-text-secondary">Pay with</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {(['cash', 'card', 'other'] as const).map((m) => (
+                        <button
+                          key={m}
+                          type="button"
+                          onClick={() =>
+                            setSplitPayments((list) =>
+                              list.map((p, i) => (i === payStep ? { ...p, method: m } : p)),
+                            )
+                          }
+                          className={`rounded-2xl border-2 py-3 text-xs font-black capitalize ${
+                            splitPayments[payStep].method === m
+                              ? 'border-mintcom-green bg-mintcom-green/15 text-mintcom-green'
+                              : 'border-gray-200 dark:border-white/10 dark:text-white'
+                          }`}
+                        >
+                          {m}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="flex gap-1">
+                      {splitPayments.map((_, i) => (
+                        <div
+                          key={i}
+                          className={`h-1.5 flex-1 rounded-full ${
+                            i < payStep
+                              ? 'bg-mintcom-green'
+                              : i === payStep
+                                ? 'bg-mintcom-green/50'
+                                : 'bg-cream-200 dark:bg-white/10'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -2623,14 +2992,42 @@ function PaymentCheckoutPanel({
                 {money(total)}
               </button>
             )}
-            {tab === 'split' && (
+            {tab === 'split' && splitMode === 'amount' && (
               <button
                 type="button"
-                onClick={confirmSplit}
+                disabled={!splitComplete}
+                onClick={startAmountPay}
+                className="w-full rounded-xl bg-mintcom-green py-3 text-sm font-black text-white disabled:opacity-40"
+              >
+                {splitComplete
+                  ? `Continue to pay · ${splitPayments.length} shares`
+                  : `Add ${money(splitRemaining)} more to continue`}
+              </button>
+            )}
+            {tab === 'split' && splitMode === 'item' && (
+              <button
+                type="button"
+                onClick={startItemPay}
                 className="w-full rounded-xl bg-mintcom-green py-3 text-sm font-black text-white"
               >
-                Complete split · {money(total)}
+                Continue to pay by guest
               </button>
+            )}
+            {tab === 'split' && splitMode === 'pay' && (
+              <button
+                type="button"
+                onClick={confirmSplitShare}
+                className="w-full rounded-xl bg-mintcom-green py-3 text-sm font-black text-white"
+              >
+                {payStep < splitPayments.length - 1
+                  ? `Confirm share ${payStep + 1} · next guest`
+                  : `Complete split · ${money(total)}`}
+              </button>
+            )}
+            {tab === 'split' && splitMode === null && (
+              <p className="text-center text-[11px] text-text-tertiary">
+                Pick By amount or By item to continue
+              </p>
             )}
           </div>
         </div>

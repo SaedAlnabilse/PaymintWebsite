@@ -7,7 +7,7 @@ import { TasksModal } from './Chat/TasksModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PartyPopper, X, CheckCircle2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useParams } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 
 const TOTAL_TASKS = 8;
 const getTasksStorageKey = (contextId: string) => `mintcom.widget.tasks.v1.${contextId}`;
@@ -32,6 +32,9 @@ const checkAllCompleted = (storageKey: string) => {
 export const ChatWidgetEnhancer = () => {
     const { t, i18n } = useTranslation();
     const { locationSlug } = useParams();
+    const location = useLocation();
+    const hideOnTryPos =
+        location.pathname === '/try-pos' || location.pathname.startsWith('/try-pos/');
     const isRTL = i18n.language === 'ar';
     const [isChatOpen, setIsChatOpen] = useState(false);
     const [isFAQOpen, setIsFAQOpen] = useState(false);
@@ -116,6 +119,11 @@ export const ChatWidgetEnhancer = () => {
         setIsFAQOpen(false);
         setIsTasksOpen(false);
     };
+
+    // Full-screen POS sandbox — keep layout clean (no DualLauncher / chatbot)
+    if (hideOnTryPos) {
+        return null;
+    }
 
     return (
         <>
