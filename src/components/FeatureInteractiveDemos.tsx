@@ -66,86 +66,93 @@ type CartLine = {
 };
 
 export const InteractivePosDemo = ({ t, isRtl, side }: DemoProps) => {
+  // Positional 2nd arg to t() is NOT defaultValue — missing keys hit parseMissingKeyHandler
+  // which humanizes the leaf (sizeS → "Size s"). Always pass { defaultValue }.
+  const d = (key: string, fallback: string) => String(t(key, { defaultValue: fallback }));
+
   const categories = useMemo(
     () => [
-      { id: 'all', name: String(t('landing.workflow.receipt.demo.pos.all', 'All')), emoji: '⊞' },
-      { id: 'beverages', name: String(t('landing.workflow.receipt.demo.pos.catBeverages', 'Beverages')), emoji: '☕' },
-      { id: 'pastries', name: String(t('landing.workflow.receipt.demo.pos.catPastries', 'Pastries')), emoji: '🥐' },
-      { id: 'food', name: String(t('landing.workflow.receipt.demo.pos.catFood', 'Food')), emoji: '🥗' },
+      { id: 'all', name: d('landing.workflow.receipt.demo.pos.all', 'All'), emoji: '⊞' },
+      { id: 'beverages', name: d('landing.workflow.receipt.demo.pos.catBeverages', 'Beverages'), emoji: '☕' },
+      { id: 'pastries', name: d('landing.workflow.receipt.demo.pos.catPastries', 'Pastries'), emoji: '🥐' },
+      { id: 'food', name: d('landing.workflow.receipt.demo.pos.catFood', 'Food'), emoji: '🥗' },
     ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- d closes over t
     [t],
   );
 
   const products: PosProduct[] = useMemo(() => {
+    // Option labels are short values only (S / M / L) — group name already says "Size"
     const size: PosAttribute = {
       id: 'size',
-      name: String(t('landing.workflow.receipt.demo.pos.attrSize', 'Size')),
+      name: d('landing.workflow.receipt.demo.pos.attrSize', 'Size'),
       required: true,
       options: [
-        { id: 's', name: String(t('landing.workflow.receipt.demo.pos.sizeS', 'Small')), price: 0 },
-        { id: 'm', name: String(t('landing.workflow.receipt.demo.pos.sizeM', 'Medium')), price: 0.5 },
-        { id: 'l', name: String(t('landing.workflow.receipt.demo.pos.sizeL', 'Large')), price: 1 },
+        { id: 's', name: d('landing.workflow.receipt.demo.pos.sizeS', 'S'), price: 0 },
+        { id: 'm', name: d('landing.workflow.receipt.demo.pos.sizeM', 'M'), price: 0.5 },
+        { id: 'l', name: d('landing.workflow.receipt.demo.pos.sizeL', 'L'), price: 1 },
       ],
     };
     const milk: PosAttribute = {
       id: 'milk',
-      name: String(t('landing.workflow.receipt.demo.pos.attrMilk', 'Milk')),
+      name: d('landing.workflow.receipt.demo.pos.attrMilk', 'Milk'),
       options: [
-        { id: 'whole', name: String(t('landing.workflow.receipt.demo.pos.milkWhole', 'Whole')), price: 0 },
-        { id: 'oat', name: String(t('landing.workflow.receipt.demo.pos.milkOat', 'Oat')), price: 0.75 },
-        { id: 'almond', name: String(t('landing.workflow.receipt.demo.pos.milkAlmond', 'Almond')), price: 0.75 },
+        { id: 'whole', name: d('landing.workflow.receipt.demo.pos.milkWhole', 'Whole'), price: 0 },
+        { id: 'oat', name: d('landing.workflow.receipt.demo.pos.milkOat', 'Oat'), price: 0.75 },
+        { id: 'almond', name: d('landing.workflow.receipt.demo.pos.milkAlmond', 'Almond'), price: 0.75 },
       ],
     };
     const extras: PosAttribute = {
       id: 'extras',
-      name: String(t('landing.workflow.receipt.demo.pos.attrExtras', 'Extras')),
+      name: d('landing.workflow.receipt.demo.pos.attrExtras', 'Extras'),
       multi: true,
       options: [
-        { id: 'shot', name: String(t('landing.workflow.receipt.demo.pos.extraShot', 'Extra shot')), price: 1 },
-        { id: 'syrup', name: String(t('landing.workflow.receipt.demo.pos.syrup', 'Vanilla syrup')), price: 0.5 },
-        { id: 'whip', name: String(t('landing.workflow.receipt.demo.pos.whip', 'Whipped cream')), price: 0.5 },
+        { id: 'shot', name: d('landing.workflow.receipt.demo.pos.extraShot', 'Extra shot'), price: 1 },
+        { id: 'syrup', name: d('landing.workflow.receipt.demo.pos.syrup', 'Vanilla syrup'), price: 0.5 },
+        { id: 'whip', name: d('landing.workflow.receipt.demo.pos.whip', 'Whipped cream'), price: 0.5 },
       ],
     };
     const heat: PosAttribute = {
       id: 'heat',
-      name: String(t('landing.workflow.receipt.demo.pos.attrHeat', 'Warming')),
+      name: d('landing.workflow.receipt.demo.pos.attrHeat', 'Warming'),
       options: [
-        { id: 'plain', name: String(t('landing.workflow.receipt.demo.pos.heatNone', 'As is')), price: 0 },
-        { id: 'warm', name: String(t('landing.workflow.receipt.demo.pos.heatWarm', 'Warmed')), price: 0.25 },
+        { id: 'plain', name: d('landing.workflow.receipt.demo.pos.heatNone', 'As is'), price: 0 },
+        { id: 'warm', name: d('landing.workflow.receipt.demo.pos.heatWarm', 'Warmed'), price: 0.25 },
       ],
     };
     const dressing: PosAttribute = {
       id: 'dressing',
-      name: String(t('landing.workflow.receipt.demo.pos.attrDressing', 'Dressing')),
+      name: d('landing.workflow.receipt.demo.pos.attrDressing', 'Dressing'),
       options: [
-        { id: 'ranch', name: String(t('landing.workflow.receipt.demo.pos.ranch', 'Ranch')), price: 0 },
-        { id: 'caesar', name: String(t('landing.workflow.receipt.demo.pos.caesar', 'Caesar')), price: 0 },
-        { id: 'balsamic', name: String(t('landing.workflow.receipt.demo.pos.balsamic', 'Balsamic')), price: 0.5 },
+        { id: 'ranch', name: d('landing.workflow.receipt.demo.pos.ranch', 'Ranch'), price: 0 },
+        { id: 'caesar', name: d('landing.workflow.receipt.demo.pos.caesar', 'Caesar'), price: 0 },
+        { id: 'balsamic', name: d('landing.workflow.receipt.demo.pos.balsamic', 'Balsamic'), price: 0.5 },
       ],
     };
     const toppings: PosAttribute = {
       id: 'toppings',
-      name: String(t('landing.workflow.receipt.demo.pos.attrToppings', 'Add-ons')),
+      name: d('landing.workflow.receipt.demo.pos.attrToppings', 'Add-ons'),
       multi: true,
       options: [
-        { id: 'cheese', name: String(t('landing.workflow.receipt.demo.pos.cheese', 'Extra cheese')), price: 1 },
-        { id: 'avocado', name: String(t('landing.workflow.receipt.demo.pos.avocado', 'Avocado')), price: 1.5 },
-        { id: 'bacon', name: String(t('landing.workflow.receipt.demo.pos.bacon', 'Bacon')), price: 1.5 },
+        { id: 'cheese', name: d('landing.workflow.receipt.demo.pos.cheese', 'Extra cheese'), price: 1 },
+        { id: 'avocado', name: d('landing.workflow.receipt.demo.pos.avocado', 'Avocado'), price: 1.5 },
+        { id: 'bacon', name: d('landing.workflow.receipt.demo.pos.bacon', 'Bacon'), price: 1.5 },
       ],
     };
 
     return [
-      { id: 'espresso', name: String(t('landing.workflow.receipt.demo.pos.espresso', 'Espresso')), price: 3.5, emoji: '☕', categoryId: 'beverages', color: 'from-amber-500/15 to-orange-500/5 border-amber-300/40', attributes: [size, extras] },
-      { id: 'latte', name: String(t('landing.workflow.receipt.demo.pos.latte', 'Latte')), price: 4.5, emoji: '🥛', categoryId: 'beverages', color: 'from-amber-400/15 to-yellow-500/5 border-amber-200/40', attributes: [size, milk, extras] },
-      { id: 'soda', name: String(t('landing.workflow.receipt.demo.pos.soda', 'Soda')), price: 2.5, emoji: '🥤', categoryId: 'beverages', color: 'from-sky-500/15 to-blue-500/5 border-sky-300/40', attributes: [size] },
-      { id: 'tea', name: String(t('landing.workflow.receipt.demo.pos.tea', 'Tea')), price: 2.75, emoji: '🍵', categoryId: 'beverages', color: 'from-emerald-500/15 to-green-500/5 border-emerald-300/40', attributes: [size, milk] },
-      { id: 'croissant', name: String(t('landing.workflow.receipt.demo.pos.croissant', 'Croissant')), price: 4, emoji: '🥐', categoryId: 'pastries', color: 'from-yellow-500/15 to-amber-500/5 border-yellow-300/40', attributes: [heat] },
-      { id: 'muffin', name: String(t('landing.workflow.receipt.demo.pos.muffin', 'Muffin')), price: 3.25, emoji: '🧁', categoryId: 'pastries', color: 'from-pink-500/15 to-rose-500/5 border-pink-300/40', attributes: [heat] },
-      { id: 'cookie', name: String(t('landing.workflow.receipt.demo.pos.cookie', 'Cookie')), price: 2, emoji: '🍪', categoryId: 'pastries', color: 'from-orange-500/15 to-amber-500/5 border-orange-300/40' },
-      { id: 'salad', name: String(t('landing.workflow.receipt.demo.pos.salad', 'Salad')), price: 6.5, emoji: '🥗', categoryId: 'food', color: 'from-emerald-500/15 to-green-500/5 border-emerald-300/40', attributes: [dressing, toppings] },
-      { id: 'sandwich', name: String(t('landing.workflow.receipt.demo.pos.sandwich', 'Sandwich')), price: 7.5, emoji: '🥪', categoryId: 'food', color: 'from-lime-500/15 to-yellow-500/5 border-lime-300/40', attributes: [toppings] },
-      { id: 'soup', name: String(t('landing.workflow.receipt.demo.pos.soup', 'Soup')), price: 5.5, emoji: '🥣', categoryId: 'food', color: 'from-orange-400/15 to-red-500/5 border-orange-300/40', attributes: [size] },
+      { id: 'espresso', name: d('landing.workflow.receipt.demo.pos.espresso', 'Espresso'), price: 3.5, emoji: '☕', categoryId: 'beverages', color: 'from-amber-500/15 to-orange-500/5 border-amber-300/40', attributes: [size, extras] },
+      { id: 'latte', name: d('landing.workflow.receipt.demo.pos.latte', 'Latte'), price: 4.5, emoji: '🥛', categoryId: 'beverages', color: 'from-amber-400/15 to-yellow-500/5 border-amber-200/40', attributes: [size, milk, extras] },
+      { id: 'soda', name: d('landing.workflow.receipt.demo.pos.soda', 'Soda'), price: 2.5, emoji: '🥤', categoryId: 'beverages', color: 'from-sky-500/15 to-blue-500/5 border-sky-300/40', attributes: [size] },
+      { id: 'tea', name: d('landing.workflow.receipt.demo.pos.tea', 'Tea'), price: 2.75, emoji: '🍵', categoryId: 'beverages', color: 'from-emerald-500/15 to-green-500/5 border-emerald-300/40', attributes: [size, milk] },
+      { id: 'croissant', name: d('landing.workflow.receipt.demo.pos.croissant', 'Croissant'), price: 4, emoji: '🥐', categoryId: 'pastries', color: 'from-yellow-500/15 to-amber-500/5 border-yellow-300/40', attributes: [heat] },
+      { id: 'muffin', name: d('landing.workflow.receipt.demo.pos.muffin', 'Muffin'), price: 3.25, emoji: '🧁', categoryId: 'pastries', color: 'from-pink-500/15 to-rose-500/5 border-pink-300/40', attributes: [heat] },
+      { id: 'cookie', name: d('landing.workflow.receipt.demo.pos.cookie', 'Cookie'), price: 2, emoji: '🍪', categoryId: 'pastries', color: 'from-orange-500/15 to-amber-500/5 border-orange-300/40' },
+      { id: 'salad', name: d('landing.workflow.receipt.demo.pos.salad', 'Salad'), price: 6.5, emoji: '🥗', categoryId: 'food', color: 'from-emerald-500/15 to-green-500/5 border-emerald-300/40', attributes: [dressing, toppings] },
+      { id: 'sandwich', name: d('landing.workflow.receipt.demo.pos.sandwich', 'Sandwich'), price: 7.5, emoji: '🥪', categoryId: 'food', color: 'from-lime-500/15 to-yellow-500/5 border-lime-300/40', attributes: [toppings] },
+      { id: 'soup', name: d('landing.workflow.receipt.demo.pos.soup', 'Soup'), price: 5.5, emoji: '🥣', categoryId: 'food', color: 'from-orange-400/15 to-red-500/5 border-orange-300/40', attributes: [size] },
     ];
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- d closes over t
   }, [t]);
 
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -305,7 +312,7 @@ export const InteractivePosDemo = ({ t, isRtl, side }: DemoProps) => {
               <span className="relative inline-flex h-2 w-2 rounded-full bg-mintcom-green" />
             </span>
             <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-gray-500 dark:text-gray-400">
-              {String(t('landing.workflow.receipt.brand', 'MINTCOM POS'))}
+              {d('landing.workflow.receipt.brand', 'MINTCOM POS')}
             </span>
           </div>
           <div className="flex items-center gap-1.5 rounded-full bg-mintcom-green/10 px-2 py-0.5 text-[10px] font-bold text-mintcom-green">
@@ -321,15 +328,15 @@ export const InteractivePosDemo = ({ t, isRtl, side }: DemoProps) => {
                 <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 400, damping: 14 }} className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-mintcom-green text-black shadow-[0_8px_28px_-6px_rgba(125,198,162,0.7)]">
                   <Check size={28} strokeWidth={3} />
                 </motion.div>
-                <p className="font-barlow text-lg font-bold text-gray-900 dark:text-white">{String(t('landing.workflow.receipt.frame.approved', 'Transaction approved'))}</p>
+                <p className="font-barlow text-lg font-bold text-gray-900 dark:text-white">{d('landing.workflow.receipt.frame.approved', 'Transaction approved')}</p>
                 <p className="mt-1 text-sm font-semibold text-mintcom-green">
                   {money(total)}{' '}
                   <span className="text-gray-400">
-                    {String(t('landing.workflow.receipt.demo.sales.via', { m: payMethod === 'cash' ? String(t('landing.workflow.receipt.demo.sales.cash', 'Cash')) : String(t('landing.workflow.receipt.demo.sales.card', 'Card')), defaultValue: `via ${payMethod === 'cash' ? 'Cash' : 'Card'}` }))}
+                    {`via ${payMethod === 'cash' ? d('landing.workflow.receipt.demo.sales.cash', 'Cash') : d('landing.workflow.receipt.demo.sales.card', 'Card')}`}
                   </span>
                 </p>
                 <div className="mt-4 w-full max-w-[240px] rounded-xl border border-dashed border-gray-200 bg-white px-3 py-3 text-start shadow-sm dark:border-white/10 dark:bg-white/[0.03]">
-                  <p className="mb-2 text-center text-[9px] font-bold uppercase tracking-widest text-gray-400">{String(t('landing.workflow.receipt.frame.pos', 'Sales receipt'))}</p>
+                  <p className="mb-2 text-center text-[9px] font-bold uppercase tracking-widest text-gray-400">{d('landing.workflow.receipt.frame.pos', 'Sales receipt')}</p>
                   {cart.map((line) => (
                     <div key={line.id} className="mb-1.5">
                       <div className="flex justify-between gap-2 text-[11px] text-gray-600 dark:text-gray-300">
@@ -344,18 +351,18 @@ export const InteractivePosDemo = ({ t, isRtl, side }: DemoProps) => {
                     </div>
                   ))}
                   <div className="mt-2 flex justify-between border-t border-dashed border-gray-200 pt-2 text-xs font-bold text-gray-900 dark:border-white/10 dark:text-white">
-                    <span>{String(t('landing.workflow.receipt.demo.pos.totalLine', 'Total'))}</span>
+                    <span>{d('landing.workflow.receipt.demo.pos.totalLine', 'Total')}</span>
                     <span className="tabular-nums">{money(total)}</span>
                   </div>
                 </div>
                 <button type="button" onClick={clearCart} className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-gray-900 px-4 py-2 text-xs font-bold text-white dark:bg-white dark:text-black">
-                  <RotateCcw size={12} /> {String(t('landing.workflow.receipt.demo.pos.newSale', 'New sale'))}
+                  <RotateCcw size={12} /> {d('landing.workflow.receipt.demo.pos.newSale', 'New sale')}
                 </button>
               </motion.div>
             ) : phase === 'paying' ? (
               <motion.div key="paying" initial={{ opacity: 0, x: isRtl ? -16 : 16 }} animate={{ opacity: 1, x: 0 }} className="py-2">
                 <p className="mb-3 text-center text-sm font-bold text-gray-900 dark:text-white">{money(total)}</p>
-                <p className="mb-4 text-center text-xs text-gray-500">{String(t('landing.workflow.receipt.demo.pos.choosePay', 'Choose how the customer pays'))}</p>
+                <p className="mb-4 text-center text-xs text-gray-500">{d('landing.workflow.receipt.demo.pos.choosePay', 'Choose how the customer pays')}</p>
                 <div className="grid grid-cols-2 gap-2.5">
                   {(['card', 'cash'] as const).map((m) => (
                     <button key={m} type="button" onClick={() => { setPayMethod(m); setPhase('done'); }} className="group flex flex-col items-center gap-2 rounded-2xl border border-gray-200 bg-white p-4 transition-all hover:-translate-y-0.5 hover:border-mintcom-green/50 hover:shadow-lg dark:border-white/10 dark:bg-white/[0.04]">
@@ -363,13 +370,13 @@ export const InteractivePosDemo = ({ t, isRtl, side }: DemoProps) => {
                         {m === 'card' ? <CreditCard size={20} /> : <span className="text-lg font-black">$</span>}
                       </span>
                       <span className="text-sm font-bold text-gray-900 dark:text-white">
-                        {String(t(`landing.workflow.receipt.demo.sales.${m}`, m === 'card' ? 'Card' : 'Cash'))}
+                        {d(`landing.workflow.receipt.demo.sales.${m}`, m === 'card' ? 'Card' : 'Cash')}
                       </span>
                     </button>
                   ))}
                 </div>
                 <button type="button" onClick={() => setPhase('selling')} className="mt-3 w-full py-2 text-xs font-semibold text-gray-400 hover:text-gray-600">
-                  {String(t('common.back', 'Back'))}
+                  {d('common.back', 'Back')}
                 </button>
               </motion.div>
             ) : (
@@ -449,7 +456,7 @@ export const InteractivePosDemo = ({ t, isRtl, side }: DemoProps) => {
                   </div>
                   {visibleProducts.length === 0 && (
                     <p className="py-6 text-center text-xs text-gray-400">
-                      {String(t('landing.workflow.receipt.demo.pos.noItems', 'No items in this category'))}
+                      {d('landing.workflow.receipt.demo.pos.noItems', 'No items in this category')}
                     </p>
                   )}
                 </div>
@@ -458,7 +465,7 @@ export const InteractivePosDemo = ({ t, isRtl, side }: DemoProps) => {
                 <div className="rounded-xl border border-gray-100 bg-white p-2.5 dark:border-white/8 dark:bg-white/[0.03]">
                   <div className="mb-1.5 flex items-center justify-between">
                     <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
-                      {String(t('landing.workflow.receipt.demo.pos.order', 'Order'))}
+                      {d('landing.workflow.receipt.demo.pos.order', 'Order')}
                     </p>
                     {cart.length > 0 && (
                       <button
@@ -466,13 +473,13 @@ export const InteractivePosDemo = ({ t, isRtl, side }: DemoProps) => {
                         onClick={clearCart}
                         className="text-[10px] font-bold text-gray-400 hover:text-rose-500"
                       >
-                        {String(t('common.clear', 'Clear'))}
+                        {d('common.clear', 'Clear')}
                       </button>
                     )}
                   </div>
                   {cart.length === 0 ? (
                     <p className="py-3 text-center text-xs text-gray-400">
-                      {String(t('landing.workflow.receipt.demo.pos.emptyCart', 'Cart is empty — tap a product above'))}
+                      {d('landing.workflow.receipt.demo.pos.emptyCart', 'Cart is empty — tap a product above')}
                     </p>
                   ) : (
                     <div className="mb-2 max-h-[110px] space-y-1.5 overflow-y-auto">
@@ -516,11 +523,11 @@ export const InteractivePosDemo = ({ t, isRtl, side }: DemoProps) => {
                   )}
                   <div className="space-y-0.5 border-t border-gray-100 pt-2 text-[11px] dark:border-white/8">
                     <div className="flex justify-between text-gray-500">
-                      <span>{String(t('landing.workflow.receipt.demo.pos.subtotal', 'Subtotal'))}</span>
+                      <span>{d('landing.workflow.receipt.demo.pos.subtotal', 'Subtotal')}</span>
                       <span className="tabular-nums">{money(subtotal)}</span>
                     </div>
                     <div className="flex justify-between text-gray-500">
-                      <span>{String(t('landing.workflow.receipt.demo.pos.taxLine', 'Tax 8%'))}</span>
+                      <span>{d('landing.workflow.receipt.demo.pos.taxLine', 'Tax 8%')}</span>
                       <span className="tabular-nums">{money(tax)}</span>
                     </div>
                     <motion.div
@@ -529,7 +536,7 @@ export const InteractivePosDemo = ({ t, isRtl, side }: DemoProps) => {
                       animate={{ scale: 1 }}
                       className="flex justify-between pt-0.5 text-sm font-bold text-gray-900 dark:text-white"
                     >
-                      <span>{String(t('landing.workflow.receipt.demo.pos.totalLine', 'Total'))}</span>
+                      <span>{d('landing.workflow.receipt.demo.pos.totalLine', 'Total')}</span>
                       <span className="tabular-nums text-mintcom-green">{money(total)}</span>
                     </motion.div>
                   </div>
@@ -540,8 +547,8 @@ export const InteractivePosDemo = ({ t, isRtl, side }: DemoProps) => {
                     className="mt-2.5 w-full rounded-xl bg-mintcom-green py-2.5 text-xs font-bold text-black shadow-[0_4px_16px_-4px_rgba(125,198,162,0.55)] disabled:opacity-40"
                   >
                     {cart.length === 0
-                      ? String(t('landing.workflow.receipt.demo.pos.charge', 'Charge'))
-                      : `${String(t('landing.workflow.receipt.demo.pos.charge', 'Charge'))} ${money(total)}`}
+                      ? d('landing.workflow.receipt.demo.pos.charge', 'Charge')
+                      : `${d('landing.workflow.receipt.demo.pos.charge', 'Charge')} ${money(total)}`}
                   </button>
                 </div>
               </motion.div>
@@ -575,14 +582,14 @@ export const InteractivePosDemo = ({ t, isRtl, side }: DemoProps) => {
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-bold text-gray-900 dark:text-white">{addonItem.name}</p>
                     <p className="text-[11px] text-gray-500">
-                      {String(t('landing.workflow.receipt.demo.pos.basePrice', 'Base'))} {money(addonItem.price)}
+                      {d('landing.workflow.receipt.demo.pos.basePrice', 'Base')} {money(addonItem.price)}
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={() => setAddonItem(null)}
                     className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 text-gray-500 dark:bg-white/10"
-                    aria-label={String(t('common.close', 'Close'))}
+                    aria-label={d('common.close', 'Close')}
                   >
                     ×
                   </button>
@@ -595,12 +602,12 @@ export const InteractivePosDemo = ({ t, isRtl, side }: DemoProps) => {
                         <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400">{attr.name}</p>
                         {attr.required && (
                           <span className="rounded bg-rose-50 px-1 text-[9px] font-bold text-rose-500 dark:bg-rose-500/10">
-                            {String(t('landing.workflow.receipt.demo.pos.required', 'Required'))}
+                            {d('landing.workflow.receipt.demo.pos.required', 'Required')}
                           </span>
                         )}
                         {attr.multi && (
                           <span className="rounded bg-gray-100 px-1 text-[9px] font-bold text-gray-500 dark:bg-white/10">
-                            {String(t('landing.workflow.receipt.demo.pos.multi', 'Multi'))}
+                            {d('landing.workflow.receipt.demo.pos.multi', 'Multi')}
                           </span>
                         )}
                       </div>
@@ -655,7 +662,7 @@ export const InteractivePosDemo = ({ t, isRtl, side }: DemoProps) => {
                       </button>
                     </div>
                     <div className="text-end">
-                      <p className="text-[10px] text-gray-400">{String(t('landing.workflow.receipt.demo.pos.lineTotal', 'Line total'))}</p>
+                      <p className="text-[10px] text-gray-400">{d('landing.workflow.receipt.demo.pos.lineTotal', 'Line total')}</p>
                       <p className="text-sm font-black tabular-nums text-mintcom-green">
                         {money(addonPreview.unit * addonQty)}
                       </p>
@@ -666,7 +673,7 @@ export const InteractivePosDemo = ({ t, isRtl, side }: DemoProps) => {
                     onClick={confirmAddons}
                     className="w-full rounded-xl bg-mintcom-green py-2.5 text-xs font-bold text-black shadow-[0_4px_16px_-4px_rgba(125,198,162,0.55)]"
                   >
-                    {String(t('landing.workflow.receipt.demo.pos.addToOrder', 'Add to order'))} · {money(addonPreview.unit * addonQty)}
+                    {d('landing.workflow.receipt.demo.pos.addToOrder', 'Add to order')} · {money(addonPreview.unit * addonQty)}
                   </button>
                 </div>
               </motion.div>
