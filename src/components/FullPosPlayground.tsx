@@ -85,8 +85,7 @@ type Screen =
   | 'held'
   | 'notifications'
   | 'settings'
-  | 'support'
-  | 'shift';
+  | 'support';
 type Staff = { id: string; name: string; role: string; pin: string; emoji: string };
 
 const NAV_ITEMS: {
@@ -103,7 +102,6 @@ const NAV_ITEMS: {
   { id: 'notifications', label: 'Alerts', short: 'Alerts', icon: Bell, badge: 'notif' },
   { id: 'settings', label: 'Settings', short: 'Settings', icon: Settings },
   { id: 'support', label: 'Support', short: 'Help', icon: HelpCircle },
-  { id: 'shift', label: 'Shift', short: 'Shift', icon: Clock },
 ];
 
 const money = (n: number) =>
@@ -773,7 +771,7 @@ export function FullPosPlayground() {
             const on =
               screen === item.id ||
               (item.id === 'settings' &&
-                (screen === 'settings' || screen === 'support' || screen === 'held' || screen === 'shift'));
+                (screen === 'settings' || screen === 'support' || screen === 'held'));
             const Icon = item.icon;
             const badge = 'badge' in item ? item.badge : 0;
             return (
@@ -817,15 +815,14 @@ export function FullPosPlayground() {
 
         {/* Main column (secondary chips + screen content) */}
         <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden pb-[52px] sm:pb-0">
-        {/* Mobile secondary destinations (held / support / shift) */}
-        {(screen === 'settings' || screen === 'support' || screen === 'held' || screen === 'shift') && (
+        {/* Mobile secondary destinations (held / support) */}
+        {(screen === 'settings' || screen === 'support' || screen === 'held') && (
           <div className="flex shrink-0 gap-1.5 overflow-x-auto border-b border-gray-200 bg-white px-3 py-1.5 dark:border-mintcom-tertiary dark:bg-mintcom-surface sm:hidden">
             {(
               [
                 { id: 'settings' as const, label: 'Settings' },
                 { id: 'held' as const, label: `Held${held.length ? ` (${held.length})` : ''}` },
                 { id: 'support' as const, label: 'Support' },
-                { id: 'shift' as const, label: 'Shift' },
               ] as const
             ).map((t) => (
               <button
@@ -1069,59 +1066,6 @@ export function FullPosPlayground() {
             </section>
           )}
 
-          {screen === 'shift' && (
-            <section className="flex h-full min-h-0 flex-1 flex-col overflow-hidden p-3 sm:p-4">
-              <div className="shrink-0">
-                <h2 className="font-barlow text-lg font-black text-text-primary dark:text-white sm:text-xl">Shift overview</h2>
-                <p className="text-[11px] text-text-secondary dark:text-mintcom-textSecondary sm:text-xs">
-                  Demo session stats for {staff?.name} at Cafe Delight
-                </p>
-              </div>
-              <div className="mt-2 grid min-h-0 flex-1 grid-rows-[1fr_auto] gap-2">
-                <div className="grid min-h-0 gap-2 sm:grid-cols-3">
-                  {[
-                    { label: 'Sales completed', value: String(shift.orders), icon: '🧾' },
-                    { label: 'Revenue', value: money(shiftRevenue), icon: '💵' },
-                    { label: 'Held tickets', value: String(held.length), icon: '⏸️' },
-                  ].map((card) => (
-                    <div
-                      key={card.label}
-                      className="flex min-h-0 flex-col justify-center rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-white/8 dark:bg-mintcom-surface"
-                    >
-                      <span className="text-2xl">{card.icon}</span>
-                      <p className="mt-2 text-2xl font-black tabular-nums text-text-primary dark:text-white">
-                        {card.value}
-                      </p>
-                      <p className="text-xs font-bold text-text-secondary dark:text-mintcom-textSecondary">
-                        {card.label}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-                <div className="shrink-0 rounded-2xl border border-mintcom-green/25 bg-mintcom-green/10 p-4">
-                  <p className="text-sm font-black text-text-primary dark:text-white">Like what you see?</p>
-                  <p className="mt-0.5 text-xs text-text-secondary dark:text-mintcom-textSecondary">
-                    Create a free Mintcom account and run this for your real menu, staff, and locations.
-                  </p>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    <Link
-                      to="/signup"
-                      className="rounded-xl bg-mintcom-green px-4 py-2 text-xs font-black text-white"
-                    >
-                      Create free account
-                    </Link>
-                    <button
-                      type="button"
-                      onClick={() => setScreen('sales')}
-                      className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-xs font-bold text-text-primary dark:border-white/10 dark:bg-mintcom-surface dark:text-white"
-                    >
-                      Keep practicing
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </section>
-          )}
         </div>
         </div>
 
