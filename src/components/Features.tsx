@@ -205,20 +205,13 @@ const WorkflowFeatureModal = ({
         'Stay in control from anywhere',
       ],
     };
-    const fallback = defaults[key] ?? [
+    // Do NOT load these via t('…highlights.x.0') — missing keys hit parseMissingKeyHandler
+    // which returns the leaf segment ("0"/"1"/"2") instead of the defaultValue.
+    return defaults[key] ?? [
       'Explore the live preview',
       'Try the interactive controls',
       'See Mintcom in action',
     ];
-    // Use defaultValue option — bare second-arg defaults break on keys ending in .0/.1/.2
-    // (i18next returns the key suffix "0"/"1"/"2" instead of the fallback string).
-    return fallback.map((text, i) =>
-      String(
-        t(`landing.workflow.receipt.demo.highlights.${key}.${i}`, {
-          defaultValue: text,
-        }),
-      ),
-    );
   };
 
   const handleDragEnd = (_e: unknown, info: PanInfo) => {
