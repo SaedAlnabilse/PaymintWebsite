@@ -2248,7 +2248,7 @@ function PaymentCheckoutPanel({
   // Split flow — matches POS: choose By Amount | By Item, then allocate
   type SplitMode = null | 'amount' | 'item' | 'pay';
   const [splitMode, setSplitMode] = useState<SplitMode>(null);
-  const [splitPayments, setSplitPayments] = useState<Array<{ amount: number; method: 'cash' | 'card' | 'other' }>>([]);
+  const [splitPayments, setSplitPayments] = useState<Array<{ amount: number; method: 'cash' | 'card' }>>([]);
   const [splitAmountCents, setSplitAmountCents] = useState(0);
   /** By item: which guest (0..n-1) each cart line is assigned to */
   const [itemGuest, setItemGuest] = useState<Record<string, number>>({});
@@ -2313,7 +2313,7 @@ function PaymentCheckoutPanel({
 
   const applyEqualSplit = (count: number) => {
     const base = Math.floor((total * 100) / count) / 100;
-    const parts: Array<{ amount: number; method: 'cash' | 'card' | 'other' }> = [];
+    const parts: Array<{ amount: number; method: 'cash' | 'card' }> = [];
     let sum = 0;
     for (let i = 0; i < count; i++) {
       if (i === count - 1) {
@@ -2335,8 +2335,12 @@ function PaymentCheckoutPanel({
     if (splitAmount > splitRemaining + 0.001) return;
     setSplitPayments((p) => [
       ...p,
-      { amount: Math.round(splitAmount * 100) / 100, method: p.length % 2 === 0 ? 'cash' : 'card' },
+      {
+        amount: Math.round(splitAmount * 100) / 100,
+        method: p.length % 2 === 0 ? 'cash' : 'card',
+      },
     ]);
+    // split share methods are cash|card only (no Other)
     setSplitAmountCents(0);
   };
 
@@ -2354,7 +2358,7 @@ function PaymentCheckoutPanel({
     return guestTotals
       .map((amount, i) => ({
         amount: Math.round(amount * 100) / 100,
-        method: (i % 2 === 0 ? 'cash' : 'card') as 'cash' | 'card' | 'other',
+        method: (i % 2 === 0 ? 'cash' : 'card') as 'cash' | 'card',
       }))
       .filter((p) => p.amount > 0.001);
   };
@@ -2378,10 +2382,11 @@ function PaymentCheckoutPanel({
       setPayStep((s) => s + 1);
       return;
     }
-    // All shares paid
+    // All shares paid — split only supports cash/card (not Other)
     const amounts = { cash: 0, card: 0, other: 0 };
     splitPayments.forEach((p) => {
-      amounts[p.method] += p.amount;
+      if (p.method === 'card') amounts.card += p.amount;
+      else amounts.cash += p.amount;
     });
     const label = `Split (${splitPayments
       .map((p, i) => `#${i + 1} ${p.method} ${money(p.amount)}`)
@@ -2921,8 +2926,8 @@ function PaymentCheckoutPanel({
                       </p>
                     </div>
                     <p className="text-[11px] font-bold text-text-secondary">Pay with</p>
-                    <div className="grid grid-cols-3 gap-2">
-                      {(['cash', 'card', 'other'] as const).map((m) => (
+                    <div className="grid grid-cols-2 gap-2">
+                      {(['cash', 'card'] as const).map((m) => (
                         <button
                           key={m}
                           type="button"
