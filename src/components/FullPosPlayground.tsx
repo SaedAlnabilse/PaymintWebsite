@@ -82,7 +82,6 @@ type Screen =
   | 'dashboard'
   | 'sales'
   | 'reports'
-  | 'held'
   | 'notifications'
   | 'settings'
   | 'support';
@@ -93,13 +92,12 @@ const NAV_ITEMS: {
   label: string;
   short: string;
   icon: typeof LayoutGrid;
-  badge?: 'held' | 'notif';
+  badge?: 'alerts';
 }[] = [
   { id: 'dashboard', label: 'Dashboard', short: 'Home', icon: LayoutDashboard },
   { id: 'sales', label: 'Sales', short: 'Sales', icon: LayoutGrid },
   { id: 'reports', label: 'Reports', short: 'Reports', icon: BarChart3 },
-  { id: 'held', label: 'Held', short: 'Held', icon: Pause, badge: 'held' },
-  { id: 'notifications', label: 'Alerts', short: 'Alerts', icon: Bell, badge: 'notif' },
+  { id: 'notifications', label: 'Alerts', short: 'Alerts', icon: Bell, badge: 'alerts' },
   { id: 'settings', label: 'Settings', short: 'Settings', icon: Settings },
   { id: 'support', label: 'Support', short: 'Help', icon: HelpCircle },
 ];
@@ -209,7 +207,7 @@ export function FullPosPlayground() {
   const products = useMemo(() => buildCatalog(), []);
   const [phase, setPhase] = useState<Phase>('welcome');
   const [screen, setScreen] = useState<Screen>('dashboard');
-  const notifUnread = 3; // demo badge (matches seed unread count in notifications screen)
+  const notifUnread = 3; // seed unread stock/system alerts in notifications center
   const [staff, setStaff] = useState<Staff | null>(null);
   const [pin, setPin] = useState('');
   const [pinError, setPinError] = useState(false);
@@ -436,7 +434,7 @@ export function FullPosPlayground() {
     setOrderNo((n) => n + 1);
     setShowDiscount(false);
     setShowNote(false);
-    ping('Order held');
+    ping('Held · see Alerts');
   };
 
   const resumeHeld = (ticket: HeldTicket) => {
@@ -745,8 +743,7 @@ export function FullPosPlayground() {
           {NAV_ITEMS.map((item) => {
             const on = screen === item.id;
             const Icon = item.icon;
-            const badge =
-              item.badge === 'held' ? held.length : item.badge === 'notif' ? notifUnread : 0;
+            const badge = item.badge === 'alerts' ? held.length + notifUnread : 0;
             return (
               <button
                 key={item.id}
@@ -782,16 +779,15 @@ export function FullPosPlayground() {
               { id: 'dashboard' as const, icon: LayoutDashboard, label: 'Home' },
               { id: 'sales' as const, icon: LayoutGrid, label: 'Sales' },
               { id: 'reports' as const, icon: BarChart3, label: 'Reports' },
-              { id: 'notifications' as const, icon: Bell, label: 'Alerts', badge: notifUnread },
+              { id: 'notifications' as const, icon: Bell, label: 'Alerts' },
               { id: 'settings' as const, icon: Settings, label: 'More' },
             ] as const
           ).map((item) => {
             const on =
               screen === item.id ||
-              (item.id === 'settings' &&
-                (screen === 'settings' || screen === 'support' || screen === 'held'));
+              (item.id === 'settings' && (screen === 'settings' || screen === 'support'));
             const Icon = item.icon;
-            const badge = 'badge' in item ? item.badge : 0;
+            const badge = item.id === 'notifications' ? held.length + notifUnread : 0;
             return (
               <button
                 key={item.id}
@@ -833,13 +829,12 @@ export function FullPosPlayground() {
 
         {/* Main column (secondary chips + screen content) */}
         <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden pb-[52px] sm:pb-0">
-        {/* Mobile secondary destinations (held / support) */}
-        {(screen === 'settings' || screen === 'support' || screen === 'held') && (
+        {/* Mobile secondary destinations */}
+        {(screen === 'settings' || screen === 'support') && (
           <div className="flex shrink-0 gap-1.5 overflow-x-auto border-b border-gray-200 bg-white px-3 py-1.5 dark:border-mintcom-tertiary dark:bg-mintcom-surface sm:hidden">
             {(
               [
                 { id: 'settings' as const, label: 'Settings' },
-                { id: 'held' as const, label: `Held${held.length ? ` (${held.length})` : ''}` },
                 { id: 'support' as const, label: 'Support' },
               ] as const
             ).map((t) => (
@@ -876,7 +871,21 @@ export function FullPosPlayground() {
           )}
 
           {screen === 'reports' && <DemoReportsScreen shift={shift} />}
-          {screen === 'notifications' && <DemoNotificationsScreen />}
+          {screen === 'notifications' && (
+            <DemoNotificationsScreen
+              held={held}
+              staffName={staff?.name}
+              onResumeHeld={(ticket) => {
+                // Map DemoHeldTicket shape → HeldTicket used in playground state
+                const full = held.find((h) => h.id === ticket.id);
+                if (full) resumeHeld(full);
+              }}
+              onDismissHeld={(id) => {
+                setHeld((list) => list.filter((h) => h.id !== id));
+                ping('Held order dismissed');
+              }}
+            />
+          )}
           {screen === 'settings' && <DemoSettingsScreen />}
           {screen === 'support' && <DemoSupportScreen />}
 
@@ -1023,67 +1032,6 @@ export function FullPosPlayground() {
                 onPayOther={() => setShowOtherPay(true)}
               />
             </>
-          )}
-
-          {screen === 'held' && (
-            <section className="flex h-full min-h-0 flex-1 flex-col overflow-hidden p-3 sm:p-4">
-              <div className="shrink-0">
-                <h2 className="font-barlow text-lg font-black text-text-primary dark:text-white sm:text-xl">Held orders</h2>
-                <p className="text-[11px] text-text-secondary dark:text-mintcom-textSecondary sm:text-xs">
-                  Park tickets and resume them later — just like open tickets on POS.
-                </p>
-              </div>
-              {held.length === 0 ? (
-                <div className="mt-2 flex min-h-0 flex-1 flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-white dark:border-mintcom-tertiary dark:bg-mintcom-surface">
-                  <Pause className="mb-2 text-mintcom-green" size={28} />
-                  <p className="font-bold text-text-primary dark:text-white">No held orders</p>
-                  <p className="mt-1 max-w-xs text-center text-xs text-text-secondary dark:text-mintcom-textSecondary">
-                    On sales, add items then tap pause on the order ticket.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => setScreen('sales')}
-                    className="mt-3 rounded-xl bg-mintcom-green px-4 py-2 text-xs font-black text-white"
-                  >
-                    Back to sales
-                  </button>
-                </div>
-              ) : (
-                <div className="mt-2 grid min-h-0 flex-1 auto-rows-fr gap-2 overflow-hidden sm:grid-cols-2 xl:grid-cols-3">
-                  {held.map((t) => {
-                    const tSub = t.lines.reduce((s, l) => s + l.unitPrice * l.qty, 0);
-                    return (
-                      <div
-                        key={t.id}
-                        className="flex min-h-0 flex-col justify-between rounded-2xl border border-gray-200 bg-white p-3 shadow-sm dark:border-white/8 dark:bg-mintcom-surface"
-                      >
-                        <div>
-                          <div className="flex items-start justify-between gap-2">
-                            <div>
-                              <p className="text-sm font-black text-text-primary dark:text-white">#{t.orderNo}</p>
-                              <p className="text-[11px] text-text-secondary dark:text-mintcom-textSecondary">
-                                {orderTypeLabel(t.type)} · {t.lines.reduce((s, l) => s + l.qty, 0)} items
-                              </p>
-                            </div>
-                            <p className="text-sm font-black text-mintcom-green">{money(tSub)}</p>
-                          </div>
-                          <p className="mt-1.5 line-clamp-2 text-[11px] text-text-tertiary dark:text-mintcom-gray">
-                            {t.lines.map((l) => `${l.emoji} ${l.name}×${l.qty}`).join(' · ')}
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => resumeHeld(t)}
-                          className="mt-2 w-full rounded-xl bg-mintcom-green py-2 text-xs font-black text-white"
-                        >
-                          Resume order
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </section>
           )}
 
         </div>
