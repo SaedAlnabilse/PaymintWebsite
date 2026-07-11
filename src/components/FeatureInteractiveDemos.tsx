@@ -8,7 +8,6 @@ import {
   Sparkles,
   Zap,
   Lock,
-  Smartphone,
   Bell,
   ToggleLeft,
   ToggleRight,
@@ -1544,7 +1543,7 @@ export const InteractiveMobileDemo = ({ t }: DemoProps) => {
   const [cursor, setCursor] = useState(0);
   const [pulseBell, setPulseBell] = useState(false);
   const [banner, setBanner] = useState<Alert | null>(null);
-  const bannerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const bannerTimerRef = useRef<number | null>(null);
 
   const unread = alerts.filter((a) => !a.isRead).length;
   const counts = {
@@ -1564,7 +1563,7 @@ export const InteractiveMobileDemo = ({ t }: DemoProps) => {
   };
 
   const dismissBanner = () => {
-    if (bannerTimerRef.current) window.clearTimeout(bannerTimerRef.current);
+    if (bannerTimerRef.current !== null) window.clearTimeout(bannerTimerRef.current);
     bannerTimerRef.current = null;
     setBanner(null);
   };
@@ -1588,13 +1587,13 @@ export const InteractiveMobileDemo = ({ t }: DemoProps) => {
     setBanner(next);
     setPulseBell(true);
     window.setTimeout(() => setPulseBell(false), 700);
-    if (bannerTimerRef.current) window.clearTimeout(bannerTimerRef.current);
+    if (bannerTimerRef.current !== null) window.clearTimeout(bannerTimerRef.current);
     bannerTimerRef.current = window.setTimeout(() => setBanner(null), 4200);
   };
 
   useEffect(
     () => () => {
-      if (bannerTimerRef.current) window.clearTimeout(bannerTimerRef.current);
+      if (bannerTimerRef.current !== null) window.clearTimeout(bannerTimerRef.current);
     },
     [],
   );
