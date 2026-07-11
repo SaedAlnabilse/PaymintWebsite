@@ -1416,14 +1416,12 @@ export function DemoNotificationsScreen({
                       key={n.id}
                       type="button"
                       onClick={() => toggle(n.id)}
-                      className={`flex w-full overflow-hidden rounded-2xl border text-start transition-all ${
+                      className={`flex w-full items-center gap-2.5 rounded-2xl border px-3 py-2.5 text-start transition-all ${
                         n.unread
                           ? 'border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-mintcom-surface'
                           : 'border-gray-100 bg-cream-50 opacity-80 dark:border-white/5 dark:bg-mintcom-dark'
                       }`}
                     >
-                      <span className={`w-1.5 shrink-0 ${tone.bar}`} />
-                      <div className="flex min-w-0 flex-1 items-center gap-2.5 px-3 py-2.5">
                         <span
                           className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${tone.iconBg}`}
                         >
@@ -1446,7 +1444,6 @@ export function DemoNotificationsScreen({
                           </p>
                           <p className="text-[9px] font-bold text-text-tertiary dark:text-mintcom-gray">{n.time}</p>
                         </div>
-                      </div>
                     </button>
                   );
                 })}
