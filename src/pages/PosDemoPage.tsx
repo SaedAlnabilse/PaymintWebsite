@@ -7,7 +7,7 @@ import { FullPosPlayground } from '../components/FullPosPlayground';
  */
 export function PosDemoPage() {
   return (
-    <>
+    <div className="h-[100dvh] max-h-[100dvh] overflow-hidden">
       <Helmet>
         <title>Try Mintcom POS · Free interactive demo</title>
         <meta
@@ -24,6 +24,6 @@ export function PosDemoPage() {
         <meta name="robots" content="index,follow" />
       </Helmet>
       <FullPosPlayground />
-    </>
+    </div>
   );
 }

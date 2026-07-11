@@ -255,6 +255,20 @@ export function FullPosPlayground() {
     return () => window.clearInterval(id);
   }, []);
 
+  // Lock document to a true full-screen POS shell (no body/page scroll)
+  useEffect(() => {
+    const html = document.documentElement;
+    const body = document.body;
+    const prevHtml = html.style.overflow;
+    const prevBody = body.style.overflow;
+    html.style.overflow = 'hidden';
+    body.style.overflow = 'hidden';
+    return () => {
+      html.style.overflow = prevHtml;
+      body.style.overflow = prevBody;
+    };
+  }, []);
+
   const visible = useMemo(() => {
     let list =
       selectedCategory === 'all' ? products : products.filter((p) => p.categoryId === selectedCategory);
@@ -505,9 +519,9 @@ export function FullPosPlayground() {
   /* ─── Welcome ─── */
   if (phase === 'welcome') {
     return (
-      <div className="flex min-h-[100dvh] flex-col bg-cream-50 dark:bg-mintcom-dark">
+      <div className="flex h-[100dvh] max-h-[100dvh] flex-col overflow-hidden bg-cream-50 dark:bg-mintcom-dark">
         <DemoChrome onExit={null} />
-        <div className="flex flex-1 flex-col items-center justify-center px-5 py-12 text-center">
+        <div className="flex min-h-0 flex-1 flex-col items-center justify-center overflow-hidden px-5 py-6 text-center">
           <motion.div
             initial={{ scale: 0.92, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -555,9 +569,9 @@ export function FullPosPlayground() {
   /* ─── PIN ─── */
   if (phase === 'pin') {
     return (
-      <div className="flex min-h-[100dvh] flex-col bg-cream-50 dark:bg-mintcom-dark">
+      <div className="flex h-[100dvh] max-h-[100dvh] flex-col overflow-hidden bg-cream-50 dark:bg-mintcom-dark">
         <DemoChrome onExit={null} />
-        <div className="flex flex-1 flex-col items-center justify-center px-5 py-8">
+        <div className="flex min-h-0 flex-1 flex-col items-center justify-center overflow-hidden px-5 py-4">
           <button
             type="button"
             onClick={() => setPhase('welcome')}
@@ -635,7 +649,7 @@ export function FullPosPlayground() {
 
   /* ─── Main POS app shell ─── */
   return (
-    <div className="flex min-h-[100dvh] flex-col bg-cream-50 text-text-primary dark:bg-mintcom-dark dark:text-white">
+    <div className="flex h-[100dvh] max-h-[100dvh] flex-col overflow-hidden bg-cream-50 text-text-primary dark:bg-mintcom-dark dark:text-white">
       <DemoChrome
         staff={staff}
         timeLabel={timeLabel}
@@ -645,7 +659,7 @@ export function FullPosPlayground() {
 
       <div className="relative flex min-h-0 flex-1 overflow-hidden">
         {/* Side rail — like POS main nav */}
-        <nav className="hidden w-[76px] shrink-0 flex-col items-center gap-0.5 overflow-y-auto border-e border-gray-200 bg-white py-3 dark:border-mintcom-tertiary dark:bg-mintcom-surface sm:flex">
+        <nav className="hidden h-full w-[76px] shrink-0 flex-col items-center gap-0.5 overflow-hidden border-e border-gray-200 bg-white py-2 dark:border-mintcom-tertiary dark:bg-mintcom-surface sm:flex">
           <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-mintcom-green/15">
             <Logo variant="icon" size="sm" />
           </div>
@@ -682,8 +696,8 @@ export function FullPosPlayground() {
           </div>
         </nav>
 
-        {/* Mobile bottom tabs — primary destinations + more via cart when on sales */}
-        <div className="fixed inset-x-0 bottom-0 z-40 flex border-t border-gray-200 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur dark:border-mintcom-tertiary dark:bg-mintcom-surface/95 sm:hidden">
+        {/* Mobile bottom tabs — inside shell (not fixed) so height math stays 100dvh */}
+        <div className="absolute inset-x-0 bottom-0 z-40 flex border-t border-gray-200 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur dark:border-mintcom-tertiary dark:bg-mintcom-surface/95 sm:hidden">
           {(
             [
               { id: 'dashboard' as const, icon: LayoutDashboard, label: 'Home' },
@@ -738,9 +752,11 @@ export function FullPosPlayground() {
           )}
         </div>
 
+        {/* Main column (secondary chips + screen content) */}
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden pb-[52px] sm:pb-0">
         {/* Mobile secondary destinations (held / support / shift) */}
         {(screen === 'settings' || screen === 'support' || screen === 'held' || screen === 'shift') && (
-          <div className="flex gap-1.5 overflow-x-auto border-b border-gray-200 bg-white px-3 py-2 dark:border-mintcom-tertiary dark:bg-mintcom-surface sm:hidden">
+          <div className="flex shrink-0 gap-1.5 overflow-x-auto border-b border-gray-200 bg-white px-3 py-1.5 dark:border-mintcom-tertiary dark:bg-mintcom-surface sm:hidden">
             {(
               [
                 { id: 'settings' as const, label: 'Settings' },
@@ -765,8 +781,8 @@ export function FullPosPlayground() {
           </div>
         )}
 
-        {/* Content */}
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col pb-14 sm:pb-0 lg:flex-row">
+        {/* Content — always fills remaining height */}
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden lg:flex-row">
           {screen === 'dashboard' && (
             <DemoDashboardScreen
               staff={staff}
@@ -785,9 +801,9 @@ export function FullPosPlayground() {
           {screen === 'sales' && (
             <>
               {/* Menu pane ~2.3 */}
-              <section className="flex min-h-0 min-w-0 flex-[2.3] flex-col bg-cream-50 dark:bg-mintcom-dark">
+              <section className="flex h-full min-h-0 min-w-0 flex-[2.3] flex-col overflow-hidden bg-cream-50 dark:bg-mintcom-dark">
                 {/* Sales header */}
-                <header className="flex flex-wrap items-center gap-2 border-b border-gray-200 bg-white px-3 py-2.5 dark:border-mintcom-tertiary dark:bg-mintcom-surface sm:px-4">
+                <header className="flex shrink-0 flex-wrap items-center gap-2 border-b border-gray-200 bg-white px-3 py-2 dark:border-mintcom-tertiary dark:bg-mintcom-surface sm:px-4">
                   <div className="me-1 hidden min-w-0 sm:block">
                     <p className="truncate text-xs font-black text-text-primary dark:text-white">Cafe Delight</p>
                     <p className="truncate text-[10px] text-text-secondary dark:text-mintcom-textSecondary">
@@ -851,45 +867,44 @@ export function FullPosPlayground() {
                   </div>
                 </header>
 
-                {/* Product grid */}
-                <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3 sm:p-4">
-                  <div className="grid grid-cols-2 gap-2.5 xs:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4">
+                {/* Product grid — fills remaining height; internal scroll only if many products */}
+                <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-2 sm:p-3">
+                  <div className="grid h-full auto-rows-fr grid-cols-2 gap-2 xs:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4">
                     {visible.map((p) => (
                       <motion.button
                         key={p.id}
                         type="button"
                         whileTap={{ scale: 0.97 }}
                         onClick={() => openItem(p)}
-                        className="group relative flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white text-start shadow-sm transition-shadow hover:shadow-md dark:border-white/8 dark:bg-mintcom-surface"
+                        className="group relative flex min-h-[110px] flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white text-start shadow-sm transition-shadow hover:shadow-md dark:border-white/8 dark:bg-mintcom-surface sm:min-h-[130px]"
                       >
                         {lastAdded === p.id && (
                           <span className="absolute end-2 top-2 z-10 rounded-full bg-mintcom-green px-1.5 py-0.5 text-[9px] font-black text-white">
                             +1
                           </span>
                         )}
-                        <div className="relative flex aspect-[4/3] items-center justify-center bg-gradient-to-br from-mintcom-greenTint to-cream-100 dark:from-mintcom-green/10 dark:to-mintcom-dark">
-                          <span className="text-4xl sm:text-5xl">{p.emoji}</span>
-                          {/* Green + like real ProductCard */}
-                          <span className="absolute bottom-2 end-2 flex h-8 w-8 items-center justify-center rounded-full bg-mintcom-green text-white shadow-md shadow-mintcom-green/30 transition-transform group-hover:scale-110">
-                            <Plus size={16} strokeWidth={3} />
+                        <div className="relative flex min-h-0 flex-1 items-center justify-center bg-gradient-to-br from-mintcom-greenTint to-cream-100 dark:from-mintcom-green/10 dark:to-mintcom-dark">
+                          <span className="text-3xl sm:text-4xl">{p.emoji}</span>
+                          <span className="absolute bottom-1.5 end-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-mintcom-green text-white shadow-md shadow-mintcom-green/30 transition-transform group-hover:scale-110 sm:h-8 sm:w-8">
+                            <Plus size={14} strokeWidth={3} />
                           </span>
                           {!!p.attributes?.length && (
-                            <span className="absolute start-2 top-2 rounded-md bg-white/90 px-1.5 py-0.5 text-[9px] font-bold text-text-secondary shadow-sm dark:bg-mintcom-dark/80 dark:text-mintcom-textSecondary">
+                            <span className="absolute start-1.5 top-1.5 rounded-md bg-white/90 px-1.5 py-0.5 text-[8px] font-bold text-text-secondary shadow-sm dark:bg-mintcom-dark/80 dark:text-mintcom-textSecondary">
                               Options
                             </span>
                           )}
                         </div>
-                        <div className="flex flex-1 flex-col gap-0.5 p-2.5">
-                          <p className="line-clamp-2 text-xs font-bold leading-snug text-text-primary dark:text-white sm:text-[13px]">
+                        <div className="flex shrink-0 flex-col gap-0.5 p-2">
+                          <p className="line-clamp-1 text-[11px] font-bold leading-snug text-text-primary dark:text-white sm:text-xs">
                             {p.name}
                           </p>
-                          <p className="text-sm font-black tabular-nums text-mintcom-green">{money(p.price)}</p>
+                          <p className="text-xs font-black tabular-nums text-mintcom-green sm:text-sm">{money(p.price)}</p>
                         </div>
                       </motion.button>
                     ))}
                   </div>
                   {visible.length === 0 && (
-                    <p className="py-16 text-center text-sm text-text-tertiary dark:text-mintcom-gray">
+                    <p className="py-10 text-center text-sm text-text-tertiary dark:text-mintcom-gray">
                       No products match your search
                     </p>
                   )}
@@ -898,7 +913,7 @@ export function FullPosPlayground() {
 
               {/* Order pane ~1.2 — desktop always; mobile sheet */}
               <OrderPanel
-                className="hidden w-full max-w-none flex-[1.2] border-s border-gray-200 bg-white dark:border-mintcom-tertiary dark:bg-mintcom-surface lg:flex"
+                className="hidden h-full w-full max-w-none flex-[1.2] overflow-hidden border-s border-gray-200 bg-white dark:border-mintcom-tertiary dark:bg-mintcom-surface lg:flex"
                 orderNo={orderNo}
                 cart={cart}
                 orderType={orderType}
@@ -929,51 +944,55 @@ export function FullPosPlayground() {
           )}
 
           {screen === 'held' && (
-            <section className="flex min-h-0 flex-1 flex-col overflow-y-auto p-4 sm:p-6">
-              <h2 className="font-barlow text-xl font-black text-text-primary dark:text-white">Held orders</h2>
-              <p className="mt-1 text-sm text-text-secondary dark:text-mintcom-textSecondary">
-                Park tickets and resume them later — just like open tickets on POS.
-              </p>
+            <section className="flex h-full min-h-0 flex-1 flex-col overflow-hidden p-3 sm:p-4">
+              <div className="shrink-0">
+                <h2 className="font-barlow text-lg font-black text-text-primary dark:text-white sm:text-xl">Held orders</h2>
+                <p className="text-[11px] text-text-secondary dark:text-mintcom-textSecondary sm:text-xs">
+                  Park tickets and resume them later — just like open tickets on POS.
+                </p>
+              </div>
               {held.length === 0 ? (
-                <div className="mt-10 flex flex-col items-center rounded-[28px] border border-dashed border-gray-200 bg-white py-16 dark:border-mintcom-tertiary dark:bg-mintcom-surface">
-                  <Pause className="mb-3 text-mintcom-green" size={32} />
+                <div className="mt-2 flex min-h-0 flex-1 flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-white dark:border-mintcom-tertiary dark:bg-mintcom-surface">
+                  <Pause className="mb-2 text-mintcom-green" size={28} />
                   <p className="font-bold text-text-primary dark:text-white">No held orders</p>
                   <p className="mt-1 max-w-xs text-center text-xs text-text-secondary dark:text-mintcom-textSecondary">
-                    On the sales screen, add items then tap the pause icon on the order ticket.
+                    On sales, add items then tap pause on the order ticket.
                   </p>
                   <button
                     type="button"
                     onClick={() => setScreen('sales')}
-                    className="mt-4 rounded-xl bg-mintcom-green px-4 py-2 text-xs font-black text-white"
+                    className="mt-3 rounded-xl bg-mintcom-green px-4 py-2 text-xs font-black text-white"
                   >
                     Back to sales
                   </button>
                 </div>
               ) : (
-                <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                <div className="mt-2 grid min-h-0 flex-1 auto-rows-fr gap-2 overflow-hidden sm:grid-cols-2 xl:grid-cols-3">
                   {held.map((t) => {
                     const tSub = t.lines.reduce((s, l) => s + l.unitPrice * l.qty, 0);
                     return (
                       <div
                         key={t.id}
-                        className="rounded-[24px] border border-gray-200 bg-white p-4 shadow-sm dark:border-white/8 dark:bg-mintcom-surface"
+                        className="flex min-h-0 flex-col justify-between rounded-2xl border border-gray-200 bg-white p-3 shadow-sm dark:border-white/8 dark:bg-mintcom-surface"
                       >
-                        <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <p className="text-sm font-black text-text-primary dark:text-white">#{t.orderNo}</p>
-                            <p className="text-[11px] text-text-secondary dark:text-mintcom-textSecondary">
-                              {orderTypeLabel(t.type)} · {t.lines.reduce((s, l) => s + l.qty, 0)} items
-                            </p>
+                        <div>
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <p className="text-sm font-black text-text-primary dark:text-white">#{t.orderNo}</p>
+                              <p className="text-[11px] text-text-secondary dark:text-mintcom-textSecondary">
+                                {orderTypeLabel(t.type)} · {t.lines.reduce((s, l) => s + l.qty, 0)} items
+                              </p>
+                            </div>
+                            <p className="text-sm font-black text-mintcom-green">{money(tSub)}</p>
                           </div>
-                          <p className="text-sm font-black text-mintcom-green">{money(tSub)}</p>
+                          <p className="mt-1.5 line-clamp-2 text-[11px] text-text-tertiary dark:text-mintcom-gray">
+                            {t.lines.map((l) => `${l.emoji} ${l.name}×${l.qty}`).join(' · ')}
+                          </p>
                         </div>
-                        <p className="mt-2 line-clamp-2 text-[11px] text-text-tertiary dark:text-mintcom-gray">
-                          {t.lines.map((l) => `${l.emoji} ${l.name}×${l.qty}`).join(' · ')}
-                        </p>
                         <button
                           type="button"
                           onClick={() => resumeHeld(t)}
-                          className="mt-3 w-full rounded-xl bg-mintcom-green py-2.5 text-xs font-black text-white"
+                          className="mt-2 w-full rounded-xl bg-mintcom-green py-2 text-xs font-black text-white"
                         >
                           Resume order
                         </button>
@@ -986,54 +1005,59 @@ export function FullPosPlayground() {
           )}
 
           {screen === 'shift' && (
-            <section className="flex min-h-0 flex-1 flex-col overflow-y-auto p-4 sm:p-6">
-              <h2 className="font-barlow text-xl font-black text-text-primary dark:text-white">Shift overview</h2>
-              <p className="mt-1 text-sm text-text-secondary dark:text-mintcom-textSecondary">
-                Demo session stats for {staff?.name} at Cafe Delight
-              </p>
-              <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                {[
-                  { label: 'Sales completed', value: String(shiftOrders), icon: '🧾' },
-                  { label: 'Revenue', value: money(shiftRevenue), icon: '💵' },
-                  { label: 'Held tickets', value: String(held.length), icon: '⏸️' },
-                ].map((card) => (
-                  <div
-                    key={card.label}
-                    className="rounded-[24px] border border-gray-200 bg-white p-5 shadow-sm dark:border-white/8 dark:bg-mintcom-surface"
-                  >
-                    <span className="text-2xl">{card.icon}</span>
-                    <p className="mt-3 text-2xl font-black tabular-nums text-text-primary dark:text-white">
-                      {card.value}
-                    </p>
-                    <p className="text-xs font-bold text-text-secondary dark:text-mintcom-textSecondary">
-                      {card.label}
-                    </p>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-6 rounded-[24px] border border-mintcom-green/25 bg-mintcom-green/10 p-5">
-                <p className="text-sm font-black text-text-primary dark:text-white">Like what you see?</p>
-                <p className="mt-1 text-xs text-text-secondary dark:text-mintcom-textSecondary">
-                  Create a free Mintcom account and run this for your real menu, staff, and locations.
+            <section className="flex h-full min-h-0 flex-1 flex-col overflow-hidden p-3 sm:p-4">
+              <div className="shrink-0">
+                <h2 className="font-barlow text-lg font-black text-text-primary dark:text-white sm:text-xl">Shift overview</h2>
+                <p className="text-[11px] text-text-secondary dark:text-mintcom-textSecondary sm:text-xs">
+                  Demo session stats for {staff?.name} at Cafe Delight
                 </p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <Link
-                    to="/signup"
-                    className="rounded-xl bg-mintcom-green px-4 py-2.5 text-xs font-black text-white"
-                  >
-                    Create free account
-                  </Link>
-                  <button
-                    type="button"
-                    onClick={() => setScreen('sales')}
-                    className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-xs font-bold text-text-primary dark:border-white/10 dark:bg-mintcom-surface dark:text-white"
-                  >
-                    Keep practicing
-                  </button>
+              </div>
+              <div className="mt-2 grid min-h-0 flex-1 grid-rows-[1fr_auto] gap-2">
+                <div className="grid min-h-0 gap-2 sm:grid-cols-3">
+                  {[
+                    { label: 'Sales completed', value: String(shiftOrders), icon: '🧾' },
+                    { label: 'Revenue', value: money(shiftRevenue), icon: '💵' },
+                    { label: 'Held tickets', value: String(held.length), icon: '⏸️' },
+                  ].map((card) => (
+                    <div
+                      key={card.label}
+                      className="flex min-h-0 flex-col justify-center rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-white/8 dark:bg-mintcom-surface"
+                    >
+                      <span className="text-2xl">{card.icon}</span>
+                      <p className="mt-2 text-2xl font-black tabular-nums text-text-primary dark:text-white">
+                        {card.value}
+                      </p>
+                      <p className="text-xs font-bold text-text-secondary dark:text-mintcom-textSecondary">
+                        {card.label}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+                <div className="shrink-0 rounded-2xl border border-mintcom-green/25 bg-mintcom-green/10 p-4">
+                  <p className="text-sm font-black text-text-primary dark:text-white">Like what you see?</p>
+                  <p className="mt-0.5 text-xs text-text-secondary dark:text-mintcom-textSecondary">
+                    Create a free Mintcom account and run this for your real menu, staff, and locations.
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <Link
+                      to="/signup"
+                      className="rounded-xl bg-mintcom-green px-4 py-2 text-xs font-black text-white"
+                    >
+                      Create free account
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => setScreen('sales')}
+                      className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-xs font-bold text-text-primary dark:border-white/10 dark:bg-mintcom-surface dark:text-white"
+                    >
+                      Keep practicing
+                    </button>
+                  </div>
                 </div>
               </div>
             </section>
           )}
+        </div>
         </div>
 
         {/* Mobile order sheet */}
@@ -1447,7 +1471,7 @@ function OrderPanel({
   const empty = cart.length === 0;
 
   return (
-    <aside className={`flex min-h-0 flex-col ${className}`}>
+    <aside className={`flex h-full min-h-0 flex-col overflow-hidden ${className}`}>
       {/* Order panel header — green action icons like real POS */}
       <div className="border-b border-gray-100 px-3 py-2.5 dark:border-white/8">
         {empty ? (
@@ -1569,7 +1593,7 @@ function OrderPanel({
       </div>
 
       {/* Lines */}
-      <div className={`min-h-0 flex-1 space-y-2 overflow-y-auto px-3 py-3 ${compact ? 'max-h-[36vh]' : ''}`}>
+      <div className={`min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain px-3 py-2 ${compact ? '' : ''}`}>
         {empty ? (
           <div className="flex h-full min-h-[120px] flex-col items-center justify-center text-center">
             <ShoppingBag className="mb-2 text-mintcom-green/50" size={28} />
