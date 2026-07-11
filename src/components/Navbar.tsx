@@ -41,6 +41,7 @@ export const Navbar = () => {
     : [
         { name: t('nav.features'), href: '/#features', id: 'features' },
         { name: t('nav.pricing'), href: '/#pricing', id: 'pricing' },
+        { name: 'Try POS', href: '/try-pos', id: 'try-pos' },
         { name: t('nav.support'), href: '/support', id: 'support' },
       ];
 
