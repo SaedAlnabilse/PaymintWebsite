@@ -216,38 +216,94 @@ export const InteractivePosDemo = ({ t, isRtl, side }: DemoProps) => {
  * Cash always fixed on, Card toggleable, add custom methods + real card brand logos, tax rate.
  */
 export const InteractiveSalesControlDemo = ({ t, side }: DemoProps) => {
-  type Method = { id: string; label: string; logo?: string; emoji?: string };
-  type Brand = { id: string; label: string; logo: string };
+  type Method = { id: string; label: string; emoji?: string; brand?: 'apple' | 'google' | 'paypal' };
+  type BrandId = 'visa' | 'mc' | 'amex' | 'discover';
+  type Brand = { id: BrandId; label: string };
 
-  // Same logo sources as PaymentMethodsPage
-  const LOGOS = {
-    visa: 'https://upload.wikimedia.org/wikipedia/commons/d/d6/Visa_2021.svg',
-    mc: 'https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg',
-    amex: 'https://upload.wikimedia.org/wikipedia/commons/f/fa/American_Express_logo_%282018%29.svg',
-    discover: 'https://upload.wikimedia.org/wikipedia/commons/8/81/Discover_Card_logo.svg',
-    apple: 'https://upload.wikimedia.org/wikipedia/commons/b/b0/Apple_Pay_logo.svg',
-    google: 'https://upload.wikimedia.org/wikipedia/commons/f/f2/Google_Pay_Logo.svg',
-    paypal: 'https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg',
-    cash: 'https://cdn-icons-png.flaticon.com/512/2331/2331714.png',
-  } as const;
+  /** Inline brand marks — no external image host (Wikimedia often blocks / 404s). */
+  const BrandMark = ({ id, className = 'h-4 w-5' }: { id: BrandId | Method['brand']; className?: string }) => {
+    if (id === 'visa') {
+      return (
+        <svg viewBox="0 0 48 16" className={className} aria-hidden>
+          <text x="0" y="13" fontFamily="Arial Black, Arial, sans-serif" fontSize="14" fontWeight="900" fill="#1A1F71" letterSpacing="-0.5">
+            VISA
+          </text>
+        </svg>
+      );
+    }
+    if (id === 'mc') {
+      return (
+        <svg viewBox="0 0 32 20" className={className} aria-hidden>
+          <circle cx="12" cy="10" r="8" fill="#EB001B" />
+          <circle cx="20" cy="10" r="8" fill="#F79E1B" />
+          <path d="M16 4.2a8 8 0 0 1 0 11.6 8 8 0 0 1 0-11.6z" fill="#FF5F00" />
+        </svg>
+      );
+    }
+    if (id === 'amex') {
+      return (
+        <svg viewBox="0 0 40 16" className={className} aria-hidden>
+          <rect width="40" height="16" rx="2" fill="#2E77BC" />
+          <text x="4" y="11.5" fontFamily="Arial, sans-serif" fontSize="7" fontWeight="700" fill="#fff">
+            AMEX
+          </text>
+        </svg>
+      );
+    }
+    if (id === 'discover') {
+      return (
+        <svg viewBox="0 0 48 16" className={className} aria-hidden>
+          <text x="0" y="12" fontFamily="Arial, sans-serif" fontSize="9" fontWeight="700" fill="#FF6000">
+            DISCOVER
+          </text>
+        </svg>
+      );
+    }
+    if (id === 'apple') {
+      return (
+        <svg viewBox="0 0 16 16" className={className} aria-hidden fill="currentColor">
+          <path d="M12.6 8.4c0-2 1.6-3 1.7-3.1-0.9-1.3-2.4-1.5-2.9-1.5-1.2-0.1-2.4 0.7-3 0.7s-1.6-0.7-2.6-0.7c-1.3 0-2.6 0.8-3.3 2-1.4 2.4-0.4 6 1 8 0.7 0.9 1.5 2 2.6 2 1 0 1.4-0.7 2.7-0.7s1.6 0.7 2.7 0.7 1.8-1 2.5-1.9c0.8-1.1 1.1-2.2 1.1-2.2s-2.1-0.8-2.1-3.1zM10.9 2.9c0.6-0.7 1-1.7 0.9-2.7-0.9 0-1.9 0.6-2.5 1.3-0.5 0.6-1 1.6-0.9 2.5 1 0.1 1.9-0.5 2.5-1.1z" />
+        </svg>
+      );
+    }
+    if (id === 'google') {
+      return (
+        <svg viewBox="0 0 18 18" className={className} aria-hidden>
+          <path fill="#4285F4" d="M17.6 9.2c0-.6-.1-1.2-.2-1.8H9v3.4h4.8c-.2 1.1-.9 2.1-1.9 2.7v2.2h3.1c1.8-1.7 2.9-4.1 2.9-7z" />
+          <path fill="#34A853" d="M9 18c2.6 0 4.7-.8 6.3-2.3l-3.1-2.2c-.8.6-1.9.9-3.2.9-2.5 0-4.5-1.7-5.3-3.9H.5v2.3C2.1 15.9 5.3 18 9 18z" />
+          <path fill="#FBBC05" d="M3.7 10.5c-.2-.6-.3-1.2-.3-1.8s.1-1.2.3-1.8V4.6H.5C-.2 6-.2 7.5-.2 9s0 3 .7 4.4l3.2-2.9z" />
+          <path fill="#EA4335" d="M9 3.6c1.4 0 2.6.5 3.6 1.4l2.7-2.7C13.7.9 11.6 0 9 0 5.3 0 2.1 2.1.5 5.2l3.2 2.5C4.5 5.3 6.5 3.6 9 3.6z" />
+        </svg>
+      );
+    }
+    if (id === 'paypal') {
+      return (
+        <svg viewBox="0 0 16 16" className={className} aria-hidden>
+          <path fill="#003087" d="M12.5 2.2C11.9 1.4 10.7 1 9.1 1H4.5c-.3 0-.6.2-.7.5L2 12.3c0 .2.2.4.4.4h2.5l.6-3.9v.2c.1-.3.4-.5.7-.5h1.5c2.9 0 5.1-1.2 5.8-4.5.1-.3.1-.5.2-.7.4-2.1-.1-3.4-1.2-4.1z" />
+          <path fill="#009CDE" d="M12.5 2.2c-.1.1-.2.2-.3.3-1 1.3-2.8 1.9-5 1.9H5.7c-.2 0-.3.1-.4.3l-.8 5.1-.2 1.4c0 .1.1.2.2.2h2.1c.2 0 .3-.1.4-.3l.1-.4.7-4.3.1-.3c0-.2.2-.3.4-.3h.3c2.3 0 4.1-.9 4.6-3.6.1-.4.1-.7.1-1 0-.3-.1-.6-.2-.9-.1-.2-.2-.4-.4-.5z" />
+        </svg>
+      );
+    }
+    return null;
+  };
 
   const methodPool = useMemo(
     (): Method[] => [
       { id: 'cliq', label: String(t('landing.workflow.receipt.demo.sales.cliq', 'CliQ')), emoji: '⚡' },
-      { id: 'apple', label: String(t('landing.workflow.receipt.demo.sales.applePay', 'Apple Pay')), logo: LOGOS.apple },
-      { id: 'google', label: String(t('landing.workflow.receipt.demo.sales.googlePay', 'Google Pay')), logo: LOGOS.google },
+      { id: 'apple', label: String(t('landing.workflow.receipt.demo.sales.applePay', 'Apple Pay')), brand: 'apple' },
+      { id: 'google', label: String(t('landing.workflow.receipt.demo.sales.googlePay', 'Google Pay')), brand: 'google' },
       { id: 'talabat', label: String(t('landing.workflow.receipt.demo.sales.talabat', 'Talabat')), emoji: '🛵' },
-      { id: 'paypal', label: String(t('landing.workflow.receipt.demo.sales.paypal', 'PayPal')), logo: LOGOS.paypal },
+      { id: 'paypal', label: String(t('landing.workflow.receipt.demo.sales.paypal', 'PayPal')), brand: 'paypal' },
     ],
     [t],
   );
 
   const brandPool = useMemo(
     (): Brand[] => [
-      { id: 'visa', label: String(t('landing.workflow.receipt.demo.sales.visa', 'Visa')), logo: LOGOS.visa },
-      { id: 'mc', label: String(t('landing.workflow.receipt.demo.sales.mastercard', 'Mastercard')), logo: LOGOS.mc },
-      { id: 'amex', label: String(t('landing.workflow.receipt.demo.sales.amex', 'Amex')), logo: LOGOS.amex },
-      { id: 'discover', label: String(t('landing.workflow.receipt.demo.sales.discover', 'Discover')), logo: LOGOS.discover },
+      { id: 'visa', label: String(t('landing.workflow.receipt.demo.sales.visa', 'Visa')) },
+      { id: 'mc', label: String(t('landing.workflow.receipt.demo.sales.mastercard', 'Mastercard')) },
+      { id: 'amex', label: String(t('landing.workflow.receipt.demo.sales.amex', 'Amex')) },
+      { id: 'discover', label: String(t('landing.workflow.receipt.demo.sales.discover', 'Discover')) },
     ],
     [t],
   );
@@ -257,8 +313,8 @@ export const InteractiveSalesControlDemo = ({ t, side }: DemoProps) => {
   const [extraMethods, setExtraMethods] = useState<Method[]>([]);
   const [enabledExtra, setEnabledExtra] = useState<Record<string, boolean>>({});
   const [cardBrands, setCardBrands] = useState<Brand[]>(() => [
-    { id: 'visa', label: 'Visa', logo: LOGOS.visa },
-    { id: 'mc', label: 'Mastercard', logo: LOGOS.mc },
+    { id: 'visa', label: 'Visa' },
+    { id: 'mc', label: 'Mastercard' },
   ]);
   const [addingMethod, setAddingMethod] = useState(false);
   const [addingBrand, setAddingBrand] = useState(false);
@@ -312,9 +368,9 @@ export const InteractiveSalesControlDemo = ({ t, side }: DemoProps) => {
     setCardBrands((list) => list.filter((b) => b.id !== id));
   };
 
-  const MethodIcon = ({ m, className = 'h-5 w-5' }: { m: Method; className?: string }) =>
-    m.logo ? (
-      <img src={m.logo} alt="" className={`${className} object-contain`} draggable={false} />
+  const MethodIcon = ({ m }: { m: Method }) =>
+    m.brand ? (
+      <BrandMark id={m.brand} className="h-4 w-5" />
     ) : (
       <span className="text-sm leading-none">{m.emoji}</span>
     );
@@ -349,8 +405,8 @@ export const InteractiveSalesControlDemo = ({ t, side }: DemoProps) => {
         <div className="rounded-xl border border-mintcom-green/40 bg-mintcom-green/10 px-3 py-2.5 shadow-sm">
           <div className="flex items-center justify-between">
             <span className="flex items-center gap-2.5 text-sm font-bold text-gray-900 dark:text-white">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white shadow-sm dark:bg-white/10">
-                <img src={LOGOS.cash} alt="" className="h-5 w-5 object-contain" draggable={false} />
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-base shadow-sm dark:bg-white/10">
+                💵
               </span>
               {String(t('landing.workflow.receipt.demo.sales.cash', 'Cash'))}
             </span>
@@ -408,7 +464,7 @@ export const InteractiveSalesControlDemo = ({ t, side }: DemoProps) => {
                   className="flex min-w-0 flex-1 items-center gap-2.5 text-start"
                 >
                   <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white shadow-sm dark:bg-white/10">
-                    <MethodIcon m={m} className="h-4 w-4 max-w-[22px]" />
+                    <MethodIcon m={m} />
                   </span>
                   <span className="truncate text-sm font-bold text-gray-900 dark:text-white">{m.label}</span>
                 </button>
@@ -453,7 +509,7 @@ export const InteractiveSalesControlDemo = ({ t, side }: DemoProps) => {
                     onClick={() => addMethod(m)}
                     className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-2.5 py-1 text-[11px] font-bold text-gray-800 shadow-sm transition-all hover:border-mintcom-green hover:bg-mintcom-green/10 dark:border-white/10 dark:bg-white/5 dark:text-white"
                   >
-                    <MethodIcon m={m} className="h-3.5 w-3.5 max-w-[16px]" />
+                    <MethodIcon m={m} />
                     {m.label}
                   </button>
                 ))
@@ -501,8 +557,8 @@ export const InteractiveSalesControlDemo = ({ t, side }: DemoProps) => {
                     key={b.id}
                     className="group inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white py-1 ps-1.5 pe-1 text-[11px] font-bold text-gray-800 shadow-sm dark:border-white/10 dark:bg-white/5 dark:text-white"
                   >
-                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-50 dark:bg-white/10">
-                      <img src={b.logo} alt="" className="h-3.5 w-3.5 object-contain" draggable={false} />
+                    <span className="flex h-6 w-7 items-center justify-center rounded-md bg-gray-50 px-0.5 dark:bg-white/10">
+                      <BrandMark id={b.id} className="h-3.5 w-full max-w-[22px]" />
                     </span>
                     {b.label}
                     {cardBrands.length > 1 && (
@@ -526,7 +582,7 @@ export const InteractiveSalesControlDemo = ({ t, side }: DemoProps) => {
                       className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-mintcom-green/40 bg-mintcom-green/5 px-2 py-1 text-[11px] font-bold text-mintcom-green"
                     >
                       +
-                      <img src={b.logo} alt="" className="h-3.5 w-3.5 object-contain" draggable={false} />
+                      <BrandMark id={b.id} className="h-3.5 w-5" />
                       {b.label}
                     </button>
                   ))
