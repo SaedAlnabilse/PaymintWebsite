@@ -150,9 +150,9 @@ const WorkflowFeatureModal = ({
         'Print a digital receipt in seconds',
       ],
       salesControl: [
-        'Card stays always available',
+        'Cash is always available',
         'Add CliQ, Apple Pay & more types',
-        'Manage card brands + tax rates',
+        'Real card brands + live tax rates',
       ],
       staffManagement: [
         'Add team members in one tap',

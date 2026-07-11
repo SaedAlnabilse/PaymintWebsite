@@ -213,40 +213,52 @@ export const InteractivePosDemo = ({ t, isRtl, side }: DemoProps) => {
 /* ─── Sales Control ─────────────────────────────────────────────────────── */
 /**
  * Sales Control — mirrors dashboard Payment Methods:
- * Cash toggleable, Card always fixed on, add custom methods + card brands, tax rate.
+ * Cash always fixed on, Card toggleable, add custom methods + real card brand logos, tax rate.
  */
 export const InteractiveSalesControlDemo = ({ t, side }: DemoProps) => {
-  type Method = { id: string; label: string; emoji: string; fixed?: boolean };
-  type Brand = { id: string; label: string; emoji: string };
+  type Method = { id: string; label: string; logo?: string; emoji?: string };
+  type Brand = { id: string; label: string; logo: string };
+
+  // Same logo sources as PaymentMethodsPage
+  const LOGOS = {
+    visa: 'https://upload.wikimedia.org/wikipedia/commons/d/d6/Visa_2021.svg',
+    mc: 'https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg',
+    amex: 'https://upload.wikimedia.org/wikipedia/commons/f/fa/American_Express_logo_%282018%29.svg',
+    discover: 'https://upload.wikimedia.org/wikipedia/commons/8/81/Discover_Card_logo.svg',
+    apple: 'https://upload.wikimedia.org/wikipedia/commons/b/b0/Apple_Pay_logo.svg',
+    google: 'https://upload.wikimedia.org/wikipedia/commons/f/f2/Google_Pay_Logo.svg',
+    paypal: 'https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg',
+    cash: 'https://cdn-icons-png.flaticon.com/512/2331/2331714.png',
+  } as const;
 
   const methodPool = useMemo(
     (): Method[] => [
       { id: 'cliq', label: String(t('landing.workflow.receipt.demo.sales.cliq', 'CliQ')), emoji: '⚡' },
-      { id: 'apple', label: String(t('landing.workflow.receipt.demo.sales.applePay', 'Apple Pay')), emoji: '' },
-      { id: 'google', label: String(t('landing.workflow.receipt.demo.sales.googlePay', 'Google Pay')), emoji: 'G' },
+      { id: 'apple', label: String(t('landing.workflow.receipt.demo.sales.applePay', 'Apple Pay')), logo: LOGOS.apple },
+      { id: 'google', label: String(t('landing.workflow.receipt.demo.sales.googlePay', 'Google Pay')), logo: LOGOS.google },
       { id: 'talabat', label: String(t('landing.workflow.receipt.demo.sales.talabat', 'Talabat')), emoji: '🛵' },
-      { id: 'paypal', label: String(t('landing.workflow.receipt.demo.sales.paypal', 'PayPal')), emoji: '🅿️' },
+      { id: 'paypal', label: String(t('landing.workflow.receipt.demo.sales.paypal', 'PayPal')), logo: LOGOS.paypal },
     ],
     [t],
   );
 
   const brandPool = useMemo(
     (): Brand[] => [
-      { id: 'visa', label: String(t('landing.workflow.receipt.demo.sales.visa', 'Visa')), emoji: '💙' },
-      { id: 'mc', label: String(t('landing.workflow.receipt.demo.sales.mastercard', 'Mastercard')), emoji: '🧡' },
-      { id: 'amex', label: String(t('landing.workflow.receipt.demo.sales.amex', 'Amex')), emoji: '🩵' },
-      { id: 'discover', label: String(t('landing.workflow.receipt.demo.sales.discover', 'Discover')), emoji: '🧡' },
+      { id: 'visa', label: String(t('landing.workflow.receipt.demo.sales.visa', 'Visa')), logo: LOGOS.visa },
+      { id: 'mc', label: String(t('landing.workflow.receipt.demo.sales.mastercard', 'Mastercard')), logo: LOGOS.mc },
+      { id: 'amex', label: String(t('landing.workflow.receipt.demo.sales.amex', 'Amex')), logo: LOGOS.amex },
+      { id: 'discover', label: String(t('landing.workflow.receipt.demo.sales.discover', 'Discover')), logo: LOGOS.discover },
     ],
     [t],
   );
 
-  const [cashOn, setCashOn] = useState(true);
-  // Card is always enabled — never toggled off
+  // Cash is always on (required) — Card can be toggled
+  const [cardOn, setCardOn] = useState(true);
   const [extraMethods, setExtraMethods] = useState<Method[]>([]);
   const [enabledExtra, setEnabledExtra] = useState<Record<string, boolean>>({});
-  const [cardBrands, setCardBrands] = useState<Brand[]>([
-    { id: 'visa', label: 'Visa', emoji: '💙' },
-    { id: 'mc', label: 'Mastercard', emoji: '🧡' },
+  const [cardBrands, setCardBrands] = useState<Brand[]>(() => [
+    { id: 'visa', label: 'Visa', logo: LOGOS.visa },
+    { id: 'mc', label: 'Mastercard', logo: LOGOS.mc },
   ]);
   const [addingMethod, setAddingMethod] = useState(false);
   const [addingBrand, setAddingBrand] = useState(false);
@@ -261,8 +273,8 @@ export const InteractiveSalesControlDemo = ({ t, side }: DemoProps) => {
   const brandsToAdd = brandPool.filter((b) => !cardBrands.some((c) => c.id === b.id));
 
   const activeCount =
-    1 + // card always
-    (cashOn ? 1 : 0) +
+    1 + // cash always
+    (cardOn ? 1 : 0) +
     extraMethods.filter((m) => enabledExtra[m.id] !== false).length;
 
   const ping = (msg: string) => {
@@ -296,6 +308,13 @@ export const InteractiveSalesControlDemo = ({ t, side }: DemoProps) => {
     setCardBrands((list) => list.filter((b) => b.id !== id));
   };
 
+  const MethodIcon = ({ m, className = 'h-5 w-5' }: { m: Method; className?: string }) =>
+    m.logo ? (
+      <img src={m.logo} alt="" className={`${className} object-contain`} draggable={false} />
+    ) : (
+      <span className="text-sm leading-none">{m.emoji}</span>
+    );
+
   return shell(
     <>
       <div className="mb-2.5 flex items-center justify-between gap-2">
@@ -322,27 +341,14 @@ export const InteractiveSalesControlDemo = ({ t, side }: DemoProps) => {
       </div>
 
       <div className="space-y-1.5">
-        {/* Cash — toggleable */}
-        <button
-          type="button"
-          onClick={() => setCashOn((v) => !v)}
-          className={`flex w-full items-center justify-between rounded-xl border px-3 py-2.5 transition-all ${
-            cashOn
-              ? 'border-mintcom-green/40 bg-mintcom-green/10 shadow-sm'
-              : 'border-gray-100 bg-white dark:border-white/8 dark:bg-white/[0.03]'
-          }`}
-        >
-          <span className="flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-white">
-            <span>💵</span> {String(t('landing.workflow.receipt.demo.sales.cash', 'Cash'))}
-          </span>
-          {cashOn ? <ToggleRight className="text-mintcom-green" size={22} /> : <ToggleLeft className="text-gray-300" size={22} />}
-        </button>
-
-        {/* Card — always fixed on (cannot disable) */}
+        {/* Cash — always fixed on (cannot disable) */}
         <div className="rounded-xl border border-mintcom-green/40 bg-mintcom-green/10 px-3 py-2.5 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-white">
-              <span>💳</span> {String(t('landing.workflow.receipt.demo.sales.card', 'Card'))}
+            <span className="flex items-center gap-2.5 text-sm font-bold text-gray-900 dark:text-white">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white shadow-sm dark:bg-white/10">
+                <img src={LOGOS.cash} alt="" className="h-5 w-5 object-contain" draggable={false} />
+              </span>
+              {String(t('landing.workflow.receipt.demo.sales.cash', 'Cash'))}
             </span>
             <span className="flex items-center gap-1.5">
               <span className="rounded-full bg-mintcom-green/25 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-mintcom-green">
@@ -351,12 +357,31 @@ export const InteractiveSalesControlDemo = ({ t, side }: DemoProps) => {
               <ToggleRight className="text-mintcom-green opacity-80" size={22} />
             </span>
           </div>
-          <p className="mt-1 text-[10px] text-gray-500">
-            {String(t('landing.workflow.receipt.demo.sales.cardFixed', 'Always available at checkout — card brands below'))}
+          <p className="mt-1 ps-[42px] text-[10px] text-gray-500">
+            {String(t('landing.workflow.receipt.demo.sales.cashFixed', 'Always available at checkout'))}
           </p>
         </div>
 
-        {/* Extra / custom payment types */}
+        {/* Card — toggleable */}
+        <button
+          type="button"
+          onClick={() => setCardOn((v) => !v)}
+          className={`flex w-full items-center justify-between rounded-xl border px-3 py-2.5 transition-all ${
+            cardOn
+              ? 'border-mintcom-green/40 bg-mintcom-green/10 shadow-sm'
+              : 'border-gray-100 bg-white dark:border-white/8 dark:bg-white/[0.03]'
+          }`}
+        >
+          <span className="flex items-center gap-2.5 text-sm font-bold text-gray-900 dark:text-white">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-base shadow-sm dark:bg-white/10">
+              💳
+            </span>
+            {String(t('landing.workflow.receipt.demo.sales.card', 'Card'))}
+          </span>
+          {cardOn ? <ToggleRight className="text-mintcom-green" size={22} /> : <ToggleLeft className="text-gray-300" size={22} />}
+        </button>
+
+        {/* Extra payment types */}
         <AnimatePresence initial={false}>
           {extraMethods.map((m) => {
             const on = enabledExtra[m.id] !== false;
@@ -376,10 +401,10 @@ export const InteractiveSalesControlDemo = ({ t, side }: DemoProps) => {
                 <button
                   type="button"
                   onClick={() => setEnabledExtra((e) => ({ ...e, [m.id]: !on }))}
-                  className="flex min-w-0 flex-1 items-center gap-2 text-start"
+                  className="flex min-w-0 flex-1 items-center gap-2.5 text-start"
                 >
-                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-white text-sm font-black shadow-sm dark:bg-white/10">
-                    {m.emoji}
+                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white shadow-sm dark:bg-white/10">
+                    <MethodIcon m={m} className="h-4 w-4 max-w-[22px]" />
                   </span>
                   <span className="truncate text-sm font-bold text-gray-900 dark:text-white">{m.label}</span>
                 </button>
@@ -422,9 +447,10 @@ export const InteractiveSalesControlDemo = ({ t, side }: DemoProps) => {
                     key={m.id}
                     type="button"
                     onClick={() => addMethod(m)}
-                    className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white px-2.5 py-1 text-[11px] font-bold text-gray-800 shadow-sm transition-all hover:border-mintcom-green hover:bg-mintcom-green/10 dark:border-white/10 dark:bg-white/5 dark:text-white"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-2.5 py-1 text-[11px] font-bold text-gray-800 shadow-sm transition-all hover:border-mintcom-green hover:bg-mintcom-green/10 dark:border-white/10 dark:bg-white/5 dark:text-white"
                   >
-                    <span>{m.emoji}</span> {m.label}
+                    <MethodIcon m={m} className="h-3.5 w-3.5 max-w-[16px]" />
+                    {m.label}
                   </button>
                 ))
               )}
@@ -449,66 +475,82 @@ export const InteractiveSalesControlDemo = ({ t, side }: DemoProps) => {
         )}
       </div>
 
-      {/* Card brands (like Card Types in dashboard) */}
-      <div className="mt-3 rounded-xl border border-gray-100 bg-white p-2.5 dark:border-white/8 dark:bg-white/[0.03]">
-        <div className="mb-2 flex items-center justify-between">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
-            {String(t('landing.workflow.receipt.demo.sales.cardBrands', 'Card brands'))}
-          </p>
-          <span className="text-[10px] font-semibold text-gray-400">{cardBrands.length}</span>
-        </div>
-        <div className="flex flex-wrap gap-1.5">
-          {cardBrands.map((b) => (
-            <span
-              key={b.id}
-              className="group inline-flex items-center gap-1 rounded-full border border-mintcom-green/25 bg-mintcom-green/10 py-1 ps-2 pe-1 text-[11px] font-bold text-gray-800 dark:text-white"
-            >
-              <span>{b.emoji}</span> {b.label}
-              {cardBrands.length > 1 && (
+      {/* Card brands — only when Card is on */}
+      <AnimatePresence>
+        {cardOn && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="mt-3 overflow-hidden"
+          >
+            <div className="rounded-xl border border-gray-100 bg-white p-2.5 dark:border-white/8 dark:bg-white/[0.03]">
+              <div className="mb-2 flex items-center justify-between">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                  {String(t('landing.workflow.receipt.demo.sales.cardBrands', 'Card brands'))}
+                </p>
+                <span className="text-[10px] font-semibold text-gray-400">{cardBrands.length}</span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {cardBrands.map((b) => (
+                  <span
+                    key={b.id}
+                    className="group inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white py-1 ps-1.5 pe-1 text-[11px] font-bold text-gray-800 shadow-sm dark:border-white/10 dark:bg-white/5 dark:text-white"
+                  >
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-50 dark:bg-white/10">
+                      <img src={b.logo} alt="" className="h-3.5 w-3.5 object-contain" draggable={false} />
+                    </span>
+                    {b.label}
+                    {cardBrands.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeBrand(b.id)}
+                        className="rounded-full px-1 text-gray-400 opacity-60 transition-opacity hover:bg-gray-100 hover:text-rose-500 group-hover:opacity-100 dark:hover:bg-white/10"
+                        aria-label={`Remove ${b.label}`}
+                      >
+                        ×
+                      </button>
+                    )}
+                  </span>
+                ))}
+                {addingBrand ? (
+                  brandsToAdd.map((b) => (
+                    <button
+                      key={b.id}
+                      type="button"
+                      onClick={() => addBrand(b)}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-mintcom-green/40 bg-mintcom-green/5 px-2 py-1 text-[11px] font-bold text-mintcom-green"
+                    >
+                      +
+                      <img src={b.logo} alt="" className="h-3.5 w-3.5 object-contain" draggable={false} />
+                      {b.label}
+                    </button>
+                  ))
+                ) : (
+                  brandsToAdd.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setAddingBrand(true)}
+                      className="inline-flex items-center rounded-full border border-dashed border-gray-200 px-2.5 py-1 text-[11px] font-bold text-mintcom-green hover:border-mintcom-green/50 dark:border-white/15"
+                    >
+                      + {String(t('landing.workflow.receipt.demo.sales.addBrand', 'Add brand'))}
+                    </button>
+                  )
+                )}
+              </div>
+              {addingBrand && (
                 <button
                   type="button"
-                  onClick={() => removeBrand(b.id)}
-                  className="rounded-full px-1 text-gray-400 opacity-60 transition-opacity hover:bg-white/60 hover:text-rose-500 group-hover:opacity-100"
-                  aria-label={`Remove ${b.label}`}
+                  onClick={() => setAddingBrand(false)}
+                  className="mt-1.5 text-[10px] font-semibold text-gray-400"
                 >
-                  ×
+                  {String(t('common.cancel', 'Cancel'))}
                 </button>
               )}
-            </span>
-          ))}
-          {addingBrand ? (
-            brandsToAdd.map((b) => (
-              <button
-                key={b.id}
-                type="button"
-                onClick={() => addBrand(b)}
-                className="inline-flex items-center gap-1 rounded-full border border-dashed border-mintcom-green/40 bg-white px-2 py-1 text-[11px] font-bold text-mintcom-green dark:bg-white/5"
-              >
-                + {b.emoji} {b.label}
-              </button>
-            ))
-          ) : (
-            brandsToAdd.length > 0 && (
-              <button
-                type="button"
-                onClick={() => setAddingBrand(true)}
-                className="inline-flex items-center rounded-full border border-dashed border-gray-200 px-2.5 py-1 text-[11px] font-bold text-mintcom-green hover:border-mintcom-green/50 dark:border-white/15"
-              >
-                + {String(t('landing.workflow.receipt.demo.sales.addBrand', 'Add brand'))}
-              </button>
-            )
-          )}
-        </div>
-        {addingBrand && (
-          <button
-            type="button"
-            onClick={() => setAddingBrand(false)}
-            className="mt-1.5 text-[10px] font-semibold text-gray-400"
-          >
-            {String(t('common.cancel', 'Cancel'))}
-          </button>
+            </div>
+          </motion.div>
         )}
-      </div>
+      </AnimatePresence>
 
       {/* Tax */}
       <div className="mt-3 rounded-xl border border-gray-100 bg-white p-3 dark:border-white/8 dark:bg-white/[0.03]">

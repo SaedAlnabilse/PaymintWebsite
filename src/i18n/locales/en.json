@@ -2528,6 +2528,7 @@
             "cardBrands": "Card brands",
             "cardFixed": "Always available at checkout — card brands below",
             "cash": "Cash",
+            "cashFixed": "Always available at checkout",
             "cliq": "CliQ",
             "discover": "Discover",
             "googlePay": "Google Pay",
