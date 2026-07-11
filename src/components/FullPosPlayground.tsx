@@ -22,6 +22,7 @@ import {
   Settings,
   ShoppingBag,
   Sparkles,
+  SplitSquareHorizontal,
   Star,
   Trash2,
   User,
@@ -80,7 +81,8 @@ type HeldTicket = {
 
 const HOLD_TABLE_COUNT = 12;
 type OrderType = 'dine-in' | 'takeaway' | 'delivery';
-type PayMethod = 'cash' | 'card' | 'cliq' | 'talabat' | 'voucher';
+type PayMethod = 'cash' | 'card' | 'cliq' | 'talabat' | 'voucher' | 'split';
+type CheckoutTab = 'cash' | 'card' | 'other' | 'split';
 type Phase = 'welcome' | 'pin' | 'app';
 type Screen =
   | 'dashboard'
@@ -201,12 +203,6 @@ function buildCatalog(): PosProduct[] {
   ];
 }
 
-const OTHER_METHODS: { id: PayMethod; label: string; emoji: string }[] = [
-  { id: 'cliq', label: 'CliQ', emoji: '⚡' },
-  { id: 'talabat', label: 'Talabat', emoji: '🛵' },
-  { id: 'voucher', label: 'Voucher', emoji: '🎟️' },
-];
-
 export function FullPosPlayground() {
   const products = useMemo(() => buildCatalog(), []);
   const [phase, setPhase] = useState<Phase>('welcome');
@@ -225,7 +221,8 @@ export function FullPosPlayground() {
   const [orderNote, setOrderNote] = useState('');
   const [showNote, setShowNote] = useState(false);
   const [showDiscount, setShowDiscount] = useState(false);
-  const [showOtherPay, setShowOtherPay] = useState(false);
+  const [showPaymentPanel, setShowPaymentPanel] = useState(false);
+  const [paymentTab, setPaymentTab] = useState<CheckoutTab>('cash');
   const [showLoyalty, setShowLoyalty] = useState(false);
   const [loyaltyName, setLoyaltyName] = useState<string | null>(null);
   const [orderNo, setOrderNo] = useState(1042);
@@ -265,10 +262,19 @@ export function FullPosPlayground() {
     setScreen('dashboard');
     setPromptOpenShift(true);
     setReturnToSalesAfterShift(true);
-    setShowOtherPay(false);
+    setShowPaymentPanel(false);
     setMobileCartOpen(false);
     ping('Open a shift to take payment');
     return false;
+  };
+
+  /** Open payment panel with order summary (like POS PaymentPanel) */
+  const openPayment = (tab: CheckoutTab) => {
+    if (!cart.length) return;
+    if (!requireOpenShiftForPayment()) return;
+    setPaymentTab(tab);
+    setShowPaymentPanel(true);
+    setMobileCartOpen(false);
   };
 
   useEffect(() => {
@@ -513,13 +519,17 @@ export function FullPosPlayground() {
     setScreen('dashboard');
   };
 
-  const completePay = (m: PayMethod) => {
+  const finalizeSale = (
+    method: PayMethod,
+    methodLabel: string,
+    amounts: { cash: number; card: number; other: number },
+  ) => {
     if (!cart.length) return;
     if (!requireOpenShiftForPayment()) return;
-    setPayMethod(m);
-    const methodBucket: 'cash' | 'card' | 'other' = m === 'cash' ? 'cash' : m === 'card' ? 'card' : 'other';
-    const methodLabel =
-      m === 'cash' ? 'Cash' : m === 'card' ? 'Card' : m === 'cliq' ? 'CliQ' : m === 'talabat' ? 'Talabat' : 'Voucher';
+    setPayMethod(method);
+    const methodBucket: 'cash' | 'card' | 'other' =
+      method === 'cash' ? 'cash' : method === 'card' ? 'card' : method === 'split' ? 'other' : 'other';
+    // For split, bucket is mixed — track real amounts from `amounts`
     const itemsLabel = cart.map((l) => `${l.emoji} ${l.name}${l.qty > 1 ? ` ×${l.qty}` : ''}`).join(' · ');
     const saleId = `sale-${Date.now()}`;
     const thisOrderNo = orderNo;
@@ -527,15 +537,15 @@ export function FullPosPlayground() {
     setShift((s) => ({
       ...s,
       orders: s.orders + 1,
-      cashSales: s.cashSales + (methodBucket === 'cash' ? total : 0),
-      cardSales: s.cardSales + (methodBucket === 'card' ? total : 0),
-      otherSales: s.otherSales + (methodBucket === 'other' ? total : 0),
+      cashSales: s.cashSales + amounts.cash,
+      cardSales: s.cardSales + amounts.card,
+      otherSales: s.otherSales + amounts.other,
       sales: [
         {
           id: saleId,
           orderNo: thisOrderNo,
           total,
-          method: methodBucket,
+          method: method === 'split' ? 'other' : methodBucket,
           methodLabel,
           items: itemsLabel,
           at: Date.now(),
@@ -547,7 +557,7 @@ export function FullPosPlayground() {
     setLastReceipt({
       lines: cart,
       total,
-      method: m,
+      method,
       orderNo: thisOrderNo,
       type: orderType,
       discountPct,
@@ -556,7 +566,7 @@ export function FullPosPlayground() {
       subtotal,
     });
     setShowReceipt(true);
-    setShowOtherPay(false);
+    setShowPaymentPanel(false);
     setCart([]);
     setDiscountPct(0);
     setOrderNote('');
@@ -1047,9 +1057,10 @@ export function FullPosPlayground() {
                 onClear={clearOrder}
                 onLoyalty={() => setShowLoyalty(true)}
                 onChangeQty={changeQty}
-                onPayCash={() => completePay('cash')}
-                onPayCard={() => completePay('card')}
-                onPayOther={() => setShowOtherPay(true)}
+                onPayCash={() => openPayment('cash')}
+                onPayCard={() => openPayment('card')}
+                onPayOther={() => openPayment('other')}
+                onPaySplit={() => openPayment('split')}
               />
             </>
           )}
@@ -1123,13 +1134,33 @@ export function FullPosPlayground() {
                   onClear={clearOrder}
                   onLoyalty={() => setShowLoyalty(true)}
                   onChangeQty={changeQty}
-                  onPayCash={() => completePay('cash')}
-                  onPayCard={() => completePay('card')}
-                  onPayOther={() => setShowOtherPay(true)}
+                  onPayCash={() => openPayment('cash')}
+                  onPayCard={() => openPayment('card')}
+                  onPayOther={() => openPayment('other')}
+                  onPaySplit={() => openPayment('split')}
                   compact
                 />
               </motion.div>
             </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Payment panel — order summary + Cash / Card / Other / Split */}
+        <AnimatePresence>
+          {showPaymentPanel && (
+            <PaymentCheckoutPanel
+              cart={cart}
+              orderNo={orderNo}
+              orderType={orderType}
+              subtotal={subtotal}
+              discount={discount}
+              discountPct={discountPct}
+              tax={tax}
+              total={total}
+              initialTab={paymentTab}
+              onClose={() => setShowPaymentPanel(false)}
+              onComplete={finalizeSale}
+            />
           )}
         </AnimatePresence>
 
@@ -1245,52 +1276,6 @@ export function FullPosPlayground() {
                   >
                     Add to cart · {money(addonPreview.unit * addonQty)}
                   </button>
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Other payment methods */}
-        <AnimatePresence>
-          {showOtherPay && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[60] flex items-end justify-center bg-black/45 p-4 backdrop-blur-sm sm:items-center"
-              onClick={() => setShowOtherPay(false)}
-            >
-              <motion.div
-                initial={{ y: 24, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                exit={{ y: 16, opacity: 0 }}
-                onClick={(e) => e.stopPropagation()}
-                className="w-full max-w-sm rounded-[28px] border border-gray-200 bg-white p-5 shadow-2xl dark:border-mintcom-tertiary dark:bg-mintcom-surface"
-              >
-                <div className="mb-1 flex items-center justify-between">
-                  <h3 className="text-sm font-black text-text-primary dark:text-white">Other payment</h3>
-                  <button type="button" onClick={() => setShowOtherPay(false)} className="text-text-tertiary">
-                    <X size={18} />
-                  </button>
-                </div>
-                <p className="mb-4 text-[11px] text-text-secondary dark:text-mintcom-textSecondary">
-                  Delivery apps, wallets & vouchers — same methods you configure in Dashboard → Payment Methods.
-                </p>
-                <p className="mb-3 text-center text-2xl font-black tabular-nums text-mintcom-green">{money(total)}</p>
-                <div className="space-y-2">
-                  {OTHER_METHODS.map((m) => (
-                    <button
-                      key={m.id}
-                      type="button"
-                      onClick={() => completePay(m.id)}
-                      className="flex w-full items-center gap-3 rounded-2xl border border-mintcom-green/30 bg-mintcom-green/10 px-4 py-3 text-start transition-all hover:bg-mintcom-green/20"
-                    >
-                      <span className="text-xl">{m.emoji}</span>
-                      <span className="flex-1 text-sm font-bold text-text-primary dark:text-white">{m.label}</span>
-                      <Wallet size={16} className="text-mintcom-green" />
-                    </button>
-                  ))}
                 </div>
               </motion.div>
             </motion.div>
@@ -1449,6 +1434,7 @@ function OrderPanel({
   onPayCash,
   onPayCard,
   onPayOther,
+  onPaySplit,
   compact,
 }: {
   className?: string;
@@ -1477,6 +1463,7 @@ function OrderPanel({
   onPayCash: () => void;
   onPayCard: () => void;
   onPayOther: () => void;
+  onPaySplit: () => void;
   compact?: boolean;
 }) {
   const empty = cart.length === 0;
@@ -1767,7 +1754,7 @@ function OrderPanel({
         )}
       </div>
 
-      {/* Totals + Cash / Card / Other */}
+      {/* Totals + Cash / Card / Other / Split */}
       <div className="border-t border-gray-100 px-3 py-3 dark:border-white/8">
         <div className="mb-1 flex items-center justify-between text-[10px] font-bold text-text-tertiary dark:text-mintcom-gray">
           <span>{itemCount} item{itemCount === 1 ? '' : 's'}</span>
@@ -1782,7 +1769,7 @@ function OrderPanel({
           </div>
         </div>
 
-        <div className="mt-3 grid grid-cols-3 gap-1.5">
+        <div className="mt-3 grid grid-cols-2 gap-1.5 sm:grid-cols-4">
           <PayTile
             disabled={empty}
             onClick={onPayCash}
@@ -1800,6 +1787,12 @@ function OrderPanel({
             onClick={onPayOther}
             icon={<Wallet size={16} className="text-mintcom-green" />}
             label="Other"
+          />
+          <PayTile
+            disabled={empty}
+            onClick={onPaySplit}
+            icon={<SplitSquareHorizontal size={16} className="text-mintcom-green" />}
+            label="Split"
           />
         </div>
       </div>
@@ -2213,5 +2206,435 @@ function payMethodLabel(m: PayMethod | null) {
   if (m === 'cliq') return 'CliQ';
   if (m === 'talabat') return 'Talabat';
   if (m === 'voucher') return 'Voucher';
+  if (m === 'split') return 'Split';
   return '—';
+}
+
+/** Payment checkout — order summary + Cash / Card / Other / Split (like POS PaymentPanel) */
+function PaymentCheckoutPanel({
+  cart,
+  orderNo,
+  orderType,
+  subtotal,
+  discount,
+  discountPct,
+  tax,
+  total,
+  initialTab,
+  onClose,
+  onComplete,
+}: {
+  cart: CartLine[];
+  orderNo: number;
+  orderType: OrderType;
+  subtotal: number;
+  discount: number;
+  discountPct: number;
+  tax: number;
+  total: number;
+  initialTab: CheckoutTab;
+  onClose: () => void;
+  onComplete: (
+    method: PayMethod,
+    methodLabel: string,
+    amounts: { cash: number; card: number; other: number },
+  ) => void;
+}) {
+  const [tab, setTab] = useState<CheckoutTab>(initialTab);
+  const [tenderedCents, setTenderedCents] = useState(() => Math.round(total * 100));
+  const [cardBrand, setCardBrand] = useState<'Visa' | 'Mastercard' | 'Amex'>('Visa');
+  const [otherId, setOtherId] = useState<'cliq' | 'talabat' | 'voucher'>('cliq');
+  const [splitParts, setSplitParts] = useState(2);
+  const [splitMethods, setSplitMethods] = useState<Array<'cash' | 'card' | 'other'>>(['cash', 'card']);
+
+  useEffect(() => {
+    setTab(initialTab);
+  }, [initialTab]);
+
+  useEffect(() => {
+    setTenderedCents(Math.round(total * 100));
+  }, [total]);
+
+  useEffect(() => {
+    setSplitMethods((prev) => {
+      const next = [...prev];
+      while (next.length < splitParts) next.push(next.length % 2 === 0 ? 'cash' : 'card');
+      return next.slice(0, splitParts);
+    });
+  }, [splitParts]);
+
+  const tendered = tenderedCents / 100;
+  const change = Math.max(0, tendered - total);
+  const short = tendered < total;
+
+  const equalShare = total / splitParts;
+  const splitShares = Array.from({ length: splitParts }, (_, i) => {
+    if (i === splitParts - 1) {
+      return Math.round((total - equalShare * (splitParts - 1)) * 100) / 100;
+    }
+    return Math.round(equalShare * 100) / 100;
+  });
+
+  const typeLabel =
+    orderType === 'dine-in' ? 'Dine in' : orderType === 'takeaway' ? 'Takeaway' : 'Delivery';
+
+  const confirmCash = () => {
+    if (short) return;
+    onComplete('cash', 'Cash', { cash: total, card: 0, other: 0 });
+  };
+  const confirmCard = () => {
+    onComplete('card', `Card · ${cardBrand}`, { cash: 0, card: total, other: 0 });
+  };
+  const confirmOther = () => {
+    const label = otherId === 'cliq' ? 'CliQ' : otherId === 'talabat' ? 'Talabat' : 'Voucher';
+    onComplete(otherId, label, { cash: 0, card: 0, other: total });
+  };
+  const confirmSplit = () => {
+    const amounts = { cash: 0, card: 0, other: 0 };
+    splitShares.forEach((amt, i) => {
+      const m = splitMethods[i] ?? 'cash';
+      amounts[m] += amt;
+    });
+    const label = `Split ×${splitParts} (${splitMethods
+      .map((m, i) => `${m} ${money(splitShares[i])}`)
+      .join(' + ')})`;
+    onComplete('split', label, amounts);
+  };
+
+  const appendDigit = (d: string) => {
+    if (d === '⌫') {
+      setTenderedCents((c) => Math.floor(c / 10));
+      return;
+    }
+    if (d === 'C') {
+      setTenderedCents(0);
+      return;
+    }
+    if (d === 'Exact') {
+      setTenderedCents(Math.round(total * 100));
+      return;
+    }
+    setTenderedCents((c) => Math.min(99999999, c * 10 + Number(d)));
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[75] flex items-end justify-center bg-black/55 p-2 backdrop-blur-sm sm:items-center sm:p-4"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ y: 40, opacity: 0, scale: 0.98 }}
+        animate={{ y: 0, opacity: 1, scale: 1 }}
+        exit={{ y: 28, opacity: 0 }}
+        transition={{ type: 'spring', stiffness: 340, damping: 28 }}
+        onClick={(e) => e.stopPropagation()}
+        className="flex max-h-[94dvh] w-full max-w-3xl flex-col overflow-hidden rounded-[28px] border border-gray-200 bg-white shadow-2xl dark:border-mintcom-tertiary dark:bg-mintcom-surface lg:flex-row"
+      >
+        {/* Order summary */}
+        <div className="flex min-h-0 w-full flex-col border-b border-gray-100 dark:border-white/8 lg:w-[42%] lg:border-b-0 lg:border-e">
+          <div className="flex shrink-0 items-center justify-between px-4 py-3">
+            <div>
+              <p className="text-sm font-black text-text-primary dark:text-white">Order summary</p>
+              <p className="text-[11px] text-text-secondary dark:text-mintcom-textSecondary">
+                #{orderNo} · {typeLabel}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex h-8 w-8 items-center justify-center rounded-lg bg-cream-100 lg:hidden dark:bg-white/10"
+            >
+              <X size={16} />
+            </button>
+          </div>
+          <div className="min-h-0 flex-1 space-y-1.5 overflow-y-auto px-4 pb-2">
+            {cart.map((line) => (
+              <div
+                key={line.id}
+                className="flex items-start gap-2 rounded-xl bg-cream-50 px-2.5 py-2 dark:bg-mintcom-dark"
+              >
+                <span className="text-lg">{line.emoji}</span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-xs font-bold text-text-primary dark:text-white">
+                    {line.name} ×{line.qty}
+                  </p>
+                  {line.addons.length > 0 && (
+                    <p className="truncate text-[10px] text-text-tertiary">
+                      + {line.addons.map((a) => a.name).join(' · ')}
+                    </p>
+                  )}
+                </div>
+                <span className="text-xs font-black tabular-nums text-text-primary dark:text-white">
+                  {money(line.unitPrice * line.qty)}
+                </span>
+              </div>
+            ))}
+          </div>
+          <div className="shrink-0 space-y-1 border-t border-gray-100 px-4 py-3 text-[11px] dark:border-white/8">
+            <div className="flex justify-between text-text-secondary">
+              <span>Subtotal</span>
+              <span className="tabular-nums">{money(subtotal)}</span>
+            </div>
+            {discountPct > 0 && (
+              <div className="flex justify-between text-text-secondary">
+                <span>Discount {discountPct}%</span>
+                <span className="tabular-nums">−{money(discount)}</span>
+              </div>
+            )}
+            <div className="flex justify-between text-text-secondary">
+              <span>Tax 8%</span>
+              <span className="tabular-nums">{money(tax)}</span>
+            </div>
+            <div className="flex justify-between pt-1 text-base font-black text-text-primary dark:text-white">
+              <span>Amount due</span>
+              <span className="tabular-nums text-mintcom-green">{money(total)}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Method + confirm */}
+        <div className="flex min-h-0 flex-1 flex-col">
+          <div className="flex shrink-0 items-center justify-between border-b border-gray-100 px-4 py-3 dark:border-white/8">
+            <p className="text-sm font-black text-text-primary dark:text-white">Payment</p>
+            <button
+              type="button"
+              onClick={onClose}
+              className="hidden h-8 w-8 items-center justify-center rounded-lg bg-cream-100 lg:flex dark:bg-white/10"
+            >
+              <X size={16} />
+            </button>
+          </div>
+
+          <div className="flex shrink-0 gap-1 overflow-x-auto px-3 pt-3">
+            {(
+              [
+                { id: 'cash' as const, label: 'Cash', emoji: '💵' },
+                { id: 'card' as const, label: 'Card', emoji: '💳' },
+                { id: 'other' as const, label: 'Other', emoji: '⚡' },
+                { id: 'split' as const, label: 'Split', emoji: '✂️' },
+              ] as const
+            ).map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setTab(t.id)}
+                className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-bold ${
+                  tab === t.id
+                    ? 'bg-mintcom-green text-white'
+                    : 'bg-cream-100 text-text-secondary dark:bg-mintcom-dark dark:text-mintcom-textSecondary'
+                }`}
+              >
+                <span>{t.emoji}</span>
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="min-h-0 flex-1 overflow-y-auto p-4">
+            {tab === 'cash' && (
+              <div className="space-y-3">
+                <div className="rounded-2xl border border-mintcom-green/30 bg-mintcom-green/5 px-4 py-3 text-center">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-text-tertiary">
+                    Amount tendered
+                  </p>
+                  <p className="text-3xl font-black tabular-nums text-mintcom-green">{money(tendered)}</p>
+                  <p className={`mt-1 text-xs font-bold ${short ? 'text-mintcom-red' : 'text-text-secondary'}`}>
+                    {short ? `Need ${money(total - tendered)} more` : `Change ${money(change)}`}
+                  </p>
+                </div>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', '⌫'].map((k) => (
+                    <button
+                      key={k}
+                      type="button"
+                      onClick={() => appendDigit(k)}
+                      className="rounded-xl border border-gray-200 bg-cream-50 py-3 text-sm font-black text-text-primary hover:border-mintcom-green/40 dark:border-white/10 dark:bg-mintcom-dark dark:text-white"
+                    >
+                      {k}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {[total, 10, 20, 50, 100].map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => setTenderedCents(Math.round(n * 100))}
+                      className="rounded-full border border-gray-200 px-3 py-1 text-[11px] font-bold dark:border-white/10 dark:text-white"
+                    >
+                      {n === total ? 'Exact' : money(n)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {tab === 'card' && (
+              <div className="space-y-3">
+                <p className="text-xs font-bold text-text-secondary">Card brand</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {(['Visa', 'Mastercard', 'Amex'] as const).map((b) => (
+                    <button
+                      key={b}
+                      type="button"
+                      onClick={() => setCardBrand(b)}
+                      className={`rounded-2xl border-2 py-4 text-sm font-black ${
+                        cardBrand === b
+                          ? 'border-mintcom-green bg-mintcom-green/15 text-mintcom-green'
+                          : 'border-gray-200 text-text-primary dark:border-white/10 dark:text-white'
+                      }`}
+                    >
+                      {b}
+                    </button>
+                  ))}
+                </div>
+                <p className="rounded-xl bg-cream-50 px-3 py-2 text-center text-xs text-text-secondary dark:bg-mintcom-dark">
+                  Charge {money(total)} on {cardBrand}
+                </p>
+              </div>
+            )}
+
+            {tab === 'other' && (
+              <div className="space-y-2">
+                {(
+                  [
+                    { id: 'cliq' as const, label: 'CliQ', emoji: '⚡' },
+                    { id: 'talabat' as const, label: 'Talabat', emoji: '🛵' },
+                    { id: 'voucher' as const, label: 'Voucher', emoji: '🎟️' },
+                  ] as const
+                ).map((m) => (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => setOtherId(m.id)}
+                    className={`flex w-full items-center gap-3 rounded-2xl border-2 px-4 py-3 text-start ${
+                      otherId === m.id
+                        ? 'border-mintcom-green bg-mintcom-green/10'
+                        : 'border-gray-200 dark:border-white/10'
+                    }`}
+                  >
+                    <span className="text-xl">{m.emoji}</span>
+                    <span className="flex-1 text-sm font-bold text-text-primary dark:text-white">{m.label}</span>
+                    {otherId === m.id && <Check size={16} className="text-mintcom-green" />}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {tab === 'split' && (
+              <div className="space-y-3">
+                <p className="text-xs font-bold text-text-secondary">Equal split across guests</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {[2, 3, 4, 5].map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => setSplitParts(n)}
+                      className={`rounded-full px-3 py-1.5 text-[11px] font-bold ${
+                        splitParts === n
+                          ? 'bg-mintcom-green text-white'
+                          : 'bg-cream-100 text-text-secondary dark:bg-mintcom-dark dark:text-mintcom-textSecondary'
+                      }`}
+                    >
+                      {n} ways
+                    </button>
+                  ))}
+                </div>
+                <div className="space-y-2">
+                  {splitShares.map((amt, i) => (
+                    <div
+                      key={i}
+                      className="flex flex-wrap items-center gap-2 rounded-2xl border border-gray-200 bg-cream-50 p-2.5 dark:border-white/10 dark:bg-mintcom-dark"
+                    >
+                      <span
+                        className="flex h-8 w-8 items-center justify-center rounded-full text-[11px] font-black text-white"
+                        style={{
+                          backgroundColor: ['#7dc6a2', '#4A90D9', '#E07A5F', '#9B6FD9', '#F2A65A'][i % 5],
+                        }}
+                      >
+                        {i + 1}
+                      </span>
+                      <span className="min-w-[4.5rem] text-sm font-black tabular-nums text-text-primary dark:text-white">
+                        {money(amt)}
+                      </span>
+                      <div className="flex flex-1 flex-wrap gap-1">
+                        {(['cash', 'card', 'other'] as const).map((m) => (
+                          <button
+                            key={m}
+                            type="button"
+                            onClick={() =>
+                              setSplitMethods((prev) => {
+                                const next = [...prev];
+                                next[i] = m;
+                                return next;
+                              })
+                            }
+                            className={`rounded-full px-2.5 py-1 text-[10px] font-bold capitalize ${
+                              splitMethods[i] === m
+                                ? 'bg-mintcom-green text-white'
+                                : 'bg-white text-text-secondary ring-1 ring-gray-200 dark:bg-mintcom-surface dark:ring-white/10'
+                            }`}
+                          >
+                            {m}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-[10px] text-text-tertiary">
+                  Each share is paid with its own method — tracked on the dashboard like POS split.
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="shrink-0 border-t border-gray-100 p-4 dark:border-white/8">
+            {tab === 'cash' && (
+              <button
+                type="button"
+                disabled={short}
+                onClick={confirmCash}
+                className="w-full rounded-xl bg-mintcom-green py-3 text-sm font-black text-white disabled:opacity-40"
+              >
+                Complete cash · {money(total)}
+                {!short && change > 0 ? ` · change ${money(change)}` : ''}
+              </button>
+            )}
+            {tab === 'card' && (
+              <button
+                type="button"
+                onClick={confirmCard}
+                className="w-full rounded-xl bg-mintcom-green py-3 text-sm font-black text-white"
+              >
+                Charge {cardBrand} · {money(total)}
+              </button>
+            )}
+            {tab === 'other' && (
+              <button
+                type="button"
+                onClick={confirmOther}
+                className="w-full rounded-xl bg-mintcom-green py-3 text-sm font-black text-white"
+              >
+                Confirm {otherId === 'cliq' ? 'CliQ' : otherId === 'talabat' ? 'Talabat' : 'Voucher'} ·{' '}
+                {money(total)}
+              </button>
+            )}
+            {tab === 'split' && (
+              <button
+                type="button"
+                onClick={confirmSplit}
+                className="w-full rounded-xl bg-mintcom-green py-3 text-sm font-black text-white"
+              >
+                Complete split · {money(total)}
+              </button>
+            )}
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
 }
