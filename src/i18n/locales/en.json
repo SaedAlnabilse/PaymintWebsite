@@ -2409,6 +2409,21 @@
             "s3": "Run first sale",
             "s4": "Ready to go"
           },
+          "mobile": {
+            "hint": "Tap to receive a live alert",
+            "n1": "New order #4218 — 24.50 USD",
+            "n2": "Daily target reached 🎉",
+            "n3": "Low stock: Espresso beans",
+            "n4": "Sara clocked in",
+            "push": "Push notification"
+          },
+          "onboard": {
+            "restart": "Restart tour",
+            "s1": "Add staff member",
+            "s2": "Assign a role",
+            "s3": "Run first sale",
+            "s4": "Ready to go"
+          },
           "pos": {
             "charge": "Charge",
             "choosePay": "Choose how the customer pays",
@@ -2425,16 +2440,24 @@
           },
           "recipe": {
             "butter": "Butter",
+            "cost": "Ingredient cost",
+            "eggs": "Eggs",
             "flour": "Flour",
+            "hint": "Toggle ingredients to recalculate margin",
             "margin": "Profit margin",
+            "price": "Sell price",
             "sugar": "Sugar"
           },
           "reporting": {
+            "hint": "Tap a day to inspect sales",
+            "weekTotal": "Week",
             "weekly": "Weekly sales"
           },
           "sales": {
+            "active": "active",
             "card": "Card",
             "cash": "Cash",
+            "methods": "Payment methods",
             "others": "Others",
             "subtotal": "Subtotal",
             "tax": "Tax",
@@ -2447,11 +2470,13 @@
             "c3": "Role-based access",
             "c4": "99.9% uptime",
             "live": "Live",
+            "partial": "Needs attention",
             "protected": "Protected"
           },
           "staff": {
             "barista": "Barista",
             "cashier": "Cashier",
+            "hint": "Tap a teammate to clock them in or out",
             "manager": "Manager",
             "off": "Off",
             "on": "On shift",
@@ -2461,6 +2486,7 @@
             "compact": "Compact",
             "cozy": "Cozy",
             "dark": "Dark",
+            "hint": "Switch density and theme — the preview updates live",
             "light": "Light"
           }
         },
