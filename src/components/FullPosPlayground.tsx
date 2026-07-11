@@ -248,9 +248,29 @@ export function FullPosPlayground() {
   const [now, setNow] = useState(() => new Date());
   const [flash, setFlash] = useState<string | null>(null);
   const [mobileCartOpen, setMobileCartOpen] = useState(false);
+  /** When true, Dashboard auto-opens the Open Shift amount popup */
+  const [promptOpenShift, setPromptOpenShift] = useState(false);
 
   const shiftOrders = shift.orders;
   const shiftRevenue = shift.cashSales + shift.cardSales + shift.otherSales;
+
+  const goToSales = () => {
+    if (!shift.open) {
+      setScreen('dashboard');
+      setPromptOpenShift(true);
+      ping('Open a shift to start selling');
+      return;
+    }
+    setScreen('sales');
+  };
+
+  const selectScreen = (id: Screen) => {
+    if (id === 'sales') {
+      goToSales();
+      return;
+    }
+    setScreen(id);
+  };
 
   useEffect(() => {
     const id = window.setInterval(() => setNow(new Date()), 30_000);
@@ -482,8 +502,7 @@ export function FullPosPlayground() {
   const completePay = (m: PayMethod) => {
     if (!cart.length) return;
     if (!shift.open) {
-      ping('Open a shift on Dashboard first');
-      setScreen('dashboard');
+      goToSales();
       return;
     }
     setPayMethod(m);
@@ -542,7 +561,10 @@ export function FullPosPlayground() {
       openingCash,
       startedAt: Date.now(),
     });
+    setPromptOpenShift(false);
     ping(`Shift open · ${money(openingCash)}`);
+    // After opening from a Sales click, take them straight to the sales screen
+    setScreen('sales');
   };
 
   const closeShift = (_actualCash: number) => {
@@ -734,7 +756,7 @@ export function FullPosPlayground() {
                 key={item.id}
                 type="button"
                 title={item.label}
-                onClick={() => setScreen(item.id)}
+                onClick={() => selectScreen(item.id)}
                 className={`relative flex w-[60px] flex-col items-center gap-0.5 rounded-2xl px-1 py-2 text-[9px] font-bold transition-colors ${
                   on
                     ? 'bg-mintcom-green text-white shadow-md shadow-mintcom-green/25'
@@ -780,7 +802,7 @@ export function FullPosPlayground() {
                 type="button"
                 onClick={() => {
                   if (item.id === 'settings' && screen === 'settings') return;
-                  setScreen(item.id === 'settings' ? 'settings' : item.id);
+                  selectScreen(item.id === 'settings' ? 'settings' : item.id);
                 }}
                 className={`relative flex flex-1 flex-col items-center gap-0.5 py-2 text-[9px] font-bold ${
                   on ? 'text-mintcom-green' : 'text-text-secondary dark:text-mintcom-textSecondary'
@@ -850,8 +872,10 @@ export function FullPosPlayground() {
               onOpenShift={openShift}
               onCloseShift={closeShift}
               onPayInOut={recordPayInOut}
-              onGoSales={() => setScreen('sales')}
+              onGoSales={goToSales}
               onGoOrders={() => setScreen('reports')}
+              autoOpenShiftModal={promptOpenShift}
+              onAutoOpenShiftModalHandled={() => setPromptOpenShift(false)}
             />
           )}
 
@@ -1022,7 +1046,7 @@ export function FullPosPlayground() {
                   </p>
                   <button
                     type="button"
-                    onClick={() => setScreen('sales')}
+                    onClick={goToSales}
                     className="mt-3 rounded-xl bg-mintcom-green px-4 py-2 text-xs font-black text-white"
                   >
                     Back to sales
