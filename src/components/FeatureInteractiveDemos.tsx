@@ -1666,7 +1666,7 @@ export const InteractiveMobileDemo = ({ t, tall = false }: DemoProps & { tall?: 
               {/* Screen */}
               <div className="relative overflow-hidden rounded-[2.35rem] bg-white dark:bg-black">
                 {/* Push banner — over everything including island */}
-                <div className="pointer-events-none absolute inset-x-0 top-0 z-[60] px-2 pt-[46px]">
+                <div className="pointer-events-none absolute inset-x-0 top-0 z-[60] px-2 pt-[48px]">
                   <AnimatePresence>
                     {banner && (
                       <motion.button
@@ -1716,38 +1716,50 @@ export const InteractiveMobileDemo = ({ t, tall = false }: DemoProps & { tall?: 
 
                 {/* Status + app header share the mint green (like real full-bleed apps) */}
                 <div className="relative bg-mintcom-green">
-                  {/* Dynamic Island */}
-                  <div className="pointer-events-none absolute start-1/2 top-[11px] z-40 h-[25px] w-[96px] -translate-x-1/2 rounded-full bg-black shadow-[0_1px_2px_rgba(0,0,0,0.35)]">
-                    <div className="absolute end-[11px] top-1/2 h-[8px] w-[8px] -translate-y-1/2 rounded-full bg-[#0c1829] ring-[0.5px] ring-[#243448]">
-                      <div className="absolute start-1/2 top-1/2 h-[3px] w-[3px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#1a2f4a]" />
-                      <div className="absolute start-[1.5px] top-[1.5px] h-[1.5px] w-[1.5px] rounded-full bg-sky-300/50" />
-                    </div>
-                  </div>
+                  {/*
+                    Status row is a 3-column grid so the Dynamic Island sits in a reserved
+                    center slot — time left, icons right, never colliding with the island.
+                  */}
+                  <div className="relative z-30 grid grid-cols-[1fr_auto_1fr] items-center px-4 pb-0 pt-[11px]">
+                    <span className="justify-self-start ps-1 text-[12px] font-semibold tabular-nums tracking-tight text-black">
+                      9:41
+                    </span>
 
-                  {/* Status bar on green */}
-                  <div className="relative z-30 flex items-center justify-between px-6 pb-0 pt-[13px] text-[12px] font-semibold text-black">
-                    <span className="w-12 tabular-nums tracking-tight">9:41</span>
-                    <div className="flex items-center gap-[5px]">
-                      <svg width="15" height="10" viewBox="0 0 17 12" aria-hidden>
+                    {/* Dynamic Island (center column) */}
+                    <div
+                      className="pointer-events-none relative z-40 mx-1 h-[22px] w-[78px] shrink-0 rounded-full bg-black"
+                      style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.4), inset 0 0 0 0.5px rgba(255,255,255,0.08)' }}
+                      aria-hidden
+                    >
+                      {/* TrueDepth camera on the right of the island */}
+                      <div className="absolute end-[9px] top-1/2 h-[7px] w-[7px] -translate-y-1/2 rounded-full bg-[#0a1420]">
+                        <div className="absolute start-1/2 top-1/2 h-[2.5px] w-[2.5px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#152a40]" />
+                        <div className="absolute start-[1px] top-[1px] h-[1.5px] w-[1.5px] rounded-full bg-sky-400/45" />
+                      </div>
+                    </div>
+
+                    {/* Status icons — far right, clear of the island */}
+                    <div className="flex items-center justify-end gap-[4px] pe-0.5 text-black">
+                      <svg width="14" height="10" viewBox="0 0 17 12" aria-hidden className="shrink-0">
                         <rect x="0" y="7.5" width="3" height="4.5" rx="0.7" fill="currentColor" />
                         <rect x="4.5" y="5.5" width="3" height="6.5" rx="0.7" fill="currentColor" />
                         <rect x="9" y="3" width="3" height="9" rx="0.7" fill="currentColor" />
                         <rect x="13.5" y="0.5" width="3" height="11.5" rx="0.7" fill="currentColor" opacity="0.28" />
                       </svg>
-                      <svg width="14" height="10" viewBox="0 0 16 12" aria-hidden>
+                      <svg width="13" height="10" viewBox="0 0 16 12" aria-hidden className="shrink-0">
                         <path d="M8 1.8c2.3 0 4.3.9 5.8 2.4l-1.15 1.15C11.5 4.15 9.85 3.5 8 3.5S4.5 4.15 3.35 5.35L2.2 4.2C3.7 2.7 5.7 1.8 8 1.8z" fill="currentColor" />
                         <path d="M8 4.9c1.35 0 2.55.5 3.5 1.4l-1.15 1.15c-.65-.6-1.5-.95-2.35-.95s-1.7.35-2.35.95L4.5 6.3C5.45 5.4 6.65 4.9 8 4.9z" fill="currentColor" />
                         <circle cx="8" cy="10.1" r="1.35" fill="currentColor" />
                       </svg>
-                      <div className="relative h-[11px] w-[23px] rounded-[3.5px] border-[1.2px] border-black/40 p-[1.4px]">
-                        <div className="h-full w-[70%] rounded-[1.5px] bg-black" />
-                        <div className="absolute -end-[2.5px] top-1/2 h-[4.5px] w-[1.5px] -translate-y-1/2 rounded-e-[1px] bg-black/35" />
+                      <div className="relative h-[10px] w-[20px] shrink-0 rounded-[3px] border-[1.2px] border-black/45 p-[1.2px]">
+                        <div className="h-full w-[72%] rounded-[1.2px] bg-black" />
+                        <div className="absolute -end-[2.5px] top-1/2 h-[4px] w-[1.4px] -translate-y-1/2 rounded-e-[1px] bg-black/40" />
                       </div>
                     </div>
                   </div>
 
                   {/* Title row */}
-                  <div className="relative z-20 px-3.5 pb-2.5 pt-2">
+                  <div className="relative z-20 px-3.5 pb-2.5 pt-2.5">
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex min-w-0 items-center gap-2">
                         <img
