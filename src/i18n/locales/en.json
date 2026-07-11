@@ -2474,12 +2474,22 @@
             "protected": "Protected"
           },
           "staff": {
+            "add": "Add staff",
+            "assignRole": "Assign role for",
             "barista": "Barista",
             "cashier": "Cashier",
-            "hint": "Tap a teammate to clock them in or out",
+            "editing": "Editing",
+            "hint": "Select a person, then assign a role & permissions",
             "manager": "Manager",
             "off": "Off",
             "on": "On shift",
+            "permOrders": "Orders",
+            "permPos": "POS sales",
+            "permRefunds": "Refunds",
+            "permReports": "Reports",
+            "permSettings": "Settings",
+            "permStaff": "Manage staff",
+            "team": "Team",
             "working": "working"
           },
           "ui": {
