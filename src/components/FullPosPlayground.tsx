@@ -35,6 +35,8 @@ import {
   DemoReportsScreen,
   DemoSettingsScreen,
   DemoSupportScreen,
+  emptyShift,
+  type DemoShift,
 } from './pos-demo/PosDemoExtraScreens';
 
 /**
@@ -244,11 +246,13 @@ export function FullPosPlayground() {
   const [addonSel, setAddonSel] = useState<Record<string, string[]>>({});
   const [addonQty, setAddonQty] = useState(1);
   const [lastAdded, setLastAdded] = useState<string | null>(null);
-  const [shiftOrders, setShiftOrders] = useState(0);
-  const [shiftRevenue, setShiftRevenue] = useState(0);
+  const [shift, setShift] = useState<DemoShift>(() => emptyShift());
   const [now, setNow] = useState(() => new Date());
   const [flash, setFlash] = useState<string | null>(null);
   const [mobileCartOpen, setMobileCartOpen] = useState(false);
+
+  const shiftOrders = shift.orders;
+  const shiftRevenue = shift.cashSales + shift.cardSales + shift.otherSales;
 
   useEffect(() => {
     const id = window.setInterval(() => setNow(new Date()), 30_000);
@@ -479,14 +483,44 @@ export function FullPosPlayground() {
 
   const completePay = (m: PayMethod) => {
     if (!cart.length) return;
+    if (!shift.open) {
+      ping('Open a shift on Dashboard first');
+      setScreen('dashboard');
+      return;
+    }
     setPayMethod(m);
-    setShiftOrders((n) => n + 1);
-    setShiftRevenue((r) => r + total);
+    const methodBucket: 'cash' | 'card' | 'other' = m === 'cash' ? 'cash' : m === 'card' ? 'card' : 'other';
+    const methodLabel =
+      m === 'cash' ? 'Cash' : m === 'card' ? 'Card' : m === 'cliq' ? 'CliQ' : m === 'talabat' ? 'Talabat' : 'Voucher';
+    const itemsLabel = cart.map((l) => `${l.emoji} ${l.name}${l.qty > 1 ? ` ×${l.qty}` : ''}`).join(' · ');
+    const saleId = `sale-${Date.now()}`;
+    const thisOrderNo = orderNo;
+
+    setShift((s) => ({
+      ...s,
+      orders: s.orders + 1,
+      cashSales: s.cashSales + (methodBucket === 'cash' ? total : 0),
+      cardSales: s.cardSales + (methodBucket === 'card' ? total : 0),
+      otherSales: s.otherSales + (methodBucket === 'other' ? total : 0),
+      sales: [
+        {
+          id: saleId,
+          orderNo: thisOrderNo,
+          total,
+          method: methodBucket,
+          methodLabel,
+          items: itemsLabel,
+          at: Date.now(),
+        },
+        ...s.sales,
+      ].slice(0, 40),
+    }));
+
     setLastReceipt({
       lines: cart,
       total,
       method: m,
-      orderNo,
+      orderNo: thisOrderNo,
       type: orderType,
       discountPct,
       discount,
@@ -503,10 +537,39 @@ export function FullPosPlayground() {
     setMobileCartOpen(false);
   };
 
+  const openShift = (openingCash: number) => {
+    setShift({
+      ...emptyShift(),
+      open: true,
+      openingCash,
+      startedAt: Date.now(),
+    });
+    ping(`Shift open · ${money(openingCash)}`);
+  };
+
+  const closeShift = (_actualCash: number) => {
+    setShift(emptyShift());
+    ping('Shift closed');
+  };
+
+  const recordPayInOut = (type: 'in' | 'out', amount: number, reason: string) => {
+    setShift((s) => ({
+      ...s,
+      payIn: s.payIn + (type === 'in' ? amount : 0),
+      payOut: s.payOut + (type === 'out' ? amount : 0),
+      movements: [
+        { id: `m-${Date.now()}`, type, amount, reason, at: Date.now() },
+        ...s.movements,
+      ],
+    }));
+    ping(type === 'in' ? `Cash in ${money(amount)}` : `Cash out ${money(amount)}`);
+  };
+
   const clockOut = () => {
     setStaff(null);
     setCart([]);
     setHeld([]);
+    setShift(emptyShift());
     setDiscountPct(0);
     setOrderNote('');
     setLoyaltyName(null);
@@ -786,14 +849,16 @@ export function FullPosPlayground() {
           {screen === 'dashboard' && (
             <DemoDashboardScreen
               staff={staff}
-              shiftOrders={shiftOrders}
-              shiftRevenue={shiftRevenue}
-              heldCount={held.length}
+              shift={shift}
+              onOpenShift={openShift}
+              onCloseShift={closeShift}
+              onPayInOut={recordPayInOut}
               onGoSales={() => setScreen('sales')}
+              onGoOrders={() => setScreen('reports')}
             />
           )}
 
-          {screen === 'reports' && <DemoReportsScreen />}
+          {screen === 'reports' && <DemoReportsScreen shift={shift} />}
           {screen === 'notifications' && <DemoNotificationsScreen />}
           {screen === 'settings' && <DemoSettingsScreen />}
           {screen === 'support' && <DemoSupportScreen />}
@@ -1015,7 +1080,7 @@ export function FullPosPlayground() {
               <div className="mt-2 grid min-h-0 flex-1 grid-rows-[1fr_auto] gap-2">
                 <div className="grid min-h-0 gap-2 sm:grid-cols-3">
                   {[
-                    { label: 'Sales completed', value: String(shiftOrders), icon: '🧾' },
+                    { label: 'Sales completed', value: String(shift.orders), icon: '🧾' },
                     { label: 'Revenue', value: money(shiftRevenue), icon: '💵' },
                     { label: 'Held tickets', value: String(held.length), icon: '⏸️' },
                   ].map((card) => (
