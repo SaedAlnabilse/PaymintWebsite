@@ -163,7 +163,7 @@ const STAFF: Staff[] = [
     role: 'Cashier',
     pin: '1234',
     emoji: '👩‍💼',
-    accessNote: 'Sales, hold, open/close shift',
+    accessNote: 'Sales, hold, delete items, open/close shift',
     perms: [
       'sales',
       'dashboard',
@@ -172,6 +172,7 @@ const STAFF: Staff[] = [
       'notifications',
       'support',
       'hold',
+      'void_item',
       'loyalty',
     ],
   },
@@ -181,8 +182,8 @@ const STAFF: Staff[] = [
     role: 'Barista',
     pin: '0000',
     emoji: '👨‍🍳',
-    accessNote: 'Sales & hold only',
-    perms: ['sales', 'notifications', 'support', 'hold'],
+    accessNote: 'Sales, hold, delete items, loyalty',
+    perms: ['sales', 'notifications', 'support', 'hold', 'void_item', 'loyalty'],
   },
   {
     id: 'maya',
@@ -1199,7 +1200,7 @@ export function FullPosPlayground() {
                 canVoid={can('void_item')}
                 canLoyalty={can('loyalty')}
                 canSplit={can('split')}
-                canClear={can('void_item') || can('discount')}
+                canClear={can('void_item')}
               />
             </>
           )}
@@ -1288,7 +1289,7 @@ export function FullPosPlayground() {
                   canVoid={can('void_item')}
                   canLoyalty={can('loyalty')}
                   canSplit={can('split')}
-                  canClear={can('void_item') || can('discount')}
+                  canClear={can('void_item')}
                   compact
                 />
               </motion.div>
