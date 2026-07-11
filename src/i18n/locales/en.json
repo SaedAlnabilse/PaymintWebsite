@@ -2385,9 +2385,16 @@
           "branch": {
             "airport": "Airport",
             "downtown": "Downtown",
+            "hint": "Switch brand, link locations — brand totals update live",
+            "link": "Link",
+            "linkAll": "Link all",
+            "linked": "Linked",
+            "locShare": "Share of brand",
             "mall": "Mall",
             "staff": "Staff",
-            "today": "Today"
+            "today": "Today",
+            "underBrand": "Locations under brand",
+            "unified": "Unified brand total"
           },
           "loyalty": {
             "bronze": "Bronze",
