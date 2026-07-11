@@ -279,51 +279,155 @@ export const InteractiveSalesControlDemo = ({ t }: DemoProps) => {
 
 /* ─── Staff Management ──────────────────────────────────────────────────── */
 export const InteractiveStaffDemo = ({ t }: DemoProps) => {
-  const roster = useMemo(
+  const roles = useMemo(
     () => [
-      { id: 'sara', name: 'Sara', role: String(t('landing.workflow.receipt.demo.staff.barista', 'Barista')), emoji: '👩‍🍳' },
-      { id: 'omar', name: 'Omar', role: String(t('landing.workflow.receipt.demo.staff.cashier', 'Cashier')), emoji: '👨‍💼' },
-      { id: 'lina', name: 'Lina', role: String(t('landing.workflow.receipt.demo.staff.manager', 'Manager')), emoji: '👩‍💻' },
+      {
+        id: 'barista',
+        label: String(t('landing.workflow.receipt.demo.staff.barista', 'Barista')),
+        emoji: '👩‍🍳',
+        perms: [
+          String(t('landing.workflow.receipt.demo.staff.permPos', 'POS sales')),
+          String(t('landing.workflow.receipt.demo.staff.permOrders', 'Orders')),
+        ],
+      },
+      {
+        id: 'cashier',
+        label: String(t('landing.workflow.receipt.demo.staff.cashier', 'Cashier')),
+        emoji: '👨‍💼',
+        perms: [
+          String(t('landing.workflow.receipt.demo.staff.permPos', 'POS sales')),
+          String(t('landing.workflow.receipt.demo.staff.permRefunds', 'Refunds')),
+        ],
+      },
+      {
+        id: 'manager',
+        label: String(t('landing.workflow.receipt.demo.staff.manager', 'Manager')),
+        emoji: '👩‍💻',
+        perms: [
+          String(t('landing.workflow.receipt.demo.staff.permReports', 'Reports')),
+          String(t('landing.workflow.receipt.demo.staff.permStaff', 'Manage staff')),
+          String(t('landing.workflow.receipt.demo.staff.permSettings', 'Settings')),
+        ],
+      },
     ],
     [t],
   );
-  const [onShift, setOnShift] = useState<Record<string, boolean>>({ sara: true, omar: true, lina: false });
-  const working = roster.filter((r) => onShift[r.id]).length;
+
+  const [members, setMembers] = useState(() => [
+    { id: 'sara', name: 'Sara', roleId: 'barista' },
+    { id: 'omar', name: 'Omar', roleId: 'cashier' },
+    { id: 'lina', name: 'Lina', roleId: 'manager' },
+  ]);
+  const [selectedId, setSelectedId] = useState('sara');
+  const [nextName, setNextName] = useState(0);
+  const extraNames = ['Noor', 'Adam', 'Maya', 'Yusuf'];
+
+  const selected = members.find((m) => m.id === selectedId) ?? members[0];
+  const selectedRole = roles.find((r) => r.id === selected.roleId) ?? roles[0];
+
+  const assignRole = (roleId: string) => {
+    setMembers((list) => list.map((m) => (m.id === selectedId ? { ...m, roleId } : m)));
+  };
+
+  const addMember = () => {
+    if (members.length >= 5) return;
+    const name = extraNames[nextName % extraNames.length];
+    const id = `new-${Date.now()}`;
+    setMembers((list) => [...list, { id, name, roleId: 'barista' }]);
+    setSelectedId(id);
+    setNextName((n) => n + 1);
+  };
 
   return shell(
     <>
-      <div className="mb-3 flex items-center justify-between">
-        <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400">{String(t('landing.workflow.receipt.frame.staffBadge', 'Employee badge'))}</p>
-        <span className="rounded-full bg-mintcom-green/10 px-2 py-0.5 text-[10px] font-bold text-mintcom-green">
-          {working} {String(t('landing.workflow.receipt.demo.staff.working', 'working'))}
-        </span>
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400">
+          {String(t('landing.workflow.receipt.demo.staff.team', 'Team'))}
+        </p>
+        <button
+          type="button"
+          onClick={addMember}
+          disabled={members.length >= 5}
+          className="rounded-full bg-mintcom-green px-2.5 py-1 text-[10px] font-bold text-black shadow-sm transition-opacity disabled:opacity-40"
+        >
+          + {String(t('landing.workflow.receipt.demo.staff.add', 'Add staff'))}
+        </button>
       </div>
-      <div className="space-y-2">
-        {roster.map((person) => {
-          const active = onShift[person.id];
+
+      <div className="space-y-1.5">
+        {members.map((person) => {
+          const role = roles.find((r) => r.id === person.roleId) ?? roles[0];
+          const isSelected = person.id === selectedId;
           return (
             <motion.button
               key={person.id}
               type="button"
               whileTap={{ scale: 0.98 }}
-              onClick={() => setOnShift((s) => ({ ...s, [person.id]: !s[person.id] }))}
+              onClick={() => setSelectedId(person.id)}
               className={`flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-start transition-all ${
-                active ? 'border-mintcom-green/40 bg-mintcom-green/8' : 'border-gray-100 bg-white dark:border-white/8 dark:bg-white/[0.03]'
+                isSelected
+                  ? 'border-mintcom-green/50 bg-mintcom-green/10 shadow-sm'
+                  : 'border-gray-100 bg-white dark:border-white/8 dark:bg-white/[0.03]'
               }`}
             >
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-lg shadow-sm dark:bg-white/10">{person.emoji}</span>
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-lg shadow-sm dark:bg-white/10">
+                {role.emoji}
+              </span>
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-bold text-gray-900 dark:text-white">{person.name}</p>
-                <p className="text-[11px] text-gray-500">{person.role} · {String(t('landing.workflow.receipt.frame.role', 'Role'))}</p>
+                <p className="text-[11px] text-gray-500">
+                  {role.label} · {String(t('landing.workflow.receipt.frame.role', 'Role'))}
+                </p>
               </div>
-              <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${active ? 'bg-mintcom-green text-black' : 'bg-gray-100 text-gray-400 dark:bg-white/10'}`}>
-                {active ? String(t('landing.workflow.receipt.demo.staff.on', 'On shift')) : String(t('landing.workflow.receipt.demo.staff.off', 'Off'))}
-              </span>
+              {isSelected && (
+                <span className="rounded-full bg-mintcom-green px-2 py-0.5 text-[10px] font-bold text-black">
+                  {String(t('landing.workflow.receipt.demo.staff.editing', 'Editing'))}
+                </span>
+              )}
             </motion.button>
           );
         })}
       </div>
-      <p className="mt-3 text-center text-[11px] text-gray-400">{String(t('landing.workflow.receipt.demo.staff.hint', 'Tap a teammate to clock them in or out'))}</p>
+
+      <div className="mt-3 rounded-xl border border-gray-100 bg-white p-3 dark:border-white/8 dark:bg-white/[0.03]">
+        <p className="mb-2 text-[11px] font-bold text-gray-700 dark:text-gray-200">
+          {String(t('landing.workflow.receipt.demo.staff.assignRole', 'Assign role for'))}{' '}
+          <span className="text-mintcom-green">{selected.name}</span>
+        </p>
+        <div className="flex flex-wrap gap-1.5">
+          {roles.map((role) => {
+            const active = selected.roleId === role.id;
+            return (
+              <button
+                key={role.id}
+                type="button"
+                onClick={() => assignRole(role.id)}
+                className={`rounded-full px-3 py-1.5 text-[11px] font-bold transition-all ${
+                  active
+                    ? 'bg-mintcom-green text-black shadow-sm'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-white/10 dark:text-gray-300'
+                }`}
+              >
+                {role.emoji} {role.label}
+              </button>
+            );
+          })}
+        </div>
+        <div className="mt-2.5 flex flex-wrap gap-1">
+          {selectedRole.perms.map((p) => (
+            <span
+              key={p}
+              className="rounded-md border border-mintcom-green/20 bg-mintcom-green/8 px-2 py-0.5 text-[10px] font-semibold text-mintcom-green"
+            >
+              {p}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <p className="mt-3 text-center text-[11px] text-gray-400">
+        {String(t('landing.workflow.receipt.demo.staff.hint', 'Select a person, then assign a role & permissions'))}
+      </p>
     </>,
     String(t('landing.workflow.receipt.brand', 'MINTCOM POS')),
   );
@@ -347,32 +451,53 @@ export const InteractiveReportingDemo = ({ t }: DemoProps) => {
   const max = Math.max(...days.map((d) => d.sales));
   const selected = days.find((d) => d.id === active)!;
   const total = days.reduce((s, d) => s + d.sales, 0);
+  const CHART_H = 140; // px — absolute heights so bars scale correctly
 
   return shell(
     <>
-      <div className="mb-1 flex items-end justify-between">
+      <div className="mb-1 flex items-end justify-between gap-2">
         <div>
           <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400">{String(t('landing.workflow.receipt.demo.reporting.weekly', 'Weekly sales'))}</p>
-          <p className="font-barlow text-xl font-black tabular-nums text-gray-900 dark:text-white">{money(selected.sales)}</p>
+          <motion.p
+            key={selected.id}
+            initial={{ opacity: 0.4, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="font-barlow text-xl font-black tabular-nums text-gray-900 dark:text-white"
+          >
+            {money(selected.sales)}
+          </motion.p>
         </div>
         <span className="rounded-lg bg-mintcom-green/10 px-2 py-1 text-[10px] font-bold text-mintcom-green">
           {String(t('landing.workflow.receipt.demo.reporting.weekTotal', 'Week'))}: {money(total)}
         </span>
       </div>
-      <div className="mt-4 flex h-32 items-end gap-1.5 sm:gap-2">
+      <div className="mt-4 flex items-end gap-1.5 sm:gap-2">
         {days.map((d) => {
-          const h = (d.sales / max) * 100;
+          // Absolute px heights (not %) so bar scale is reliable
+          const hPx = Math.max(18, Math.round((d.sales / max) * CHART_H));
           const isActive = d.id === active;
           return (
-            <button key={d.id} type="button" onClick={() => setActive(d.id)} className="group flex flex-1 flex-col items-center gap-1.5">
-              <motion.div
-                layout
-                animate={{ height: `${h}%` }}
-                transition={{ type: 'spring', stiffness: 260, damping: 22 }}
-                className={`w-full min-h-[8px] rounded-t-md transition-colors ${isActive ? 'bg-mintcom-green shadow-[0_0_16px_rgba(125,198,162,0.45)]' : 'bg-mintcom-green/25 group-hover:bg-mintcom-green/45'}`}
-                style={{ height: `${h}%` }}
-              />
-              <span className={`text-[10px] font-bold ${isActive ? 'text-mintcom-green' : 'text-gray-400'}`}>{d.label}</span>
+            <button
+              key={d.id}
+              type="button"
+              onClick={() => setActive(d.id)}
+              className="group flex flex-1 flex-col items-center gap-1.5"
+            >
+              <div className="flex w-full items-end" style={{ height: CHART_H }}>
+                <motion.div
+                  initial={false}
+                  animate={{ height: hPx }}
+                  transition={{ type: 'spring', stiffness: 280, damping: 24 }}
+                  className={`w-full rounded-t-md transition-colors ${
+                    isActive
+                      ? 'bg-mintcom-green shadow-[0_0_16px_rgba(125,198,162,0.45)]'
+                      : 'bg-mintcom-green/30 group-hover:bg-mintcom-green/50'
+                  }`}
+                />
+              </div>
+              <span className={`text-[10px] font-bold leading-none ${isActive ? 'text-mintcom-green' : 'text-gray-400'}`}>
+                {d.label}
+              </span>
             </button>
           );
         })}
