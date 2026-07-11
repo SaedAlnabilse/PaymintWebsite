@@ -151,8 +151,8 @@ const WorkflowFeatureModal = ({
       ],
       salesControl: [
         'Cash is always available',
-        'Add CliQ, Apple Pay & more types',
-        'Real card brands + live tax rates',
+        'Add payment types & card brands',
+        'Tax + service charge at checkout',
       ],
       staffManagement: [
         'Add team members in one tap',
