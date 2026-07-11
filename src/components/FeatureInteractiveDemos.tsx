@@ -219,19 +219,6 @@ export const InteractiveSalesControlDemo = ({ t, side }: DemoProps) => {
   type Method = { id: string; label: string; emoji: string; fixed?: boolean };
   type Brand = { id: string; label: string; emoji: string };
 
-  const coreMethods = useMemo(
-    (): Method[] => [
-      { id: 'cash', label: String(t('landing.workflow.receipt.demo.sales.cash', 'Cash')), emoji: '💵' },
-      {
-        id: 'card',
-        label: String(t('landing.workflow.receipt.demo.sales.card', 'Card')),
-        emoji: '💳',
-        fixed: true, // always on — like required tender in Mintcom
-      },
-    ],
-    [t],
-  );
-
   const methodPool = useMemo(
     (): Method[] => [
       { id: 'cliq', label: String(t('landing.workflow.receipt.demo.sales.cliq', 'CliQ')), emoji: '⚡' },
