@@ -2416,7 +2416,12 @@
             "subtotal": "小计",
             "tap": "点击商品添加",
             "taxLine": "税 8%",
-            "totalLine": "合计"
+            "totalLine": "合计",
+            "charge": "收款",
+            "choosePay": "选择顾客支付方式",
+            "emptyCart": "购物车为空 — 点击上方商品",
+            "newSale": "新销售",
+            "salad": "沙拉"
           },
           "recipe": {
             "butter": "黄油",
