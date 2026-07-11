@@ -1480,6 +1480,12 @@ function OrderPanel({
   compact?: boolean;
 }) {
   const empty = cart.length === 0;
+  // Accordion expand like POS OrderSummaryPanel — one open at a time
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  const toggleExpand = (id: string) => {
+    setExpandedId((cur) => (cur === id ? null : id));
+  };
 
   return (
     <aside className={`flex h-full min-h-0 flex-col overflow-hidden ${className}`}>
@@ -1614,51 +1620,145 @@ function OrderPanel({
             </p>
           </div>
         ) : (
-          cart.map((line) => (
-            <div
-              key={line.id}
-              className="rounded-2xl border border-gray-100 bg-cream-50 p-2.5 dark:border-white/8 dark:bg-mintcom-dark"
-            >
-              <div className="flex items-start gap-2">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-lg shadow-sm dark:bg-mintcom-surface">
-                  {line.emoji}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-start justify-between gap-2">
+          cart.map((line) => {
+            const expanded = expandedId === line.id;
+            const lineTotal = line.unitPrice * line.qty;
+            return (
+              <div
+                key={line.id}
+                className="overflow-hidden rounded-2xl border border-gray-200 bg-cream-100 dark:border-white/10 dark:bg-mintcom-dark"
+              >
+                {/* Collapsed header — tap to expand like POS SwipeableOrderItem */}
+                <button
+                  type="button"
+                  onClick={() => toggleExpand(line.id)}
+                  className="flex w-full items-center gap-2 p-2.5 text-start"
+                >
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-lg shadow-sm dark:bg-mintcom-surface">
+                    {line.emoji}
+                  </span>
+                  <div className="min-w-0 flex-1">
                     <p className="truncate text-xs font-bold text-text-primary dark:text-white">{line.name}</p>
-                    <p className="shrink-0 text-xs font-black tabular-nums text-text-primary dark:text-white">
-                      {money(line.unitPrice * line.qty)}
+                    {line.addons.length > 0 && (
+                      <p className="mt-0.5 truncate text-[10px] text-text-tertiary dark:text-mintcom-gray">
+                        + {line.addons.map((a) => a.name).join(' · ')}
+                      </p>
+                    )}
+                    {line.note && (
+                      <p className="mt-0.5 line-clamp-1 text-[10px] text-text-secondary dark:text-mintcom-textSecondary">
+                        📝 {line.note}
+                      </p>
+                    )}
+                    <p className="mt-0.5 text-sm font-black tabular-nums text-text-primary dark:text-white">
+                      {money(lineTotal)}
                     </p>
                   </div>
-                  {line.addons.length > 0 && (
-                    <p className="mt-0.5 truncate text-[10px] text-text-tertiary dark:text-mintcom-gray">
-                      +{' '}
-                      {line.addons
-                        .map((a) => (a.price > 0 ? `${a.name} (${money(a.price)})` : a.name))
-                        .join(' · ')}
-                    </p>
+                  <span className="flex h-7 min-w-7 shrink-0 items-center justify-center rounded-full bg-mintcom-green px-1.5 text-[11px] font-black text-white">
+                    ×{line.qty}
+                  </span>
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-gray-200 bg-white dark:border-white/10 dark:bg-mintcom-surface">
+                    <ChevronDown
+                      size={16}
+                      className={`text-text-tertiary transition-transform ${expanded ? 'rotate-180' : ''}`}
+                    />
+                  </span>
+                </button>
+
+                {/* Expanded body — base, attributes, qty, note, total, remove */}
+                <AnimatePresence initial={false}>
+                  {expanded && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.18 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="space-y-2 border-t border-gray-200/80 px-2.5 pb-2.5 pt-2 dark:border-white/8">
+                        <div className="flex items-center justify-between text-[11px]">
+                          <span className="font-bold text-text-tertiary">Base price</span>
+                          <span className="font-bold tabular-nums text-text-primary dark:text-white">
+                            {money(line.basePrice)}
+                          </span>
+                        </div>
+
+                        {line.addons.length > 0 && (
+                          <div className="rounded-xl border border-mintcom-green/25 bg-mintcom-green/10 px-2.5 py-2">
+                            <p className="mb-1 text-[10px] font-black uppercase tracking-wide text-mintcom-green">
+                              Selected options
+                            </p>
+                            <div className="space-y-1">
+                              {line.addons.map((a) => (
+                                <div key={a.id} className="flex items-center justify-between text-[11px]">
+                                  <span className="font-medium text-text-primary dark:text-white">• {a.name}</span>
+                                  <span className="font-bold tabular-nums text-mintcom-green">
+                                    {a.price > 0 ? `+${money(a.price)}` : 'Free'}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-[11px] font-bold text-text-tertiary">Quantity</span>
+                          <div className="inline-flex items-center gap-0.5 rounded-xl border border-gray-200 bg-white p-0.5 dark:border-white/10 dark:bg-mintcom-surface">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onChangeQty(line.id, -1);
+                              }}
+                              className="flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold text-text-secondary hover:bg-cream-100 dark:hover:bg-white/10"
+                            >
+                              −
+                            </button>
+                            <span className="w-7 text-center text-sm font-black tabular-nums text-text-primary dark:text-white">
+                              {line.qty}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onChangeQty(line.id, 1);
+                              }}
+                              className="flex h-8 w-8 items-center justify-center rounded-lg bg-mintcom-green text-sm font-bold text-white"
+                            >
+                              +
+                            </button>
+                          </div>
+                        </div>
+
+                        {line.note && (
+                          <div className="rounded-xl border border-mintcom-green/20 bg-mintcom-green/5 px-2.5 py-1.5 text-[11px] text-text-primary dark:text-white">
+                            {line.note}
+                          </div>
+                        )}
+
+                        <div className="flex items-center justify-between border-t border-gray-200/80 pt-2 dark:border-white/8">
+                          <span className="text-xs font-black text-text-primary dark:text-white">Item total</span>
+                          <span className="text-sm font-black tabular-nums text-mintcom-green">{money(lineTotal)}</span>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // Remove line by stepping qty to 0
+                            onChangeQty(line.id, -line.qty);
+                            if (expandedId === line.id) setExpandedId(null);
+                          }}
+                          className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-mintcom-red py-2 text-[11px] font-black text-white"
+                        >
+                          <Trash2 size={13} /> Remove item
+                        </button>
+                      </div>
+                    </motion.div>
                   )}
-                  <div className="mt-1.5 inline-flex items-center gap-0.5 rounded-lg border border-gray-200 bg-white p-0.5 dark:border-white/10 dark:bg-mintcom-surface">
-                    <button
-                      type="button"
-                      onClick={() => onChangeQty(line.id, -1)}
-                      className="flex h-6 w-6 items-center justify-center rounded-md text-text-secondary hover:bg-cream-100 dark:hover:bg-white/10"
-                    >
-                      −
-                    </button>
-                    <span className="w-5 text-center text-[11px] font-bold tabular-nums">{line.qty}</span>
-                    <button
-                      type="button"
-                      onClick={() => onChangeQty(line.id, 1)}
-                      className="flex h-6 w-6 items-center justify-center rounded-md text-text-secondary hover:bg-cream-100 dark:hover:bg-white/10"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
+                </AnimatePresence>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
         {orderNote && (
           <p className="rounded-xl bg-mintcom-yellow/10 px-2.5 py-1.5 text-[10px] font-medium text-text-secondary dark:text-mintcom-textSecondary">
