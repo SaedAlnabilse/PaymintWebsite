@@ -150,9 +150,9 @@ const WorkflowFeatureModal = ({
         'Print a digital receipt in seconds',
       ],
       salesControl: [
-        'Toggle payment methods on the fly',
-        'Set tax rates with instant totals',
-        'Control how every sale is settled',
+        'Card stays always available',
+        'Add CliQ, Apple Pay & more types',
+        'Manage card brands + tax rates',
       ],
       staffManagement: [
         'Add team members in one tap',
