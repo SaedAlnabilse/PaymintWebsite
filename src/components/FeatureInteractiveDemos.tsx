@@ -1036,74 +1036,366 @@ export const InteractiveSecureDemo = ({ t }: DemoProps) => {
   );
 };
 
-/* ─── Loyalty ───────────────────────────────────────────────────────────── */
+/* ─── Loyalty (mirrors POS: DISCOUNT % or FREE_ITEM from a category) ───── */
 export const InteractiveLoyaltyDemo = ({ t }: DemoProps) => {
-  const tiers = useMemo(
-    () => [
-      { id: 'bronze', label: String(t('landing.workflow.receipt.demo.loyalty.bronze', 'Bronze')), need: 0, color: 'from-amber-700/30 to-amber-600/10 border-amber-700/30' },
-      { id: 'silver', label: String(t('landing.workflow.receipt.demo.loyalty.silver', 'Silver')), need: 200, color: 'from-slate-400/30 to-slate-300/10 border-slate-400/40' },
-      { id: 'gold', label: String(t('landing.workflow.receipt.demo.loyalty.gold', 'Gold')), need: 500, color: 'from-yellow-400/40 to-amber-300/10 border-yellow-400/50' },
-    ],
+  type CartLine = { id: string; name: string; price: number; emoji: string; free?: boolean };
+  type Reward =
+    | { id: string; type: 'DISCOUNT'; name: string; pointsRequired: number; discountPercentage: number; icon: string }
+    | { id: string; type: 'FREE_ITEM'; name: string; pointsRequired: number; categoryId: string; categoryName: string; icon: string };
+
+  const categories = useMemo(
+    () => ({
+      beverages: {
+        name: String(t('landing.workflow.receipt.demo.loyalty.catBeverages', 'Beverages')),
+        items: [
+          { id: 'latte', name: String(t('landing.workflow.receipt.demo.loyalty.itemLatte', 'Latte')), price: 4.5, emoji: '☕' },
+          { id: 'espresso', name: String(t('landing.workflow.receipt.demo.pos.espresso', 'Espresso')), price: 3.5, emoji: '☕' },
+          { id: 'soda', name: String(t('landing.workflow.receipt.demo.pos.soda', 'Soda')), price: 2.5, emoji: '🥤' },
+        ],
+      },
+      pastries: {
+        name: String(t('landing.workflow.receipt.demo.loyalty.catPastries', 'Pastries')),
+        items: [
+          { id: 'croissant', name: String(t('landing.workflow.receipt.demo.pos.croissant', 'Croissant')), price: 4, emoji: '🥐' },
+          { id: 'muffin', name: String(t('landing.workflow.receipt.demo.loyalty.itemMuffin', 'Muffin')), price: 3.25, emoji: '🧁' },
+          { id: 'cookie', name: String(t('landing.workflow.receipt.demo.loyalty.itemCookie', 'Cookie')), price: 2, emoji: '🍪' },
+        ],
+      },
+    }),
     [t],
   );
-  const [points, setPoints] = useState(120);
-  const [flash, setFlash] = useState<string | null>(null);
-  const tier = [...tiers].reverse().find((x) => points >= x.need) ?? tiers[0];
-  const next = tiers.find((x) => x.need > points);
 
-  const earn = () => {
-    setPoints((p) => p + 100);
-    setFlash('+100');
-    window.setTimeout(() => setFlash(null), 500);
+  const rewards: Reward[] = useMemo(
+    () => [
+      {
+        id: 'd10',
+        type: 'DISCOUNT',
+        name: String(t('landing.workflow.receipt.demo.loyalty.reward10', '10% off order')),
+        pointsRequired: 100,
+        discountPercentage: 10,
+        icon: '%',
+      },
+      {
+        id: 'free-bev',
+        type: 'FREE_ITEM',
+        name: String(t('landing.workflow.receipt.demo.loyalty.rewardFreeBev', 'Free drink')),
+        pointsRequired: 150,
+        categoryId: 'beverages',
+        categoryName: categories.beverages.name,
+        icon: '🎁',
+      },
+      {
+        id: 'free-pastry',
+        type: 'FREE_ITEM',
+        name: String(t('landing.workflow.receipt.demo.loyalty.rewardFreePastry', 'Free pastry')),
+        pointsRequired: 200,
+        categoryId: 'pastries',
+        categoryName: categories.pastries.name,
+        icon: '🎁',
+      },
+      {
+        id: 'd20',
+        type: 'DISCOUNT',
+        name: String(t('landing.workflow.receipt.demo.loyalty.reward20', '20% off order')),
+        pointsRequired: 250,
+        discountPercentage: 20,
+        icon: '%',
+      },
+    ],
+    [t, categories.beverages.name, categories.pastries.name],
+  );
+
+  const [points, setPoints] = useState(280);
+  const [cart, setCart] = useState<CartLine[]>([
+    { id: 'c1', name: String(t('landing.workflow.receipt.demo.pos.espresso', 'Espresso')), price: 3.5, emoji: '☕' },
+    { id: 'c2', name: String(t('landing.workflow.receipt.demo.pos.croissant', 'Croissant')), price: 4, emoji: '🥐' },
+    { id: 'c3', name: String(t('landing.workflow.receipt.demo.loyalty.itemSandwich', 'Sandwich')), price: 7.5, emoji: '🥪' },
+  ]);
+  const [applied, setApplied] = useState<{
+    rewardId: string;
+    label: string;
+    pointsCost: number;
+    discountPct?: number;
+    freeItemName?: string;
+  } | null>(null);
+  const [phase, setPhase] = useState<'main' | 'pickItem'>('main');
+  const [pendingFree, setPendingFree] = useState<Extract<Reward, { type: 'FREE_ITEM' }> | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
+
+  const subtotal = cart.reduce((s, l) => s + (l.free ? 0 : l.price), 0);
+  const discountAmt = applied?.discountPct ? subtotal * (applied.discountPct / 100) : 0;
+  const total = Math.max(0, subtotal - discountAmt);
+  // 1 pt per $1 on paid total (like pointsPerCurrency)
+  const earnPreview = Math.floor(total);
+
+  const flash = (msg: string) => {
+    setToast(msg);
+    window.setTimeout(() => setToast(null), 1400);
   };
-  const redeem = () => {
-    if (points < 100) return;
-    setPoints((p) => p - 100);
-    setFlash('-100');
-    window.setTimeout(() => setFlash(null), 500);
+
+  const removeReward = () => {
+    if (!applied) return;
+    setPoints((p) => p + applied.pointsCost);
+    setCart((c) => c.filter((l) => !l.free));
+    setApplied(null);
+    flash(String(t('landing.workflow.receipt.demo.loyalty.rewardRemoved', 'Reward removed')));
   };
+
+  const applyDiscount = (reward: Extract<Reward, { type: 'DISCOUNT' }>) => {
+    if (applied || points < reward.pointsRequired) return;
+    if (cart.filter((l) => !l.free).length === 0) {
+      flash(String(t('landing.workflow.receipt.demo.loyalty.addItemsFirst', 'Add items to the order first')));
+      return;
+    }
+    setPoints((p) => p - reward.pointsRequired);
+    setApplied({
+      rewardId: reward.id,
+      label: reward.name,
+      pointsCost: reward.pointsRequired,
+      discountPct: reward.discountPercentage,
+    });
+    flash(`−${reward.pointsRequired} pts · ${reward.discountPercentage}%`);
+  };
+
+  const startFreeItem = (reward: Extract<Reward, { type: 'FREE_ITEM' }>) => {
+    if (applied || points < reward.pointsRequired) return;
+    setPendingFree(reward);
+    setPhase('pickItem');
+  };
+
+  const pickFreeItem = (item: { id: string; name: string; price: number; emoji: string }) => {
+    if (!pendingFree) return;
+    setPoints((p) => p - pendingFree.pointsRequired);
+    setCart((c) => [
+      ...c,
+      { id: `free-${item.id}-${Date.now()}`, name: item.name, price: item.price, emoji: item.emoji, free: true },
+    ]);
+    setApplied({
+      rewardId: pendingFree.id,
+      label: pendingFree.name,
+      pointsCost: pendingFree.pointsRequired,
+      freeItemName: item.name,
+    });
+    setPendingFree(null);
+    setPhase('main');
+    flash(`−${pendingFree.pointsRequired} pts · ${item.name} FREE`);
+  };
+
+  const completeSale = () => {
+    const earned = earnPreview;
+    setPoints((p) => p + earned);
+    setCart([
+      { id: 'c1', name: String(t('landing.workflow.receipt.demo.pos.espresso', 'Espresso')), price: 3.5, emoji: '☕' },
+      { id: 'c2', name: String(t('landing.workflow.receipt.demo.pos.croissant', 'Croissant')), price: 4, emoji: '🥐' },
+      { id: 'c3', name: String(t('landing.workflow.receipt.demo.loyalty.itemSandwich', 'Sandwich')), price: 7.5, emoji: '🥪' },
+    ]);
+    setApplied(null);
+    flash(`+${earned} pts ${String(t('landing.workflow.receipt.demo.loyalty.earned', 'earned'))}`);
+  };
+
+  const catKey = pendingFree?.categoryId as keyof typeof categories | undefined;
+  const freeItems = catKey ? categories[catKey]?.items ?? [] : [];
 
   return shell(
     <>
-      <div className={`relative overflow-hidden rounded-xl border bg-gradient-to-br p-4 ${tier.color}`}>
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">{String(t('landing.workflow.receipt.demo.loyalty.tier', 'Tier'))}</p>
-            <p className="text-xl font-black text-gray-900 dark:text-white">{tier.label}</p>
-            <p className="mt-0.5 text-[11px] text-gray-500">{String(t('landing.workflow.receipt.frame.loyalty', 'Member since 2024'))}</p>
-          </div>
-          <div className="relative text-end">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">pts</p>
-            <p className="text-2xl font-black tabular-nums text-mintcom-green">{points}</p>
-            <AnimatePresence>
-              {flash && (
-                <motion.span initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: -10 }} exit={{ opacity: 0 }} className="absolute -top-1 end-0 text-xs font-black text-mintcom-green">
-                  {flash}
-                </motion.span>
-              )}
-            </AnimatePresence>
-          </div>
+      {/* Customer profile (like POS loyalty lookup) */}
+      <div className="mb-3 flex items-center gap-3 rounded-xl border border-mintcom-green/25 bg-gradient-to-r from-mintcom-green/12 to-transparent p-3">
+        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-mintcom-green text-lg font-black text-black">
+          L
         </div>
-        {next && (
-          <div className="mt-3">
-            <div className="mb-1 flex justify-between text-[10px] text-gray-500">
-              <span>→ {next.label}</span>
-              <span>{next.need - points} pts</span>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-bold text-gray-900 dark:text-white">Layla Hassan</p>
+          <p className="text-[11px] text-gray-500">{String(t('landing.workflow.receipt.frame.loyalty', 'Member since 2024'))}</p>
+        </div>
+        <div className="relative text-end">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+            {String(t('landing.workflow.receipt.demo.loyalty.points', 'Points'))}
+          </p>
+          <p className="text-xl font-black tabular-nums text-mintcom-green">{points}</p>
+          <AnimatePresence>
+            {toast && (
+              <motion.span
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: -6 }}
+                exit={{ opacity: 0 }}
+                className="absolute -top-1 end-0 whitespace-nowrap rounded-full bg-mintcom-green px-1.5 py-0.5 text-[9px] font-black text-black"
+              >
+                {toast}
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+
+      <AnimatePresence mode="wait">
+        {phase === 'pickItem' && pendingFree ? (
+          <motion.div
+            key="pick"
+            initial={{ opacity: 0, x: 12 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -12 }}
+          >
+            <div className="mb-2 flex items-center justify-between">
+              <p className="text-[11px] font-bold text-gray-700 dark:text-gray-200">
+                {String(t('landing.workflow.receipt.demo.loyalty.pickFrom', 'Pick free item from'))}{' '}
+                <span className="text-mintcom-green">{pendingFree.categoryName}</span>
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setPhase('main');
+                  setPendingFree(null);
+                }}
+                className="text-[11px] font-bold text-gray-400 hover:text-gray-600"
+              >
+                {String(t('common.back', 'Back'))}
+              </button>
             </div>
-            <div className="h-1.5 overflow-hidden rounded-full bg-black/10 dark:bg-white/10">
-              <motion.div animate={{ width: `${Math.min(100, (points / next.need) * 100)}%` }} className="h-full rounded-full bg-mintcom-green" />
+            <div className="grid grid-cols-3 gap-2">
+              {freeItems.map((item) => (
+                <motion.button
+                  key={item.id}
+                  type="button"
+                  whileTap={{ scale: 0.94 }}
+                  onClick={() => pickFreeItem(item)}
+                  className="rounded-xl border border-mintcom-green/30 bg-mintcom-green/8 p-2.5 text-center transition-all hover:border-mintcom-green hover:shadow-md"
+                >
+                  <span className="text-xl">{item.emoji}</span>
+                  <p className="mt-1 truncate text-[11px] font-bold text-gray-900 dark:text-white">{item.name}</p>
+                  <p className="text-[10px] font-semibold text-mintcom-green">
+                    {String(t('landing.workflow.receipt.demo.loyalty.free', 'FREE'))}
+                  </p>
+                  <p className="text-[9px] text-gray-400 line-through">{money(item.price)}</p>
+                </motion.button>
+              ))}
             </div>
-          </div>
+            <p className="mt-2 text-center text-[10px] text-gray-400">
+              {pendingFree.pointsRequired} pts · {String(t('landing.workflow.receipt.demo.loyalty.freeItemHint', 'Same as POS: free item from a reward category'))}
+            </p>
+          </motion.div>
+        ) : (
+          <motion.div key="main" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            {/* Mini order (reward applies to current cart like POS) */}
+            <div className="mb-2 rounded-xl border border-gray-100 bg-white p-2.5 dark:border-white/8 dark:bg-white/[0.03]">
+              <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                {String(t('landing.workflow.receipt.demo.loyalty.order', 'Current order'))}
+              </p>
+              <div className="space-y-1">
+                {cart.map((line) => (
+                  <div key={line.id} className="flex items-center justify-between gap-2 text-[11px]">
+                    <span className={`truncate font-medium ${line.free ? 'text-mintcom-green' : 'text-gray-700 dark:text-gray-200'}`}>
+                      {line.emoji} {line.name}
+                      {line.free && (
+                        <span className="ms-1 rounded bg-mintcom-green/20 px-1 text-[9px] font-black uppercase">
+                          {String(t('landing.workflow.receipt.demo.loyalty.free', 'FREE'))}
+                        </span>
+                      )}
+                    </span>
+                    <span className={`tabular-nums font-bold ${line.free ? 'text-mintcom-green' : 'text-gray-900 dark:text-white'}`}>
+                      {line.free ? money(0) : money(line.price)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-2 space-y-0.5 border-t border-gray-100 pt-2 text-[11px] dark:border-white/8">
+                <div className="flex justify-between text-gray-500">
+                  <span>{String(t('landing.workflow.receipt.demo.pos.subtotal', 'Subtotal'))}</span>
+                  <span className="tabular-nums">{money(subtotal)}</span>
+                </div>
+                {discountAmt > 0 && (
+                  <div className="flex justify-between text-mintcom-green">
+                    <span>
+                      {String(t('landing.workflow.receipt.demo.loyalty.rewardDiscount', 'Loyalty discount'))} ({applied?.discountPct}%)
+                    </span>
+                    <span className="tabular-nums font-bold">−{money(discountAmt)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-sm font-bold text-gray-900 dark:text-white">
+                  <span>{String(t('landing.workflow.receipt.demo.pos.totalLine', 'Total'))}</span>
+                  <span className="tabular-nums text-mintcom-green">{money(total)}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Applied reward chip */}
+            {applied && (
+              <div className="mb-2 flex items-center justify-between rounded-xl border border-mintcom-green/40 bg-mintcom-green/10 px-3 py-2">
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-mintcom-green">
+                    {String(t('landing.workflow.receipt.demo.loyalty.applied', 'Applied reward'))}
+                  </p>
+                  <p className="truncate text-xs font-bold text-gray-900 dark:text-white">
+                    {applied.freeItemName
+                      ? `${applied.label}: ${applied.freeItemName}`
+                      : applied.label}
+                  </p>
+                </div>
+                <button type="button" onClick={removeReward} className="shrink-0 text-[11px] font-bold text-gray-500 hover:text-rose-500">
+                  {String(t('landing.workflow.receipt.demo.loyalty.remove', 'Remove'))}
+                </button>
+              </div>
+            )}
+
+            {/* Rewards catalog — DISCOUNT or FREE_ITEM from category */}
+            <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-gray-400">
+              {String(t('landing.workflow.receipt.demo.loyalty.rewards', 'Rewards'))}
+            </p>
+            <div className="max-h-[132px] space-y-1.5 overflow-y-auto">
+              {rewards.map((reward) => {
+                const can = !applied && points >= reward.pointsRequired;
+                const locked = points < reward.pointsRequired;
+                return (
+                  <button
+                    key={reward.id}
+                    type="button"
+                    disabled={!can}
+                    onClick={() => {
+                      if (reward.type === 'DISCOUNT') applyDiscount(reward);
+                      else startFreeItem(reward);
+                    }}
+                    className={`flex w-full items-center gap-2.5 rounded-xl border px-2.5 py-2 text-start transition-all ${
+                      can
+                        ? 'border-gray-100 bg-white hover:border-mintcom-green/40 hover:shadow-sm dark:border-white/8 dark:bg-white/[0.03]'
+                        : 'border-gray-100 bg-gray-50 opacity-55 dark:border-white/5 dark:bg-white/[0.02]'
+                    }`}
+                  >
+                    <span
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-black ${
+                        reward.type === 'DISCOUNT' ? 'bg-sky-500/15 text-sky-600' : 'bg-amber-500/15 text-amber-600'
+                      }`}
+                    >
+                      {reward.type === 'DISCOUNT' ? '%' : '🎁'}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-xs font-bold text-gray-900 dark:text-white">{reward.name}</p>
+                      <p className="text-[10px] text-gray-500">
+                        {reward.type === 'DISCOUNT'
+                          ? String(t('landing.workflow.receipt.demo.loyalty.typeDiscount', 'Discount on order'))
+                          : `${String(t('landing.workflow.receipt.demo.loyalty.typeFreeItem', 'Free item from'))} ${reward.categoryName}`}
+                      </p>
+                    </div>
+                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${locked ? 'bg-gray-100 text-gray-400' : 'bg-mintcom-green/15 text-mintcom-green'}`}>
+                      {reward.pointsRequired} pts
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <button
+              type="button"
+              onClick={completeSale}
+              className="mt-2.5 w-full rounded-xl bg-mintcom-green py-2.5 text-xs font-bold text-black shadow-[0_4px_16px_-4px_rgba(125,198,162,0.5)]"
+            >
+              {String(t('landing.workflow.receipt.demo.loyalty.completeSale', 'Complete sale'))}
+              {earnPreview > 0 ? ` · +${earnPreview} pts` : ''}
+            </button>
+            <p className="mt-2 text-center text-[10px] text-gray-400">
+              {String(t('landing.workflow.receipt.demo.loyalty.hint', 'Redeem a % discount or a free item from a category — just like Mintcom POS'))}
+            </p>
+          </motion.div>
         )}
-      </div>
-      <div className="mt-3 grid grid-cols-2 gap-2">
-        <button type="button" onClick={earn} className="rounded-xl bg-mintcom-green py-2.5 text-xs font-bold text-black">
-          {String(t('landing.workflow.receipt.demo.loyalty.earn', 'Earn 100'))}
-        </button>
-        <button type="button" onClick={redeem} disabled={points < 100} className="rounded-xl border border-gray-200 py-2.5 text-xs font-bold text-gray-700 disabled:opacity-40 dark:border-white/10 dark:text-gray-200">
-          {String(t('landing.workflow.receipt.demo.loyalty.redeem', 'Redeem'))}
-        </button>
-      </div>
+      </AnimatePresence>
     </>,
     String(t('landing.workflow.receipt.brand', 'MINTCOM POS')),
   );
