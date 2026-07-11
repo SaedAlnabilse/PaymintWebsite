@@ -1416,7 +1416,7 @@ export const InteractiveLoyaltyDemo = ({ t, side }: DemoProps) => {
  * tabs All | Cash | Stock | Refunds, typed alert cards with unread accent,
  * icon tone, description, amount/stock pill, location, mark-as-read on tap.
  */
-export const InteractiveMobileDemo = ({ t, tall = false, side }: DemoProps & { tall?: boolean }) => {
+export const InteractiveMobileDemo = ({ t, tall = false, side: _side }: DemoProps & { tall?: boolean }) => {
   type TabId = 'all' | 'cash' | 'stock' | 'refunds';
   type Kind =
     | 'cash_shortage'
