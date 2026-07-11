@@ -13,6 +13,7 @@ import {
   HelpCircle,
   LayoutDashboard,
   LayoutGrid,
+  Lock,
   Pause,
   Percent,
   Play,
@@ -91,7 +92,50 @@ type Screen =
   | 'notifications'
   | 'settings'
   | 'support';
-type Staff = { id: string; name: string; role: string; pin: string; emoji: string };
+/** Demo role permissions — mirrors real POS access control */
+type Perm =
+  | 'sales'
+  | 'dashboard'
+  | 'open_shift'
+  | 'close_shift'
+  | 'cash_movement'
+  | 'reports'
+  | 'notifications'
+  | 'settings'
+  | 'support'
+  | 'discount'
+  | 'hold'
+  | 'void_item'
+  | 'split'
+  | 'loyalty';
+
+const ALL_PERMS: Perm[] = [
+  'sales',
+  'dashboard',
+  'open_shift',
+  'close_shift',
+  'cash_movement',
+  'reports',
+  'notifications',
+  'settings',
+  'support',
+  'discount',
+  'hold',
+  'void_item',
+  'split',
+  'loyalty',
+];
+
+type Staff = {
+  id: string;
+  name: string;
+  role: string;
+  pin: string;
+  emoji: string;
+  perms: Perm[];
+  /** Short blurb on clock-in card */
+  accessNote: string;
+};
 
 const NAV_ITEMS: {
   id: Screen;
@@ -99,22 +143,56 @@ const NAV_ITEMS: {
   short: string;
   icon: typeof LayoutGrid;
   badge?: 'alerts';
+  perm: Perm;
 }[] = [
-  { id: 'dashboard', label: 'Dashboard', short: 'Home', icon: LayoutDashboard },
-  { id: 'sales', label: 'Sales', short: 'Sales', icon: LayoutGrid },
-  { id: 'reports', label: 'Reports', short: 'Reports', icon: BarChart3 },
-  { id: 'notifications', label: 'Alerts', short: 'Alerts', icon: Bell, badge: 'alerts' },
-  { id: 'settings', label: 'Settings', short: 'Settings', icon: Settings },
-  { id: 'support', label: 'Support', short: 'Help', icon: HelpCircle },
+  { id: 'dashboard', label: 'Dashboard', short: 'Home', icon: LayoutDashboard, perm: 'dashboard' },
+  { id: 'sales', label: 'Sales', short: 'Sales', icon: LayoutGrid, perm: 'sales' },
+  { id: 'reports', label: 'Reports', short: 'Reports', icon: BarChart3, perm: 'reports' },
+  { id: 'notifications', label: 'Alerts', short: 'Alerts', icon: Bell, badge: 'alerts', perm: 'notifications' },
+  { id: 'settings', label: 'Settings', short: 'Settings', icon: Settings, perm: 'settings' },
+  { id: 'support', label: 'Support', short: 'Help', icon: HelpCircle, perm: 'support' },
 ];
 
 const money = (n: number) =>
   n.toLocaleString(undefined, { style: 'currency', currency: 'USD', minimumFractionDigits: 2 });
 
 const STAFF: Staff[] = [
-  { id: 'sara', name: 'Sara', role: 'Cashier', pin: '1234', emoji: '👩‍💼' },
-  { id: 'omar', name: 'Omar', role: 'Barista', pin: '0000', emoji: '👨‍🍳' },
-  { id: 'maya', name: 'Maya', role: 'Manager', pin: '9999', emoji: '👩‍💻' },
+  {
+    id: 'sara',
+    name: 'Sara',
+    role: 'Cashier',
+    pin: '1234',
+    emoji: '👩‍💼',
+    accessNote: 'Sales, hold, open/close shift',
+    perms: [
+      'sales',
+      'dashboard',
+      'open_shift',
+      'close_shift',
+      'notifications',
+      'support',
+      'hold',
+      'loyalty',
+    ],
+  },
+  {
+    id: 'omar',
+    name: 'Omar',
+    role: 'Barista',
+    pin: '0000',
+    emoji: '👨‍🍳',
+    accessNote: 'Sales & hold only',
+    perms: ['sales', 'notifications', 'support', 'hold'],
+  },
+  {
+    id: 'maya',
+    name: 'Maya',
+    role: 'Manager',
+    pin: '9999',
+    emoji: '👩‍💻',
+    accessNote: 'Full access — all screens',
+    perms: [...ALL_PERMS],
+  },
 ];
 
 const CATEGORIES = [
@@ -256,6 +334,22 @@ export function FullPosPlayground() {
   const shiftOrders = shift.orders;
   const shiftRevenue = shift.cashSales + shift.cardSales + shift.otherSales;
 
+  const can = (perm: Perm) => !!staff?.perms.includes(perm);
+
+  const goScreen = (id: Screen) => {
+    const item = NAV_ITEMS.find((n) => n.id === id);
+    if (item && !can(item.perm)) {
+      ping(`${item.label} · manager only`);
+      return;
+    }
+    // Barista has no dashboard — land on sales
+    if (id === 'dashboard' && !can('dashboard')) {
+      setScreen(can('sales') ? 'sales' : 'support');
+      return;
+    }
+    setScreen(id);
+  };
+
   /** Block only at checkout — sales browsing & adding items is always allowed */
   const requireOpenShiftForPayment = () => {
     if (shift.open) return true;
@@ -272,6 +366,10 @@ export function FullPosPlayground() {
   const openPayment = (tab: CheckoutTab) => {
     if (!cart.length) return;
     if (!requireOpenShiftForPayment()) return;
+    if (tab === 'split' && !can('split')) {
+      ping('Split payments · manager only');
+      return;
+    }
     setPaymentTab(tab);
     setShowPaymentPanel(true);
     setMobileCartOpen(false);
@@ -427,6 +525,10 @@ export function FullPosPlayground() {
 
   const openHoldModal = () => {
     if (!cart.length) return;
+    if (!can('hold')) {
+      ping('Hold order · not allowed for your role');
+      return;
+    }
     setShowHoldModal(true);
   };
 
@@ -516,7 +618,13 @@ export function FullPosPlayground() {
     setStaff(match);
     setPin('');
     setPhase('app');
-    setScreen('dashboard');
+    // Land on first allowed screen
+    const home = match.perms.includes('dashboard')
+      ? 'dashboard'
+      : match.perms.includes('sales')
+        ? 'sales'
+        : 'support';
+    setScreen(home);
   };
 
   const finalizeSale = (
@@ -699,7 +807,12 @@ export function FullPosPlayground() {
                   onClick={() => {
                     setStaff(s);
                     setPhase('app');
-                    setScreen('dashboard');
+                    const home = s.perms.includes('dashboard')
+                      ? 'dashboard'
+                      : s.perms.includes('sales')
+                        ? 'sales'
+                        : 'support';
+                    setScreen(home);
                     setPin('');
                   }}
                   className="flex w-full items-center gap-3 rounded-2xl border border-gray-100 bg-cream-50 px-3 py-3 text-start transition-all hover:border-mintcom-green/40 hover:bg-mintcom-green/10 dark:border-white/8 dark:bg-mintcom-dark dark:hover:border-mintcom-green/40"
@@ -712,6 +825,7 @@ export function FullPosPlayground() {
                     <span className="text-[11px] text-text-secondary dark:text-mintcom-textSecondary">
                       {s.role} · PIN {s.pin}
                     </span>
+                    <span className="mt-0.5 block text-[10px] font-bold text-mintcom-green">{s.accessNote}</span>
                   </span>
                   <ChevronDown className="-rotate-90 text-mintcom-green" size={16} />
                 </button>
@@ -773,22 +887,25 @@ export function FullPosPlayground() {
           {NAV_ITEMS.map((item) => {
             const on = screen === item.id;
             const Icon = item.icon;
+            const allowed = can(item.perm);
             const badge = item.badge === 'alerts' ? held.length + notifUnread : 0;
             return (
               <button
                 key={item.id}
                 type="button"
-                title={item.label}
-                onClick={() => setScreen(item.id)}
+                title={allowed ? item.label : `${item.label} · locked for ${staff?.role ?? 'role'}`}
+                onClick={() => goScreen(item.id)}
                 className={`relative flex w-[60px] flex-col items-center gap-0.5 rounded-2xl px-1 py-2 text-[9px] font-bold transition-colors ${
                   on
                     ? 'bg-mintcom-green text-white shadow-md shadow-mintcom-green/25'
-                    : 'text-text-secondary hover:bg-mintcom-green/10 hover:text-mintcom-green dark:text-mintcom-textSecondary'
+                    : allowed
+                      ? 'text-text-secondary hover:bg-mintcom-green/10 hover:text-mintcom-green dark:text-mintcom-textSecondary'
+                      : 'text-text-tertiary/50 opacity-50 dark:text-mintcom-gray/40'
                 }`}
               >
-                <Icon size={17} />
+                {allowed ? <Icon size={17} /> : <Lock size={15} />}
                 {item.short}
-                {badge > 0 && (
+                {allowed && badge > 0 && (
                   <span className="absolute -end-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-mintcom-red px-1 text-[9px] font-black text-white">
                     {badge > 9 ? '9+' : badge}
                   </span>
@@ -796,9 +913,10 @@ export function FullPosPlayground() {
               </button>
             );
           })}
-          <div className="mt-auto flex flex-col items-center gap-1 px-1 pb-1 text-center">
+          <div className="mt-auto flex flex-col items-center gap-0.5 px-1 pb-1 text-center">
             <span className="text-lg">{staff?.emoji}</span>
             <span className="text-[9px] font-bold text-text-tertiary dark:text-mintcom-gray">{staff?.name}</span>
+            <span className="max-w-[56px] truncate text-[8px] font-bold text-mintcom-green">{staff?.role}</span>
           </div>
         </nav>
 
@@ -806,17 +924,18 @@ export function FullPosPlayground() {
         <div className="absolute inset-x-0 bottom-0 z-40 flex border-t border-gray-200 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur dark:border-mintcom-tertiary dark:bg-mintcom-surface/95 sm:hidden">
           {(
             [
-              { id: 'dashboard' as const, icon: LayoutDashboard, label: 'Home' },
-              { id: 'sales' as const, icon: LayoutGrid, label: 'Sales' },
-              { id: 'reports' as const, icon: BarChart3, label: 'Reports' },
-              { id: 'notifications' as const, icon: Bell, label: 'Alerts' },
-              { id: 'settings' as const, icon: Settings, label: 'More' },
+              { id: 'dashboard' as const, icon: LayoutDashboard, label: 'Home', perm: 'dashboard' as Perm },
+              { id: 'sales' as const, icon: LayoutGrid, label: 'Sales', perm: 'sales' as Perm },
+              { id: 'reports' as const, icon: BarChart3, label: 'Reports', perm: 'reports' as Perm },
+              { id: 'notifications' as const, icon: Bell, label: 'Alerts', perm: 'notifications' as Perm },
+              { id: 'settings' as const, icon: Settings, label: 'More', perm: 'settings' as Perm },
             ] as const
           ).map((item) => {
             const on =
               screen === item.id ||
               (item.id === 'settings' && (screen === 'settings' || screen === 'support'));
             const Icon = item.icon;
+            const allowed = can(item.perm);
             const badge = item.id === 'notifications' ? held.length + notifUnread : 0;
             return (
               <button
@@ -824,15 +943,19 @@ export function FullPosPlayground() {
                 type="button"
                 onClick={() => {
                   if (item.id === 'settings' && screen === 'settings') return;
-                  setScreen(item.id === 'settings' ? 'settings' : item.id);
+                  goScreen(item.id === 'settings' ? 'settings' : item.id);
                 }}
                 className={`relative flex flex-1 flex-col items-center gap-0.5 py-2 text-[9px] font-bold ${
-                  on ? 'text-mintcom-green' : 'text-text-secondary dark:text-mintcom-textSecondary'
+                  on
+                    ? 'text-mintcom-green'
+                    : allowed
+                      ? 'text-text-secondary dark:text-mintcom-textSecondary'
+                      : 'text-text-tertiary/40'
                 }`}
               >
-                <Icon size={17} />
+                {allowed ? <Icon size={17} /> : <Lock size={15} />}
                 {item.label}
-                {badge > 0 && (
+                {allowed && badge > 0 && (
                   <span className="absolute end-[18%] top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-mintcom-red px-1 text-[9px] text-white">
                     {badge}
                   </span>
@@ -893,10 +1016,14 @@ export function FullPosPlayground() {
               onOpenShift={openShift}
               onCloseShift={closeShift}
               onPayInOut={recordPayInOut}
-              onGoSales={() => setScreen('sales')}
-              onGoOrders={() => setScreen('reports')}
+              onGoSales={() => goScreen('sales')}
+              onGoOrders={() => goScreen('reports')}
               autoOpenShiftModal={promptOpenShift}
               onAutoOpenShiftModalHandled={() => setPromptOpenShift(false)}
+              canOpenShift={can('open_shift')}
+              canCloseShift={can('close_shift')}
+              canCashMovement={can('cash_movement')}
+              canViewAnalytics={can('dashboard')}
             />
           )}
 
@@ -1055,12 +1182,24 @@ export function FullPosPlayground() {
                 setOrderNote={setOrderNote}
                 onHold={openHoldModal}
                 onClear={clearOrder}
-                onLoyalty={() => setShowLoyalty(true)}
+                onLoyalty={() => {
+                  if (!can('loyalty')) {
+                    ping('Loyalty · manager only');
+                    return;
+                  }
+                  setShowLoyalty(true);
+                }}
                 onChangeQty={changeQty}
                 onPayCash={() => openPayment('cash')}
                 onPayCard={() => openPayment('card')}
                 onPayOther={() => openPayment('other')}
                 onPaySplit={() => openPayment('split')}
+                canDiscount={can('discount')}
+                canHold={can('hold')}
+                canVoid={can('void_item')}
+                canLoyalty={can('loyalty')}
+                canSplit={can('split')}
+                canClear={can('void_item') || can('discount')}
               />
             </>
           )}
@@ -1132,12 +1271,24 @@ export function FullPosPlayground() {
                   setOrderNote={setOrderNote}
                   onHold={openHoldModal}
                   onClear={clearOrder}
-                  onLoyalty={() => setShowLoyalty(true)}
+                  onLoyalty={() => {
+                    if (!can('loyalty')) {
+                      ping('Loyalty · manager only');
+                      return;
+                    }
+                    setShowLoyalty(true);
+                  }}
                   onChangeQty={changeQty}
                   onPayCash={() => openPayment('cash')}
                   onPayCard={() => openPayment('card')}
                   onPayOther={() => openPayment('other')}
                   onPaySplit={() => openPayment('split')}
+                  canDiscount={can('discount')}
+                  canHold={can('hold')}
+                  canVoid={can('void_item')}
+                  canLoyalty={can('loyalty')}
+                  canSplit={can('split')}
+                  canClear={can('void_item') || can('discount')}
                   compact
                 />
               </motion.div>
@@ -1160,6 +1311,7 @@ export function FullPosPlayground() {
               initialTab={paymentTab}
               onClose={() => setShowPaymentPanel(false)}
               onComplete={finalizeSale}
+              canSplit={can('split')}
             />
           )}
         </AnimatePresence>
@@ -1435,6 +1587,12 @@ function OrderPanel({
   onPayCard,
   onPayOther,
   onPaySplit,
+  canDiscount = true,
+  canHold = true,
+  canVoid = true,
+  canLoyalty = true,
+  canSplit = true,
+  canClear = true,
   compact,
 }: {
   className?: string;
@@ -1464,6 +1622,12 @@ function OrderPanel({
   onPayCard: () => void;
   onPayOther: () => void;
   onPaySplit: () => void;
+  canDiscount?: boolean;
+  canHold?: boolean;
+  canVoid?: boolean;
+  canLoyalty?: boolean;
+  canSplit?: boolean;
+  canClear?: boolean;
   compact?: boolean;
 }) {
   const empty = cart.length === 0;
@@ -1490,21 +1654,29 @@ function OrderPanel({
         ) : (
           <div className="flex items-center justify-between gap-2">
             <div className="flex flex-wrap gap-1.5">
-              <IconBtn label="Discount" onClick={() => setShowDiscount(!showDiscount)} active={discountPct > 0}>
-                <Percent size={16} />
-              </IconBtn>
+              {canDiscount && (
+                <IconBtn label="Discount" onClick={() => setShowDiscount(!showDiscount)} active={discountPct > 0}>
+                  <Percent size={16} />
+                </IconBtn>
+              )}
               <IconBtn label="Note" onClick={() => setShowNote(!showNote)} active={!!orderNote}>
                 <FileText size={16} />
               </IconBtn>
-              <IconBtn label="Hold" onClick={onHold}>
-                <Pause size={16} />
-              </IconBtn>
-              <IconBtn label="Loyalty" onClick={onLoyalty} active={!!loyaltyName}>
-                <Star size={16} />
-              </IconBtn>
-              <IconBtn label="Clear" onClick={onClear} danger>
-                <Trash2 size={16} />
-              </IconBtn>
+              {canHold && (
+                <IconBtn label="Hold" onClick={onHold}>
+                  <Pause size={16} />
+                </IconBtn>
+              )}
+              {canLoyalty && (
+                <IconBtn label="Loyalty" onClick={onLoyalty} active={!!loyaltyName}>
+                  <Star size={16} />
+                </IconBtn>
+              )}
+              {canClear && (
+                <IconBtn label="Clear" onClick={onClear} danger>
+                  <Trash2 size={16} />
+                </IconBtn>
+              )}
             </div>
             <div className="text-end">
               <p className="text-[10px] font-bold uppercase tracking-wider text-text-tertiary dark:text-mintcom-gray">
@@ -1727,18 +1899,19 @@ function OrderPanel({
                           <span className="text-sm font-black tabular-nums text-mintcom-green">{money(lineTotal)}</span>
                         </div>
 
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            // Remove line by stepping qty to 0
-                            onChangeQty(line.id, -line.qty);
-                            if (expandedId === line.id) setExpandedId(null);
-                          }}
-                          className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-mintcom-red py-2 text-[11px] font-black text-white"
-                        >
-                          <Trash2 size={13} /> Remove item
-                        </button>
+                        {canVoid && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onChangeQty(line.id, -line.qty);
+                              if (expandedId === line.id) setExpandedId(null);
+                            }}
+                            className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-mintcom-red py-2 text-[11px] font-black text-white"
+                          >
+                            <Trash2 size={13} /> Remove item
+                          </button>
+                        )}
                       </div>
                     </motion.div>
                   )}
@@ -1769,7 +1942,7 @@ function OrderPanel({
           </div>
         </div>
 
-        <div className="mt-3 grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+        <div className={`mt-3 grid gap-1.5 ${canSplit ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3'}`}>
           <PayTile
             disabled={empty}
             onClick={onPayCash}
@@ -1788,12 +1961,14 @@ function OrderPanel({
             icon={<Wallet size={16} className="text-mintcom-green" />}
             label="Other"
           />
-          <PayTile
-            disabled={empty}
-            onClick={onPaySplit}
-            icon={<SplitSquareHorizontal size={16} className="text-mintcom-green" />}
-            label="Split"
-          />
+          {canSplit && (
+            <PayTile
+              disabled={empty}
+              onClick={onPaySplit}
+              icon={<SplitSquareHorizontal size={16} className="text-mintcom-green" />}
+              label="Split"
+            />
+          )}
         </div>
       </div>
     </aside>
@@ -2223,6 +2398,7 @@ function PaymentCheckoutPanel({
   initialTab,
   onClose,
   onComplete,
+  canSplit = true,
 }: {
   cart: CartLine[];
   orderNo: number;
@@ -2239,8 +2415,9 @@ function PaymentCheckoutPanel({
     methodLabel: string,
     amounts: { cash: number; card: number; other: number },
   ) => void;
+  canSplit?: boolean;
 }) {
-  const [tab, setTab] = useState<CheckoutTab>(initialTab);
+  const [tab, setTab] = useState<CheckoutTab>(initialTab === 'split' && !canSplit ? 'cash' : initialTab);
   const [tenderedCents, setTenderedCents] = useState(() => Math.round(total * 100));
   const [cardBrand, setCardBrand] = useState<'Visa' | 'Mastercard' | 'Amex'>('Visa');
   const [otherId, setOtherId] = useState<'cliq' | 'talabat' | 'voucher'>('cliq');
@@ -2525,7 +2702,9 @@ function PaymentCheckoutPanel({
                 { id: 'other' as const, label: 'Other', emoji: '⚡' },
                 { id: 'split' as const, label: 'Split', emoji: '✂️' },
               ] as const
-            ).map((t) => (
+            )
+              .filter((t) => t.id !== 'split' || canSplit)
+              .map((t) => (
               <button
                 key={t.id}
                 type="button"
