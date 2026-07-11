@@ -1605,7 +1605,7 @@ export const InteractiveMobileDemo = ({ t, tall = false }: DemoProps & { tall?: 
     { id: 'refunds', label: String(t('landing.workflow.receipt.demo.mobile.tabRefunds', 'Refunds')) },
   ];
 
-  const appName = String(t('landing.workflow.receipt.demo.mobile.appName', 'Mintcom'));
+  const appName = String(t('landing.workflow.receipt.demo.mobile.appName', 'Admin Portal'));
 
   const feedMax = tall ? 'max-h-[min(42vh,380px)] min-h-[320px]' : 'max-h-[236px] min-h-[200px]';
   const phoneMax = tall ? 'max-w-[272px]' : 'max-w-[286px]';
