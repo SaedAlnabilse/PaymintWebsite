@@ -42,7 +42,9 @@ const shell = (children: ReactNode, brand?: string, side?: boolean) => (
 const money = (n: number) =>
   n.toLocaleString(undefined, { style: 'currency', currency: 'USD', minimumFractionDigits: 2 });
 
-/* ─── Point of Sale (mirrors POS Sales screen: categories → items → cart) ─ */
+/* ─── Point of Sale (categories → items → add-ons popup → cart) ─────────── */
+type PosOption = { id: string; name: string; price: number };
+type PosAttribute = { id: string; name: string; multi?: boolean; required?: boolean; options: PosOption[] };
 type PosProduct = {
   id: string;
   name: string;
@@ -50,8 +52,18 @@ type PosProduct = {
   emoji: string;
   categoryId: string;
   color: string;
+  attributes?: PosAttribute[];
 };
-type CartLine = { id: string; name: string; price: number; qty: number; emoji: string };
+type CartLine = {
+  id: string;
+  productId: string;
+  name: string;
+  basePrice: number;
+  unitPrice: number;
+  qty: number;
+  emoji: string;
+  addons: PosOption[];
+};
 
 export const InteractivePosDemo = ({ t, isRtl, side }: DemoProps) => {
   const categories = useMemo(
@@ -64,21 +76,77 @@ export const InteractivePosDemo = ({ t, isRtl, side }: DemoProps) => {
     [t],
   );
 
-  const products: PosProduct[] = useMemo(
-    () => [
-      { id: 'espresso', name: String(t('landing.workflow.receipt.demo.pos.espresso', 'Espresso')), price: 3.5, emoji: '☕', categoryId: 'beverages', color: 'from-amber-500/15 to-orange-500/5 border-amber-300/40' },
-      { id: 'latte', name: String(t('landing.workflow.receipt.demo.pos.latte', 'Latte')), price: 4.5, emoji: '🥛', categoryId: 'beverages', color: 'from-amber-400/15 to-yellow-500/5 border-amber-200/40' },
-      { id: 'soda', name: String(t('landing.workflow.receipt.demo.pos.soda', 'Soda')), price: 2.5, emoji: '🥤', categoryId: 'beverages', color: 'from-sky-500/15 to-blue-500/5 border-sky-300/40' },
-      { id: 'tea', name: String(t('landing.workflow.receipt.demo.pos.tea', 'Tea')), price: 2.75, emoji: '🍵', categoryId: 'beverages', color: 'from-emerald-500/15 to-green-500/5 border-emerald-300/40' },
-      { id: 'croissant', name: String(t('landing.workflow.receipt.demo.pos.croissant', 'Croissant')), price: 4, emoji: '🥐', categoryId: 'pastries', color: 'from-yellow-500/15 to-amber-500/5 border-yellow-300/40' },
-      { id: 'muffin', name: String(t('landing.workflow.receipt.demo.pos.muffin', 'Muffin')), price: 3.25, emoji: '🧁', categoryId: 'pastries', color: 'from-pink-500/15 to-rose-500/5 border-pink-300/40' },
+  const products: PosProduct[] = useMemo(() => {
+    const size: PosAttribute = {
+      id: 'size',
+      name: String(t('landing.workflow.receipt.demo.pos.attrSize', 'Size')),
+      required: true,
+      options: [
+        { id: 's', name: String(t('landing.workflow.receipt.demo.pos.sizeS', 'Small')), price: 0 },
+        { id: 'm', name: String(t('landing.workflow.receipt.demo.pos.sizeM', 'Medium')), price: 0.5 },
+        { id: 'l', name: String(t('landing.workflow.receipt.demo.pos.sizeL', 'Large')), price: 1 },
+      ],
+    };
+    const milk: PosAttribute = {
+      id: 'milk',
+      name: String(t('landing.workflow.receipt.demo.pos.attrMilk', 'Milk')),
+      options: [
+        { id: 'whole', name: String(t('landing.workflow.receipt.demo.pos.milkWhole', 'Whole')), price: 0 },
+        { id: 'oat', name: String(t('landing.workflow.receipt.demo.pos.milkOat', 'Oat')), price: 0.75 },
+        { id: 'almond', name: String(t('landing.workflow.receipt.demo.pos.milkAlmond', 'Almond')), price: 0.75 },
+      ],
+    };
+    const extras: PosAttribute = {
+      id: 'extras',
+      name: String(t('landing.workflow.receipt.demo.pos.attrExtras', 'Extras')),
+      multi: true,
+      options: [
+        { id: 'shot', name: String(t('landing.workflow.receipt.demo.pos.extraShot', 'Extra shot')), price: 1 },
+        { id: 'syrup', name: String(t('landing.workflow.receipt.demo.pos.syrup', 'Vanilla syrup')), price: 0.5 },
+        { id: 'whip', name: String(t('landing.workflow.receipt.demo.pos.whip', 'Whipped cream')), price: 0.5 },
+      ],
+    };
+    const heat: PosAttribute = {
+      id: 'heat',
+      name: String(t('landing.workflow.receipt.demo.pos.attrHeat', 'Warming')),
+      options: [
+        { id: 'plain', name: String(t('landing.workflow.receipt.demo.pos.heatNone', 'As is')), price: 0 },
+        { id: 'warm', name: String(t('landing.workflow.receipt.demo.pos.heatWarm', 'Warmed')), price: 0.25 },
+      ],
+    };
+    const dressing: PosAttribute = {
+      id: 'dressing',
+      name: String(t('landing.workflow.receipt.demo.pos.attrDressing', 'Dressing')),
+      options: [
+        { id: 'ranch', name: String(t('landing.workflow.receipt.demo.pos.ranch', 'Ranch')), price: 0 },
+        { id: 'caesar', name: String(t('landing.workflow.receipt.demo.pos.caesar', 'Caesar')), price: 0 },
+        { id: 'balsamic', name: String(t('landing.workflow.receipt.demo.pos.balsamic', 'Balsamic')), price: 0.5 },
+      ],
+    };
+    const toppings: PosAttribute = {
+      id: 'toppings',
+      name: String(t('landing.workflow.receipt.demo.pos.attrToppings', 'Add-ons')),
+      multi: true,
+      options: [
+        { id: 'cheese', name: String(t('landing.workflow.receipt.demo.pos.cheese', 'Extra cheese')), price: 1 },
+        { id: 'avocado', name: String(t('landing.workflow.receipt.demo.pos.avocado', 'Avocado')), price: 1.5 },
+        { id: 'bacon', name: String(t('landing.workflow.receipt.demo.pos.bacon', 'Bacon')), price: 1.5 },
+      ],
+    };
+
+    return [
+      { id: 'espresso', name: String(t('landing.workflow.receipt.demo.pos.espresso', 'Espresso')), price: 3.5, emoji: '☕', categoryId: 'beverages', color: 'from-amber-500/15 to-orange-500/5 border-amber-300/40', attributes: [size, extras] },
+      { id: 'latte', name: String(t('landing.workflow.receipt.demo.pos.latte', 'Latte')), price: 4.5, emoji: '🥛', categoryId: 'beverages', color: 'from-amber-400/15 to-yellow-500/5 border-amber-200/40', attributes: [size, milk, extras] },
+      { id: 'soda', name: String(t('landing.workflow.receipt.demo.pos.soda', 'Soda')), price: 2.5, emoji: '🥤', categoryId: 'beverages', color: 'from-sky-500/15 to-blue-500/5 border-sky-300/40', attributes: [size] },
+      { id: 'tea', name: String(t('landing.workflow.receipt.demo.pos.tea', 'Tea')), price: 2.75, emoji: '🍵', categoryId: 'beverages', color: 'from-emerald-500/15 to-green-500/5 border-emerald-300/40', attributes: [size, milk] },
+      { id: 'croissant', name: String(t('landing.workflow.receipt.demo.pos.croissant', 'Croissant')), price: 4, emoji: '🥐', categoryId: 'pastries', color: 'from-yellow-500/15 to-amber-500/5 border-yellow-300/40', attributes: [heat] },
+      { id: 'muffin', name: String(t('landing.workflow.receipt.demo.pos.muffin', 'Muffin')), price: 3.25, emoji: '🧁', categoryId: 'pastries', color: 'from-pink-500/15 to-rose-500/5 border-pink-300/40', attributes: [heat] },
       { id: 'cookie', name: String(t('landing.workflow.receipt.demo.pos.cookie', 'Cookie')), price: 2, emoji: '🍪', categoryId: 'pastries', color: 'from-orange-500/15 to-amber-500/5 border-orange-300/40' },
-      { id: 'salad', name: String(t('landing.workflow.receipt.demo.pos.salad', 'Salad')), price: 6.5, emoji: '🥗', categoryId: 'food', color: 'from-emerald-500/15 to-green-500/5 border-emerald-300/40' },
-      { id: 'sandwich', name: String(t('landing.workflow.receipt.demo.pos.sandwich', 'Sandwich')), price: 7.5, emoji: '🥪', categoryId: 'food', color: 'from-lime-500/15 to-yellow-500/5 border-lime-300/40' },
-      { id: 'soup', name: String(t('landing.workflow.receipt.demo.pos.soup', 'Soup')), price: 5.5, emoji: '🥣', categoryId: 'food', color: 'from-orange-400/15 to-red-500/5 border-orange-300/40' },
-    ],
-    [t],
-  );
+      { id: 'salad', name: String(t('landing.workflow.receipt.demo.pos.salad', 'Salad')), price: 6.5, emoji: '🥗', categoryId: 'food', color: 'from-emerald-500/15 to-green-500/5 border-emerald-300/40', attributes: [dressing, toppings] },
+      { id: 'sandwich', name: String(t('landing.workflow.receipt.demo.pos.sandwich', 'Sandwich')), price: 7.5, emoji: '🥪', categoryId: 'food', color: 'from-lime-500/15 to-yellow-500/5 border-lime-300/40', attributes: [toppings] },
+      { id: 'soup', name: String(t('landing.workflow.receipt.demo.pos.soup', 'Soup')), price: 5.5, emoji: '🥣', categoryId: 'food', color: 'from-orange-400/15 to-red-500/5 border-orange-300/40', attributes: [size] },
+    ];
+  }, [t]);
 
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [cart, setCart] = useState<CartLine[]>([]);
@@ -86,6 +154,10 @@ export const InteractivePosDemo = ({ t, isRtl, side }: DemoProps) => {
   const [payMethod, setPayMethod] = useState<'card' | 'cash' | null>(null);
   const [lastAdded, setLastAdded] = useState<string | null>(null);
   const [pulseTotal, setPulseTotal] = useState(0);
+  const [addonItem, setAddonItem] = useState<PosProduct | null>(null);
+  /** selected option ids per attribute id */
+  const [addonSel, setAddonSel] = useState<Record<string, string[]>>({});
+  const [addonQty, setAddonQty] = useState(1);
 
   const visibleProducts = useMemo(
     () =>
@@ -95,20 +167,114 @@ export const InteractivePosDemo = ({ t, isRtl, side }: DemoProps) => {
     [products, selectedCategory],
   );
 
-  const subtotal = cart.reduce((s, l) => s + l.price * l.qty, 0);
+  const subtotal = cart.reduce((s, l) => s + l.unitPrice * l.qty, 0);
   const tax = subtotal * 0.08;
   const total = subtotal + tax;
   const itemCount = cart.reduce((s, l) => s + l.qty, 0);
 
-  const addProduct = (p: PosProduct) => {
+  const openItem = (p: PosProduct) => {
     if (phase !== 'selling') return;
-    setCart((prev) => {
-      const existing = prev.find((l) => l.id === p.id);
-      if (existing) return prev.map((l) => (l.id === p.id ? { ...l, qty: l.qty + 1 } : l));
-      return [...prev, { id: p.id, name: p.name, price: p.price, qty: 1, emoji: p.emoji }];
+    if (!p.attributes?.length) {
+      // no add-ons — add straight to cart (merge same plain item)
+      setCart((prev) => {
+        const existing = prev.find((l) => l.productId === p.id && l.addons.length === 0);
+        if (existing) return prev.map((l) => (l.id === existing.id ? { ...l, qty: l.qty + 1 } : l));
+        return [
+          ...prev,
+          {
+            id: `${p.id}-${Date.now()}`,
+            productId: p.id,
+            name: p.name,
+            basePrice: p.price,
+            unitPrice: p.price,
+            qty: 1,
+            emoji: p.emoji,
+            addons: [],
+          },
+        ];
+      });
+      setLastAdded(p.id);
+      setPulseTotal((n) => n + 1);
+      window.setTimeout(() => setLastAdded(null), 350);
+      return;
+    }
+    // Pre-select first option for single-select groups (required size, etc.)
+    const initial: Record<string, string[]> = {};
+    p.attributes.forEach((attr) => {
+      if (!attr.multi && attr.options[0]) initial[attr.id] = [attr.options[0].id];
+      else initial[attr.id] = [];
     });
-    setLastAdded(p.id);
+    setAddonSel(initial);
+    setAddonQty(1);
+    setAddonItem(p);
+  };
+
+  const toggleOption = (attr: PosAttribute, opt: PosOption) => {
+    setAddonSel((prev) => {
+      const cur = prev[attr.id] ?? [];
+      if (attr.multi) {
+        const has = cur.includes(opt.id);
+        return { ...prev, [attr.id]: has ? cur.filter((x) => x !== opt.id) : [...cur, opt.id] };
+      }
+      return { ...prev, [attr.id]: [opt.id] };
+    });
+  };
+
+  const addonPreview = useMemo(() => {
+    if (!addonItem?.attributes) return { addons: [] as PosOption[], unit: 0 };
+    const addons: PosOption[] = [];
+    addonItem.attributes.forEach((attr) => {
+      const ids = addonSel[attr.id] ?? [];
+      attr.options.forEach((o) => {
+        if (ids.includes(o.id) && o.price >= 0) {
+          // always include selected, even free (for labels), but free still listed
+          addons.push(o);
+        }
+      });
+    });
+    // For display of free required options like "Small", keep them if selected
+    const unit = addonItem.price + addons.reduce((s, a) => s + a.price, 0);
+    return { addons, unit };
+  }, [addonItem, addonSel]);
+
+  const confirmAddons = () => {
+    if (!addonItem) return;
+    // enforce required attributes
+    for (const attr of addonItem.attributes ?? []) {
+      if (attr.required && !(addonSel[attr.id]?.length)) return;
+    }
+    const { addons, unit } = addonPreview;
+    // merge only if same product + same addon set
+    const key = addons.map((a) => a.id).sort().join(',');
+    setCart((prev) => {
+      const existing = prev.find(
+        (l) =>
+          l.productId === addonItem.id &&
+          l.addons
+            .map((a) => a.id)
+            .sort()
+            .join(',') === key,
+      );
+      if (existing) {
+        return prev.map((l) => (l.id === existing.id ? { ...l, qty: l.qty + addonQty } : l));
+      }
+      return [
+        ...prev,
+        {
+          id: `${addonItem.id}-${key || 'plain'}-${Date.now()}`,
+          productId: addonItem.id,
+          name: addonItem.name,
+          basePrice: addonItem.price,
+          unitPrice: unit,
+          qty: addonQty,
+          emoji: addonItem.emoji,
+          addons,
+        },
+      ];
+    });
+    setLastAdded(addonItem.id);
     setPulseTotal((n) => n + 1);
+    setAddonItem(null);
     window.setTimeout(() => setLastAdded(null), 350);
   };
 
@@ -125,6 +291,7 @@ export const InteractivePosDemo = ({ t, isRtl, side }: DemoProps) => {
     setCart([]);
     setPhase('selling');
     setPayMethod(null);
+    setAddonItem(null);
   };
 
   return (
@@ -164,9 +331,16 @@ export const InteractivePosDemo = ({ t, isRtl, side }: DemoProps) => {
                 <div className="mt-4 w-full max-w-[240px] rounded-xl border border-dashed border-gray-200 bg-white px-3 py-3 text-start shadow-sm dark:border-white/10 dark:bg-white/[0.03]">
                   <p className="mb-2 text-center text-[9px] font-bold uppercase tracking-widest text-gray-400">{String(t('landing.workflow.receipt.frame.pos', 'Sales receipt'))}</p>
                   {cart.map((line) => (
-                    <div key={line.id} className="flex justify-between gap-2 text-[11px] text-gray-600 dark:text-gray-300">
-                      <span className="truncate">{line.emoji} {line.name} ×{line.qty}</span>
-                      <span className="tabular-nums font-semibold">{money(line.price * line.qty)}</span>
+                    <div key={line.id} className="mb-1.5">
+                      <div className="flex justify-between gap-2 text-[11px] text-gray-600 dark:text-gray-300">
+                        <span className="truncate font-medium">{line.emoji} {line.name} ×{line.qty}</span>
+                        <span className="tabular-nums font-semibold">{money(line.unitPrice * line.qty)}</span>
+                      </div>
+                      {line.addons.length > 0 && (
+                        <p className="truncate text-[9px] text-gray-400">
+                          + {line.addons.map((a) => a.name).join(', ')}
+                        </p>
+                      )}
                     </div>
                   ))}
                   <div className="mt-2 flex justify-between border-t border-dashed border-gray-200 pt-2 text-xs font-bold text-gray-900 dark:border-white/10 dark:text-white">
@@ -242,7 +416,7 @@ export const InteractivePosDemo = ({ t, isRtl, side }: DemoProps) => {
                           initial={{ opacity: 0, scale: 0.92 }}
                           animate={{ opacity: 1, scale: 1 }}
                           exit={{ opacity: 0, scale: 0.9 }}
-                          onClick={() => addProduct(p)}
+                          onClick={() => openItem(p)}
                           className={`relative flex flex-col items-center gap-0.5 rounded-xl border bg-gradient-to-br p-2 transition-shadow hover:shadow-md ${p.color} dark:from-white/[0.06] dark:to-white/[0.02]`}
                         >
                           <AnimatePresence>
@@ -257,6 +431,11 @@ export const InteractivePosDemo = ({ t, isRtl, side }: DemoProps) => {
                               </motion.span>
                             )}
                           </AnimatePresence>
+                          {!!p.attributes?.length && (
+                            <span className="absolute start-1 top-1 rounded bg-black/5 px-1 text-[8px] font-bold text-gray-500 dark:bg-white/10">
+                              +
+                            </span>
+                          )}
                           <span className="text-xl leading-none sm:text-2xl">{p.emoji}</span>
                           <span className="w-full truncate text-center text-[10px] font-bold text-gray-800 dark:text-gray-100 sm:text-[11px]">
                             {p.name}
@@ -296,34 +475,41 @@ export const InteractivePosDemo = ({ t, isRtl, side }: DemoProps) => {
                       {String(t('landing.workflow.receipt.demo.pos.emptyCart', 'Cart is empty — tap a product above'))}
                     </p>
                   ) : (
-                    <div className="mb-2 max-h-[100px] space-y-1 overflow-y-auto">
+                    <div className="mb-2 max-h-[110px] space-y-1.5 overflow-y-auto">
                       {cart.map((line) => (
-                        <div key={line.id} className="flex items-center gap-2 text-xs">
-                          <span className="min-w-0 flex-1 truncate font-medium text-gray-700 dark:text-gray-200">
-                            {line.emoji} {line.name}
-                          </span>
-                          <div className="flex items-center gap-0.5 rounded-lg bg-gray-50 p-0.5 dark:bg-white/5">
-                            <button
-                              type="button"
-                              onClick={() => changeQty(line.id, -1)}
-                              className="flex h-6 w-6 items-center justify-center rounded-md text-gray-500 hover:bg-white hover:text-gray-900 dark:hover:bg-white/10"
-                            >
-                              −
-                            </button>
-                            <span className="w-5 text-center text-[11px] font-bold tabular-nums text-gray-900 dark:text-white">
-                              {line.qty}
+                        <div key={line.id} className="text-xs">
+                          <div className="flex items-center gap-2">
+                            <span className="min-w-0 flex-1 truncate font-medium text-gray-700 dark:text-gray-200">
+                              {line.emoji} {line.name}
                             </span>
-                            <button
-                              type="button"
-                              onClick={() => changeQty(line.id, 1)}
-                              className="flex h-6 w-6 items-center justify-center rounded-md text-gray-500 hover:bg-white hover:text-gray-900 dark:hover:bg-white/10"
-                            >
-                              +
-                            </button>
+                            <div className="flex items-center gap-0.5 rounded-lg bg-gray-50 p-0.5 dark:bg-white/5">
+                              <button
+                                type="button"
+                                onClick={() => changeQty(line.id, -1)}
+                                className="flex h-6 w-6 items-center justify-center rounded-md text-gray-500 hover:bg-white hover:text-gray-900 dark:hover:bg-white/10"
+                              >
+                                −
+                              </button>
+                              <span className="w-5 text-center text-[11px] font-bold tabular-nums text-gray-900 dark:text-white">
+                                {line.qty}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => changeQty(line.id, 1)}
+                                className="flex h-6 w-6 items-center justify-center rounded-md text-gray-500 hover:bg-white hover:text-gray-900 dark:hover:bg-white/10"
+                              >
+                                +
+                              </button>
+                            </div>
+                            <span className="w-14 text-end text-[11px] font-bold tabular-nums text-gray-900 dark:text-white">
+                              {money(line.unitPrice * line.qty)}
+                            </span>
                           </div>
-                          <span className="w-14 text-end text-[11px] font-bold tabular-nums text-gray-900 dark:text-white">
-                            {money(line.price * line.qty)}
-                          </span>
+                          {line.addons.length > 0 && (
+                            <p className="mt-0.5 truncate ps-0.5 text-[9px] text-gray-400">
+                              + {line.addons.map((a) => (a.price > 0 ? `${a.name} (${money(a.price)})` : a.name)).join(' · ')}
+                            </p>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -362,6 +548,131 @@ export const InteractivePosDemo = ({ t, isRtl, side }: DemoProps) => {
             )}
           </AnimatePresence>
         </div>
+
+        {/* Add-ons / attributes modal — like POS AddonModal */}
+        <AnimatePresence>
+          {addonItem && (
+            <motion.div
+              key="addon-modal"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 z-50 flex items-end justify-center bg-black/45 p-2 sm:items-center"
+              onClick={() => setAddonItem(null)}
+            >
+              <motion.div
+                initial={{ y: 40, opacity: 0, scale: 0.96 }}
+                animate={{ y: 0, opacity: 1, scale: 1 }}
+                exit={{ y: 30, opacity: 0, scale: 0.96 }}
+                transition={{ type: 'spring', stiffness: 360, damping: 28 }}
+                onClick={(e) => e.stopPropagation()}
+                className="max-h-[92%] w-full max-w-[340px] overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-2xl dark:border-white/10 dark:bg-[#141414]"
+              >
+                <div className="flex items-center gap-3 border-b border-gray-100 px-3.5 py-3 dark:border-white/8">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-mintcom-green/15 text-2xl">
+                    {addonItem.emoji}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-bold text-gray-900 dark:text-white">{addonItem.name}</p>
+                    <p className="text-[11px] text-gray-500">
+                      {String(t('landing.workflow.receipt.demo.pos.basePrice', 'Base'))} {money(addonItem.price)}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setAddonItem(null)}
+                    className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 text-gray-500 dark:bg-white/10"
+                    aria-label={String(t('common.close', 'Close'))}
+                  >
+                    ×
+                  </button>
+                </div>
+
+                <div className="max-h-[260px] space-y-3 overflow-y-auto px-3.5 py-3">
+                  {(addonItem.attributes ?? []).map((attr) => (
+                    <div key={attr.id}>
+                      <div className="mb-1.5 flex items-center gap-1.5">
+                        <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400">{attr.name}</p>
+                        {attr.required && (
+                          <span className="rounded bg-rose-50 px-1 text-[9px] font-bold text-rose-500 dark:bg-rose-500/10">
+                            {String(t('landing.workflow.receipt.demo.pos.required', 'Required'))}
+                          </span>
+                        )}
+                        {attr.multi && (
+                          <span className="rounded bg-gray-100 px-1 text-[9px] font-bold text-gray-500 dark:bg-white/10">
+                            {String(t('landing.workflow.receipt.demo.pos.multi', 'Multi'))}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {attr.options.map((opt) => {
+                          const selected = (addonSel[attr.id] ?? []).includes(opt.id);
+                          return (
+                            <button
+                              key={opt.id}
+                              type="button"
+                              onClick={() => toggleOption(attr, opt)}
+                              className={`inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-[11px] font-bold transition-all ${
+                                selected
+                                  ? 'border-mintcom-green bg-mintcom-green/15 text-gray-900 shadow-sm dark:text-white'
+                                  : 'border-gray-200 bg-white text-gray-600 hover:border-mintcom-green/40 dark:border-white/10 dark:bg-white/5 dark:text-gray-300'
+                              }`}
+                            >
+                              {selected && <Check size={11} className="text-mintcom-green" strokeWidth={3} />}
+                              {opt.name}
+                              {opt.price > 0 && (
+                                <span className={`tabular-nums ${selected ? 'text-mintcom-green' : 'text-gray-400'}`}>
+                                  +{money(opt.price)}
+                                </span>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="border-t border-gray-100 px-3.5 py-3 dark:border-white/8">
+                  <div className="mb-2.5 flex items-center justify-between">
+                    <div className="flex items-center gap-1 rounded-xl bg-gray-50 p-0.5 dark:bg-white/5">
+                      <button
+                        type="button"
+                        onClick={() => setAddonQty((q) => Math.max(1, q - 1))}
+                        className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-600 hover:bg-white dark:hover:bg-white/10"
+                      >
+                        −
+                      </button>
+                      <span className="w-7 text-center text-sm font-bold tabular-nums text-gray-900 dark:text-white">
+                        {addonQty}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setAddonQty((q) => Math.min(20, q + 1))}
+                        className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-600 hover:bg-white dark:hover:bg-white/10"
+                      >
+                        +
+                      </button>
+                    </div>
+                    <div className="text-end">
+                      <p className="text-[10px] text-gray-400">{String(t('landing.workflow.receipt.demo.pos.lineTotal', 'Line total'))}</p>
+                      <p className="text-sm font-black tabular-nums text-mintcom-green">
+                        {money(addonPreview.unit * addonQty)}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={confirmAddons}
+                    className="w-full rounded-xl bg-mintcom-green py-2.5 text-xs font-bold text-black shadow-[0_4px_16px_-4px_rgba(125,198,162,0.55)]"
+                  >
+                    {String(t('landing.workflow.receipt.demo.pos.addToOrder', 'Add to order'))} · {money(addonPreview.unit * addonQty)}
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
