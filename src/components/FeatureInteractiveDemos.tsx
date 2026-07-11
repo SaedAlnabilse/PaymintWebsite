@@ -15,11 +15,11 @@ import {
 
 // i18next `t` accepts flexible options; keep loose for demo copy fallbacks
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type DemoProps = { t: (...args: any[]) => any; isRtl: boolean };
+type DemoProps = { t: (...args: any[]) => any; isRtl: boolean; side?: boolean };
 
-const shell = (children: ReactNode, brand?: string) => (
+const shell = (children: ReactNode, brand?: string, side?: boolean) => (
   <div
-    className="mt-5 select-none overflow-hidden rounded-2xl border border-gray-200/80 bg-gradient-to-b from-gray-50 to-white shadow-inner dark:border-white/10 dark:from-[#0c0c0c] dark:to-[#121212]"
+    className={`${side ? 'mt-0 w-full shadow-lg shadow-black/5 dark:shadow-black/30' : 'mt-5'} select-none overflow-hidden rounded-2xl border border-gray-200/80 bg-gradient-to-b from-gray-50 to-white shadow-inner dark:border-white/10 dark:from-[#0c0c0c] dark:to-[#121212]`}
     onPointerDown={(e) => e.stopPropagation()}
   >
     {brand && (
@@ -46,7 +46,7 @@ const money = (n: number) =>
 type PosProduct = { id: string; name: string; price: number; emoji: string; color: string };
 type CartLine = { id: string; name: string; price: number; qty: number; emoji: string };
 
-export const InteractivePosDemo = ({ t, isRtl }: DemoProps) => {
+export const InteractivePosDemo = ({ t, isRtl, side }: DemoProps) => {
   const products: PosProduct[] = useMemo(
     () => [
       { id: 'espresso', name: String(t('landing.workflow.receipt.demo.pos.espresso', 'Espresso')), price: 3.5, emoji: '☕', color: 'from-amber-500/20 to-orange-500/10 border-amber-400/30 hover:border-amber-400/60' },
@@ -86,8 +86,8 @@ export const InteractivePosDemo = ({ t, isRtl }: DemoProps) => {
   };
 
   return (
-    <div dir={isRtl ? 'rtl' : 'ltr'} className="mt-5 select-none" onPointerDown={(e) => e.stopPropagation()}>
-      <div className="overflow-hidden rounded-2xl border border-gray-200/80 bg-gradient-to-b from-gray-50 to-white shadow-inner dark:border-white/10 dark:from-[#0c0c0c] dark:to-[#121212]">
+    <div dir={isRtl ? 'rtl' : 'ltr'} className={`${side ? 'mt-0 w-full' : 'mt-5'} select-none`} onPointerDown={(e) => e.stopPropagation()}>
+      <div className={`overflow-hidden rounded-2xl border border-gray-200/80 bg-gradient-to-b from-gray-50 to-white shadow-inner dark:border-white/10 dark:from-[#0c0c0c] dark:to-[#121212] ${side ? 'shadow-lg shadow-black/5 dark:shadow-black/30' : ''}`}>
         <div className="flex items-center justify-between border-b border-gray-100 px-3.5 py-2 dark:border-white/5">
           <div className="flex items-center gap-2">
             <span className="relative flex h-2 w-2">
@@ -211,7 +211,7 @@ export const InteractivePosDemo = ({ t, isRtl }: DemoProps) => {
 };
 
 /* ─── Sales Control ─────────────────────────────────────────────────────── */
-export const InteractiveSalesControlDemo = ({ t }: DemoProps) => {
+export const InteractiveSalesControlDemo = ({ t, side }: DemoProps) => {
   const methods = useMemo(
     () => [
       { id: 'card', label: String(t('landing.workflow.receipt.demo.sales.card', 'Card')), emoji: '💳' },
@@ -273,11 +273,12 @@ export const InteractiveSalesControlDemo = ({ t }: DemoProps) => {
       </div>
     </>,
     String(t('landing.workflow.receipt.frame.salesCard', 'Mintcom Pay')),
+    side,
   );
 };
 
 /* ─── Staff Management ──────────────────────────────────────────────────── */
-export const InteractiveStaffDemo = ({ t }: DemoProps) => {
+export const InteractiveStaffDemo = ({ t, side }: DemoProps) => {
   const roles = useMemo(
     () => [
       {
@@ -429,11 +430,12 @@ export const InteractiveStaffDemo = ({ t }: DemoProps) => {
       </p>
     </>,
     String(t('landing.workflow.receipt.brand', 'MINTCOM POS')),
+    side,
   );
 };
 
 /* ─── Advanced Reporting ────────────────────────────────────────────────── */
-export const InteractiveReportingDemo = ({ t }: DemoProps) => {
+export const InteractiveReportingDemo = ({ t, side }: DemoProps) => {
   const days = useMemo(
     () => [
       { id: 'mon', label: 'M', sales: 820 },
@@ -504,11 +506,12 @@ export const InteractiveReportingDemo = ({ t }: DemoProps) => {
       <p className="mt-3 text-center text-[11px] text-gray-400">{String(t('landing.workflow.receipt.demo.reporting.hint', 'Tap a day to inspect sales'))}</p>
     </>,
     String(t('landing.workflow.receipt.frame.report', 'Quarterly report')),
+    side,
   );
 };
 
 /* ─── Recipe & Cost Management ──────────────────────────────────────────── */
-export const InteractiveRecipeDemo = ({ t }: DemoProps) => {
+export const InteractiveRecipeDemo = ({ t, side }: DemoProps) => {
   const ingredients = useMemo(
     () => [
       { id: 'flour', name: String(t('landing.workflow.receipt.demo.recipe.flour', 'Flour')), cost: 0.4, emoji: '🌾' },
@@ -567,11 +570,12 @@ export const InteractiveRecipeDemo = ({ t }: DemoProps) => {
       <p className="mt-2 text-center text-[11px] text-gray-400">{String(t('landing.workflow.receipt.demo.recipe.hint', 'Toggle ingredients to recalculate margin'))}</p>
     </>,
     String(t('landing.workflow.receipt.frame.prep', 'Prep')),
+    side,
   );
 };
 
 /* ─── AI System ─────────────────────────────────────────────────────────── */
-export const InteractiveAiDemo = ({ t }: DemoProps) => {
+export const InteractiveAiDemo = ({ t, side }: DemoProps) => {
   const prompts = useMemo(
     () => [
       { q: String(t('landing.workflow.receipt.demo.ai.q1', 'What sold best today?')), a: String(t('landing.workflow.receipt.demo.ai.a1', 'Espresso led with 142 cups, up 18% from yesterday.')) },
@@ -641,12 +645,13 @@ export const InteractiveAiDemo = ({ t }: DemoProps) => {
       <p className="mt-2 text-center text-[10px] text-gray-400">{String(t('landing.workflow.receipt.frame.aiFooter', 'Built into every Mintcom dashboard'))}</p>
     </>,
     String(t('landing.workflow.receipt.brand', 'MINTCOM POS')),
+    side,
   );
 };
 
 /* ─── Multi-Branch ──────────────────────────────────────────────────────── */
 /** Multi-branch as in Mintcom: brands own locations; unified brand totals. */
-export const InteractiveBranchDemo = ({ t }: DemoProps) => {
+export const InteractiveBranchDemo = ({ t, side }: DemoProps) => {
   type Loc = { id: string; name: string; sales: number; staff: number; emoji: string };
 
   const brandCatalog = useMemo(
@@ -862,11 +867,12 @@ export const InteractiveBranchDemo = ({ t }: DemoProps) => {
       </p>
     </>,
     String(t('landing.cloudControl.scope.preview.brand', 'Brand')),
+    side,
   );
 };
 
 /* ─── Simple UI ─────────────────────────────────────────────────────────── */
-export const InteractiveUiDemo = ({ t }: DemoProps) => {
+export const InteractiveUiDemo = ({ t, side }: DemoProps) => {
   const [density, setDensity] = useState<'compact' | 'cozy'>('cozy');
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const dense = density === 'compact';
@@ -916,11 +922,12 @@ export const InteractiveUiDemo = ({ t }: DemoProps) => {
       <p className="mt-2 text-center text-[11px] text-gray-400">{String(t('landing.workflow.receipt.demo.ui.hint', 'Switch density and theme — the preview updates live'))}</p>
     </>,
     String(t('landing.workflow.receipt.brand', 'MINTCOM POS')),
+    side,
   );
 };
 
 /* ─── Fast Onboarding ───────────────────────────────────────────────────── */
-export const InteractiveOnboardDemo = ({ t }: DemoProps) => {
+export const InteractiveOnboardDemo = ({ t, side }: DemoProps) => {
   const steps = useMemo(
     () => [
       String(t('landing.workflow.receipt.demo.onboard.s1', 'Add staff member')),
@@ -978,11 +985,12 @@ export const InteractiveOnboardDemo = ({ t }: DemoProps) => {
       </div>
     </>,
     String(t('landing.workflow.receipt.frame.boarding', 'Welcome aboard')),
+    side,
   );
 };
 
 /* ─── Secure & Reliable ─────────────────────────────────────────────────── */
-export const InteractiveSecureDemo = ({ t }: DemoProps) => {
+export const InteractiveSecureDemo = ({ t, side }: DemoProps) => {
   const checks = useMemo(
     () => [
       { id: 'c1', label: String(t('landing.workflow.receipt.demo.secure.c1', 'Encrypted backups')) },
@@ -1032,11 +1040,12 @@ export const InteractiveSecureDemo = ({ t }: DemoProps) => {
       </div>
     </>,
     String(t('landing.workflow.receipt.frame.dossier', 'Security dossier')),
+    side,
   );
 };
 
 /* ─── Loyalty (mirrors POS: DISCOUNT % or FREE_ITEM from a category) ───── */
-export const InteractiveLoyaltyDemo = ({ t }: DemoProps) => {
+export const InteractiveLoyaltyDemo = ({ t, side }: DemoProps) => {
   type CartLine = { id: string; name: string; price: number; emoji: string; free?: boolean };
   type Reward =
     | { id: string; type: 'DISCOUNT'; name: string; pointsRequired: number; discountPercentage: number; icon: string }
@@ -1397,6 +1406,7 @@ export const InteractiveLoyaltyDemo = ({ t }: DemoProps) => {
       </AnimatePresence>
     </>,
     String(t('landing.workflow.receipt.brand', 'MINTCOM POS')),
+    side,
   );
 };
 
@@ -1406,7 +1416,7 @@ export const InteractiveLoyaltyDemo = ({ t }: DemoProps) => {
  * tabs All | Cash | Stock | Refunds, typed alert cards with unread accent,
  * icon tone, description, amount/stock pill, location, mark-as-read on tap.
  */
-export const InteractiveMobileDemo = ({ t, tall = false }: DemoProps & { tall?: boolean }) => {
+export const InteractiveMobileDemo = ({ t, tall = false, side }: DemoProps & { tall?: boolean }) => {
   type TabId = 'all' | 'cash' | 'stock' | 'refunds';
   type Kind =
     | 'cash_shortage'
@@ -1956,14 +1966,16 @@ export const FeatureInteractiveDemo = ({
   t,
   isRtl,
   tall,
+  side,
 }: {
   featureId?: string;
   t: DemoProps['t'];
   isRtl: boolean;
   tall?: boolean;
+  side?: boolean;
 }) => {
   if (!featureId) return null;
-  const props = { t, isRtl };
+  const props = { t, isRtl, side };
   switch (featureId) {
     case 'pointOfSale':
       return <InteractivePosDemo {...props} />;

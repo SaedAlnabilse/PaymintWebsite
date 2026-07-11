@@ -137,8 +137,81 @@ const WorkflowFeatureModal = ({
   if (!feature) return null;
   const Icon = feature.icon;
   const interactive = hasInteractiveDemo(feature.id);
-  // Mobile demo uses a split “story + device” layout
-  const isSplitLayout = feature.id === 'mobileApp';
+  // All interactive demos use text-left + playground-right layout
+  const isSplitLayout = interactive;
+  const isPhoneDemo = feature.id === 'mobileApp';
+
+  const featureHighlights = (id?: string): string[] => {
+    const key = id ?? '';
+    const defaults: Record<string, [string, string, string]> = {
+      pointOfSale: [
+        'Tap products into a live cart',
+        'Charge with card or cash',
+        'Print a digital receipt in seconds',
+      ],
+      salesControl: [
+        'Toggle payment methods on the fly',
+        'Set tax rates with instant totals',
+        'Control how every sale is settled',
+      ],
+      staffManagement: [
+        'Add team members in one tap',
+        'Assign roles & permissions',
+        'See access update instantly',
+      ],
+      advancedReporting: [
+        'Inspect sales day by day',
+        'Track weekly performance live',
+        'Spot peaks before they pass',
+      ],
+      production: [
+        'Toggle recipe ingredients',
+        'Recalculate cost instantly',
+        'Watch profit margin update',
+      ],
+      aiSystem: [
+        'Ask sales & forecast questions',
+        'Get typed AI answers live',
+        'Built into every dashboard',
+      ],
+      multiBranch: [
+        'Switch brands like Cafe Delight',
+        'Link locations under each brand',
+        'Unified brand totals update live',
+      ],
+      simpleUI: [
+        'Switch compact or cozy density',
+        'Preview light and dark themes',
+        'See the dashboard change live',
+      ],
+      fastOnboarding: [
+        'Walk through setup steps',
+        'Track onboarding progress',
+        'Get new staff productive fast',
+      ],
+      secure: [
+        'Toggle security controls',
+        'Score your protection live',
+        'Encrypted, backed up, always on',
+      ],
+      loyalty: [
+        'Redeem % discounts on orders',
+        'Gift free items from a category',
+        'Earn points like real POS loyalty',
+      ],
+      mobileApp: [
+        'Live cash, stock & refund alerts',
+        'Push banners with business context',
+        'Stay in control from anywhere',
+      ],
+    };
+    const fallback = defaults[key] ?? ['Explore the live preview', 'Try the interactive controls', 'See Mintcom in action'];
+    return [
+      String(t(`landing.workflow.receipt.demo.highlights.${key}.0`, fallback[0])),
+      String(t(`landing.workflow.receipt.demo.highlights.${key}.1`, fallback[1])),
+      String(t(`landing.workflow.receipt.demo.highlights.${key}.2`, fallback[2])),
+    ];
+  };
 
   const handleDragEnd = (_e: unknown, info: PanInfo) => {
     if (interactive) return; // don't swipe-away while playing with demos
@@ -169,7 +242,7 @@ const WorkflowFeatureModal = ({
         exit={{ opacity: 0, scale: 0.94, y: 24 }}
         transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
         className={`relative z-10 w-full overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-[0_24px_80px_-16px_rgba(0,0,0,0.35)] dark:border-white/10 dark:bg-[#161616] ${
-          isSplitLayout ? 'max-w-5xl' : interactive ? 'max-w-xl' : 'max-w-2xl'
+          isSplitLayout ? 'max-w-5xl' : 'max-w-2xl'
         }`}
         dir={isRtl ? 'rtl' : 'ltr'}
         style={{ perspective: 1200 }}
@@ -217,7 +290,7 @@ const WorkflowFeatureModal = ({
           <span className="tabular-nums opacity-70">{features.length}</span>
         </div>
 
-        <div className={`relative overflow-x-hidden ${isSplitLayout ? 'max-h-[min(90vh,820px)] overflow-y-auto' : 'max-h-[min(78vh,720px)] overflow-y-auto'}`}>
+        <div className={`relative overflow-x-hidden ${isSplitLayout ? 'max-h-[min(90vh,860px)] overflow-y-auto' : 'max-h-[min(78vh,720px)] overflow-y-auto'}`}>
           <AnimatePresence mode="wait" custom={direction} initial={false}>
             <motion.div
               key={activeIndex}
@@ -233,12 +306,18 @@ const WorkflowFeatureModal = ({
               className={`relative z-10 ${
                 isSplitLayout
                   ? 'p-6 pt-14 md:p-8 md:pt-16 lg:p-10 lg:pt-16'
-                  : `p-8 pt-14 md:p-10 md:pt-16 ${interactive ? '' : 'cursor-grab active:cursor-grabbing'}`
+                  : 'cursor-grab p-8 pt-14 md:p-10 md:pt-16 active:cursor-grabbing'
               }`}
               style={{ transformStyle: 'preserve-3d' }}
             >
               {isSplitLayout ? (
-                <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(260px,300px)] lg:gap-10 xl:grid-cols-[minmax(0,1fr)_minmax(270px,310px)]">
+                <div
+                  className={`grid items-center gap-8 lg:gap-10 ${
+                    isPhoneDemo
+                      ? 'lg:grid-cols-[minmax(0,1fr)_minmax(250px,300px)] xl:grid-cols-[minmax(0,1fr)_minmax(260px,310px)]'
+                      : 'lg:grid-cols-[minmax(0,0.92fr)_minmax(300px,1.08fr)] xl:grid-cols-[minmax(0,0.9fr)_minmax(340px,1.1fr)]'
+                  }`}
+                >
                   {/* Left: story copy */}
                   <div className="order-2 min-w-0 lg:order-1">
                     <motion.div
@@ -271,14 +350,10 @@ const WorkflowFeatureModal = ({
                       transition={{ delay: 0.26, duration: 0.4 }}
                       className="mt-6 space-y-2.5"
                     >
-                      {[
-                        t('landing.workflow.receipt.demo.mobile.bullet1', 'Live cash, stock & refund alerts'),
-                        t('landing.workflow.receipt.demo.mobile.bullet2', 'Push banners with your business context'),
-                        t('landing.workflow.receipt.demo.mobile.bullet3', 'Stay in control from anywhere'),
-                      ].map((line) => (
-                        <li key={String(line)} className="flex items-start gap-2.5 text-sm font-semibold text-gray-700 dark:text-gray-200">
+                      {featureHighlights(feature.id).map((line) => (
+                        <li key={line} className="flex items-start gap-2.5 text-sm font-semibold text-gray-700 dark:text-gray-200">
                           <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-mintcom-green" />
-                          <span>{String(line)}</span>
+                          <span>{line}</span>
                         </li>
                       ))}
                     </motion.ul>
@@ -288,32 +363,40 @@ const WorkflowFeatureModal = ({
                       transition={{ delay: 0.35 }}
                       className="mt-6 hidden text-xs font-medium text-gray-400 lg:block"
                     >
-                      {String(t('landing.workflow.receipt.demo.mobile.hint', 'Push a real banner · tap it to open · filter tabs'))}
+                      {String(t('landing.workflow.receipt.demo.tryHint', 'Try the live preview on the right →'))}
                     </motion.p>
                   </div>
 
-                  {/* Right: tall iPhone */}
+                  {/* Right: interactive playground */}
                   <motion.div
                     initial={{ y: 24, opacity: 0, scale: 0.96 }}
                     animate={{ y: 0, opacity: 1, scale: 1 }}
                     transition={{ delay: 0.2, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                    className="order-1 flex justify-center lg:order-2 lg:justify-end"
+                    className={`order-1 flex lg:order-2 ${
+                      isPhoneDemo ? 'justify-center lg:justify-end' : 'w-full justify-center lg:justify-stretch'
+                    }`}
                   >
-                    <FeatureInteractiveDemo featureId={feature.id} t={t} isRtl={isRtl} tall />
+                    <div className={isPhoneDemo ? undefined : 'w-full max-w-md lg:max-w-none'}>
+                      <FeatureInteractiveDemo
+                        featureId={feature.id}
+                        t={t}
+                        isRtl={isRtl}
+                        tall={isPhoneDemo}
+                        side
+                      />
+                    </div>
                   </motion.div>
                 </div>
               ) : (
                 <>
-                  {!interactive && (
-                    <motion.div
-                      initial={{ scale: 0.6, rotate: -12, opacity: 0 }}
-                      animate={{ scale: 1, rotate: 0, opacity: 1 }}
-                      transition={{ delay: 0.05, duration: 0.5, type: 'spring', stiffness: 220, damping: 18 }}
-                      className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-mintcom-green/10 dark:bg-white/5 text-mintcom-green"
-                    >
-                      <Icon size={28} />
-                    </motion.div>
-                  )}
+                  <motion.div
+                    initial={{ scale: 0.6, rotate: -12, opacity: 0 }}
+                    animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                    transition={{ delay: 0.05, duration: 0.5, type: 'spring', stiffness: 220, damping: 18 }}
+                    className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-mintcom-green/10 dark:bg-white/5 text-mintcom-green"
+                  >
+                    <Icon size={28} />
+                  </motion.div>
 
                   <motion.h3
                     initial={{ y: 14, opacity: 0 }}
@@ -328,22 +411,10 @@ const WorkflowFeatureModal = ({
                     initial={{ y: 16, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.2, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-                    className={`mt-3 font-barlow text-gray-600 dark:text-gray-300 leading-relaxed font-medium whitespace-pre-line ${
-                      interactive ? 'text-sm md:text-[15px]' : 'mt-4 text-base md:text-[17px]'
-                    }`}
+                    className="mt-4 font-barlow text-base md:text-[17px] text-gray-600 dark:text-gray-300 leading-relaxed font-medium whitespace-pre-line"
                   >
                     {feature.description}
                   </motion.p>
-
-                  {interactive && (
-                    <motion.div
-                      initial={{ y: 18, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      transition={{ delay: 0.28, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-                    >
-                      <FeatureInteractiveDemo featureId={feature.id} t={t} isRtl={isRtl} />
-                    </motion.div>
-                  )}
                 </>
               )}
             </motion.div>

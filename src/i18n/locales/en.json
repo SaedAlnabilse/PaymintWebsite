@@ -2501,6 +2501,7 @@
             "taxLine": "Tax 8%",
             "totalLine": "Total"
           },
+          "tryHint": "Try the live preview on the right →",
           "recipe": {
             "butter": "Butter",
             "cost": "Ingredient cost",
