@@ -42,25 +42,58 @@ const shell = (children: ReactNode, brand?: string, side?: boolean) => (
 const money = (n: number) =>
   n.toLocaleString(undefined, { style: 'currency', currency: 'USD', minimumFractionDigits: 2 });
 
-/* ─── Point of Sale ─────────────────────────────────────────────────────── */
-type PosProduct = { id: string; name: string; price: number; emoji: string; color: string };
+/* ─── Point of Sale (mirrors POS Sales screen: categories → items → cart) ─ */
+type PosProduct = {
+  id: string;
+  name: string;
+  price: number;
+  emoji: string;
+  categoryId: string;
+  color: string;
+};
 type CartLine = { id: string; name: string; price: number; qty: number; emoji: string };
 
 export const InteractivePosDemo = ({ t, isRtl, side }: DemoProps) => {
-  const products: PosProduct[] = useMemo(
+  const categories = useMemo(
     () => [
-      { id: 'espresso', name: String(t('landing.workflow.receipt.demo.pos.espresso', 'Espresso')), price: 3.5, emoji: '☕', color: 'from-amber-500/20 to-orange-500/10 border-amber-400/30 hover:border-amber-400/60' },
-      { id: 'croissant', name: String(t('landing.workflow.receipt.demo.pos.croissant', 'Croissant')), price: 4, emoji: '🥐', color: 'from-yellow-500/20 to-amber-500/10 border-yellow-400/30 hover:border-yellow-400/60' },
-      { id: 'soda', name: String(t('landing.workflow.receipt.demo.pos.soda', 'Soda')), price: 2.5, emoji: '🥤', color: 'from-sky-500/20 to-blue-500/10 border-sky-400/30 hover:border-sky-400/60' },
-      { id: 'salad', name: String(t('landing.workflow.receipt.demo.pos.salad', 'Salad')), price: 6.5, emoji: '🥗', color: 'from-emerald-500/20 to-green-500/10 border-emerald-400/30 hover:border-emerald-400/60' },
+      { id: 'all', name: String(t('landing.workflow.receipt.demo.pos.all', 'All')), emoji: '⊞' },
+      { id: 'beverages', name: String(t('landing.workflow.receipt.demo.pos.catBeverages', 'Beverages')), emoji: '☕' },
+      { id: 'pastries', name: String(t('landing.workflow.receipt.demo.pos.catPastries', 'Pastries')), emoji: '🥐' },
+      { id: 'food', name: String(t('landing.workflow.receipt.demo.pos.catFood', 'Food')), emoji: '🥗' },
     ],
     [t],
   );
+
+  const products: PosProduct[] = useMemo(
+    () => [
+      { id: 'espresso', name: String(t('landing.workflow.receipt.demo.pos.espresso', 'Espresso')), price: 3.5, emoji: '☕', categoryId: 'beverages', color: 'from-amber-500/15 to-orange-500/5 border-amber-300/40' },
+      { id: 'latte', name: String(t('landing.workflow.receipt.demo.pos.latte', 'Latte')), price: 4.5, emoji: '🥛', categoryId: 'beverages', color: 'from-amber-400/15 to-yellow-500/5 border-amber-200/40' },
+      { id: 'soda', name: String(t('landing.workflow.receipt.demo.pos.soda', 'Soda')), price: 2.5, emoji: '🥤', categoryId: 'beverages', color: 'from-sky-500/15 to-blue-500/5 border-sky-300/40' },
+      { id: 'tea', name: String(t('landing.workflow.receipt.demo.pos.tea', 'Tea')), price: 2.75, emoji: '🍵', categoryId: 'beverages', color: 'from-emerald-500/15 to-green-500/5 border-emerald-300/40' },
+      { id: 'croissant', name: String(t('landing.workflow.receipt.demo.pos.croissant', 'Croissant')), price: 4, emoji: '🥐', categoryId: 'pastries', color: 'from-yellow-500/15 to-amber-500/5 border-yellow-300/40' },
+      { id: 'muffin', name: String(t('landing.workflow.receipt.demo.pos.muffin', 'Muffin')), price: 3.25, emoji: '🧁', categoryId: 'pastries', color: 'from-pink-500/15 to-rose-500/5 border-pink-300/40' },
+      { id: 'cookie', name: String(t('landing.workflow.receipt.demo.pos.cookie', 'Cookie')), price: 2, emoji: '🍪', categoryId: 'pastries', color: 'from-orange-500/15 to-amber-500/5 border-orange-300/40' },
+      { id: 'salad', name: String(t('landing.workflow.receipt.demo.pos.salad', 'Salad')), price: 6.5, emoji: '🥗', categoryId: 'food', color: 'from-emerald-500/15 to-green-500/5 border-emerald-300/40' },
+      { id: 'sandwich', name: String(t('landing.workflow.receipt.demo.pos.sandwich', 'Sandwich')), price: 7.5, emoji: '🥪', categoryId: 'food', color: 'from-lime-500/15 to-yellow-500/5 border-lime-300/40' },
+      { id: 'soup', name: String(t('landing.workflow.receipt.demo.pos.soup', 'Soup')), price: 5.5, emoji: '🥣', categoryId: 'food', color: 'from-orange-400/15 to-red-500/5 border-orange-300/40' },
+    ],
+    [t],
+  );
+
+  const [selectedCategory, setSelectedCategory] = useState('all');
   const [cart, setCart] = useState<CartLine[]>([]);
   const [phase, setPhase] = useState<'selling' | 'paying' | 'done'>('selling');
   const [payMethod, setPayMethod] = useState<'card' | 'cash' | null>(null);
   const [lastAdded, setLastAdded] = useState<string | null>(null);
   const [pulseTotal, setPulseTotal] = useState(0);
+
+  const visibleProducts = useMemo(
+    () =>
+      selectedCategory === 'all'
+        ? products
+        : products.filter((p) => p.categoryId === selectedCategory),
+    [products, selectedCategory],
+  );
 
   const subtotal = cart.reduce((s, l) => s + l.price * l.qty, 0);
   const tax = subtotal * 0.08;
@@ -79,6 +112,15 @@ export const InteractivePosDemo = ({ t, isRtl, side }: DemoProps) => {
     window.setTimeout(() => setLastAdded(null), 350);
   };
 
+  const changeQty = (id: string, delta: number) => {
+    setCart((prev) =>
+      prev
+        .map((l) => (l.id === id ? { ...l, qty: l.qty + delta } : l))
+        .filter((l) => l.qty > 0),
+    );
+    setPulseTotal((n) => n + 1);
+  };
+
   const clearCart = () => {
     setCart([]);
     setPhase('selling');
@@ -88,6 +130,7 @@ export const InteractivePosDemo = ({ t, isRtl, side }: DemoProps) => {
   return (
     <div dir={isRtl ? 'rtl' : 'ltr'} className={`${side ? 'mt-0 w-full' : 'mt-5'} select-none`} onPointerDown={(e) => e.stopPropagation()}>
       <div className={`overflow-hidden rounded-2xl border border-gray-200/80 bg-gradient-to-b from-gray-50 to-white shadow-inner dark:border-white/10 dark:from-[#0c0c0c] dark:to-[#121212] ${side ? 'shadow-lg shadow-black/5 dark:shadow-black/30' : ''}`}>
+        {/* Top bar */}
         <div className="flex items-center justify-between border-b border-gray-100 px-3.5 py-2 dark:border-white/5">
           <div className="flex items-center gap-2">
             <span className="relative flex h-2 w-2">
@@ -103,6 +146,7 @@ export const InteractivePosDemo = ({ t, isRtl, side }: DemoProps) => {
             {itemCount}
           </div>
         </div>
+
         <div className="p-3 sm:p-3.5">
           <AnimatePresence mode="wait">
             {phase === 'done' ? (
@@ -117,7 +161,7 @@ export const InteractivePosDemo = ({ t, isRtl, side }: DemoProps) => {
                     {String(t('landing.workflow.receipt.demo.sales.via', { m: payMethod === 'cash' ? String(t('landing.workflow.receipt.demo.sales.cash', 'Cash')) : String(t('landing.workflow.receipt.demo.sales.card', 'Card')), defaultValue: `via ${payMethod === 'cash' ? 'Cash' : 'Card'}` }))}
                   </span>
                 </p>
-                <div className="mt-4 w-full max-w-[220px] rounded-xl border border-dashed border-gray-200 bg-white px-3 py-3 text-start shadow-sm dark:border-white/10 dark:bg-white/[0.03]">
+                <div className="mt-4 w-full max-w-[240px] rounded-xl border border-dashed border-gray-200 bg-white px-3 py-3 text-start shadow-sm dark:border-white/10 dark:bg-white/[0.03]">
                   <p className="mb-2 text-center text-[9px] font-bold uppercase tracking-widest text-gray-400">{String(t('landing.workflow.receipt.frame.pos', 'Sales receipt'))}</p>
                   {cart.map((line) => (
                     <div key={line.id} className="flex justify-between gap-2 text-[11px] text-gray-600 dark:text-gray-300">
@@ -155,51 +199,164 @@ export const InteractivePosDemo = ({ t, isRtl, side }: DemoProps) => {
                 </button>
               </motion.div>
             ) : (
-              <motion.div key="selling" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                <p className="mb-2.5 text-center text-[11px] font-semibold text-gray-400">{String(t('landing.workflow.receipt.demo.pos.tap', 'Tap an item to add'))}</p>
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                  {products.map((p) => (
-                    <motion.button key={p.id} type="button" whileTap={{ scale: 0.92 }} onClick={() => addProduct(p)} className={`relative flex flex-col items-center gap-1 rounded-xl border bg-gradient-to-br p-2.5 transition-shadow hover:shadow-md sm:p-3 ${p.color} dark:from-white/[0.06] dark:to-white/[0.02]`}>
-                      <AnimatePresence>
-                        {lastAdded === p.id && (
-                          <motion.span initial={{ opacity: 0, y: 6, scale: 0.6 }} animate={{ opacity: 1, y: -8, scale: 1 }} exit={{ opacity: 0, y: -18 }} className="pointer-events-none absolute -top-1 end-1 rounded-full bg-mintcom-green px-1.5 py-0.5 text-[9px] font-black text-black">+1</motion.span>
-                        )}
-                      </AnimatePresence>
-                      <span className="text-2xl leading-none sm:text-[26px]">{p.emoji}</span>
-                      <span className="w-full truncate text-center text-[11px] font-bold text-gray-800 dark:text-gray-100">{p.name}</span>
-                      <span className="tabular-nums text-[10px] font-semibold text-gray-500">{money(p.price)}</span>
-                    </motion.button>
-                  ))}
+              <motion.div key="selling" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2.5">
+                {/* Category pills — like POS CategoryToolbar */}
+                <div className="flex gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
+                  {categories.map((cat) => {
+                    const on = selectedCategory === cat.id;
+                    const count =
+                      cat.id === 'all'
+                        ? products.length
+                        : products.filter((p) => p.categoryId === cat.id).length;
+                    return (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => setSelectedCategory(cat.id)}
+                        className={`flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[11px] font-bold transition-all ${
+                          on
+                            ? 'bg-mintcom-green text-black shadow-sm'
+                            : 'bg-white text-gray-600 ring-1 ring-gray-200 hover:ring-mintcom-green/40 dark:bg-white/5 dark:text-gray-300 dark:ring-white/10'
+                        }`}
+                      >
+                        <span className="text-sm leading-none">{cat.emoji}</span>
+                        {cat.name}
+                        <span className={`rounded-full px-1.5 text-[9px] tabular-nums ${on ? 'bg-black/10' : 'bg-black/[0.05] dark:bg-white/10'}`}>
+                          {count}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
-                <div className="mt-3 rounded-xl border border-gray-100 bg-white/80 p-3 dark:border-white/8 dark:bg-white/[0.03]">
+
+                {/* Menu grid — items for selected category */}
+                <div className="max-h-[200px] min-h-[140px] overflow-y-auto overscroll-contain pr-0.5">
+                  <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-4">
+                    <AnimatePresence mode="popLayout">
+                      {visibleProducts.map((p) => (
+                        <motion.button
+                          key={p.id}
+                          layout
+                          type="button"
+                          whileTap={{ scale: 0.94 }}
+                          initial={{ opacity: 0, scale: 0.92 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.9 }}
+                          onClick={() => addProduct(p)}
+                          className={`relative flex flex-col items-center gap-0.5 rounded-xl border bg-gradient-to-br p-2 transition-shadow hover:shadow-md ${p.color} dark:from-white/[0.06] dark:to-white/[0.02]`}
+                        >
+                          <AnimatePresence>
+                            {lastAdded === p.id && (
+                              <motion.span
+                                initial={{ opacity: 0, y: 6, scale: 0.6 }}
+                                animate={{ opacity: 1, y: -6, scale: 1 }}
+                                exit={{ opacity: 0, y: -14 }}
+                                className="pointer-events-none absolute -top-1 end-0.5 rounded-full bg-mintcom-green px-1.5 py-0.5 text-[9px] font-black text-black"
+                              >
+                                +1
+                              </motion.span>
+                            )}
+                          </AnimatePresence>
+                          <span className="text-xl leading-none sm:text-2xl">{p.emoji}</span>
+                          <span className="w-full truncate text-center text-[10px] font-bold text-gray-800 dark:text-gray-100 sm:text-[11px]">
+                            {p.name}
+                          </span>
+                          <span className="tabular-nums text-[9px] font-semibold text-gray-500 sm:text-[10px]">
+                            {money(p.price)}
+                          </span>
+                        </motion.button>
+                      ))}
+                    </AnimatePresence>
+                  </div>
+                  {visibleProducts.length === 0 && (
+                    <p className="py-6 text-center text-xs text-gray-400">
+                      {String(t('landing.workflow.receipt.demo.pos.noItems', 'No items in this category'))}
+                    </p>
+                  )}
+                </div>
+
+                {/* Cart ticket — like POS order panel */}
+                <div className="rounded-xl border border-gray-100 bg-white p-2.5 dark:border-white/8 dark:bg-white/[0.03]">
+                  <div className="mb-1.5 flex items-center justify-between">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                      {String(t('landing.workflow.receipt.demo.pos.order', 'Order'))}
+                    </p>
+                    {cart.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={clearCart}
+                        className="text-[10px] font-bold text-gray-400 hover:text-rose-500"
+                      >
+                        {String(t('common.clear', 'Clear'))}
+                      </button>
+                    )}
+                  </div>
                   {cart.length === 0 ? (
-                    <p className="py-3 text-center text-xs text-gray-400">{String(t('landing.workflow.receipt.demo.pos.emptyCart', 'Cart is empty — tap a product above'))}</p>
+                    <p className="py-3 text-center text-xs text-gray-400">
+                      {String(t('landing.workflow.receipt.demo.pos.emptyCart', 'Cart is empty — tap a product above'))}
+                    </p>
                   ) : (
-                    <div className="mb-2 max-h-[88px] space-y-1 overflow-y-auto">
+                    <div className="mb-2 max-h-[100px] space-y-1 overflow-y-auto">
                       {cart.map((line) => (
-                        <div key={line.id} className="flex items-center justify-between gap-2 text-xs">
-                          <span className="truncate font-medium text-gray-700 dark:text-gray-200">{line.emoji} {line.name} <span className="text-gray-400">×{line.qty}</span></span>
-                          <span className="tabular-nums font-bold text-gray-900 dark:text-white">{money(line.price * line.qty)}</span>
+                        <div key={line.id} className="flex items-center gap-2 text-xs">
+                          <span className="min-w-0 flex-1 truncate font-medium text-gray-700 dark:text-gray-200">
+                            {line.emoji} {line.name}
+                          </span>
+                          <div className="flex items-center gap-0.5 rounded-lg bg-gray-50 p-0.5 dark:bg-white/5">
+                            <button
+                              type="button"
+                              onClick={() => changeQty(line.id, -1)}
+                              className="flex h-6 w-6 items-center justify-center rounded-md text-gray-500 hover:bg-white hover:text-gray-900 dark:hover:bg-white/10"
+                            >
+                              −
+                            </button>
+                            <span className="w-5 text-center text-[11px] font-bold tabular-nums text-gray-900 dark:text-white">
+                              {line.qty}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => changeQty(line.id, 1)}
+                              className="flex h-6 w-6 items-center justify-center rounded-md text-gray-500 hover:bg-white hover:text-gray-900 dark:hover:bg-white/10"
+                            >
+                              +
+                            </button>
+                          </div>
+                          <span className="w-14 text-end text-[11px] font-bold tabular-nums text-gray-900 dark:text-white">
+                            {money(line.price * line.qty)}
+                          </span>
                         </div>
                       ))}
                     </div>
                   )}
                   <div className="space-y-0.5 border-t border-gray-100 pt-2 text-[11px] dark:border-white/8">
-                    <div className="flex justify-between text-gray-500"><span>{String(t('landing.workflow.receipt.demo.pos.subtotal', 'Subtotal'))}</span><span className="tabular-nums">{money(subtotal)}</span></div>
-                    <div className="flex justify-between text-gray-500"><span>{String(t('landing.workflow.receipt.demo.pos.taxLine', 'Tax 8%'))}</span><span className="tabular-nums">{money(tax)}</span></div>
-                    <motion.div key={pulseTotal} initial={{ scale: 1.04 }} animate={{ scale: 1 }} className="flex justify-between pt-0.5 text-sm font-bold text-gray-900 dark:text-white">
+                    <div className="flex justify-between text-gray-500">
+                      <span>{String(t('landing.workflow.receipt.demo.pos.subtotal', 'Subtotal'))}</span>
+                      <span className="tabular-nums">{money(subtotal)}</span>
+                    </div>
+                    <div className="flex justify-between text-gray-500">
+                      <span>{String(t('landing.workflow.receipt.demo.pos.taxLine', 'Tax 8%'))}</span>
+                      <span className="tabular-nums">{money(tax)}</span>
+                    </div>
+                    <motion.div
+                      key={pulseTotal}
+                      initial={{ scale: 1.03 }}
+                      animate={{ scale: 1 }}
+                      className="flex justify-between pt-0.5 text-sm font-bold text-gray-900 dark:text-white"
+                    >
                       <span>{String(t('landing.workflow.receipt.demo.pos.totalLine', 'Total'))}</span>
                       <span className="tabular-nums text-mintcom-green">{money(total)}</span>
                     </motion.div>
                   </div>
-                  <div className="mt-2.5 flex gap-2">
-                    {cart.length > 0 && (
-                      <button type="button" onClick={clearCart} className="rounded-xl border border-gray-200 px-3 py-2.5 text-xs font-bold text-gray-500 dark:border-white/10">{String(t('common.clear', 'Clear'))}</button>
-                    )}
-                    <button type="button" disabled={cart.length === 0} onClick={() => cart.length && setPhase('paying')} className="flex-1 rounded-xl bg-mintcom-green py-2.5 text-xs font-bold text-black shadow-[0_4px_16px_-4px_rgba(125,198,162,0.55)] disabled:opacity-40">
-                      {cart.length === 0 ? String(t('landing.workflow.receipt.demo.pos.charge', 'Charge')) : `${String(t('landing.workflow.receipt.demo.pos.charge', 'Charge'))} ${money(total)}`}
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    disabled={cart.length === 0}
+                    onClick={() => cart.length && setPhase('paying')}
+                    className="mt-2.5 w-full rounded-xl bg-mintcom-green py-2.5 text-xs font-bold text-black shadow-[0_4px_16px_-4px_rgba(125,198,162,0.55)] disabled:opacity-40"
+                  >
+                    {cart.length === 0
+                      ? String(t('landing.workflow.receipt.demo.pos.charge', 'Charge'))
+                      : `${String(t('landing.workflow.receipt.demo.pos.charge', 'Charge'))} ${money(total)}`}
+                  </button>
                 </div>
               </motion.div>
             )}

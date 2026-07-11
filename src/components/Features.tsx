@@ -145,9 +145,9 @@ const WorkflowFeatureModal = ({
     const key = id ?? '';
     const defaults: Record<string, [string, string, string]> = {
       pointOfSale: [
-        'Tap products into a live cart',
+        'Browse by category or All menu',
+        'Tap items into a live order',
         'Charge with card or cash',
-        'Print a digital receipt in seconds',
       ],
       salesControl: [
         'Cash is always available',
