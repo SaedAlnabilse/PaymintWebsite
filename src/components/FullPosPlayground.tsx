@@ -1707,7 +1707,7 @@ function OrderPanel({
   );
 }
 
-/** Mirrors mintcom-pos HoldOrderModal — pick a table or enter a guest name */
+/** Mirrors mintcom-pos HoldOrderModal — table dropdown or guest nickname */
 function HoldOrderModal({
   usedLabels,
   tableCount,
@@ -1725,6 +1725,7 @@ function HoldOrderModal({
 }) {
   const [selectedTable, setSelectedTable] = useState('');
   const [nickname, setNickname] = useState('');
+  const [tableOpen, setTableOpen] = useState(false);
 
   const tables = useMemo(() => {
     return Array.from({ length: tableCount }, (_, i) => {
@@ -1739,6 +1740,22 @@ function HoldOrderModal({
   const holdLabel = selectedTable || nickname.trim();
   const canHold = holdLabel.length > 0;
   const nicknameMode = nickname.trim() !== '';
+
+  const clearTable = () => {
+    setSelectedTable('');
+    setTableOpen(false);
+  };
+
+  const pickTable = (name: string) => {
+    // Tap same table again to unselect
+    if (selectedTable === name) {
+      clearTable();
+      return;
+    }
+    setSelectedTable(name);
+    setNickname('');
+    setTableOpen(false);
+  };
 
   return (
     <motion.div
@@ -1773,7 +1790,7 @@ function HoldOrderModal({
           </button>
         </div>
 
-        <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
           <p className="text-xs font-bold text-text-secondary dark:text-mintcom-textSecondary">
             Choose a free table or type a guest nickname
           </p>
@@ -1789,66 +1806,100 @@ function HoldOrderModal({
             </span>
           </div>
 
-          <div className={nicknameMode ? 'pointer-events-none opacity-45' : ''}>
+          {/* Table dropdown */}
+          <div className={nicknameMode ? 'opacity-45' : ''}>
             <p className="mb-1.5 text-[11px] font-bold text-text-primary dark:text-white">Table number</p>
-            <div className="grid grid-cols-4 gap-1.5 sm:grid-cols-4">
-              {tables.map((t) => {
-                const selected = selectedTable === t.name;
-                return (
-                  <button
-                    key={t.name}
-                    type="button"
-                    disabled={t.used}
-                    onClick={() => {
-                      setSelectedTable(t.name);
-                      setNickname('');
-                    }}
-                    className={`flex flex-col items-center rounded-xl border-2 px-1 py-2.5 transition-all ${
-                      t.used
-                        ? 'cursor-not-allowed border-red-200 bg-red-50 dark:border-red-500/30 dark:bg-red-500/10'
-                        : selected
-                          ? 'border-mintcom-green bg-mintcom-green/15 shadow-sm'
-                          : 'border-gray-200 bg-cream-50 hover:border-mintcom-green/40 dark:border-white/10 dark:bg-mintcom-dark'
-                    }`}
-                  >
-                    <span
-                      className={`text-base font-black tabular-nums ${
-                        t.used
-                          ? 'text-mintcom-red'
-                          : selected
-                            ? 'text-mintcom-green'
-                            : 'text-text-primary dark:text-white'
-                      }`}
-                    >
-                      {t.num}
-                    </span>
-                    <span
-                      className={`text-[9px] font-bold ${
-                        t.used
-                          ? 'text-mintcom-red'
-                          : selected
-                            ? 'text-mintcom-green'
-                            : 'text-text-tertiary'
-                      }`}
-                    >
-                      {t.used ? 'Held' : selected ? 'Selected' : 'Free'}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-            {selectedTable && (
+            <div className="relative">
               <button
                 type="button"
-                onClick={() => setSelectedTable('')}
-                className="mt-1.5 text-[10px] font-bold text-text-tertiary hover:text-mintcom-green"
+                disabled={nicknameMode}
+                onClick={() => !nicknameMode && setTableOpen((v) => !v)}
+                className={`flex w-full items-center justify-between rounded-2xl border px-3 py-2.5 text-start text-sm font-bold transition-colors ${
+                  tableOpen
+                    ? 'border-mintcom-green bg-mintcom-green/5'
+                    : 'border-gray-200 bg-cream-50 dark:border-white/10 dark:bg-mintcom-dark'
+                } ${nicknameMode ? 'cursor-not-allowed' : ''}`}
               >
-                Clear table to use a nickname instead
+                <span
+                  className={
+                    selectedTable ? 'text-text-primary dark:text-white' : 'text-text-tertiary dark:text-mintcom-gray'
+                  }
+                >
+                  {selectedTable || 'Select a table…'}
+                </span>
+                <span className="flex items-center gap-1">
+                  {selectedTable && !nicknameMode && (
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        clearTable();
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          clearTable();
+                        }
+                      }}
+                      className="rounded-md p-1 text-text-tertiary hover:bg-white hover:text-mintcom-red dark:hover:bg-white/10"
+                      aria-label="Clear table"
+                    >
+                      <X size={14} />
+                    </span>
+                  )}
+                  <ChevronDown
+                    size={16}
+                    className={`text-text-tertiary transition-transform ${tableOpen ? 'rotate-180' : ''}`}
+                  />
+                </span>
               </button>
+
+              <AnimatePresence>
+                {tableOpen && !nicknameMode && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    className="absolute inset-x-0 top-full z-20 mt-1.5 max-h-48 overflow-y-auto rounded-2xl border border-gray-200 bg-white py-1 shadow-xl dark:border-mintcom-tertiary dark:bg-mintcom-surface"
+                  >
+                    {tables.map((t) => {
+                      const selected = selectedTable === t.name;
+                      return (
+                        <button
+                          key={t.name}
+                          type="button"
+                          disabled={t.used}
+                          onClick={() => pickTable(t.name)}
+                          className={`flex w-full items-center justify-between px-3 py-2.5 text-start text-sm font-bold transition-colors ${
+                            t.used
+                              ? 'cursor-not-allowed text-mintcom-red/70'
+                              : selected
+                                ? 'bg-mintcom-green/15 text-mintcom-green'
+                                : 'text-text-primary hover:bg-cream-50 dark:text-white dark:hover:bg-white/5'
+                          }`}
+                        >
+                          <span>{t.name}</span>
+                          <span className="text-[10px] font-bold uppercase tracking-wide">
+                            {t.used ? 'Held' : selected ? 'Selected · tap to clear' : 'Free'}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+            {selectedTable && (
+              <p className="mt-1.5 text-[10px] text-text-tertiary">
+                Tap the × or the same table again to unselect and type a nickname
+              </p>
             )}
           </div>
 
-          <div className={selectedTable ? 'pointer-events-none opacity-45' : ''}>
+          {/* Nickname */}
+          <div className={selectedTable ? 'opacity-45' : ''}>
             <p className="mb-1.5 text-[11px] font-bold text-text-primary dark:text-white">
               Or enter a nickname
             </p>
@@ -1858,18 +1909,25 @@ function HoldOrderModal({
                 onChange={(e) => {
                   const v = e.target.value.slice(0, 40);
                   setNickname(v);
-                  if (v.trim()) setSelectedTable('');
+                  if (v.trim()) {
+                    setSelectedTable('');
+                    setTableOpen(false);
+                  }
+                }}
+                onFocus={() => {
+                  // Typing a name takes priority — clear table so field is active
+                  if (selectedTable) clearTable();
                 }}
                 placeholder="e.g. Sara, Uber Eats, Walk-in"
                 maxLength={40}
-                disabled={!!selectedTable}
                 className="w-full rounded-2xl border border-gray-200 bg-cream-50 px-3 py-2.5 pe-9 text-sm font-medium outline-none focus:border-mintcom-green dark:border-mintcom-tertiary dark:bg-mintcom-dark dark:text-white"
               />
-              {nickname && !selectedTable && (
+              {nickname && (
                 <button
                   type="button"
                   onClick={() => setNickname('')}
                   className="absolute end-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-text-tertiary hover:bg-white dark:hover:bg-white/10"
+                  aria-label="Clear nickname"
                 >
                   <X size={14} />
                 </button>
