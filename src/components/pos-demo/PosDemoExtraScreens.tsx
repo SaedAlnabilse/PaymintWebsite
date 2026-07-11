@@ -1119,6 +1119,8 @@ export type DemoHeldTicket = {
   lines: { emoji: string; name: string; qty: number; unitPrice: number }[];
   discountPct: number;
   note: string;
+  /** Table or guest nickname from Hold Order popup */
+  label: string;
   at: number;
 };
 
@@ -1346,7 +1348,10 @@ export function DemoNotificationsScreen({
                         </span>
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-center gap-1.5">
-                            <p className="text-sm font-black">Held · #{t.orderNo}</p>
+                            <p className="text-sm font-black">{t.label || `Held · #${t.orderNo}`}</p>
+                            <span className="rounded-full bg-white/20 px-1.5 py-0.5 text-[9px] font-bold">
+                              #{t.orderNo}
+                            </span>
                             <span className="rounded-full bg-white/20 px-1.5 py-0.5 text-[9px] font-bold">
                               {orderTypeShort(t.type)}
                             </span>
