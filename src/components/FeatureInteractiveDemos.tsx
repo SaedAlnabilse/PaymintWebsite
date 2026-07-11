@@ -1406,7 +1406,7 @@ export const InteractiveLoyaltyDemo = ({ t }: DemoProps) => {
  * tabs All | Cash | Stock | Refunds, typed alert cards with unread accent,
  * icon tone, description, amount/stock pill, location, mark-as-read on tap.
  */
-export const InteractiveMobileDemo = ({ t }: DemoProps) => {
+export const InteractiveMobileDemo = ({ t, tall = false }: DemoProps & { tall?: boolean }) => {
   type TabId = 'all' | 'cash' | 'stock' | 'refunds';
   type Kind =
     | 'cash_shortage'
@@ -1607,9 +1607,12 @@ export const InteractiveMobileDemo = ({ t }: DemoProps) => {
 
   const appName = String(t('landing.workflow.receipt.demo.mobile.appName', 'Mintcom'));
 
+  const feedMax = tall ? 'max-h-[min(42vh,380px)] min-h-[320px]' : 'max-h-[236px] min-h-[200px]';
+  const phoneMax = tall ? 'max-w-[272px]' : 'max-w-[286px]';
+
   return (
-    <div className="mt-5 select-none" onPointerDown={(e) => e.stopPropagation()}>
-      <div className="relative mx-auto w-full max-w-[286px]">
+    <div className={`${tall ? 'mt-0' : 'mt-5'} select-none`} onPointerDown={(e) => e.stopPropagation()}>
+      <div className={`relative mx-auto w-full ${phoneMax}`}>
         {/* Ambient glow behind phone */}
         <div
           aria-hidden
@@ -1820,8 +1823,8 @@ export const InteractiveMobileDemo = ({ t }: DemoProps) => {
                   })}
                 </div>
 
-                {/* Feed */}
-                <div className="max-h-[236px] min-h-[200px] overflow-y-auto overscroll-contain bg-white dark:bg-black">
+                {/* Feed — taller when shown beside copy (real iPhone proportions) */}
+                <div className={`${feedMax} overflow-y-auto overscroll-contain bg-white dark:bg-black`}>
                   <div className="sticky top-0 z-10 flex items-center gap-2 bg-white/95 px-3.5 pb-1 pt-2.5 backdrop-blur-sm dark:bg-black/95">
                     <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-gray-400">
                       {String(t('landing.workflow.receipt.demo.mobile.today', 'Today'))}
@@ -1925,9 +1928,11 @@ export const InteractiveMobileDemo = ({ t }: DemoProps) => {
           </div>
         </div>
 
-        <p className="mt-4 text-center text-[11px] leading-relaxed text-gray-400">
-          {String(t('landing.workflow.receipt.demo.mobile.hint', 'Push a real banner · tap it to open · filter tabs'))}
-        </p>
+        {!tall && (
+          <p className="mt-4 text-center text-[11px] leading-relaxed text-gray-400">
+            {String(t('landing.workflow.receipt.demo.mobile.hint', 'Push a real banner · tap it to open · filter tabs'))}
+          </p>
+        )}
       </div>
     </div>
   );
@@ -1938,10 +1943,12 @@ export const FeatureInteractiveDemo = ({
   featureId,
   t,
   isRtl,
+  tall,
 }: {
   featureId?: string;
   t: DemoProps['t'];
   isRtl: boolean;
+  tall?: boolean;
 }) => {
   if (!featureId) return null;
   const props = { t, isRtl };
@@ -1969,7 +1976,7 @@ export const FeatureInteractiveDemo = ({
     case 'loyalty':
       return <InteractiveLoyaltyDemo {...props} />;
     case 'mobileApp':
-      return <InteractiveMobileDemo {...props} />;
+      return <InteractiveMobileDemo {...props} tall={tall} />;
     default:
       return null;
   }
