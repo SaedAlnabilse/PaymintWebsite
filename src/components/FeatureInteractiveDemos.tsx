@@ -646,59 +646,223 @@ export const InteractiveAiDemo = ({ t }: DemoProps) => {
 };
 
 /* ─── Multi-Branch ──────────────────────────────────────────────────────── */
+/** Multi-branch as in Mintcom: brands own locations; unified brand totals. */
 export const InteractiveBranchDemo = ({ t }: DemoProps) => {
-  const branches = useMemo(
+  type Loc = { id: string; name: string; sales: number; staff: number; emoji: string };
+
+  const brandCatalog = useMemo(
     () => [
-      { id: 'downtown', name: String(t('landing.workflow.receipt.demo.branch.downtown', 'Downtown')), sales: 4280, staff: 8, emoji: '🏙️', color: 'from-sky-500/20 to-blue-500/10' },
-      { id: 'mall', name: String(t('landing.workflow.receipt.demo.branch.mall', 'Mall')), sales: 6120, staff: 12, emoji: '🛍️', color: 'from-violet-500/20 to-purple-500/10' },
-      { id: 'airport', name: String(t('landing.workflow.receipt.demo.branch.airport', 'Airport')), sales: 8940, staff: 15, emoji: '✈️', color: 'from-amber-500/20 to-orange-500/10' },
+      {
+        id: 'cafe',
+        name: String(t('landing.cloudControl.scope.preview.brandA', 'Cafe Delight')),
+        emoji: '☕',
+        locations: [
+          { id: 'dt', name: String(t('landing.cloudControl.scope.preview.locDowntown', 'Downtown')), sales: 4280, staff: 8, emoji: '🏙️' },
+          { id: 'mall', name: String(t('landing.cloudControl.scope.preview.locMall', 'Mall')), sales: 6120, staff: 12, emoji: '🛍️' },
+          { id: 'west', name: String(t('landing.cloudControl.scope.preview.locWest', 'West Side')), sales: 3180, staff: 6, emoji: '📍' },
+        ] as Loc[],
+      },
+      {
+        id: 'urban',
+        name: String(t('landing.cloudControl.scope.preview.brandB', 'Urban Eats')),
+        emoji: '🍔',
+        locations: [
+          { id: 'airport', name: String(t('landing.cloudControl.scope.preview.locAirport', 'Airport')), sales: 8940, staff: 15, emoji: '✈️' },
+          { id: 'mall2', name: String(t('landing.cloudControl.scope.preview.locMall', 'Mall')), sales: 5400, staff: 10, emoji: '🛍️' },
+        ] as Loc[],
+      },
+      {
+        id: 'pizza',
+        name: String(t('landing.cloudControl.scope.preview.brandC', 'Pizza Yard')),
+        emoji: '🍕',
+        locations: [
+          { id: 'dt2', name: String(t('landing.cloudControl.scope.preview.locDowntown', 'Downtown')), sales: 7100, staff: 11, emoji: '🏙️' },
+          { id: 'west2', name: String(t('landing.cloudControl.scope.preview.locWest', 'West Side')), sales: 2650, staff: 5, emoji: '📍' },
+        ] as Loc[],
+      },
     ],
     [t],
   );
-  const [active, setActive] = useState('mall');
-  const b = branches.find((x) => x.id === active)!;
+
+  const [brandId, setBrandId] = useState(brandCatalog[0].id);
+  // linked location ids per brand (operational control — include/exclude from brand rollup)
+  const [linked, setLinked] = useState<Record<string, string[]>>(() =>
+    Object.fromEntries(brandCatalog.map((b) => [b.id, b.locations.map((l) => l.id)])),
+  );
+  const [focusLoc, setFocusLoc] = useState<string | null>(null);
+
+  const brand = brandCatalog.find((b) => b.id === brandId) ?? brandCatalog[0];
+  const linkedIds = linked[brandId] ?? [];
+  const activeLocs = brand.locations.filter((l) => linkedIds.includes(l.id));
+  const brandSales = activeLocs.reduce((s, l) => s + l.sales, 0);
+  const brandStaff = activeLocs.reduce((s, l) => s + l.staff, 0);
+  const focused = brand.locations.find((l) => l.id === focusLoc) ?? null;
+
+  const toggleLink = (locId: string) => {
+    setLinked((prev) => {
+      const cur = prev[brandId] ?? [];
+      const next = cur.includes(locId) ? cur.filter((id) => id !== locId) : [...cur, locId];
+      // keep at least one location linked so brand always has a rollup
+      if (next.length === 0) return prev;
+      return { ...prev, [brandId]: next };
+    });
+  };
+
+  const linkAll = () => {
+    setLinked((prev) => ({ ...prev, [brandId]: brand.locations.map((l) => l.id) }));
+  };
 
   return shell(
     <>
-      <div className="grid grid-cols-3 gap-2">
-        {branches.map((branch) => (
-          <motion.button
-            key={branch.id}
-            type="button"
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setActive(branch.id)}
-            className={`rounded-xl border bg-gradient-to-br p-2.5 text-center transition-all ${branch.color} ${
-              active === branch.id ? 'border-mintcom-green ring-2 ring-mintcom-green/30' : 'border-gray-100 dark:border-white/8'
-            }`}
-          >
-            <span className="text-xl">{branch.emoji}</span>
-            <p className="mt-1 truncate text-[11px] font-bold text-gray-900 dark:text-white">{branch.name}</p>
-          </motion.button>
-        ))}
+      {/* Brand switcher — like picking a brand in the owner/brand portal */}
+      <div className="mb-3">
+        <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-gray-400">
+          {String(t('landing.cloudControl.scope.brand', 'Brand scope'))}
+        </p>
+        <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
+          {brandCatalog.map((b) => {
+            const on = b.id === brandId;
+            return (
+              <button
+                key={b.id}
+                type="button"
+                onClick={() => {
+                  setBrandId(b.id);
+                  setFocusLoc(null);
+                }}
+                className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-bold transition-all ${
+                  on
+                    ? 'bg-mintcom-green text-black shadow-sm'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-white/10 dark:text-gray-300'
+                }`}
+              >
+                <span>{b.emoji}</span>
+                {b.name}
+              </button>
+            );
+          })}
+        </div>
       </div>
+
+      {/* Unified brand dashboard totals */}
       <AnimatePresence mode="wait">
         <motion.div
-          key={active}
-          initial={{ opacity: 0, y: 8 }}
+          key={brandId}
+          initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          className="mt-3 grid grid-cols-2 gap-2"
+          exit={{ opacity: 0, y: -6 }}
+          className="mb-3 rounded-xl border border-mintcom-green/25 bg-gradient-to-br from-mintcom-green/12 to-transparent p-3"
         >
-          <div className="rounded-xl border border-gray-100 bg-white p-3 dark:border-white/8 dark:bg-white/[0.03]">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">{String(t('landing.workflow.receipt.demo.branch.today', 'Today'))}</p>
-            <p className="mt-1 text-lg font-black tabular-nums text-mintcom-green">{money(b.sales)}</p>
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-mintcom-green">
+                {brand.emoji} {brand.name}
+              </p>
+              <p className="mt-0.5 text-[11px] text-gray-500">
+                {String(t('landing.workflow.receipt.demo.branch.unified', 'Unified brand total'))}
+              </p>
+            </div>
+            <span className="rounded-full bg-white/80 px-2 py-0.5 text-[10px] font-bold text-mintcom-green dark:bg-black/20">
+              {activeLocs.length}/{brand.locations.length}{' '}
+              {String(t('brand.dashboard.locations', 'Locations'))}
+            </span>
           </div>
-          <div className="rounded-xl border border-gray-100 bg-white p-3 dark:border-white/8 dark:bg-white/[0.03]">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">{String(t('landing.workflow.receipt.demo.branch.staff', 'Staff'))}</p>
-            <p className="mt-1 text-lg font-black tabular-nums text-gray-900 dark:text-white">{b.staff}</p>
+          <div className="mt-2.5 grid grid-cols-2 gap-2">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                {String(t('landing.workflow.receipt.demo.branch.today', 'Today'))}
+              </p>
+              <p className="text-lg font-black tabular-nums text-mintcom-green">{money(brandSales)}</p>
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                {String(t('landing.workflow.receipt.demo.branch.staff', 'Staff'))}
+              </p>
+              <p className="text-lg font-black tabular-nums text-gray-900 dark:text-white">{brandStaff}</p>
+            </div>
           </div>
         </motion.div>
       </AnimatePresence>
+
+      {/* Locations under this brand */}
+      <div className="mb-1.5 flex items-center justify-between">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+          {String(t('landing.workflow.receipt.demo.branch.underBrand', 'Locations under brand'))}
+        </p>
+        {linkedIds.length < brand.locations.length && (
+          <button type="button" onClick={linkAll} className="text-[10px] font-bold text-mintcom-green hover:underline">
+            {String(t('landing.workflow.receipt.demo.branch.linkAll', 'Link all'))}
+          </button>
+        )}
+      </div>
+      <div className="max-h-[148px] space-y-1.5 overflow-y-auto">
+        {brand.locations.map((loc) => {
+          const isLinked = linkedIds.includes(loc.id);
+          const isFocus = focusLoc === loc.id;
+          return (
+            <div
+              key={loc.id}
+              className={`flex items-center gap-2 rounded-xl border px-2.5 py-2 transition-all ${
+                isLinked
+                  ? isFocus
+                    ? 'border-mintcom-green bg-mintcom-green/10'
+                    : 'border-gray-100 bg-white dark:border-white/8 dark:bg-white/[0.03]'
+                  : 'border-dashed border-gray-200 bg-gray-50/80 opacity-70 dark:border-white/10 dark:bg-white/[0.02]'
+              }`}
+            >
+              <button
+                type="button"
+                onClick={() => setFocusLoc(loc.id)}
+                className="flex min-w-0 flex-1 items-center gap-2 text-start"
+              >
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-50 text-base dark:bg-white/10">
+                  {loc.emoji}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-xs font-bold text-gray-900 dark:text-white">{loc.name}</p>
+                  <p className="text-[10px] tabular-nums text-gray-500">
+                    {money(loc.sales)} · {loc.staff} {String(t('landing.workflow.receipt.demo.branch.staff', 'Staff')).toLowerCase()}
+                  </p>
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => toggleLink(loc.id)}
+                className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-bold transition-colors ${
+                  isLinked
+                    ? 'bg-mintcom-green text-black'
+                    : 'bg-gray-200 text-gray-500 dark:bg-white/10 dark:text-gray-400'
+                }`}
+              >
+                {isLinked
+                  ? String(t('landing.workflow.receipt.demo.branch.linked', 'Linked'))
+                  : String(t('landing.workflow.receipt.demo.branch.link', 'Link'))}
+              </button>
+            </div>
+          );
+        })}
+      </div>
+
+      {focused && linkedIds.includes(focused.id) && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          className="mt-2 rounded-lg border border-mintcom-green/20 bg-mintcom-green/5 px-2.5 py-2 text-[11px] text-gray-600 dark:text-gray-300"
+        >
+          <span className="font-bold text-gray-900 dark:text-white">{focused.name}</span>
+          {' · '}
+          {String(t('landing.workflow.receipt.demo.branch.locShare', 'Share of brand'))}:{' '}
+          <span className="font-bold text-mintcom-green">
+            {brandSales > 0 ? Math.round((focused.sales / brandSales) * 100) : 0}%
+          </span>
+        </motion.div>
+      )}
+
       <p className="mt-3 text-center text-[11px] text-gray-400">
-        {branches.length} {String(t('landing.workflow.receipt.frame.locations', 'live locations'))} · {String(t('landing.workflow.receipt.frame.map', 'Branch atlas'))}
+        {String(t('landing.workflow.receipt.demo.branch.hint', 'Switch brand, link locations — brand totals update live'))}
       </p>
     </>,
-    String(t('landing.workflow.receipt.brand', 'MINTCOM POS')),
+    String(t('landing.cloudControl.scope.preview.brand', 'Brand')),
   );
 };
 
