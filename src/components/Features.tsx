@@ -137,6 +137,8 @@ const WorkflowFeatureModal = ({
   if (!feature) return null;
   const Icon = feature.icon;
   const interactive = hasInteractiveDemo(feature.id);
+  // Mobile demo uses a split “story + device” layout
+  const isSplitLayout = feature.id === 'mobileApp';
 
   const handleDragEnd = (_e: unknown, info: PanInfo) => {
     if (interactive) return; // don't swipe-away while playing with demos
@@ -151,7 +153,7 @@ const WorkflowFeatureModal = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4">
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -167,7 +169,7 @@ const WorkflowFeatureModal = ({
         exit={{ opacity: 0, scale: 0.94, y: 24 }}
         transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
         className={`relative z-10 w-full overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-[0_24px_80px_-16px_rgba(0,0,0,0.35)] dark:border-white/10 dark:bg-[#161616] ${
-          interactive ? 'max-w-xl' : 'max-w-2xl'
+          isSplitLayout ? 'max-w-5xl' : interactive ? 'max-w-xl' : 'max-w-2xl'
         }`}
         dir={isRtl ? 'rtl' : 'ltr'}
         style={{ perspective: 1200 }}
@@ -215,7 +217,7 @@ const WorkflowFeatureModal = ({
           <span className="tabular-nums opacity-70">{features.length}</span>
         </div>
 
-        <div className="relative max-h-[min(78vh,720px)] overflow-y-auto overflow-x-hidden">
+        <div className={`relative overflow-x-hidden ${isSplitLayout ? 'max-h-[min(90vh,820px)] overflow-y-auto' : 'max-h-[min(78vh,720px)] overflow-y-auto'}`}>
           <AnimatePresence mode="wait" custom={direction} initial={false}>
             <motion.div
               key={activeIndex}
@@ -228,48 +230,121 @@ const WorkflowFeatureModal = ({
               dragConstraints={{ left: 0, right: 0 }}
               dragElastic={0.25}
               onDragEnd={handleDragEnd}
-              className={`relative z-10 p-8 pt-14 md:p-10 md:pt-16 ${interactive ? '' : 'cursor-grab active:cursor-grabbing'}`}
+              className={`relative z-10 ${
+                isSplitLayout
+                  ? 'p-6 pt-14 md:p-8 md:pt-16 lg:p-10 lg:pt-16'
+                  : `p-8 pt-14 md:p-10 md:pt-16 ${interactive ? '' : 'cursor-grab active:cursor-grabbing'}`
+              }`}
               style={{ transformStyle: 'preserve-3d' }}
             >
-              {!interactive && (
-                <motion.div
-                  initial={{ scale: 0.6, rotate: -12, opacity: 0 }}
-                  animate={{ scale: 1, rotate: 0, opacity: 1 }}
-                  transition={{ delay: 0.05, duration: 0.5, type: 'spring', stiffness: 220, damping: 18 }}
-                  className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-mintcom-green/10 dark:bg-white/5 text-mintcom-green"
-                >
-                  <Icon size={28} />
-                </motion.div>
-              )}
+              {isSplitLayout ? (
+                <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(260px,300px)] lg:gap-10 xl:grid-cols-[minmax(0,1fr)_minmax(270px,310px)]">
+                  {/* Left: story copy */}
+                  <div className="order-2 min-w-0 lg:order-1">
+                    <motion.div
+                      initial={{ scale: 0.7, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ delay: 0.05, type: 'spring', stiffness: 220, damping: 18 }}
+                      className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-mintcom-green/10 text-mintcom-green dark:bg-white/5"
+                    >
+                      <Icon size={26} />
+                    </motion.div>
+                    <motion.h3
+                      initial={{ y: 14, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 0.1, duration: 0.4 }}
+                      className="font-barlow text-2xl font-bold leading-snug tracking-tight text-gray-900 dark:text-white md:text-3xl lg:text-[2rem]"
+                    >
+                      {feature.title}
+                    </motion.h3>
+                    <motion.p
+                      initial={{ y: 16, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 0.18, duration: 0.45 }}
+                      className="mt-4 max-w-md font-barlow text-[15px] font-medium leading-relaxed text-gray-600 dark:text-gray-300 md:text-base"
+                    >
+                      {feature.description}
+                    </motion.p>
+                    <motion.ul
+                      initial={{ y: 12, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 0.26, duration: 0.4 }}
+                      className="mt-6 space-y-2.5"
+                    >
+                      {[
+                        t('landing.workflow.receipt.demo.mobile.bullet1', 'Live cash, stock & refund alerts'),
+                        t('landing.workflow.receipt.demo.mobile.bullet2', 'Push banners with your business context'),
+                        t('landing.workflow.receipt.demo.mobile.bullet3', 'Stay in control from anywhere'),
+                      ].map((line) => (
+                        <li key={String(line)} className="flex items-start gap-2.5 text-sm font-semibold text-gray-700 dark:text-gray-200">
+                          <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-mintcom-green" />
+                          <span>{String(line)}</span>
+                        </li>
+                      ))}
+                    </motion.ul>
+                    <motion.p
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.35 }}
+                      className="mt-6 hidden text-xs font-medium text-gray-400 lg:block"
+                    >
+                      {String(t('landing.workflow.receipt.demo.mobile.hint', 'Push a real banner · tap it to open · filter tabs'))}
+                    </motion.p>
+                  </div>
 
-              <motion.h3
-                initial={{ y: 14, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.12, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                className="font-barlow text-2xl md:text-3xl font-bold text-gray-900 dark:text-white tracking-tight leading-snug"
-              >
-                {feature.title}
-              </motion.h3>
+                  {/* Right: tall iPhone */}
+                  <motion.div
+                    initial={{ y: 24, opacity: 0, scale: 0.96 }}
+                    animate={{ y: 0, opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.2, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                    className="order-1 flex justify-center lg:order-2 lg:justify-end"
+                  >
+                    <FeatureInteractiveDemo featureId={feature.id} t={t} isRtl={isRtl} tall />
+                  </motion.div>
+                </div>
+              ) : (
+                <>
+                  {!interactive && (
+                    <motion.div
+                      initial={{ scale: 0.6, rotate: -12, opacity: 0 }}
+                      animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                      transition={{ delay: 0.05, duration: 0.5, type: 'spring', stiffness: 220, damping: 18 }}
+                      className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-mintcom-green/10 dark:bg-white/5 text-mintcom-green"
+                    >
+                      <Icon size={28} />
+                    </motion.div>
+                  )}
 
-              <motion.p
-                initial={{ y: 16, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.2, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-                className={`mt-3 font-barlow text-gray-600 dark:text-gray-300 leading-relaxed font-medium whitespace-pre-line ${
-                  interactive ? 'text-sm md:text-[15px]' : 'mt-4 text-base md:text-[17px]'
-                }`}
-              >
-                {feature.description}
-              </motion.p>
+                  <motion.h3
+                    initial={{ y: 14, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.12, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                    className="font-barlow text-2xl md:text-3xl font-bold text-gray-900 dark:text-white tracking-tight leading-snug"
+                  >
+                    {feature.title}
+                  </motion.h3>
 
-              {interactive && (
-                <motion.div
-                  initial={{ y: 18, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.28, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-                >
-                  <FeatureInteractiveDemo featureId={feature.id} t={t} isRtl={isRtl} />
-                </motion.div>
+                  <motion.p
+                    initial={{ y: 16, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.2, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+                    className={`mt-3 font-barlow text-gray-600 dark:text-gray-300 leading-relaxed font-medium whitespace-pre-line ${
+                      interactive ? 'text-sm md:text-[15px]' : 'mt-4 text-base md:text-[17px]'
+                    }`}
+                  >
+                    {feature.description}
+                  </motion.p>
+
+                  {interactive && (
+                    <motion.div
+                      initial={{ y: 18, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 0.28, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+                    >
+                      <FeatureInteractiveDemo featureId={feature.id} t={t} isRtl={isRtl} />
+                    </motion.div>
+                  )}
+                </>
               )}
             </motion.div>
           </AnimatePresence>
