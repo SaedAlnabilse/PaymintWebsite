@@ -3,11 +3,15 @@ import { Link } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   ArrowLeft,
+  BarChart3,
+  Bell,
   Check,
   ChevronDown,
   Clock,
   CreditCard,
   FileText,
+  HelpCircle,
+  LayoutDashboard,
   LayoutGrid,
   Pause,
   Percent,
@@ -15,6 +19,7 @@ import {
   Plus,
   RotateCcw,
   Search,
+  Settings,
   ShoppingBag,
   Sparkles,
   Star,
@@ -24,6 +29,13 @@ import {
   X,
 } from 'lucide-react';
 import { Logo } from './Logo';
+import {
+  DemoDashboardScreen,
+  DemoNotificationsScreen,
+  DemoReportsScreen,
+  DemoSettingsScreen,
+  DemoSupportScreen,
+} from './pos-demo/PosDemoExtraScreens';
 
 /**
  * Full POS sandbox — styled like real Mintcom POS (mintcom-pos SalesScreen)
@@ -64,8 +76,33 @@ type HeldTicket = {
 type OrderType = 'dine-in' | 'takeaway' | 'delivery';
 type PayMethod = 'cash' | 'card' | 'cliq' | 'talabat' | 'voucher';
 type Phase = 'welcome' | 'pin' | 'app';
-type Screen = 'sales' | 'held' | 'shift';
+type Screen =
+  | 'dashboard'
+  | 'sales'
+  | 'reports'
+  | 'held'
+  | 'notifications'
+  | 'settings'
+  | 'support'
+  | 'shift';
 type Staff = { id: string; name: string; role: string; pin: string; emoji: string };
+
+const NAV_ITEMS: {
+  id: Screen;
+  label: string;
+  short: string;
+  icon: typeof LayoutGrid;
+  badge?: 'held' | 'notif';
+}[] = [
+  { id: 'dashboard', label: 'Dashboard', short: 'Home', icon: LayoutDashboard },
+  { id: 'sales', label: 'Sales', short: 'Sales', icon: LayoutGrid },
+  { id: 'reports', label: 'Reports', short: 'Reports', icon: BarChart3 },
+  { id: 'held', label: 'Held', short: 'Held', icon: Pause, badge: 'held' },
+  { id: 'notifications', label: 'Alerts', short: 'Alerts', icon: Bell, badge: 'notif' },
+  { id: 'settings', label: 'Settings', short: 'Settings', icon: Settings },
+  { id: 'support', label: 'Support', short: 'Help', icon: HelpCircle },
+  { id: 'shift', label: 'Shift', short: 'Shift', icon: Clock },
+];
 
 const money = (n: number) =>
   n.toLocaleString(undefined, { style: 'currency', currency: 'USD', minimumFractionDigits: 2 });
@@ -171,7 +208,8 @@ const OTHER_METHODS: { id: PayMethod; label: string; emoji: string }[] = [
 export function FullPosPlayground() {
   const products = useMemo(() => buildCatalog(), []);
   const [phase, setPhase] = useState<Phase>('welcome');
-  const [screen, setScreen] = useState<Screen>('sales');
+  const [screen, setScreen] = useState<Screen>('dashboard');
+  const notifUnread = 3; // demo badge (matches seed unread count in notifications screen)
   const [staff, setStaff] = useState<Staff | null>(null);
   const [pin, setPin] = useState('');
   const [pinError, setPinError] = useState(false);
@@ -422,7 +460,7 @@ export function FullPosPlayground() {
     setStaff(match);
     setPin('');
     setPhase('app');
-    setScreen('sales');
+    setScreen('dashboard');
   };
 
   const completePay = (m: PayMethod) => {
@@ -485,11 +523,11 @@ export function FullPosPlayground() {
             <span className="text-mintcom-green">Mintcom POS</span>
           </h1>
           <p className="mt-4 max-w-md text-sm leading-relaxed text-text-secondary dark:text-mintcom-textSecondary sm:text-base">
-            Same layout as the live sales screen — menu, order ticket, add-ons, hold, loyalty, and Cash /
-            Card / Other. Nothing is saved.
+            Full POS sandbox — dashboard, sales, reports, notifications, settings, and support. Same
+            flow cashiers use. Nothing is saved.
           </p>
-          <div className="mt-8 grid w-full max-w-lg grid-cols-2 gap-2 sm:grid-cols-4">
-            {['Sales screen', 'Add-ons', 'Hold tickets', 'Payments'].map((label) => (
+          <div className="mt-8 grid w-full max-w-xl grid-cols-2 gap-2 sm:grid-cols-3">
+            {['Dashboard', 'Sales screen', 'Reports', 'Notifications', 'Settings', 'Support'].map((label) => (
               <div
                 key={label}
                 className="rounded-2xl border border-gray-200 bg-white px-3 py-3 text-[11px] font-bold text-text-primary shadow-sm dark:border-white/10 dark:bg-mintcom-surface dark:text-white"
@@ -540,7 +578,7 @@ export function FullPosPlayground() {
                   onClick={() => {
                     setStaff(s);
                     setPhase('app');
-                    setScreen('sales');
+                    setScreen('dashboard');
                     setPin('');
                   }}
                   className="flex w-full items-center gap-3 rounded-2xl border border-gray-100 bg-cream-50 px-3 py-3 text-start transition-all hover:border-mintcom-green/40 hover:bg-mintcom-green/10 dark:border-white/8 dark:bg-mintcom-dark dark:hover:border-mintcom-green/40"
@@ -606,94 +644,144 @@ export function FullPosPlayground() {
       />
 
       <div className="relative flex min-h-0 flex-1 overflow-hidden">
-        {/* Side rail — like POS nav */}
-        <nav className="hidden w-[72px] shrink-0 flex-col items-center gap-1 border-e border-gray-200 bg-white py-3 dark:border-mintcom-tertiary dark:bg-mintcom-surface sm:flex">
-          <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-mintcom-green/15">
+        {/* Side rail — like POS main nav */}
+        <nav className="hidden w-[76px] shrink-0 flex-col items-center gap-0.5 overflow-y-auto border-e border-gray-200 bg-white py-3 dark:border-mintcom-tertiary dark:bg-mintcom-surface sm:flex">
+          <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-mintcom-green/15">
             <Logo variant="icon" size="sm" />
           </div>
-          {(
-            [
-              { id: 'sales' as const, icon: LayoutGrid, label: 'Sales' },
-              { id: 'held' as const, icon: Pause, label: 'Held', badge: held.length },
-              { id: 'shift' as const, icon: Clock, label: 'Shift' },
-            ] as const
-          ).map((item) => {
+          {NAV_ITEMS.map((item) => {
             const on = screen === item.id;
             const Icon = item.icon;
+            const badge =
+              item.badge === 'held' ? held.length : item.badge === 'notif' ? notifUnread : 0;
             return (
               <button
                 key={item.id}
                 type="button"
+                title={item.label}
                 onClick={() => setScreen(item.id)}
-                className={`relative flex w-[56px] flex-col items-center gap-0.5 rounded-2xl px-1 py-2.5 text-[10px] font-bold transition-colors ${
+                className={`relative flex w-[60px] flex-col items-center gap-0.5 rounded-2xl px-1 py-2 text-[9px] font-bold transition-colors ${
                   on
                     ? 'bg-mintcom-green text-white shadow-md shadow-mintcom-green/25'
                     : 'text-text-secondary hover:bg-mintcom-green/10 hover:text-mintcom-green dark:text-mintcom-textSecondary'
                 }`}
               >
-                <Icon size={18} />
-                {item.label}
-                {'badge' in item && item.badge > 0 && (
+                <Icon size={17} />
+                {item.short}
+                {badge > 0 && (
                   <span className="absolute -end-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-mintcom-red px-1 text-[9px] font-black text-white">
-                    {item.badge}
+                    {badge > 9 ? '9+' : badge}
                   </span>
                 )}
               </button>
             );
           })}
-          <div className="mt-auto flex flex-col items-center gap-1 px-1 text-center">
+          <div className="mt-auto flex flex-col items-center gap-1 px-1 pb-1 text-center">
             <span className="text-lg">{staff?.emoji}</span>
             <span className="text-[9px] font-bold text-text-tertiary dark:text-mintcom-gray">{staff?.name}</span>
           </div>
         </nav>
 
-        {/* Mobile bottom tabs */}
+        {/* Mobile bottom tabs — primary destinations + more via cart when on sales */}
         <div className="fixed inset-x-0 bottom-0 z-40 flex border-t border-gray-200 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur dark:border-mintcom-tertiary dark:bg-mintcom-surface/95 sm:hidden">
           {(
             [
+              { id: 'dashboard' as const, icon: LayoutDashboard, label: 'Home' },
               { id: 'sales' as const, icon: LayoutGrid, label: 'Sales' },
-              { id: 'held' as const, icon: Pause, label: 'Held', badge: held.length },
-              { id: 'shift' as const, icon: Clock, label: 'Shift' },
+              { id: 'reports' as const, icon: BarChart3, label: 'Reports' },
+              { id: 'notifications' as const, icon: Bell, label: 'Alerts', badge: notifUnread },
+              { id: 'settings' as const, icon: Settings, label: 'More' },
             ] as const
           ).map((item) => {
-            const on = screen === item.id;
+            const on =
+              screen === item.id ||
+              (item.id === 'settings' &&
+                (screen === 'settings' || screen === 'support' || screen === 'held' || screen === 'shift'));
             const Icon = item.icon;
+            const badge = 'badge' in item ? item.badge : 0;
             return (
               <button
                 key={item.id}
                 type="button"
-                onClick={() => setScreen(item.id)}
-                className={`relative flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-bold ${
+                onClick={() => {
+                  if (item.id === 'settings' && screen === 'settings') return;
+                  setScreen(item.id === 'settings' ? 'settings' : item.id);
+                }}
+                className={`relative flex flex-1 flex-col items-center gap-0.5 py-2 text-[9px] font-bold ${
                   on ? 'text-mintcom-green' : 'text-text-secondary dark:text-mintcom-textSecondary'
                 }`}
               >
-                <Icon size={18} />
+                <Icon size={17} />
                 {item.label}
-                {'badge' in item && item.badge > 0 && (
-                  <span className="absolute end-[28%] top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-mintcom-red px-1 text-[9px] text-white">
-                    {item.badge}
+                {badge > 0 && (
+                  <span className="absolute end-[18%] top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-mintcom-red px-1 text-[9px] text-white">
+                    {badge}
                   </span>
                 )}
               </button>
             );
           })}
-          <button
-            type="button"
-            onClick={() => setMobileCartOpen(true)}
-            className="relative flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-bold text-text-secondary dark:text-mintcom-textSecondary"
-          >
-            <ShoppingBag size={18} />
-            Cart
-            {itemCount > 0 && (
-              <span className="absolute end-[28%] top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-mintcom-green px-1 text-[9px] font-black text-white">
-                {itemCount}
-              </span>
-            )}
-          </button>
+          {screen === 'sales' && (
+            <button
+              type="button"
+              onClick={() => setMobileCartOpen(true)}
+              className="relative flex flex-1 flex-col items-center gap-0.5 py-2 text-[9px] font-bold text-text-secondary dark:text-mintcom-textSecondary"
+            >
+              <ShoppingBag size={17} />
+              Cart
+              {itemCount > 0 && (
+                <span className="absolute end-[18%] top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-mintcom-green px-1 text-[9px] font-black text-white">
+                  {itemCount}
+                </span>
+              )}
+            </button>
+          )}
         </div>
+
+        {/* Mobile secondary destinations (held / support / shift) */}
+        {(screen === 'settings' || screen === 'support' || screen === 'held' || screen === 'shift') && (
+          <div className="flex gap-1.5 overflow-x-auto border-b border-gray-200 bg-white px-3 py-2 dark:border-mintcom-tertiary dark:bg-mintcom-surface sm:hidden">
+            {(
+              [
+                { id: 'settings' as const, label: 'Settings' },
+                { id: 'held' as const, label: `Held${held.length ? ` (${held.length})` : ''}` },
+                { id: 'support' as const, label: 'Support' },
+                { id: 'shift' as const, label: 'Shift' },
+              ] as const
+            ).map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setScreen(t.id)}
+                className={`shrink-0 rounded-full px-3 py-1.5 text-[11px] font-bold ${
+                  screen === t.id
+                    ? 'bg-mintcom-green text-white'
+                    : 'bg-cream-100 text-text-secondary dark:bg-mintcom-dark dark:text-mintcom-textSecondary'
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Content */}
         <div className="flex min-h-0 min-w-0 flex-1 flex-col pb-14 sm:pb-0 lg:flex-row">
+          {screen === 'dashboard' && (
+            <DemoDashboardScreen
+              staff={staff}
+              shiftOrders={shiftOrders}
+              shiftRevenue={shiftRevenue}
+              heldCount={held.length}
+              onGoSales={() => setScreen('sales')}
+            />
+          )}
+
+          {screen === 'reports' && <DemoReportsScreen />}
+          {screen === 'notifications' && <DemoNotificationsScreen />}
+          {screen === 'settings' && <DemoSettingsScreen />}
+          {screen === 'support' && <DemoSupportScreen />}
+
           {screen === 'sales' && (
             <>
               {/* Menu pane ~2.3 */}
