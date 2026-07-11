@@ -2410,8 +2410,13 @@
             "s4": "Ready to go"
           },
           "pos": {
+            "charge": "Charge",
+            "choosePay": "Choose how the customer pays",
             "croissant": "Croissant",
+            "emptyCart": "Cart is empty — tap a product above",
             "espresso": "Espresso",
+            "newSale": "New sale",
+            "salad": "Salad",
             "soda": "Soda",
             "subtotal": "Subtotal",
             "tap": "Tap an item to add",

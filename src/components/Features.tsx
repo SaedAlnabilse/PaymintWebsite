@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence, type PanInfo, type Variants } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import {
@@ -17,6 +17,9 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
+  Check,
+  RotateCcw,
+  ShoppingBag,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -24,6 +27,370 @@ type WorkflowFeature = {
   title: string;
   description: string;
   icon: LucideIcon;
+  id?: string;
+};
+
+type PosProduct = {
+  id: string;
+  name: string;
+  price: number;
+  emoji: string;
+  color: string;
+};
+
+type CartLine = { id: string; name: string; price: number; qty: number; emoji: string };
+
+/** Interactive mini POS terminal — visitors tap products, build a cart, and charge. */
+const InteractivePosDemo = ({ t, isRtl }: { t: any; isRtl: boolean }) => {
+  const products: PosProduct[] = useMemo(
+    () => [
+      {
+        id: 'espresso',
+        name: t('landing.workflow.receipt.demo.pos.espresso', 'Espresso'),
+        price: 3.5,
+        emoji: '☕',
+        color: 'from-amber-500/20 to-orange-500/10 border-amber-400/30 hover:border-amber-400/60',
+      },
+      {
+        id: 'croissant',
+        name: t('landing.workflow.receipt.demo.pos.croissant', 'Croissant'),
+        price: 4,
+        emoji: '🥐',
+        color: 'from-yellow-500/20 to-amber-500/10 border-yellow-400/30 hover:border-yellow-400/60',
+      },
+      {
+        id: 'soda',
+        name: t('landing.workflow.receipt.demo.pos.soda', 'Soda'),
+        price: 2.5,
+        emoji: '🥤',
+        color: 'from-sky-500/20 to-blue-500/10 border-sky-400/30 hover:border-sky-400/60',
+      },
+      {
+        id: 'salad',
+        name: t('landing.workflow.receipt.demo.pos.salad', 'Salad'),
+        price: 6.5,
+        emoji: '🥗',
+        color: 'from-emerald-500/20 to-green-500/10 border-emerald-400/30 hover:border-emerald-400/60',
+      },
+    ],
+    [t],
+  );
+
+  const [cart, setCart] = useState<CartLine[]>([]);
+  const [phase, setPhase] = useState<'selling' | 'paying' | 'done'>('selling');
+  const [payMethod, setPayMethod] = useState<'card' | 'cash' | null>(null);
+  const [lastAdded, setLastAdded] = useState<string | null>(null);
+  const [pulseTotal, setPulseTotal] = useState(0);
+
+  const subtotal = cart.reduce((s, l) => s + l.price * l.qty, 0);
+  const tax = subtotal * 0.08;
+  const total = subtotal + tax;
+  const itemCount = cart.reduce((s, l) => s + l.qty, 0);
+
+  const addProduct = (p: PosProduct) => {
+    if (phase !== 'selling') return;
+    setCart((prev) => {
+      const existing = prev.find((l) => l.id === p.id);
+      if (existing) {
+        return prev.map((l) => (l.id === p.id ? { ...l, qty: l.qty + 1 } : l));
+      }
+      return [...prev, { id: p.id, name: p.name, price: p.price, qty: 1, emoji: p.emoji }];
+    });
+    setLastAdded(p.id);
+    setPulseTotal((n) => n + 1);
+    window.setTimeout(() => setLastAdded(null), 350);
+  };
+
+  const clearCart = () => {
+    setCart([]);
+    setPhase('selling');
+    setPayMethod(null);
+  };
+
+  const startPay = () => {
+    if (cart.length === 0) return;
+    setPhase('paying');
+  };
+
+  const completePay = (method: 'card' | 'cash') => {
+    setPayMethod(method);
+    setPhase('done');
+  };
+
+  const formatMoney = (n: number) =>
+    n.toLocaleString(undefined, { style: 'currency', currency: 'USD', minimumFractionDigits: 2 });
+
+  return (
+    <div
+      dir={isRtl ? 'rtl' : 'ltr'}
+      className="mt-5 select-none"
+      onPointerDown={(e) => e.stopPropagation()}
+    >
+      {/* Terminal chrome */}
+      <div className="overflow-hidden rounded-2xl border border-gray-200/80 bg-gradient-to-b from-gray-50 to-white shadow-inner dark:border-white/10 dark:from-[#0c0c0c] dark:to-[#121212]">
+        {/* status bar */}
+        <div className="flex items-center justify-between border-b border-gray-100 px-3.5 py-2 dark:border-white/5">
+          <div className="flex items-center gap-2">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-mintcom-green opacity-60" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-mintcom-green" />
+            </span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-gray-500 dark:text-gray-400">
+              {t('landing.workflow.receipt.brand', 'MINTCOM POS')}
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5 rounded-full bg-mintcom-green/10 px-2 py-0.5 text-[10px] font-bold text-mintcom-green">
+            <ShoppingBag size={10} />
+            {itemCount}
+          </div>
+        </div>
+
+        <div className="p-3 sm:p-3.5">
+          <AnimatePresence mode="wait">
+            {phase === 'done' ? (
+              <motion.div
+                key="done"
+                initial={{ opacity: 0, scale: 0.92, y: 12 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.96 }}
+                transition={{ type: 'spring', stiffness: 280, damping: 22 }}
+                className="flex flex-col items-center py-4 text-center"
+              >
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 14, delay: 0.05 }}
+                  className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-mintcom-green text-black shadow-[0_8px_28px_-6px_rgba(125,198,162,0.7)]"
+                >
+                  <Check size={28} strokeWidth={3} />
+                </motion.div>
+                <p className="font-barlow text-lg font-bold text-gray-900 dark:text-white">
+                  {t('landing.workflow.receipt.frame.approved', 'Transaction approved')}
+                </p>
+                <p className="mt-1 text-sm font-semibold text-mintcom-green">
+                  {formatMoney(total)}{' '}
+                  <span className="text-gray-400">
+                    {t('landing.workflow.receipt.demo.sales.via', {
+                      m: payMethod === 'cash'
+                        ? t('landing.workflow.receipt.demo.sales.cash', 'Cash')
+                        : t('landing.workflow.receipt.demo.sales.card', 'Card'),
+                      defaultValue: `via ${payMethod === 'cash' ? 'Cash' : 'Card'}`,
+                    })}
+                  </span>
+                </p>
+
+                {/* mini receipt */}
+                <motion.div
+                  initial={{ y: 16, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                  className="mt-4 w-full max-w-[220px] rounded-xl border border-dashed border-gray-200 bg-white px-3 py-3 text-start shadow-sm dark:border-white/10 dark:bg-white/[0.03]"
+                >
+                  <p className="mb-2 text-center text-[9px] font-bold uppercase tracking-widest text-gray-400">
+                    {t('landing.workflow.receipt.frame.pos', 'Sales receipt')}
+                  </p>
+                  <div className="space-y-1">
+                    {cart.map((line) => (
+                      <div key={line.id} className="flex justify-between gap-2 text-[11px] text-gray-600 dark:text-gray-300">
+                        <span className="truncate">
+                          {line.emoji} {line.name} ×{line.qty}
+                        </span>
+                        <span className="tabular-nums font-semibold">{formatMoney(line.price * line.qty)}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-2 border-t border-dashed border-gray-200 pt-2 dark:border-white/10">
+                    <div className="flex justify-between text-xs font-bold text-gray-900 dark:text-white">
+                      <span>{t('landing.workflow.receipt.demo.pos.totalLine', 'Total')}</span>
+                      <span className="tabular-nums">{formatMoney(total)}</span>
+                    </div>
+                  </div>
+                  <p className="mt-2 text-center text-[10px] text-gray-400">
+                    {t('landing.workflow.receipt.thanks', 'Thank you')}
+                  </p>
+                </motion.div>
+
+                <button
+                  type="button"
+                  onClick={clearCart}
+                  className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-gray-900 px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-100"
+                >
+                  <RotateCcw size={12} />
+                  {t('landing.workflow.receipt.demo.pos.newSale', 'New sale')}
+                </button>
+              </motion.div>
+            ) : phase === 'paying' ? (
+              <motion.div
+                key="paying"
+                initial={{ opacity: 0, x: isRtl ? -20 : 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: isRtl ? 20 : -20 }}
+                className="py-2"
+              >
+                <p className="mb-3 text-center text-sm font-bold text-gray-900 dark:text-white">
+                  {formatMoney(total)}
+                </p>
+                <p className="mb-4 text-center text-xs text-gray-500">
+                  {t('landing.workflow.receipt.demo.pos.choosePay', 'Choose how the customer pays')}
+                </p>
+                <div className="grid grid-cols-2 gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => completePay('card')}
+                    className="group flex flex-col items-center gap-2 rounded-2xl border border-gray-200 bg-white p-4 transition-all hover:-translate-y-0.5 hover:border-mintcom-green/50 hover:shadow-lg dark:border-white/10 dark:bg-white/[0.04]"
+                  >
+                    <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-mintcom-green/15 text-mintcom-green transition-transform group-hover:scale-110">
+                      <CreditCard size={20} />
+                    </span>
+                    <span className="text-sm font-bold text-gray-900 dark:text-white">
+                      {t('landing.workflow.receipt.demo.sales.card', 'Card')}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => completePay('cash')}
+                    className="group flex flex-col items-center gap-2 rounded-2xl border border-gray-200 bg-white p-4 transition-all hover:-translate-y-0.5 hover:border-mintcom-green/50 hover:shadow-lg dark:border-white/10 dark:bg-white/[0.04]"
+                  >
+                    <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-600 transition-transform group-hover:scale-110 dark:text-emerald-400">
+                      <span className="text-lg font-black">$</span>
+                    </span>
+                    <span className="text-sm font-bold text-gray-900 dark:text-white">
+                      {t('landing.workflow.receipt.demo.sales.cash', 'Cash')}
+                    </span>
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPhase('selling')}
+                  className="mt-3 w-full py-2 text-xs font-semibold text-gray-400 transition-colors hover:text-gray-600 dark:hover:text-gray-300"
+                >
+                  {t('common.back', 'Back')}
+                </button>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="selling"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <p className="mb-2.5 text-center text-[11px] font-semibold text-gray-400">
+                  {t('landing.workflow.receipt.demo.pos.tap', 'Tap an item to add')}
+                </p>
+
+                {/* product grid */}
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  {products.map((p) => (
+                    <motion.button
+                      key={p.id}
+                      type="button"
+                      whileTap={{ scale: 0.92 }}
+                      onClick={() => addProduct(p)}
+                      className={`relative flex flex-col items-center gap-1 rounded-xl border bg-gradient-to-br p-2.5 transition-shadow hover:shadow-md sm:p-3 ${p.color} dark:from-white/[0.06] dark:to-white/[0.02]`}
+                    >
+                      <AnimatePresence>
+                        {lastAdded === p.id && (
+                          <motion.span
+                            initial={{ opacity: 0, y: 6, scale: 0.6 }}
+                            animate={{ opacity: 1, y: -8, scale: 1 }}
+                            exit={{ opacity: 0, y: -18 }}
+                            className="pointer-events-none absolute -top-1 end-1 rounded-full bg-mintcom-green px-1.5 py-0.5 text-[9px] font-black text-black"
+                          >
+                            +1
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
+                      <span className="text-2xl leading-none sm:text-[26px]">{p.emoji}</span>
+                      <span className="w-full truncate text-center text-[11px] font-bold text-gray-800 dark:text-gray-100">
+                        {p.name}
+                      </span>
+                      <span className="tabular-nums text-[10px] font-semibold text-gray-500 dark:text-gray-400">
+                        {formatMoney(p.price)}
+                      </span>
+                    </motion.button>
+                  ))}
+                </div>
+
+                {/* cart + totals */}
+                <div className="mt-3 rounded-xl border border-gray-100 bg-white/80 p-3 dark:border-white/8 dark:bg-white/[0.03]">
+                  {cart.length === 0 ? (
+                    <p className="py-3 text-center text-xs text-gray-400">
+                      {t('landing.workflow.receipt.demo.pos.emptyCart', 'Cart is empty — tap a product above')}
+                    </p>
+                  ) : (
+                    <div className="mb-2 max-h-[88px] space-y-1 overflow-y-auto">
+                      <AnimatePresence initial={false}>
+                        {cart.map((line) => (
+                          <motion.div
+                            key={line.id}
+                            layout
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="flex items-center justify-between gap-2 text-xs"
+                          >
+                            <span className="min-w-0 truncate font-medium text-gray-700 dark:text-gray-200">
+                              {line.emoji} {line.name}{' '}
+                              <span className="text-gray-400">×{line.qty}</span>
+                            </span>
+                            <span className="tabular-nums font-bold text-gray-900 dark:text-white">
+                              {formatMoney(line.price * line.qty)}
+                            </span>
+                          </motion.div>
+                        ))}
+                      </AnimatePresence>
+                    </div>
+                  )}
+
+                  <div className="space-y-0.5 border-t border-gray-100 pt-2 text-[11px] dark:border-white/8">
+                    <div className="flex justify-between text-gray-500">
+                      <span>{t('landing.workflow.receipt.demo.pos.subtotal', 'Subtotal')}</span>
+                      <span className="tabular-nums">{formatMoney(subtotal)}</span>
+                    </div>
+                    <div className="flex justify-between text-gray-500">
+                      <span>{t('landing.workflow.receipt.demo.pos.taxLine', 'Tax 8%')}</span>
+                      <span className="tabular-nums">{formatMoney(tax)}</span>
+                    </div>
+                    <motion.div
+                      key={pulseTotal}
+                      initial={{ scale: 1.04 }}
+                      animate={{ scale: 1 }}
+                      className="flex justify-between pt-0.5 text-sm font-bold text-gray-900 dark:text-white"
+                    >
+                      <span>{t('landing.workflow.receipt.demo.pos.totalLine', 'Total')}</span>
+                      <span className="tabular-nums text-mintcom-green">{formatMoney(total)}</span>
+                    </motion.div>
+                  </div>
+
+                  <div className="mt-2.5 flex gap-2">
+                    {cart.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={clearCart}
+                        className="rounded-xl border border-gray-200 px-3 py-2.5 text-xs font-bold text-gray-500 transition-colors hover:bg-gray-50 dark:border-white/10 dark:hover:bg-white/5"
+                      >
+                        {t('common.clear', 'Clear')}
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      disabled={cart.length === 0}
+                      onClick={startPay}
+                      className="flex-1 rounded-xl bg-mintcom-green py-2.5 text-xs font-bold text-black shadow-[0_4px_16px_-4px_rgba(125,198,162,0.55)] transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-4px_rgba(125,198,162,0.65)] disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
+                    >
+                      {cart.length === 0
+                        ? t('landing.workflow.receipt.demo.pos.charge', 'Charge')
+                        : `${t('landing.workflow.receipt.demo.pos.charge', 'Charge')} ${formatMoney(total)}`}
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 const WorkflowFeatureCard = ({
@@ -132,8 +499,10 @@ const WorkflowFeatureModal = ({
   const feature = features[activeIndex];
   if (!feature) return null;
   const Icon = feature.icon;
+  const isPosStep = feature.id === 'pointOfSale';
 
   const handleDragEnd = (_e: unknown, info: PanInfo) => {
+    if (isPosStep) return; // don't swipe-away while playing with the POS demo
     const threshold = 80;
     if (info.offset.x < -threshold) {
       if (isRtl) {
@@ -168,7 +537,9 @@ const WorkflowFeatureModal = ({
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.94, y: 24 }}
         transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-        className="relative z-10 w-full max-w-2xl overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-[0_24px_80px_-16px_rgba(0,0,0,0.35)] dark:border-white/10 dark:bg-[#161616]"
+        className={`relative z-10 w-full overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-[0_24px_80px_-16px_rgba(0,0,0,0.35)] dark:border-white/10 dark:bg-[#161616] ${
+          isPosStep ? 'max-w-xl' : 'max-w-2xl'
+        }`}
         dir={isRtl ? 'rtl' : 'ltr'}
         style={{ perspective: 1200 }}
       >
@@ -219,8 +590,8 @@ const WorkflowFeatureModal = ({
           <span className="tabular-nums opacity-70">{features.length}</span>
         </div>
 
-        {/* sliding content area — drag enabled */}
-        <div className="relative overflow-hidden">
+        {/* sliding content area — drag enabled (except on interactive POS demo) */}
+        <div className="relative max-h-[min(78vh,720px)] overflow-y-auto overflow-x-hidden">
           <AnimatePresence mode="wait" custom={direction} initial={false}>
             <motion.div
               key={activeIndex}
@@ -229,21 +600,23 @@ const WorkflowFeatureModal = ({
               initial="enter"
               animate="center"
               exit="exit"
-              drag="x"
+              drag={isPosStep ? false : 'x'}
               dragConstraints={{ left: 0, right: 0 }}
               dragElastic={0.25}
               onDragEnd={handleDragEnd}
-              className="relative z-10 cursor-grab p-8 pt-14 md:p-10 md:pt-16 active:cursor-grabbing"
+              className={`relative z-10 p-8 pt-14 md:p-10 md:pt-16 ${isPosStep ? '' : 'cursor-grab active:cursor-grabbing'}`}
               style={{ transformStyle: 'preserve-3d' }}
             >
-              <motion.div
-                initial={{ scale: 0.6, rotate: -12, opacity: 0 }}
-                animate={{ scale: 1, rotate: 0, opacity: 1 }}
-                transition={{ delay: 0.05, duration: 0.5, type: 'spring', stiffness: 220, damping: 18 }}
-                className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-mintcom-green/10 dark:bg-white/5 text-mintcom-green"
-              >
-                <Icon size={28} />
-              </motion.div>
+              {!isPosStep && (
+                <motion.div
+                  initial={{ scale: 0.6, rotate: -12, opacity: 0 }}
+                  animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                  transition={{ delay: 0.05, duration: 0.5, type: 'spring', stiffness: 220, damping: 18 }}
+                  className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-mintcom-green/10 dark:bg-white/5 text-mintcom-green"
+                >
+                  <Icon size={28} />
+                </motion.div>
+              )}
 
               <motion.h3
                 initial={{ y: 14, opacity: 0 }}
@@ -258,10 +631,22 @@ const WorkflowFeatureModal = ({
                 initial={{ y: 16, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.2, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-                className="mt-4 font-barlow text-base md:text-[17px] text-gray-600 dark:text-gray-300 leading-relaxed font-medium whitespace-pre-line"
+                className={`mt-3 font-barlow text-gray-600 dark:text-gray-300 leading-relaxed font-medium whitespace-pre-line ${
+                  isPosStep ? 'text-sm md:text-[15px]' : 'mt-4 text-base md:text-[17px]'
+                }`}
               >
                 {feature.description}
               </motion.p>
+
+              {isPosStep && (
+                <motion.div
+                  initial={{ y: 18, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.28, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  <InteractivePosDemo t={t} isRtl={isRtl} />
+                </motion.div>
+              )}
             </motion.div>
           </AnimatePresence>
         </div>
@@ -320,61 +705,73 @@ export const Features = () => {
   // Fast Staff Onboarding, Secure & Reliable, Loyalty & Customer Management, Mobile App & Notifications
   const workflowFeatures: WorkflowFeature[] = [
     {
+      id: 'pointOfSale',
       title: t('landing.workflow.pointOfSale.title'),
       description: t('landing.workflow.pointOfSale.description'),
       icon: CreditCard,
     },
     {
+      id: 'salesControl',
       title: t('landing.workflow.salesControl.title'),
       description: t('landing.workflow.salesControl.description'),
       icon: ShieldCheck,
     },
     {
+      id: 'staffManagement',
       title: t('landing.workflow.staffManagement.title'),
       description: t('landing.workflow.staffManagement.description'),
       icon: Users,
     },
     {
+      id: 'advancedReporting',
       title: t('landing.workflow.advancedReporting.title'),
       description: t('landing.workflow.advancedReporting.description'),
       icon: BarChart3,
     },
     {
+      id: 'production',
       title: t('landing.workflow.production.title'),
       description: t('landing.workflow.production.description'),
       icon: ChefHat,
     },
     {
+      id: 'aiSystem',
       title: t('landing.workflow.aiSystem.title'),
       description: t('landing.workflow.aiSystem.description'),
       icon: Sparkles,
     },
     {
+      id: 'multiBranch',
       title: t('landing.workflow.multiBranch.title'),
       description: t('landing.workflow.multiBranch.description'),
       icon: Building2,
     },
     {
+      id: 'simpleUI',
       title: t('landing.workflow.simpleUI.title'),
       description: t('landing.workflow.simpleUI.description'),
       icon: LayoutDashboard,
     },
     {
+      id: 'fastOnboarding',
       title: t('landing.workflow.fastOnboarding.title'),
       description: t('landing.workflow.fastOnboarding.description'),
       icon: Zap,
     },
     {
+      id: 'secure',
       title: t('landing.workflow.secure.title'),
       description: t('landing.workflow.secure.description'),
       icon: Lock,
     },
     {
+      id: 'loyalty',
       title: t('landing.workflow.loyalty.title'),
       description: t('landing.workflow.loyalty.description'),
       icon: Heart,
     },
     {
+      id: 'mobileApp',
       title: t('landing.workflow.mobileApp.title'),
       description: t('landing.workflow.mobileApp.description'),
       icon: Smartphone,
