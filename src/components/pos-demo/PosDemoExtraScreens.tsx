@@ -477,6 +477,10 @@ export function DemoDashboardScreen({
   onGoOrders,
   autoOpenShiftModal = false,
   onAutoOpenShiftModalHandled,
+  canOpenShift = true,
+  canCloseShift = true,
+  canCashMovement = true,
+  canViewAnalytics = true,
 }: {
   staff: Staff | null;
   shift: DemoShift;
@@ -488,6 +492,10 @@ export function DemoDashboardScreen({
   /** Parent asks to open the Open Shift amount popup (e.g. user tapped Sales without a shift). */
   autoOpenShiftModal?: boolean;
   onAutoOpenShiftModalHandled?: () => void;
+  canOpenShift?: boolean;
+  canCloseShift?: boolean;
+  canCashMovement?: boolean;
+  canViewAnalytics?: boolean;
 }) {
   const [shiftModal, setShiftModal] = useState<'open' | 'close' | null>(null);
   const [payModal, setPayModal] = useState<'in' | 'out' | null>(null);
@@ -498,11 +506,13 @@ export function DemoDashboardScreen({
   } | null>(null);
 
   useEffect(() => {
-    if (autoOpenShiftModal && !shift.open) {
+    if (autoOpenShiftModal && !shift.open && canOpenShift) {
       setShiftModal('open');
       onAutoOpenShiftModalHandled?.();
+    } else if (autoOpenShiftModal && !canOpenShift) {
+      onAutoOpenShiftModalHandled?.();
     }
-  }, [autoOpenShiftModal, shift.open, onAutoOpenShiftModalHandled]);
+  }, [autoOpenShiftModal, shift.open, canOpenShift, onAutoOpenShiftModalHandled]);
 
   const netSales = shift.cashSales + shift.cardSales + shift.otherSales;
   const expectedCash = shift.openingCash + shift.cashSales + shift.payIn - shift.payOut;
@@ -564,30 +574,36 @@ export function DemoDashboardScreen({
                 >
                   <List size={14} /> My orders
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setPayModal('in')}
-                  className="inline-flex items-center gap-1 rounded-xl border border-gray-200 bg-cream-50 px-2.5 py-2 text-[11px] font-bold text-text-primary dark:border-white/10 dark:bg-mintcom-dark dark:text-white"
-                >
-                  <ArrowDownLeft size={13} className="text-mintcom-green" /> Cash in
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPayModal('out')}
-                  className="inline-flex items-center gap-1 rounded-xl border border-gray-200 bg-cream-50 px-2.5 py-2 text-[11px] font-bold text-text-primary dark:border-white/10 dark:bg-mintcom-dark dark:text-white"
-                >
-                  <ArrowUpRight size={13} className="text-mintcom-red" /> Cash out
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShiftModal('close')}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-mintcom-red px-3 py-2 text-[11px] font-black text-white"
-                >
-                  <LogOut size={14} /> Close shift
-                </button>
+                {canCashMovement && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setPayModal('in')}
+                      className="inline-flex items-center gap-1 rounded-xl border border-gray-200 bg-cream-50 px-2.5 py-2 text-[11px] font-bold text-text-primary dark:border-white/10 dark:bg-mintcom-dark dark:text-white"
+                    >
+                      <ArrowDownLeft size={13} className="text-mintcom-green" /> Cash in
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPayModal('out')}
+                      className="inline-flex items-center gap-1 rounded-xl border border-gray-200 bg-cream-50 px-2.5 py-2 text-[11px] font-bold text-text-primary dark:border-white/10 dark:bg-mintcom-dark dark:text-white"
+                    >
+                      <ArrowUpRight size={13} className="text-mintcom-red" /> Cash out
+                    </button>
+                  </>
+                )}
+                {canCloseShift && (
+                  <button
+                    type="button"
+                    onClick={() => setShiftModal('close')}
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-mintcom-red px-3 py-2 text-[11px] font-black text-white"
+                  >
+                    <LogOut size={14} /> Close shift
+                  </button>
+                )}
               </>
             )}
-            {!shift.open && (
+            {!shift.open && canOpenShift && (
               <button
                 type="button"
                 onClick={() => setShiftModal('open')}
@@ -596,11 +612,32 @@ export function DemoDashboardScreen({
                 <LogIn size={14} /> Open shift
               </button>
             )}
+            {!shift.open && !canOpenShift && (
+              <span className="rounded-xl bg-cream-100 px-3 py-2 text-[10px] font-bold text-text-tertiary dark:bg-mintcom-dark">
+                Ask a manager to open the shift
+              </span>
+            )}
           </div>
         </div>
       </Card>
 
       {/* Metric grid — POS layout: left column tall cards + right 2x2 + chart */}
+      {!canViewAnalytics ? (
+        <Card className="flex min-h-0 flex-1 flex-col items-center justify-center p-6 text-center">
+          <span className="mb-2 text-3xl">🔒</span>
+          <p className="text-sm font-black text-text-primary dark:text-white">Analytics locked</p>
+          <p className="mt-1 max-w-xs text-[11px] text-text-secondary dark:text-mintcom-textSecondary">
+            Full KPIs and charts need manager access. You can still open a shift and run sales.
+          </p>
+          <button
+            type="button"
+            onClick={onGoSales}
+            className="mt-4 rounded-xl bg-mintcom-green px-4 py-2 text-xs font-black text-white"
+          >
+            Go to sales
+          </button>
+        </Card>
+      ) : (
       <div className="grid min-h-0 flex-1 gap-2 overflow-hidden lg:grid-cols-2">
         {/* Left: Net / Cash / Card */}
         <div className="grid min-h-0 grid-rows-3 gap-2">
@@ -678,8 +715,9 @@ export function DemoDashboardScreen({
           </Card>
         </div>
       </div>
+      )}
 
-      {!shift.open && (
+      {!shift.open && canOpenShift && (
         <p className="mt-2 shrink-0 text-center text-[11px] font-bold text-text-tertiary dark:text-mintcom-gray">
           Tip: Open shift first — then ring sales. Cash in / out updates the drawer mid-shift.
         </p>
