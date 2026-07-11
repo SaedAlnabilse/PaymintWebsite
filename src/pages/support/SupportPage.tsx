@@ -389,10 +389,8 @@ export const SupportPage = () => {
                   whileHover={{ y: -3 }}>
                   <Link to={`/support/category/${category.id}`}
                     className={`group relative flex h-full items-center gap-6 overflow-hidden rounded-2xl border bg-white p-6 transition-all duration-300 dark:bg-white/[0.03] ${acc.border} ${acc.glow} shadow-[0_2px_12px_-4px_rgba(0,0,0,0.06)] dark:shadow-none`}>
-                    {/* left color strip */}
-                    <div className={`absolute inset-y-0 start-0 w-1 ${acc.iconBg} rounded-full opacity-60 transition-opacity group-hover:opacity-100`} />
                     {/* icon */}
-                    <div className={`ms-2 flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl ${acc.iconBg} text-white shadow-md transition-transform duration-300 group-hover:scale-105`}>
+                    <div className={`flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl ${acc.iconBg} text-white shadow-md transition-transform duration-300 group-hover:scale-105`}>
                       <category.icon size={26} />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -419,8 +417,7 @@ export const SupportPage = () => {
                   whileHover={{ y: -3 }}>
                   <Link to={`/support/category/${category.id}`}
                     className={`group relative flex h-full items-center gap-6 overflow-hidden rounded-2xl border bg-white p-6 transition-all duration-300 dark:bg-white/[0.03] ${acc.border} ${acc.glow} shadow-[0_2px_12px_-4px_rgba(0,0,0,0.06)] dark:shadow-none`}>
-                    <div className={`absolute inset-y-0 start-0 w-1 ${acc.iconBg} rounded-full opacity-60 transition-opacity group-hover:opacity-100`} />
-                    <div className={`ms-2 flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl ${acc.iconBg} text-white shadow-md transition-transform duration-300 group-hover:scale-105`}>
+                    <div className={`flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl ${acc.iconBg} text-white shadow-md transition-transform duration-300 group-hover:scale-105`}>
                       <category.icon size={26} />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -532,7 +529,7 @@ export const SupportPage = () => {
             {/* ── User Manual card ── */}
             <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
               transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}>
-              <div className="sticky top-24 overflow-hidden rounded-3xl border border-mintcom-green/20 bg-gradient-to-b from-mintcom-green/10 to-mintcom-green/4 p-7 dark:from-mintcom-green/12 dark:to-mintcom-green/3">
+              <div className="relative overflow-hidden rounded-3xl border border-mintcom-green/20 bg-gradient-to-b from-mintcom-green/10 to-mintcom-green/4 p-7 dark:from-mintcom-green/12 dark:to-mintcom-green/3">
                 {/* decorative circles */}
                 <div aria-hidden className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-mintcom-green/20 blur-2xl" />
                 <div aria-hidden className="pointer-events-none absolute -bottom-8 -left-8 h-32 w-32 rounded-full bg-emerald-400/10 blur-2xl" />
