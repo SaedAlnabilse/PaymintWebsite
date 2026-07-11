@@ -1402,59 +1402,346 @@ export const InteractiveLoyaltyDemo = ({ t }: DemoProps) => {
 };
 
 /* ─── Mobile App & Notifications ────────────────────────────────────────── */
+/**
+ * Mobile demo modeled on admin portal AdminPortalAlertsView:
+ * tabs All | Cash | Stock | Refunds, typed alert cards with unread accent,
+ * icon tone, description, amount/stock pill, location, mark-as-read on tap.
+ */
 export const InteractiveMobileDemo = ({ t }: DemoProps) => {
-  const pool = useMemo(
-    () => [
-      { id: 'n1', text: String(t('landing.workflow.receipt.demo.mobile.n1', 'New order #4218 — 24.50 USD')), icon: '🧾' },
-      { id: 'n2', text: String(t('landing.workflow.receipt.demo.mobile.n2', 'Daily target reached 🎉')), icon: '🎯' },
-      { id: 'n3', text: String(t('landing.workflow.receipt.demo.mobile.n3', 'Low stock: Espresso beans')), icon: '📦' },
-      { id: 'n4', text: String(t('landing.workflow.receipt.demo.mobile.n4', 'Sara clocked in')), icon: '👤' },
-    ],
-    [t],
-  );
-  const [notifs, setNotifs] = useState(pool.slice(0, 2));
-  const [cursor, setCursor] = useState(2);
+  type TabId = 'all' | 'cash' | 'stock' | 'refunds';
+  type Kind =
+    | 'cash_shortage'
+    | 'cash_overage'
+    | 'stock_critical'
+    | 'stock_warning'
+    | 'refund';
+
+  type Alert = {
+    id: string;
+    kind: Kind;
+    title: string;
+    description: string;
+    pill: string;
+    location: string;
+    time: string;
+    isRead: boolean;
+  };
+
+  const tone = (kind: Kind) => {
+    switch (kind) {
+      case 'cash_shortage':
+        return { color: '#D55263', bg: '#D5526312', icon: '!' };
+      case 'cash_overage':
+        return { color: '#F59E0B', bg: '#F59E0B12', icon: '+' };
+      case 'stock_critical':
+        return { color: '#D55263', bg: '#D5526312', icon: '⚠' };
+      case 'stock_warning':
+        return { color: '#4F46E5', bg: '#4F46E512', icon: '📦' };
+      case 'refund':
+        return { color: '#D0A62A', bg: '#D0A62A12', icon: '↺' };
+    }
+  };
+
+  const tabOf = (kind: Kind): TabId => {
+    if (kind === 'cash_shortage' || kind === 'cash_overage') return 'cash';
+    if (kind === 'stock_critical' || kind === 'stock_warning') return 'stock';
+    return 'refunds';
+  };
+
+  const seed = useMemo((): Alert[] => {
+    const loc = String(t('landing.cloudControl.scope.preview.locDowntown', 'Downtown'));
+    const mall = String(t('landing.cloudControl.scope.preview.locMall', 'Mall'));
+    return [
+      {
+        id: 'a1',
+        kind: 'cash_shortage',
+        title: `${String(t('landing.workflow.receipt.demo.mobile.shortage', 'Shortage'))} - Sara`,
+        description: String(t('landing.workflow.receipt.demo.mobile.cashDesc', 'Expected $420.00 — Counted $395.50')),
+        pill: '−$24.50',
+        location: loc,
+        time: String(t('landing.workflow.receipt.demo.mobile.justNow', 'Just now')),
+        isRead: false,
+      },
+      {
+        id: 'a2',
+        kind: 'stock_warning',
+        title: String(t('landing.workflow.receipt.demo.mobile.lowStock', 'Low stock')),
+        description: String(t('landing.workflow.receipt.demo.mobile.stockDesc', 'Espresso beans has 4 units remaining')),
+        pill: '4 left',
+        location: mall,
+        time: '12m ago',
+        isRead: false,
+      },
+      {
+        id: 'a3',
+        kind: 'refund',
+        title: String(t('landing.workflow.receipt.demo.mobile.refund', 'Refund')),
+        description: String(t('landing.workflow.receipt.demo.mobile.refundDesc', 'Order #4218 refunded by Omar')),
+        pill: '$12.00',
+        location: loc,
+        time: '1h ago',
+        isRead: true,
+      },
+      {
+        id: 'a4',
+        kind: 'cash_overage',
+        title: `${String(t('landing.workflow.receipt.demo.mobile.overage', 'Overage'))} - Lina`,
+        description: String(t('landing.workflow.receipt.demo.mobile.overageDesc', 'Expected $310.00 — Counted $318.25')),
+        pill: '+$8.25',
+        location: mall,
+        time: '2h ago',
+        isRead: true,
+      },
+      {
+        id: 'a5',
+        kind: 'stock_critical',
+        title: String(t('landing.workflow.receipt.demo.mobile.criticalStock', 'Critical stock')),
+        description: String(t('landing.workflow.receipt.demo.mobile.criticalDesc', 'Whole milk has 1 L remaining')),
+        pill: '1 left',
+        location: loc,
+        time: '3h ago',
+        isRead: true,
+      },
+    ];
+  }, [t]);
+
+  const pushPool = useMemo((): Omit<Alert, 'id' | 'isRead' | 'time'>[] => {
+    const loc = String(t('landing.cloudControl.scope.preview.locAirport', 'Airport'));
+    return [
+      {
+        kind: 'cash_shortage',
+        title: `${String(t('landing.workflow.receipt.demo.mobile.shortage', 'Shortage'))} - Noor`,
+        description: String(t('landing.workflow.receipt.demo.mobile.cashDesc2', 'Expected $180.00 — Counted $172.00')),
+        pill: '−$8.00',
+        location: loc,
+      },
+      {
+        kind: 'stock_critical',
+        title: String(t('landing.workflow.receipt.demo.mobile.criticalStock', 'Critical stock')),
+        description: String(t('landing.workflow.receipt.demo.mobile.criticalDesc2', 'Croissant dough has 0 units remaining')),
+        pill: '0 left',
+        location: loc,
+      },
+      {
+        kind: 'refund',
+        title: String(t('landing.workflow.receipt.demo.mobile.refund', 'Refund')),
+        description: String(t('landing.workflow.receipt.demo.mobile.refundDesc2', 'Order #4301 partial refund — $6.50')),
+        pill: '$6.50',
+        location: loc,
+      },
+      {
+        kind: 'cash_overage',
+        title: `${String(t('landing.workflow.receipt.demo.mobile.overage', 'Overage'))} - Adam`,
+        description: String(t('landing.workflow.receipt.demo.mobile.overageDesc2', 'Expected $95.00 — Counted $102.00')),
+        pill: '+$7.00',
+        location: loc,
+      },
+    ];
+  }, [t]);
+
+  const [alerts, setAlerts] = useState<Alert[]>(seed);
+  const [tab, setTab] = useState<TabId>('all');
+  const [cursor, setCursor] = useState(0);
+  const [pulseBell, setPulseBell] = useState(false);
+
+  const unread = alerts.filter((a) => !a.isRead).length;
+  const counts = {
+    all: alerts.length,
+    cash: alerts.filter((a) => tabOf(a.kind) === 'cash').length,
+    stock: alerts.filter((a) => tabOf(a.kind) === 'stock').length,
+    refunds: alerts.filter((a) => tabOf(a.kind) === 'refunds').length,
+  };
+  const visible = alerts.filter((a) => tab === 'all' || tabOf(a.kind) === tab);
+
+  const markRead = (id: string) => {
+    setAlerts((list) => list.map((a) => (a.id === id ? { ...a, isRead: true } : a)));
+  };
+
+  const markAllRead = () => {
+    setAlerts((list) => list.map((a) => ({ ...a, isRead: true })));
+  };
 
   const pushNotif = () => {
-    const next = pool[cursor % pool.length];
-    setNotifs((n) => [{ ...next, id: `${next.id}-${Date.now()}` }, ...n].slice(0, 4));
+    const template = pushPool[cursor % pushPool.length];
+    const next: Alert = {
+      ...template,
+      id: `push-${Date.now()}`,
+      time: String(t('landing.workflow.receipt.demo.mobile.justNow', 'Just now')),
+      isRead: false,
+    };
+    setAlerts((list) => [next, ...list].slice(0, 8));
     setCursor((c) => c + 1);
+    setTab(tabOf(next.kind));
+    setPulseBell(true);
+    window.setTimeout(() => setPulseBell(false), 600);
   };
+
+  const tabs: { id: TabId; label: string }[] = [
+    { id: 'all', label: String(t('common.all', 'All')) },
+    { id: 'cash', label: String(t('landing.workflow.receipt.demo.mobile.tabCash', 'Cash')) },
+    { id: 'stock', label: String(t('landing.workflow.receipt.demo.mobile.tabStock', 'Stock')) },
+    { id: 'refunds', label: String(t('landing.workflow.receipt.demo.mobile.tabRefunds', 'Refunds')) },
+  ];
 
   return (
     <div className="mt-5 select-none" onPointerDown={(e) => e.stopPropagation()}>
-      <div className="mx-auto w-full max-w-[240px]">
-        <div className="overflow-hidden rounded-[1.75rem] border-[3px] border-gray-900 bg-gray-900 p-1.5 shadow-xl dark:border-gray-700">
-          <div className="overflow-hidden rounded-[1.35rem] bg-white dark:bg-[#0c0c0c]">
-            <div className="flex items-center justify-between bg-mintcom-green/15 px-3 py-2">
-              <span className="text-[10px] font-black uppercase tracking-wider text-mintcom-green">Mintcom</span>
-              <Bell size={12} className="text-mintcom-green" />
+      <div className="mx-auto w-full max-w-[300px]">
+        <div className="overflow-hidden rounded-[1.85rem] border-[3px] border-gray-900 bg-gray-900 p-1.5 shadow-2xl dark:border-gray-700">
+          <div className="overflow-hidden rounded-[1.4rem] bg-[#f6f7f8] dark:bg-[#0a0a0a]">
+            {/* Status bar */}
+            <div className="flex items-center justify-between bg-mintcom-green px-3 py-1 text-[9px] font-bold text-black/70">
+              <span>9:41</span>
+              <span className="tracking-widest">••••</span>
             </div>
-            <div className="min-h-[180px] space-y-1.5 p-2.5">
-              <AnimatePresence initial={false}>
-                {notifs.map((n) => (
-                  <motion.div
-                    key={n.id}
-                    initial={{ opacity: 0, y: -16, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="flex items-start gap-2 rounded-xl border border-gray-100 bg-gray-50 px-2.5 py-2 dark:border-white/8 dark:bg-white/[0.04]"
+
+            {/* Header — matches admin green top + Notifications title */}
+            <div className="bg-mintcom-green px-3 pb-2.5 pt-1">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-[9px] font-bold uppercase tracking-wider text-black/55">
+                    {String(t('landing.workflow.receipt.demo.mobile.eyebrow', 'All locations'))}
+                  </p>
+                  <p className="text-sm font-black text-black">
+                    {String(t('landing.workflow.receipt.demo.mobile.title', 'Notifications'))}
+                  </p>
+                </div>
+                <motion.div
+                  animate={pulseBell ? { scale: [1, 1.25, 1], rotate: [0, -12, 12, 0] } : {}}
+                  className="relative flex h-8 w-8 items-center justify-center rounded-full bg-black/10"
+                >
+                  <Bell size={14} className="text-black" />
+                  {unread > 0 && (
+                    <span className="absolute -end-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#D55263] px-0.5 text-[9px] font-black text-white">
+                      {unread}
+                    </span>
+                  )}
+                </motion.div>
+              </div>
+              {unread > 0 && (
+                <button
+                  type="button"
+                  onClick={markAllRead}
+                  className="mt-1.5 text-[10px] font-bold text-black/70 underline-offset-2 hover:underline"
+                >
+                  {String(t('landing.workflow.receipt.demo.mobile.markAll', 'Mark all read'))}
+                </button>
+              )}
+            </div>
+
+            {/* Category tabs — All / Cash / Stock / Refunds */}
+            <div className="flex gap-1 overflow-x-auto border-b border-gray-200/80 bg-white px-2 py-1.5 no-scrollbar dark:border-white/8 dark:bg-[#111]">
+              {tabs.map((tb) => {
+                const on = tab === tb.id;
+                const count = counts[tb.id];
+                return (
+                  <button
+                    key={tb.id}
+                    type="button"
+                    onClick={() => setTab(tb.id)}
+                    className={`flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold transition-all ${
+                      on ? 'bg-mintcom-green text-black' : 'bg-gray-100 text-gray-500 dark:bg-white/8 dark:text-gray-400'
+                    }`}
                   >
-                    <span className="text-sm">{n.icon}</span>
-                    <p className="text-[11px] font-semibold leading-snug text-gray-800 dark:text-gray-100">{n.text}</p>
-                  </motion.div>
-                ))}
+                    {tb.label}
+                    <span className={`rounded-full px-1 text-[9px] ${on ? 'bg-black/10' : 'bg-black/5 dark:bg-white/10'}`}>
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Day group + alert cards */}
+            <div className="max-h-[260px] min-h-[220px] overflow-y-auto bg-white dark:bg-[#0c0c0c]">
+              <div className="flex items-center gap-2 px-3 pt-2.5 pb-1">
+                <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400">
+                  {String(t('landing.workflow.receipt.demo.mobile.today', 'Today'))}
+                </span>
+                <div className="h-px flex-1 bg-gray-100 dark:bg-white/8" />
+                <span className="text-[9px] text-gray-400">
+                  {visible.length}{' '}
+                  {visible.length === 1
+                    ? String(t('landing.workflow.receipt.demo.mobile.alert', 'alert'))
+                    : String(t('landing.workflow.receipt.demo.mobile.alerts', 'alerts'))}
+                </span>
+              </div>
+
+              <AnimatePresence initial={false}>
+                {visible.length === 0 ? (
+                  <p className="px-4 py-8 text-center text-[11px] text-gray-400">
+                    {String(t('landing.workflow.receipt.demo.mobile.empty', 'No alerts in this tab'))}
+                  </p>
+                ) : (
+                  visible.map((alert, idx) => {
+                    const tn = tone(alert.kind);
+                    return (
+                      <motion.button
+                        key={alert.id}
+                        type="button"
+                        layout
+                        initial={{ opacity: 0, y: -14, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, height: 0 }}
+                        onClick={() => markRead(alert.id)}
+                        className={`relative flex w-full gap-2.5 border-b border-gray-100 px-3 py-2.5 text-start transition-colors hover:bg-gray-50 dark:border-white/6 dark:hover:bg-white/[0.03] ${
+                          idx === visible.length - 1 ? 'border-b-0' : ''
+                        } ${alert.isRead ? 'opacity-75' : ''}`}
+                      >
+                        {/* Unread accent bar — same idea as admin portal */}
+                        {!alert.isRead && (
+                          <span
+                            className="absolute inset-y-2 start-0 w-[3px] rounded-e-full"
+                            style={{ backgroundColor: tn.color }}
+                          />
+                        )}
+                        <span
+                          className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-[12px] font-black"
+                          style={{ backgroundColor: tn.bg, color: tn.color }}
+                        >
+                          {tn.icon}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-start justify-between gap-2">
+                            <p className={`text-[11px] leading-snug ${alert.isRead ? 'font-semibold text-gray-700 dark:text-gray-300' : 'font-bold text-gray-900 dark:text-white'}`}>
+                              {alert.title}
+                            </p>
+                            <span className="shrink-0 text-[9px] text-gray-400">{alert.time}</span>
+                          </div>
+                          <p className="mt-0.5 line-clamp-2 text-[10px] leading-snug text-gray-500 dark:text-gray-400">
+                            {alert.description}
+                          </p>
+                          <div className="mt-1.5 flex items-center justify-between gap-2">
+                            <span
+                              className="rounded-full px-1.5 py-0.5 text-[9px] font-bold"
+                              style={{ backgroundColor: tn.bg, color: tn.color }}
+                            >
+                              {alert.pill}
+                            </span>
+                            <span className="truncate text-[9px] font-semibold text-gray-400">{alert.location}</span>
+                          </div>
+                        </div>
+                      </motion.button>
+                    );
+                  })
+                )}
               </AnimatePresence>
             </div>
-            <div className="border-t border-gray-100 p-2 dark:border-white/8">
-              <button type="button" onClick={pushNotif} className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-mintcom-green py-2 text-[11px] font-bold text-black">
+
+            <div className="border-t border-gray-100 bg-white p-2 dark:border-white/8 dark:bg-[#111]">
+              <button
+                type="button"
+                onClick={pushNotif}
+                className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-mintcom-green py-2 text-[11px] font-bold text-black shadow-sm"
+              >
                 <Smartphone size={12} />
                 {String(t('landing.workflow.receipt.demo.mobile.push', 'Push notification'))}
               </button>
             </div>
           </div>
         </div>
-        <p className="mt-2 text-center text-[11px] text-gray-400">{String(t('landing.workflow.receipt.demo.mobile.hint', 'Tap to receive a live alert'))}</p>
+        <p className="mt-2 text-center text-[11px] text-gray-400">
+          {String(t('landing.workflow.receipt.demo.mobile.hint', 'Filter tabs · tap to mark read · push live alerts'))}
+        </p>
       </div>
     </div>
   );
