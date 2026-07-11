@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   CreditCard,
@@ -1543,6 +1543,8 @@ export const InteractiveMobileDemo = ({ t }: DemoProps) => {
   const [tab, setTab] = useState<TabId>('all');
   const [cursor, setCursor] = useState(0);
   const [pulseBell, setPulseBell] = useState(false);
+  const [banner, setBanner] = useState<Alert | null>(null);
+  const bannerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const unread = alerts.filter((a) => !a.isRead).length;
   const counts = {
@@ -1561,6 +1563,18 @@ export const InteractiveMobileDemo = ({ t }: DemoProps) => {
     setAlerts((list) => list.map((a) => ({ ...a, isRead: true })));
   };
 
+  const dismissBanner = () => {
+    if (bannerTimerRef.current) window.clearTimeout(bannerTimerRef.current);
+    bannerTimerRef.current = null;
+    setBanner(null);
+  };
+
+  const openFromBanner = () => {
+    if (!banner) return;
+    setTab(tabOf(banner.kind));
+    dismissBanner();
+  };
+
   const pushNotif = () => {
     const template = pushPool[cursor % pushPool.length];
     const next: Alert = {
@@ -1571,10 +1585,19 @@ export const InteractiveMobileDemo = ({ t }: DemoProps) => {
     };
     setAlerts((list) => [next, ...list].slice(0, 8));
     setCursor((c) => c + 1);
-    setTab(tabOf(next.kind));
+    setBanner(next);
     setPulseBell(true);
-    window.setTimeout(() => setPulseBell(false), 600);
+    window.setTimeout(() => setPulseBell(false), 700);
+    if (bannerTimerRef.current) window.clearTimeout(bannerTimerRef.current);
+    bannerTimerRef.current = window.setTimeout(() => setBanner(null), 4200);
   };
+
+  useEffect(
+    () => () => {
+      if (bannerTimerRef.current) window.clearTimeout(bannerTimerRef.current);
+    },
+    [],
+  );
 
   const tabs: { id: TabId; label: string }[] = [
     { id: 'all', label: String(t('common.all', 'All')) },
@@ -1583,164 +1606,258 @@ export const InteractiveMobileDemo = ({ t }: DemoProps) => {
     { id: 'refunds', label: String(t('landing.workflow.receipt.demo.mobile.tabRefunds', 'Refunds')) },
   ];
 
+  const appName = String(t('landing.workflow.receipt.demo.mobile.appName', 'Mintcom'));
+
   return (
     <div className="mt-5 select-none" onPointerDown={(e) => e.stopPropagation()}>
-      <div className="mx-auto w-full max-w-[300px]">
-        <div className="overflow-hidden rounded-[1.85rem] border-[3px] border-gray-900 bg-gray-900 p-1.5 shadow-2xl dark:border-gray-700">
-          <div className="overflow-hidden rounded-[1.4rem] bg-[#f6f7f8] dark:bg-[#0a0a0a]">
-            {/* Status bar */}
-            <div className="flex items-center justify-between bg-mintcom-green px-3 py-1 text-[9px] font-bold text-black/70">
-              <span>9:41</span>
-              <span className="tracking-widest">••••</span>
-            </div>
+      <div className="mx-auto w-full max-w-[288px]">
+        {/* iPhone chassis */}
+        <div
+          className="relative mx-auto"
+          style={{
+            filter: 'drop-shadow(0 28px 40px rgba(0,0,0,0.35)) drop-shadow(0 8px 16px rgba(0,0,0,0.2))',
+          }}
+        >
+          {/* Side buttons (volume + power) */}
+          <div className="pointer-events-none absolute -start-[3px] top-24 h-7 w-[3px] rounded-s-sm bg-[#2a2a2c]" />
+          <div className="pointer-events-none absolute -start-[3px] top-36 h-12 w-[3px] rounded-s-sm bg-[#2a2a2c]" />
+          <div className="pointer-events-none absolute -start-[3px] top-52 h-12 w-[3px] rounded-s-sm bg-[#2a2a2c]" />
+          <div className="pointer-events-none absolute -end-[3px] top-40 h-16 w-[3px] rounded-e-sm bg-[#2a2a2c]" />
 
-            {/* Header — matches admin green top + Notifications title */}
-            <div className="bg-mintcom-green px-3 pb-2.5 pt-1">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-[9px] font-bold uppercase tracking-wider text-black/55">
-                    {String(t('landing.workflow.receipt.demo.mobile.eyebrow', 'All locations'))}
-                  </p>
-                  <p className="text-sm font-black text-black">
-                    {String(t('landing.workflow.receipt.demo.mobile.title', 'Notifications'))}
-                  </p>
+          <div className="overflow-hidden rounded-[2.4rem] bg-[#1c1c1e] p-[10px] ring-1 ring-white/10">
+            <div className="relative overflow-hidden rounded-[1.95rem] bg-[#f2f2f7] dark:bg-black">
+              {/* Dynamic Island */}
+              <div className="pointer-events-none absolute start-1/2 top-2 z-40 h-[22px] w-[92px] -translate-x-1/2 rounded-full bg-black shadow-inner" />
+
+              {/* iOS status bar */}
+              <div className="relative z-30 flex items-center justify-between px-5 pb-1 pt-2.5 text-[11px] font-semibold text-black dark:text-white">
+                <span className="w-12 tabular-nums">9:41</span>
+                <div className="flex items-center gap-1">
+                  <svg width="15" height="11" viewBox="0 0 16 12" className="opacity-90" aria-hidden>
+                    <rect x="0" y="7" width="3" height="5" rx="0.6" fill="currentColor" />
+                    <rect x="4.5" y="5" width="3" height="7" rx="0.6" fill="currentColor" />
+                    <rect x="9" y="2.5" width="3" height="9.5" rx="0.6" fill="currentColor" />
+                    <rect x="13.5" y="0" width="3" height="12" rx="0.6" fill="currentColor" opacity="0.35" />
+                  </svg>
+                  <svg width="14" height="11" viewBox="0 0 16 12" className="opacity-90" aria-hidden>
+                    <path d="M8 2.2c2.2 0 4.1 0.9 5.5 2.3l-1.1 1.1C11.3 4.4 9.7 3.7 8 3.7S4.7 4.4 3.6 5.6L2.5 4.5C3.9 3.1 5.8 2.2 8 2.2z" fill="currentColor" />
+                    <path d="M8 5.2c1.3 0 2.5 0.5 3.4 1.4L10.3 7.7C9.7 7.1 8.9 6.7 8 6.7S6.3 7.1 5.7 7.7L4.6 6.6C5.5 5.7 6.7 5.2 8 5.2z" fill="currentColor" />
+                    <circle cx="8" cy="10" r="1.3" fill="currentColor" />
+                  </svg>
+                  <div className="relative ms-0.5 h-[11px] w-[22px] rounded-[3px] border border-current/40 p-[1px]">
+                    <div className="h-full w-[70%] rounded-[1.5px] bg-current" />
+                    <div className="absolute -end-[2.5px] top-1/2 h-[4px] w-[1.5px] -translate-y-1/2 rounded-e-sm bg-current/40" />
+                  </div>
                 </div>
-                <motion.div
-                  animate={pulseBell ? { scale: [1, 1.25, 1], rotate: [0, -12, 12, 0] } : {}}
-                  className="relative flex h-8 w-8 items-center justify-center rounded-full bg-black/10"
-                >
-                  <Bell size={14} className="text-black" />
-                  {unread > 0 && (
-                    <span className="absolute -end-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#D55263] px-0.5 text-[9px] font-black text-white">
-                      {unread}
-                    </span>
-                  )}
-                </motion.div>
               </div>
-              {unread > 0 && (
+
+              {/* ── Real iOS push banner ── */}
+              <div className="pointer-events-none absolute inset-x-0 top-0 z-50 px-2.5 pt-9">
+                <AnimatePresence>
+                  {banner && (
+                    <motion.button
+                      key={banner.id}
+                      type="button"
+                      initial={{ y: -90, opacity: 0, scale: 0.94 }}
+                      animate={{ y: 0, opacity: 1, scale: 1 }}
+                      exit={{ y: -80, opacity: 0, scale: 0.96 }}
+                      transition={{ type: 'spring', stiffness: 420, damping: 28 }}
+                      onClick={openFromBanner}
+                      className="pointer-events-auto w-full rounded-[18px] border border-white/40 bg-white/85 p-2.5 text-start shadow-[0_12px_40px_-8px_rgba(0,0,0,0.35)] backdrop-blur-xl dark:border-white/10 dark:bg-[#2c2c2e]/92"
+                      style={{ WebkitBackdropFilter: 'blur(24px)' }}
+                    >
+                      <div className="flex gap-2.5">
+                        <img
+                          src="/mintcom-admin-app-icon.png"
+                          alt=""
+                          className="h-9 w-9 shrink-0 rounded-[9px] shadow-sm ring-1 ring-black/5"
+                          draggable={false}
+                        />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-[10px] font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                              {appName}
+                            </span>
+                            <span className="text-[10px] text-gray-400">
+                              {String(t('landing.workflow.receipt.demo.mobile.now', 'now'))}
+                            </span>
+                          </div>
+                          <p className="mt-0.5 truncate text-[12px] font-semibold leading-tight text-gray-900 dark:text-white">
+                            {banner.title}
+                          </p>
+                          <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-gray-600 dark:text-gray-300">
+                            {banner.description}
+                          </p>
+                        </div>
+                      </div>
+                      {/* grabber hint */}
+                      <div className="mx-auto mt-2 h-1 w-8 rounded-full bg-black/10 dark:bg-white/15" />
+                    </motion.button>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* App header — mint green like admin portal */}
+              <div className="bg-mintcom-green px-3 pb-2.5 pt-1">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <img
+                      src="/mintcom-admin-app-icon.png"
+                      alt=""
+                      className="h-7 w-7 rounded-[7px] shadow-sm ring-1 ring-black/10"
+                      draggable={false}
+                    />
+                    <div>
+                      <p className="text-[9px] font-bold uppercase tracking-wider text-black/55">
+                        {String(t('landing.workflow.receipt.demo.mobile.eyebrow', 'All locations'))}
+                      </p>
+                      <p className="text-[13px] font-black leading-tight text-black">
+                        {String(t('landing.workflow.receipt.demo.mobile.title', 'Notifications'))}
+                      </p>
+                    </div>
+                  </div>
+                  <motion.div
+                    animate={pulseBell ? { scale: [1, 1.25, 1], rotate: [0, -12, 12, 0] } : {}}
+                    className="relative flex h-8 w-8 items-center justify-center rounded-full bg-black/10"
+                  >
+                    <Bell size={14} className="text-black" />
+                    {unread > 0 && (
+                      <span className="absolute -end-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#D55263] px-0.5 text-[9px] font-black text-white">
+                        {unread}
+                      </span>
+                    )}
+                  </motion.div>
+                </div>
+                {unread > 0 && (
+                  <button
+                    type="button"
+                    onClick={markAllRead}
+                    className="mt-1.5 text-[10px] font-bold text-black/70 underline-offset-2 hover:underline"
+                  >
+                    {String(t('landing.workflow.receipt.demo.mobile.markAll', 'Mark all read'))}
+                  </button>
+                )}
+              </div>
+
+              {/* Tabs */}
+              <div className="flex gap-1 overflow-x-auto border-b border-black/5 bg-white px-2 py-1.5 no-scrollbar dark:border-white/8 dark:bg-[#1c1c1e]">
+                {tabs.map((tb) => {
+                  const on = tab === tb.id;
+                  const count = counts[tb.id];
+                  return (
+                    <button
+                      key={tb.id}
+                      type="button"
+                      onClick={() => setTab(tb.id)}
+                      className={`flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold transition-all ${
+                        on ? 'bg-mintcom-green text-black' : 'bg-black/[0.05] text-gray-500 dark:bg-white/8 dark:text-gray-400'
+                      }`}
+                    >
+                      {tb.label}
+                      <span className={`rounded-full px-1 text-[9px] ${on ? 'bg-black/10' : 'bg-black/5 dark:bg-white/10'}`}>
+                        {count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Feed */}
+              <div className="max-h-[248px] min-h-[210px] overflow-y-auto bg-white dark:bg-black">
+                <div className="flex items-center gap-2 px-3 pt-2.5 pb-1">
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400">
+                    {String(t('landing.workflow.receipt.demo.mobile.today', 'Today'))}
+                  </span>
+                  <div className="h-px flex-1 bg-gray-100 dark:bg-white/8" />
+                  <span className="text-[9px] text-gray-400">
+                    {visible.length}{' '}
+                    {visible.length === 1
+                      ? String(t('landing.workflow.receipt.demo.mobile.alert', 'alert'))
+                      : String(t('landing.workflow.receipt.demo.mobile.alerts', 'alerts'))}
+                  </span>
+                </div>
+
+                <AnimatePresence initial={false}>
+                  {visible.length === 0 ? (
+                    <p className="px-4 py-8 text-center text-[11px] text-gray-400">
+                      {String(t('landing.workflow.receipt.demo.mobile.empty', 'No alerts in this tab'))}
+                    </p>
+                  ) : (
+                    visible.map((alert, idx) => {
+                      const tn = tone(alert.kind);
+                      return (
+                        <motion.button
+                          key={alert.id}
+                          type="button"
+                          layout
+                          initial={{ opacity: 0, y: -14, scale: 0.98 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, height: 0 }}
+                          onClick={() => markRead(alert.id)}
+                          className={`relative flex w-full gap-2.5 border-b border-gray-100 px-3 py-2.5 text-start transition-colors hover:bg-gray-50 dark:border-white/6 dark:hover:bg-white/[0.04] ${
+                            idx === visible.length - 1 ? 'border-b-0' : ''
+                          } ${alert.isRead ? 'opacity-75' : ''}`}
+                        >
+                          {!alert.isRead && (
+                            <span
+                              className="absolute inset-y-2 start-0 w-[3px] rounded-e-full"
+                              style={{ backgroundColor: tn.color }}
+                            />
+                          )}
+                          <span
+                            className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-[12px] font-black"
+                            style={{ backgroundColor: tn.bg, color: tn.color }}
+                          >
+                            {tn.icon}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-start justify-between gap-2">
+                              <p className={`text-[11px] leading-snug ${alert.isRead ? 'font-semibold text-gray-700 dark:text-gray-300' : 'font-bold text-gray-900 dark:text-white'}`}>
+                                {alert.title}
+                              </p>
+                              <span className="shrink-0 text-[9px] text-gray-400">{alert.time}</span>
+                            </div>
+                            <p className="mt-0.5 line-clamp-2 text-[10px] leading-snug text-gray-500 dark:text-gray-400">
+                              {alert.description}
+                            </p>
+                            <div className="mt-1.5 flex items-center justify-between gap-2">
+                              <span
+                                className="rounded-full px-1.5 py-0.5 text-[9px] font-bold"
+                                style={{ backgroundColor: tn.bg, color: tn.color }}
+                              >
+                                {alert.pill}
+                              </span>
+                              <span className="truncate text-[9px] font-semibold text-gray-400">{alert.location}</span>
+                            </div>
+                          </div>
+                        </motion.button>
+                      );
+                    })
+                  )}
+                </AnimatePresence>
+              </div>
+
+              <div className="border-t border-black/5 bg-white p-2 dark:border-white/8 dark:bg-[#1c1c1e]">
                 <button
                   type="button"
-                  onClick={markAllRead}
-                  className="mt-1.5 text-[10px] font-bold text-black/70 underline-offset-2 hover:underline"
+                  onClick={pushNotif}
+                  className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-mintcom-green py-2.5 text-[11px] font-bold text-black shadow-sm active:scale-[0.98]"
                 >
-                  {String(t('landing.workflow.receipt.demo.mobile.markAll', 'Mark all read'))}
+                  <Bell size={12} />
+                  {String(t('landing.workflow.receipt.demo.mobile.push', 'Push notification'))}
                 </button>
-              )}
-            </div>
-
-            {/* Category tabs — All / Cash / Stock / Refunds */}
-            <div className="flex gap-1 overflow-x-auto border-b border-gray-200/80 bg-white px-2 py-1.5 no-scrollbar dark:border-white/8 dark:bg-[#111]">
-              {tabs.map((tb) => {
-                const on = tab === tb.id;
-                const count = counts[tb.id];
-                return (
-                  <button
-                    key={tb.id}
-                    type="button"
-                    onClick={() => setTab(tb.id)}
-                    className={`flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold transition-all ${
-                      on ? 'bg-mintcom-green text-black' : 'bg-gray-100 text-gray-500 dark:bg-white/8 dark:text-gray-400'
-                    }`}
-                  >
-                    {tb.label}
-                    <span className={`rounded-full px-1 text-[9px] ${on ? 'bg-black/10' : 'bg-black/5 dark:bg-white/10'}`}>
-                      {count}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Day group + alert cards */}
-            <div className="max-h-[260px] min-h-[220px] overflow-y-auto bg-white dark:bg-[#0c0c0c]">
-              <div className="flex items-center gap-2 px-3 pt-2.5 pb-1">
-                <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400">
-                  {String(t('landing.workflow.receipt.demo.mobile.today', 'Today'))}
-                </span>
-                <div className="h-px flex-1 bg-gray-100 dark:bg-white/8" />
-                <span className="text-[9px] text-gray-400">
-                  {visible.length}{' '}
-                  {visible.length === 1
-                    ? String(t('landing.workflow.receipt.demo.mobile.alert', 'alert'))
-                    : String(t('landing.workflow.receipt.demo.mobile.alerts', 'alerts'))}
-                </span>
               </div>
 
-              <AnimatePresence initial={false}>
-                {visible.length === 0 ? (
-                  <p className="px-4 py-8 text-center text-[11px] text-gray-400">
-                    {String(t('landing.workflow.receipt.demo.mobile.empty', 'No alerts in this tab'))}
-                  </p>
-                ) : (
-                  visible.map((alert, idx) => {
-                    const tn = tone(alert.kind);
-                    return (
-                      <motion.button
-                        key={alert.id}
-                        type="button"
-                        layout
-                        initial={{ opacity: 0, y: -14, scale: 0.98 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, height: 0 }}
-                        onClick={() => markRead(alert.id)}
-                        className={`relative flex w-full gap-2.5 border-b border-gray-100 px-3 py-2.5 text-start transition-colors hover:bg-gray-50 dark:border-white/6 dark:hover:bg-white/[0.03] ${
-                          idx === visible.length - 1 ? 'border-b-0' : ''
-                        } ${alert.isRead ? 'opacity-75' : ''}`}
-                      >
-                        {/* Unread accent bar — same idea as admin portal */}
-                        {!alert.isRead && (
-                          <span
-                            className="absolute inset-y-2 start-0 w-[3px] rounded-e-full"
-                            style={{ backgroundColor: tn.color }}
-                          />
-                        )}
-                        <span
-                          className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-[12px] font-black"
-                          style={{ backgroundColor: tn.bg, color: tn.color }}
-                        >
-                          {tn.icon}
-                        </span>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-start justify-between gap-2">
-                            <p className={`text-[11px] leading-snug ${alert.isRead ? 'font-semibold text-gray-700 dark:text-gray-300' : 'font-bold text-gray-900 dark:text-white'}`}>
-                              {alert.title}
-                            </p>
-                            <span className="shrink-0 text-[9px] text-gray-400">{alert.time}</span>
-                          </div>
-                          <p className="mt-0.5 line-clamp-2 text-[10px] leading-snug text-gray-500 dark:text-gray-400">
-                            {alert.description}
-                          </p>
-                          <div className="mt-1.5 flex items-center justify-between gap-2">
-                            <span
-                              className="rounded-full px-1.5 py-0.5 text-[9px] font-bold"
-                              style={{ backgroundColor: tn.bg, color: tn.color }}
-                            >
-                              {alert.pill}
-                            </span>
-                            <span className="truncate text-[9px] font-semibold text-gray-400">{alert.location}</span>
-                          </div>
-                        </div>
-                      </motion.button>
-                    );
-                  })
-                )}
-              </AnimatePresence>
-            </div>
-
-            <div className="border-t border-gray-100 bg-white p-2 dark:border-white/8 dark:bg-[#111]">
-              <button
-                type="button"
-                onClick={pushNotif}
-                className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-mintcom-green py-2 text-[11px] font-bold text-black shadow-sm"
-              >
-                <Smartphone size={12} />
-                {String(t('landing.workflow.receipt.demo.mobile.push', 'Push notification'))}
-              </button>
+              {/* Home indicator */}
+              <div className="flex justify-center bg-white pb-1.5 pt-0.5 dark:bg-[#1c1c1e]">
+                <div className="h-[4px] w-[108px] rounded-full bg-black/80 dark:bg-white/80" />
+              </div>
             </div>
           </div>
         </div>
-        <p className="mt-2 text-center text-[11px] text-gray-400">
-          {String(t('landing.workflow.receipt.demo.mobile.hint', 'Filter tabs · tap to mark read · push live alerts'))}
+
+        <p className="mt-3 text-center text-[11px] text-gray-400">
+          {String(t('landing.workflow.receipt.demo.mobile.hint', 'Push a real banner · tap it to open · filter tabs'))}
         </p>
       </div>
     </div>

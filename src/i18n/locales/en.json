@@ -2445,6 +2445,7 @@
           "mobile": {
             "alert": "alert",
             "alerts": "alerts",
+            "appName": "Mintcom",
             "cashDesc": "Expected $420.00 — Counted $395.50",
             "cashDesc2": "Expected $180.00 — Counted $172.00",
             "criticalDesc": "Whole milk has 1 L remaining",
@@ -2460,6 +2461,7 @@
             "n2": "Daily target reached 🎉",
             "n3": "Low stock: Espresso beans",
             "n4": "Sara clocked in",
+            "now": "now",
             "overage": "Overage",
             "overageDesc": "Expected $310.00 — Counted $318.25",
             "overageDesc2": "Expected $95.00 — Counted $102.00",
