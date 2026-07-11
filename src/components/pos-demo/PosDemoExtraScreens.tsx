@@ -16,12 +16,15 @@ import {
   HelpCircle,
   Info,
   Layers,
+  AlertTriangle,
   List,
   LogIn,
   LogOut,
   Mail,
   Package,
+  Pause,
   Percent,
+  Play,
   Receipt,
   ShoppingBag,
   Tag,
@@ -1108,45 +1111,151 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
   );
 }
 
-/* ─── Notifications (unchanged fill layout) ─────────────────────────────── */
+/* ─── Notifications center (held + stock + system — like real POS) ─────── */
+export type DemoHeldTicket = {
+  id: string;
+  orderNo: number;
+  type: 'dine-in' | 'takeaway' | 'delivery';
+  lines: { emoji: string; name: string; qty: number; unitPrice: number }[];
+  discountPct: number;
+  note: string;
+  at: number;
+};
+
 type Notif = {
   id: string;
   title: string;
   body: string;
   time: string;
-  type: 'order' | 'stock' | 'system' | 'shift';
+  kind: 'stock_red' | 'stock_yellow' | 'stock_out' | 'system' | 'shift';
   unread: boolean;
 };
 
 const INITIAL_NOTIFS: Notif[] = [
-  { id: '1', title: 'Low stock · Oat milk', body: 'Only 2 units left. Restock before the evening rush.', time: '4m ago', type: 'stock', unread: true },
-  { id: '2', title: 'Held order waiting', body: 'Order #1040 is still held for table 4.', time: '18m ago', type: 'order', unread: true },
-  { id: '3', title: 'Shift reminder', body: 'Cash drawer variance check recommended before close.', time: '1h ago', type: 'shift', unread: true },
-  { id: '4', title: 'New loyalty member', body: 'Lina joined Cafe Delight rewards · 50 welcome points.', time: '2h ago', type: 'system', unread: false },
-  { id: '5', title: 'Printer ready', body: 'Kitchen printer reconnected successfully.', time: 'Yesterday', type: 'system', unread: false },
+  {
+    id: 's1',
+    title: 'Out of stock · Oat milk',
+    body: '0 units left. Item is blocked on the sales screen until restocked.',
+    time: '4m ago',
+    kind: 'stock_out',
+    unread: true,
+  },
+  {
+    id: 's2',
+    title: 'Critical stock · Espresso beans',
+    body: '4 bags left — below red threshold (5).',
+    time: '18m ago',
+    kind: 'stock_red',
+    unread: true,
+  },
+  {
+    id: 's3',
+    title: 'Low stock · To-go cups L',
+    body: '28 left — yellow threshold. Reorder soon.',
+    time: '1h ago',
+    kind: 'stock_yellow',
+    unread: true,
+  },
+  {
+    id: 's4',
+    title: 'Shift reminder',
+    body: 'Cash drawer variance check recommended before close.',
+    time: '2h ago',
+    kind: 'shift',
+    unread: false,
+  },
+  {
+    id: 's5',
+    title: 'Printer ready',
+    body: 'Kitchen printer reconnected successfully.',
+    time: 'Yesterday',
+    kind: 'system',
+    unread: false,
+  },
 ];
 
-const notifIcon = (type: Notif['type']) => {
-  if (type === 'stock') return '📦';
-  if (type === 'order') return '🧾';
-  if (type === 'shift') return '⏱️';
-  return '🔔';
-};
+function orderTypeShort(t: DemoHeldTicket['type']) {
+  if (t === 'dine-in') return 'Dine in';
+  if (t === 'takeaway') return 'Takeaway';
+  return 'Delivery';
+}
 
-export function DemoNotificationsScreen() {
+function stockTone(kind: Notif['kind']) {
+  if (kind === 'stock_out' || kind === 'stock_red')
+    return {
+      bar: 'bg-mintcom-red',
+      chip: 'bg-mintcom-red/15 text-mintcom-red',
+      icon: <AlertTriangle size={16} className="text-white" />,
+      iconBg: 'bg-mintcom-red',
+      label: kind === 'stock_out' ? 'Out of stock' : 'Critical',
+    };
+  if (kind === 'stock_yellow')
+    return {
+      bar: 'bg-mintcom-yellow',
+      chip: 'bg-mintcom-yellow/20 text-amber-700 dark:text-mintcom-yellow',
+      icon: <Package size={16} className="text-black" />,
+      iconBg: 'bg-mintcom-yellow',
+      label: 'Low stock',
+    };
+  if (kind === 'shift')
+    return {
+      bar: 'bg-mintcom-green',
+      chip: 'bg-mintcom-green/15 text-mintcom-green',
+      icon: <Clock size={16} className="text-white" />,
+      iconBg: 'bg-mintcom-green',
+      label: 'Shift',
+    };
+  return {
+    bar: 'bg-sky-500',
+    chip: 'bg-sky-500/15 text-sky-600 dark:text-sky-400',
+    icon: <CheckCheck size={16} className="text-white" />,
+    iconBg: 'bg-sky-500',
+    label: 'System',
+  };
+}
+
+/**
+ * One screen like mintcom-pos NotificationsScreen:
+ * 1) Pinned held orders (resume)
+ * 2) Stock + system alerts below
+ */
+export function DemoNotificationsScreen({
+  held,
+  staffName,
+  onResumeHeld,
+  onDismissHeld,
+}: {
+  held: DemoHeldTicket[];
+  staffName?: string;
+  onResumeHeld: (ticket: DemoHeldTicket) => void;
+  onDismissHeld?: (id: string) => void;
+}) {
   const [items, setItems] = useState(INITIAL_NOTIFS);
+  const [filter, setFilter] = useState<'all' | 'held' | 'stock' | 'other'>('all');
   const unread = items.filter((n) => n.unread).length;
+  const badgeTotal = held.length + unread;
+
   const markAll = () => setItems((list) => list.map((n) => ({ ...n, unread: false })));
   const toggle = (id: string) =>
     setItems((list) => list.map((n) => (n.id === id ? { ...n, unread: !n.unread } : n)));
 
+  const stockItems = items.filter((n) => n.kind.startsWith('stock'));
+  const otherItems = items.filter((n) => !n.kind.startsWith('stock'));
+
+  const showHeld = filter === 'all' || filter === 'held';
+  const showStock = filter === 'all' || filter === 'stock';
+  const showOther = filter === 'all' || filter === 'other';
+
   return (
     <Fill>
-      <div className="mb-2 flex shrink-0 items-center justify-between gap-2">
+      <div className="mb-2 flex shrink-0 flex-wrap items-center justify-between gap-2">
         <div>
-          <h2 className="font-barlow text-lg font-black text-text-primary dark:text-white sm:text-xl">Notifications</h2>
+          <h2 className="font-barlow text-lg font-black text-text-primary dark:text-white sm:text-xl">
+            Notifications
+          </h2>
           <p className="text-[11px] text-text-secondary dark:text-mintcom-textSecondary">
-            {unread ? `${unread} unread` : 'All caught up'}
+            Held orders · stock · system — same center as Mintcom POS
+            {badgeTotal > 0 ? ` · ${badgeTotal} active` : ''}
           </p>
         </div>
         {unread > 0 && (
@@ -1155,34 +1264,196 @@ export function DemoNotificationsScreen() {
             onClick={markAll}
             className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-1.5 text-[11px] font-bold dark:border-white/10 dark:bg-mintcom-surface dark:text-white"
           >
-            <CheckCheck size={14} className="text-mintcom-green" /> Mark all
+            <CheckCheck size={14} className="text-mintcom-green" /> Mark alerts read
           </button>
         )}
       </div>
-      <div className="mx-auto grid min-h-0 w-full max-w-2xl flex-1 grid-rows-5 gap-1.5 overflow-hidden">
-        {items.map((n) => (
+
+      {/* Filter chips */}
+      <div className="mb-2 flex shrink-0 flex-wrap gap-1">
+        {(
+          [
+            { id: 'all' as const, label: 'All', count: held.length + items.length },
+            { id: 'held' as const, label: 'Held', count: held.length },
+            { id: 'stock' as const, label: 'Stock', count: stockItems.length },
+            { id: 'other' as const, label: 'Other', count: otherItems.length },
+          ] as const
+        ).map((f) => (
           <button
-            key={n.id}
+            key={f.id}
             type="button"
-            onClick={() => toggle(n.id)}
-            className={`flex min-h-0 w-full items-center gap-2.5 rounded-2xl border px-3 py-2 text-start ${
-              n.unread
-                ? 'border-mintcom-green/30 bg-mintcom-green/10'
-                : 'border-gray-200 bg-white dark:border-white/8 dark:bg-mintcom-surface'
+            onClick={() => setFilter(f.id)}
+            className={`rounded-full px-3 py-1.5 text-[11px] font-bold ${
+              filter === f.id
+                ? 'bg-mintcom-green text-white'
+                : 'bg-white text-text-secondary ring-1 ring-gray-200 dark:bg-mintcom-surface dark:text-mintcom-textSecondary dark:ring-white/10'
             }`}
           >
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-base shadow-sm dark:bg-mintcom-dark">
-              {notifIcon(n.type)}
-            </span>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center justify-between gap-2">
-                <p className="truncate text-xs font-bold text-text-primary dark:text-white sm:text-sm">{n.title}</p>
-                {n.unread && <span className="h-2 w-2 shrink-0 rounded-full bg-mintcom-green" />}
-              </div>
-              <p className="line-clamp-1 text-[11px] text-text-secondary dark:text-mintcom-textSecondary">{n.body}</p>
-            </div>
+            {f.label}
+            {f.count > 0 && (
+              <span className={`ms-1 tabular-nums ${filter === f.id ? 'text-white/80' : 'text-text-tertiary'}`}>
+                {f.count}
+              </span>
+            )}
           </button>
         ))}
+      </div>
+
+      <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
+        {/* ── Held orders (pinned) ── */}
+        {showHeld && (
+          <section className="flex min-h-0 shrink-0 flex-col gap-1.5 overflow-hidden" style={{ maxHeight: held.length ? '42%' : undefined }}>
+            <div className="flex shrink-0 items-center gap-2">
+              <Pause size={12} className="text-mintcom-green" />
+              <p className="text-[10px] font-black uppercase tracking-wider text-text-tertiary dark:text-mintcom-gray">
+                Held orders
+              </p>
+              {held.length > 0 && (
+                <span className="rounded-full bg-mintcom-green/15 px-1.5 py-0.5 text-[9px] font-black text-mintcom-green">
+                  {held.length}
+                </span>
+              )}
+            </div>
+
+            {held.length === 0 ? (
+              filter === 'held' ? (
+                <Card className="flex flex-1 flex-col items-center justify-center p-6 text-center">
+                  <Pause className="mb-2 text-mintcom-green/50" size={28} />
+                  <p className="text-sm font-bold text-text-primary dark:text-white">No held orders</p>
+                  <p className="mt-1 max-w-xs text-[11px] text-text-secondary dark:text-mintcom-textSecondary">
+                    On Sales, build a ticket and tap the pause icon to park it here.
+                  </p>
+                </Card>
+              ) : (
+                <p className="rounded-xl border border-dashed border-gray-200 px-3 py-2 text-[11px] text-text-tertiary dark:border-white/10">
+                  No held orders — park a ticket from Sales with Hold.
+                </p>
+              )
+            ) : (
+              <div className="min-h-0 flex-1 space-y-1.5 overflow-y-auto overscroll-contain pe-0.5">
+                {held.map((t) => {
+                  const sub = t.lines.reduce((s, l) => s + l.unitPrice * l.qty, 0);
+                  const qty = t.lines.reduce((s, l) => s + l.qty, 0);
+                  const age = Math.max(1, Math.round((Date.now() - t.at) / 60000));
+                  return (
+                    <div
+                      key={t.id}
+                      className="overflow-hidden rounded-2xl border border-mintcom-green/30 bg-gradient-to-br from-mintcom-green to-mintcom-greenDark text-white shadow-md shadow-mintcom-green/20"
+                    >
+                      <div className="flex items-start gap-3 p-3">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/20">
+                          <ShoppingBag size={18} />
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <p className="text-sm font-black">Held · #{t.orderNo}</p>
+                            <span className="rounded-full bg-white/20 px-1.5 py-0.5 text-[9px] font-bold">
+                              {orderTypeShort(t.type)}
+                            </span>
+                          </div>
+                          <p className="mt-0.5 line-clamp-1 text-[11px] text-white/85">
+                            {t.lines.map((l) => `${l.emoji} ${l.name}×${l.qty}`).join(' · ')}
+                          </p>
+                          <p className="mt-0.5 text-[10px] text-white/70">
+                            {qty} items · {money(sub)}
+                            {t.discountPct > 0 ? ` · ${t.discountPct}% off` : ''}
+                            {' · '}
+                            {age < 60 ? `${age}m ago` : `${Math.floor(age / 60)}h ago`}
+                            {staffName ? ` · ${staffName}` : ''}
+                          </p>
+                          {t.note && (
+                            <p className="mt-1 line-clamp-1 text-[10px] text-white/80">📝 {t.note}</p>
+                          )}
+                        </div>
+                        <div className="flex shrink-0 flex-col gap-1">
+                          <button
+                            type="button"
+                            onClick={() => onResumeHeld(t)}
+                            className="inline-flex items-center gap-1 rounded-xl bg-white px-3 py-2 text-[11px] font-black text-mintcom-green"
+                          >
+                            <Play size={12} fill="currentColor" /> Resume
+                          </button>
+                          {onDismissHeld && (
+                            <button
+                              type="button"
+                              onClick={() => onDismissHeld(t.id)}
+                              className="rounded-xl bg-white/15 px-2 py-1 text-[10px] font-bold text-white/90 hover:bg-white/25"
+                            >
+                              Dismiss
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* ── Stock + other alerts ── */}
+        {(showStock || showOther) && (
+          <section className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-hidden">
+            <div className="flex shrink-0 items-center gap-2">
+              <AlertTriangle size={12} className="text-mintcom-yellow" />
+              <p className="text-[10px] font-black uppercase tracking-wider text-text-tertiary dark:text-mintcom-gray">
+                {filter === 'stock' ? 'Stock alerts' : filter === 'other' ? 'Other alerts' : 'Stock & system'}
+              </p>
+            </div>
+            <div className="min-h-0 flex-1 space-y-1.5 overflow-y-auto overscroll-contain pe-0.5">
+              {(showStock ? stockItems : [])
+                .concat(showOther ? otherItems : [])
+                .map((n) => {
+                  const tone = stockTone(n.kind);
+                  return (
+                    <button
+                      key={n.id}
+                      type="button"
+                      onClick={() => toggle(n.id)}
+                      className={`flex w-full overflow-hidden rounded-2xl border text-start transition-all ${
+                        n.unread
+                          ? 'border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-mintcom-surface'
+                          : 'border-gray-100 bg-cream-50 opacity-80 dark:border-white/5 dark:bg-mintcom-dark'
+                      }`}
+                    >
+                      <span className={`w-1.5 shrink-0 ${tone.bar}`} />
+                      <div className="flex min-w-0 flex-1 items-center gap-2.5 px-3 py-2.5">
+                        <span
+                          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${tone.iconBg}`}
+                        >
+                          {tone.icon}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <p className="truncate text-xs font-bold text-text-primary dark:text-white sm:text-sm">
+                              {n.title}
+                            </p>
+                            <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold ${tone.chip}`}>
+                              {tone.label}
+                            </span>
+                            {n.unread && (
+                              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-mintcom-green" />
+                            )}
+                          </div>
+                          <p className="line-clamp-1 text-[11px] text-text-secondary dark:text-mintcom-textSecondary">
+                            {n.body}
+                          </p>
+                          <p className="text-[9px] font-bold text-text-tertiary dark:text-mintcom-gray">{n.time}</p>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              {filter === 'stock' && stockItems.length === 0 && (
+                <p className="py-8 text-center text-[11px] text-text-tertiary">No stock alerts</p>
+              )}
+              {filter === 'other' && otherItems.length === 0 && (
+                <p className="py-8 text-center text-[11px] text-text-tertiary">No other alerts</p>
+              )}
+            </div>
+          </section>
+        )}
       </div>
     </Fill>
   );
