@@ -263,11 +263,15 @@ export const InteractiveSalesControlDemo = ({ t, side }: DemoProps) => {
   const [addingMethod, setAddingMethod] = useState(false);
   const [addingBrand, setAddingBrand] = useState(false);
   const [taxRate, setTaxRate] = useState(8);
+  const [serviceOn, setServiceOn] = useState(false);
+  const [serviceRate, setServiceRate] = useState(10);
   const [flash, setFlash] = useState<string | null>(null);
 
   const sample = 42.5;
-  const tax = sample * (taxRate / 100);
-  const total = sample + tax;
+  const service = serviceOn ? sample * (serviceRate / 100) : 0;
+  // Tax applied on subtotal + service (common restaurant pattern)
+  const tax = (sample + service) * (taxRate / 100);
+  const total = sample + service + tax;
 
   const availableToAdd = methodPool.filter((m) => !extraMethods.some((e) => e.id === m.id));
   const brandsToAdd = brandPool.filter((b) => !cardBrands.some((c) => c.id === b.id));
@@ -552,8 +556,59 @@ export const InteractiveSalesControlDemo = ({ t, side }: DemoProps) => {
         )}
       </AnimatePresence>
 
-      {/* Tax */}
+      {/* Service charge — on/off + % slider (like app settings) */}
       <div className="mt-3 rounded-xl border border-gray-100 bg-white p-3 dark:border-white/8 dark:bg-white/[0.03]">
+        <div className="flex items-center justify-between gap-2">
+          <div>
+            <p className="text-xs font-bold text-gray-700 dark:text-gray-200">
+              {String(t('landing.workflow.receipt.demo.sales.serviceCharge', 'Service charge'))}
+            </p>
+            <p className="text-[10px] text-gray-400">
+              {String(t('landing.workflow.receipt.demo.sales.serviceHint', 'Optional fee applied at checkout'))}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setServiceOn((v) => !v)}
+            className="shrink-0"
+            aria-label={serviceOn ? 'Turn off service charge' : 'Turn on service charge'}
+          >
+            {serviceOn ? (
+              <ToggleRight className="text-mintcom-green" size={26} />
+            ) : (
+              <ToggleLeft className="text-gray-300" size={26} />
+            )}
+          </button>
+        </div>
+        <AnimatePresence initial={false}>
+          {serviceOn && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="mt-2.5 flex items-center justify-between text-xs">
+                <span className="font-semibold text-gray-500">
+                  {String(t('landing.workflow.receipt.demo.sales.serviceRate', 'Rate'))}
+                </span>
+                <span className="tabular-nums font-black text-mintcom-green">{serviceRate}%</span>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={25}
+                value={serviceRate}
+                onChange={(e) => setServiceRate(Number(e.target.value))}
+                className="mt-1 w-full accent-mintcom-green"
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Tax */}
+      <div className="mt-2 rounded-xl border border-gray-100 bg-white p-3 dark:border-white/8 dark:bg-white/[0.03]">
         <div className="mb-2 flex items-center justify-between text-xs">
           <span className="font-bold text-gray-700 dark:text-gray-200">{String(t('landing.workflow.receipt.demo.sales.tax', 'Tax'))}</span>
           <span className="tabular-nums font-black text-mintcom-green">{taxRate}%</span>
@@ -571,6 +626,14 @@ export const InteractiveSalesControlDemo = ({ t, side }: DemoProps) => {
             <span>{String(t('landing.workflow.receipt.demo.sales.subtotal', 'Subtotal'))}</span>
             <span className="tabular-nums">{money(sample)}</span>
           </div>
+          {serviceOn && service > 0 && (
+            <div className="flex justify-between text-gray-500">
+              <span>
+                {String(t('landing.workflow.receipt.demo.sales.serviceCharge', 'Service charge'))} ({serviceRate}%)
+              </span>
+              <span className="tabular-nums">{money(service)}</span>
+            </div>
+          )}
           <div className="flex justify-between text-gray-500">
             <span>
               {String(t('landing.workflow.receipt.demo.sales.tax', 'Tax'))} ({taxRate}%)
