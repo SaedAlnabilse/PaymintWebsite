@@ -472,6 +472,8 @@ export function DemoDashboardScreen({
   onPayInOut,
   onGoSales,
   onGoOrders,
+  autoOpenShiftModal = false,
+  onAutoOpenShiftModalHandled,
 }: {
   staff: Staff | null;
   shift: DemoShift;
@@ -480,6 +482,9 @@ export function DemoDashboardScreen({
   onPayInOut: (type: 'in' | 'out', amount: number, reason: string) => void;
   onGoSales: () => void;
   onGoOrders?: () => void;
+  /** Parent asks to open the Open Shift amount popup (e.g. user tapped Sales without a shift). */
+  autoOpenShiftModal?: boolean;
+  onAutoOpenShiftModalHandled?: () => void;
 }) {
   const [shiftModal, setShiftModal] = useState<'open' | 'close' | null>(null);
   const [payModal, setPayModal] = useState<'in' | 'out' | null>(null);
@@ -488,6 +493,13 @@ export function DemoDashboardScreen({
     actual: number;
     variance: number;
   } | null>(null);
+
+  useEffect(() => {
+    if (autoOpenShiftModal && !shift.open) {
+      setShiftModal('open');
+      onAutoOpenShiftModalHandled?.();
+    }
+  }, [autoOpenShiftModal, shift.open, onAutoOpenShiftModalHandled]);
 
   const netSales = shift.cashSales + shift.cardSales + shift.otherSales;
   const expectedCash = shift.openingCash + shift.cashSales + shift.payIn - shift.payOut;
