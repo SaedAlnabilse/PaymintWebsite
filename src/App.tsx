@@ -31,6 +31,7 @@ import { ScrollToTop } from './components/ScrollToTop';
 // ============================================================================
 // Landing page is the entry point - consider preloading for better UX
 const LandingPage = lazy(() => import('./pages/LandingPage').then(m => ({ default: m.LandingPage })));
+const PosDemoPage = lazy(() => import('./pages/PosDemoPage').then(m => ({ default: m.PosDemoPage })));
 
 const LoginPage = lazy(() => import('./pages/LoginPage').then(m => ({ default: m.LoginPage })));
 const SignUpPage = lazy(() => import('./pages/SignUpPage').then(m => ({ default: m.SignUpPage })));
@@ -136,6 +137,7 @@ function LayoutSuspense({ children }: { children: React.ReactNode }) {
 
 const routeSeo = [
   { path: '/', title: 'Mintcom POS | Cloud POS & Business Management', description: 'Run sales, inventory, staff, reports, loyalty, and multi-location operations from Mintcom.' },
+  { path: '/try-pos', title: 'Try Mintcom POS | Free interactive demo', description: 'Try a full Mintcom POS experience free — clock in, sell items, customize add-ons, and take payment. No account required.' },
   { path: '/login', title: 'Login | Mintcom POS', description: 'Sign in securely to your Mintcom account.' },
   { path: '/signup', title: 'Create Account | Mintcom POS', description: 'Create a Mintcom account for your business.' },
   { path: '/support', title: 'Support | Mintcom POS', description: 'Find Mintcom help articles and support tickets.' },
@@ -287,6 +289,14 @@ const router = createBrowserRouter([
         element: (
           <PageSuspense>
             <LandingPage />
+          </PageSuspense>
+        ),
+      },
+      {
+        path: "/try-pos",
+        element: (
+          <PageSuspense>
+            <PosDemoPage />
           </PageSuspense>
         ),
       },

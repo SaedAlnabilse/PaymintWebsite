@@ -101,7 +101,7 @@ export const Hero = ({ isVideoOpen, setIsVideoOpen }: { isVideoOpen: boolean; se
               {t('landing.hero.description')}
             </p>
 
-            <div className="flex w-full flex-col justify-start gap-3 sm:w-auto sm:flex-row">
+            <div className="flex w-full flex-col justify-start gap-3 sm:w-auto sm:flex-row sm:flex-wrap">
               <motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={handleCtaClick}
@@ -109,6 +109,15 @@ export const Hero = ({ isVideoOpen, setIsVideoOpen }: { isVideoOpen: boolean; se
               >
                 {isAuthenticated ? t('nav.dashboard', 'Go to Dashboard') : t('landing.hero.cta')}
                 <ArrowRight size={20} className={`transition-transform ${t('common.locale') === 'ar' ? 'rotate-180 group-hover:-translate-x-1' : 'group-hover:translate-x-1'}`} />
+              </motion.button>
+
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={() => navigate('/try-pos')}
+                className="group flex w-full items-center justify-center gap-2 rounded-xl border-2 border-mintcom-green/40 bg-mintcom-green/10 px-6 py-3.5 text-base font-bold text-gray-900 transition-colors hover:border-mintcom-green hover:bg-mintcom-green/15 dark:text-white sm:px-8 sm:py-4 sm:text-lg sm:w-auto"
+              >
+                <Play size={18} fill="currentColor" className="text-mintcom-green" />
+                Try free POS demo
               </motion.button>
 
               {HERO_VIDEO_URL && (
