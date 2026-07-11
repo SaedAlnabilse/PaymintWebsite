@@ -211,48 +211,320 @@ export const InteractivePosDemo = ({ t, isRtl, side }: DemoProps) => {
 };
 
 /* ─── Sales Control ─────────────────────────────────────────────────────── */
+/**
+ * Sales Control — mirrors dashboard Payment Methods:
+ * Cash toggleable, Card always fixed on, add custom methods + card brands, tax rate.
+ */
 export const InteractiveSalesControlDemo = ({ t, side }: DemoProps) => {
-  const methods = useMemo(
-    () => [
-      { id: 'card', label: String(t('landing.workflow.receipt.demo.sales.card', 'Card')), emoji: '💳' },
+  type Method = { id: string; label: string; emoji: string; fixed?: boolean };
+  type Brand = { id: string; label: string; emoji: string };
+
+  const coreMethods = useMemo(
+    (): Method[] => [
       { id: 'cash', label: String(t('landing.workflow.receipt.demo.sales.cash', 'Cash')), emoji: '💵' },
-      { id: 'others', label: String(t('landing.workflow.receipt.demo.sales.others', 'Others')), emoji: '🔗' },
+      {
+        id: 'card',
+        label: String(t('landing.workflow.receipt.demo.sales.card', 'Card')),
+        emoji: '💳',
+        fixed: true, // always on — like required tender in Mintcom
+      },
     ],
     [t],
   );
-  const [enabled, setEnabled] = useState<Record<string, boolean>>({ card: true, cash: true, others: false });
+
+  const methodPool = useMemo(
+    (): Method[] => [
+      { id: 'cliq', label: String(t('landing.workflow.receipt.demo.sales.cliq', 'CliQ')), emoji: '⚡' },
+      { id: 'apple', label: String(t('landing.workflow.receipt.demo.sales.applePay', 'Apple Pay')), emoji: '' },
+      { id: 'google', label: String(t('landing.workflow.receipt.demo.sales.googlePay', 'Google Pay')), emoji: 'G' },
+      { id: 'talabat', label: String(t('landing.workflow.receipt.demo.sales.talabat', 'Talabat')), emoji: '🛵' },
+      { id: 'paypal', label: String(t('landing.workflow.receipt.demo.sales.paypal', 'PayPal')), emoji: '🅿️' },
+    ],
+    [t],
+  );
+
+  const brandPool = useMemo(
+    (): Brand[] => [
+      { id: 'visa', label: String(t('landing.workflow.receipt.demo.sales.visa', 'Visa')), emoji: '💙' },
+      { id: 'mc', label: String(t('landing.workflow.receipt.demo.sales.mastercard', 'Mastercard')), emoji: '🧡' },
+      { id: 'amex', label: String(t('landing.workflow.receipt.demo.sales.amex', 'Amex')), emoji: '🩵' },
+      { id: 'discover', label: String(t('landing.workflow.receipt.demo.sales.discover', 'Discover')), emoji: '🧡' },
+    ],
+    [t],
+  );
+
+  const [cashOn, setCashOn] = useState(true);
+  // Card is always enabled — never toggled off
+  const [extraMethods, setExtraMethods] = useState<Method[]>([]);
+  const [enabledExtra, setEnabledExtra] = useState<Record<string, boolean>>({});
+  const [cardBrands, setCardBrands] = useState<Brand[]>([
+    { id: 'visa', label: 'Visa', emoji: '💙' },
+    { id: 'mc', label: 'Mastercard', emoji: '🧡' },
+  ]);
+  const [addingMethod, setAddingMethod] = useState(false);
+  const [addingBrand, setAddingBrand] = useState(false);
   const [taxRate, setTaxRate] = useState(8);
+  const [flash, setFlash] = useState<string | null>(null);
+
   const sample = 42.5;
   const tax = sample * (taxRate / 100);
   const total = sample + tax;
-  const activeCount = Object.values(enabled).filter(Boolean).length;
+
+  const availableToAdd = methodPool.filter((m) => !extraMethods.some((e) => e.id === m.id));
+  const brandsToAdd = brandPool.filter((b) => !cardBrands.some((c) => c.id === b.id));
+
+  const activeCount =
+    1 + // card always
+    (cashOn ? 1 : 0) +
+    extraMethods.filter((m) => enabledExtra[m.id] !== false).length;
+
+  const ping = (msg: string) => {
+    setFlash(msg);
+    window.setTimeout(() => setFlash(null), 1200);
+  };
+
+  const addMethod = (m: Method) => {
+    setExtraMethods((list) => [...list, m]);
+    setEnabledExtra((e) => ({ ...e, [m.id]: true }));
+    setAddingMethod(false);
+    ping(`+ ${m.label}`);
+  };
+
+  const removeMethod = (id: string) => {
+    setExtraMethods((list) => list.filter((m) => m.id !== id));
+    setEnabledExtra((e) => {
+      const next = { ...e };
+      delete next[id];
+      return next;
+    });
+  };
+
+  const addBrand = (b: Brand) => {
+    setCardBrands((list) => [...list, b]);
+    setAddingBrand(false);
+    ping(`+ ${b.label}`);
+  };
+
+  const removeBrand = (id: string) => {
+    setCardBrands((list) => list.filter((b) => b.id !== id));
+  };
 
   return shell(
     <>
-      <div className="mb-3 flex items-center justify-between">
-        <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400">{String(t('landing.workflow.receipt.demo.sales.methods', 'Payment methods'))}</p>
-        <span className="rounded-full bg-mintcom-green/10 px-2 py-0.5 text-[10px] font-bold text-mintcom-green">{activeCount} {String(t('landing.workflow.receipt.demo.sales.active', 'active'))}</span>
+      <div className="mb-2.5 flex items-center justify-between gap-2">
+        <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400">
+          {String(t('landing.workflow.receipt.demo.sales.methods', 'Payment methods'))}
+        </p>
+        <div className="flex items-center gap-1.5">
+          <AnimatePresence>
+            {flash && (
+              <motion.span
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="rounded-full bg-mintcom-green/15 px-2 py-0.5 text-[10px] font-bold text-mintcom-green"
+              >
+                {flash}
+              </motion.span>
+            )}
+          </AnimatePresence>
+          <span className="rounded-full bg-mintcom-green/10 px-2 py-0.5 text-[10px] font-bold text-mintcom-green">
+            {activeCount} {String(t('landing.workflow.receipt.demo.sales.active', 'active'))}
+          </span>
+        </div>
       </div>
-      <div className="space-y-2">
-        {methods.map((m) => (
-          <button
-            key={m.id}
-            type="button"
-            onClick={() => setEnabled((e) => ({ ...e, [m.id]: !e[m.id] }))}
-            className={`flex w-full items-center justify-between rounded-xl border px-3 py-2.5 transition-all ${
-              enabled[m.id]
-                ? 'border-mintcom-green/40 bg-mintcom-green/10 shadow-sm'
-                : 'border-gray-100 bg-white dark:border-white/8 dark:bg-white/[0.03]'
-            }`}
-          >
+
+      <div className="space-y-1.5">
+        {/* Cash — toggleable */}
+        <button
+          type="button"
+          onClick={() => setCashOn((v) => !v)}
+          className={`flex w-full items-center justify-between rounded-xl border px-3 py-2.5 transition-all ${
+            cashOn
+              ? 'border-mintcom-green/40 bg-mintcom-green/10 shadow-sm'
+              : 'border-gray-100 bg-white dark:border-white/8 dark:bg-white/[0.03]'
+          }`}
+        >
+          <span className="flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-white">
+            <span>💵</span> {String(t('landing.workflow.receipt.demo.sales.cash', 'Cash'))}
+          </span>
+          {cashOn ? <ToggleRight className="text-mintcom-green" size={22} /> : <ToggleLeft className="text-gray-300" size={22} />}
+        </button>
+
+        {/* Card — always fixed on (cannot disable) */}
+        <div className="rounded-xl border border-mintcom-green/40 bg-mintcom-green/10 px-3 py-2.5 shadow-sm">
+          <div className="flex items-center justify-between">
             <span className="flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-white">
-              <span>{m.emoji}</span> {m.label}
+              <span>💳</span> {String(t('landing.workflow.receipt.demo.sales.card', 'Card'))}
             </span>
-            {enabled[m.id] ? <ToggleRight className="text-mintcom-green" size={22} /> : <ToggleLeft className="text-gray-300" size={22} />}
-          </button>
-        ))}
+            <span className="flex items-center gap-1.5">
+              <span className="rounded-full bg-mintcom-green/25 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-mintcom-green">
+                {String(t('landing.workflow.receipt.demo.sales.required', 'Required'))}
+              </span>
+              <ToggleRight className="text-mintcom-green opacity-80" size={22} />
+            </span>
+          </div>
+          <p className="mt-1 text-[10px] text-gray-500">
+            {String(t('landing.workflow.receipt.demo.sales.cardFixed', 'Always available at checkout — card brands below'))}
+          </p>
+        </div>
+
+        {/* Extra / custom payment types */}
+        <AnimatePresence initial={false}>
+          {extraMethods.map((m) => {
+            const on = enabledExtra[m.id] !== false;
+            return (
+              <motion.div
+                key={m.id}
+                layout
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className={`flex items-center justify-between rounded-xl border px-3 py-2.5 transition-all ${
+                  on
+                    ? 'border-mintcom-green/40 bg-mintcom-green/10 shadow-sm'
+                    : 'border-gray-100 bg-white dark:border-white/8 dark:bg-white/[0.03]'
+                }`}
+              >
+                <button
+                  type="button"
+                  onClick={() => setEnabledExtra((e) => ({ ...e, [m.id]: !on }))}
+                  className="flex min-w-0 flex-1 items-center gap-2 text-start"
+                >
+                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-white text-sm font-black shadow-sm dark:bg-white/10">
+                    {m.emoji}
+                  </span>
+                  <span className="truncate text-sm font-bold text-gray-900 dark:text-white">{m.label}</span>
+                </button>
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setEnabledExtra((e) => ({ ...e, [m.id]: !on }))}
+                    className="p-0.5"
+                    aria-label={on ? 'Disable' : 'Enable'}
+                  >
+                    {on ? <ToggleRight className="text-mintcom-green" size={22} /> : <ToggleLeft className="text-gray-300" size={22} />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => removeMethod(m.id)}
+                    className="rounded-lg px-1.5 py-1 text-[10px] font-bold text-gray-400 hover:bg-rose-50 hover:text-rose-500 dark:hover:bg-rose-500/10"
+                  >
+                    ×
+                  </button>
+                </div>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
       </div>
-      <div className="mt-4 rounded-xl border border-gray-100 bg-white p-3 dark:border-white/8 dark:bg-white/[0.03]">
+
+      {/* Add payment method */}
+      <div className="mt-2">
+        {addingMethod ? (
+          <div className="rounded-xl border border-dashed border-mintcom-green/40 bg-mintcom-green/5 p-2">
+            <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-gray-400">
+              {String(t('landing.workflow.receipt.demo.sales.pickMethod', 'Pick a payment type'))}
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {availableToAdd.length === 0 ? (
+                <span className="text-[11px] text-gray-400">{String(t('landing.workflow.receipt.demo.sales.allAdded', 'All types added'))}</span>
+              ) : (
+                availableToAdd.map((m) => (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => addMethod(m)}
+                    className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white px-2.5 py-1 text-[11px] font-bold text-gray-800 shadow-sm transition-all hover:border-mintcom-green hover:bg-mintcom-green/10 dark:border-white/10 dark:bg-white/5 dark:text-white"
+                  >
+                    <span>{m.emoji}</span> {m.label}
+                  </button>
+                ))
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => setAddingMethod(false)}
+              className="mt-2 text-[10px] font-semibold text-gray-400 hover:text-gray-600"
+            >
+              {String(t('common.cancel', 'Cancel'))}
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setAddingMethod(true)}
+            disabled={availableToAdd.length === 0}
+            className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-gray-200 py-2 text-[11px] font-bold text-mintcom-green transition-colors hover:border-mintcom-green/50 hover:bg-mintcom-green/5 disabled:opacity-40 dark:border-white/15"
+          >
+            + {String(t('landing.workflow.receipt.demo.sales.addMethod', 'Add payment type'))}
+          </button>
+        )}
+      </div>
+
+      {/* Card brands (like Card Types in dashboard) */}
+      <div className="mt-3 rounded-xl border border-gray-100 bg-white p-2.5 dark:border-white/8 dark:bg-white/[0.03]">
+        <div className="mb-2 flex items-center justify-between">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+            {String(t('landing.workflow.receipt.demo.sales.cardBrands', 'Card brands'))}
+          </p>
+          <span className="text-[10px] font-semibold text-gray-400">{cardBrands.length}</span>
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {cardBrands.map((b) => (
+            <span
+              key={b.id}
+              className="group inline-flex items-center gap-1 rounded-full border border-mintcom-green/25 bg-mintcom-green/10 py-1 ps-2 pe-1 text-[11px] font-bold text-gray-800 dark:text-white"
+            >
+              <span>{b.emoji}</span> {b.label}
+              {cardBrands.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => removeBrand(b.id)}
+                  className="rounded-full px-1 text-gray-400 opacity-60 transition-opacity hover:bg-white/60 hover:text-rose-500 group-hover:opacity-100"
+                  aria-label={`Remove ${b.label}`}
+                >
+                  ×
+                </button>
+              )}
+            </span>
+          ))}
+          {addingBrand ? (
+            brandsToAdd.map((b) => (
+              <button
+                key={b.id}
+                type="button"
+                onClick={() => addBrand(b)}
+                className="inline-flex items-center gap-1 rounded-full border border-dashed border-mintcom-green/40 bg-white px-2 py-1 text-[11px] font-bold text-mintcom-green dark:bg-white/5"
+              >
+                + {b.emoji} {b.label}
+              </button>
+            ))
+          ) : (
+            brandsToAdd.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setAddingBrand(true)}
+                className="inline-flex items-center rounded-full border border-dashed border-gray-200 px-2.5 py-1 text-[11px] font-bold text-mintcom-green hover:border-mintcom-green/50 dark:border-white/15"
+              >
+                + {String(t('landing.workflow.receipt.demo.sales.addBrand', 'Add brand'))}
+              </button>
+            )
+          )}
+        </div>
+        {addingBrand && (
+          <button
+            type="button"
+            onClick={() => setAddingBrand(false)}
+            className="mt-1.5 text-[10px] font-semibold text-gray-400"
+          >
+            {String(t('common.cancel', 'Cancel'))}
+          </button>
+        )}
+      </div>
+
+      {/* Tax */}
+      <div className="mt-3 rounded-xl border border-gray-100 bg-white p-3 dark:border-white/8 dark:bg-white/[0.03]">
         <div className="mb-2 flex items-center justify-between text-xs">
           <span className="font-bold text-gray-700 dark:text-gray-200">{String(t('landing.workflow.receipt.demo.sales.tax', 'Tax'))}</span>
           <span className="tabular-nums font-black text-mintcom-green">{taxRate}%</span>
@@ -266,9 +538,20 @@ export const InteractiveSalesControlDemo = ({ t, side }: DemoProps) => {
           className="w-full accent-mintcom-green"
         />
         <div className="mt-3 space-y-1 border-t border-gray-100 pt-2 text-[11px] dark:border-white/8">
-          <div className="flex justify-between text-gray-500"><span>{String(t('landing.workflow.receipt.demo.sales.subtotal', 'Subtotal'))}</span><span className="tabular-nums">{money(sample)}</span></div>
-          <div className="flex justify-between text-gray-500"><span>{String(t('landing.workflow.receipt.demo.sales.tax', 'Tax'))} ({taxRate}%)</span><span className="tabular-nums">{money(tax)}</span></div>
-          <div className="flex justify-between text-sm font-bold text-gray-900 dark:text-white"><span>{String(t('landing.workflow.receipt.demo.sales.total', 'Charged'))}</span><span className="tabular-nums text-mintcom-green">{money(total)}</span></div>
+          <div className="flex justify-between text-gray-500">
+            <span>{String(t('landing.workflow.receipt.demo.sales.subtotal', 'Subtotal'))}</span>
+            <span className="tabular-nums">{money(sample)}</span>
+          </div>
+          <div className="flex justify-between text-gray-500">
+            <span>
+              {String(t('landing.workflow.receipt.demo.sales.tax', 'Tax'))} ({taxRate}%)
+            </span>
+            <span className="tabular-nums">{money(tax)}</span>
+          </div>
+          <div className="flex justify-between text-sm font-bold text-gray-900 dark:text-white">
+            <span>{String(t('landing.workflow.receipt.demo.sales.total', 'Charged'))}</span>
+            <span className="tabular-nums text-mintcom-green">{money(total)}</span>
+          </div>
         </div>
       </div>
     </>,
