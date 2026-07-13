@@ -436,7 +436,8 @@
       "passwordRequired": "请输入密码",
       "passwordsDoNotMatch": "两次输入的密码不一致",
       "passwordUppercase": "必须包含至少一个大写字母",
-      "termsRequired": "您必须同意《隐私政策》和《服务条款》"
+      "termsRequired": "您必须同意《隐私政策》和《服务条款》",
+      "passwordSymbol": "必须包含至少一个符号"
     },
     "verifyEmail": {
       "backToHome": "返回首页",
@@ -3017,7 +3018,8 @@
       "selectData": "选择要复制的数据：",
       "startFresh": "不导入（从零开始）",
       "subtitle": "介绍一下您的营业地点",
-      "title": "门店信息"
+      "title": "门店信息",
+      "currencyLinkedToCountry": "货币会根据所选国家自动设置。如有需要可手动更改。"
     },
     "step2": {
       "activateButton": "激活并付款",
@@ -3572,16 +3574,24 @@
       "delete": "删除",
       "deleteAccount": "删除账户",
       "deleteAccountModal": {
-        "confirmDeletePrompt": "输入 DELETE 以确认",
+        "confirmDeletePrompt": "输入 {{keyword}} 以确认",
         "confirmFinal": "我了解此操作是永久性且不可逆的",
         "confirmPassword": "确认您的密码以继续",
         "deleting": "正在删除账户…",
         "feedbackHint": "告诉我们原因，帮助我们改进（选填）",
         "passwordPlaceholder": "输入您的密码",
         "title": "删除账户",
-        "typeDeletePlaceholder": "在此输入 DELETE",
+        "typeDeletePlaceholder": "在此输入 {{keyword}}",
         "warning": "这将永久删除您的账户及所有关联数据。此操作无法撤销。",
-        "whyLeaving": "您为什么要离开？"
+        "whyLeaving": "您为什么要离开？",
+        "reasons": {
+          "its_too_expensive": "价格太贵",
+          "i_found_a_better_alternative": "找到了更好的替代方案",
+          "missing_features_i_need": "缺少我需要的功能",
+          "too_difficult_to_use": "太难使用",
+          "closing_my_business": "关闭业务",
+          "other": "其他"
+        }
       },
       "deleteButton": "删除账户",
       "deleteFailed": "发起删除失败",
@@ -3682,7 +3692,18 @@
       },
       "verified": "已验证",
       "verifyEmail": "验证邮箱",
-      "videoTutorial": "视频教程"
+      "videoTutorial": "视频教程",
+      "ownerAccountTitle": "所有者账户",
+      "ownerAccount": "所有者账户",
+      "profileCompletion": "资料完成度",
+      "completeProfileHint": "完善您的资料以解锁全部功能",
+      "systemCurrency": "系统货币",
+      "systemCurrencySubtitle": "更新所有门店的货币。",
+      "systemCurrencyDesc": "更新所有门店的货币。",
+      "applyingCurrencyChanges": "正在将更改应用到所有门店...",
+      "currencyUpdated": "全局货币已更新为 {{currency}}",
+      "currencyUpdateFailed": "更新全局货币失败",
+      "videoGuideComingSoon": "视频指南即将推出"
     },
     "account_employees": {
       "members_count_few": "{{count}} 名成员",
@@ -5690,7 +5711,8 @@
       "subtitle": "快速找到答案",
       "title": "我们能为您做什么？",
       "topics": "帮助主题",
-      "tryDifferent": "请尝试其他搜索词"
+      "tryDifferent": "请尝试其他搜索词",
+      "entityQuestions": "问题"
     },
     "quickLinks": {
       "community": "加入社区",
@@ -5781,6 +5803,7 @@
     "passwordNumber": "密码必须包含至少一个数字",
     "passwordRequired": "请输入密码",
     "passwordsDoNotMatch": "两次输入的密码不一致",
-    "passwordUppercase": "密码必须包含至少一个大写字母"
+    "passwordUppercase": "密码必须包含至少一个大写字母",
+    "passwordSymbol": "密码必须包含至少一个符号"
   }
 }

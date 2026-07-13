@@ -33,6 +33,7 @@ import {
     CreditCard,
     Library,
     HelpCircle,
+    Search,
 } from 'lucide-react';
 import api from '../../config/api';
 import { ONBOARDING_VIDEO_URL } from '../../config/downloads';
@@ -90,8 +91,17 @@ const MAX_OWNER_PROFILE_EMAIL_LENGTH = 254;
 const sanitizeOwnerProfileText = (value: unknown, maxLength: number) =>
     String(value ?? '').slice(0, maxLength);
 
+const DELETE_REASON_OPTIONS = [
+    { key: 'its_too_expensive', value: "It's too expensive" },
+    { key: 'i_found_a_better_alternative', value: 'I found a better alternative' },
+    { key: 'missing_features_i_need', value: 'Missing features I need' },
+    { key: 'too_difficult_to_use', value: 'Too difficult to use' },
+    { key: 'closing_my_business', value: 'Closing my business' },
+    { key: 'other', value: 'Other' },
+] as const;
+
 export function OwnerAccountManagementPage() {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const { account, establishments, logout, updateAccount } = useAuth();
     const navigate = useNavigate();
     const hasOnboardingVideo = Boolean(ONBOARDING_VIDEO_URL);
@@ -139,13 +149,17 @@ export function OwnerAccountManagementPage() {
     // Currency awaiting confirmation (warning popup) before it is applied.
     const [pendingCurrency, setPendingCurrency] = useState<string | null>(null);
 
+    // Access credentials hub (locations + brands) — compact list for large counts
+    const [credTab, setCredTab] = useState<'locations' | 'brands'>('locations');
+    const [credSearch, setCredSearch] = useState('');
+
     const handleUpdateGlobalCurrency = async (newCurrency: string) => {
         try {
             setIsUpdatingCurrency(true);
             const response = await api.put('/api/accounts/currency', { currency: newCurrency });
             if (response.data?.success) {
                 setGlobalCurrency(newCurrency);
-                toast.success(`Global currency updated to ${newCurrency}`);
+                toast.success(t('owner.account.currencyUpdated', { currency: newCurrency }));
                 
                 // Update local establishments data
                 if (accountDetails?.establishments) {
@@ -157,7 +171,7 @@ export function OwnerAccountManagementPage() {
             }
         } catch (err: any) {
             console.error('Failed to update currency:', err);
-            toast.error(err.response?.data?.message || 'Failed to update global currency');
+            toast.error(err.response?.data?.message || t('owner.account.currencyUpdateFailed'));
         } finally {
             setIsUpdatingCurrency(false);
         }
@@ -177,6 +191,53 @@ export function OwnerAccountManagementPage() {
 
         return contextEstablishments;
     }, [accountDetails?.establishments, establishments]);
+
+    const brandLoginRows = useMemo(() => {
+        return brands.map((brand) => {
+            let count = brand.establishmentCount || brand._count?.establishments || (brand.establishments ? brand.establishments.length : 0);
+            if (!count && establishments) {
+                const directMatches = establishments.filter((e: any) => e.brandId === brand.id || e.brand?.id === brand.id).length;
+                if (directMatches > 0) {
+                    count = directMatches;
+                } else if (brands.length === 1 && establishments.length > 0) {
+                    count = establishments.length;
+                }
+            }
+            return { ...brand, locationCount: count || 0 };
+        });
+    }, [brands, establishments]);
+
+    const filteredLocationLogins = useMemo(() => {
+        const q = credSearch.trim().toLowerCase();
+        if (!q) return locationLoginEstablishments;
+        return locationLoginEstablishments.filter((est: any) => {
+            const slug = String(est.establishmentLoginId || est.loginId || est.locationLoginId || est.id || '').toLowerCase();
+            const name = String(est.name || '').toLowerCase();
+            const currency = String(est.currency || '').toLowerCase();
+            return name.includes(q) || slug.includes(q) || currency.includes(q);
+        });
+    }, [locationLoginEstablishments, credSearch]);
+
+    const filteredBrandLogins = useMemo(() => {
+        const q = credSearch.trim().toLowerCase();
+        if (!q) return brandLoginRows;
+        return brandLoginRows.filter((brand) => {
+            const slug = String(brand.establishmentLoginId || '').toLowerCase();
+            const name = String(brand.name || '').toLowerCase();
+            return name.includes(q) || slug.includes(q);
+        });
+    }, [brandLoginRows, credSearch]);
+
+    const hasAccessCredentials = locationLoginEstablishments.length > 0 || brands.length > 0;
+
+    // Prefer the tab that has items; keep user choice when both exist.
+    useEffect(() => {
+        if (credTab === 'locations' && locationLoginEstablishments.length === 0 && brands.length > 0) {
+            setCredTab('brands');
+        } else if (credTab === 'brands' && brands.length === 0 && locationLoginEstablishments.length > 0) {
+            setCredTab('locations');
+        }
+    }, [credTab, locationLoginEstablishments.length, brands.length]);
 
     const handleEditClick = () => {
         if (accountDetails) {
@@ -248,20 +309,11 @@ export function OwnerAccountManagementPage() {
             }
         } catch (err: any) {
             console.error('Failed to update profile:', err);
-            toast.error(err.response?.data?.message || 'Failed to update profile');
+            toast.error(err.response?.data?.message || t('owner.account.updateFailed'));
         } finally {
             setIsSaving(false);
         }
     };
-
-    const deleteReasons = [
-        "It's too expensive",
-        "I found a better alternative",
-        "Missing features I need",
-        "Too difficult to use",
-        "Closing my business",
-        "Other"
-    ];
 
     useEffect(() => {
         if (!showDeleteConfirm) {
@@ -413,7 +465,13 @@ export function OwnerAccountManagementPage() {
     const formatDate = (dateString: string) => {
         try {
             const date = new Date(dateString);
-            return date.toLocaleDateString(t('common.language') === 'Arabic' ? 'ar-SA' : 'en-US', {
+            const lang = (i18n.language || 'en').toLowerCase();
+            const locale = lang.startsWith('ar')
+                ? 'ar-SA'
+                : lang.startsWith('zh')
+                    ? 'zh-CN'
+                    : 'en-US';
+            return date.toLocaleDateString(locale, {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
@@ -599,7 +657,7 @@ export function OwnerAccountManagementPage() {
                                     <div className="w-10 h-10 rounded-xl bg-mintcom-green/10 flex items-center justify-center">
                                         <User className="w-5 h-5 text-mintcom-green" />
                                     </div>
-                                    <h2 className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">Owner Account</h2>
+                                    <h2 className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">{t('owner.account.ownerAccountTitle')}</h2>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     {isEditing ? (
@@ -609,7 +667,7 @@ export function OwnerAccountManagementPage() {
                                                 className="px-4 py-2 bg-gray-100 dark:bg-white/[0.05] hover:bg-gray-200 dark:hover:bg-white/[0.1] text-gray-600 dark:text-gray-300 rounded-xl text-sm font-bold transition-all"
                                                 disabled={isSaving}
                                             >
-                                                Cancel
+                                                {t('owner.account.cancel')}
                                             </button>
                                             <button
                                                 onClick={handleSaveProfile}
@@ -619,12 +677,12 @@ export function OwnerAccountManagementPage() {
                                                 {isSaving ? (
                                                     <>
                                                         <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
-                                                        Saving...
+                                                        {t('owner.account.saving')}
                                                     </>
                                                 ) : (
                                                     <>
                                                         <CheckCircle2 size={16} />
-                                                        Save
+                                                        {t('owner.account.save')}
                                                     </>
                                                 )}
                                             </button>
@@ -635,14 +693,14 @@ export function OwnerAccountManagementPage() {
                                                 onClick={handleEditClick}
                                                 className="px-4 py-2 bg-gray-100 dark:bg-white/[0.05] hover:bg-gray-200 dark:hover:bg-white/[0.1] text-gray-600 dark:text-gray-300 rounded-xl text-sm font-bold transition-all"
                                             >
-                                                Edit Profile
+                                                {t('owner.account.editProfile')}
                                             </button>
                                             <button
                                                 onClick={() => openPasswordModal('account')}
                                                 className="flex items-center gap-2 px-4 py-2 bg-mintcom-green/10 hover:bg-mintcom-green/20 text-mintcom-green rounded-xl text-sm font-bold transition-all"
                                             >
                                                 <Key size={16} />
-                                                Reset Password
+                                                {t('owner.account.resetPassword')}
                                             </button>
                                         </>
                                     )}
@@ -722,7 +780,7 @@ export function OwnerAccountManagementPage() {
                             {profileCompletion < 100 && (
                                 <div className="mt-6 pt-6 border-t border-gray-100 dark:border-white/[0.05]">
                                     <div className="flex items-center justify-between mb-2">
-                                        <span className="label-strong">Profile Completion</span>
+                                        <span className="label-strong">{t('owner.account.profileCompletion')}</span>
                                         <span className="text-sm font-bold text-mintcom-green">{profileCompletion}%</span>
                                     </div>
                                     <div className="h-2 bg-gray-100 dark:bg-white/[0.05] rounded-full overflow-hidden">
@@ -732,66 +790,159 @@ export function OwnerAccountManagementPage() {
                                         />
                                     </div>
                                     <p className="text-sm font-bold text-gray-500 mt-2">
-                                        Complete your profile to unlock all features
+                                        {t('owner.account.completeProfileHint')}
                                     </p>
                                 </div>
                             )}
                         </div>
                     </motion.div>
 
-                    {/* Location Logins */}
-                    {locationLoginEstablishments && locationLoginEstablishments.length > 0 && (
+                    {/* Access credentials hub — compact, searchable (scales to many locations/brands) */}
+                    {hasAccessCredentials && (
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.2 }}
-                            className="bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.05] p-6 shadow-sm"
+                            className="bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.05] shadow-sm overflow-hidden"
                         >
-                            <div className="flex items-center gap-3 mb-6">
-                                <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
-                                    <Store className="w-5 h-5 text-blue-500" />
+                            {/* Header */}
+                            <div className="p-5 sm:p-6 border-b border-gray-100 dark:border-white/[0.05]">
+                                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/15 to-purple-500/15 flex items-center justify-center shrink-0">
+                                            <Key className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <h2 className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">
+                                                {t('owner.account.accessCredentials', {
+                                                    defaultValue: 'Access Credentials',
+                                                })}
+                                            </h2>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                                {t('owner.account.accessCredentialsSubtitle', {
+                                                    defaultValue: 'Login IDs for location and brand dashboards — search, copy, open, or reset.',
+                                                })}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="relative w-full sm:w-64 shrink-0">
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                                        <input
+                                            type="text"
+                                            value={credSearch}
+                                            onChange={(e) => setCredSearch(e.target.value)}
+                                            placeholder={formatInputPlaceholder(
+                                                t('owner.account.searchCredentials', {
+                                                    defaultValue: 'Search name or login ID…',
+                                                }),
+                                                t('common.locale'),
+                                            )}
+                                            className="w-full h-10 pl-9 pr-9 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm font-semibold text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-mintcom-green/20 focus:border-mintcom-green transition-all"
+                                        />
+                                        {credSearch && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setCredSearch('')}
+                                                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                                                aria-label={t('common.clearSearch', { defaultValue: 'Clear search' })}
+                                            >
+                                                <X size={14} />
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
-                                <div>
-                                    <h2 className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">
-                                        {t('owner.account.locationLogins', { count: locationLoginEstablishments.length })}
-                                    </h2>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400">{t('owner.account.locationLoginsSubtitle')}</p>
+
+                                {/* Tabs */}
+                                <div className="mt-4 flex items-center gap-1 p-1 rounded-xl bg-gray-100/80 dark:bg-white/[0.04] w-full sm:w-fit">
+                                    {locationLoginEstablishments.length > 0 && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setCredTab('locations')}
+                                            className={`flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
+                                                credTab === 'locations'
+                                                    ? 'bg-white dark:bg-[#0F172A] text-blue-600 dark:text-blue-400 shadow-sm'
+                                                    : 'text-gray-500 hover:text-gray-800 dark:hover:text-gray-200'
+                                            }`}
+                                        >
+                                            <Store size={14} />
+                                            {t('owner.account.locations', { defaultValue: 'Locations' })}
+                                            <span
+                                                className={`min-w-[1.25rem] h-5 px-1.5 rounded-md text-[10px] font-black flex items-center justify-center ${
+                                                    credTab === 'locations'
+                                                        ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
+                                                        : 'bg-gray-200/80 dark:bg-white/10 text-gray-500'
+                                                }`}
+                                            >
+                                                {locationLoginEstablishments.length}
+                                            </span>
+                                        </button>
+                                    )}
+                                    {brands.length > 0 && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setCredTab('brands')}
+                                            className={`flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
+                                                credTab === 'brands'
+                                                    ? 'bg-white dark:bg-[#0F172A] text-purple-600 dark:text-purple-400 shadow-sm'
+                                                    : 'text-gray-500 hover:text-gray-800 dark:hover:text-gray-200'
+                                            }`}
+                                        >
+                                            <Building2 size={14} />
+                                            {t('owner.account.brands', { defaultValue: 'Brands' })}
+                                            <span
+                                                className={`min-w-[1.25rem] h-5 px-1.5 rounded-md text-[10px] font-black flex items-center justify-center ${
+                                                    credTab === 'brands'
+                                                        ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400'
+                                                        : 'bg-gray-200/80 dark:bg-white/10 text-gray-500'
+                                                }`}
+                                            >
+                                                {brands.length}
+                                            </span>
+                                        </button>
+                                    )}
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {locationLoginEstablishments.map((est: any) => {
-                                    const slug = (est.establishmentLoginId || est.loginId || est.locationLoginId || est.id || '').trim();
-                                    const Icon = getBusinessTypeIcon(est.type);
-                                    return (
-                                        <div
-                                            key={est.id}
-                                            className="relative bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.05] p-5 shadow-sm transition-all duration-300 overflow-hidden flex flex-col justify-between h-full"
-                                        >
-                                            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-
-                                            <div className="relative z-10 flex flex-col h-full">
-                                                {/* Header Section */}
-                                                <div className="flex items-start justify-between gap-3 mb-4">
-                                                    <div className="flex items-start gap-3">
-                                                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/10 to-indigo-500/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
-                                                            <Icon className="w-5 h-5 text-blue-500" />
+                            {/* Compact list */}
+                            <div className="max-h-[28rem] overflow-y-auto custom-scrollbar divide-y divide-gray-100 dark:divide-white/[0.04]">
+                                {credTab === 'locations' && (
+                                    filteredLocationLogins.length === 0 ? (
+                                        <div className="py-12 px-6 text-center">
+                                            <p className="text-sm font-bold text-gray-500">
+                                                {credSearch.trim()
+                                                    ? t('common.noResults', { defaultValue: 'No results found' })
+                                                    : t('owner.account.noLocationsOrBrands')}
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        filteredLocationLogins.map((est: any) => {
+                                            const slug = (est.establishmentLoginId || est.loginId || est.locationLoginId || est.id || '').trim();
+                                            const Icon = getBusinessTypeIcon(est.type);
+                                            const copyKey = `est-login-${est.id}`;
+                                            return (
+                                                <div
+                                                    key={est.id}
+                                                    className="group flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 px-4 sm:px-5 py-3.5 hover:bg-gray-50/80 dark:hover:bg-white/[0.02] transition-colors"
+                                                >
+                                                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                                                        <div className="w-9 h-9 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0">
+                                                            <Icon className="w-4 h-4 text-blue-500" />
                                                         </div>
-                                                        <div className="min-w-0">
-                                                            <h3 className="text-sm font-bold tracking-tight text-gray-900 dark:text-white truncate pr-1" title={est.name}>
-                                                                {est.name}
-                                                            </h3>
-                                                            <div className="flex items-center flex-wrap gap-x-2 gap-y-1 mt-1.5">
+                                                        <div className="min-w-0 flex-1">
+                                                            <div className="flex items-center gap-2 min-w-0">
+                                                                <h3 className="text-sm font-bold text-gray-900 dark:text-white truncate" title={est.name}>
+                                                                    {est.name}
+                                                                </h3>
                                                                 {getStatusBadge(est.subscriptionStatus)}
-                                                                <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-gray-100 dark:bg-white/[0.05] border border-gray-200 dark:border-white/[0.05] text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400">
-                                                                    {est.currency?.toUpperCase() || 'JOD'}
-                                                                </span>
+                                                            </div>
+                                                            <div className="flex items-center flex-wrap gap-x-2 gap-y-0.5 mt-0.5 text-[11px] font-medium text-gray-500">
+                                                                <span className="uppercase tracking-wide">{est.currency?.toUpperCase() || 'JOD'}</span>
                                                                 {est.createdAt && (
                                                                     <>
-                                                                        <span className="text-gray-300 dark:text-gray-600 text-[10px]">&bull;</span>
-                                                                        <span className="flex items-center gap-1 text-xs font-medium text-gray-500 dark:text-gray-400">
-                                                                            <Calendar size={12} className="opacity-70" />
-                                                                            {t('owner.account.createdDate', { date: formatDate(est.createdAt) })}
+                                                                        <span className="text-gray-300 dark:text-gray-600">·</span>
+                                                                        <span className="inline-flex items-center gap-1">
+                                                                            <Calendar size={11} className="opacity-70" />
+                                                                            {formatDate(est.createdAt)}
                                                                         </span>
                                                                     </>
                                                                 )}
@@ -799,177 +950,148 @@ export function OwnerAccountManagementPage() {
                                                         </div>
                                                     </div>
 
-                                                    <button
-                                                        onClick={() => window.open(`/dashboard/${slug}`, '_blank')}
-                                                        className="flex items-center justify-center w-8 h-8 rounded-lg bg-gray-50 dark:bg-white/5 text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-all ml-auto shrink-0"
-                                                        title={t('owner.brands.viewDashboard')}
-                                                    >
-                                                        <ExternalLink size={16} />
-                                                    </button>
-                                                </div>
-
-                                                {/* Login ID Section */}
-                                                <div className="mt-auto">
-                                                    <div className="p-3 bg-blue-50/70 dark:bg-blue-500/10 rounded-xl border border-blue-100 dark:border-blue-500/20 transition-colors">
-                                                        <div className="flex items-center justify-between gap-2 mb-2">
-                                                            <label className="text-[10px] font-semibold text-blue-700 dark:text-blue-300 tracking-wide flex items-center gap-1">
-                                                                <Key size={10} />
-                                                                {t('owner.account.locationLoginId', { defaultValue: 'Location Login ID' })}
-                                                            </label>
-                                                            <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 dark:bg-blue-500/15 px-2 py-1 text-[10px] font-bold text-blue-700 dark:text-blue-300">
-                                                                <Shield size={10} />
-                                                                {t('owner.account.locationLoginBadge', { defaultValue: 'Location' })}
-                                                            </span>
-                                                        </div>
-                                                        <div className="flex items-center justify-between gap-2">
+                                                    <div className="flex items-center gap-2 sm:gap-3 sm:ml-auto min-w-0">
+                                                        <div className="flex-1 sm:flex-none min-w-0 flex items-center gap-1.5 rounded-xl border border-blue-100 dark:border-blue-500/20 bg-blue-50/60 dark:bg-blue-500/10 px-2.5 py-1.5 max-w-full sm:max-w-[14rem]">
+                                                            <code className="text-xs font-mono font-bold text-gray-900 dark:text-white truncate select-all" title={slug}>
+                                                                {slug || t('common.na')}
+                                                            </code>
                                                             <button
-                                                                onClick={() => copyToClipboard(slug, `est-login-${est.id}`)}
+                                                                type="button"
+                                                                onClick={() => copyToClipboard(slug, copyKey)}
                                                                 disabled={!slug}
-                                                                className="text-xs font-bold text-blue-500 hover:text-blue-600 transition-colors flex items-center gap-1"
+                                                                className="shrink-0 p-1 rounded-md text-blue-500 hover:bg-blue-100/80 dark:hover:bg-blue-500/20 transition-colors disabled:opacity-40"
+                                                                title={t('common.copy')}
                                                             >
-                                                                {copiedId === `est-login-${est.id}` ? (
-                                                                    <span className="flex items-center gap-1 text-mintcom-green"><CheckCircle2 size={10} /> {t('common.copied')}</span>
+                                                                {copiedId === copyKey ? (
+                                                                    <CheckCircle2 size={14} className="text-mintcom-green" />
                                                                 ) : (
-                                                                    <span className="flex items-center gap-1"><Copy size={10} /> {t('common.copy')}</span>
+                                                                    <Copy size={14} />
                                                                 )}
                                                             </button>
                                                         </div>
-                                                        <code className="mt-2 block text-xs font-mono font-bold text-gray-900 dark:text-white truncate select-all">
-                                                            {slug || t('common.na')}
-                                                        </code>
-                                                        <p className="mt-2 text-[11px] font-medium text-blue-700/80 dark:text-blue-200/80 leading-relaxed">
-                                                            {t('owner.account.locationLoginHint', { defaultValue: 'Use this ID to sign in to this location dashboard.' })}
-                                                        </p>
-                                                    </div>
-
-                                                    <div className="mt-3 flex justify-end">
-                                                        <button
-                                                            onClick={() => openPasswordModal('establishment', est.id, est.name)}
-                                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all ml-auto"
-                                                        >
-                                                            <Lock size={12} />
-                                                            {t('owner.account.resetPassword')}
-                                                        </button>
+                                                        <div className="flex items-center gap-1 shrink-0">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => window.open(`/dashboard/${slug}`, '_blank')}
+                                                                className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-all"
+                                                                title={t('owner.brands.viewDashboard')}
+                                                            >
+                                                                <ExternalLink size={15} />
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => openPasswordModal('establishment', est.id, est.name)}
+                                                                className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
+                                                                title={t('owner.account.resetPassword')}
+                                                            >
+                                                                <Lock size={15} />
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        </div>
+                                            );
+                                        })
                                     )
-                                })}
-                            </div>
-                        </motion.div>
-                    )}
+                                )}
 
-                    {/* Brand Logins */}
-                    {brands.length > 0 && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.25 }}
-                            className="bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.05] p-6 shadow-sm"
-                        >
-                            <div className="flex items-center gap-3 mb-6">
-                                <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center">
-                                    <Building2 className="w-5 h-5 text-purple-500" />
-                                </div>
-                                <div>
-                                    <h2 className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">
-                                        {t('owner.account.brandLogins', { count: brands.length })}
-                                    </h2>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400">{t('owner.account.brandLoginsSubtitle')}</p>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 gap-4">
-                                {brands.map((brand) => {
-                                    // Robust counting logic
-                                    let count = brand.establishmentCount || brand._count?.establishments || (brand.establishments ? brand.establishments.length : 0);
-
-                                    // If count is missing from profile, try to calculate from global establishments
-                                    if (!count && establishments) {
-                                        const directMatches = establishments.filter((e: any) => e.brandId === brand.id || e.brand?.id === brand.id).length;
-                                        if (directMatches > 0) {
-                                            count = directMatches;
-                                        } else if (brands.length === 1 && establishments.length > 0) {
-                                            // Fallback: If owner has only 1 brand and we can't link, assume all establishments belong to this brand
-                                            count = establishments.length;
-                                        }
-                                    }
-
-                                    return (
-                                        <div
-                                            key={brand.id}
-                                            className="relative bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.05] p-5 shadow-sm transition-all duration-300 overflow-hidden"
-                                        >
-                                            <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-                                            <div className="relative z-10 space-y-5">
-                                                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                                                    <div className="flex items-start gap-4">
-                                                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-500/10 to-fuchsia-500/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shrink-0">
-                                                            <Building2 className="w-6 h-6 text-purple-500" />
+                                {credTab === 'brands' && (
+                                    filteredBrandLogins.length === 0 ? (
+                                        <div className="py-12 px-6 text-center">
+                                            <p className="text-sm font-bold text-gray-500">
+                                                {credSearch.trim()
+                                                    ? t('common.noResults', { defaultValue: 'No results found' })
+                                                    : t('owner.account.noLocationsOrBrands')}
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        filteredBrandLogins.map((brand) => {
+                                            const loginId = brand.establishmentLoginId || '';
+                                            const copyKey = `brand-${brand.id}`;
+                                            return (
+                                                <div
+                                                    key={brand.id}
+                                                    className="group flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 px-4 sm:px-5 py-3.5 hover:bg-gray-50/80 dark:hover:bg-white/[0.02] transition-colors"
+                                                >
+                                                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                                                        <div className="w-9 h-9 rounded-xl bg-purple-500/10 flex items-center justify-center shrink-0">
+                                                            <Building2 className="w-4 h-4 text-purple-500" />
                                                         </div>
-                                                        <div>
-                                                            <h3 className="text-lg font-bold tracking-tight text-gray-900 dark:text-white">{brand.name}</h3>
-                                                            <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-1.5 text-xs text-gray-500 dark:text-gray-400">
-                                                                <span className="font-medium bg-gray-100 dark:bg-white/[0.05] px-2 py-0.5 rounded-md border border-gray-200 dark:border-white/[0.05]">
-                                                                    {t('owner.account.locationsCount', { count })}
-                                                                </span>
-                                                                <span className="text-gray-300 dark:text-gray-600">&bull;</span>
-                                                                <span className={`font-bold ${brand.isActive ? 'text-mintcom-green' : 'text-gray-400'}`}>
+                                                        <div className="min-w-0 flex-1">
+                                                            <div className="flex items-center gap-2 min-w-0">
+                                                                <h3 className="text-sm font-bold text-gray-900 dark:text-white truncate" title={brand.name}>
+                                                                    {brand.name}
+                                                                </h3>
+                                                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md border ${
+                                                                    brand.isActive
+                                                                        ? 'bg-mintcom-green/10 text-mintcom-green border-mintcom-green/20'
+                                                                        : 'bg-gray-100 dark:bg-white/5 text-gray-400 border-gray-200 dark:border-white/10'
+                                                                }`}>
                                                                     {brand.isActive ? t('common.status.active') : t('common.status.inactive')}
                                                                 </span>
-                                                                <span className="text-gray-300 dark:text-gray-600">&bull;</span>
-                                                                <span className="flex items-center gap-1.5 font-medium">
-                                                                    <Calendar size={12} className="opacity-70" />
-                                                                    {t('owner.account.createdDate', { date: formatDate(brand.createdAt) })}
-                                                                </span>
+                                                            </div>
+                                                            <div className="flex items-center flex-wrap gap-x-2 gap-y-0.5 mt-0.5 text-[11px] font-medium text-gray-500">
+                                                                <span>{t('owner.account.locationsCount', { count: brand.locationCount })}</span>
+                                                                {brand.createdAt && (
+                                                                    <>
+                                                                        <span className="text-gray-300 dark:text-gray-600">·</span>
+                                                                        <span className="inline-flex items-center gap-1">
+                                                                            <Calendar size={11} className="opacity-70" />
+                                                                            {formatDate(brand.createdAt)}
+                                                                        </span>
+                                                                    </>
+                                                                )}
                                                             </div>
                                                         </div>
                                                     </div>
 
-                                                    <button
-                                                        onClick={() => openPasswordModal('brand', brand.id, brand.name)}
-                                                        className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-white/[0.05] border border-gray-200 dark:border-white/[0.1] hover:border-red-500/30 hover:bg-red-50 dark:hover:bg-red-900/10 text-gray-600 dark:text-gray-300 hover:text-red-500 rounded-xl text-xs font-bold transition-all shadow-sm shrink-0 self-start sm:self-center"
-                                                    >
-                                                        <Lock size={14} />
-                                                        {t('owner.account.resetPassword')}
-                                                    </button>
-                                                </div>
-
-                                                <div className="mt-5 p-4 bg-blue-50/70 dark:bg-blue-500/10 rounded-xl border border-blue-100 dark:border-blue-500/20 transition-colors">
-                                                    <div className="flex items-center justify-between gap-2 mb-2">
-                                                        <label className="text-[10px] font-semibold text-blue-700 dark:text-blue-300 tracking-wide flex items-center gap-1.5">
-                                                            <Key size={10} />
-                                                            {t('owner.account.brandLoginId')}
-                                                        </label>
-                                                        <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 dark:bg-blue-500/15 px-2 py-1 text-[10px] font-bold text-blue-700 dark:text-blue-300">
-                                                            <Shield size={10} />
-                                                            {t('owner.account.brandLoginBadge', { defaultValue: 'Brand' })}
-                                                        </span>
+                                                    <div className="flex items-center gap-2 sm:gap-3 sm:ml-auto min-w-0">
+                                                        <div className="flex-1 sm:flex-none min-w-0 flex items-center gap-1.5 rounded-xl border border-purple-100 dark:border-purple-500/20 bg-purple-50/60 dark:bg-purple-500/10 px-2.5 py-1.5 max-w-full sm:max-w-[14rem]">
+                                                            <code className="text-xs font-mono font-bold text-gray-900 dark:text-white truncate select-all" title={loginId}>
+                                                                {loginId || t('common.na')}
+                                                            </code>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => copyToClipboard(loginId, copyKey)}
+                                                                disabled={!loginId}
+                                                                className="shrink-0 p-1 rounded-md text-purple-500 hover:bg-purple-100/80 dark:hover:bg-purple-500/20 transition-colors disabled:opacity-40"
+                                                                title={t('common.copy')}
+                                                            >
+                                                                {copiedId === copyKey ? (
+                                                                    <CheckCircle2 size={14} className="text-mintcom-green" />
+                                                                ) : (
+                                                                    <Copy size={14} />
+                                                                )}
+                                                            </button>
+                                                        </div>
+                                                        <div className="flex items-center gap-1 shrink-0">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => openPasswordModal('brand', brand.id, brand.name)}
+                                                                className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
+                                                                title={t('owner.account.resetPassword')}
+                                                            >
+                                                                <Lock size={15} />
+                                                            </button>
+                                                        </div>
                                                     </div>
-                                                    <div className="flex items-center justify-between gap-2">
-                                                        <button
-                                                            onClick={() => copyToClipboard(brand.establishmentLoginId, `brand-${brand.id}`)}
-                                                            className="text-xs font-bold text-blue-500 hover:text-blue-600 transition-colors flex items-center gap-1"
-                                                        >
-                                                            {copiedId === `brand-${brand.id}` ? (
-                                                                <span className="flex items-center gap-1 text-mintcom-green"><CheckCircle2 size={10} /> {t('common.copied')}</span>
-                                                            ) : (
-                                                                <span className="flex items-center gap-1"><Copy size={10} /> {t('common.copy')}</span>
-                                                            )}
-                                                        </button>
-                                                    </div>
-                                                    <code className="mt-2 block text-sm font-mono font-bold text-gray-900 dark:text-white tracking-wide truncate select-all">
-                                                        {brand.establishmentLoginId}
-                                                    </code>
-                                                    <p className="mt-2 text-[11px] font-medium text-blue-700/80 dark:text-blue-200/80 leading-relaxed">
-                                                        {t('owner.account.brandLoginHint', { defaultValue: 'Use this ID to sign in to the brand dashboard.' })}
-                                                    </p>
                                                 </div>
-                                            </div>
-                                        </div>
+                                            );
+                                        })
                                     )
-                                })}
+                                )}
+                            </div>
+
+                            {/* Footer hint — one line instead of per-card */}
+                            <div className="px-5 py-3 border-t border-gray-100 dark:border-white/[0.05] bg-gray-50/50 dark:bg-white/[0.02]">
+                                <p className="text-[11px] font-medium text-gray-500 dark:text-gray-400 leading-relaxed">
+                                    {credTab === 'locations'
+                                        ? t('owner.account.locationLoginHint', {
+                                            defaultValue: 'Use this ID to sign in to this location dashboard.',
+                                        })
+                                        : t('owner.account.brandLoginHint', {
+                                            defaultValue: 'Use this ID to sign in to the brand dashboard.',
+                                        })}
+                                </p>
                             </div>
                         </motion.div>
                     )}
@@ -992,8 +1114,8 @@ export function OwnerAccountManagementPage() {
                                     <Landmark className="w-5 h-5 text-amber-500" />
                                 </div>
                                 <div>
-                                    <h2 className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">System Currency</h2>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400">Updates currency for all your locations.</p>
+                                    <h2 className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">{t('owner.account.systemCurrency')}</h2>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">{t('owner.account.systemCurrencySubtitle')}</p>
                                 </div>
                             </div>
                             <div className="space-y-4">
@@ -1009,7 +1131,7 @@ export function OwnerAccountManagementPage() {
                                     >
                                         {CURRENCIES.map((c) => (
                                             <option key={c.code} value={c.code} className="bg-white dark:bg-gray-800">
-                                                {c.name} ({c.symbol})
+                                                {c.code} ({c.symbol})
                                             </option>
                                         ))}
                                     </select>
@@ -1021,167 +1143,176 @@ export function OwnerAccountManagementPage() {
                                 </div>
                                 {isUpdatingCurrency && (
                                     <p className="text-xs font-bold text-amber-500 animate-pulse text-center">
-                                        Applying changes to all locations...
+                                        {t('owner.account.applyingCurrencyChanges')}
                                     </p>
                                 )}
                             </div>
                         </div>
                     </motion.div>
 
-                    {/* Resources & Help */}
+                    {/* Resources & Help — bento-style guides + compact company links */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.2 }}
-                        className="relative bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.05] p-6 shadow-sm transition-all duration-300 overflow-hidden"
+                        className="relative bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.05] shadow-sm overflow-hidden"
                     >
-                        <div className="absolute top-0 right-0 w-40 h-40 bg-blue-500/10 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-                        <div className="relative z-10">
-                            <div className="flex items-center gap-3 mb-6">
-                                <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                        <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-transparent pointer-events-none" />
+                        <div className="relative z-10 p-5 sm:p-6">
+                            <div className="flex items-center gap-3 mb-5">
+                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/15 to-indigo-500/10 flex items-center justify-center border border-blue-500/10">
                                     <Library className="w-5 h-5 text-blue-500" />
                                 </div>
                                 <div>
-                                    <h2 className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">{t('owner.account.resources.title')}</h2>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400">{t('owner.account.resources.subtitle')}</p>
+                                    <h2 className="text-lg font-bold tracking-tight text-gray-900 dark:text-white">
+                                        {t('owner.account.resources.title')}
+                                    </h2>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                                        {t('owner.account.resources.subtitle')}
+                                    </p>
                                 </div>
                             </div>
 
-                            <div className="space-y-3">
-                                {/* User Manual */}
+                            {/* Guides — 2-column tiles */}
+                            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2.5 px-0.5">
+                                {t('owner.account.resources.guides', { defaultValue: 'Guides' })}
+                            </p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-5">
                                 <a
                                     href="/docs/mintcom-user-manual.pdf"
                                     download="Mintcom_User_Manual.pdf"
-                                    className="flex items-center gap-4 p-3 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-100 dark:border-white/[0.05] transition-all"
+                                    className="group relative flex flex-col gap-3 p-3.5 rounded-2xl border border-blue-100 dark:border-blue-500/15 bg-gradient-to-br from-blue-50/90 to-white dark:from-blue-500/10 dark:to-white/[0.02] hover:border-blue-300 dark:hover:border-blue-500/30 hover:shadow-md hover:shadow-blue-500/5 transition-all"
                                 >
-                                    <div className="w-10 h-10 rounded-lg bg-white dark:bg-white/[0.05] flex items-center justify-center shadow-sm border border-gray-100 dark:border-white/[0.05]">
-                                        <BookOpen size={20} className="text-blue-500 group-hover/item:scale-110 transition-transform" />
+                                    <div className="flex items-start justify-between gap-2">
+                                        <div className="w-9 h-9 rounded-xl bg-blue-500 text-white flex items-center justify-center shadow-sm shadow-blue-500/25">
+                                            <BookOpen size={16} />
+                                        </div>
+                                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 dark:text-blue-400 opacity-70 group-hover:opacity-100 transition-opacity">
+                                            <Download size={12} />
+                                            PDF
+                                        </span>
                                     </div>
-                                    <div className="flex-1">
-                                        <h4 className="text-sm font-bold tracking-tight text-gray-900 dark:text-white">{t('owner.account.resources.userManual.title')}</h4>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400">{t('owner.account.resources.userManual.desc')}</p>
+                                    <div>
+                                        <h4 className="text-sm font-bold text-gray-900 dark:text-white leading-tight">
+                                            {t('owner.account.resources.userManual.title')}
+                                        </h4>
+                                        <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 leading-snug line-clamp-2">
+                                            {t('owner.account.resources.userManual.desc')}
+                                        </p>
                                     </div>
-                                    <Download size={16} className="text-gray-400 group-hover/item:text-blue-500 transition-colors" />
                                 </a>
 
-                                {/* Setup Manual */}
                                 <a
                                     href="/docs/mintcom-setup-manual.pdf"
                                     download="Mintcom_Setup_Manual.pdf"
-                                    className="flex items-center gap-4 p-3 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-100 dark:border-white/[0.05] transition-all"
+                                    className="group relative flex flex-col gap-3 p-3.5 rounded-2xl border border-amber-100 dark:border-amber-500/15 bg-gradient-to-br from-amber-50/90 to-white dark:from-amber-500/10 dark:to-white/[0.02] hover:border-amber-300 dark:hover:border-amber-500/30 hover:shadow-md hover:shadow-amber-500/5 transition-all"
                                 >
-                                    <div className="w-10 h-10 rounded-lg bg-white dark:bg-white/[0.05] flex items-center justify-center shadow-sm border border-gray-100 dark:border-white/[0.05]">
-                                        <Settings size={20} className="text-amber-500 group-hover/item:scale-110 transition-transform" />
+                                    <div className="flex items-start justify-between gap-2">
+                                        <div className="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-sm shadow-amber-500/25">
+                                            <Settings size={16} />
+                                        </div>
+                                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-600 dark:text-amber-400 opacity-70 group-hover:opacity-100 transition-opacity">
+                                            <Download size={12} />
+                                            PDF
+                                        </span>
                                     </div>
-                                    <div className="flex-1">
-                                        <h4 className="text-sm font-bold tracking-tight text-gray-900 dark:text-white">{t('owner.account.resources.setupManual.title')}</h4>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400">{t('owner.account.resources.setupManual.desc')}</p>
+                                    <div>
+                                        <h4 className="text-sm font-bold text-gray-900 dark:text-white leading-tight">
+                                            {t('owner.account.resources.setupManual.title')}
+                                        </h4>
+                                        <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 leading-snug line-clamp-2">
+                                            {t('owner.account.resources.setupManual.desc')}
+                                        </p>
                                     </div>
-                                    <Download size={16} className="text-gray-400 group-hover/item:text-amber-500 transition-colors" />
                                 </a>
 
-                                {/* Video Tutorial */}
                                 {hasOnboardingVideo ? (
                                     <a
                                         href={ONBOARDING_VIDEO_URL}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="flex items-center gap-4 p-3 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-100 dark:border-white/[0.05] transition-all"
+                                        className="group relative sm:col-span-2 flex items-center gap-3 p-3.5 rounded-2xl border border-red-100 dark:border-red-500/15 bg-gradient-to-r from-red-50/90 via-white to-white dark:from-red-500/10 dark:via-white/[0.02] dark:to-transparent hover:border-red-300 dark:hover:border-red-500/30 hover:shadow-md hover:shadow-red-500/5 transition-all"
                                     >
-                                        <div className="w-10 h-10 rounded-lg bg-white dark:bg-white/[0.05] flex items-center justify-center shadow-sm border border-gray-100 dark:border-white/[0.05]">
-                                            <PlayCircle size={20} className="text-red-500 group-hover/item:scale-110 transition-transform" />
+                                        <div className="w-10 h-10 rounded-xl bg-red-500 text-white flex items-center justify-center shadow-sm shadow-red-500/25 shrink-0">
+                                            <PlayCircle size={18} />
                                         </div>
-                                        <div className="flex-1">
-                                            <h4 className="text-sm font-bold tracking-tight text-gray-900 dark:text-white">{t('owner.account.resources.videoTutorial.title')}</h4>
-                                            <p className="text-xs text-gray-500 dark:text-gray-400">{t('owner.account.resources.videoTutorial.desc')}</p>
+                                        <div className="flex-1 min-w-0">
+                                            <h4 className="text-sm font-bold text-gray-900 dark:text-white">
+                                                {t('owner.account.resources.videoTutorial.title')}
+                                            </h4>
+                                            <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate">
+                                                {t('owner.account.resources.videoTutorial.desc')}
+                                            </p>
                                         </div>
-                                        <ExternalLink size={16} className="text-gray-400 group-hover/item:text-red-500 transition-colors" />
+                                        <ExternalLink size={15} className="text-red-400 shrink-0 opacity-70 group-hover:opacity-100" />
                                     </a>
                                 ) : (
-                                    <button
-                                        type="button"
-                                        disabled
-                                        aria-label="Video guide coming soon"
-                                        className="flex w-full items-center gap-4 p-3 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-100 dark:border-white/[0.05] transition-all opacity-60 cursor-not-allowed text-left"
+                                    <div
+                                        aria-label={t('owner.account.videoGuideComingSoon')}
+                                        className="sm:col-span-2 flex items-center gap-3 p-3.5 rounded-2xl border border-gray-100 dark:border-white/10 bg-gray-50/80 dark:bg-white/[0.03] opacity-60"
                                     >
-                                        <div className="w-10 h-10 rounded-lg bg-white dark:bg-white/[0.05] flex items-center justify-center shadow-sm border border-gray-100 dark:border-white/[0.05]">
-                                            <PlayCircle size={20} className="text-red-500" />
+                                        <div className="w-10 h-10 rounded-xl bg-gray-200 dark:bg-white/10 text-gray-500 flex items-center justify-center shrink-0">
+                                            <PlayCircle size={18} />
                                         </div>
-                                        <div className="flex-1">
-                                            <h4 className="text-sm font-bold tracking-tight text-gray-900 dark:text-white">{t('owner.account.resources.videoTutorial.title')}</h4>
-                                            <p className="text-xs text-gray-500 dark:text-gray-400">{t('owner.account.resources.videoTutorial.desc')}</p>
+                                        <div className="flex-1 min-w-0">
+                                            <h4 className="text-sm font-bold text-gray-900 dark:text-white">
+                                                {t('owner.account.resources.videoTutorial.title')}
+                                            </h4>
+                                            <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                                                {t('common.comingSoon', { defaultValue: 'Coming soon' })}
+                                            </p>
                                         </div>
-                                        <ExternalLink size={16} className="text-gray-400" />
-                                    </button>
+                                    </div>
                                 )}
+                            </div>
 
-                                {/* Q&A */}
-                                <a
-                                    href="/qa"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center gap-4 p-3 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-100 dark:border-white/[0.05] transition-all"
-                                >
-                                    <div className="w-10 h-10 rounded-lg bg-white dark:bg-white/[0.05] flex items-center justify-center shadow-sm border border-gray-100 dark:border-white/[0.05]">
-                                        <HelpCircle size={20} className="text-purple-500 group-hover/item:scale-110 transition-transform" />
-                                    </div>
-                                    <div className="flex-1">
-                                        <h4 className="text-sm font-bold tracking-tight text-gray-900 dark:text-white">{t('owner.account.resources.qa.title')}</h4>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400">{t('owner.account.resources.qa.desc')}</p>
-                                    </div>
-                                    <ExternalLink size={16} className="text-gray-400 group-hover/item:text-purple-500 transition-colors" />
-                                </a>
-
-                                {/* Privacy Policy */}
-                                <a
-                                    href="/legal/privacy"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center gap-4 p-3 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-100 dark:border-white/[0.05] transition-all"
-                                >
-                                    <div className="w-10 h-10 rounded-lg bg-white dark:bg-white/[0.05] flex items-center justify-center shadow-sm border border-gray-100 dark:border-white/[0.05]">
-                                        <Shield size={20} className="text-mintcom-green group-hover/item:scale-110 transition-transform" />
-                                    </div>
-                                    <div className="flex-1">
-                                        <h4 className="text-sm font-bold tracking-tight text-gray-900 dark:text-white">{t('owner.account.resources.privacyPolicy.title')}</h4>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400">{t('owner.account.resources.privacyPolicy.desc')}</p>
-                                    </div>
-                                    <ExternalLink size={16} className="text-gray-400 group-hover/item:text-mintcom-green transition-colors" />
-                                </a>
-
-                                {/* Terms of Use */}
-                                <a
-                                    href="/legal/terms"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center gap-4 p-3 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-100 dark:border-white/[0.05] transition-all"
-                                >
-                                    <div className="w-10 h-10 rounded-lg bg-white dark:bg-white/[0.05] flex items-center justify-center shadow-sm border border-gray-100 dark:border-white/[0.05]">
-                                        <Scale size={20} className="text-blue-500 group-hover/item:scale-110 transition-transform" />
-                                    </div>
-                                    <div className="flex-1">
-                                        <h4 className="text-sm font-bold tracking-tight text-gray-900 dark:text-white">{t('owner.account.resources.termsOfUse.title')}</h4>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400">{t('owner.account.resources.termsOfUse.desc')}</p>
-                                    </div>
-                                    <ExternalLink size={16} className="text-gray-400 group-hover/item:text-blue-500 transition-colors" />
-                                </a>
-
-                                {/* About Us */}
-                                <a
-                                    href="/about"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center gap-4 p-3 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-100 dark:border-white/[0.05] transition-all"
-                                >
-                                    <div className="w-10 h-10 rounded-lg bg-white dark:bg-white/[0.05] flex items-center justify-center shadow-sm border border-gray-100 dark:border-white/[0.05]">
-                                        <Info size={20} className="text-mintcom-green group-hover/item:scale-110 transition-transform" />
-                                    </div>
-                                    <div className="flex-1">
-                                        <h4 className="text-sm font-bold tracking-tight text-gray-900 dark:text-white">{t('owner.account.resources.aboutUs.title')}</h4>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400">{t('owner.account.resources.aboutUs.desc')}</p>
-                                    </div>
-                                    <ExternalLink size={16} className="text-gray-400 group-hover/item:text-mintcom-green transition-colors" />
-                                </a>
+                            {/* Company / legal — compact chips */}
+                            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2.5 px-0.5">
+                                {t('owner.account.resources.company', { defaultValue: 'Company & legal' })}
+                            </p>
+                            <div className="grid grid-cols-2 gap-2">
+                                {[
+                                    {
+                                        href: '/qa',
+                                        icon: HelpCircle,
+                                        title: t('owner.account.resources.qa.title'),
+                                        tone: 'text-purple-500 bg-purple-500/10 border-purple-500/10 hover:border-purple-400/40',
+                                    },
+                                    {
+                                        href: '/legal/privacy',
+                                        icon: Shield,
+                                        title: t('owner.account.resources.privacyPolicy.title'),
+                                        tone: 'text-mintcom-green bg-mintcom-green/10 border-mintcom-green/10 hover:border-mintcom-green/40',
+                                    },
+                                    {
+                                        href: '/legal/terms',
+                                        icon: Scale,
+                                        title: t('owner.account.resources.termsOfUse.title'),
+                                        tone: 'text-blue-500 bg-blue-500/10 border-blue-500/10 hover:border-blue-400/40',
+                                    },
+                                    {
+                                        href: '/about',
+                                        icon: Info,
+                                        title: t('owner.account.resources.aboutUs.title'),
+                                        tone: 'text-emerald-600 bg-emerald-500/10 border-emerald-500/10 hover:border-emerald-400/40',
+                                    },
+                                ].map((item) => (
+                                    <a
+                                        key={item.href}
+                                        href={item.href}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className={`group flex items-center gap-2.5 p-2.5 rounded-xl border bg-white dark:bg-white/[0.02] transition-all hover:shadow-sm ${item.tone}`}
+                                    >
+                                        <div className="w-8 h-8 rounded-lg bg-white dark:bg-white/5 flex items-center justify-center shrink-0 shadow-sm border border-black/[0.03] dark:border-white/5">
+                                            <item.icon size={15} className="shrink-0" />
+                                        </div>
+                                        <span className="text-xs font-bold text-gray-800 dark:text-gray-100 truncate flex-1">
+                                            {item.title}
+                                        </span>
+                                        <ExternalLink size={12} className="text-gray-300 group-hover:text-gray-500 shrink-0 transition-colors" />
+                                    </a>
+                                ))}
                             </div>
                         </div>
                     </motion.div>
@@ -1356,16 +1487,16 @@ export function OwnerAccountManagementPage() {
                                     <p className="text-sm text-gray-500 dark:text-gray-400">{t('owner.account.deleteAccountModal.feedbackHint')}</p>
                                 </div>
                                 <div className="grid grid-cols-1 gap-2">
-                                    {deleteReasons.map((reason) => (
+                                    {DELETE_REASON_OPTIONS.map((reason) => (
                                         <button
-                                            key={reason}
-                                            onClick={() => setDeleteReason(reason)}
-                                            className={`w-full text-left px-4 py-3 rounded-xl border transition-all text-sm font-medium ${deleteReason === reason
+                                            key={reason.key}
+                                            onClick={() => setDeleteReason(reason.value)}
+                                            className={`w-full text-start px-4 py-3 rounded-xl border transition-all text-sm font-medium ${deleteReason === reason.value
                                                 ? 'bg-mintcom-green/10 border-mintcom-green text-mintcom-green'
                                                 : 'bg-gray-50 dark:bg-white/[0.02] border-gray-100 dark:border-white/[0.05] text-gray-600 dark:text-gray-400 hover:border-gray-300'
                                                 }`}
                                         >
-                                            {t(`owner.account.deleteAccountModal.reasons.${reason.toLowerCase().replace(/ /g, '_').replace("'", '')}`, { defaultValue: reason })}
+                                            {t(`owner.account.deleteAccountModal.reasons.${reason.key}`)}
                                         </button>
                                     ))}
                                 </div>
@@ -1407,7 +1538,7 @@ export function OwnerAccountManagementPage() {
                                     </button>
                                     <button
                                         onClick={() => setDeleteStep(3)}
-                                        disabled={deleteConfirmationText !== t('common.delete')}
+                                        disabled={deleteConfirmationText.trim().toLocaleLowerCase(i18n.language) !== t('common.delete').toLocaleLowerCase(i18n.language)}
                                         className="flex-1 py-4 bg-red-500 text-white rounded-2xl text-sm font-black disabled:opacity-50 transition-all"
                                     >
                                         {t('common.next')}

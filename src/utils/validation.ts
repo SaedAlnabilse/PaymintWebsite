@@ -17,7 +17,8 @@ export const getSignUpSchema = (t: TFunction) => {
       .min(8, t('auth.validation.passwordMin'))
       .regex(/[A-Z]/, t('auth.validation.passwordUppercase'))
       .regex(/[a-z]/, t('auth.validation.passwordLowercase'))
-      .regex(/[0-9]/, t('auth.validation.passwordNumber')),
+      .regex(/[0-9]/, t('auth.validation.passwordNumber'))
+      .regex(/[^A-Za-z0-9]/, t('auth.validation.passwordSymbol')),
     confirmPassword: z.string(),
     agreeToTerms: z.boolean().refine(val => val === true, {
       message: t('auth.validation.termsRequired'),
