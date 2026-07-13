@@ -67,6 +67,7 @@ export function SignUpPage() {
     { label: t('auth.validation.passwordUppercase'), met: /[A-Z]/.test(password) },
     { label: t('auth.validation.passwordLowercase'), met: /[a-z]/.test(password) },
     { label: t('auth.validation.passwordNumber'), met: /[0-9]/.test(password) },
+    { label: t('auth.validation.passwordSymbol'), met: /[^A-Za-z0-9]/.test(password) },
   ];
 
   const handleGoogleAuthClick = useCallback((e: React.MouseEvent) => {

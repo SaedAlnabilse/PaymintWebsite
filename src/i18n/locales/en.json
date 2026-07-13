@@ -436,7 +436,8 @@
       "passwordRequired": "Password is required",
       "passwordsDoNotMatch": "Passwords do not match",
       "passwordUppercase": "Must contain at least one uppercase letter",
-      "termsRequired": "You must agree to the Privacy Policy and Terms of Service"
+      "termsRequired": "You must agree to the Privacy Policy and Terms of Service",
+      "passwordSymbol": "Must contain at least one symbol"
     },
     "verifyEmail": {
       "backToHome": "Back to Home",
@@ -3017,7 +3018,8 @@
       "selectData": "Select data to duplicate:",
       "startFresh": "Do not import (Start fresh)",
       "subtitle": "Tell Us About Your Business Location",
-      "title": "Location Details"
+      "title": "Location Details",
+      "currencyLinkedToCountry": "Currency is set from the selected country. You can change it if needed."
     },
     "step2": {
       "activateButton": "Activate & Pay",
@@ -3572,16 +3574,24 @@
       "delete": "Delete",
       "deleteAccount": "Delete Account",
       "deleteAccountModal": {
-        "confirmDeletePrompt": "Type DELETE to confirm",
+        "confirmDeletePrompt": "Type {{keyword}} to confirm",
         "confirmFinal": "I understand this action is permanent and irreversible",
         "confirmPassword": "Confirm your password to proceed",
         "deleting": "Deleting account...",
         "feedbackHint": "Help us improve by sharing your reason (optional)",
         "passwordPlaceholder": "Enter your password",
         "title": "Delete Account",
-        "typeDeletePlaceholder": "Type DELETE here",
+        "typeDeletePlaceholder": "Type {{keyword}} here",
         "warning": "This will permanently delete your account and all associated data. This action cannot be undone.",
-        "whyLeaving": "Why are you leaving?"
+        "whyLeaving": "Why are you leaving?",
+        "reasons": {
+          "its_too_expensive": "It's too expensive",
+          "i_found_a_better_alternative": "I found a better alternative",
+          "missing_features_i_need": "Missing features I need",
+          "too_difficult_to_use": "Too difficult to use",
+          "closing_my_business": "Closing my business",
+          "other": "Other"
+        }
       },
       "deleteButton": "Delete Account",
       "deleteFailed": "Failed to initiate deletion",
@@ -3682,7 +3692,18 @@
       },
       "verified": "Verified",
       "verifyEmail": "Verify email",
-      "videoTutorial": "Video Tutorial"
+      "videoTutorial": "Video Tutorial",
+      "ownerAccountTitle": "Owner Account",
+      "ownerAccount": "Owner Account",
+      "profileCompletion": "Profile Completion",
+      "completeProfileHint": "Complete your profile to unlock all features",
+      "systemCurrency": "System Currency",
+      "systemCurrencySubtitle": "Updates currency for all your locations.",
+      "systemCurrencyDesc": "Updates currency for all your locations.",
+      "applyingCurrencyChanges": "Applying changes to all locations...",
+      "currencyUpdated": "Global currency updated to {{currency}}",
+      "currencyUpdateFailed": "Failed to update global currency",
+      "videoGuideComingSoon": "Video guide coming soon"
     },
     "account_employees": {
       "members_count_few": "{{count}} Members",
@@ -5690,7 +5711,8 @@
       "subtitle": "Find Answers Quickly",
       "title": "How Can We Help You?",
       "topics": "Help Topics",
-      "tryDifferent": "Try a different search term"
+      "tryDifferent": "Try a different search term",
+      "entityQuestions": "questions"
     },
     "quickLinks": {
       "community": "Join Community",
@@ -5781,6 +5803,7 @@
     "passwordNumber": "Password must contain at least one number",
     "passwordRequired": "Password is required",
     "passwordsDoNotMatch": "Passwords do not match",
-    "passwordUppercase": "Password must contain at least one uppercase letter"
+    "passwordUppercase": "Password must contain at least one uppercase letter",
+    "passwordSymbol": "Password must contain at least one symbol"
   }
 }

@@ -436,7 +436,8 @@
       "passwordRequired": "كلمة المرور مطلوبة",
       "passwordsDoNotMatch": "كلمات المرور غير متطابقة",
       "passwordUppercase": "يجب أن تحتوي على حرف كبير واحد على الأقل",
-      "termsRequired": "يجب الموافقة على سياسة الخصوصية وشروط الخدمة"
+      "termsRequired": "يجب الموافقة على سياسة الخصوصية وشروط الخدمة",
+      "passwordSymbol": "يجب أن تحتوي على رمز واحد على الأقل"
     },
     "verifyEmail": {
       "backToHome": "العودة للرئيسية",
@@ -3017,7 +3018,8 @@
       "selectData": "اختر البيانات المراد تكرارها:",
       "startFresh": "عدم الاستيراد (ابدأ من الصفر)",
       "subtitle": "أخبرنا عن موقع عملك.",
-      "title": "تفاصيل الموقع"
+      "title": "تفاصيل الموقع",
+      "currencyLinkedToCountry": "يتم تعيين العملة تلقائياً حسب الدولة المحددة. يمكنك تغييرها عند الحاجة."
     },
     "step2": {
       "activateButton": "تفعيل ودفع",
@@ -3572,16 +3574,24 @@
       "delete": "حذف",
       "deleteAccount": "حذف الحساب",
       "deleteAccountModal": {
-        "confirmDeletePrompt": "اكتب DELETE للتأكيد",
+        "confirmDeletePrompt": "اكتب {{keyword}} للتأكيد",
         "confirmFinal": "أفهم أن هذا الإجراء دائم",
         "confirmPassword": "أكد كلمة المرور",
         "deleting": "جاري حذف الحساب...",
         "feedbackHint": "ملاحظاتك تساعدنا على التحسين (اختياري)",
         "passwordPlaceholder": "أدخل كلمة المرور",
         "title": "حذف حسابك",
-        "typeDeletePlaceholder": "اكتب DELETE هنا",
+        "typeDeletePlaceholder": "اكتب {{keyword}} هنا",
         "warning": "سيتم حذف حسابك وجميع بياناتك بشكل دائم.",
-        "whyLeaving": "لماذا تغادر؟"
+        "whyLeaving": "لماذا تغادر؟",
+        "reasons": {
+          "its_too_expensive": "مرتفع التكلفة",
+          "i_found_a_better_alternative": "وجدت بديلاً أفضل",
+          "missing_features_i_need": "تفتقد ميزات أحتاجها",
+          "too_difficult_to_use": "صعب الاستخدام",
+          "closing_my_business": "أغلق نشاطي التجاري",
+          "other": "أخرى"
+        }
       },
       "deleteButton": "حذف الحساب",
       "deleteFailed": "فشل بدء الحذف",
@@ -3682,7 +3692,18 @@
       },
       "verified": "تم التحقق",
       "verifyEmail": "التحقق من البريد الإلكتروني",
-      "videoTutorial": "دروس الفيديو"
+      "videoTutorial": "دروس الفيديو",
+      "ownerAccountTitle": "حساب المالك",
+      "ownerAccount": "حساب المالك",
+      "profileCompletion": "اكتمال الملف الشخصي",
+      "completeProfileHint": "أكمل ملفك الشخصي لفتح جميع الميزات",
+      "systemCurrency": "عملة النظام",
+      "systemCurrencySubtitle": "يحدّث العملة لجميع مواقعك.",
+      "systemCurrencyDesc": "يحدّث العملة لجميع مواقعك.",
+      "applyingCurrencyChanges": "جاري تطبيق التغييرات على جميع المواقع...",
+      "currencyUpdated": "تم تحديث العملة العامة إلى {{currency}}",
+      "currencyUpdateFailed": "فشل تحديث العملة العامة",
+      "videoGuideComingSoon": "دليل الفيديو قريباً"
     },
     "account_employees": {
       "members_count_few": "{{count}} أعضاء",
@@ -5690,7 +5711,8 @@
       "subtitle": "إجابات على الأسئلة الشائعة",
       "title": "كيف يمكننا مساعدتك؟",
       "topics": "مواضيع المساعدة",
-      "tryDifferent": "جرب مصطلح بحث مختلف"
+      "tryDifferent": "جرب مصطلح بحث مختلف",
+      "entityQuestions": "أسئلة"
     },
     "quickLinks": {
       "community": "منتدى المجتمع",
@@ -5781,6 +5803,7 @@
     "passwordNumber": "يجب أن تحتوي على رقم",
     "passwordRequired": "كلمة المرور مطلوبة",
     "passwordsDoNotMatch": "كلمات المرور غير متطابقة",
-    "passwordUppercase": "يجب أن تحتوي على حرف كبير"
+    "passwordUppercase": "يجب أن تحتوي على حرف كبير",
+    "passwordSymbol": "يجب أن تحتوي كلمة المرور على رمز واحد على الأقل"
   }
 }
