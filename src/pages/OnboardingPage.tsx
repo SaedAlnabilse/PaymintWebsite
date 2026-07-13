@@ -80,6 +80,7 @@ import {
   getCurrencyOptions,
   getDeviceTimeZone,
 } from '../data/globalLocaleOptions';
+import { getLocalizedManual } from '../utils/localizedDocs';
 import {
   detectCardBrand,
   formatCardNumberInput,
@@ -207,9 +208,11 @@ function CardBrandMark({ brand }: { brand: 'mastercard' | 'visa' | 'amex' }) {
 
 
 export function OnboardingPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const isRTL = t('common.locale') === 'ar';
   const locale = t('common.locale');
+  const userManualDoc = getLocalizedManual('user', i18n.language);
+  const setupManualDoc = getLocalizedManual('setup', i18n.language);
   const countryOptions = useMemo(() => getCountryOptions(locale), [locale]);
   const allCurrencyOptions = useMemo(() => getCurrencyOptions(locale), [locale]);
   const hasAndroidDownload = Boolean(ANDROID_DOWNLOAD_URL);
@@ -2266,8 +2269,8 @@ export function OnboardingPage() {
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                       {/* User Manual */}
                       <a
-                        href="/docs/mintcom-user-manual.pdf"
-                        download="Mintcom_User_Manual.pdf"
+                        href={userManualDoc.path}
+                        download={userManualDoc.filename}
                         className="group p-4 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-xl hover:border-mintcom-green/50 hover:bg-mintcom-green/5 transition-all"
                       >
                         <div className="w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
@@ -2279,7 +2282,8 @@ export function OnboardingPage() {
 
                       {/* Setup Manual */}
                       <a
-                        href="/docs/mintcom-setup-manual.pdf"
+                        href={setupManualDoc.path}
+                        download={setupManualDoc.filename}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="group p-4 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-xl hover:border-mintcom-green/50 hover:bg-mintcom-green/5 transition-all"

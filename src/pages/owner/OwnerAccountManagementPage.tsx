@@ -47,6 +47,7 @@ import toast from 'react-hot-toast';
 import { getBusinessTypeIcon } from '../../utils/businessTypeIcons';
 import { SectionLoader } from '../../components/LoadingState';
 import { formatInputPlaceholder } from '../../utils/textCase';
+import { getLocalizedManual } from '../../utils/localizedDocs';
 
 interface AccountDetails {
     id: string;
@@ -105,6 +106,8 @@ export function OwnerAccountManagementPage() {
     const { account, establishments, logout, updateAccount } = useAuth();
     const navigate = useNavigate();
     const hasOnboardingVideo = Boolean(ONBOARDING_VIDEO_URL);
+    const userManualDoc = getLocalizedManual('user', i18n.language);
+    const setupManualDoc = getLocalizedManual('setup', i18n.language);
     const [accountDetails, setAccountDetails] = useState<AccountDetails | null>(null);
     const [brands, setBrands] = useState<BrandCredential[]>([]);
     const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
@@ -1179,8 +1182,8 @@ export function OwnerAccountManagementPage() {
                             </p>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-5">
                                 <a
-                                    href="/docs/mintcom-user-manual.pdf"
-                                    download="Mintcom_User_Manual.pdf"
+                                    href={userManualDoc.path}
+                                    download={userManualDoc.filename}
                                     className="group relative flex flex-col gap-3 p-3.5 rounded-2xl border border-blue-100 dark:border-blue-500/15 bg-gradient-to-br from-blue-50/90 to-white dark:from-blue-500/10 dark:to-white/[0.02] hover:border-blue-300 dark:hover:border-blue-500/30 hover:shadow-md hover:shadow-blue-500/5 transition-all"
                                 >
                                     <div className="flex items-start justify-between gap-2">
@@ -1203,8 +1206,8 @@ export function OwnerAccountManagementPage() {
                                 </a>
 
                                 <a
-                                    href="/docs/mintcom-setup-manual.pdf"
-                                    download="Mintcom_Setup_Manual.pdf"
+                                    href={setupManualDoc.path}
+                                    download={setupManualDoc.filename}
                                     className="group relative flex flex-col gap-3 p-3.5 rounded-2xl border border-amber-100 dark:border-amber-500/15 bg-gradient-to-br from-amber-50/90 to-white dark:from-amber-500/10 dark:to-white/[0.02] hover:border-amber-300 dark:hover:border-amber-500/30 hover:shadow-md hover:shadow-amber-500/5 transition-all"
                                 >
                                     <div className="flex items-start justify-between gap-2">
