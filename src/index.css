@@ -1013,3 +1013,27 @@
 html[lang="ar"] [class*="tracking-"] {
   letter-spacing: normal !important;
 }
+
+/* Force all standard elements inside try-pos-root sandbox to be rounded 12px (0.75rem / rounded-xl) */
+.try-pos-root button,
+.try-pos-root input,
+.try-pos-root select,
+.try-pos-root textarea,
+.try-pos-root .rounded-2xl,
+.try-pos-root .rounded-3xl,
+.try-pos-root .rounded-xl,
+.try-pos-root .rounded-lg,
+.try-pos-root .rounded-md,
+.try-pos-root .rounded-[28px],
+.try-pos-root [class*="rounded-"] {
+  border-radius: 12px !important;
+}
+
+/* Maintain full roundness for actual circular buttons, badges, and avatars */
+.try-pos-root .rounded-full,
+.try-pos-root button.rounded-full,
+.try-pos-root span.rounded-full,
+.try-pos-root img.rounded-full,
+.try-pos-root div.rounded-full {
+  border-radius: 9999px !important;
+}

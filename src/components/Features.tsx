@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { motion, AnimatePresence, type PanInfo, type Variants } from 'framer-motion';
+import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import {
   CreditCard,
@@ -47,11 +47,9 @@ const WorkflowFeatureCard = ({
       viewport={{ once: true }}
       transition={{ delay: (index % 4) * 0.08, duration: 0.5 }}
       whileHover={{ y: -6, scale: 1.02 }}
-      className="group flex flex-col h-full p-6 rounded-2xl border border-gray-100 dark:border-white/5 bg-white dark:bg-[#121212] hover:border-mintcom-green/40 hover:shadow-2xl hover:shadow-mintcom-green/10 shadow-lg shadow-gray-200/30 dark:shadow-none transition-all duration-500 relative overflow-hidden"
+      className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white p-6 shadow-lg shadow-gray-200/30 transition-all duration-500 hover:border-mintcom-green/40 hover:shadow-2xl hover:shadow-mintcom-green/10 dark:border-white/5 dark:bg-[#121212] dark:shadow-none"
     >
-      <div className="absolute top-0 right-0 w-28 h-28 bg-mintcom-green/5 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-
-      <div className="flex items-start gap-4 mb-4 relative z-10">
+      <div className="relative z-10 mb-4 flex items-start gap-4">
         <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-mintcom-green/10 dark:bg-mintcom-green/15 flex items-center justify-center group-hover:bg-mintcom-green group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 shadow-inner">
           <feature.icon size={22} className="text-mintcom-green group-hover:text-white transition-colors duration-500" />
         </div>
@@ -136,9 +134,9 @@ const WorkflowFeatureModal = ({
   const feature = features[activeIndex];
   if (!feature) return null;
   const Icon = feature.icon;
-  const interactive = hasInteractiveDemo(feature.id);
-  // All interactive demos use text-left + playground-right layout
-  const isSplitLayout = interactive;
+  const hasPreview = hasInteractiveDemo(feature.id);
+  // All feature cards use the same split layout + modal size
+  const isSplitLayout = hasPreview;
   const isPhoneDemo = feature.id === 'mobileApp';
 
   const featureHighlights = (id?: string): string[] => {
@@ -146,84 +144,90 @@ const WorkflowFeatureModal = ({
     const defaults: Record<string, [string, string, string]> = {
       pointOfSale: [
         'Browse by category or All menu',
-        'Tap items into a live order',
-        'Charge with card or cash',
+        'Build orders with add-ons & qty',
+        'Charge with card, cash, or other',
       ],
       salesControl: [
-        'Cash is always available',
-        'Add payment types & card brands',
-        'Tax + service charge at checkout',
+        'Cash always available at checkout',
+        'Card brands, wallets & delivery apps',
+        'Tax + service charge configured once',
       ],
       staffManagement: [
-        'Add team members in one tap',
-        'Assign roles & permissions',
-        'See access update instantly',
+        'Add team members with PIN clock-in',
+        'Assign roles & fine-grained permissions',
+        'Access updates instantly on every POS',
       ],
       advancedReporting: [
-        'Inspect sales day by day',
-        'Track weekly performance live',
-        'Spot peaks before they pass',
+        'Net sales, card, cash & order counts',
+        'Weekly charts and peak-day insights',
+        'Top sellers ranked by revenue',
       ],
       production: [
-        'Toggle recipe ingredients',
-        'Recalculate cost instantly',
-        'Watch profit margin update',
+        'Track raw materials with stock value',
+        'Low-stock alerts and restock on the fly',
+        'Link recipes so sales deduct inventory',
       ],
       aiSystem: [
-        'Ask sales & forecast questions',
-        'Get typed AI answers live',
-        'Built into every dashboard',
+        'Ask sales & staffing questions',
+        'Get clear, business-ready answers',
+        'Built into every Mintcom workspace',
       ],
       multiBranch: [
-        'Switch brands like Cafe Delight',
-        'Link locations under each brand',
-        'Unified brand totals update live',
+        'Link locations under one brand',
+        'Unified brand totals in real time',
+        'Compare Downtown, Mall & more',
       ],
       simpleUI: [
-        'Switch compact or cozy density',
-        'Preview light and dark themes',
-        'See the dashboard change live',
+        'Open shift with My Orders & Close Shift',
+        'Net, cash, card & pay-in/out at a glance',
+        'Live sales trend for the active shift',
       ],
       fastOnboarding: [
-        'Walk through setup steps',
-        'Track onboarding progress',
-        'Get new staff productive fast',
+        'Guided setup from location to sale',
+        'Progress that staff can follow',
+        'Productive on day one',
       ],
       secure: [
-        'Toggle security controls',
-        'Score your protection live',
-        'Encrypted, backed up, always on',
+        'Encrypted backups & 2FA ready',
+        'Role-based access by design',
+        'Live protection score per location',
       ],
       loyalty: [
-        'Redeem % discounts on orders',
+        'Redeem % discounts at the register',
         'Gift free items from a category',
-        'Earn points like real POS loyalty',
+        'Points earn just like real POS loyalty',
       ],
       mobileApp: [
-        'Live cash, stock & refund alerts',
-        'Push banners with business context',
-        'Stay in control from anywhere',
+        'Cash shortage & overage alerts',
+        'Stock warnings with location context',
+        'Refunds and push banners on the go',
       ],
     };
     // Do NOT load these via t('…highlights.x.0') — missing keys hit parseMissingKeyHandler
     // which returns the leaf segment ("0"/"1"/"2") instead of the defaultValue.
     return defaults[key] ?? [
-      'Explore the live preview',
-      'Try the interactive controls',
-      'See Mintcom in action',
+      'See the real Mintcom interface',
+      'Same screens as Try POS & dashboard',
+      'Built for busy businesses',
     ];
   };
 
-  const handleDragEnd = (_e: unknown, info: PanInfo) => {
-    if (interactive) return; // don't swipe-away while playing with demos
-    const threshold = 80;
-    if (info.offset.x < -threshold) {
-      if (isRtl) onPrev();
-      else onNext();
-    } else if (info.offset.x > threshold) {
-      if (isRtl) onNext();
-      else onPrev();
-    }
+  const previewHint = (id?: string): string => {
+    const hints: Record<string, string> = {
+      pointOfSale: 'Real Mintcom POS sales screen →',
+      salesControl: 'Real payment settings screen →',
+      staffManagement: 'Real team & roles screen →',
+      advancedReporting: 'Real reporting dashboard →',
+      production: 'Real Recipe Operations · raw materials →',
+      aiSystem: 'Real Mintcom AI assistant →',
+      multiBranch: 'Real multi-location brand view →',
+      simpleUI: 'Real try-pos Dashboard →',
+      fastOnboarding: 'Real onboarding checklist →',
+      secure: 'Real security controls →',
+      loyalty: 'Real loyalty panel on POS →',
+      mobileApp: 'Real owner mobile alerts →',
+    };
+    return hints[id ?? ''] ?? 'Real Mintcom interface →';
   };
 
   return (
@@ -242,9 +246,7 @@ const WorkflowFeatureModal = ({
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.94, y: 24 }}
         transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-        className={`relative z-10 w-full overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-[0_24px_80px_-16px_rgba(0,0,0,0.35)] dark:border-white/10 dark:bg-[#161616] ${
-          isSplitLayout ? 'max-w-5xl' : 'max-w-2xl'
-        }`}
+        className="relative z-10 w-full max-w-5xl overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-[0_24px_80px_-16px_rgba(0,0,0,0.35)] dark:border-white/10 dark:bg-[#161616]"
         dir={isRtl ? 'rtl' : 'ltr'}
         style={{ perspective: 1200 }}
       >
@@ -291,7 +293,7 @@ const WorkflowFeatureModal = ({
           <span className="tabular-nums opacity-70">{features.length}</span>
         </div>
 
-        <div className={`relative overflow-x-hidden ${isSplitLayout ? 'max-h-[min(90vh,860px)] overflow-y-auto' : 'max-h-[min(78vh,720px)] overflow-y-auto'}`}>
+        <div className="relative max-h-[min(90vh,860px)] overflow-x-hidden overflow-y-auto">
           <AnimatePresence mode="wait" custom={direction} initial={false}>
             <motion.div
               key={activeIndex}
@@ -300,25 +302,11 @@ const WorkflowFeatureModal = ({
               initial="enter"
               animate="center"
               exit="exit"
-              drag={interactive ? false : 'x'}
-              dragConstraints={{ left: 0, right: 0 }}
-              dragElastic={0.25}
-              onDragEnd={handleDragEnd}
-              className={`relative z-10 ${
-                isSplitLayout
-                  ? 'p-6 pt-14 md:p-8 md:pt-16 lg:p-10 lg:pt-16'
-                  : 'cursor-grab p-8 pt-14 md:p-10 md:pt-16 active:cursor-grabbing'
-              }`}
+              className="relative z-10 select-text p-6 pt-14 md:p-8 md:pt-16 lg:p-10 lg:pt-16"
               style={{ transformStyle: 'preserve-3d' }}
             >
               {isSplitLayout ? (
-                <div
-                  className={`grid items-center gap-8 lg:gap-10 ${
-                    isPhoneDemo
-                      ? 'lg:grid-cols-[minmax(0,1fr)_minmax(250px,300px)] xl:grid-cols-[minmax(0,1fr)_minmax(260px,310px)]'
-                      : 'lg:grid-cols-[minmax(0,0.92fr)_minmax(300px,1.08fr)] xl:grid-cols-[minmax(0,0.9fr)_minmax(340px,1.1fr)]'
-                  }`}
-                >
+                <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,0.78fr)_minmax(340px,1.22fr)] lg:gap-10 xl:grid-cols-[minmax(0,0.72fr)_minmax(380px,1.28fr)]">
                   {/* Left: story copy */}
                   <div className="order-2 min-w-0 lg:order-1">
                     <motion.div
@@ -364,20 +352,18 @@ const WorkflowFeatureModal = ({
                       transition={{ delay: 0.35 }}
                       className="mt-6 hidden text-xs font-medium text-gray-400 lg:block"
                     >
-                      {String(t('landing.workflow.receipt.demo.tryHint', 'Try the live preview on the right →'))}
+                      {previewHint(feature.id)}
                     </motion.p>
                   </div>
 
-                  {/* Right: interactive playground */}
+                  {/* Right: static real-UI screenshot — same size for every card */}
                   <motion.div
                     initial={{ y: 24, opacity: 0, scale: 0.96 }}
                     animate={{ y: 0, opacity: 1, scale: 1 }}
                     transition={{ delay: 0.2, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                    className={`order-1 flex lg:order-2 ${
-                      isPhoneDemo ? 'justify-center lg:justify-end' : 'w-full justify-center lg:justify-stretch'
-                    }`}
+                    className="order-1 flex w-full justify-center lg:order-2 lg:justify-stretch"
                   >
-                    <div className={isPhoneDemo ? undefined : 'w-full max-w-md lg:max-w-none'}>
+                    <div className="w-full max-w-none">
                       <FeatureInteractiveDemo
                         featureId={feature.id}
                         t={t}
@@ -623,7 +609,7 @@ export const Features = () => {
             </span>
           </motion.div>
 
-          <h2 className="text-[clamp(1rem,5.2vw,4.5rem)] whitespace-nowrap font-bold font-magilio mb-6 leading-tight tracking-tight">
+          <h2 className="text-[clamp(1rem,4.2vw,3.75rem)] whitespace-nowrap font-bold font-magilio mb-6 leading-tight tracking-tight">
             <span className="text-gray-900 dark:text-white">{t('landing.workflow.title')} </span>
             <span className="bg-mintcom-green text-gray-900 dark:text-gray-900 px-2 rounded-sm">{t('landing.workflow.titleHighlight')}</span>
           </h2>

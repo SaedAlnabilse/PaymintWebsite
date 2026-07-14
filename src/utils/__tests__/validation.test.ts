@@ -13,8 +13,8 @@ describe('Validation Schemas', () => {
         firstName: 'John',
         lastName: 'Doe',
         email: 'john.doe@example.com',
-        password: 'Password123',
-        confirmPassword: 'Password123',
+        password: 'Password123!',
+        confirmPassword: 'Password123!',
         agreeToTerms: true,
       };
       const result = signUpSchema.safeParse(validData);
@@ -26,8 +26,8 @@ describe('Validation Schemas', () => {
         firstName: 'John',
         lastName: 'Doe',
         email: 'john.doe@example.com',
-        password: 'Password123',
-        confirmPassword: 'DifferentPassword123',
+        password: 'Password123!',
+        confirmPassword: 'DifferentPassword123!',
         agreeToTerms: true,
       };
       const result = signUpSchema.safeParse(invalidData);
@@ -42,8 +42,8 @@ describe('Validation Schemas', () => {
         firstName: '  ',
         lastName: '  ',
         email: ' john.doe@example.com ',
-        password: 'Password123',
-        confirmPassword: 'Password123',
+        password: 'Password123!',
+        confirmPassword: 'Password123!',
         agreeToTerms: true,
       };
       const result = signUpSchema.safeParse(invalidData);
@@ -51,6 +51,22 @@ describe('Validation Schemas', () => {
       if (!result.success) {
         expect(result.error.issues.some(i => i.path.includes('firstName'))).toBe(true);
         expect(result.error.issues.some(i => i.path.includes('lastName'))).toBe(true);
+      }
+    });
+
+    it('should reject password without a symbol', () => {
+      const invalidData = {
+        firstName: 'John',
+        lastName: 'Doe',
+        email: 'john.doe@example.com',
+        password: 'Password123',
+        confirmPassword: 'Password123',
+        agreeToTerms: true,
+      };
+      const result = signUpSchema.safeParse(invalidData);
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues.find(i => i.path.includes('password'))?.message).toBe('auth.validation.passwordSymbol');
       }
     });
   });
@@ -61,7 +77,7 @@ describe('Validation Schemas', () => {
     it('should validate a correct login object', () => {
       const validData = {
         email: 'john.doe@example.com',
-        password: 'Password123',
+        password: 'Password123!',
       };
       const result = loginSchema.safeParse(validData);
       expect(result.success).toBe(true);
@@ -70,7 +86,7 @@ describe('Validation Schemas', () => {
     it('should fail if email is invalid', () => {
       const invalidData = {
         email: 'not-an-email',
-        password: 'Password123',
+        password: 'Password123!',
       };
       const result = loginSchema.safeParse(invalidData);
       expect(result.success).toBe(false);

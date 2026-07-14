@@ -250,42 +250,9 @@ export function OwnerOverviewPage() {
                 </div>
             </div>
 
-            {/* KPI Grid — Net Sales first (left), then Total Sales (includes tax/service) */}
+            {/* KPI Grid — portfolio counts first, then money metrics */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {[
-                    {
-                        label: t('owner.overview.netSales'),
-                        value: stats.netSales,
-                        icon: DollarSign,
-                        color: 'text-mintcom-green',
-                        bg: 'bg-mintcom-green/10',
-                        isCurrency: true,
-                        sub: t('owner.overview.netSalesSub'),
-                        info: t('owner.overview.netSalesInfo'),
-                        route: null as string | null,
-                    },
-                    {
-                        label: t('owner.overview.totalSales'),
-                        value: stats.totalRevenue,
-                        icon: Wallet,
-                        color: 'text-mintcom-green',
-                        bg: 'bg-mintcom-green/10',
-                        isCurrency: true,
-                        sub: t('owner.overview.totalSalesSub'),
-                        info: t('owner.overview.totalSalesInfo'),
-                        route: null as string | null,
-                    },
-                    {
-                        label: t('owner.overview.totalProfit'),
-                        value: stats.totalProfit,
-                        icon: TrendingUp,
-                        color: 'text-blue-500',
-                        bg: 'bg-blue-500/10',
-                        isCurrency: true,
-                        sub: null as string | null,
-                        info: t('owner.overview.totalProfitInfo'),
-                        route: null as string | null,
-                    },
                     {
                         label: t('owner.overview.activeLocations'),
                         value: stats.activeLocations,
@@ -318,6 +285,39 @@ export function OwnerOverviewPage() {
                         sub: null as string | null,
                         info: null as string | null,
                         route: '/owner/employees',
+                    },
+                    {
+                        label: t('owner.overview.netSales'),
+                        value: stats.netSales,
+                        icon: DollarSign,
+                        color: 'text-mintcom-green',
+                        bg: 'bg-mintcom-green/10',
+                        isCurrency: true,
+                        sub: t('owner.overview.netSalesSub'),
+                        info: t('owner.overview.netSalesInfo'),
+                        route: null as string | null,
+                    },
+                    {
+                        label: t('owner.overview.totalSales'),
+                        value: stats.totalRevenue,
+                        icon: Wallet,
+                        color: 'text-mintcom-green',
+                        bg: 'bg-mintcom-green/10',
+                        isCurrency: true,
+                        sub: t('owner.overview.totalSalesSub'),
+                        info: t('owner.overview.totalSalesInfo'),
+                        route: null as string | null,
+                    },
+                    {
+                        label: t('owner.overview.totalProfit'),
+                        value: stats.totalProfit,
+                        icon: TrendingUp,
+                        color: 'text-blue-500',
+                        bg: 'bg-blue-500/10',
+                        isCurrency: true,
+                        sub: null as string | null,
+                        info: t('owner.overview.totalProfitInfo'),
+                        route: null as string | null,
                     },
                 ].map((stat, i) => {
                     const isClickable = !!stat.route;

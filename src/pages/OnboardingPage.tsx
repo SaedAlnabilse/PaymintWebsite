@@ -76,9 +76,11 @@ import { formatInputPlaceholder, formatInputLabel } from '../utils/textCase';
 import {
   getBestTimeZoneForCountry,
   getCountryOptions,
+  getCountryPrimaryCurrency,
   getCurrencyOptions,
   getDeviceTimeZone,
 } from '../data/globalLocaleOptions';
+import { getLocalizedManual } from '../utils/localizedDocs';
 import {
   detectCardBrand,
   formatCardNumberInput,
@@ -135,6 +137,9 @@ const clearStoredLaunchData = () => {
   }
 };
 
+const CARD_INPUT_CLASS =
+  'min-w-0 w-full flex-1 bg-transparent font-sans text-sm font-bold leading-none text-gray-900 dark:text-white placeholder:font-sans placeholder:font-medium placeholder:text-gray-400 focus:outline-none';
+
 function EmbeddedCardField({
   label,
   error,
@@ -145,61 +150,71 @@ function EmbeddedCardField({
   children: ReactNode;
 }) {
   return (
-    <label className="block">
-      <span className="mb-1.5 block text-sm font-medium tracking-normal text-slate-600">{label}</span>
+    <label className="block w-full min-w-0">
+      <span className="mb-1.5 flex min-h-[1.125rem] items-center gap-1 text-xs font-sans font-bold text-gray-500 dark:text-gray-400">
+        {label}
+      </span>
       <span
-        className={`flex h-10 items-center rounded-md border bg-white px-3 transition focus-within:border-[#5DC99B] focus-within:ring-2 focus-within:ring-[#5DC99B]/15 ${
-          error ? 'border-red-500' : 'border-gray-200'
+        className={`flex min-h-12 w-full items-center gap-2 rounded-2xl border bg-white px-4 py-3 transition focus-within:border-mintcom-green focus-within:ring-2 focus-within:ring-mintcom-green/20 dark:bg-black/20 ${
+          error
+            ? 'border-mintcom-red ring-2 ring-mintcom-red/20'
+            : 'border-gray-200 dark:border-white/10'
         }`}
       >
         {children}
       </span>
-      {error && <span className="mt-1 block text-xs font-semibold tracking-normal text-red-600">{error}</span>}
+      <span className="mt-1 block min-h-[1rem] text-xs font-sans font-semibold text-mintcom-red">
+        {error || '\u00A0'}
+      </span>
     </label>
   );
 }
 
 function CardBrandMark({ brand }: { brand: 'mastercard' | 'visa' | 'amex' }) {
+  // Equal-height badges so Visa / Mastercard / Amex align consistently across OS fonts.
+  const shell =
+    'inline-flex h-8 min-w-[4.5rem] items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 font-sans text-[11px] font-bold leading-none tracking-wide text-gray-600 dark:border-white/10 dark:bg-white/5 dark:text-gray-300';
+
   if (brand === 'mastercard') {
     return (
-      <span className="inline-flex items-center gap-1">
-        <span className="relative inline-block h-4 w-7">
-          <span className="absolute left-0.5 top-0.5 h-3.5 w-3.5 rounded-full bg-[#EB001B]" />
-          <span className="absolute right-0.5 top-0.5 h-3.5 w-3.5 rounded-full bg-[#F79E1B]/90" />
+      <span className={shell} aria-label="Mastercard">
+        <span className="relative inline-block h-3.5 w-6 shrink-0" aria-hidden>
+          <span className="absolute left-0 top-0 h-3.5 w-3.5 rounded-full bg-[#EB001B]" />
+          <span className="absolute right-0 top-0 h-3.5 w-3.5 rounded-full bg-[#F79E1B]/90" />
         </span>
-        <span>Mastercard</span>
+        <span className="font-sans text-[11px] font-bold leading-none">Mastercard</span>
       </span>
     );
   }
 
   if (brand === 'visa') {
     return (
-      <span className="inline-flex items-center gap-1">
-        <span className="grid h-4 min-w-7 place-items-center rounded border border-gray-200 px-1 text-[8px] font-black tracking-normal text-[#1A4F9C]">
+      <span className={shell} aria-label="Visa">
+        <span className="font-sans text-[11px] font-black leading-none tracking-[0.12em] text-[#1A4F9C] dark:text-[#6B9FE8]">
           VISA
         </span>
-        <span>Visa</span>
       </span>
     );
   }
 
   return (
-    <span className="inline-flex items-center gap-1">
-      <span className="grid h-4 min-w-7 place-items-center rounded bg-[#2E77BC] px-1 text-[8px] font-black tracking-normal text-white">
+    <span className={shell} aria-label="American Express">
+      <span className="rounded bg-[#2E77BC] px-1.5 py-0.5 font-sans text-[9px] font-black leading-none tracking-wide text-white">
         AMEX
       </span>
-      <span>Amex</span>
     </span>
   );
 }
 
 
 export function OnboardingPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const isRTL = t('common.locale') === 'ar';
   const locale = t('common.locale');
+  const userManualDoc = getLocalizedManual('user', i18n.language);
+  const setupManualDoc = getLocalizedManual('setup', i18n.language);
   const countryOptions = useMemo(() => getCountryOptions(locale), [locale]);
-  const currencyOptions = useMemo(() => getCurrencyOptions(locale), [locale]);
+  const allCurrencyOptions = useMemo(() => getCurrencyOptions(locale), [locale]);
   const hasAndroidDownload = Boolean(ANDROID_DOWNLOAD_URL);
   const hasIosDownload = Boolean(IOS_DOWNLOAD_URL);
   const hasOwnerAndroidDownload = Boolean(OWNER_ANDROID_DOWNLOAD_URL);
@@ -230,7 +245,8 @@ export function OnboardingPage() {
       .min(8, t('auth.validation.passwordMin'))
       .regex(/[A-Z]/, t('auth.validation.passwordUppercase'))
       .regex(/[a-z]/, t('auth.validation.passwordLowercase'))
-      .regex(/[0-9]/, t('auth.validation.passwordNumber')),
+      .regex(/[0-9]/, t('auth.validation.passwordNumber'))
+      .regex(/[^A-Za-z0-9]/, t('auth.validation.passwordSymbol')),
   });
 
   // Step 3: Admin Access
@@ -242,7 +258,8 @@ export function OnboardingPage() {
       .min(8, t('auth.validation.passwordMin'))
       .regex(/[A-Z]/, t('auth.validation.passwordUppercase'))
       .regex(/[a-z]/, t('auth.validation.passwordLowercase'))
-      .regex(/[0-9]/, t('auth.validation.passwordNumber')),
+      .regex(/[0-9]/, t('auth.validation.passwordNumber'))
+      .regex(/[^A-Za-z0-9]/, t('auth.validation.passwordSymbol')),
     firstName: z.string().min(2, t('onboarding.step4.errors.firstNameMin')),
     lastName: z.string().min(2, t('onboarding.step4.errors.lastNameMin')),
   });
@@ -554,6 +571,29 @@ export function OnboardingPage() {
       form1.setValue('currency', establishments[0].currency);
     }
   }, [establishments, form1]);
+
+  const selectedCountry = form1.watch('country');
+  const isCurrencyLocked = establishments.length > 0;
+
+  // Keep currency linked to the selected country/city region during first registration.
+  useEffect(() => {
+    if (isCurrencyLocked || !selectedCountry) return;
+    const primaryCurrency = getCountryPrimaryCurrency(selectedCountry);
+    if (primaryCurrency) {
+      form1.setValue('currency', primaryCurrency, { shouldValidate: true, shouldDirty: true });
+    }
+  }, [selectedCountry, isCurrencyLocked, form1]);
+
+  const currencyOptions = useMemo(() => {
+    const countryMeta = countryOptions.find((option) => option.code === selectedCountry);
+    const allowedCodes = countryMeta?.currencyCodes || [];
+    if (allowedCodes.length === 0) return allCurrencyOptions;
+
+    const allowedSet = new Set(allowedCodes);
+    const linked = allCurrencyOptions.filter((option) => allowedSet.has(option.code));
+    // Prefer country-linked currencies; fall back to full list if mapping is incomplete.
+    return linked.length > 0 ? linked : allCurrencyOptions;
+  }, [allCurrencyOptions, countryOptions, selectedCountry]);
 
   const cardNumberValue = form4.watch('cardNumber') || '';
   const cardDigits = getCardDigits(cardNumberValue);
@@ -957,40 +997,7 @@ export function OnboardingPage() {
                       </div>
                     </div>
 
-                    {/* Base Currency Row */}
-                    <div className="space-y-2">
-                      <label className="text-xs font-sans text-gray-400 mx-1 flex items-center">
-                        {t('onboarding.step1.currency')} <span className="text-mintcom-red mx-1">*</span>
-                      </label>
-                      <div className="relative">
-                        <DollarSign className={`absolute ${isRTL ? 'right-4' : 'left-4'} top-1/2 -translate-y-1/2 ${establishments.length > 0 ? 'text-gray-500' : 'text-gray-400'}`} size={20} />
-                        <select
-                          {...form1.register('currency')}
-                          disabled={establishments.length > 0}
-                          className={`w-full bg-gray-50 dark:bg-black/20 border ${form1.formState.errors.currency ? 'border-mintcom-red ring-2 ring-mintcom-red/20' : 'border-gray-200 dark:border-white/10'} rounded-2xl py-4 ${isRTL ? 'pr-12 pl-4' : 'pl-12 pr-4'} text-sm font-sans font-bold text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-mintcom-green/50 transition-all appearance-none ${establishments.length > 0 ? 'opacity-60 cursor-not-allowed bg-gray-100 dark:bg-white/5' : ''}`}
-                        >
-                          {currencyOptions.map((currencyOption) => (
-                            <option key={currencyOption.code} value={currencyOption.code}>
-                              {currencyOption.label}
-                            </option>
-                          ))}
-                        </select>
-                        <ChevronDown className={`absolute ${isRTL ? 'left-4' : 'right-4'} top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none`} size={16} />
-                        {establishments.length > 0 && (
-                          <div className={`absolute ${isRTL ? 'left-10' : 'right-10'} top-1/2 -translate-y-1/2`}>
-                            <Lock size={16} className="text-gray-400" />
-                          </div>
-                        )}
-                      </div>
-                      {establishments.length > 0 && (
-                        <p className="text-[10px] font-sans text-amber-600 mt-1.5 mx-1 flex items-center gap-1.5 bg-amber-500/5 p-2 rounded-lg border border-amber-500/10">
-                          <Info size={12} className="flex-shrink-0" />
-                          {t('onboarding.step1.currencyLockedNote')}
-                        </p>
-                      )}
-                      {form1.formState.errors.currency && <p className="text-mintcom-red text-xs font-sans text-gray-500 mt-1 mx-1">{form1.formState.errors.currency.message as string}</p>}
-                    </div>
-
+                    {/* Country first — currency is linked to the selected country/region */}
                     <div className="space-y-2">
                       <label className="text-xs font-sans text-gray-400 mx-1 flex items-center">
                         {t('onboarding.step1.country', { defaultValue: 'Country' })} <span className="text-mintcom-red mx-1">*</span>
@@ -1010,6 +1017,48 @@ export function OnboardingPage() {
                         <ChevronDown className={`absolute ${isRTL ? 'left-4' : 'right-4'} top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none`} size={16} />
                       </div>
                       {form1.formState.errors.country && <p className="text-mintcom-red text-xs font-sans text-gray-500 mt-1 mx-1">{form1.formState.errors.country.message as string}</p>}
+                    </div>
+
+                    {/* Base Currency Row (auto-filled from country; still editable when not locked) */}
+                    <div className="space-y-2">
+                      <label className="text-xs font-sans text-gray-400 mx-1 flex items-center">
+                        {t('onboarding.step1.currency')} <span className="text-mintcom-red mx-1">*</span>
+                      </label>
+                      <div className="relative">
+                        <DollarSign className={`absolute ${isRTL ? 'right-4' : 'left-4'} top-1/2 -translate-y-1/2 ${isCurrencyLocked ? 'text-gray-500' : 'text-gray-400'}`} size={20} />
+                        <select
+                          {...form1.register('currency')}
+                          disabled={isCurrencyLocked}
+                          className={`w-full bg-gray-50 dark:bg-black/20 border ${form1.formState.errors.currency ? 'border-mintcom-red ring-2 ring-mintcom-red/20' : 'border-gray-200 dark:border-white/10'} rounded-2xl py-4 ${isRTL ? 'pr-12 pl-4' : 'pl-12 pr-4'} text-sm font-sans font-bold text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-mintcom-green/50 transition-all appearance-none ${isCurrencyLocked ? 'opacity-60 cursor-not-allowed bg-gray-100 dark:bg-white/5' : ''}`}
+                        >
+                          {currencyOptions.map((currencyOption) => (
+                            <option key={currencyOption.code} value={currencyOption.code}>
+                              {currencyOption.label}
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown className={`absolute ${isRTL ? 'left-4' : 'right-4'} top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none`} size={16} />
+                        {isCurrencyLocked && (
+                          <div className={`absolute ${isRTL ? 'left-10' : 'right-10'} top-1/2 -translate-y-1/2`}>
+                            <Lock size={16} className="text-gray-400" />
+                          </div>
+                        )}
+                      </div>
+                      {!isCurrencyLocked && (
+                        <p className="text-[10px] font-sans text-gray-500 mt-1.5 mx-1 flex items-center gap-1.5">
+                          <Info size={12} className="flex-shrink-0" />
+                          {t('onboarding.step1.currencyLinkedToCountry', {
+                            defaultValue: 'Currency is set from the selected country. You can change it if needed.',
+                          })}
+                        </p>
+                      )}
+                      {isCurrencyLocked && (
+                        <p className="text-[10px] font-sans text-amber-600 mt-1.5 mx-1 flex items-center gap-1.5 bg-amber-500/5 p-2 rounded-lg border border-amber-500/10">
+                          <Info size={12} className="flex-shrink-0" />
+                          {t('onboarding.step1.currencyLockedNote')}
+                        </p>
+                      )}
+                      {form1.formState.errors.currency && <p className="text-mintcom-red text-xs font-sans text-gray-500 mt-1 mx-1">{form1.formState.errors.currency.message as string}</p>}
                     </div>
 
                     <div className="space-y-2">
@@ -1734,10 +1783,10 @@ export function OnboardingPage() {
 
                   {/* New Card Form - Only show if no saved card OR user chose to add new */}
                   {(!hasSavedCard || !useSavedCard) && (
-                    <div className="space-y-4 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                      <div className="flex items-center gap-1.5 text-sm font-medium tracking-normal text-slate-600">
-                        <Lock size={13} />
-                        <span>
+                    <div className="space-y-1 rounded-2xl border border-gray-200 bg-gray-50 p-5 dark:border-white/10 dark:bg-black/20">
+                      <div className="mb-3 flex items-center gap-2 text-xs font-sans font-bold text-gray-500 dark:text-gray-400">
+                        <Lock size={14} className="shrink-0 text-mintcom-green" />
+                        <span className="leading-none">
                           {t('paymentMethods.modal.subtitle', {
                             defaultValue: 'Secure - 256-bit encrypted',
                           })}
@@ -1763,12 +1812,12 @@ export function OnboardingPage() {
                           maxLength={MAX_FORMATTED_CARD_NUMBER_LENGTH}
                           inputMode="numeric"
                           placeholder="0000 0000 0000 0000"
-                          className="h-10 min-w-0 flex-1 bg-transparent text-base font-medium tracking-normal text-slate-900 placeholder:text-slate-400 focus:outline-none"
+                          className={CARD_INPUT_CLASS}
                         />
-                        <CreditCard size={18} className="text-slate-500" />
+                        <CreditCard size={18} className="shrink-0 text-gray-400" aria-hidden />
                       </EmbeddedCardField>
 
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 gap-x-3 gap-y-1 sm:grid-cols-2 sm:items-start">
                         <EmbeddedCardField
                           label={t('paymentMethods.modal.expiry', { defaultValue: 'Expiry date' })}
                           error={form4.formState.errors.expiryDate?.message as string | undefined}
@@ -1786,17 +1835,18 @@ export function OnboardingPage() {
                               form4.clearErrors('expiryDate');
                             }}
                             maxLength={5}
+                            inputMode="numeric"
                             placeholder="MM/YY"
-                            className="h-10 min-w-0 flex-1 bg-transparent text-base font-medium tracking-normal text-slate-900 placeholder:text-slate-400 focus:outline-none"
+                            className={CARD_INPUT_CLASS}
                           />
                         </EmbeddedCardField>
 
                         <EmbeddedCardField
                           label={(
-                            <span className="flex items-center gap-1">
+                            <>
                               {t('paymentMethods.modal.cvv', { defaultValue: 'CVV' })}
-                              <Info size={12} className="text-slate-400" />
-                            </span>
+                              <Info size={12} className="shrink-0 text-gray-400" aria-hidden />
+                            </>
                           )}
                           error={form4.formState.errors.cvv?.message as string | undefined}
                         >
@@ -1814,8 +1864,8 @@ export function OnboardingPage() {
                             }}
                             maxLength={4}
                             inputMode="numeric"
-                            placeholder="..."
-                            className="h-10 min-w-0 flex-1 bg-transparent text-base font-medium tracking-normal text-slate-900 placeholder:text-slate-400 focus:outline-none"
+                            placeholder="•••"
+                            className={CARD_INPUT_CLASS}
                           />
                         </EmbeddedCardField>
                       </div>
@@ -1840,11 +1890,11 @@ export function OnboardingPage() {
                           placeholder={t('paymentMethods.modal.cardholderPlaceholder', {
                             defaultValue: 'Name as it appears on card',
                           })}
-                          className="h-10 min-w-0 flex-1 bg-transparent text-base font-medium tracking-normal text-slate-900 placeholder:text-slate-400 focus:outline-none"
+                          className={CARD_INPUT_CLASS}
                         />
                       </EmbeddedCardField>
 
-                      <div className="flex items-center justify-center gap-5 pt-1 text-sm font-semibold tracking-normal text-gray-400">
+                      <div className="flex flex-wrap items-center justify-center gap-2.5 pt-2">
                         <CardBrandMark brand="mastercard" />
                         <CardBrandMark brand="visa" />
                         <CardBrandMark brand="amex" />
@@ -2219,8 +2269,8 @@ export function OnboardingPage() {
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                       {/* User Manual */}
                       <a
-                        href="/docs/mintcom-user-manual.pdf"
-                        download="Mintcom_User_Manual.pdf"
+                        href={userManualDoc.path}
+                        download={userManualDoc.filename}
                         className="group p-4 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-xl hover:border-mintcom-green/50 hover:bg-mintcom-green/5 transition-all"
                       >
                         <div className="w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
@@ -2232,7 +2282,8 @@ export function OnboardingPage() {
 
                       {/* Setup Manual */}
                       <a
-                        href="/docs/mintcom-setup-manual.pdf"
+                        href={setupManualDoc.path}
+                        download={setupManualDoc.filename}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="group p-4 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-xl hover:border-mintcom-green/50 hover:bg-mintcom-green/5 transition-all"

@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Mintcom Setup Manual</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm 20mm 16mm; }
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; color: #1f2937; font-size: 10.5pt; line-height: 1.55; margin: 0; }
+  h1, h2, h3, h4 { color: #065f46; line-height: 1.25; }
+  h1.chapter { font-size: 20pt; border-bottom: 3px solid #10b981; padding-bottom: 6px; margin-top: 0; page-break-before: always; }
+  h2 { font-size: 14pt; margin-top: 22px; border-bottom: 1px solid #d1fae5; padding-bottom: 3px; }
+  h3 { font-size: 11.5pt; margin-top: 16px; color: #047857; }
+  h4 { font-size: 10.5pt; margin-top: 12px; color: #065f46; }
+  p { margin: 6px 0; }
+  ul, ol { margin: 6px 0 6px 0; padding-left: 22px; }
+  li { margin: 3px 0; }
+  table { border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 9.5pt; page-break-inside: avoid; }
+  th { background: #065f46; color: #fff; text-align: left; padding: 6px 8px; }
+  td { border: 1px solid #d1d5db; padding: 5px 8px; vertical-align: top; }
+  tr:nth-child(even) td { background: #f0fdf4; }
+  .tip, .warn, .note { border-radius: 6px; padding: 8px 12px; margin: 10px 0; font-size: 9.8pt; page-break-inside: avoid; }
+  .tip  { background: #ecfdf5; border-left: 4px solid #10b981; }
+  .warn { background: #fef2f2; border-left: 4px solid #ef4444; }
+  .note { background: #eff6ff; border-left: 4px solid #3b82f6; }
+  .tip b:first-child, .warn b:first-child, .note b:first-child { display: inline-block; margin-bottom: 2px; }
+  .path { background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 4px; padding: 1px 6px; font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 9pt; white-space: nowrap; }
+  .cover { text-align: center; padding-top: 150px; page-break-after: always; }
+  .cover .logo img { height: 56px; width: auto; }
+  .cover h1 { font-size: 26pt; border: none; margin: 10px 0 4px 0; }
+  .cover .tagline { color: #6b7280; font-size: 12pt; margin-bottom: 40px; }
+  .cover .meta { display: inline-block; text-align: left; background: #f0fdf4; border: 1px solid #a7f3d0; border-radius: 10px; padding: 16px 28px; font-size: 10.5pt; }
+  .toc { page-break-after: always; }
+  .toc h1 { font-size: 20pt; border-bottom: 3px solid #10b981; padding-bottom: 6px; }
+  .toc ol { list-style: none; padding: 0; counter-reset: toc; }
+  .toc > ol > li { counter-increment: toc; font-weight: 600; margin: 7px 0; }
+  .toc > ol > li::before { content: counter(toc) ". "; color: #10b981; }
+  .toc .sub { font-weight: 400; color: #4b5563; font-size: 9.5pt; margin: 1px 0 1px 18px; }
+  .steps li { margin: 5px 0; }
+  .footer-note { color:#9ca3af; font-size:8.5pt; text-align:center; margin-top:30px; }
+  strong { color: #111827; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div class="logo"><img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjE0NSA0NzAgODI1IDE1MCI+CiAgPGRlZnM+CiAgICA8c3R5bGU+CiAgICAgIC5jbHMtMSB7CiAgICAgICAgZmlsbDogI2FjZTJiZjsKICAgICAgfQoKICAgICAgLmNscy0yIHsKICAgICAgICBmaWxsOiAjN2RjNmEyOwogICAgICB9CgogICAgICAuY2xzLTMgewogICAgICAgIGZvbnQtZmFtaWx5OiBCYXJsb3ctUmVndWxhciwgQmFybG93OwogICAgICAgIGZvbnQtc2l6ZTogMzAuMTFweDsKICAgICAgfQogICAgPC9zdHlsZT4KICA8L2RlZnM+CiAgPGc+CiAgICA8Zz4KICAgICAgPHBhdGggY2xhc3M9ImNscy0yIiBkPSJtMjg5LjQsNTk5LjA2di04MC4zOGMwLTIuMjYsMS44My00LjA5LDQuMDktNC4wOWgxNi41NXYxMS43NWM3LjE5LTguODksMTUuODgtMTMuMzQsMjYuMDQtMTMuMzQsMTEsMCwxOC45NCw0LjQ1LDIzLjgyLDEzLjM0LDcuNDEtOC44OSwxNS45OC0xMy4zNCwyNS43Mi0xMy4zNCwxMi45MSwwLDIxLjM4LDQuODcsMjUuNCwxNC42MSwxLjQ4LDMuMTcsMi4yMiw5LDIuMjIsMTcuNDd2NTMuOTloLTIyLjIzdi00OC4yN2MwLTguNjgtLjc0LTE0LjA4LTIuMjItMTYuMi0yLjU0LTMuMTctNi4wMy00Ljc2LTEwLjQ4LTQuNzYtNy4yLDAtMTEuODYsMy43MS0xMy45NywxMS4xMi0xLjA2LDQuMjQtMS41OSwxMC4wNi0xLjU5LDE3LjQ3djQwLjY1aC0yMi41NXYtNTcuNDhjLS42NC01LjA4LTIuMjItOC4zNi00Ljc2LTkuODQtMS40OC0xLjI3LTMuNzEtMS45MS02LjY3LTEuOTEtNy42MiwwLTEyLjcsMy42LTE1LjI0LDEwLjgtMS4yNywzLjM5LTEuOSw5LjIxLTEuOSwxNy40N3Y0MC45N2gtMjIuMjNaIi8+CiAgICAgIDxwYXRoIGNsYXNzPSJjbHMtMiIgZD0ibTQ2MC43LDU5OS4wNnYtODQuNDdoMjAuNjR2MTIuN2M2Ljk5LTkuNTMsMTUuOTgtMTQuMjksMjYuOTktMTQuMjlzMTguODQsMy4wNywyMy41LDkuMjFjMy44MSw0LjY2LDUuNzIsMTIuODEsNS43MiwyNC40NXY1Mi40aC0yMi4yM3YtNDMuMTljMC03LjQxLS4xMS0xMS42NC0uMzItMTIuNy0uODUtNS4wOC0yLjc1LTguNzgtNS43Mi0xMS4xMi0yLjEyLTEuNDgtNC43Ni0yLjIyLTcuOTQtMi4yMi04LjQ3LDAtMTMuOTcsMy45Mi0xNi41MSwxMS43NS0xLjI3LDMuMzktMS45LDkuODUtMS45LDE5LjM3djM4LjExaC0yMi4yM1oiLz4KICAgICAgPHBhdGggY2xhc3M9ImNscy0yIiBkPSJtNTk2LjEzLDU5NS41NmMtNS43MSwyLjMzLTExLjY1LDMuNTEtMTcuNzksMy41MS04LjI1LDAtMTQuMTgtMi40NC0xNy43OS03LjMyLTEuNDctMi4xMS0yLjU0LTQuOTYtMy4xNy04LjU3LS42My0zLjE3LS44NC04LjQ3LS42My0xNS44OHYtMzYuODRoLTEwLjQ5di0xNy43OWgxMC40OXYtMTYuOGgyMi4yM3YxNi44aDE1LjI1djE3Ljc5aC0xNS4yNXY0MS45MmMuNDMsMy44MywxLjI3LDYuMTQsMi41NCw3LC44NC44NCwyLjExLDEuMjcsMy44MSwxLjI3LDIuMTMsMCw1LjA5LS43NSw4LjktMi4yMmwxLjksMTcuMTNaIi8+CiAgICAgIDxwYXRoIGNsYXNzPSJjbHMtMiIgZD0ibTcxNS4xNiw1OTMuOThjLTE0LjQtNy42Mi0yMS41OS0yMC45Ni0yMS41OS00MC4wMSwwLTcuODMsMS44LTE1LjEzLDUuNC0yMS45MSwzLjgxLTYuNzcsOS0xMS45NiwxNS41Ni0xNS41Niw2LjU2LTMuNiwxNC4wOC01LjQsMjIuNTUtNS40LDEyLjcsMCwyMy4xMyw0LjA4LDMxLjI4LDEyLjIzLDguMTUsOC4xNSwxMi4yMywxOC41OCwxMi4yMywzMS4yOHMtNC4wMiwyMy4yOS0xMi4wNywzMS43NmMtOC4yNiw4LjQ3LTE4Ljc0LDEyLjctMzEuNDQsMTIuNy04LjA1LDAtMTUuMzUtMS42OS0yMS45MS01LjA4Wm0zNy43OS0yMS4yOGMzLjE3LTQuODcsNC43Ni0xMC44LDQuNzYtMTcuNzhzLTEuNTktMTMuMTItNC43Ni0xNy43OGMtMy44MS01LjI5LTkuMTEtNy45NC0xNS44OC03Ljk0cy0xMi4wNywyLjY1LTE1Ljg4LDcuOTRjLTMuMTgsNC42Ni00Ljc2LDEwLjU5LTQuNzYsMTcuNzhzMS41OSwxMi45Miw0Ljc2LDE3Ljc4YzMuODEsNS41MSw5LjEsOC4yNiwxNS44OCw4LjI2czEyLjA3LTIuNzUsMTUuODgtOC4yNloiLz4KICAgICAgPHBhdGggY2xhc3M9ImNscy0yIiBkPSJtNzkwLjExLDU5OS4wNnYtODAuMzhjMC0yLjI2LDEuODMtNC4wOSw0LjA5LTQuMDloMTYuNTV2MTEuNzVjNy4xOS04Ljg5LDE1Ljg4LTEzLjM0LDI2LjA0LTEzLjM0LDExLDAsMTguOTQsNC40NSwyMy44MiwxMy4zNCw3LjQxLTguODksMTUuOTgtMTMuMzQsMjUuNzItMTMuMzQsMTIuOTEsMCwyMS4zOCw0Ljg3LDI1LjQsMTQuNjEsMS40OCwzLjE3LDIuMjIsOSwyLjIyLDE3LjQ3djQ5Ljg5YzAsMi4yNi0xLjgzLDQuMDktNC4wOSw0LjA5aC0xOC4xNHYtNDguMjdjMC04LjY4LS43NC0xNC4wOC0yLjIyLTE2LjItMi41NC0zLjE3LTYuMDMtNC43Ni0xMC40OC00Ljc2LTcuMiwwLTExLjg2LDMuNzEtMTMuOTcsMTEuMTItMS4wNiw0LjI0LTEuNTksMTAuMDYtMS41OSwxNy40N3Y0MC42NWgtMjIuNTV2LTU3LjQ4Yy0uNjQtNS4wOC0yLjIyLTguMzYtNC43Ni05Ljg0LTEuNDgtMS4yNy0zLjcxLTEuOTEtNi42Ny0xLjkxLTcuNjIsMC0xMi43LDMuNi0xNS4yNCwxMC44LTEuMjcsMy4zOS0xLjksOS4yMS0xLjksMTcuNDd2NDAuOTdoLTIyLjIzWiIvPgogICAgICA8cGF0aCBjbGFzcz0iY2xzLTIiIGQ9Im02NDUuMDgsNTk5LjA2Yy03LjE5LDAtMTMuMzktMS4yLTE4LjU4LTMuNi01LjItMi40LTkuNTQtNS41OS0xMy4wNC05LjU5LTMuNS00LTYuMTItOC41Mi03Ljg3LTEzLjU2LTEuNzUtNS4wNC0yLjYyLTEwLjI3LTIuNjItMTUuNjZ2LTIuODVjMC01LjU5LjktMTAuOTYsMi43LTE2LjExLDEuOC01LjE0LDQuNDctOS43Miw4LjAyLTEzLjcxLDMuNTUtNCw3Ljk0LTcuMTQsMTMuMTktOS40NCw1LjI0LTIuMywxMS4yNi0zLjQ1LDE4LjA2LTMuNDUsNy4zOSwwLDEzLjk0LDEuNDIsMTkuNjMsNC4yNyw1LjY5LDIuODUsMTAuMjQsNi44MiwxMy42NCwxMS45MSwyLjU0LDMuODIsNC4yNSw4LjA4LDUuMTEsMTIuNzkuNDYsMi41NC0xLjQ1LDQuODktNC4wMyw0Ljg5aC0xNS41NmMtMS43OCwwLTMuNDEtMS4xNC0zLjktMi44NS0uNzItMi41Ni0yLjA0LTQuNzgtMy45NS02LjY2LTIuNi0yLjU1LTYuMjUtMy44Mi0xMC45NC0zLjgyLTQsMC03LjMyLDEtOS45NywzLTIuNjUsMi00LjYyLDQuNzctNS45Miw4LjMyLTEuMywzLjU1LTEuOTUsNy42Ny0xLjk1LDEyLjM2LDAsNC40LjYsOC4zNywxLjgsMTEuOTEsMS4yLDMuNTUsMy4xMiw2LjMsNS43Nyw4LjI0LDIuNjUsMS45NSw2LjEyLDIuOTIsMTAuNDIsMi45MiwzLjIsMCw1LjkyLS41Nyw4LjE3LTEuNzIsMi4yNS0xLjE1LDQuMDItMi43NSw1LjMyLTQuNzkuNzktMS4yNCwxLjQxLTIuNiwxLjg3LTQuMDguNTUtMS43NywyLjEtMy4wNCwzLjk1LTMuMDRoMTUuNTdjMi41NiwwLDQuNDYsMi4zMyw0LjAzLDQuODUtLjgyLDQuODItMi41NSw5LjE3LTUuMTksMTMuMDYtMy41LDUuMTUtOC4xNCw5LjE3LTEzLjk0LDEyLjA2LTUuOCwyLjktMTIuMzksNC4zNC0xOS43OCw0LjM0WiIvPgogICAgICA8Zz4KICAgICAgICA8cmVjdCBjbGFzcz0iY2xzLTIiIHg9IjQyNS43IiB5PSI1MTQuNTkiIHdpZHRoPSIyMi41NSIgaGVpZ2h0PSI4NC40NyIgcng9IjQuMDkiIHJ5PSI0LjA5Ii8+CiAgICAgICAgPGNpcmNsZSBjbGFzcz0iY2xzLTIiIGN4PSI0MzYuOTciIGN5PSI0OTIuMiIgcj0iMTEuMjciLz4KICAgICAgPC9nPgogICAgICA8Zz4KICAgICAgICA8cGF0aCBjbGFzcz0iY2xzLTIiIGQ9Im0xNzYuMTEsNTg1Ljc3Yy0yLjUtMy41Ny01LjU5LTkuMTktNy4xNC0xMy45OC00Ljg2LTE1LjAzLTYuMi0zOC44OSwxNi41Mi01Ni45NCw5LjY0LTcuNjYsMjEuNjMtMTIuMTgsMzMuOC0xNC4yLDE2LjgzLTIuOCwzNC4zNC0uNzMsNTAuODUtNC43OS0yLjA3LDQuNjQtMi41MSw5LjY1LTIuMTcsMTQuMzMuNDIsNS43OSwxLjkyLDExLjI5LDIuNSwxNy4wNCwxLjczLDE3LjE4LTUuMjksMzYuMzUtMTguNjksNTEuMDUtNy43OSw4LjU1LTE3LjgyLDE1LjY4LTI4LjgsMTkuMTYtMTAuMjcsMy4yNi0yOS42OSwyLjE2LTQzLjkxLTguNSIvPgogICAgICAgIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0ibTIyMi42OSw1NDIuNWMtNS4wMSw1LjgzLTEwLjI0LDExLjY2LTE1LjI3LDE3LjA5LS41OS42My0uMzUsMS41OC40NiwxLjgsMTUuNiw0LjI0LDMwLjg5LS4xNSwzOC45Ni00Ljk2LTEyLjAzLDkuMzYtMjkuMTksMTIuNDctNDIuNzksNy44OS0uNDctLjE2LTEuMDMtLjAyLTEuMzguMzYtMy45Myw0LjE3LTcuNjEsOC0xMC44MywxMS4yOC0uNTkuNi0uNDEsMS41My4zNiwxLjgsMTQuOTksNS4yNSwzMC4zLDEuNTcsMzguNC0yLjg0LTExLjQxLDguMTgtMjkuMDcsOS41Ny00MS44NSw1LjIxLS40Ni0uMTYtMS0uMDItMS4zNi4zMy0yLjIxLDIuMi00LjAxLDMuOTYtNS4yOCw1LjE3LDAsMC02LjMyLDYuMjQtMTAuMjMsMTEuNjItLjQ1LjYyLTEuMzYuNzgtMS44OS4zLTEuMDctLjk1LTIuMDctMS45Ni0yLjk5LTMuMDMtLjQxLS40OC0uMjQtMS4yMi4zNy0xLjYxLDMuMS0xLjk2LDExLjk0LTkuNjMsMTEuOTQtOS42MywyLjItMi4wMyw0LjM5LTQuMDcsNi41Ny02LjE0LjQyLS40LjUtLjk4LjItMS40Mi03LjM2LTEwLjk4LTcuMTItMjYuMTIuNzYtMzcuNzctMy43NCw3LjY4LTUuNjksMjEuNiwxLjkyLDM0LjQ0LjM4LjY0LDEuMzYuNywxLjk0LjE0LDQuMTUtNC4wMSw4LjI3LTguMDksMTIuMzQtMTIuMjIuMzYtLjM2LjQ0LS44Ny4yMy0xLjI5LTUuNTYtMTAuODctMy42Ni0yNS4xOSw0Ljg4LTM1Ljc2LTQuMiw2Ljg5LTcuNDgsMTkuNTUtMi40LDMxLjkzLjMxLjc2LDEuNDIuODcsMi4wNS4yMyw1LjE0LTUuMzIsMTAuMTktMTAuNzMsMTUuMTQtMTYuMTguMzYtLjM5LjQxLS45My4xNC0xLjM0LTUuMDQtNy43NS00Ljc5LTE4LjUxLjc2LTI3LTIuNTksNS40Ni0zLjk4LDE1LjEzLjksMjQuMDIuMzguNjksMS40NS43MiwyLjAyLjA4LDUuNzEtNi40MSwxMS4yNy0xMi44OCwxNi42NS0xOS4zOC00LjIsNi42LTEwLjE4LDE0LjM1LTE2LjgxLDIyLjI4LS41Ny42OC0uMjUsMS42NS42MSwxLjc4LDEyLjM1LDEuOTcsMjMuNjktMi40NywyOS40NS02LjY5LTguNTMsOC4wNS0yMS42OCwxMS42Ny0zMi42NSw5LjA4LS40Ny0uMTEtLjk4LjA1LTEuMzEuNDJaIi8+CiAgICAgIDwvZz4KICAgIDwvZz4KICAgIDxwYXRoIGNsYXNzPSJjbHMtMiIgZD0ibTk0NS4zMSw1MDcuNDJ2MTMuNDFoLTEuMzZ2LTEwLjcxbC00Ljc4LDEwLjcxaC0uOTlsLTQuNzgtMTAuNjd2MTAuNjdoLTEuMzZ2LTEzLjQxaDEuNDRsNS4xOSwxMS42Miw1LjE5LTExLjYyaDEuNDZabS0xNS40Mi0uMTd2MS4xM2gtMy43N3YxMi40NmgtMS4zNnYtMTIuNDZoLTMuNzl2LTEuMTNoOC45MloiLz4KICA8L2c+CiAgCjwvc3ZnPg==" alt="Mintcom"></div>
+  <div class="tagline">Easy to Pay, Easy to Grow.</div>
+  <h1>Hardware Setup Manual</h1>
+  <p class="tagline">Tablets, printers, and devices — set up once, sell reliably every day</p>
+  <div class="meta">
+    <b>Version:</b> 3.0<br>
+    <b>Last updated:</b> July 11, 2026<br>
+    <b>Applies to:</b> Mintcom POS app (Android &amp; iOS)<br>
+    <b>Audience:</b> Owners and managers setting up a new location or device
+  </div>
+</div>
+
+<div class="toc">
+<h1>Table of Contents</h1>
+<ol>
+  <li>Before You Start
+    <div class="sub">What you need &middot; Minimum device requirements</div></li>
+  <li>Tablet &amp; Phone Setup
+    <div class="sub">Installing the POS app &middot; Locking the device to Mintcom (iOS &amp; Android)</div></li>
+  <li>Choosing a Receipt Printer
+    <div class="sub">How Mintcom connects to printers &middot; Popular compatible models</div></li>
+  <li>Connecting a Network (Wi-Fi/LAN) Printer
+    <div class="sub">Wiring it up &middot; Finding the IP address &middot; Static vs. DHCP</div></li>
+  <li>Connecting a Bluetooth Printer
+    <div class="sub">Pairing at the OS level &middot; Finding it in Mintcom</div></li>
+  <li>Adding the Printer Inside Mintcom POS
+    <div class="sub">Scan, connect, test, set default &middot; Copies &amp; the cash drawer &middot; Testing without hardware</div></li>
+  <li>The Cash Drawer</li>
+  <li>Barcode &amp; QR Scanners</li>
+  <li>Multi-Device &amp; Multi-Register Setups</li>
+  <li>Troubleshooting</li>
+  <li>Setup Checklist</li>
+  <li>Support</li>
+</ol>
+</div>
+
+<h1 class="chapter">1. Before You Start</h1>
+<h2>1.1 What you need</h2>
+<ul>
+  <li>A tablet or phone (Android or iOS) per register, connected to Wi-Fi.</li>
+  <li>Your <b>Location ID</b> and <b>Location password</b> (created during onboarding — see the User Manual, Chapter 3).</li>
+  <li>A receipt printer, if you plan to print physical receipts. Mintcom also works with no printer at all — receipts can still be viewed and emailed.</li>
+  <li>A stable router/Wi-Fi network. If you're using a network printer, the tablets and the printer must be on the <b>same network</b>.</li>
+</ul>
+
+<h2>1.2 Minimum device requirements</h2>
+<table>
+  <tr><th>Platform</th><th>Minimum</th><th>Recommended</th></tr>
+  <tr><td>Android</td><td>Android 7.0 (Nougat) or later</td><td>A mid-range tablet from the last 3–4 years, e.g. Samsung Galaxy Tab A/S series</td></tr>
+  <tr><td>iOS / iPadOS</td><td>A currently-supported iPad model with an up-to-date iOS/iPadOS version</td><td>iPad (9th generation or later), iPad Air, or iPad Pro</td></tr>
+</table>
+<div class="tip"><b>Tip:</b> Mintcom is a standard app on standard tablets — there is no proprietary or locked hardware requirement. Any device that meets the minimums above will run it smoothly.</div>
+
+<h1 class="chapter">2. Tablet &amp; Phone Setup</h1>
+<h2>2.1 Install the app</h2>
+<ol class="steps">
+  <li><b>iPad/iPhone:</b> open the App Store, search "Mintcom POS", install.</li>
+  <li><b>Android:</b> open Google Play Store, search "Mintcom POS", install.</li>
+  <li>Open the app, enter your <b>Location ID</b> and <b>Location password</b>, and tap <b>Connect</b>. The device is now bound to your store — each staff member can sign in with their own username afterward (User Manual, Chapter 7.1).</li>
+</ol>
+
+<h2>2.2 Lock the tablet to Mintcom (recommended for shared/counter devices)</h2>
+<p>These are standard operating-system features (not part of Mintcom) that stop staff or customers from leaving the POS app accidentally.</p>
+
+<h3>iPad — Guided Access</h3>
+<ol class="steps">
+  <li><span class="path">Settings &rsaquo; Accessibility &rsaquo; Guided Access</span> &rsaquo; toggle it <b>On</b>.</li>
+  <li>Set a Guided Access passcode (use a different one from the device passcode).</li>
+  <li>Open <b>Mintcom POS</b>, then triple-click the side (Top) or Home button.</li>
+  <li>Tap <b>Start</b> in the top-right corner. The iPad is now locked to Mintcom.</li>
+  <li>To exit: triple-click the same button and enter the Guided Access passcode.</li>
+</ol>
+
+<h3>Android — App Pinning</h3>
+<ol class="steps">
+  <li><span class="path">Settings &rsaquo; Security &rsaquo; Advanced &rsaquo; App Pinning</span> (path varies slightly by manufacturer) &rsaquo; toggle it <b>On</b>.</li>
+  <li>Open <b>Mintcom POS</b>, then open the Recent Apps (Overview) screen.</li>
+  <li>Tap the app icon at the top of the Mintcom card and select <b>Pin</b>.</li>
+  <li>To unpin: press and hold Back and Overview together (or follow your device's unpin gesture).</li>
+</ol>
+
+<h1 class="chapter">3. Choosing a Receipt Printer</h1>
+<h2>3.1 How Mintcom connects to printers</h2>
+<p>Mintcom POS supports two connection types for receipt and kitchen printers:</p>
+<table>
+  <tr><th>Connection</th><th>Best for</th><th>Notes</th></tr>
+  <tr><td><b>Network (Wi-Fi/LAN)</b></td><td>Fixed counters, multiple tablets sharing one printer, kitchen printers</td><td>Most stable option. Every tablet on the network can print to it.</td></tr>
+  <tr><td><b>Bluetooth</b></td><td>Single-tablet setups, mobile carts, food trucks, pop-ups</td><td>One printer pairs to one device at a time.</td></tr>
+</table>
+<div class="warn"><b>USB printers are not supported.</b> Choose a printer with Network (Ethernet/Wi-Fi) or Bluetooth connectivity — not a USB-only model.</div>
+<p>Any standard <b>ESC/POS-compatible thermal receipt printer</b> with one of the two connections above will work. You are not locked into one brand.</p>
+
+<h2>3.2 Popular compatible models</h2>
+<p>These are commonly used, reliable ESC/POS thermal printers — not the only options, just a safe starting point if you're buying new hardware:</p>
+<ul>
+  <li><b>Epson</b> — TM-T88VI, TM-m30II (both offer Bluetooth and Network versions)</li>
+  <li><b>Star Micronics</b> — TSP143III (LAN/Bluetooth), mC-Print3</li>
+</ul>
+
+<h1 class="chapter">4. Connecting a Network (Wi-Fi/LAN) Printer</h1>
+<p>Network printers are the most stable choice and let every tablet in the store print to the same printer.</p>
+<h2>4.1 Wire it up</h2>
+<ol class="steps">
+  <li>Plug the printer into power.</li>
+  <li>Connect an Ethernet cable from your router or network switch to the printer. (Some models also support Wi-Fi directly — follow that printer's own Wi-Fi setup steps if so.)</li>
+  <li>Turn the printer on and wait for the "Ready" light.</li>
+</ol>
+<h2>4.2 Find its IP address</h2>
+<ol class="steps">
+  <li>Print a network status/self-test sheet — usually by holding the <b>Feed</b> button while powering the printer on, or pressing a small reset button on the back for a few seconds (check your model's manual, as the exact method varies).</li>
+  <li>Note the <b>IP address</b> shown (e.g. <span class="path">192.168.1.50</span>).</li>
+</ol>
+<h2>4.3 Static IP is strongly recommended</h2>
+<p>Assign the printer a <b>static IP</b> (or a DHCP reservation) in your router settings. Otherwise the printer's address can change after a power outage or router restart, and Mintcom will stop finding it until you re-enter the new IP.</p>
+
+<h1 class="chapter">5. Connecting a Bluetooth Printer</h1>
+<p>Good for single-tablet counters, mobile setups, and food trucks.</p>
+<h2>5.1 Pair the printer at the device level first</h2>
+<p>Classic Bluetooth thermal printers must be <b>paired in your tablet's Bluetooth settings before Mintcom can see them</b> — the app lists already-paired printers plus any it can discover directly.</p>
+<ol class="steps">
+  <li>Turn on the printer, then press and hold its <b>Pair</b> button until the Bluetooth light blinks (check your model — this varies).</li>
+  <li>On the tablet: <span class="path">Settings &rsaquo; Bluetooth</span>, select the printer from the list (e.g. "Star Micronics…").</li>
+  <li>If asked for a PIN, try <span class="path">0000</span> or <span class="path">1234</span> — the two common defaults.</li>
+</ol>
+<h2>5.2 Find it in Mintcom</h2>
+<p>Once paired, open Mintcom POS and use <b>Scan Bluetooth</b> (Chapter 6) — the printer will appear in the results ready to connect.</p>
+
+<h1 class="chapter">6. Adding the Printer Inside Mintcom POS</h1>
+<p>Once the hardware side is ready, connect it inside the app: <span class="path">POS &rsaquo; Settings &rsaquo; Printer Settings</span>.</p>
+
+<h2>6.1 Find and connect a printer</h2>
+<ol class="steps">
+  <li>Tap <b>Scan Bluetooth</b>, <b>Scan Network</b>, or <b>Scan All</b> to search for nearby/paired printers. Found printers are listed — tap <b>Connect</b> on the one you want.</li>
+  <li><b>No printer found?</b> Add it manually: under <b>Add Network Printer by IP</b>, enter the printer's <b>IP address</b> (from Chapter 4.2) and <b>Port</b> (leave the default <span class="path">9100</span> unless your printer's documentation says otherwise), give it an optional name (e.g. "Kitchen Printer"), and tap <b>Add Network Printer by IP</b>.</li>
+  <li>Tap <b>Test</b> next to a configured printer to print a test receipt and confirm the connection.</li>
+  <li>If you have more than one printer, tap <b>Set Default</b> on the one that should print regular sales receipts.</li>
+  <li>Rename a printer anytime by tapping its name (Edit Printer Name), or remove it with <b>Remove Printer</b>.</li>
+</ol>
+
+<h2>6.2 Printing options</h2>
+<p>In the same Printer Settings screen:</p>
+<ul>
+  <li><b>Number of copies</b> — how many copies print per receipt (1–10). Adjust with the +/− counter.</li>
+  <li><b>Open Cash Drawer</b> — a quick-action button to fire the drawer on demand, without a sale (Chapter 7).</li>
+</ul>
+<div class="note"><b>Note:</b> Mintcom does not auto-print receipts — the cashier taps <b>Print Full Receipt</b> on the payment success screen (or reprints later from My Orders). There is also no per-printer "kitchen vs. receipts" role switch; each printer you configure is simply available to print to when needed.</div>
+
+<h2>6.3 Testing without a printer</h2>
+<p>Setting up before your hardware arrives, or just want to see the flow? Under <b>Testing Mode</b>, tap <b>Add Debug Printer</b> to add a virtual printer. It lets you complete sales and preview receipts on-screen exactly like a real printer would, with no hardware required.</p>
+
+<h1 class="chapter">7. The Cash Drawer</h1>
+<ul>
+  <li>Mintcom does not connect to a cash drawer directly — the drawer connects to your <b>receipt printer</b> (via an RJ11/RJ12 cable, typically), and the printer triggers it to open.</li>
+  <li>Once your printer is connected and set as default (Chapter 6), the drawer opens automatically whenever a cash sale is completed.</li>
+  <li>To open it manually at any time (making change, start-of-day float), use <b>Open Cash Drawer</b> in Printer Settings, or the equivalent action on the sales screen. This requires the <b>Open Drawer Without Making Sale</b> permission and is logged.</li>
+</ul>
+
+<h1 class="chapter">8. Barcode &amp; QR Scanners</h1>
+<ul>
+  <li>Mintcom's camera can scan QR codes directly — used mainly to scan a customer's digital <b>loyalty card</b> (Google Wallet / Apple Wallet pass or pass page) at the counter, via <b>Loyalty &rsaquo; Scan QR Code</b> on the sales screen.</li>
+  <li>A physical handheld <b>barcode/QR scanner gun</b> (the kind that types like a keyboard — HID mode) can also be used the same way: point and scan while the loyalty search field is focused, and the code is entered automatically.</li>
+  <li>These devices connect over <b>Bluetooth or USB</b> directly to the tablet (as a keyboard peripheral) — this is separate from receipt printer connectivity in Chapter 3, and USB is fine here since the scanner behaves as a keyboard, not a printer.</li>
+</ul>
+<div class="note"><b>Note:</b> product lookup (adding items to the cart) is done by tapping the item tile or searching by name — Mintcom does not currently scan a product barcode to add it to the cart.</div>
+
+<h1 class="chapter">9. Multi-Device &amp; Multi-Register Setups</h1>
+<ul>
+  <li>Connect as many tablets as you like to the same Location ID — they all share the same live menu, stock, staff, and settings, and sync in real time (User Manual, Chapter 7.7).</li>
+  <li>A <b>network printer</b> can be shared by every tablet on the same Wi-Fi; add it once on each device using the same IP address.</li>
+  <li>A <b>Bluetooth printer</b> can only be connected to one device at a time — use network printers instead if several registers need to share one printer.</li>
+  <li>Each staff member signs in on whichever tablet they're using; only one shift can be open per register at a time (User Manual, Chapter 8.1).</li>
+</ul>
+
+<h1 class="chapter">10. Troubleshooting</h1>
+<table>
+  <tr><th>Symptom</th><th>What to check</th></tr>
+  <tr><td>Printer not printing</td><td>Paper loaded correctly (feeds from under the roll); printer cover fully closed; power light on.</td></tr>
+  <tr><td>Network printer not found</td><td>Ethernet cable clicks in on both ends; print a fresh status sheet — if the IP shows <span class="path">0.0.0.0</span>, check the cable/switch/router; confirm the tablet is on the <b>same network</b> as the printer (guest Wi-Fi networks often block device-to-device traffic — avoid them for POS gear).</td></tr>
+  <tr><td>Printer's IP address changed overnight</td><td>It's likely on DHCP and was reassigned after a router restart. Set a static IP or DHCP reservation (Chapter 4.3), then re-add the printer with the new IP.</td></tr>
+  <tr><td>Bluetooth printer not appearing in Scan Bluetooth</td><td>Pair it first in the tablet's OS Bluetooth settings (Chapter 5.1) — the app can only find printers that are already paired or actively discoverable.</td></tr>
+  <tr><td>"Printer Already Exists"</td><td>A printer with that IP and port is already configured — check the existing list before adding it again.</td></tr>
+  <tr><td>Cash drawer won't open</td><td>Confirm the receipt printer itself is connected and prints correctly — the drawer depends entirely on the printer connection (Chapter 7).</td></tr>
+  <tr><td>App running slowly or crashing</td><td>Update the app from the App Store/Play Store; restart the tablet; confirm you have a working internet connection (Mintcom keeps working offline for sales, but stays fastest with a stable connection — User Manual, Chapter 15).</td></tr>
+  <tr><td>Still stuck</td><td>Contact support with the printer model, connection type (Network/Bluetooth), and what you see on screen — see Chapter 12.</td></tr>
+</table>
+
+<h1 class="chapter">11. Setup Checklist</h1>
+<ul>
+  <li>&#9744; Tablet meets the minimum OS version and is fully updated.</li>
+  <li>&#9744; Mintcom POS installed and connected with the Location ID.</li>
+  <li>&#9744; Device locked to Mintcom with Guided Access (iPad) or App Pinning (Android), if it's a shared counter device.</li>
+  <li>&#9744; Printer chosen with Network or Bluetooth connectivity (not USB-only).</li>
+  <li>&#9744; Network printer: static IP assigned; same Wi-Fi network as the tablets.</li>
+  <li>&#9744; Bluetooth printer: paired in the tablet's Bluetooth settings first.</li>
+  <li>&#9744; Printer added in <span class="path">POS &rsaquo; Settings &rsaquo; Printer Settings</span>, test receipt printed successfully, set as default.</li>
+  <li>&#9744; Cash drawer opens correctly on a test cash sale.</li>
+  <li>&#9744; Copies count set to what you want per sale.</li>
+  <li>&#9744; If used, barcode/QR scanner gun tested against a loyalty pass.</li>
+  <li>&#9744; Repeated on every additional register/tablet in the store.</li>
+</ul>
+
+<h1 class="chapter">12. Support</h1>
+<table>
+  <tr><th>Channel</th><th>Details</th></tr>
+  <tr><td>Help Center</td><td>https://mintcompos.com/support — articles, Q&amp;A, and support tickets.</td></tr>
+  <tr><td>Support email</td><td>support@mintcompos.com</td></tr>
+  <tr><td>Security reports</td><td>admin@mintcompos.com</td></tr>
+  <tr><td>In-app help</td><td><b>Minto</b>, the Mintcom AI assistant, is available in the website chat widget 24/7. On the POS, staff with the <i>Access Support Portal</i> permission can open the Support Center directly from the app.</td></tr>
+</table>
+<p>When contacting support about a hardware issue, include: the printer model, its connection type (Network or Bluetooth), the tablet model and OS version, and a photo or short recording of what's happening if possible — it helps us diagnose faster.</p>
+
+<p class="footer-note">© 2026 Mintcom LLC. All rights reserved. &middot; Mintcom Hardware Setup Manual v3.0 &middot; mintcompos.com</p>
+</body>
+</html>
