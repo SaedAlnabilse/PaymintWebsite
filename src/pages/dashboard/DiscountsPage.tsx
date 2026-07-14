@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useLocation } from 'react-router-dom';
 import { Plus, Percent, DollarSign, Trash2, Edit2, Tag, ShieldAlert, Award, Grid3X3, List, ArrowUpDown, RotateCcw } from 'lucide-react';
 import api from '../../config/api';
 import { useCurrency } from '../../context/CurrencyContext';
@@ -40,6 +41,7 @@ type StatusFilterValue = 'ALL' | 'ACTIVE' | 'INACTIVE';
 
 export function DiscountsPage() {
   const { t } = useTranslation();
+  const location = useLocation();
     const { currentEstablishment } = useAuth();
   const { onRefresh } = useRealtime({
     establishmentId: currentEstablishment?.id || null,
@@ -189,6 +191,14 @@ export function DiscountsPage() {
     setEditingDiscount(null);
     setShowModal(true);
   };
+
+  useEffect(() => {
+    const state = location.state as { openCreateModal?: boolean } | null;
+    if (state?.openCreateModal && !isLoading) {
+      openCreateModal();
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state, isLoading]);
 
   const moveCreateViewToActive = () => {
     if (filterStatus === 'INACTIVE') {

@@ -81,17 +81,22 @@
       "updateProduct": "商品：更新",
       "updateTax": "更新：税率"
     },
+    "activeFilters": "筛选条件",
     "administrativeAccount": "管理账户",
     "allActions": "全部操作",
+    "allUsers": "全部用户",
     "customRange": "自定义时间段",
     "data": "数据",
     "details": "详情",
     "export": "导出",
+    "filterByUser": "按用户筛选",
     "history": "历史记录",
     "internal": "内部",
     "ip": "IP 地址",
     "loading": "正在加载日志…",
     "logDetails": "日志详情",
+    "meOnly": "仅我",
+    "meOnlyUnavailable": "您的登录未关联到此门店的员工档案。",
     "noLogs": "未找到日志。",
     "owner": "业主",
     "searchPlaceholder": "搜索日志…",
@@ -672,54 +677,77 @@
     },
     "tasks": {
       "aboutMinutes": "约 {{minutes}} 分钟",
+      "addons": {
+        "action": "创建加料",
+        "description": "创建规格、配料等结账时可附加的选项——与基础商品分开，菜单更灵活。",
+        "title": "添加修饰项与加料"
+      },
       "allDoneSubtitle": "您的门店已全部设置完成，随时可以营业",
       "allDoneTitle": "全部完成！",
       "categories": {
         "action": "新建分类",
-        "description": "在添加商品之前，先创建清晰的分类，如饮品、食品或服务。",
-        "title": "创建您的第一个分类"
+        "description": "先整理菜单分类（饮品、食品、服务），方便收银时快速找到商品。",
+        "title": "创建菜单分类"
       },
       "completed": "已完成",
-      "congratsMessage": "您已成功完成所有设置任务。您的门店现在已完全准备就绪！",
+      "congratsContinue": "继续使用仪表盘",
+      "congratsGetApp": "安装 POS 应用",
+      "congratsMessage": "您已完成全部设置步骤。门店已可正式营业——安装 POS 应用并完成首笔测试订单。",
+      "congratsProgress": "全部 {{total}} 个设置步骤已完成",
       "congratsTitle": "恭喜！🎉",
+      "discounts": {
+        "action": "创建优惠",
+        "description": "创建迎新、欢乐时光或员工折扣，让促销在结账时即可使用。",
+        "title": "创建折扣优惠"
+      },
       "goLive": {
-        "action": "打开启动指南",
-        "description": "打开启动指南，在 POS 上登录，并完成一笔测试订单以验证全部设置。",
-        "title": "安装 POS 应用并完成测试销售"
+        "action": "获取移动应用",
+        "description": "在 iOS 或 Android 上下载 Mintcom POS 应用，登录并完成一笔测试销售，然后查看销售报表确认总额正确。",
+        "title": "安装 POS 并完成测试销售"
+      },
+      "loyalty": {
+        "action": "打开会员",
+        "description": "开启积分并添加一个奖励，让常客在每次消费后自动累计。",
+        "title": "开启会员奖励"
       },
       "markAsCompleted": "标记为已完成",
       "payments": {
         "action": "支付方式",
-        "description": "启用员工结账时将使用的支付方式（现金、银行卡、钱包）。",
+        "description": "启用收银员将接受的现金、银行卡和钱包支付方式。",
         "title": "设置支付方式"
       },
       "products": {
-        "action": "添加商品",
-        "description": "创建您的第一个可售商品，设置价格、税务处理方式和正确的分类。",
-        "title": "添加您的第一个商品"
+        "action": "构建菜单",
+        "description": "添加开业菜单（价格与分类），并上传图片，让第一天 POS 清晰好用——优先热销与招牌单品。",
+        "title": "构建完整菜单"
       },
       "profile": {
         "action": "打开资料",
-        "description": "设置店铺名称、地址和联系方式，确保收据和报表信息正确。",
+        "description": "设置店铺名称、地址和联系方式，用于仪表盘与报表展示。",
         "title": "完善门店资料"
       },
       "progressText": "已完成 {{done}}/{{total}} 项",
       "receipt": {
         "action": "收据设置",
-        "description": "按照顾客应看到的样式，设置标志、页眉、地址、税号和页脚信息。",
+        "description": "设置标志、页眉、税号和页脚，让打印收据符合品牌形象。",
         "title": "配置收据版式"
       },
-      "setupGuideSubtitle": "按步骤设置您的门店，然后放心完成首笔测试销售",
+      "roles": {
+        "action": "打开角色",
+        "description": "查看现有角色（收银员、经理或自定义），或创建具有所需权限的新角色——在邀请员工之前完成。",
+        "title": "查看或创建角色"
+      },
+      "setupGuideSubtitle": "一条清晰路径：品牌、收款规则、菜单、优惠、团队——然后完成首笔测试销售",
       "setupGuideTitle": "设置指南",
       "staff": {
         "action": "添加员工",
-        "description": "至少创建一个具有正确角色的员工账户，以便安全地开始运营。",
-        "title": "添加收银员或员工账户"
+        "description": "邀请收银员或经理，并分配你已查看的角色之一——请勿共用登录。",
+        "title": "添加团队成员"
       },
       "stepsCount": "{{count}} 个步骤",
       "taxes": {
         "action": "税务设置",
-        "description": "核对税率，确保总额、报表和结算准确无误。",
+        "description": "设置税率，确保订单总额与结算准确。",
         "title": "设置税率"
       },
       "title": "任务"
@@ -1891,24 +1919,66 @@
       "mockup": {
         "adminDashboard": "管理仪表盘",
         "ahmadClockedIn": "Ahmad 已上班打卡",
+        "alertsLabel": "条提醒",
+        "allLocations": "全部门店",
         "businessOwner": "企业主",
         "cashierSara": "收银员 Sara",
         "clockedOut": "下午 4:00 下班打卡",
+        "criticalStock": "库存告急",
+        "criticalStockDesc": "浓缩咖啡豆剩余 3 千克",
+        "criticalStockPill": "剩余 3",
+        "airportBranch": "机场分店",
+        "downtownCafe": "市中心咖啡厅",
         "espressoBeans": "浓缩咖啡豆",
         "espressoRemaining": "剩余 -3 千克",
+        "filterByLocation": "按门店筛选",
         "goodMorning": "早上好，",
         "jod2450": "2,450 约旦第纳尔",
+        "lowStock": "库存偏低",
+        "lowStockDesc": "全脂牛奶剩余 8 升",
+        "lowStockPill": "剩余 8",
+        "mallBranch": "商场分店",
+        "markAllRead": "全部标为已读",
         "milkAdded": "已添加 +20 升",
+        "navAccount": "账户",
+        "navBrands": "品牌",
+        "navHome": "首页",
+        "navLocations": "门店",
         "nineAM": "上午 9:00",
+        "notificationsTitle": "通知",
         "orderAmt": "24.00 约旦第纳尔",
         "orderCompleted": "订单已完成",
         "orderNum": "订单 #1042",
         "orders": "订单",
+        "overageDesc": "应收 320.00 第纳尔 - 实点 335.00 第纳尔",
+        "overagePill": "+15.00 第纳尔",
+        "overages": "溢余",
+        "overageTitle": "溢余 - Ahmad",
+        "refundDesc": "订单 #1042 已退款 · 24.00 第纳尔",
+        "refundPill": "退款",
+        "refundTitle": "退款",
         "salesActivity": "销售动态",
+        "searchPlaceholder": "搜索通知",
         "shiftStarted": "班次已开始",
+        "shortageDesc": "应收 500.00 第纳尔 - 实点 480.00 第纳尔",
+        "shortagePill": "-20.00 第纳尔",
+        "shortages": "短缺",
+        "shortageSara": "短缺 - Sara",
         "staff": "员工",
         "stockRestocked": "库存已补货",
+        "stockStat": "库存",
+        "tabAll": "全部",
+        "tabCash": "现金",
+        "tabRefunds": "退款",
+        "tabStock": "库存",
+        "time12m": "12 分钟前",
+        "time1h": "1 小时前",
+        "time2h": "2 小时前",
+        "time3h": "3 小时前",
+        "time4h": "4 小时前",
+        "today": "今天",
         "todaysRevenue": "今日营收",
+        "updates": "更新",
         "welcomeBack": "欢迎回来，",
         "wholeMilk": "全脂牛奶"
       },
@@ -2417,7 +2487,12 @@
             "subtotal": "小计",
             "tap": "点击商品添加",
             "taxLine": "税 8%",
-            "totalLine": "合计"
+            "totalLine": "合计",
+            "charge": "收款",
+            "choosePay": "选择顾客支付方式",
+            "emptyCart": "购物车为空 — 点击上方商品",
+            "newSale": "新销售",
+            "salad": "沙拉"
           },
           "recipe": {
             "butter": "黄油",
@@ -2549,6 +2624,34 @@
       "subtitle": "",
       "title": "您能得到什么，只需",
       "titleHighlight": "每月 20 美元？"
+    },
+    "heroPos": {
+      "catAll": "全部菜单",
+      "catCold": "冷饮",
+      "catHot": "热饮",
+      "catDesserts": "甜品",
+      "catSalads": "沙拉",
+      "employee": "管理员员工",
+      "role": "收银员 · 班次进行中",
+      "search": "搜索菜单…",
+      "sync": "同步",
+      "orderDrawer": "订单抽屉",
+      "payInOut": "现金存入 / 支出",
+      "allMenu": "全部菜单",
+      "synced": "同步状态：已同步",
+      "orderNumber": "订单",
+      "subtotal": "小计",
+      "discount": "折扣",
+      "tax": "总税额",
+      "total": "总计",
+      "paymentMethod": "支付方式",
+      "split": "分单",
+      "cash": "现金",
+      "card": "刷卡",
+      "other": "其他",
+      "receiptOrder": "订单 41，商品：",
+      "readyForPayment": "准备付款",
+      "tapOrInsert": "拍卡或插卡"
     }
   },
   "legal": {
@@ -3559,6 +3662,8 @@
       "brandLoginBadge": "品牌",
       "brandLoginHint": "使用此 ID 登录品牌仪表盘。",
       "brandLoginId": "品牌登录 ID",
+      "accessCredentials": "访问凭据",
+      "accessCredentialsSubtitle": "门店与品牌仪表盘登录 ID — 可搜索、复制、打开或重置。",
       "brandLogins": "品牌登录",
       "brandLoginsSubtitle": "品牌仪表盘的登录凭据",
       "brands": "品牌",
@@ -3571,6 +3676,9 @@
       "createFirst": "创建您的第一个资源",
       "dangerZone": "危险区域",
       "dangerZoneHint": "删除账户后将无法恢复。请务必确认。",
+      "dangerZoneBullet1": "所有门店与品牌将被安排删除",
+      "dangerZoneBullet2": "员工访问权限与登录 ID 将停止生效",
+      "dangerZoneBullet3": "如有宽限期，可在期间内取消",
       "delete": "删除",
       "deleteAccount": "删除账户",
       "deleteAccountModal": {
@@ -3619,6 +3727,8 @@
       "locations": "门店",
       "locationsCount": "{{count}} 家门店",
       "loginId": "登录 ID",
+      "searchCredentials": "搜索名称或登录 ID…",
+      "totalStaff": "员工",
       "noLocationsOrBrands": "未找到门店或品牌",
       "noLocationsOrBrandsHint": "创建您的第一个门店或品牌开始使用。",
       "privacy": "隐私",
@@ -3631,6 +3741,8 @@
           "desc": "了解我们的使命和团队",
           "title": "关于我们"
         },
+        "company": "公司与法律",
+        "guides": "指南",
         "privacyPolicy": {
           "desc": "我们如何保护您的数据",
           "title": "隐私政策"
@@ -3670,11 +3782,15 @@
       "save": "保存",
       "saving": "正在保存…",
       "securityTips": {
+        "enable2fa": "在可用时启用双重身份验证",
         "neverShareOtp": "切勿与任何人分享您的一次性密码或验证码",
+        "subtitle": "保护您的账户与登录信息",
         "title": "安全提示",
         "uniquePasswords": "为每个账户使用独特的强密码",
         "updatePeriodically": "定期更新密码以提高安全性"
       },
+      "singleBrandBadge": "1 个品牌",
+      "singleLocationBadge": "1 个门店",
       "setupManual": "设置手册",
       "stats": {
         "admins": "管理员",
@@ -3691,6 +3807,8 @@
         "requiredFields": "请填写所有必填字段"
       },
       "verified": "已验证",
+      "unverified": "未验证",
+      "owner": "所有者",
       "verifyEmail": "验证邮箱",
       "videoTutorial": "视频教程",
       "ownerAccountTitle": "所有者账户",
@@ -3703,7 +3821,8 @@
       "applyingCurrencyChanges": "正在将更改应用到所有门店...",
       "currencyUpdated": "全局货币已更新为 {{currency}}",
       "currencyUpdateFailed": "更新全局货币失败",
-      "videoGuideComingSoon": "视频指南即将推出"
+      "videoGuideComingSoon": "视频指南即将推出",
+      "ownerAccount": "所有者账户"
     },
     "account_employees": {
       "members_count_few": "{{count}} 名成员",

@@ -51,7 +51,7 @@ export const Contact = () => {
             {/* Contact Info Sidebar */}
             <div className="lg:w-2/5 bg-gray-100 dark:bg-gray-900 p-8 sm:p-12 lg:p-16 relative overflow-hidden flex flex-col justify-between">
               <div className="relative z-10">
-                <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold font-magilio mb-6 leading-tight tracking-tight">
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold font-magilio mb-6 leading-tight tracking-tight">
                   <span className="text-mintcom-green">{t('landing.contact.title')}</span>
                   {' '}
                   <span className="text-gray-900 dark:text-white">{t('landing.contact.titleHighlight')}</span>

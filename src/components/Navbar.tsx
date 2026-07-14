@@ -41,6 +41,7 @@ export const Navbar = () => {
     : [
         { name: t('nav.features'), href: '/#features', id: 'features' },
         { name: t('nav.pricing'), href: '/#pricing', id: 'pricing' },
+        { name: 'Try POS', href: '/try-pos', id: 'try-pos', target: '_blank', rel: 'noopener noreferrer' },
         { name: t('nav.support'), href: '/support', id: 'support' },
       ];
 
@@ -145,6 +146,8 @@ export const Navbar = () => {
                     <Link
                       key={link.id}
                       to={link.href}
+                      target={link.target}
+                      rel={link.rel}
                       onMouseEnter={() => setHoveredLink(link.id)}
                       onMouseLeave={() => setHoveredLink(null)}
                       className="relative z-10 px-5 py-2 text-[13px] font-semibold text-gray-600 transition-colors duration-200 hover:text-mintcom-green dark:text-gray-400 dark:hover:text-mintcom-green"
@@ -332,8 +335,13 @@ export const Navbar = () => {
                   >
                     <Link
                       to={link.href}
+                      target={link.target}
+                      rel={link.rel}
                       onClick={(e) => {
                         setIsMobileMenuOpen(false);
+                        if (link.target === '_blank') {
+                          return;
+                        }
                         if (
                           link.href.startsWith('/#') &&
                           window.location.pathname === '/'

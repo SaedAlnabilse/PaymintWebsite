@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { createPortal } from 'react-dom';
 import {
@@ -6,7 +6,8 @@ import {
   History,
   X,
   Shield,
-  FileText
+  FileText,
+  UserRound,
 } from 'lucide-react';
 
 import api from '../../config/api';
@@ -39,6 +40,21 @@ interface ActivityLog {
   ipAddress?: string;
   timestamp: string;
 }
+
+interface ActivityStaffOption {
+  id: string;
+  label: string;
+  email?: string;
+  username?: string;
+}
+
+/** Sentinel value for the "Me only" user filter. */
+const USER_FILTER_ME = '__me__';
+/**
+ * Owner/account actions are logged without an employeeId (UI shows "Owner").
+ * Backend accepts this sentinel as `employeeId = null`.
+ */
+const USER_FILTER_OWNER = 'owner';
 
 const actionColors: Record<string, string> = {
   // Inventory
@@ -83,7 +99,7 @@ const actionColors: Record<string, string> = {
 
 export function ActivityLogsPage() {
   const { t } = useTranslation();
-  const { account , currentEstablishment } = useAuth();
+  const { account, currentEstablishment } = useAuth();
   usePermissionGuard([
     'view_activity_logs',
     'manage_settings',
@@ -104,6 +120,9 @@ export function ActivityLogsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [actionFilter, setActionFilter] = useState('all');
+  /** `all` | `__me__` | staff employee id */
+  const [userFilter, setUserFilter] = useState<string>('all');
+  const [staffOptions, setStaffOptions] = useState<ActivityStaffOption[]>([]);
 
   // Date Filters State
   const [dateRange, setDateRange] = useState<{ start: string; end: string }>(() => {
@@ -120,12 +139,110 @@ export function ActivityLogsPage() {
   const [totalLogs, setTotalLogs] = useState(0);
   const [selectedLog, setSelectedLog] = useState<ActivityLog | null>(null);
 
+  const myStaffId = useMemo(() => {
+    if (!account || staffOptions.length === 0) return null;
+    const email = account.email?.trim().toLowerCase();
+    const first = account.firstName?.trim().toLowerCase();
+    const last = account.lastName?.trim().toLowerCase();
+
+    const byEmail = email
+      ? staffOptions.find((s) => s.email?.trim().toLowerCase() === email)
+      : undefined;
+    if (byEmail) return byEmail.id;
+
+    if (first && last) {
+      const byName = staffOptions.find((s) => {
+        const label = s.label.trim().toLowerCase();
+        return label === `${first} ${last}` || label.startsWith(`${first} ${last}`);
+      });
+      if (byName) return byName.id;
+    }
+
+    return null;
+  }, [account, staffOptions]);
+
+  /** Primary account owner (not a secondary admin employee login). */
+  const isOwnerAccount = Boolean(account && !account.isSecondaryAdmin);
+
+  /**
+   * Resolve who "me" is for the API:
+   * - Staff profile match → employee id
+   * - Primary owner with no employee row → "owner" (null employeeId logs)
+   */
+  const myPerformedById = useMemo(() => {
+    if (myStaffId) return myStaffId;
+    if (isOwnerAccount) return USER_FILTER_OWNER;
+    return null;
+  }, [myStaffId, isOwnerAccount]);
+
+  const userFilterOptions = useMemo(() => {
+    const options: { label: string; value: string }[] = [
+      {
+        label: t('activity.meOnly', { defaultValue: 'Me only' }),
+        value: USER_FILTER_ME,
+      },
+      {
+        label: t('activity.owner', { defaultValue: 'Owner' }),
+        value: USER_FILTER_OWNER,
+      },
+      ...staffOptions.map((s) => ({
+        label: s.label,
+        value: s.id,
+      })),
+    ];
+    return options;
+  }, [staffOptions, t]);
+
+  const resolvedPerformedById = useMemo(() => {
+    if (userFilter === 'all') return null;
+    if (userFilter === USER_FILTER_ME) return myPerformedById;
+    return userFilter;
+  }, [userFilter, myPerformedById]);
+
+  const hasActiveFilters = useMemo(
+    () =>
+      Boolean(searchQuery.trim()) ||
+      actionFilter !== 'all' ||
+      userFilter !== 'all' ||
+      activePreset !== 'last_30_days',
+    [searchQuery, actionFilter, userFilter, activePreset],
+  );
+
+  const fetchStaffOptions = useCallback(async () => {
+    try {
+      const response = await api.get('/api/users');
+      const rows = Array.isArray(response.data) ? response.data : [];
+      const options: ActivityStaffOption[] = [];
+
+      for (const row of rows as Record<string, unknown>[]) {
+        const id = String(row.id || '');
+        if (!id) continue;
+        const firstName = typeof row.firstName === 'string' ? row.firstName.trim() : '';
+        const lastName = typeof row.lastName === 'string' ? row.lastName.trim() : '';
+        const name = typeof row.name === 'string' ? row.name.trim() : '';
+        const username = typeof row.username === 'string' ? row.username.trim() : '';
+        const email = typeof row.email === 'string' ? row.email.trim() : '';
+        const fullName = `${firstName} ${lastName}`.trim();
+        const label = name || fullName || username || email || id;
+        options.push({
+          id,
+          label,
+          email: email || undefined,
+          username: username || undefined,
+        });
+      }
+
+      options.sort((a, b) => a.label.localeCompare(b.label));
+      setStaffOptions(options);
+    } catch {
+      // Non-blocking: user filter still works for "Me only" if staff load fails partially.
+      setStaffOptions([]);
+    }
+  }, []);
+
   useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchLogs();
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [page, actionFilter, dateRange, searchQuery]);
+    fetchStaffOptions();
+  }, [fetchStaffOptions, currentEstablishment?.id]);
 
   const handlePresetChange = (preset: string) => {
     setActivePreset(preset);
@@ -142,9 +259,26 @@ export function ActivityLogsPage() {
     setPage(1);
   };
 
-  const fetchLogs = async () => {
+  const clearAllFilters = () => {
+    setSearchQuery('');
+    setActionFilter('all');
+    setUserFilter('all');
+    handlePresetChange('last_30_days');
+    setPage(1);
+  };
+
+  const fetchLogs = useCallback(async () => {
     try {
       setIsLoading(true);
+
+      // Secondary admin with no staff profile cannot resolve "me".
+      if (userFilter === USER_FILTER_ME && !myPerformedById) {
+        setLogs([]);
+        setTotalPages(1);
+        setTotalLogs(0);
+        return;
+      }
+
       const params: Record<string, any> = {
         page,
         limit: 10,
@@ -152,6 +286,10 @@ export function ActivityLogsPage() {
       };
 
       if (actionFilter !== 'all') params.action = actionFilter;
+
+      if (resolvedPerformedById) {
+        params.performedById = resolvedPerformedById;
+      }
 
       if (dateRange.start) {
         const start = new Date(dateRange.start);
@@ -178,7 +316,23 @@ export function ActivityLogsPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [
+    page,
+    actionFilter,
+    dateRange,
+    searchQuery,
+    userFilter,
+    myPerformedById,
+    resolvedPerformedById,
+    t,
+  ]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchLogs();
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [fetchLogs]);
 
   const formatDate = (dateString: string) => {
     const locale = t('common.locale') === 'ar' ? 'ar-EG' : 'en-US';
@@ -334,9 +488,34 @@ export function ActivityLogsPage() {
             )}
           </div>
 
-          <div className="flex flex-col md:flex-row items-center gap-4 w-full xl:w-auto">
+          <div className="flex flex-col md:flex-row md:flex-wrap items-stretch md:items-center gap-3 w-full xl:w-auto">
+            {/* User / actor filter */}
+            <div className="w-full md:w-52">
+              <SingleSelect
+                value={userFilter === 'all' ? null : userFilter}
+                onChange={(val) => {
+                  const next = val || 'all';
+                  if (next === USER_FILTER_ME && !myPerformedById) {
+                    toast.error(
+                      t('activity.meOnlyUnavailable', {
+                        defaultValue: 'Your login is not linked to a staff profile at this location.',
+                      }),
+                    );
+                  }
+                  setUserFilter(next);
+                  setPage(1);
+                }}
+                options={userFilterOptions}
+                allOptionLabel={t('activity.allUsers', { defaultValue: 'All users' })}
+                placeholder={formatInputPlaceholder(
+                  t('activity.filterByUser', { defaultValue: 'Filter by user' }),
+                  t('common.locale'),
+                )}
+              />
+            </div>
+
             {/* Action Filter */}
-            <div className="w-full md:w-64">
+            <div className="w-full md:w-56">
               <SingleSelect
                 value={actionFilter === 'all' ? null : actionFilter}
                 onChange={(val) => { setActionFilter(val || 'all'); setPage(1); }}
@@ -379,9 +558,9 @@ export function ActivityLogsPage() {
             </div>
 
             {/* Date Filters Container - Split for visual feedback */}
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
               {/* Presets Dropdown */}
-              <div className="w-40 rounded-2xl transition-all">
+              <div className="w-full sm:w-40 rounded-2xl transition-all">
                 <SingleSelect
                   value={activePreset === 'custom' ? null : activePreset}
                   onChange={(val) => {
@@ -395,7 +574,7 @@ export function ActivityLogsPage() {
               </div>
 
               {/* Custom Date Inputs Group */}
-              <div className="flex-none min-w-[200px] sm:min-w-[240px] relative z-[60]">
+              <div className="flex-none min-w-0 sm:min-w-[200px] sm:min-w-[240px] relative z-[60]">
                 <DateRangePicker
                   startDate={dateRange.start}
                   endDate={dateRange.end}
@@ -412,6 +591,69 @@ export function ActivityLogsPage() {
             </div>
           </div>
         </div>
+
+        {/* Active filter summary */}
+        {hasActiveFilters && (
+          <div className="mt-3 pt-3 border-t border-gray-100 dark:border-white/5 flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-gray-400 tracking-wide">
+              <UserRound size={12} />
+              {t('activity.activeFilters', { defaultValue: 'Filters' })}
+            </span>
+            {userFilter !== 'all' && (
+              <button
+                type="button"
+                onClick={() => { setUserFilter('all'); setPage(1); }}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-mintcom-green/10 text-mintcom-green text-[11px] font-bold border border-mintcom-green/20 hover:bg-mintcom-green/15 transition-colors"
+              >
+                {userFilter === USER_FILTER_ME
+                  ? t('activity.meOnly', { defaultValue: 'Me only' })
+                  : userFilter === USER_FILTER_OWNER
+                    ? t('activity.owner', { defaultValue: 'Owner' })
+                    : staffOptions.find((s) => s.id === userFilter)?.label || t('activity.user')}
+                <X size={11} strokeWidth={2.5} />
+              </button>
+            )}
+            {actionFilter !== 'all' && (
+              <button
+                type="button"
+                onClick={() => { setActionFilter('all'); setPage(1); }}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[11px] font-bold border border-blue-500/20 hover:bg-blue-500/15 transition-colors"
+              >
+                {getActionLabel(actionFilter)}
+                <X size={11} strokeWidth={2.5} />
+              </button>
+            )}
+            {searchQuery.trim() && (
+              <button
+                type="button"
+                onClick={() => { setSearchQuery(''); setPage(1); }}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300 text-[11px] font-bold border border-gray-200 dark:border-white/10 hover:bg-gray-200/80 dark:hover:bg-white/15 transition-colors max-w-[200px]"
+              >
+                <span className="truncate">“{searchQuery.trim()}”</span>
+                <X size={11} strokeWidth={2.5} className="shrink-0" />
+              </button>
+            )}
+            {activePreset !== 'last_30_days' && (
+              <button
+                type="button"
+                onClick={() => handlePresetChange('last_30_days')}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-700 dark:text-amber-400 text-[11px] font-bold border border-amber-500/20 hover:bg-amber-500/15 transition-colors"
+              >
+                {activePreset === 'custom'
+                  ? t('activity.customRange')
+                  : t(`common.datePeriods.${activePreset}`, { defaultValue: activePreset })}
+                <X size={11} strokeWidth={2.5} />
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={clearAllFilters}
+              className="ms-auto text-[11px] font-bold text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
+            >
+              {t('common.clearAll', { defaultValue: 'Clear all' })}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Main Logs Area */}
