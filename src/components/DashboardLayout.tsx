@@ -114,6 +114,13 @@ export function DashboardLayout() {
     }
   }, [searchParams, setSearchParams]);
 
+  // Setup-guide "Install POS" task dispatches this to open the same download modal.
+  useEffect(() => {
+    const openMobileApp = () => setMobileAppModalOpen(true);
+    window.addEventListener('mintcom-open-mobile-app', openMobileApp);
+    return () => window.removeEventListener('mintcom-open-mobile-app', openMobileApp);
+  }, []);
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);

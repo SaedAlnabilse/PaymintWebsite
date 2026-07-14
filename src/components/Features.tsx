@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { motion, AnimatePresence, type PanInfo, type Variants } from 'framer-motion';
+import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import {
   CreditCard,
@@ -19,11 +19,13 @@ import {
   X,
   type LucideIcon,
 } from 'lucide-react';
+import { FeatureInteractiveDemo, hasInteractiveDemo } from './FeatureInteractiveDemos';
 
 type WorkflowFeature = {
   title: string;
   description: string;
   icon: LucideIcon;
+  id?: string;
 };
 
 const WorkflowFeatureCard = ({
@@ -34,7 +36,8 @@ const WorkflowFeatureCard = ({
 }: {
   feature: WorkflowFeature;
   index: number;
-  t: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  t: (...args: any[]) => any;
   onOpen: (index: number) => void;
 }) => {
   return (
@@ -44,11 +47,9 @@ const WorkflowFeatureCard = ({
       viewport={{ once: true }}
       transition={{ delay: (index % 4) * 0.08, duration: 0.5 }}
       whileHover={{ y: -6, scale: 1.02 }}
-      className="group flex flex-col h-full p-6 rounded-2xl border border-gray-100 dark:border-white/5 bg-white dark:bg-[#121212] hover:border-mintcom-green/40 hover:shadow-2xl hover:shadow-mintcom-green/10 shadow-lg shadow-gray-200/30 dark:shadow-none transition-all duration-500 relative overflow-hidden"
+      className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white p-6 shadow-lg shadow-gray-200/30 transition-all duration-500 hover:border-mintcom-green/40 hover:shadow-2xl hover:shadow-mintcom-green/10 dark:border-white/5 dark:bg-[#121212] dark:shadow-none"
     >
-      <div className="absolute top-0 right-0 w-28 h-28 bg-mintcom-green/5 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-
-      <div className="flex items-start gap-4 mb-4 relative z-10">
+      <div className="relative z-10 mb-4 flex items-start gap-4">
         <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-mintcom-green/10 dark:bg-mintcom-green/15 flex items-center justify-center group-hover:bg-mintcom-green group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 shadow-inner">
           <feature.icon size={22} className="text-mintcom-green group-hover:text-white transition-colors duration-500" />
         </div>
@@ -126,33 +127,111 @@ const WorkflowFeatureModal = ({
   onPrev: () => void;
   onNext: () => void;
   onJumpTo: (i: number) => void;
-  t: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  t: (...args: any[]) => any;
   isRtl: boolean;
 }) => {
   const feature = features[activeIndex];
   if (!feature) return null;
   const Icon = feature.icon;
+  const hasPreview = hasInteractiveDemo(feature.id);
+  // All feature cards use the same split layout + modal size
+  const isSplitLayout = hasPreview;
+  const isPhoneDemo = feature.id === 'mobileApp';
 
-  const handleDragEnd = (_e: unknown, info: PanInfo) => {
-    const threshold = 80;
-    if (info.offset.x < -threshold) {
-      if (isRtl) {
-        onPrev();
-      } else {
-        onNext();
-      }
-    } else if (info.offset.x > threshold) {
-      if (isRtl) {
-        onNext();
-      } else {
-        onPrev();
-      }
-    }
+  const featureHighlights = (id?: string): string[] => {
+    const key = id ?? '';
+    const defaults: Record<string, [string, string, string]> = {
+      pointOfSale: [
+        'Browse by category or All menu',
+        'Build orders with add-ons & qty',
+        'Charge with card, cash, or other',
+      ],
+      salesControl: [
+        'Cash always available at checkout',
+        'Card brands, wallets & delivery apps',
+        'Tax + service charge configured once',
+      ],
+      staffManagement: [
+        'Add team members with PIN clock-in',
+        'Assign roles & fine-grained permissions',
+        'Access updates instantly on every POS',
+      ],
+      advancedReporting: [
+        'Net sales, card, cash & order counts',
+        'Weekly charts and peak-day insights',
+        'Top sellers ranked by revenue',
+      ],
+      production: [
+        'Track raw materials with stock value',
+        'Low-stock alerts and restock on the fly',
+        'Link recipes so sales deduct inventory',
+      ],
+      aiSystem: [
+        'Ask sales & staffing questions',
+        'Get clear, business-ready answers',
+        'Built into every Mintcom workspace',
+      ],
+      multiBranch: [
+        'Link locations under one brand',
+        'Unified brand totals in real time',
+        'Compare Downtown, Mall & more',
+      ],
+      simpleUI: [
+        'Open shift with My Orders & Close Shift',
+        'Net, cash, card & pay-in/out at a glance',
+        'Live sales trend for the active shift',
+      ],
+      fastOnboarding: [
+        'Guided setup from location to sale',
+        'Progress that staff can follow',
+        'Productive on day one',
+      ],
+      secure: [
+        'Encrypted backups & 2FA ready',
+        'Role-based access by design',
+        'Live protection score per location',
+      ],
+      loyalty: [
+        'Redeem % discounts at the register',
+        'Gift free items from a category',
+        'Points earn just like real POS loyalty',
+      ],
+      mobileApp: [
+        'Cash shortage & overage alerts',
+        'Stock warnings with location context',
+        'Refunds and push banners on the go',
+      ],
+    };
+    // Do NOT load these via t('…highlights.x.0') — missing keys hit parseMissingKeyHandler
+    // which returns the leaf segment ("0"/"1"/"2") instead of the defaultValue.
+    return defaults[key] ?? [
+      'See the real Mintcom interface',
+      'Same screens as Try POS & dashboard',
+      'Built for busy businesses',
+    ];
+  };
+
+  const previewHint = (id?: string): string => {
+    const hints: Record<string, string> = {
+      pointOfSale: 'Real Mintcom POS sales screen →',
+      salesControl: 'Real payment settings screen →',
+      staffManagement: 'Real team & roles screen →',
+      advancedReporting: 'Real reporting dashboard →',
+      production: 'Real Recipe Operations · raw materials →',
+      aiSystem: 'Real Mintcom AI assistant →',
+      multiBranch: 'Real multi-location brand view →',
+      simpleUI: 'Real try-pos Dashboard →',
+      fastOnboarding: 'Real onboarding checklist →',
+      secure: 'Real security controls →',
+      loyalty: 'Real loyalty panel on POS →',
+      mobileApp: 'Real owner mobile alerts →',
+    };
+    return hints[id ?? ''] ?? 'Real Mintcom interface →';
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      {/* backdrop */}
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4">
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -162,17 +241,15 @@ const WorkflowFeatureModal = ({
         onClick={onClose}
       />
 
-      {/* modal shell — stays mounted while paginating */}
       <motion.div
         initial={{ opacity: 0, scale: 0.94, y: 24 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.94, y: 24 }}
         transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-        className="relative z-10 w-full max-w-2xl overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-[0_24px_80px_-16px_rgba(0,0,0,0.35)] dark:border-white/10 dark:bg-[#161616]"
+        className="relative z-10 w-full max-w-5xl overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-[0_24px_80px_-16px_rgba(0,0,0,0.35)] dark:border-white/10 dark:bg-[#161616]"
         dir={isRtl ? 'rtl' : 'ltr'}
         style={{ perspective: 1200 }}
       >
-        {/* ambient glow that pulses on each step */}
         <motion.div
           key={`glow-${activeIndex}`}
           initial={{ opacity: 0, scale: 0.4 }}
@@ -181,7 +258,6 @@ const WorkflowFeatureModal = ({
           className="pointer-events-none absolute -top-24 left-1/2 -z-0 h-64 w-64 -translate-x-1/2 rounded-full bg-mintcom-green/30 blur-3xl"
         />
 
-        {/* sweep highlight that crosses the card on each step */}
         <motion.div
           key={`sweep-${activeIndex}`}
           initial={{ x: direction * -120 + '%', opacity: 0 }}
@@ -190,17 +266,15 @@ const WorkflowFeatureModal = ({
           className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 -skew-x-12 bg-gradient-to-r from-transparent via-mintcom-green/15 to-transparent"
         />
 
-        {/* close */}
         <button
           type="button"
           onClick={onClose}
-          aria-label={t('common.close', 'Close')}
+          aria-label={String(t('common.close', 'Close'))}
           className="absolute end-4 top-4 z-30 flex h-9 w-9 items-center justify-center rounded-xl bg-gray-100 text-gray-500 transition-colors hover:bg-gray-200 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/15"
         >
           <X size={16} strokeWidth={2.5} />
         </button>
 
-        {/* counter pill */}
         <div className="absolute start-4 top-4 z-30 flex items-center gap-1 rounded-full bg-mintcom-green/10 px-3 py-1 text-xs font-bold text-mintcom-green">
           <AnimatePresence mode="popLayout" initial={false} custom={direction}>
             <motion.span
@@ -219,8 +293,7 @@ const WorkflowFeatureModal = ({
           <span className="tabular-nums opacity-70">{features.length}</span>
         </div>
 
-        {/* sliding content area — drag enabled */}
-        <div className="relative overflow-hidden">
+        <div className="relative max-h-[min(90vh,860px)] overflow-x-hidden overflow-y-auto">
           <AnimatePresence mode="wait" custom={direction} initial={false}>
             <motion.div
               key={activeIndex}
@@ -229,56 +302,123 @@ const WorkflowFeatureModal = ({
               initial="enter"
               animate="center"
               exit="exit"
-              drag="x"
-              dragConstraints={{ left: 0, right: 0 }}
-              dragElastic={0.25}
-              onDragEnd={handleDragEnd}
-              className="relative z-10 cursor-grab p-8 pt-14 md:p-10 md:pt-16 active:cursor-grabbing"
+              className="relative z-10 select-text p-6 pt-14 md:p-8 md:pt-16 lg:p-10 lg:pt-16"
               style={{ transformStyle: 'preserve-3d' }}
             >
-              <motion.div
-                initial={{ scale: 0.6, rotate: -12, opacity: 0 }}
-                animate={{ scale: 1, rotate: 0, opacity: 1 }}
-                transition={{ delay: 0.05, duration: 0.5, type: 'spring', stiffness: 220, damping: 18 }}
-                className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-mintcom-green/10 dark:bg-white/5 text-mintcom-green"
-              >
-                <Icon size={28} />
-              </motion.div>
+              {isSplitLayout ? (
+                <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,0.78fr)_minmax(340px,1.22fr)] lg:gap-10 xl:grid-cols-[minmax(0,0.72fr)_minmax(380px,1.28fr)]">
+                  {/* Left: story copy */}
+                  <div className="order-2 min-w-0 lg:order-1">
+                    <motion.div
+                      initial={{ scale: 0.7, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ delay: 0.05, type: 'spring', stiffness: 220, damping: 18 }}
+                      className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-mintcom-green/10 text-mintcom-green dark:bg-white/5"
+                    >
+                      <Icon size={26} />
+                    </motion.div>
+                    <motion.h3
+                      initial={{ y: 14, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 0.1, duration: 0.4 }}
+                      className="font-barlow text-2xl font-bold leading-snug tracking-tight text-gray-900 dark:text-white md:text-3xl lg:text-[2rem]"
+                    >
+                      {feature.title}
+                    </motion.h3>
+                    <motion.p
+                      initial={{ y: 16, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 0.18, duration: 0.45 }}
+                      className="mt-4 max-w-md font-barlow text-[15px] font-medium leading-relaxed text-gray-600 dark:text-gray-300 md:text-base"
+                    >
+                      {feature.description}
+                    </motion.p>
+                    <motion.ul
+                      initial={{ y: 12, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 0.26, duration: 0.4 }}
+                      className="mt-6 space-y-2.5"
+                    >
+                      {featureHighlights(feature.id).map((line) => (
+                        <li key={line} className="flex items-start gap-2.5 text-sm font-semibold text-gray-700 dark:text-gray-200">
+                          <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-mintcom-green" />
+                          <span>{line}</span>
+                        </li>
+                      ))}
+                    </motion.ul>
+                    <motion.p
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.35 }}
+                      className="mt-6 hidden text-xs font-medium text-gray-400 lg:block"
+                    >
+                      {previewHint(feature.id)}
+                    </motion.p>
+                  </div>
 
-              <motion.h3
-                initial={{ y: 14, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.12, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                className="font-barlow text-2xl md:text-3xl font-bold text-gray-900 dark:text-white tracking-tight leading-snug"
-              >
-                {feature.title}
-              </motion.h3>
+                  {/* Right: static real-UI screenshot — same size for every card */}
+                  <motion.div
+                    initial={{ y: 24, opacity: 0, scale: 0.96 }}
+                    animate={{ y: 0, opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.2, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                    className="order-1 flex w-full justify-center lg:order-2 lg:justify-stretch"
+                  >
+                    <div className="w-full max-w-none">
+                      <FeatureInteractiveDemo
+                        featureId={feature.id}
+                        t={t}
+                        isRtl={isRtl}
+                        tall={isPhoneDemo}
+                        side
+                      />
+                    </div>
+                  </motion.div>
+                </div>
+              ) : (
+                <>
+                  <motion.div
+                    initial={{ scale: 0.6, rotate: -12, opacity: 0 }}
+                    animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                    transition={{ delay: 0.05, duration: 0.5, type: 'spring', stiffness: 220, damping: 18 }}
+                    className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-mintcom-green/10 dark:bg-white/5 text-mintcom-green"
+                  >
+                    <Icon size={28} />
+                  </motion.div>
 
-              <motion.p
-                initial={{ y: 16, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.2, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-                className="mt-4 font-barlow text-base md:text-[17px] text-gray-600 dark:text-gray-300 leading-relaxed font-medium whitespace-pre-line"
-              >
-                {feature.description}
-              </motion.p>
+                  <motion.h3
+                    initial={{ y: 14, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.12, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                    className="font-barlow text-2xl md:text-3xl font-bold text-gray-900 dark:text-white tracking-tight leading-snug"
+                  >
+                    {feature.title}
+                  </motion.h3>
+
+                  <motion.p
+                    initial={{ y: 16, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.2, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+                    className="mt-4 font-barlow text-base md:text-[17px] text-gray-600 dark:text-gray-300 leading-relaxed font-medium whitespace-pre-line"
+                  >
+                    {feature.description}
+                  </motion.p>
+                </>
+              )}
             </motion.div>
           </AnimatePresence>
         </div>
 
-        {/* footer / nav */}
         <div className="relative z-10 mx-8 flex items-center justify-between gap-4 border-t border-gray-100 dark:border-white/10 py-5 md:mx-10">
           <button
             type="button"
             onClick={onPrev}
-            aria-label={t('common.previous', 'Previous')}
+            aria-label={String(t('common.previous', 'Previous'))}
             className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-bold text-gray-700 transition-colors hover:bg-gray-50 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
           >
             {isRtl ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
             <span className="hidden sm:inline">{t('common.previous', 'Previous')}</span>
           </button>
 
-          {/* dots */}
           <div className="flex items-center gap-1.5 overflow-x-auto max-w-[55%] no-scrollbar">
             {features.map((_, i) => (
               <button
@@ -296,7 +436,7 @@ const WorkflowFeatureModal = ({
           <button
             type="button"
             onClick={onNext}
-            aria-label={t('common.next', 'Next')}
+            aria-label={String(t('common.next', 'Next'))}
             className="flex items-center gap-2 rounded-xl bg-mintcom-green px-4 py-2.5 text-sm font-bold text-black shadow-[0_4px_20px_-4px_rgba(125,198,162,0.5)] transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_28px_-4px_rgba(125,198,162,0.65)]"
           >
             <span className="hidden sm:inline">{t('common.next', 'Next')}</span>
@@ -314,67 +454,75 @@ export const Features = () => {
   const [activeCard, setActiveCard] = useState<number | null>(null);
   const [direction, setDirection] = useState(1);
 
-  // Order matches the requested layout:
-  // POS, Sales Control, Staff Management, Advanced Reporting,
-  // Recipe & Cost Management, AI System, Multi-Branch Management, Simple & Easy Interface,
-  // Fast Staff Onboarding, Secure & Reliable, Loyalty & Customer Management, Mobile App & Notifications
   const workflowFeatures: WorkflowFeature[] = [
     {
+      id: 'pointOfSale',
       title: t('landing.workflow.pointOfSale.title'),
       description: t('landing.workflow.pointOfSale.description'),
       icon: CreditCard,
     },
     {
+      id: 'salesControl',
       title: t('landing.workflow.salesControl.title'),
       description: t('landing.workflow.salesControl.description'),
       icon: ShieldCheck,
     },
     {
+      id: 'staffManagement',
       title: t('landing.workflow.staffManagement.title'),
       description: t('landing.workflow.staffManagement.description'),
       icon: Users,
     },
     {
+      id: 'advancedReporting',
       title: t('landing.workflow.advancedReporting.title'),
       description: t('landing.workflow.advancedReporting.description'),
       icon: BarChart3,
     },
     {
+      id: 'production',
       title: t('landing.workflow.production.title'),
       description: t('landing.workflow.production.description'),
       icon: ChefHat,
     },
     {
+      id: 'aiSystem',
       title: t('landing.workflow.aiSystem.title'),
       description: t('landing.workflow.aiSystem.description'),
       icon: Sparkles,
     },
     {
+      id: 'multiBranch',
       title: t('landing.workflow.multiBranch.title'),
       description: t('landing.workflow.multiBranch.description'),
       icon: Building2,
     },
     {
+      id: 'simpleUI',
       title: t('landing.workflow.simpleUI.title'),
       description: t('landing.workflow.simpleUI.description'),
       icon: LayoutDashboard,
     },
     {
+      id: 'fastOnboarding',
       title: t('landing.workflow.fastOnboarding.title'),
       description: t('landing.workflow.fastOnboarding.description'),
       icon: Zap,
     },
     {
+      id: 'secure',
       title: t('landing.workflow.secure.title'),
       description: t('landing.workflow.secure.description'),
       icon: Lock,
     },
     {
+      id: 'loyalty',
       title: t('landing.workflow.loyalty.title'),
       description: t('landing.workflow.loyalty.description'),
       icon: Heart,
     },
     {
+      id: 'mobileApp',
       title: t('landing.workflow.mobileApp.title'),
       description: t('landing.workflow.mobileApp.description'),
       icon: Smartphone,
@@ -402,7 +550,6 @@ export const Features = () => {
     });
   }, []);
 
-  // Keyboard nav, body scroll lock, and chat widget hide while modal is open
   useEffect(() => {
     if (activeCard === null) return;
 
@@ -431,12 +578,10 @@ export const Features = () => {
       className="py-16 lg:py-24 bg-white dark:bg-[#0f0f0f] overflow-hidden relative"
       dir={isRtl ? 'rtl' : 'ltr'}
     >
-      {/* Background Decor */}
       <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-mintcom-green/5 rounded-full blur-[120px] -z-10" />
       <div className="absolute top-20 right-0 w-[400px] h-[400px] bg-mintcom-green/5 rounded-full blur-[100px] -z-10" />
 
       <div className="container mx-auto px-6 md:px-10 lg:px-16 max-w-[1280px]">
-        {/* Heading */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -464,7 +609,7 @@ export const Features = () => {
             </span>
           </motion.div>
 
-          <h2 className="text-[clamp(1rem,5.2vw,4.5rem)] whitespace-nowrap font-bold font-magilio mb-6 leading-tight tracking-tight">
+          <h2 className="text-[clamp(1rem,4.2vw,3.75rem)] whitespace-nowrap font-bold font-magilio mb-6 leading-tight tracking-tight">
             <span className="text-gray-900 dark:text-white">{t('landing.workflow.title')} </span>
             <span className="bg-mintcom-green text-gray-900 dark:text-gray-900 px-2 rounded-sm">{t('landing.workflow.titleHighlight')}</span>
           </h2>
@@ -475,11 +620,10 @@ export const Features = () => {
           )}
         </motion.div>
 
-        {/* 4-column responsive grid of all 12 features */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 lg:gap-6 items-stretch">
           {workflowFeatures.map((feature, index) => (
             <WorkflowFeatureCard
-              key={index}
+              key={feature.id ?? index}
               feature={feature}
               index={index}
               t={t}
@@ -489,7 +633,6 @@ export const Features = () => {
         </div>
       </div>
 
-      {/* Read more popup */}
       <AnimatePresence>
         {activeCard !== null && (
           <WorkflowFeatureModal

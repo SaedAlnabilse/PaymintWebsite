@@ -22,6 +22,8 @@ interface CustomSelectProps {
     direction?: 'up' | 'down';
     disabled?: boolean;
     scrollIntoViewOnOpen?: boolean; // Only scroll into view when inside modals/popups
+    /** Match denser form inputs (h-11, px-3, rounded-xl). Default keeps existing large control. */
+    size?: 'default' | 'compact';
 }
 
 export function CustomSelect({
@@ -35,7 +37,8 @@ export function CustomSelect({
     required,
     direction = 'down',
     disabled = false,
-    scrollIntoViewOnOpen = false
+    scrollIntoViewOnOpen = false,
+    size = 'default',
 }: CustomSelectProps) {
     const { t } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
@@ -195,23 +198,26 @@ export function CustomSelect({
                 type="button"
                 onClick={() => !disabled && setIsOpen(!isOpen)}
                 disabled={disabled}
-                className={`w-full px-5 py-3.5 bg-white dark:bg-white/[0.03] backdrop-blur-sm border border-gray-200 dark:border-white/[0.08] rounded-2xl text-left flex items-center justify-between transition-[color,background-color,border-color,box-shadow,ring] outline-none shadow-sm
+                className={`w-full border text-left flex items-center justify-between transition-[color,background-color,border-color,box-shadow,ring] outline-none
+                    ${size === 'compact'
+                        ? 'h-11 px-3 py-0 rounded-xl shadow-none bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10'
+                        : 'px-5 py-3.5 rounded-2xl shadow-sm bg-white dark:bg-white/[0.03] backdrop-blur-sm border-gray-200 dark:border-white/[0.08]'}
                     ${disabled
-                        ? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-white/[0.01]'
+                        ? 'cursor-not-allowed opacity-70 bg-gray-50 dark:bg-white/[0.03] text-gray-500'
                         : 'hover:border-mintcom-green/50 hover:bg-gray-50/50 dark:hover:bg-white/[0.06]'}
                     ${error
                         ? 'ring-2 ring-mintcom-red border-mintcom-red'
-                        : isOpen || isFilterActive
+                        : !disabled && (isOpen || isFilterActive)
                             ? 'ring-[3px] ring-mintcom-green/10 border-mintcom-green bg-mintcom-green/5 dark:bg-mintcom-green/10 !ring-[3px] !ring-mintcom-green/10 !border-mintcom-green !bg-mintcom-green/5 dark:!bg-mintcom-green/10'
                             : ''
                     }`}
             >
-                <span className={`text-sm font-normal truncate pr-2 ${selectedOption ? 'text-gray-900 dark:text-white' : 'text-gray-400'}`}>
+                <span className={`text-sm ${size === 'compact' ? 'font-semibold' : 'font-normal'} truncate pr-2 ${selectedOption ? (disabled ? 'text-gray-700 dark:text-gray-300' : 'text-gray-900 dark:text-white') : 'text-gray-400'}`}>
                     {selectedOption ? selectedOption.label : displayPlaceholder}
                 </span>
                 <ChevronDown
-                    size={18}
-                    className={`transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-180' : ''} ${isOpen || isFilterActive ? 'text-mintcom-green' : 'text-gray-400'}`}
+                    size={size === 'compact' ? 16 : 18}
+                    className={`transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-180' : ''} ${!disabled && (isOpen || isFilterActive) ? 'text-mintcom-green' : 'text-gray-400'}`}
                 />
             </button>
 

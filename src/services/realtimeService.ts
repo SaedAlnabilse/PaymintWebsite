@@ -4,10 +4,10 @@ import { formatCurrencyCode } from '../utils/currency';
 import { env } from '../config/env';
 
 // Use the same-origin proxy in production so realtime auth stays first-party.
-// In development, connect directly to the backend because the Vite dev proxy is separate.
+// In development, prefer VITE_API_URL (local backend) so testing hits localhost:3000.
 const BACKEND_WS_URL = env.PROD
   ? window.location.origin
-  : import.meta.env.VITE_API_URL || 'https://grateful-liberation-production-d036.up.railway.app';
+  : import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 /**
  * Real-time Event Types
