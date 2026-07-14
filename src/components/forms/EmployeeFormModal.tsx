@@ -118,7 +118,7 @@ const ALLOWED_BACKOFFICE_PERMISSION_IDS: Set<string> = new Set([
   ...CANONICAL_BACKOFFICE_PERMISSIONS.map(({ id }) => id),
   ...BACKOFFICE_DEFAULT_PERMISSION_IDS,
 ]);
-const EMPLOYEE_PASSWORD_POLICY_PATTERN = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+const EMPLOYEE_PASSWORD_POLICY_PATTERN = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
 
 const normalizeAndFilterPermissions = (
   values: unknown,

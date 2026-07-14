@@ -3,6 +3,13 @@ import { Check, ChevronDown, ChevronUp, ClipboardList, ExternalLink, X } from 'l
 import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
+import {
+  areAllSetupTasksCompleted,
+  getDashboardTasksContextId,
+  getTasksStorageKey,
+  readCompletedTasksMap,
+  SETUP_TASK_IDS,
+} from '../../data/setupTasks';
 
 interface TasksModalProps {
   isOpen: boolean;
@@ -19,31 +26,10 @@ interface TaskItem {
   title: string;
   description: string;
   actionLabel: string;
-  navigation: TaskNavigation;
+  /** Navigate to a dashboard page, or open a global UI (e.g. mobile app modal). */
+  navigation?: TaskNavigation;
+  openEvent?: string;
   estimateMinutes: number;
-}
-
-const getTasksStorageKey = (contextId: string) => `mintcom.widget.tasks.v1.${contextId}`;
-
-function readCompletedState(storageKey: string): Record<string, boolean> {
-  if (typeof window === 'undefined') {
-    return {};
-  }
-
-  try {
-    const raw = window.localStorage.getItem(storageKey);
-    if (!raw) {
-      return {};
-    }
-    const parsed = JSON.parse(raw);
-    if (parsed && typeof parsed === 'object') {
-      return parsed as Record<string, boolean>;
-    }
-  } catch {
-    // Ignore invalid persisted data and start fresh.
-  }
-
-  return {};
 }
 
 export function TasksModal({ isOpen, onClose }: TasksModalProps) {
@@ -54,6 +40,9 @@ export function TasksModal({ isOpen, onClose }: TasksModalProps) {
   const [completedById, setCompletedById] = useState<Record<string, boolean>>({});
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
+  /** Skip the first persist after loading from localStorage so we don't overwrite with stale state. */
+  const skipNextPersistRef = useRef(true);
+  const prevAllDoneRef = useRef(false);
 
   // Handle click outside to close
   useEffect(() => {
@@ -80,14 +69,16 @@ export function TasksModal({ isOpen, onClose }: TasksModalProps) {
     return match ? match[1] : null;
   }, [location.pathname]);
   const storageKey = useMemo(
-    () => getTasksStorageKey(dashboardSlug ? `dashboard-${dashboardSlug}` : 'global'),
-    [dashboardSlug],
+    () => getTasksStorageKey(getDashboardTasksContextId(location.pathname)),
+    [location.pathname],
   );
 
   const dashboardRoute = useCallback((suffix: string, fallback: string) =>
     dashboardSlug ? `/dashboard/${dashboardSlug}${suffix}` : fallback,
   [dashboardSlug]);
 
+  // One outcome per step — no double visits to the same screen.
+  // Order: identity → money → menu → growth → team → launch.
   const tasks = useMemo<TaskItem[]>(() => [
     {
       id: 'location-profile',
@@ -112,6 +103,28 @@ export function TasksModal({ isOpen, onClose }: TasksModalProps) {
       estimateMinutes: 1
     },
     {
+      id: 'setup-taxes',
+      title: t('chat.tasks.taxes.title'),
+      description: t('chat.tasks.taxes.description'),
+      actionLabel: t('chat.tasks.taxes.action'),
+      navigation: {
+        path: dashboardRoute('/settings', '/onboarding/step/2'),
+        state: { openSettingsTab: 'sales' }
+      },
+      estimateMinutes: 1
+    },
+    {
+      id: 'setup-payments',
+      title: t('chat.tasks.payments.title'),
+      description: t('chat.tasks.payments.description'),
+      actionLabel: t('chat.tasks.payments.action'),
+      navigation: {
+        path: dashboardRoute('/payment-methods', '/onboarding/step/2'),
+        state: { openCreateModal: true }
+      },
+      estimateMinutes: 1
+    },
+    {
       id: 'create-category',
       title: t('chat.tasks.categories.title'),
       description: t('chat.tasks.categories.description'),
@@ -131,29 +144,49 @@ export function TasksModal({ isOpen, onClose }: TasksModalProps) {
         path: dashboardRoute('/products', '/onboarding/step/1'),
         state: { openCreateModal: true }
       },
-      estimateMinutes: 1
+      estimateMinutes: 4
     },
     {
-      id: 'setup-payments',
-      title: t('chat.tasks.payments.title'),
-      description: t('chat.tasks.payments.description'),
-      actionLabel: t('chat.tasks.payments.action'),
+      id: 'addons',
+      title: t('chat.tasks.addons.title'),
+      description: t('chat.tasks.addons.description'),
+      actionLabel: t('chat.tasks.addons.action'),
       navigation: {
-        path: dashboardRoute('/payment-methods', '/onboarding/step/2'),
+        path: dashboardRoute('/addons', '/onboarding/step/1'),
         state: { openCreateModal: true }
       },
-      estimateMinutes: 1
+      estimateMinutes: 2
     },
     {
-      id: 'setup-taxes',
-      title: t('chat.tasks.taxes.title'),
-      description: t('chat.tasks.taxes.description'),
-      actionLabel: t('chat.tasks.taxes.action'),
+      id: 'discounts',
+      title: t('chat.tasks.discounts.title'),
+      description: t('chat.tasks.discounts.description'),
+      actionLabel: t('chat.tasks.discounts.action'),
       navigation: {
-        path: dashboardRoute('/settings', '/onboarding/step/2'),
-        state: { openSettingsTab: 'sales' }
+        path: dashboardRoute('/discounts', '/onboarding/step/1'),
+        state: { openCreateModal: true }
       },
-      estimateMinutes: 1
+      estimateMinutes: 2
+    },
+    {
+      id: 'loyalty',
+      title: t('chat.tasks.loyalty.title'),
+      description: t('chat.tasks.loyalty.description'),
+      actionLabel: t('chat.tasks.loyalty.action'),
+      navigation: {
+        path: dashboardRoute('/loyalty', '/onboarding/step/1')
+      },
+      estimateMinutes: 2
+    },
+    {
+      id: 'roles',
+      title: t('chat.tasks.roles.title'),
+      description: t('chat.tasks.roles.description'),
+      actionLabel: t('chat.tasks.roles.action'),
+      navigation: {
+        path: dashboardRoute('/roles', '/onboarding/step/4')
+      },
+      estimateMinutes: 2
     },
     {
       id: 'add-staff',
@@ -171,13 +204,17 @@ export function TasksModal({ isOpen, onClose }: TasksModalProps) {
       title: t('chat.tasks.goLive.title'),
       description: t('chat.tasks.goLive.description'),
       actionLabel: t('chat.tasks.goLive.action'),
-      navigation: { path: '/onboarding/step/5' },
+      // Opens the Get Mobile App modal (App Store / Google Play) in the dashboard shell.
+      openEvent: 'mintcom-open-mobile-app',
       estimateMinutes: 2
     }
   ], [t, dashboardRoute]);
 
   useEffect(() => {
-    setCompletedById(readCompletedState(storageKey));
+    skipNextPersistRef.current = true;
+    const loaded = readCompletedTasksMap(storageKey);
+    setCompletedById(loaded);
+    prevAllDoneRef.current = areAllSetupTasksCompleted(loaded);
   }, [storageKey]);
 
   useEffect(() => {
@@ -185,9 +222,21 @@ export function TasksModal({ isOpen, onClose }: TasksModalProps) {
       return;
     }
 
+    if (skipNextPersistRef.current) {
+      skipNextPersistRef.current = false;
+      return;
+    }
+
     try {
       window.localStorage.setItem(storageKey, JSON.stringify(completedById));
       window.dispatchEvent(new Event('mintcom-tasks-updated'));
+
+      const allDone = areAllSetupTasksCompleted(completedById);
+      // Fire once when the user just finished the last remaining task.
+      if (allDone && !prevAllDoneRef.current) {
+        window.dispatchEvent(new Event('mintcom-tasks-all-completed'));
+      }
+      prevAllDoneRef.current = allDone;
     } catch {
       // No-op if storage is unavailable.
     }
@@ -220,8 +269,8 @@ export function TasksModal({ isOpen, onClose }: TasksModalProps) {
   }, [isOpen]); // Only fire when isOpen changes
 
   const completedCount = useMemo(
-    () => tasks.filter((task) => completedById[task.id]).length,
-    [tasks, completedById]
+    () => SETUP_TASK_IDS.filter((id) => completedById[id]).length,
+    [completedById]
   );
 
   const totalMinutes = useMemo(
@@ -243,16 +292,38 @@ export function TasksModal({ isOpen, onClose }: TasksModalProps) {
       if (isNowComplete && expandedId === taskId) {
         setExpandedId(null);
       }
-      return {
+      const next = {
         ...prev,
-        [taskId]: isNowComplete
+        [taskId]: isNowComplete,
       };
+
+      // Eager celebration when the last incomplete task is checked (don't wait only on effect).
+      if (isNowComplete && areAllSetupTasksCompleted(next) && typeof window !== 'undefined') {
+        try {
+          window.localStorage.setItem(storageKey, JSON.stringify(next));
+        } catch {
+          // ignore
+        }
+        // Defer so React state commit finishes first.
+        queueMicrotask(() => {
+          window.dispatchEvent(new Event('mintcom-tasks-updated'));
+          window.dispatchEvent(new Event('mintcom-tasks-all-completed'));
+        });
+      }
+
+      return next;
     });
   };
 
-  const handleOpenTask = (navigation: TaskNavigation) => {
+  const handleOpenTask = (task: TaskItem) => {
     onClose(); // Close the modal so the user can complete the task
-    navigate(navigation.path, navigation.state ? { state: navigation.state } : undefined);
+    if (task.openEvent && typeof window !== 'undefined') {
+      window.dispatchEvent(new Event(task.openEvent));
+      return;
+    }
+    if (task.navigation) {
+      navigate(task.navigation.path, task.navigation.state ? { state: task.navigation.state } : undefined);
+    }
   };
 
   return (
@@ -368,7 +439,7 @@ export function TasksModal({ isOpen, onClose }: TasksModalProps) {
 
                           <div className="mt-4 flex items-center gap-2">
                             <button
-                              onClick={() => handleOpenTask(task.navigation)}
+                              onClick={() => handleOpenTask(task)}
                               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#7dc6a2] to-[#5BA882] text-white font-bold text-sm shadow-sm hover:brightness-105 transition-all"
                             >
                               <span>{task.actionLabel}</span>

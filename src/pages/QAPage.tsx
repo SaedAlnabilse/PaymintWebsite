@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Helmet } from 'react-helmet-async';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -8,36 +8,63 @@ import { Search, Plus, Minus, MessageCircle, CreditCard, Wrench, Settings, HelpC
 import { Navbar } from '../components/Navbar';
 import { Footer } from '../components/Footer';
 import { FAQ_DATA } from '../data/faq';
+import type { FAQItem } from '../data/faq';
 import { formatInputPlaceholder } from '../utils/textCase';
 
+const getLocalizedFaqText = (item: FAQItem, language: string) => {
+    const useArabic = language.toLowerCase().startsWith('ar');
+    return {
+        question: useArabic && item.questionAr ? item.questionAr : item.question,
+        answer: useArabic && item.answerAr ? item.answerAr : item.answer,
+    };
+};
+
 export const QAPage = () => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const [searchQuery, setSearchQuery] = useState('');
     const [activeCategory, setActiveCategory] = useState('All');
     const [expandedId, setExpandedId] = useState<string | null>(null);
 
-    const categories = [
-        { id: 'All', label: t('support.qa.categories.all', 'All Questions'), icon: HelpCircle },
-        { id: 'general', label: t('support.qa.categories.general', 'General Support'), icon: MessageCircle },
-        { id: 'products', label: t('support.qa.categories.products', 'Product Management'), icon: Package },
-        { id: 'orders', label: t('support.qa.categories.orders', 'Sales and Orders'), icon: ClipboardList },
-        { id: 'staff', label: t('support.qa.categories.staff', 'Team and Staff'), icon: Users },
-        { id: 'billing', label: t('support.qa.categories.payments', 'Billing and Plans'), icon: CreditCard },
-        { id: 'technical', label: t('support.qa.categories.technical', 'Technical Support'), icon: Wrench },
-        { id: 'account', label: t('support.qa.categories.account', 'Account Settings'), icon: Settings },
-    ];
+    const isArabic = (i18n.language || '').toLowerCase().startsWith('ar');
+    const isRTL = isArabic || t('common.locale') === 'ar';
 
-    const filteredQA = FAQ_DATA.filter(item => {
-        const matchesSearch = item.question.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                              item.answer.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesCategory = activeCategory === 'All' || item.category === activeCategory;
-        return matchesSearch && matchesCategory;
-    });
+    const categories = useMemo(() => [
+        { id: 'All', label: t('support.qa.categories.all', { defaultValue: 'All Questions' }), icon: HelpCircle },
+        { id: 'general', label: t('support.qa.categories.general', { defaultValue: 'General Support' }), icon: MessageCircle },
+        { id: 'products', label: t('support.qa.categories.products', { defaultValue: 'Product Management' }), icon: Package },
+        { id: 'orders', label: t('support.qa.categories.orders', { defaultValue: 'Sales and Orders' }), icon: ClipboardList },
+        { id: 'staff', label: t('support.qa.categories.staff', { defaultValue: 'Team and Staff' }), icon: Users },
+        { id: 'billing', label: t('support.qa.categories.payments', { defaultValue: 'Billing and Plans' }), icon: CreditCard },
+        { id: 'technical', label: t('support.qa.categories.technical', { defaultValue: 'Technical Support' }), icon: Wrench },
+        { id: 'account', label: t('support.qa.categories.account', { defaultValue: 'Account Settings' }), icon: Settings },
+    ], [t]);
+
+    const filteredQA = useMemo(() => {
+        const query = searchQuery.trim().toLowerCase();
+        return FAQ_DATA.filter((item) => {
+            const { question, answer } = getLocalizedFaqText(item, i18n.language || 'en');
+            const matchesSearch =
+                !query ||
+                question.toLowerCase().includes(query) ||
+                answer.toLowerCase().includes(query) ||
+                // Always allow matching against the alternate language so bilingual search works
+                item.question.toLowerCase().includes(query) ||
+                item.answer.toLowerCase().includes(query) ||
+                Boolean(item.questionAr?.includes(searchQuery.trim())) ||
+                Boolean(item.answerAr?.includes(searchQuery.trim()));
+            const matchesCategory = activeCategory === 'All' || item.category === activeCategory;
+            return matchesSearch && matchesCategory;
+        });
+    }, [searchQuery, activeCategory, i18n.language]);
+
     const hasSearch = searchQuery.trim().length > 0;
     const hasTopicFilter = activeCategory !== 'All';
+    const questionsEntity = t('support.qa.entityQuestions', {
+        defaultValue: isArabic ? 'أسئلة' : 'questions',
+    });
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-[#0F172A] text-gray-900 dark:text-white font-sans" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
+        <div className="min-h-screen bg-gray-50 dark:bg-[#0F172A] text-gray-900 dark:text-white font-sans" dir={isRTL ? 'rtl' : 'ltr'}>
             <Helmet>
                 <title>{t('metadata.qa.title')}</title>
                 <meta name="description" content={t('metadata.qa.description')} />
@@ -54,7 +81,7 @@ export const QAPage = () => {
                         animate={{ opacity: 1, y: 0 }}
                         className="text-2xl sm:text-3xl font-semibold text-gray-900 dark:text-white mb-6 tracking-tight"
                     >
-                        {t('support.qa.title', 'How Can We Help You?')}
+                        {t('support.qa.title', { defaultValue: 'How Can We Help You?' })}
                     </motion.h1>
 
                     {/* Search Bar */}
@@ -66,22 +93,25 @@ export const QAPage = () => {
                     >
                         <input maxLength={255}
                             type="text"
-                            placeholder={formatInputPlaceholder(t('support.qa.search_placeholder', 'Search for answers...'), t('common.locale'))}
+                            placeholder={formatInputPlaceholder(
+                                t('support.qa.search_placeholder', { defaultValue: 'Search for answers...' }),
+                                t('common.locale'),
+                            )}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-12 pr-11 py-4 bg-gray-100 dark:bg-black/20 border-gray-200 dark:border-white/10 rounded-2xl text-sm font-medium text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none transition-all"
+                            className={`w-full ${isRTL ? 'pr-12 pl-11' : 'pl-12 pr-11'} py-4 bg-gray-100 dark:bg-black/20 border-gray-200 dark:border-white/10 rounded-2xl text-sm font-medium text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none transition-all`}
                         />
                         {searchQuery && (
                           <button
                             type="button"
                             onClick={() => setSearchQuery('')}
-                            aria-label={t('common.clearSearch', 'Clear search')}
-                            className="absolute right-2.5 top-1/2 -translate-y-1/2 inline-flex h-7 w-7 items-center justify-center rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
+                            aria-label={t('common.clearSearch', { defaultValue: 'Clear search' })}
+                            className={`absolute ${isRTL ? 'left-2.5' : 'right-2.5'} top-1/2 -translate-y-1/2 inline-flex h-7 w-7 items-center justify-center rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors`}
                           >
                             <X size={12} strokeWidth={2.75} />
                           </button>
                         )}
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                        <Search className={`absolute ${isRTL ? 'right-4' : 'left-4'} top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5`} />
                     </motion.div>
                 </div>
             </div>
@@ -92,7 +122,7 @@ export const QAPage = () => {
                     {/* Sidebar Topics */}
                     <div className="lg:col-span-1 space-y-1">
                         <p className="label-strong font-outfit mb-4 px-2 uppercase">
-                            {t('support.qa.topics', 'Help Topics')}
+                            {t('support.qa.topics', { defaultValue: 'Help Topics' })}
                         </p>
                         {categories.map((cat) => (
                             <button
@@ -107,12 +137,12 @@ export const QAPage = () => {
                                 {activeCategory === cat.id && (
                                   <motion.div 
                                     layoutId="active-indicator"
-                                    className={`absolute inset-y-0 ${t('common.locale') === 'ar' ? 'right-0' : 'left-0'} w-1 bg-mintcom-green rounded-full`}
+                                    className={`absolute inset-y-0 ${isRTL ? 'right-0' : 'left-0'} w-1 bg-mintcom-green rounded-full`}
                                   />
                                 )}
                                 <cat.icon size={18} className={activeCategory === cat.id ? 'text-mintcom-green' : 'text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white'} />
                                 {cat.label}
-                                {activeCategory === cat.id && <ChevronRight size={16} className={t('common.locale') === 'ar' ? 'mr-auto rotate-180' : 'ml-auto'} />}
+                                {activeCategory === cat.id && <ChevronRight size={16} className={isRTL ? 'mr-auto rotate-180' : 'ml-auto'} />}
                             </button>
                         ))}
                     </div>
@@ -128,7 +158,9 @@ export const QAPage = () => {
                                     exit={{ opacity: 0 }}
                                     className="space-y-4"
                                 >
-                                    {filteredQA.map((item) => (
+                                    {filteredQA.map((item) => {
+                                        const { question, answer } = getLocalizedFaqText(item, i18n.language || 'en');
+                                        return (
                                         <motion.div
                                             key={item.id}
                                             layout
@@ -136,11 +168,11 @@ export const QAPage = () => {
                                         >
                                             <button
                                                 onClick={() => setExpandedId(expandedId === item.id ? null : item.id)}
-                                                className="w-full flex items-start justify-between p-6 text-left"
+                                                className={`w-full flex items-start justify-between p-6 ${isRTL ? 'text-right' : 'text-left'}`}
                                             >
-                                                <div className="flex-1 pr-8">
+                                                <div className={`flex-1 ${isRTL ? 'pl-8' : 'pr-8'}`}>
                                                     <h3 className={`font-barlow text-base font-medium transition-colors ${expandedId === item.id ? 'text-mintcom-green' : 'text-gray-900 dark:text-white'}`}>
-                                                        {item.question}
+                                                        {question}
                                                     </h3>
                                                 </div>
                                                 <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
@@ -163,14 +195,15 @@ export const QAPage = () => {
                                                         <div className="px-6 pb-6 pt-0">
                                                             <div className="h-px w-full bg-gray-100 dark:bg-white/5 mb-4" />
                                                             <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-                                                                {item.answer}
+                                                                {answer}
                                                             </p>
                                                         </div>
                                                     </motion.div>
                                                 )}
                                             </AnimatePresence>
                                         </motion.div>
-                                    ))}
+                                        );
+                                    })}
                                 </motion.div>
                             ) : (
                                 <motion.div 
@@ -183,14 +216,18 @@ export const QAPage = () => {
                                         <Search className="w-8 h-8 text-gray-400" />
                                     </div>
                                     <h3 className="font-barlow text-base font-semibold text-gray-900 dark:text-white mb-2">
-                                        {hasTopicFilter && !hasSearch ? t('common.noFilteredResults') : t('support.qa.empty_title', 'No Results Found')}
+                                        {hasTopicFilter && !hasSearch ? t('common.noFilteredResults') : t('support.qa.empty_title', { defaultValue: 'No Results Found' })}
                                     </h3>
                                     <p className="text-xs font-medium text-gray-500">
                                         {hasSearch
-                                            ? t('common.noMatchingResults', { entity: 'questions', query: searchQuery.trim(), defaultValue: 'No {{entity}} matching "{{query}}"' })
+                                            ? t('common.noMatchingResults', {
+                                                entity: questionsEntity,
+                                                query: searchQuery.trim(),
+                                                defaultValue: 'No {{entity}} matching "{{query}}"',
+                                              })
                                             : hasTopicFilter
                                                 ? t('common.noFilteredResultsDesc')
-                                                : t('support.qa.empty_subtitle', 'Try adjusting your search or topic filter.')}
+                                                : t('support.qa.empty_subtitle', { defaultValue: 'Try adjusting your search or topic filter.' })}
                                     </p>
                                 </motion.div>
                             )}

@@ -13,6 +13,7 @@ import { LoginRequiredModal } from '../../components/LoginRequiredModal';
 import { useAuth } from '../../context/AuthContext';
 import { formatInputPlaceholder } from '../../utils/textCase';
 import { getArticleViews, getArticleViewsNumber, useSupportArticleMetrics } from '../../hooks/useSupportArticleMetrics';
+import { getLocalizedManual } from '../../utils/localizedDocs';
 
 /* ─── tiny helpers ─────────────────────────────────────────────────────── */
 const categoryAccent: Record<string, { border: string; glow: string; iconBg: string; dot: string }> = {
@@ -43,7 +44,8 @@ const categoryAccent: Record<string, { border: string; glow: string; iconBg: str
 };
 
 export const SupportPage = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const userManualDoc = getLocalizedManual('user', i18n.language);
   const navigate = useNavigate();
   const isRtl = t('common.locale') === 'ar';
   const [searchQuery, setSearchQuery] = useState('');
@@ -560,7 +562,7 @@ export const SupportPage = () => {
                     ))}
                   </div>
 
-                  <a href="/docs/mintcom-user-manual.pdf" download
+                  <a href={userManualDoc.path} download={userManualDoc.filename}
                     className="mt-6 flex w-full items-center justify-center gap-2.5 rounded-2xl bg-mintcom-green py-3.5 text-sm font-bold text-black shadow-[0_4px_20px_-4px_rgba(125,198,162,0.5)] transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_28px_-4px_rgba(125,198,162,0.65)]">
                     <Download size={16} />
                     {t('support.manual.downloadButton')}

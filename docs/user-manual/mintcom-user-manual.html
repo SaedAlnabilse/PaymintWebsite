@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Mintcom User Manual</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm 20mm 16mm; }
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; color: #1f2937; font-size: 10.5pt; line-height: 1.55; margin: 0; }
+  h1, h2, h3, h4 { color: #065f46; line-height: 1.25; }
+  h1.chapter { font-size: 20pt; border-bottom: 3px solid #10b981; padding-bottom: 6px; margin-top: 0; page-break-before: always; }
+  h2 { font-size: 14pt; margin-top: 22px; border-bottom: 1px solid #d1fae5; padding-bottom: 3px; }
+  h3 { font-size: 11.5pt; margin-top: 16px; color: #047857; }
+  h4 { font-size: 10.5pt; margin-top: 12px; color: #065f46; }
+  p { margin: 6px 0; }
+  ul, ol { margin: 6px 0 6px 0; padding-left: 22px; }
+  li { margin: 3px 0; }
+  table { border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 9.5pt; page-break-inside: avoid; }
+  th { background: #065f46; color: #fff; text-align: left; padding: 6px 8px; }
+  td { border: 1px solid #d1d5db; padding: 5px 8px; vertical-align: top; }
+  tr:nth-child(even) td { background: #f0fdf4; }
+  .tip, .warn, .note { border-radius: 6px; padding: 8px 12px; margin: 10px 0; font-size: 9.8pt; page-break-inside: avoid; }
+  .tip  { background: #ecfdf5; border-left: 4px solid #10b981; }
+  .warn { background: #fef2f2; border-left: 4px solid #ef4444; }
+  .note { background: #eff6ff; border-left: 4px solid #3b82f6; }
+  .tip b:first-child, .warn b:first-child, .note b:first-child { display: inline-block; margin-bottom: 2px; }
+  .path { background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 4px; padding: 1px 6px; font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 9pt; white-space: nowrap; }
+  .kbd { background:#065f46; color:#fff; border-radius:4px; padding:0 6px; font-size:9pt; }
+  .cover { text-align: center; padding-top: 150px; page-break-after: always; }
+  .cover .logo img { height: 56px; width: auto; }
+  .cover h1 { font-size: 26pt; border: none; margin: 10px 0 4px 0; }
+  .cover .tagline { color: #6b7280; font-size: 12pt; margin-bottom: 40px; }
+  .cover .meta { display: inline-block; text-align: left; background: #f0fdf4; border: 1px solid #a7f3d0; border-radius: 10px; padding: 16px 28px; font-size: 10.5pt; }
+  .toc { page-break-after: always; }
+  .toc h1 { font-size: 20pt; border-bottom: 3px solid #10b981; padding-bottom: 6px; }
+  .toc ol { list-style: none; padding: 0; counter-reset: toc; column-count: 1; }
+  .toc > ol > li { counter-increment: toc; font-weight: 600; margin: 7px 0; }
+  .toc > ol > li::before { content: counter(toc) ". "; color: #10b981; }
+  .toc .sub { font-weight: 400; color: #4b5563; font-size: 9.5pt; margin: 1px 0 1px 18px; }
+  .steps li { margin: 5px 0; }
+  .permtable td:first-child { font-family: Menlo, Consolas, monospace; font-size: 8.5pt; white-space: nowrap; }
+  .footer-note { color:#9ca3af; font-size:8.5pt; text-align:center; margin-top:30px; }
+  strong { color: #111827; }
+</style>
+</head>
+<body>
+
+<!-- ======================= COVER ======================= -->
+<div class="cover">
+  <div class="logo"><img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjE0NSA0NzAgODI1IDE1MCI+CiAgPGRlZnM+CiAgICA8c3R5bGU+CiAgICAgIC5jbHMtMSB7CiAgICAgICAgZmlsbDogI2FjZTJiZjsKICAgICAgfQoKICAgICAgLmNscy0yIHsKICAgICAgICBmaWxsOiAjN2RjNmEyOwogICAgICB9CgogICAgICAuY2xzLTMgewogICAgICAgIGZvbnQtZmFtaWx5OiBCYXJsb3ctUmVndWxhciwgQmFybG93OwogICAgICAgIGZvbnQtc2l6ZTogMzAuMTFweDsKICAgICAgfQogICAgPC9zdHlsZT4KICA8L2RlZnM+CiAgPGc+CiAgICA8Zz4KICAgICAgPHBhdGggY2xhc3M9ImNscy0yIiBkPSJtMjg5LjQsNTk5LjA2di04MC4zOGMwLTIuMjYsMS44My00LjA5LDQuMDktNC4wOWgxNi41NXYxMS43NWM3LjE5LTguODksMTUuODgtMTMuMzQsMjYuMDQtMTMuMzQsMTEsMCwxOC45NCw0LjQ1LDIzLjgyLDEzLjM0LDcuNDEtOC44OSwxNS45OC0xMy4zNCwyNS43Mi0xMy4zNCwxMi45MSwwLDIxLjM4LDQuODcsMjUuNCwxNC42MSwxLjQ4LDMuMTcsMi4yMiw5LDIuMjIsMTcuNDd2NTMuOTloLTIyLjIzdi00OC4yN2MwLTguNjgtLjc0LTE0LjA4LTIuMjItMTYuMi0yLjU0LTMuMTctNi4wMy00Ljc2LTEwLjQ4LTQuNzYtNy4yLDAtMTEuODYsMy43MS0xMy45NywxMS4xMi0xLjA2LDQuMjQtMS41OSwxMC4wNi0xLjU5LDE3LjQ3djQwLjY1aC0yMi41NXYtNTcuNDhjLS42NC01LjA4LTIuMjItOC4zNi00Ljc2LTkuODQtMS40OC0xLjI3LTMuNzEtMS45MS02LjY3LTEuOTEtNy42MiwwLTEyLjcsMy42LTE1LjI0LDEwLjgtMS4yNywzLjM5LTEuOSw5LjIxLTEuOSwxNy40N3Y0MC45N2gtMjIuMjNaIi8+CiAgICAgIDxwYXRoIGNsYXNzPSJjbHMtMiIgZD0ibTQ2MC43LDU5OS4wNnYtODQuNDdoMjAuNjR2MTIuN2M2Ljk5LTkuNTMsMTUuOTgtMTQuMjksMjYuOTktMTQuMjlzMTguODQsMy4wNywyMy41LDkuMjFjMy44MSw0LjY2LDUuNzIsMTIuODEsNS43MiwyNC40NXY1Mi40aC0yMi4yM3YtNDMuMTljMC03LjQxLS4xMS0xMS42NC0uMzItMTIuNy0uODUtNS4wOC0yLjc1LTguNzgtNS43Mi0xMS4xMi0yLjEyLTEuNDgtNC43Ni0yLjIyLTcuOTQtMi4yMi04LjQ3LDAtMTMuOTcsMy45Mi0xNi41MSwxMS43NS0xLjI3LDMuMzktMS45LDkuODUtMS45LDE5LjM3djM4LjExaC0yMi4yM1oiLz4KICAgICAgPHBhdGggY2xhc3M9ImNscy0yIiBkPSJtNTk2LjEzLDU5NS41NmMtNS43MSwyLjMzLTExLjY1LDMuNTEtMTcuNzksMy41MS04LjI1LDAtMTQuMTgtMi40NC0xNy43OS03LjMyLTEuNDctMi4xMS0yLjU0LTQuOTYtMy4xNy04LjU3LS42My0zLjE3LS44NC04LjQ3LS42My0xNS44OHYtMzYuODRoLTEwLjQ5di0xNy43OWgxMC40OXYtMTYuOGgyMi4yM3YxNi44aDE1LjI1djE3Ljc5aC0xNS4yNXY0MS45MmMuNDMsMy44MywxLjI3LDYuMTQsMi41NCw3LC44NC44NCwyLjExLDEuMjcsMy44MSwxLjI3LDIuMTMsMCw1LjA5LS43NSw4LjktMi4yMmwxLjksMTcuMTNaIi8+CiAgICAgIDxwYXRoIGNsYXNzPSJjbHMtMiIgZD0ibTcxNS4xNiw1OTMuOThjLTE0LjQtNy42Mi0yMS41OS0yMC45Ni0yMS41OS00MC4wMSwwLTcuODMsMS44LTE1LjEzLDUuNC0yMS45MSwzLjgxLTYuNzcsOS0xMS45NiwxNS41Ni0xNS41Niw2LjU2LTMuNiwxNC4wOC01LjQsMjIuNTUtNS40LDEyLjcsMCwyMy4xMyw0LjA4LDMxLjI4LDEyLjIzLDguMTUsOC4xNSwxMi4yMywxOC41OCwxMi4yMywzMS4yOHMtNC4wMiwyMy4yOS0xMi4wNywzMS43NmMtOC4yNiw4LjQ3LTE4Ljc0LDEyLjctMzEuNDQsMTIuNy04LjA1LDAtMTUuMzUtMS42OS0yMS45MS01LjA4Wm0zNy43OS0yMS4yOGMzLjE3LTQuODcsNC43Ni0xMC44LDQuNzYtMTcuNzhzLTEuNTktMTMuMTItNC43Ni0xNy43OGMtMy44MS01LjI5LTkuMTEtNy45NC0xNS44OC03Ljk0cy0xMi4wNywyLjY1LTE1Ljg4LDcuOTRjLTMuMTgsNC42Ni00Ljc2LDEwLjU5LTQuNzYsMTcuNzhzMS41OSwxMi45Miw0Ljc2LDE3Ljc4YzMuODEsNS41MSw5LjEsOC4yNiwxNS44OCw4LjI2czEyLjA3LTIuNzUsMTUuODgtOC4yNloiLz4KICAgICAgPHBhdGggY2xhc3M9ImNscy0yIiBkPSJtNzkwLjExLDU5OS4wNnYtODAuMzhjMC0yLjI2LDEuODMtNC4wOSw0LjA5LTQuMDloMTYuNTV2MTEuNzVjNy4xOS04Ljg5LDE1Ljg4LTEzLjM0LDI2LjA0LTEzLjM0LDExLDAsMTguOTQsNC40NSwyMy44MiwxMy4zNCw3LjQxLTguODksMTUuOTgtMTMuMzQsMjUuNzItMTMuMzQsMTIuOTEsMCwyMS4zOCw0Ljg3LDI1LjQsMTQuNjEsMS40OCwzLjE3LDIuMjIsOSwyLjIyLDE3LjQ3djQ5Ljg5YzAsMi4yNi0xLjgzLDQuMDktNC4wOSw0LjA5aC0xOC4xNHYtNDguMjdjMC04LjY4LS43NC0xNC4wOC0yLjIyLTE2LjItMi41NC0zLjE3LTYuMDMtNC43Ni0xMC40OC00Ljc2LTcuMiwwLTExLjg2LDMuNzEtMTMuOTcsMTEuMTItMS4wNiw0LjI0LTEuNTksMTAuMDYtMS41OSwxNy40N3Y0MC42NWgtMjIuNTV2LTU3LjQ4Yy0uNjQtNS4wOC0yLjIyLTguMzYtNC43Ni05Ljg0LTEuNDgtMS4yNy0zLjcxLTEuOTEtNi42Ny0xLjkxLTcuNjIsMC0xMi43LDMuNi0xNS4yNCwxMC44LTEuMjcsMy4zOS0xLjksOS4yMS0xLjksMTcuNDd2NDAuOTdoLTIyLjIzWiIvPgogICAgICA8cGF0aCBjbGFzcz0iY2xzLTIiIGQ9Im02NDUuMDgsNTk5LjA2Yy03LjE5LDAtMTMuMzktMS4yLTE4LjU4LTMuNi01LjItMi40LTkuNTQtNS41OS0xMy4wNC05LjU5LTMuNS00LTYuMTItOC41Mi03Ljg3LTEzLjU2LTEuNzUtNS4wNC0yLjYyLTEwLjI3LTIuNjItMTUuNjZ2LTIuODVjMC01LjU5LjktMTAuOTYsMi43LTE2LjExLDEuOC01LjE0LDQuNDctOS43Miw4LjAyLTEzLjcxLDMuNTUtNCw3Ljk0LTcuMTQsMTMuMTktOS40NCw1LjI0LTIuMywxMS4yNi0zLjQ1LDE4LjA2LTMuNDUsNy4zOSwwLDEzLjk0LDEuNDIsMTkuNjMsNC4yNyw1LjY5LDIuODUsMTAuMjQsNi44MiwxMy42NCwxMS45MSwyLjU0LDMuODIsNC4yNSw4LjA4LDUuMTEsMTIuNzkuNDYsMi41NC0xLjQ1LDQuODktNC4wMyw0Ljg5aC0xNS41NmMtMS43OCwwLTMuNDEtMS4xNC0zLjktMi44NS0uNzItMi41Ni0yLjA0LTQuNzgtMy45NS02LjY2LTIuNi0yLjU1LTYuMjUtMy44Mi0xMC45NC0zLjgyLTQsMC03LjMyLDEtOS45NywzLTIuNjUsMi00LjYyLDQuNzctNS45Miw4LjMyLTEuMywzLjU1LTEuOTUsNy42Ny0xLjk1LDEyLjM2LDAsNC40LjYsOC4zNywxLjgsMTEuOTEsMS4yLDMuNTUsMy4xMiw2LjMsNS43Nyw4LjI0LDIuNjUsMS45NSw2LjEyLDIuOTIsMTAuNDIsMi45MiwzLjIsMCw1LjkyLS41Nyw4LjE3LTEuNzIsMi4yNS0xLjE1LDQuMDItMi43NSw1LjMyLTQuNzkuNzktMS4yNCwxLjQxLTIuNiwxLjg3LTQuMDguNTUtMS43NywyLjEtMy4wNCwzLjk1LTMuMDRoMTUuNTdjMi41NiwwLDQuNDYsMi4zMyw0LjAzLDQuODUtLjgyLDQuODItMi41NSw5LjE3LTUuMTksMTMuMDYtMy41LDUuMTUtOC4xNCw5LjE3LTEzLjk0LDEyLjA2LTUuOCwyLjktMTIuMzksNC4zNC0xOS43OCw0LjM0WiIvPgogICAgICA8Zz4KICAgICAgICA8cmVjdCBjbGFzcz0iY2xzLTIiIHg9IjQyNS43IiB5PSI1MTQuNTkiIHdpZHRoPSIyMi41NSIgaGVpZ2h0PSI4NC40NyIgcng9IjQuMDkiIHJ5PSI0LjA5Ii8+CiAgICAgICAgPGNpcmNsZSBjbGFzcz0iY2xzLTIiIGN4PSI0MzYuOTciIGN5PSI0OTIuMiIgcj0iMTEuMjciLz4KICAgICAgPC9nPgogICAgICA8Zz4KICAgICAgICA8cGF0aCBjbGFzcz0iY2xzLTIiIGQ9Im0xNzYuMTEsNTg1Ljc3Yy0yLjUtMy41Ny01LjU5LTkuMTktNy4xNC0xMy45OC00Ljg2LTE1LjAzLTYuMi0zOC44OSwxNi41Mi01Ni45NCw5LjY0LTcuNjYsMjEuNjMtMTIuMTgsMzMuOC0xNC4yLDE2LjgzLTIuOCwzNC4zNC0uNzMsNTAuODUtNC43OS0yLjA3LDQuNjQtMi41MSw5LjY1LTIuMTcsMTQuMzMuNDIsNS43OSwxLjkyLDExLjI5LDIuNSwxNy4wNCwxLjczLDE3LjE4LTUuMjksMzYuMzUtMTguNjksNTEuMDUtNy43OSw4LjU1LTE3LjgyLDE1LjY4LTI4LjgsMTkuMTYtMTAuMjcsMy4yNi0yOS42OSwyLjE2LTQzLjkxLTguNSIvPgogICAgICAgIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0ibTIyMi42OSw1NDIuNWMtNS4wMSw1LjgzLTEwLjI0LDExLjY2LTE1LjI3LDE3LjA5LS41OS42My0uMzUsMS41OC40NiwxLjgsMTUuNiw0LjI0LDMwLjg5LS4xNSwzOC45Ni00Ljk2LTEyLjAzLDkuMzYtMjkuMTksMTIuNDctNDIuNzksNy44OS0uNDctLjE2LTEuMDMtLjAyLTEuMzguMzYtMy45Myw0LjE3LTcuNjEsOC0xMC44MywxMS4yOC0uNTkuNi0uNDEsMS41My4zNiwxLjgsMTQuOTksNS4yNSwzMC4zLDEuNTcsMzguNC0yLjg0LTExLjQxLDguMTgtMjkuMDcsOS41Ny00MS44NSw1LjIxLS40Ni0uMTYtMS0uMDItMS4zNi4zMy0yLjIxLDIuMi00LjAxLDMuOTYtNS4yOCw1LjE3LDAsMC02LjMyLDYuMjQtMTAuMjMsMTEuNjItLjQ1LjYyLTEuMzYuNzgtMS44OS4zLTEuMDctLjk1LTIuMDctMS45Ni0yLjk5LTMuMDMtLjQxLS40OC0uMjQtMS4yMi4zNy0xLjYxLDMuMS0xLjk2LDExLjk0LTkuNjMsMTEuOTQtOS42MywyLjItMi4wMyw0LjM5LTQuMDcsNi41Ny02LjE0LjQyLS40LjUtLjk4LjItMS40Mi03LjM2LTEwLjk4LTcuMTItMjYuMTIuNzYtMzcuNzctMy43NCw3LjY4LTUuNjksMjEuNiwxLjkyLDM0LjQ0LjM4LjY0LDEuMzYuNywxLjk0LjE0LDQuMTUtNC4wMSw4LjI3LTguMDksMTIuMzQtMTIuMjIuMzYtLjM2LjQ0LS44Ny4yMy0xLjI5LTUuNTYtMTAuODctMy42Ni0yNS4xOSw0Ljg4LTM1Ljc2LTQuMiw2Ljg5LTcuNDgsMTkuNTUtMi40LDMxLjkzLjMxLjc2LDEuNDIuODcsMi4wNS4yMyw1LjE0LTUuMzIsMTAuMTktMTAuNzMsMTUuMTQtMTYuMTguMzYtLjM5LjQxLS45My4xNC0xLjM0LTUuMDQtNy43NS00Ljc5LTE4LjUxLjc2LTI3LTIuNTksNS40Ni0zLjk4LDE1LjEzLjksMjQuMDIuMzguNjksMS40NS43MiwyLjAyLjA4LDUuNzEtNi40MSwxMS4yNy0xMi44OCwxNi42NS0xOS4zOC00LjIsNi42LTEwLjE4LDE0LjM1LTE2LjgxLDIyLjI4LS41Ny42OC0uMjUsMS42NS42MSwxLjc4LDEyLjM1LDEuOTcsMjMuNjktMi40NywyOS40NS02LjY5LTguNTMsOC4wNS0yMS42OCwxMS42Ny0zMi42NSw5LjA4LS40Ny0uMTEtLjk4LjA1LTEuMzEuNDJaIi8+CiAgICAgIDwvZz4KICAgIDwvZz4KICAgIDxwYXRoIGNsYXNzPSJjbHMtMiIgZD0ibTk0NS4zMSw1MDcuNDJ2MTMuNDFoLTEuMzZ2LTEwLjcxbC00Ljc4LDEwLjcxaC0uOTlsLTQuNzgtMTAuNjd2MTAuNjdoLTEuMzZ2LTEzLjQxaDEuNDRsNS4xOSwxMS42Miw1LjE5LTExLjYyaDEuNDZabS0xNS40Mi0uMTd2MS4xM2gtMy43N3YxMi40NmgtMS4zNnYtMTIuNDZoLTMuNzl2LTEuMTNoOC45MloiLz4KICA8L2c+CiAgCjwvc3ZnPg==" alt="Mintcom"></div>
+  <div class="tagline">Easy to Pay, Easy to Grow.</div>
+  <h1>User Manual</h1>
+  <p class="tagline">The complete guide to running your business on Mintcom</p>
+  <div class="meta">
+    <b>Version:</b> 9.0<br>
+    <b>Last updated:</b> July 11, 2026<br>
+    <b>Applies to:</b> Mintcom Web Dashboard, Mintcom POS app, Mintcom Back&nbsp;Office app<br>
+    <b>Audience:</b> Account owners, brand admins, managers, supervisors, cashiers
+  </div>
+</div>
+
+<!-- ======================= TOC ======================= -->
+<div class="toc">
+<h1>Table of Contents</h1>
+<ol>
+  <li>Welcome to Mintcom
+    <div class="sub">What Mintcom is &middot; What you can do with it &middot; Languages &amp; themes</div></li>
+  <li>The Mintcom Ecosystem: Apps, Portals &amp; Logins
+    <div class="sub">The four surfaces &middot; The four kinds of logins &middot; Which login goes where</div></li>
+  <li>Getting Started: Your Account &amp; First Location
+    <div class="sub">Sign-up &amp; email verification &middot; The 5-step onboarding wizard &middot; Copy settings from another location</div></li>
+  <li>Subscriptions &amp; Billing
+    <div class="sub">Pricing &amp; the 30-day trial &middot; Cards &amp; invoices &middot; Cancel, resume, reactivate &middot; What happens when access ends</div></li>
+  <li>Building Your Menu: Categories, Products &amp; Add-ons
+    <div class="sub">Categories &amp; CSV import &middot; Products, stock alerts &amp; AI images &middot; Add-on groups &amp; options &middot; Archive vs. delete</div></li>
+  <li>Recipe Operations: Ingredients, Recipes &amp; Stock
+    <div class="sub">Raw materials &middot; Preparation recipes &amp; batches &middot; Product recipes &middot; Stock Management on the POS</div></li>
+  <li>The POS App: Daily Sales
+    <div class="sub">Connecting &amp; signing in &middot; Building an order &middot; Add-ons, notes &amp; quantities &middot; Discounts &amp; tax at the POS &middot; Hold orders &amp; tables</div></li>
+  <li>Shifts &amp; Cash Control
+    <div class="sub">Opening &amp; closing a shift &middot; Cash discrepancy &middot; PAY-IN / PAY-OUT &middot; Auto cash-out rules &middot; The lock screen</div></li>
+  <li>Payments, Receipts &amp; Refunds
+    <div class="sub">Cash, card types &amp; other methods &middot; Split payments &middot; Printing &amp; emailing receipts &middot; Full &amp; partial refunds</div></li>
+  <li>Customers, Loyalty &amp; Discounts
+    <div class="sub">Customer database &middot; Earning rules &amp; rewards &middot; The digital loyalty card, QR &amp; Google/Apple Wallet &middot; Discounts</div></li>
+  <li>Staff, Roles &amp; Permissions
+    <div class="sub">Adding employees &middot; Custom roles &middot; The full permission reference &middot; Default role templates</div></li>
+  <li>Reports, Orders &amp; Activity Logs
+    <div class="sub">All ten report areas explained &middot; The Orders page &middot; Exports &middot; The activity log</div></li>
+  <li>Location Settings &amp; E-Invoicing
+    <div class="sub">Profile &middot; Tax, currency &amp; service charge &middot; Receipt design &middot; E-Invoicing &amp; tax compliance &middot; Deleting a location</div></li>
+  <li>The Owner Portal, Brands &amp; the Back Office App
+    <div class="sub">Enterprise overview &middot; Locations &middot; Brands &amp; the brand portal &middot; Employees &amp; global roles &middot; The mobile Back Office app</div></li>
+  <li>Offline Mode, Sync &amp; Sessions
+    <div class="sub">What works offline &middot; Syncing pending orders &middot; Session &amp; auto-logout rules</div></li>
+  <li>Hardware &amp; Printers
+    <div class="sub">Devices &middot; Adding Bluetooth &amp; network printers &middot; Cash drawer &middot; Printing options</div></li>
+  <li>Security &amp; Data Protection
+    <div class="sub">Passwords &amp; the Master Access Key &middot; Archive vs. delete philosophy &middot; Grace periods &amp; data exports &middot; Customer anonymization</div></li>
+  <li>Troubleshooting &amp; FAQ</li>
+  <li>Launch Checklist</li>
+  <li>Support &amp; Resources</li>
+</ol>
+</div>
+
+<!-- ======================= CH 1 ======================= -->
+<h1 class="chapter">1. Welcome to Mintcom</h1>
+<p>Mintcom is a cloud point-of-sale and business management platform for restaurants, cafes, bakeries, retail stores, kiosks, and multi-location operators. It runs on ordinary tablets and phones — no proprietary hardware — and keeps every location, employee, product, and sale connected to one account in real time.</p>
+
+<h2>What you can do with Mintcom</h2>
+<ul>
+  <li><b>Sell</b> — a fast POS app with categories, add-ons, item notes, discounts, split payments, hold orders, and receipt printing.</li>
+  <li><b>Control cash</b> — shifts with opening/closing balances, automatic discrepancy calculation, PAY-IN/PAY-OUT logging, and auto cash-out protection.</li>
+  <li><b>Manage the menu</b> — categories, products with images and stock alerts, add-on groups, and CSV bulk import.</li>
+  <li><b>Track ingredients</b> — raw materials, preparation recipes, and product recipes that deduct stock automatically with every sale.</li>
+  <li><b>Grow repeat business</b> — a customer database and a loyalty program with points, rewards, and a digital loyalty card customers can add to Google Wallet or Apple Wallet.</li>
+  <li><b>Run your team</b> — employees, granular permissions, custom roles, and a complete activity log of every sensitive action.</li>
+  <li><b>Understand performance</b> — ten report areas covering sales, items, add-ons, staff, shifts, cash gaps, busy times, payments, discounts, and taxes.</li>
+  <li><b>Stay compliant</b> — built-in E-Invoicing &amp; Tax Compliance that reports sales to your country's tax authority and prints a verification QR code on receipts.</li>
+  <li><b>Scale</b> — add locations in minutes, group them into brands, and monitor everything from the Owner Portal or the mobile Back Office app.</li>
+</ul>
+
+<h2>Languages, themes &amp; accessibility</h2>
+<ul>
+  <li>The web dashboard and both mobile apps are available in <b>English and Arabic</b>, with full right-to-left layout in Arabic. The POS app restarts automatically when you change its language so the layout is applied correctly.</li>
+  <li>Light and dark modes are available everywhere. The POS also offers color themes (Blue, Green, Yellow) plus sound and vibration feedback toggles.</li>
+</ul>
+
+<div class="tip"><b>Tip:</b> Keep this manual with your opening documents. Chapter 19 is a printable launch checklist you can run through before your first live day.</div>
+
+<!-- ======================= CH 2 ======================= -->
+<h1 class="chapter">2. The Mintcom Ecosystem: Apps, Portals &amp; Logins</h1>
+<p>Mintcom is organized into a few clearly separated surfaces. Understanding them — and which login opens which — is the single most useful thing to learn first.</p>
+
+<h2>2.1 The four surfaces</h2>
+<table>
+  <tr><th>Surface</th><th>Where</th><th>Who uses it</th><th>What it is for</th></tr>
+  <tr><td><b>Website &amp; Location Dashboard</b></td><td>mintcompos.com in any modern browser</td><td>Owners, managers, back-office staff</td><td>Sign-up, onboarding, and the per-location back office: menu, staff, customers, loyalty, reports, settings.</td></tr>
+  <tr><td><b>Owner Portal</b></td><td>mintcompos.com &rsaquo; Owner Portal</td><td>The account owner and owner-level employees</td><td>Account-level control: all locations, brands, employees, global roles, billing, account management.</td></tr>
+  <tr><td><b>Mintcom POS app</b></td><td>Android / iOS tablet or phone</td><td>Cashiers, supervisors, managers</td><td>Checkout, shifts, cash management, held orders, refunds, on-device reports, printers, offline sales.</td></tr>
+  <tr><td><b>Mintcom Back Office app</b></td><td>Android / iOS phone</td><td>Owners and managers on the go</td><td>The full dashboard + Owner Portal + Brand Portal in a mobile app, with push notifications.</td></tr>
+</table>
+<div class="note"><b>Note:</b> The <b>Brand Portal</b> is a fifth view that appears once you group two or more locations into a brand — see Chapter 14.</div>
+
+<h2>2.2 The four kinds of logins</h2>
+<table>
+  <tr><th>Login</th><th>Format</th><th>Opens</th><th>Created in</th></tr>
+  <tr><td><b>Owner account</b></td><td>Email + password</td><td>Website, Owner Portal, Back Office app</td><td>Sign-up. One universal owner login also works on every location's POS.</td></tr>
+  <tr><td><b>Location Login ID</b></td><td>Location ID + location password</td><td>Connects a POS device to one location; also signs in to that Location Dashboard</td><td>Onboarding step 3. Each location has its own unique ID (min. 4 characters).</td></tr>
+  <tr><td><b>Employee login</b></td><td>Username + password (or PIN at the POS)</td><td>The POS (after the device is connected) and, if the role allows, the back office</td><td>Location Dashboard &rsaquo; Staff, or Owner Portal &rsaquo; Employees.</td></tr>
+  <tr><td><b>Brand Login ID</b></td><td>Brand ID + brand password</td><td>The Brand Portal dashboard</td><td>When you create a brand. Must be unique across all locations and brands.</td></tr>
+</table>
+
+<div class="tip"><b>How a POS device gets ready:</b> first the device is <i>connected to the store</i> with the Location Login ID and password. After that, each staff member signs in and out with their own username — the device stays connected. A "Previous User" shortcut lets the last cashier sign back in quickly.</div>
+
+<div class="warn"><b>Security rule:</b> never share the owner email/password or the Location ID password with day-to-day staff. Cashiers only ever need their personal username and password/PIN.</div>
+
+<!-- ======================= CH 3 ======================= -->
+<h1 class="chapter">3. Getting Started: Your Account &amp; First Location</h1>
+
+<h2>3.1 Create and verify your account</h2>
+<ol class="steps">
+  <li>Go to <span class="path">mintcompos.com &rsaquo; Sign Up</span> and register with your email (Google and Apple sign-in are also supported).</li>
+  <li>Open the verification email and confirm your address. You cannot finish onboarding without a verified email.</li>
+  <li>Sign in. If it is a brand-new account, you are taken straight to the onboarding wizard.</li>
+</ol>
+
+<h2>3.2 The 5-step onboarding wizard</h2>
+<p>Onboarding creates your first location. (To add further locations later, use <span class="path">Owner Portal &rsaquo; Locations &rsaquo; Add Location</span> — the same wizard, with a discounted price.)</p>
+
+<h3>Step 1 — Location details</h3>
+<ul>
+  <li><b>Location name</b> — the business name shown on receipts and reports (e.g. "The Coffee House").</li>
+  <li><b>Business type</b> — Restaurant, Cafe, Retail Store, Bakery, or Other.</li>
+  <li><b>Country and address</b>.</li>
+  <li><b>Currency</b> — choose from USD, EUR, GBP, AED, SAR, JOD, KWD, BHD, OMR, QAR, EGP, TRY. The account currency can later be changed from Account Management, and it applies to all locations in the account.</li>
+  <li><b>Quick Setup (from the second location onward)</b> — copy data from an existing location instead of starting fresh: products/categories/add-ons, discounts, and payment methods (card types + custom methods). Or choose "Do not import (Start fresh)".</li>
+</ul>
+
+<h3>Step 2 — Subscription &amp; free trial</h3>
+<ul>
+  <li>New accounts start with a <b>30-day free trial</b> — you are not charged today, and you can cancel anytime before the trial ends.</li>
+  <li>Pick the billing cycle you will pay after the trial: <b>Monthly</b> or <b>Yearly</b> (see Chapter 4 for exact prices).</li>
+  <li>Enter a payment card, or pick a saved card if the account already has one.</li>
+</ul>
+
+<h3>Step 3 — Create the Location Login</h3>
+<ul>
+  <li><b>Location ID</b> — at least 4 characters; letters, numbers, underscores, and hyphens only. It must be unique. This is what you type into the POS app to connect the device.</li>
+  <li><b>Location password</b> — at least 8 characters with an uppercase letter, a lowercase letter, and a number.</li>
+</ul>
+
+<h3>Step 4 — Create the universal Owner Login</h3>
+<ul>
+  <li>Set your owner username, first/last name, and a personal password. This one login manages POS and Back Office access for <b>every</b> location in your account.</li>
+  <li>If you already created it (when adding a second location), the fields appear locked — edit them from Employees or Account Settings instead.</li>
+</ul>
+
+<h3>Step 5 — Welcome &amp; downloads</h3>
+<ul>
+  <li>Your Location ID and settings are summarized on screen.</li>
+  <li>Download links for the <b>POS App</b> (App Store / Play Store) and the <b>Owner App</b> (Back Office) are shown here.</li>
+  <li>Resources are linked: User Manual, Setup Manual (hardware), Video Guide, Q&amp;A Center — and <b>Minto</b>, the built-in 24/7 AI assistant.</li>
+  <li>Click <b>Open Owner Portal</b> to start configuring.</li>
+</ol>
+
+<h2>3.3 Recommended first-day order of work</h2>
+<ol class="steps">
+  <li>Set the tax rate, currency check, and (if used) the service charge — <span class="path">Dashboard &rsaquo; Settings &rsaquo; Sales Setup</span> (Chapter 13).</li>
+  <li>Create categories, then products, then add-ons (Chapter 5).</li>
+  <li>Configure payment methods: card types and any wallets/delivery apps you accept (Chapter 9).</li>
+  <li>Add staff and assign roles (Chapter 11).</li>
+  <li>Set the receipt design and printer(s) (Chapters 13 and 16).</li>
+  <li>Run one full test: open a shift, make a sale, print the receipt, refund it, close the shift, and check the reports (Chapter 19 checklist).</li>
+</ol>
+
+<!-- ======================= CH 4 ======================= -->
+<h1 class="chapter">4. Subscriptions &amp; Billing</h1>
+<p>Subscription billing pays for Mintcom itself and is completely separate from the payment methods your cashiers use at checkout (those are in Chapter 9). Manage everything from <span class="path">Owner Portal &rsaquo; Billing</span>. The <b>Manage Billing</b> permission is required.</p>
+
+<h2>4.1 Pricing</h2>
+<table>
+  <tr><th>Plan</th><th>Monthly</th><th>Yearly</th></tr>
+  <tr><td>First location</td><td>20 USD / month</td><td>210 USD / year</td></tr>
+  <tr><td>Each additional location</td><td>17 USD / month</td><td>180 USD / year</td></tr>
+</table>
+<ul>
+  <li>Every location is billed separately, on its own cycle, and can use its own card.</li>
+  <li>The <b>30-day free trial</b> applies to a new account's first location and can be used once per account.</li>
+</ul>
+
+<h2>4.2 The Billing page</h2>
+<ul>
+  <li><b>Plans</b> — every location with its plan (Monthly/Yearly), status, cost, and next bill date. Actions per location: Subscribe, Upgrade, Cancel, Resume, Reactivate, Stop Trial, and change the card used.</li>
+  <li><b>Cards</b> — saved payment cards. Add a card, set the default (Primary), or delete one. Mintcom stores only the cardholder name, brand, last 4 digits, and expiry.</li>
+  <li><b>Invoices</b> — the billing history with status Paid, Pending, or Failed.</li>
+</ul>
+
+<h2>4.3 Subscription statuses</h2>
+<table>
+  <tr><th>Status</th><th>Meaning</th></tr>
+  <tr><td>Trial</td><td>Free trial running. Banners in the POS and dashboard count down as it nears the end.</td></tr>
+  <tr><td>Active</td><td>Paid and running normally.</td></tr>
+  <tr><td>Cancels soon</td><td>You canceled; access continues until the end of the paid period, then the location locks.</td></tr>
+  <tr><td>Canceled / Expired</td><td>Access is locked. Data is kept for 30 days so you can reactivate; after that it is scheduled for deletion.</td></tr>
+  <tr><td>Past due / Suspended</td><td>A renewal charge failed or the trial ended without a subscription. Update the card and subscribe to restore access.</td></tr>
+</table>
+
+<h2>4.4 Cancel, resume, reactivate, stop trial</h2>
+<ul>
+  <li><b>Cancel</b> — you keep full access until the end of the paid period. After that the location is locked and its data is deleted 30 days later unless you come back.</li>
+  <li><b>Resume</b> — undo a cancellation before the period ends; no immediate charge.</li>
+  <li><b>Reactivate</b> — restart a locked location; your default card is charged for a new billing cycle.</li>
+  <li><b>Stop Trial</b> — ends the trial immediately and revokes access (useful for test locations).</li>
+</ul>
+<div class="warn"><b>Important:</b> when a trial or subscription expires, all POS users at that location are automatically logged out. The POS shows a "Subscription required" screen with a Subscribe button until billing is restored. Your data is preserved for 30 days.</div>
+<div class="note"><b>Security verification:</b> high-impact billing actions (cancel, reactivate, delete card, stop trial) ask you to confirm your <b>Master Access Key</b> — your primary account password. See Chapter 17.</div>
+
+<!-- ======================= CH 5 ======================= -->
+<h1 class="chapter">5. Building Your Menu: Categories, Products &amp; Add-ons</h1>
+<p>Your menu has three layers: <b>Categories</b> group products for fast checkout; <b>Products</b> are the sellable items; <b>Add-ons</b> (attribute groups) are the options a cashier can pick when selling an item. All three are managed from the Location Dashboard, the Back Office app, or directly on the POS (Settings &rsaquo; Product Management / Categories / Attributes). The <b>Manage Inventory</b> permission is required to make changes.</p>
+
+<h2>5.1 Categories</h2>
+<ul>
+  <li>Each category has a <b>name</b> and an <b>icon</b>, and appears as a tile in the POS menu.</li>
+  <li><b>CSV import</b> — import up to <b>200 categories</b> at once. Only a <i>Name</i> column is required; Mintcom flags duplicates and suggests icons from words like coffee, drink, cake, pizza, burger, fish, salad, retail, combo, gift, featured.</li>
+  <li><b>Status</b> — categories are Active or Inactive; filter the list by either.</li>
+  <li>A category that still contains active products cannot be archived — move or archive the products first. Products cannot be created before at least one category exists.</li>
+</ul>
+<div class="tip"><b>Naming tips:</b> keep names short and operational (Hot Drinks, Bakery, Meals, Desserts, Combos), consistent across locations, and organized around how staff search during checkout — not around accounting.</div>
+
+<h2>5.2 Products</h2>
+<p>Create products from <span class="path">Dashboard &rsaquo; Products</span>. Each product can have:</p>
+<table>
+  <tr><th>Field</th><th>Details</th></tr>
+  <tr><td>Name &amp; description</td><td>The name appears on the POS tile and the receipt.</td></tr>
+  <tr><td>Price</td><td>The retail price customers pay (must be greater than 0).</td></tr>
+  <tr><td>Cost</td><td>What the item costs you. Powers the Profit figures in reports; visible only to staff with the <b>View Cost</b> permission.</td></tr>
+  <tr><td>Category</td><td>Required — every product belongs to one category.</td></tr>
+  <tr><td>Image</td><td>Upload your own, or use <b>Generate Image</b>: Mintcom creates a product photo from the name automatically (a designed fallback image is used if no photo is found). Image generation has a monthly quota shown in the form; it resets each month.</td></tr>
+  <tr><td>Add-ons</td><td>Attach any add-on groups that should appear when this item is sold.</td></tr>
+  <tr><td>Track Inventory</td><td>Toggle stock control for physical goods (below).</td></tr>
+</table>
+
+<h3>Stock control on a product</h3>
+<ul>
+  <li><b>Quantity</b> — current stock; it decreases automatically with each sale.</li>
+  <li><b>Yellow Alert (low)</b> and <b>Red Alert (critical)</b> — threshold levels. When stock reaches them, the product is flagged in the Products list and the POS raises Low Stock / Critical Stock notifications. Red must be lower than Yellow.</li>
+  <li><b>Allow Overselling</b> — keep selling even when stock reaches zero (the count goes negative). Useful when you restock in bulk later.</li>
+  <li>Out-of-stock, low, and critical counts are summarized in the stat cards at the top of the Products page.</li>
+</ul>
+
+<h3>Bulk import &amp; export</h3>
+<ul>
+  <li><b>Import CSV</b> — bulk-create products; categories named in the file that don't exist yet are created automatically.</li>
+  <li><b>Export</b> — download the product list for external analysis (requires the <b>Export Data</b> permission).</li>
+</ul>
+
+<h3>Change history</h3>
+<p>Every change to a product's name, price, cost, category, or image is recorded with who changed it and when. In the reports you can open an item's <b>Change History / Price Audit Trail</b> to explain why revenue for an item shifted over time.</p>
+
+<h2>5.3 Add-ons (attribute groups)</h2>
+<p>Add-ons let cashiers customize items — sizes, milk types, toppings, spice level, cooking preference. Manage them from <span class="path">Dashboard &rsaquo; Add-ons</span> (called <i>Attributes</i> on the POS).</p>
+<ul>
+  <li><b>Group</b> — a named set of options (e.g. "Size"). Two settings per group:
+    <ul>
+      <li><b>Single Select</b> (customer picks exactly one) or <b>Multi Select</b> (any number).</li>
+      <li><b>Required</b> — the cashier must choose an option before adding the item to the order.</li>
+    </ul></li>
+  <li><b>Options</b> — the choices inside the group (e.g. Small, Large, Double espresso). Each option can be <b>free (complimentary)</b> or carry a <b>price</b> that is added to the item.</li>
+  <li><b>Available</b> — untick an option to hide it temporarily (e.g. out of stock) without deleting it; re-tick anytime. The POS Stock Management screen has a quick Add-on Availability tab for the same purpose.</li>
+  <li>Attach groups to products in the product form. The same group can serve many products.</li>
+  <li>Paid add-on revenue is tracked separately — see the "Sales by Add-ons" report.</li>
+</ul>
+
+<h2>5.4 Archive vs. delete (applies to categories, products, add-ons, discounts, payment methods)</h2>
+<p>Mintcom protects your history. The delete button behaves in one of two ways:</p>
+<table>
+  <tr><th>Case</th><th>What happens</th></tr>
+  <tr><td>The record was <b>never used in a sale</b></td><td>It is <b>permanently deleted</b>.</td></tr>
+  <tr><td>The record <b>appears in past orders</b></td><td>It is <b>archived / deactivated</b>: hidden from new sales, but historical receipts and reports keep the original snapshot (name, price, options) forever.</td></tr>
+</table>
+<ul>
+  <li>Archived products, add-on groups, options, discounts, card types, and payment methods can be <b>reactivated</b> later. A product can only be reactivated into an <i>active</i> category.</li>
+  <li>Deleted/archived items appear in reports with a <b>[Deleted]</b> badge so old data always stays readable.</li>
+</ul>
+
+<!-- ======================= CH 6 ======================= -->
+<h1 class="chapter">6. Recipe Operations: Ingredients, Recipes &amp; Stock</h1>
+<p>Recipe Operations connects what you <i>sell</i> to what you <i>consume</i>. Find it at <span class="path">Dashboard &rsaquo; Recipe Operations</span> and on the POS under <span class="path">Settings &rsaquo; Raw Materials / Recipes</span>. It has three building blocks, best created in this order:</p>
+
+<h2>6.1 Raw materials (ingredients)</h2>
+<ul>
+  <li>Create each ingredient with a <b>name</b> (Flour, Tomatoes…), a <b>unit</b> (kg, g, L, ml, oz, lb, pcs, cups, portions, servings, units), the <b>quantity in stock</b>, a <b>unit cost</b>, and a <b>Low Stock Alert</b> threshold.</li>
+  <li><b>Restock</b> adds a purchased amount to the current stock.</li>
+  <li>Materials show Optimal / Low Stock / Out of Stock badges based on the alert threshold.</li>
+</ul>
+
+<h2>6.2 Preparation (sub-)recipes &amp; batches</h2>
+<ul>
+  <li>A preparation recipe turns raw materials into an intermediate product — e.g. <i>Pizza Dough</i> or <i>Tomato Sauce</i>. Define its <b>ingredients</b> and its <b>yield</b> (how much one batch makes, e.g. 5 L of sauce).</li>
+  <li><b>Manufacture / Run Batch</b> — choose how many batches to produce; Mintcom deducts the raw materials and adds the prepared item to stock. If there aren't enough raw materials, production is blocked and the shortage is shown.</li>
+  <li>Material cost per batch and per unit is calculated from the ingredient costs.</li>
+</ul>
+
+<h2>6.3 Product recipes (mapping the menu)</h2>
+<ul>
+  <li>A product recipe links a <b>menu item (or add-on)</b> to the materials and prepped items it consumes — e.g. selling one Croissant deducts 50&nbsp;g flour and 20&nbsp;g butter.</li>
+  <li>Once mapped, every POS sale deducts ingredients automatically. No manual counting.</li>
+  <li>Recipes can be archived; archived recipes remain visible under the inactive filter.</li>
+</ul>
+
+<h2>6.4 Quick stock updates on the POS</h2>
+<p><span class="path">POS &rsaquo; Settings &rsaquo; Stock Management</span> is a fast screen for shift staff with two tabs:</p>
+<ul>
+  <li><b>Item Stock</b> — type a new quantity for any stock-tracked product and save. Requires the <b>Restock Items</b> permission (designed so staff can restock without full back-office access).</li>
+  <li><b>Add-on Availability</b> — flip add-on options between Available and Unavailable.</li>
+</ul>
+<div class="tip"><b>Best practice:</b> create materials before recipes, use consistent units, then run one test sale and confirm the expected deduction. Re-check recipe costs whenever supplier prices change.</div>
+
+<!-- ======================= CH 7 ======================= -->
+<h1 class="chapter">7. The POS App: Daily Sales</h1>
+
+<h2>7.1 Connecting a device and signing in</h2>
+<ol class="steps">
+  <li>Install <b>Mintcom POS</b> from the App Store or Play Store (links are in onboarding step 5 and in the Owner Portal).</li>
+  <li>On first launch, enter the <b>Establishment ID</b> (Location Login ID) and the location password, then <b>Connect</b>. The device is now bound to that store.</li>
+  <li>Each staff member signs in with their <b>username</b> and <b>password or PIN</b>. If an employee has access to several locations, they pick the location after login. The <b>Previous User</b> shortcut re-opens the last cashier's login.</li>
+  <li><b>Forgot password?</b> — the POS sends a password reset request to the admin, who approves it (an OTP goes to the admin email).</li>
+</ol>
+
+<h2>7.2 The POS layout</h2>
+<ul>
+  <li><b>Dashboard</b> — welcome screen with the shift controls (Open/Close Shift), live sales for the current shift (Net Sales, Cash / Card / Other payments, Number of Orders, Total Hours Worked), a comparison with the last shift, and 7-day / 30-day charts. Viewing analytics requires the <b>Dashboard</b> permission; the sales screen requires <b>Access POS</b>.</li>
+  <li><b>Sales</b> — the selling screen: category tiles (plus <i>All Menu</i>), search, sorting (Alphabetical / Most Recent / Best Seller), and the order cart.</li>
+  <li><b>My Orders</b> — the signed-in cashier's completed orders, with reprint, email receipt, and refund actions.</li>
+  <li><b>Reports</b> — on-device reporting (Chapter 12 covers the content; the POS adds Export PDF/Excel, Print Report, and Email Report).</li>
+  <li><b>Notifications</b> — stock alerts (low / critical / out of stock), held orders, refund notices, and system updates.</li>
+  <li><b>Settings</b> — Main Settings, Product Management, Categories, Attributes, Payment Processes, Raw Materials, Recipes, Stock Management, Activity Log, Printer Settings, Language, About.</li>
+</ul>
+
+<h2>7.3 Building an order</h2>
+<ol class="steps">
+  <li>Tap a category (or search) and tap items to add them. Items with add-ons open the customization sheet:
+    <ul>
+      <li><b>Required single-select groups</b> must be answered (e.g. Size).</li>
+      <li><b>Multi-select groups</b> allow any combination; paid options add to the item price.</li>
+      <li>An <b>item note</b> can be typed for the kitchen (e.g. "no ice").</li>
+    </ul></li>
+  <li>Adjust <b>quantity</b> per line, or tap a line to edit its add-ons, note, or item-level discount.</li>
+  <li>Add an <b>order note</b> (e.g. "Customer will pick up at 7:00 PM").</li>
+  <li>Attach a <b>loyalty customer</b> if they are a member (Chapter 10).</li>
+  <li>Removing items or clearing the whole cart requires the <b>Void Items</b> permission.</li>
+</ol>
+
+<h2>7.4 Discounts at the POS</h2>
+<ul>
+  <li>Discounts are <b>percentage-based presets</b> created in the back office (Chapter 10.4). The cashier taps <b>Apply Discount</b> and picks one — for the <b>whole order</b> or for a <b>single item</b> from its line.</li>
+  <li>Applying discounts requires the <b>Apply Discounts</b> permission.</li>
+  <li>Discounts marked <b>Admin Only</b> are visible only to admin/manager users — regular staff never see them in the list.</li>
+  <li>The receipt shows the discount name and amount; every use is counted in the Discounts report.</li>
+</ul>
+
+<h2>7.5 Tax and service charge in an order</h2>
+<ul>
+  <li>The location's <b>default tax rate</b> (set in Settings &rsaquo; Sales Setup) is applied to every order automatically and shown as "Tax (X%)" on the cart and receipt.</li>
+  <li>A cashier with the <b>Change Tax Rate in Order</b> permission can, for one order: enter a different tax percentage, choose <b>No Tax</b>, or <b>Reset to default</b>.</li>
+  <li>Orders with an edited rate are flagged <b>Paid (Tax Change)</b> and are fully auditable in the Taxes report (Chapter 12.10) — you always see how much tax was collected at a changed rate and by whom.</li>
+  <li>If a <b>service charge</b> is enabled it is added per the location rules (auto-apply or manual). Cashiers with the <b>Change Service Charge</b> permission may modify or remove it on an order; others cannot.</li>
+</ul>
+
+<h2>7.6 Hold orders (open tickets &amp; tables)</h2>
+<ul>
+  <li><b>Hold Order</b> parks the cart so you can serve the next customer. Give it a <b>table number</b> (chosen from the table shortcuts list — Table 1, Table 2, … configurable up to 300 tables) <i>or</i> a custom <b>nickname</b> ("John", "counter pickup"). A table already in use cannot be picked twice.</li>
+  <li>Resume a held order from the <b>Hold Orders</b> list or from Notifications &rsaquo; Held Orders (searchable). Resuming while another order is in the cart asks before replacing it.</li>
+  <li>Held orders can print an <b>unpaid preview receipt</b> — clearly marked "UNPAID/ESTIMATE".</li>
+  <li>Cashiers can always manage their own held orders; seeing and managing <i>other users'</i> held orders requires the <b>Manage Previous Held Orders</b> permission. Held orders are visible to managers on the web dashboard's Orders page too (status "On Hold"), where they can also be deleted.</li>
+</ul>
+
+<h2>7.7 Real-time sync between devices</h2>
+<p>All POS devices and the back office stay live-connected: product or price changes, new categories, store setting updates, new orders, refunds, held orders, and shift events from other registers appear as instant banners ("Order 'Table 5' has been held by Sara", "Shift started by Omar"). Menu changes made mid-order are applied right after checkout so the current sale is never disturbed.</p>
+
+<!-- ======================= CH 8 ======================= -->
+<h1 class="chapter">8. Shifts &amp; Cash Control</h1>
+<p>A shift is the container for everything a cashier does: sales, refunds, and cash movements. Sales cannot be processed without an active shift.</p>
+
+<h2>8.1 Opening a shift</h2>
+<ol class="steps">
+  <li>On the POS Dashboard tap <b>Open Shift</b>.</li>
+  <li>Count the drawer and enter the <b>Opening Cash Amount</b>. Entering 0.00 asks for confirmation; the amount cannot be changed after confirming.</li>
+  <li>If another user already has an open shift on this register, a <b>Shift Conflict</b> warning names them — wait for them to close, or use the user-switch flow (below).</li>
+  <li>If <i>you</i> already have an active shift (e.g. after an app restart), the POS offers <b>Resume Shift</b> and you continue exactly where you left off.</li>
+</ol>
+
+<h2>8.2 PAY-IN / PAY-OUT (non-sales cash)</h2>
+<ul>
+  <li>Use <b>PAY-IN</b> when cash enters the drawer outside a sale (e.g. change float) and <b>PAY-OUT</b> when cash leaves (e.g. paying a supplier). Enter the amount and an optional reason.</li>
+  <li>Requires the <b>Pay-In/Pay-Out</b> permission. Every entry is logged in the <b>Non-Sales Transactions Log</b> with user, time, amount, and note — visible on the POS and in the web Sales report's Cash Management Log.</li>
+  <li><b>Open Drawer</b> without a sale is a separate permission (<b>Open Drawer Without Making Sale</b>) and each use is recorded.</li>
+</ul>
+<div class="warn"><b>Never</b> use refunds to hide a cash difference. Close the shift with the real counted cash and investigate discrepancies through the reports.</div>
+
+<h2>8.3 Closing a shift</h2>
+<ol class="steps">
+  <li>Tap <b>Close Shift</b>. The shift summary shows sales by payment method, refunds, PAY-IN/PAY-OUT totals, and the <b>Expected Cash</b>.</li>
+  <li>Count the drawer and enter the <b>Actual Cash in Drawer</b>.</li>
+  <li>Mintcom computes the <b>Cash Discrepancy</b> (overage or shortage) instantly.</li>
+  <li>Confirm <b>Close Shift &amp; Cash Out</b>. Review the final report, then choose <b>Confirm &amp; Log Out</b> or <b>Stay Logged In</b>.</li>
+</ol>
+
+<h2>8.4 Automatic cash-out protection</h2>
+<p>Shifts are never left dangling. The system closes them automatically with the system-calculated balance when:</p>
+<table>
+  <tr><th>Event</th><th>What happens</th></tr>
+  <tr><td>A user logs out without cashing out</td><td>Their shift is auto-closed and saved; the next user sees "Previous Shift Closed".</td></tr>
+  <tr><td>Switching users on the lock screen</td><td>The previous user's shift is cashed out first — the POS warns "…will be automatically cashed out. This cannot be undone."</td></tr>
+  <tr><td>The app stays outside the foreground for more than <b>3 hours</b></td><td>The shift is auto cashed-out by the server.</td></tr>
+</table>
+<p>Auto-closed shifts are labeled <b>AUTO</b> in the Shifts report, with the exact reason recorded: <i>auto-closed by system, on sign-out, due to inactivity, session expired, another user signed in</i> — versus <i>Manual cash-out</i>. Hours worked are recorded from the exact shift start and end times.</p>
+
+<h2>8.5 The lock screen</h2>
+<ul>
+  <li>After <b>20 minutes without a touch</b> while the app is open, the screen locks. <b>The shift stays open</b> — the same user unlocks with their password/PIN and continues exactly where they were.</li>
+  <li><b>Switch user</b> from the lock screen: the current user's shift is auto cashed-out (with warning), then the login screen opens for the next user.</li>
+  <li>Leaving the app (home screen, screen off): within <b>20 minutes</b> you resume silently; after that a password is required; after <b>3 hours</b> the shift is cashed out automatically.</li>
+</ul>
+
+<!-- ======================= CH 9 ======================= -->
+<h1 class="chapter">9. Payments, Receipts &amp; Refunds</h1>
+
+<h2>9.1 Configuring checkout payment methods</h2>
+<p>Configure at <span class="path">Dashboard &rsaquo; Payment Methods</span> (POS: <span class="path">Settings &rsaquo; Payment Processes</span>). Requires the <b>Manage Payment Methods</b> permission. Mintcom has exactly three kinds of checkout payments:</p>
+<table>
+  <tr><th>Kind</th><th>What it is</th><th>Setup</th></tr>
+  <tr><td><b>Cash</b></td><td>Built in — always available.</td><td>Nothing to configure.</td></tr>
+  <tr><td><b>Card</b>, broken down by <b>Card Types</b></td><td>Card payments taken on your own bank terminal; the cashier records which brand was used so reports match your terminal statements.</td><td>One tap on <b>Setup Defaults</b> seeds Visa, Mastercard, Amex, Discover. Add your own card types too (name + logo, e.g. a local debit brand).</td></tr>
+  <tr><td><b>Other Payment Methods</b> (digital wallets &amp; apps)</td><td>Everything that isn't cash or card: wallets and delivery apps — e.g. Apple Pay, Careem, Talabat, Zain Cash — whatever you accept.</td><td>Create each method with a name and logo (recommended 200&times;200&nbsp;px, PNG/JPG, max 5&nbsp;MB). The logo shows at checkout and on reports.</td></tr>
+</table>
+<ul>
+  <li>Method and card-type names appear in orders, receipts, filters, and reports — keep them short and consistent.</li>
+  <li><b>Deactivating</b> a card type or method removes it from future checkouts while historical reports keep the original name; you can <b>reactivate</b> it anytime. A method never used in a sale is deleted permanently instead.</li>
+</ul>
+<div class="note"><b>Note:</b> Mintcom records the payment method for reporting; the money itself is collected on your own terminal or platform. There is no card processing inside the POS, so there are no Mintcom transaction fees.</div>
+
+<h2>9.2 Taking a payment</h2>
+<ol class="steps">
+  <li>Tap <b>Checkout</b>. Choose Cash, Card, or Other.</li>
+  <li><b>Cash</b> — enter the <b>Amount Tendered</b> (or tap <b>Exact</b>); the <b>Change</b> is calculated and shown on the receipt.</li>
+  <li><b>Card</b> — pick the card type (Visa, Mastercard, …) so the sale is attributed correctly.</li>
+  <li><b>Other</b> — pick the wallet/app method.</li>
+  <li>Confirm. The success screen offers <b>Print Full Receipt</b> and <b>New Order</b>.</li>
+</ol>
+
+<h2>9.3 Split payments</h2>
+<ul>
+  <li><b>Split by Amount</b> — each person pays a custom amount; use <b>Split Equally</b> to divide the bill into equal parts, or type custom amounts. Every part can use a different method (cash / any card type / any other method).</li>
+  <li><b>Split by Item</b> — select which items each payment covers (tap to add, long-press to remove) and pay part by part; the screen tracks Paid / Remaining until the bill closes.</li>
+  <li>A fixed-amount service charge can only be used with split-by-amount.</li>
+</ul>
+
+<h2>9.4 Receipts</h2>
+<ul>
+  <li>Receipts include: your logo, business name and tagline, address, order number, date/time, served-by name, every item with add-ons and notes, discounts, subtotal, tax with rate, service charge, total, payment method (with card type), tendered/change, loyalty points earned and redeemed, Tax ID/TRN, receipt number, and your footer message. Exactly which header/footer blocks print is your choice — see Receipt settings (Chapter 13.3).</li>
+  <li><b>QR codes on the receipt:</b> when E-Invoicing is on, the government <b>verification QR</b> prints on every receipt (Chapter 13.4); a <b>"Scan to Rate Us!"</b> QR can also appear so customers can leave feedback.</li>
+  <li><b>Auto-print on payment</b>, <b>number of copies</b>, and <b>kitchen tickets</b> (send orders to a kitchen printer) are printer options — Chapter 16.</li>
+  <li><b>Reprint</b> — from My Orders or Reports &rsaquo; Orders; reprints are marked "** REPRINTED RECEIPT **". Requires the <b>Reprint Receipt or Send</b> permission.</li>
+  <li><b>Email a receipt</b> — from My Orders, send the receipt to a customer email address.</li>
+  <li>Unpaid held orders print with an "UNPAID/ESTIMATE" banner; refunded orders print with "** REFUNDED **" and the refund reason.</li>
+</ul>
+
+<h2>9.5 Refunds</h2>
+<ul>
+  <li>Refund from the POS (<b>My Orders</b> or <b>Reports &rsaquo; Orders &amp; Receipts</b>) or from the web dashboard's Orders page. Requires the <b>Refunds</b> permission (back-office refunds/cancellations use <b>Make Refunds</b>).</li>
+  <li><b>Refund Entire Order</b> or <b>Refund Item/s</b> — partial refunds pick specific items and quantities; the order then shows status <b>Partially Refunded</b> with the remaining balance visible.</li>
+  <li>A <b>refund reason is required</b> on every refund and is stored on the order and receipt.</li>
+  <li><b>Restock Items</b> option — return the refunded items to available inventory in the same action.</li>
+  <li>If the customer earned loyalty points on the order, the points are returned/deducted automatically.</li>
+  <li>Refunds appear as negative amounts in the Sales report, per-staff in Staff Analysis, and in the Taxes report when tax was involved.</li>
+</ul>
+
+<!-- ======================= CH 10 ======================= -->
+<h1 class="chapter">10. Customers, Loyalty &amp; Discounts</h1>
+
+<h2>10.1 The customer database (CRM)</h2>
+<p><span class="path">Dashboard &rsaquo; Customers</span> — requires <b>Manage Customers</b>.</p>
+<ul>
+  <li>A customer needs at least a <b>name or phone number</b>; email and address are optional. Phone numbers are unique per location.</li>
+  <li>Each profile shows <b>Total Spent, Total Visits, Average Transaction Value, order count, and Loyalty Points</b>, plus the order history.</li>
+  <li><b>Adjust Points</b> — add or deduct points manually (corrections, goodwill), within a per-adjustment maximum shown in the dialog.</li>
+  <li><b>Export</b> the customer list to CSV (requires <b>Export Data</b>).</li>
+  <li><b>Remove Customer</b> — if the customer has order history, Mintcom offers to <b>anonymize</b> instead: personal details are removed while anonymous sales history stays in reports and receipts (privacy-law friendly). Customers with no history are removed outright.</li>
+</ul>
+
+<h2>10.2 The loyalty program</h2>
+<p>Configure at <span class="path">Dashboard &rsaquo; Loyalty &amp; Rewards</span> (POS: <span class="path">Settings &rsaquo; Payment Processes &rsaquo; Loyalty Program</span>). Requires <b>Manage Loyalty Program</b> to configure; cashiers need <b>Loyalty System Access</b> to use it during sales.</p>
+<h3>Earning configuration</h3>
+<table>
+  <tr><th>Setting</th><th>Meaning</th></tr>
+  <tr><td>Enable Loyalty Program</td><td>Master switch for the whole feature.</td></tr>
+  <tr><td>Earning Rule</td><td>"Customers earn <i>X</i> points for every <i>Y</i> {currency} spent" — you set both numbers.</td></tr>
+  <tr><td>Welcome Bonus</td><td>Points granted automatically to every new member on enrollment.</td></tr>
+  <tr><td>Redemption Rate</td><td>How much each point is worth when redeemed as a discount.</td></tr>
+</table>
+<h3>The rewards catalog</h3>
+<p>Add reward "patterns" customers can redeem with points. Each reward has a <b>points cost</b> and one of these types:</p>
+<ul>
+  <li><b>Discount %</b> — a percentage off the order.</li>
+  <li><b>Value off</b> — a fixed amount off.</li>
+  <li><b>Free item</b> — the customer picks any item from a <b>category you choose</b> (e.g. "Free from Hot Drinks").</li>
+</ul>
+
+<h2>10.3 Loyalty at the POS</h2>
+<ol class="steps">
+  <li>Tap <b>Loyalty</b> on the sales screen and find the customer by <b>name or phone</b> — or tap <b>Scan QR Code</b> and scan the customer's digital loyalty card (see 10.4). New customers are registered on the spot with a name (phone optional) and instantly receive the welcome bonus.</li>
+  <li><b>Attach to Order</b> — the customer is now linked; their <b>points balance</b> and <b>available rewards</b> are shown.</li>
+  <li>Points are earned automatically when the sale completes — the receipt prints <b>Points Earned</b> and <b>Points Redeemed</b>, and the POS confirms "{name} earned {points} points".</li>
+  <li><b>Redeem</b> — pick a reward the balance covers:
+    <ul>
+      <li>Discount rewards apply to the order total (order must have items first).</li>
+      <li>Free-item rewards open the category picker; the customer chooses the item, add-ons can be customized, and the line is added marked <b>FREE (Loyalty)</b> with its points cost.</li>
+    </ul></li>
+  <li><b>Unreward</b> removes an applied reward; detaching the customer or refunding the order returns the points automatically.</li>
+</ol>
+
+<h2>10.4 The digital loyalty card — QR, Google Wallet &amp; Apple Wallet</h2>
+<p>Every loyalty customer gets a personal digital card, so they never need a plastic card or an app:</p>
+<ul>
+  <li><b>Pass page</b> — each customer has a personal card page showing their name, points, card number, and a large <b>QR code</b> with the hint "Show this QR code at the counter to collect &amp; redeem points". It works in any phone browser and can be bookmarked or added to the home screen (iPhone and Android).</li>
+  <li><b>Add to Google Wallet</b> — one tap saves the card into Google Wallet on Android; the pass carries the same QR.</li>
+  <li><b>Add to Apple Wallet</b> — iPhones download a signed <span class="path">.pkpass</span> that opens straight into Apple Wallet.</li>
+  <li><b>Join page</b> — a self-service enrollment page where a customer enters their phone number to create their pass ("save your reward pass &amp; points directly to Google Wallet").</li>
+  <li><b>At the counter</b> — the cashier taps <b>Scan QR Code</b> in the POS loyalty screen and scans the customer's wallet pass, pass page, or a printed physical card; the customer is identified instantly and attached to the order.</li>
+</ul>
+<div class="tip"><b>Tip:</b> put the join-page link or QR on your counter and receipts — enrollment takes customers under a minute and requires nothing from staff.</div>
+
+<h2>10.5 Discounts</h2>
+<p>Create at <span class="path">Dashboard &rsaquo; Discounts</span> (POS: Settings &rsaquo; Payment Processes &rsaquo; Discount Presets). Requires <b>Manage Discounts</b>.</p>
+<ul>
+  <li>Each discount is a named <b>percentage</b> preset (e.g. "Employee Discount — 15%"). The name is what prints on the receipt.</li>
+  <li><b>Admin Only / Manager Only</b> — restrict a discount so only admin-level users can apply it at checkout; regular cashiers won't even see it.</li>
+  <li>Custom roles can further limit <i>which</i> discounts a role may apply (an allowed-discounts list per role).</li>
+  <li>At the POS, discounts apply to the whole order or to individual items (Chapter 7.4).</li>
+  <li>Deactivating a discount hides it from new sales while old receipts keep the original discount; unused discounts delete permanently; deactivated ones can be reactivated.</li>
+  <li>Track usage in <b>Reports &rsaquo; Discounts</b>: times applied and total value discounted, per discount.</li>
+</ul>
+
+<!-- ======================= CH 11 ======================= -->
+<h1 class="chapter">11. Staff, Roles &amp; Permissions</h1>
+
+<h2>11.1 Where people are managed</h2>
+<table>
+  <tr><th>Scope</th><th>Where</th></tr>
+  <tr><td>Staff of one location</td><td><span class="path">Dashboard &rsaquo; Staff</span></td></tr>
+  <tr><td>All employees, cross-location access</td><td><span class="path">Owner Portal &rsaquo; Employees</span></td></tr>
+  <tr><td>Admins (full dashboard + app access)</td><td><span class="path">Dashboard &rsaquo; Admins</span></td></tr>
+  <tr><td>Roles reused across all locations</td><td><span class="path">Owner Portal &rsaquo; Global Roles</span></td></tr>
+  <tr><td>Roles for one location</td><td><span class="path">Dashboard &rsaquo; Custom Roles</span></td></tr>
+  <tr><td>Brand-level team</td><td><span class="path">Brand Portal &rsaquo; Team</span></td></tr>
+</table>
+
+<h2>11.2 Adding an employee</h2>
+<ol class="steps">
+  <li>Enter a <b>username</b> (unique within your account) and optionally name, phone, and email. <b>Email becomes required</b> when the role includes back-office/website access, because it is the sign-in.</li>
+  <li>Set a <b>password</b> — at least 8 characters with uppercase, lowercase, and a number.</li>
+  <li>Choose <b>location access</b> — one location, several, or all (multi-location assignment is done from the Owner Portal). You can use the same role for all locations or a different role per location.</li>
+  <li>Pick a <b>role</b> — Admin (full access) or a custom/global role.</li>
+  <li>Managers can reset staff passwords later from the Staff page.</li>
+</ol>
+<div class="note"><b>Owner protection:</b> the account owner cannot be deactivated from staff management and can only be edited from Account Management. Deactivated employees lose access immediately, while their past orders, shifts, and reports stay intact.</div>
+
+<h2>11.3 Custom roles</h2>
+<ul>
+  <li>Create a role with a <b>name</b>, an optional <b>template</b> to pre-fill permissions, and two independent sections: <b>Basic Sales Permissions</b> (POS) and <b>Advanced Back-Office Permissions</b>. Sales-screen access and item voiding are included automatically when the POS section is enabled; Dashboard and Order-history access are included by default with the back-office section.</li>
+  <li>Roles can carry an <b>allowed discounts</b> list — or allow all discounts.</li>
+  <li><b>Deleting an assigned role</b> opens a resolution dialog showing how many employees/locations are affected. Choose: <b>Move employees to another role</b> (they get the new role's permissions immediately) or <b>Keep their current access</b> (role deleted, permissions kept as-is).</li>
+  <li>Managers can only grant permissions they themselves hold (plus the basic POS set) — nobody can escalate beyond their own access.</li>
+</ul>
+
+<h2>11.4 POS permissions reference</h2>
+<table class="permtable">
+  <tr><th>Permission</th><th>Allows</th></tr>
+  <tr><td>Access POS</td><td>Use the sales screen (base permission for all POS work).</td></tr>
+  <tr><td>Void Items</td><td>Remove items from an active order / clear the cart.</td></tr>
+  <tr><td>Apply Discounts</td><td>Apply discount presets to orders or items.</td></tr>
+  <tr><td>Make Refunds</td><td>Process refunds on completed orders.</td></tr>
+  <tr><td>Open Drawer Without Making Sale</td><td>Open the cash drawer manually.</td></tr>
+  <tr><td>Change Tax Rate in Order</td><td>Edit the tax %, choose No Tax, or reset, for one order.</td></tr>
+  <tr><td>Change Service Charge in Order</td><td>Modify or remove the service charge on an order.</td></tr>
+  <tr><td>Pay-In/Pay-Out</td><td>Record non-sales cash movements.</td></tr>
+  <tr><td>Restock Items</td><td>Quick stock updates from the POS without back-office access.</td></tr>
+  <tr><td>Manage Previous Held Orders</td><td>See and manage all users' held orders (own ones always work).</td></tr>
+  <tr><td>Loyalty System Access</td><td>Use loyalty search/attach/redeem during sales.</td></tr>
+  <tr><td>Reprint Receipt or Send</td><td>Reprint or email receipts.</td></tr>
+  <tr><td>View Current Analytics in Dashboard</td><td>See the live shift dashboard.</td></tr>
+  <tr><td>View Previous Shift Analytics</td><td>See last-shift and historical dashboards/reports on the POS.</td></tr>
+  <tr><td>Access Support Portal</td><td>Open live chat / support from the POS.</td></tr>
+</table>
+
+<h2>11.5 Back-office permissions reference</h2>
+<table class="permtable">
+  <tr><th>Permission</th><th>Allows</th></tr>
+  <tr><td>Dashboard</td><td>View the sales summary and analytics.</td></tr>
+  <tr><td>View Reports</td><td>Open the Reports area (all tabs).</td></tr>
+  <tr><td>View Orders</td><td>Open order history and details.</td></tr>
+  <tr><td>Make Refunds (Cancel Receipts)</td><td>Refund/cancel completed receipts from the back office.</td></tr>
+  <tr><td>Recipe Operations (Manage Inventory)</td><td>Products, categories, add-ons, stock, materials, and recipes.</td></tr>
+  <tr><td>View Costs</td><td>See item costs and profit margins.</td></tr>
+  <tr><td>Manage Customers</td><td>The customer database.</td></tr>
+  <tr><td>Staff (Manage Employees)</td><td>Add/edit staff and assign roles.</td></tr>
+  <tr><td>Discounts, Loyalty and Customers (Manage Discounts)</td><td>Create/edit discount presets.</td></tr>
+  <tr><td>Payment Methods</td><td>Card types and other payment methods.</td></tr>
+  <tr><td>Configure Loyalty Rewards</td><td>Earning rules and the rewards catalog.</td></tr>
+  <tr><td>Taxes</td><td>Tax rate and tax configuration.</td></tr>
+  <tr><td>Kitchen Printers</td><td>Kitchen printing behavior and routes.</td></tr>
+  <tr><td>POS Devices</td><td>Registers and connected POS devices.</td></tr>
+  <tr><td>Change Establishment Settings</td><td>General store configuration (plus fine-grained: Location Profile, Tax &amp; Currency, Service Charge, Receipts).</td></tr>
+  <tr><td>Activity Log</td><td>View the audit trail.</td></tr>
+  <tr><td>Billing</td><td>Subscriptions and payments (Owner Portal Billing).</td></tr>
+  <tr><td>Export Data</td><td>CSV/PDF exports of business data.</td></tr>
+  <tr><td>Delete Location</td><td>Start the location deletion wizard.</td></tr>
+</table>
+<div class="note"><b>Automatic dependencies:</b> granting some permissions auto-includes what they need — e.g. Refunds includes View Orders; back-office refund rights include Refunds + View Orders; Shift Reports include Dashboard. You never have to hunt for a missing prerequisite.</div>
+
+<h2>11.6 Default role templates</h2>
+<table>
+  <tr><th>Template</th><th>POS</th><th>Back office</th><th>Designed for</th></tr>
+  <tr><td>Owner</td><td>&#10003;</td><td>&#10003;</td><td>Everything.</td></tr>
+  <tr><td>HQ Admin</td><td>—</td><td>&#10003;</td><td>Analytics, people, inventory, settings, billing — no register work.</td></tr>
+  <tr><td>Branch Manager</td><td>&#10003;</td><td>&#10003;</td><td>Full sales + sales control, analytics, inventory, people.</td></tr>
+  <tr><td>Supervisor</td><td>&#10003;</td><td>optional</td><td>Sales + voids/refunds/cancellations + analytics.</td></tr>
+  <tr><td>Cashier</td><td>&#10003;</td><td>—</td><td>Everyday selling: sales, drawer, discounts, held orders, loyalty, pay-in/out, shift dashboards.</td></tr>
+  <tr><td>Inventory Officer</td><td>—</td><td>&#10003;</td><td>Products, recipes, stock + analytics.</td></tr>
+  <tr><td>Reports Officer</td><td>—</td><td>&#10003;</td><td>Read-only analytics: reports, orders, shifts, activity log.</td></tr>
+</table>
+<div class="warn"><b>Access hygiene:</b> grant the smallest set of permissions that does the job; deactivate leavers immediately; review roles after promotions or new-branch launches; never share PINs.</div>
+
+<!-- ======================= CH 12 ======================= -->
+<h1 class="chapter">12. Reports, Orders &amp; Activity Logs</h1>
+<p><span class="path">Dashboard &rsaquo; Reports</span> (permission: <b>View Reports</b>). Every report accepts a date range — presets from Today to This Year plus a custom range — and most add their own filters (employee, payment method, category, discount, shift). The POS Reports tab carries the same data on-device, plus <b>Export PDF, Export Excel, Print Report, and Email Report</b> (to yourself or an admin). Web reports export via the Export menu (permission: <b>Export Data</b>).</p>
+
+<h2>12.1 Sales Summary</h2>
+<ul>
+  <li><b>Total Sales</b> (includes tax &amp; service/other charges, refunds netted out), <b>Net Sales</b> (excludes tax &amp; charges), <b>Profit</b> (net sales minus item costs — needs View Costs), <b>Tax Amount</b>, <b>Service/Other Charges</b> (with refund adjustments), <b>Refunds</b>, <b>Number of Orders</b>, and <b>Staff Hours</b>.</li>
+  <li>Payment-method breakdown (cash / each card type / each other method), performance-over-time chart, transaction history, and the <b>Cash Management Log</b> (all PAY-IN/PAY-OUT entries).</li>
+  <li>Tap any total for the <b>Sales Totals Breakdown</b> explaining exactly what is included.</li>
+</ul>
+
+<h2>12.2 Sales by Items &amp; Categories</h2>
+<ul>
+  <li>Views <b>By Products, By Category, By Add-ons, By Attributes (groups)</b> — units sold, gross revenue, and share for each; drill into a category to see its products.</li>
+  <li>Item/add-on sales are shown <i>before</i> order-level tax and service charges; related-order totals (including them) are shown alongside, so the numbers always reconcile.</li>
+  <li>Each item links to its <b>Change History</b> (price/name/image audit trail) to explain movements in the period.</li>
+</ul>
+
+<h2>12.3 Sales by Add-ons</h2>
+<p>Revenue and quantity per add-on option and per attribute group — see exactly what your paid extras earn.</p>
+
+<h2>12.4 Sales by Staff</h2>
+<p>Per-employee rank, total sales, share, orders, average ticket, <b>sales per hour</b>, hours worked, discounts issued, refunds, and cash variances. Open one employee for their personal performance panel.</p>
+
+<h2>12.5 Shifts Report</h2>
+<p>Every shift with staff, start/end time, opening and closing balances, sales, and variance — labeled <b>Cashed out</b> (manual) or <b>AUTO</b> (auto-closed, with the reason: sign-out, inactivity, session expired, another user signed in).</p>
+
+<h2>12.6 Cash Discrepancy</h2>
+<ul>
+  <li>Variance per shift = (closing − opening) − cash movement. Positive = <b>Cash Over</b>, negative = <b>Cash Short</b>, zero = <b>Balanced</b>.</li>
+  <li>Summary cards: shifts balanced ("14 of 16"), total over, total short, net variance, and an <b>Accuracy Rate</b>; details sorted by largest variance with the staff member on each row.</li>
+</ul>
+
+<h2>12.7 Busy Times (Peak Hours)</h2>
+<ul>
+  <li>Orders by hour of day, the <b>Busiest Hour</b> (with % of all orders), the 3-hour <b>Rush Window</b>, the <b>Quietest Hour</b> ("good time for prep or breaks"), peak-hour revenue, and average ticket.</li>
+  <li>The <b>Day Load Map</b> heat-grid shows each hour of each day — darker = more orders. Use it to schedule staff.</li>
+</ul>
+
+<h2>12.8 Payments Report</h2>
+<p>Distribution across all payment channels: total collected, transaction count, top method, and a per-method breakdown — cards split by card type, other methods listed individually. Click through to the matching orders.</p>
+
+<h2>12.9 Discounts Report</h2>
+<p>Per discount: times applied and total value discounted, over any period.</p>
+
+<h2>12.10 Taxes Report</h2>
+<ul>
+  <li><b>Taxable Sales, Tax-Free Sales, Total Tax, Average Rate</b>, refund-adjusted.</li>
+  <li><b>Tax Breakdown by Rate</b> — rows for the current location rate, previous rates (if you changed the setting), and <b>Changed-tax orders</b> where a cashier edited the rate at the POS, each with net tax, transactions, and share.</li>
+  <li>The <b>Tax Audit Summary</b> flags tax-free sales and POS tax edits for quick compliance checks.</li>
+</ul>
+
+<h2>12.11 The Orders page</h2>
+<p><span class="path">Dashboard &rsaquo; Orders</span> (permission: <b>View Orders</b>) — the searchable transaction ledger:</p>
+<ul>
+  <li>Filter by period, status (<b>Completed, On Hold, Refunded, Partially Refunded, Paid (Tax Change)</b>), payment method (cash / cards / others / specific), service-charge state (applied / changed / not applied), and search by order number or customer.</li>
+  <li>Open any order for full detail: items with add-on and note snapshots, discount, tax with rate, service charge, staff, customer and contact, timestamps, refund history (who refunded, why).</li>
+  <li><b>Refund</b> directly from here — entire order or selected items — with reason, as at the POS. Held orders can be deleted.</li>
+  <li><b>Export</b> the filtered list (order #, date, customer, status, payment method, service charge, total).</li>
+</ul>
+
+<h2>12.12 Activity Logs</h2>
+<p><span class="path">Dashboard &rsaquo; Activity Logs</span> (permission: <b>Activity Log</b>) — the audit trail of sensitive actions: every product/category/add-on/discount create-update-delete (with old and new values), employee and role changes, orders created and refunded, shifts opened/closed, settings and logo changes, receipt/tax updates — each with the user, timestamp, and IP address. Filter by user, action type, and date; export for external audit. Check it after refunds, discount changes, role changes, or price updates.</p>
+
+<!-- ======================= CH 13 ======================= -->
+<h1 class="chapter">13. Location Settings &amp; E-Invoicing</h1>
+<p><span class="path">Dashboard &rsaquo; Settings</span> has five tabs, each behind its own permission so you can delegate safely: Profile, Sales Setup, Receipts, E-Invoicing, and Delete Location.</p>
+
+<h2>13.1 Profile</h2>
+<ul>
+  <li>Business <b>name</b>, <b>logo</b> (recommended 512&times;512 px square PNG/JPG/SVG, max 2 MB), <b>about</b> text, <b>address</b>, <b>email</b>.</li>
+  <li><b>Tax ID / TRN</b> — your tax registration number, printed on receipts if enabled. Check your local rules.</li>
+  <li><b>Opening hours</b> — service times per weekday.</li>
+  <li>Your <b>Location Login ID</b> is displayed here for reference; its password is reset from the Owner Portal only.</li>
+  <li>The business name and logo can be changed only here or in the Back Office app — not on the POS — so branding stays consistent.</li>
+</ul>
+
+<h2>13.2 Sales Setup (tax, currency, service charge, tables)</h2>
+<ul>
+  <li><b>Tax Rate (%)</b> — the default rate for all sales, 0–100. Changing it is treated as a critical action with a double confirmation, and reports keep previous-rate rows separate so history stays accurate.</li>
+  <li><b>System Currency</b> — shown here; changing currency is done from the Owner Portal / Account Management and applies account-wide.</li>
+  <li><b>Service Charge</b> — enable and set: charge <b>name</b>, <b>type</b> (percentage or fixed amount), <b>value</b>, <b>Taxable</b> (apply sales tax to the charge), <b>Auto apply to orders</b>, and <b>Allow cashier override</b> (cashiers may remove/modify it per order).</li>
+  <li><b>Table Shortcuts</b> — how many numbered tables (Table 1, Table 2, …) appear in the POS Hold Order menu.</li>
+</ul>
+
+<h2>13.3 Receipts</h2>
+<ul>
+  <li>Toggle each block: <b>Logo</b>, <b>Business Name</b>, <b>Tagline</b>, <b>Address</b>, <b>Tax ID</b>, and the <b>Footer Message</b> (e.g. "Thank you for visiting!"). The POS adds a farewell-message field and a live receipt preview.</li>
+  <li><b>Receipt Number Start</b> — optionally choose the number your receipt/invoice numbering begins from.</li>
+</ul>
+
+<h2>13.4 E-Invoicing &amp; Tax Compliance</h2>
+<p>Connect the POS to your country's tax authority so every sale is reported automatically and receipts carry a government <b>verification QR code</b>.</p>
+<ol class="steps">
+  <li><b>Select your country.</b> Direct integrations include <b>Jordan (JoFotara)</b> and <b>Saudi Arabia (ZATCA)</b>; a wide set of countries (the EU, UK, Norway, Singapore, Australia, New Zealand, Japan, and more) connect through the <b>Peppol</b> e-invoicing network. If your country isn't supported yet, the tab says Tax Sync is unavailable.</li>
+  <li><b>Register with the authority</b> — the panel links you to the official registration site for your country.</li>
+  <li><b>Enter your credentials</b> (fields depend on the country — e.g. VAT number, access point ID, API key for Peppol). Saved secrets are masked; re-enter to change them.</li>
+  <li><b>Test connection</b> — verify the credentials before going live (Connected / Connection failed).</li>
+  <li>Choose the behavior:
+    <ul>
+      <li><b>Auto-submit invoices</b> — report each sale as it completes.</li>
+      <li><b>Block sale on reporting failure</b> — prevent completing a sale that cannot be reported; leave it off to queue and retry instead (recommended for unstable connections).</li>
+    </ul></li>
+</ol>
+<p>Turning e-invoicing off stops reporting new sales and removes the QR from future receipts; already-reported invoices are unaffected.</p>
+
+<h2>13.5 Delete Location (danger zone)</h2>
+<ol class="steps">
+  <li><b>Warning</b> — a summary of what will be permanently deleted (orders, products, customers, staff, shifts).</li>
+  <li><b>Export</b> — download or have emailed to you: Sales &amp; revenue, Products, Customers, Staff, and Shifts/cash logs.</li>
+  <li><b>Confirm</b> — verify with your owner account password <i>and</i> the location credentials.</li>
+</ol>
+<ul>
+  <li>A <b>30-day grace period</b> starts; a banner shows the scheduled date and a <b>Cancel deletion</b> button.</li>
+  <li>A deleted-but-in-grace location can be <b>restored</b>: verify the owner credentials and set a new Location Login ID and password. After 30 days, deletion is permanent.</li>
+</ul>
+
+<!-- ======================= CH 14 ======================= -->
+<h1 class="chapter">14. The Owner Portal, Brands &amp; the Back Office App</h1>
+
+<h2>14.1 Overview</h2>
+<p>The Owner Portal home consolidates all locations: <b>Total Sales</b> (gross), <b>Net Sales</b>, <b>Total Profit</b> (sales minus item costs), <b>Active Locations</b> (a location counts as active when a shift is currently open), staff totals, sales trends per period, and quick links. Multi-currency accounts are converted for comparison.</p>
+
+<h2>14.2 Locations</h2>
+<ul>
+  <li>Every establishment with status (Trial / Active / Canceled / Expired), type, currency, and whether it is online.</li>
+  <li><b>Enter</b> opens that location's dashboard. You can work in different locations in different browser tabs at the same time.</li>
+  <li><b>Add Location</b> runs the onboarding wizard (Chapter 3) with additional-location pricing and the copy-settings quick setup.</li>
+</ul>
+
+<h2>14.3 Brands &amp; the Brand Portal</h2>
+<ul>
+  <li>A <b>brand</b> groups two or more locations for unified management ("Burger House Global"). Locations already in a brand can't join another.</li>
+  <li><b>Create Brand</b> (or <b>Merge Locations</b>) wizard: 1) brand name + <b>Brand Login ID</b> (unique across all locations and brands, min 4 chars) and brand password; 2) link at least 2 locations; 3) choose which employees get <b>global access</b> to all linked locations.</li>
+  <li>The <b>Brand Portal</b> (sign in with the Brand Login ID, or open from the Owner Portal) has:
+    <ul>
+      <li><b>Dashboard</b> — consolidated brand performance and per-location comparison.</li>
+      <li><b>Locations</b> — the branches under the brand.</li>
+      <li><b>Team</b> — brand-wide staff with global access.</li>
+    </ul></li>
+  <li><b>Delete Brand</b> returns all locations to independent mode (locations and their data are untouched). A single location can also be <b>dissolved</b> out of a brand.</li>
+</ul>
+
+<h2>14.4 Employees &amp; Global Roles</h2>
+<ul>
+  <li><b>Employees</b> — every user across the organization, with role, status, and location access; assign one employee to several locations with the same or different roles. Stats show total users, admins, and who's active now.</li>
+  <li><b>Global Roles</b> — roles defined once and available in every location (same editor as custom roles, Chapter 11.3).</li>
+</ul>
+
+<h2>14.5 Account Management</h2>
+<ul>
+  <li>Profile (name, email — email changes require re-verification), password reset, join date.</li>
+  <li><b>Location Logins</b> and <b>Brand Logins</b> — all your IDs in one place with copy buttons.</li>
+  <li><b>Useful Resources</b> — this User Manual, the hardware Setup Manual, Video Tutorial, Q&amp;A Center, privacy policy and terms.</li>
+  <li><b>Danger Zone</b> — delete the whole account: type DELETE, confirm your password, optional feedback. A grace period follows during which one click restores everything; active locations must be resolved first.</li>
+</ul>
+
+<h2>14.6 The Back Office app</h2>
+<ul>
+  <li>The mobile app (iOS/Android) mirrors the web: the full Location Dashboard (products, categories, add-ons, recipe operations, customers, discounts, loyalty, staff, roles, orders with detail view, reports, activity logs, petty-cash log, settings), the Owner Portal (overview, locations, onboarding a new location, brands, employees, roles, billing, account settings), and the Brand Portal.</li>
+  <li>It adds <b>push notifications</b> so you hear about sales activity and stock alerts wherever you are, per-section notification screens, and app settings.</li>
+  <li>Get it from the App Store / Play Store — the Owner Portal sidebar has a <b>Get Mobile App</b> QR code.</li>
+</ul>
+
+<!-- ======================= CH 15 ======================= -->
+<h1 class="chapter">15. Offline Mode, Sync &amp; Sessions</h1>
+
+<h2>15.1 Selling offline</h2>
+<ul>
+  <li>If the internet drops, the POS switches to <b>offline mode</b> and tells you — you keep taking orders and payments. Orders are saved locally, marked "Offline Order (Pending Sync)".</li>
+  <li>A <b>Sync badge</b> shows the pending count. When the connection returns, pending orders upload automatically (or tap the badge to push them); the badge turns to <b>Synced</b>.</li>
+  <li>While offline the app reminds you every 3 minutes so nobody forgets.</li>
+</ul>
+<h3>What needs internet</h3>
+<ul>
+  <li>Web dashboard / Owner Portal / Back Office data, billing, fresh reports, support tickets.</li>
+  <li>Loading updated products, staff, and settings from the server; loyalty lookups; e-invoice submission (queued if "block on failure" is off).</li>
+  <li>Unlocking the lock screen verifies the password online — reconnect if unlock fails offline.</li>
+</ul>
+<div class="warn"><b>Never uninstall the POS app or clear its data while orders are pending sync</b> — those sales exist only on the device until they upload. Reconnect and confirm the Synced state before closing the day.</div>
+
+<h2>15.2 Session &amp; auto-logout rules (summary)</h2>
+<table>
+  <tr><th>Situation</th><th>Behavior</th></tr>
+  <tr><td>App open, 20 min without touch</td><td>Lock screen appears; shift stays open; unlock with password/PIN.</td></tr>
+  <tr><td>App left/backgrounded &le; 20 min</td><td>Silent resume — no login needed.</td></tr>
+  <tr><td>App left &gt; 20 min</td><td>Password required to continue.</td></tr>
+  <tr><td>App left &gt; 3 hours</td><td>The shift is auto cashed-out with the system-calculated balance.</td></tr>
+  <tr><td>Logout / switch user</td><td>Open shift is cashed out automatically (with warning).</td></tr>
+  <tr><td>Trial or subscription expires</td><td>All POS users at the location are logged out until billing is restored.</td></tr>
+  <tr><td>Website owner session</td><td>One active owner session per platform: signing in on a second browser signs out the first; the web session and the Back Office app session are independent.</td></tr>
+</table>
+
+<!-- ======================= CH 16 ======================= -->
+<h1 class="chapter">16. Hardware &amp; Printers</h1>
+
+<h2>16.1 Recommended hardware</h2>
+<table>
+  <tr><th>Device</th><th>Requirement</th></tr>
+  <tr><td>POS device</td><td>Any modern Android or iOS tablet/phone; keep it powered during shifts.</td></tr>
+  <tr><td>Back-office computer</td><td>Any modern browser with cookies and session storage enabled.</td></tr>
+  <tr><td>Receipt printer</td><td>ESC/POS thermal printers over <b>Bluetooth</b> or <b>Ethernet/Wi-Fi network</b> (typically port 9100).</td></tr>
+  <tr><td>Cash drawer</td><td>Connects through the receipt printer; the POS opens it on sale or via Open Drawer.</td></tr>
+  <tr><td>Barcode/QR scanner</td><td>Camera or a handheld HID-mode (keyboard-emulation) scanner — used to scan a customer's digital loyalty card at checkout, not to look up products.</td></tr>
+  <tr><td>Network</td><td>Stable Wi-Fi shared by the POS devices and network printers.</td></tr>
+</table>
+<p>See the separate <b>Setup Manual</b> (Owner Portal &rsaquo; Account Management &rsaquo; Resources) for step-by-step hardware installation.</p>
+
+<h2>16.2 Adding printers on the POS</h2>
+<p><span class="path">POS &rsaquo; Settings &rsaquo; Printer Settings</span>:</p>
+<ol class="steps">
+  <li><b>Scan Bluetooth</b>, <b>Scan Network</b>, or <b>Scan All</b> — found printers appear; tap <b>Connect</b>.</li>
+  <li>Or <b>Add Network Printer by IP</b> — enter the printer's IP address (e.g. 192.168.1.100) and port (default 9100), and name it ("Kitchen Printer").</li>
+  <li>Tap <b>Test</b> to print a test receipt, and <b>Set Default</b> on the main receipt printer.</li>
+  <li>No printer yet? Add the <b>Debug Printer</b> — a virtual printer for testing the flow.</li>
+</ol>
+<h3>Printing options</h3>
+<ul>
+  <li><b>Auto-print on payment</b> — receipt prints automatically after each successful sale.</li>
+  <li><b>Number of copies</b> — print multiples of each receipt.</li>
+  <li><b>Print kitchen tickets</b> — send order tickets to a kitchen printer.</li>
+  <li><b>Open Cash Drawer</b> — quick action to fire the drawer through the printer.</li>
+</ul>
+
+<!-- ======================= CH 17 ======================= -->
+<h1 class="chapter">17. Security &amp; Data Protection</h1>
+
+<h2>17.1 Passwords &amp; verification</h2>
+<ul>
+  <li>All passwords: minimum 8 characters with uppercase, lowercase, and a number.</li>
+  <li>The <b>Master Access Key</b> — your primary account password — is re-confirmed before high-impact actions: canceling subscriptions, deleting cards, deactivating staff, deleting brands, removing customers, deleting locations or the account. Too many wrong attempts logs you out.</li>
+  <li>Password resets flow through verified email (owner/back office) or admin approval with OTP (POS staff).</li>
+</ul>
+
+<h2>17.2 How Mintcom protects your history</h2>
+<ul>
+  <li><b>Archive over delete</b> — anything used in a sale is archived, never destroyed; receipts and reports keep original snapshots of names, prices, options, and rates forever (Chapter 5.4).</li>
+  <li><b>Grace periods</b> — location deletion and account deletion both have a 30-day window with one-click restore; canceled subscriptions keep data 30 days.</li>
+  <li><b>Exports before deletion</b> — the deletion wizard hands you your sales, products, customers, staff, and shift data first.</li>
+  <li><b>Customer anonymization</b> — remove personal data while keeping anonymous sales history (Chapter 10.1).</li>
+  <li><b>Activity log</b> — every sensitive action is recorded with user, time, and IP (Chapter 12.12).</li>
+</ul>
+
+<h2>17.3 Day-to-day rules for the team</h2>
+<ul>
+  <li>Owner credentials and the Location ID password stay with management only.</li>
+  <li>One person = one login. Shared logins destroy the audit trail and per-staff reports.</li>
+  <li>Deactivate an employee the day they leave.</li>
+  <li>Let the lock screen do its job — don't disable device auto-lock.</li>
+  <li>Never send card numbers or passwords through support tickets or chat.</li>
+  <li>Report security concerns to <b>admin@mintcompos.com</b>.</li>
+</ul>
+
+<!-- ======================= CH 18 ======================= -->
+<h1 class="chapter">18. Troubleshooting &amp; FAQ</h1>
+
+<table>
+  <tr><th>Symptom</th><th>What to do</th></tr>
+  <tr><td>"No Active Shift" when trying to sell or refund</td><td>Open a shift from the POS Dashboard first — sales, refunds, and PAY-IN/PAY-OUT all require one.</td></tr>
+  <tr><td>"Shift Conflict — another user has an open shift"</td><td>That register has an unclosed shift. Have that user close it, or use the lock-screen switch flow (their shift is auto cashed-out).</td></tr>
+  <tr><td>A button is missing or "Permission Denied"</td><td>The role lacks that permission. An owner/manager reviews it under Staff / Custom Roles. Check you're in the right location, and whether the action is owner-level vs. location-level.</td></tr>
+  <tr><td>"Subscription required" at POS login</td><td>The trial or subscription ended. Owner Portal &rsaquo; Billing → check status, card, invoices; Subscribe or Reactivate.</td></tr>
+  <tr><td>Cashier's menu is empty</td><td>Products/categories may be inactive, or the device hasn't synced — pull to refresh, check the Products page, and confirm the category is Active.</td></tr>
+  <tr><td>Printer won't print</td><td>Check power, paper, and cover; confirm the device and printer share the network (or Bluetooth is on); reconnect in Printer Settings; run Test. Persisting? Send support the printer model and connection type.</td></tr>
+  <tr><td>Cash drawer won't open</td><td>The drawer fires through the printer — confirm the printer works first; opening without a sale needs the Open Drawer permission.</td></tr>
+  <tr><td>Offline banner won't clear / orders pending</td><td>Check Wi-Fi, keep the app open, tap the Sync badge. Never clear app data with pending orders.</td></tr>
+  <tr><td>Locked screen won't unlock offline</td><td>Unlock verifies the password online — restore the connection and retry.</td></tr>
+  <tr><td>Session expired on the website</td><td>Sign in again. Only one owner session per platform is active — logging in elsewhere signs out the previous browser. Avoid private-browsing modes that block storage.</td></tr>
+  <tr><td>Totals look different between two reports</td><td>Check whether each figure includes or excludes tax &amp; service charges (each card says which), and confirm identical date ranges and filters. Refunds are netted out.</td></tr>
+  <tr><td>Loyalty reward won't apply</td><td>Order must have items first; the customer's balance must cover the points cost; the cashier needs Loyalty System Access; discounts/rewards can't stack on the same line.</td></tr>
+  <tr><td>Product image generation unavailable</td><td>Enter a product name first; if the monthly quota is used up, the form shows the reset date.</td></tr>
+  <tr><td>Can't archive a category</td><td>It still has active products — move or archive them first.</td></tr>
+  <tr><td>Can't create a brand</td><td>You need at least 2 locations that aren't already in another brand.</td></tr>
+  <tr><td>E-invoicing "Connection failed"</td><td>Re-check the country selection and credentials (saved secrets must be re-entered to change), then Test connection again. Registration with the authority must be completed first.</td></tr>
+</table>
+
+<!-- ======================= CH 19 ======================= -->
+<h1 class="chapter">19. Launch Checklist</h1>
+<p>Run through this before your first live day:</p>
+<h3>Account &amp; billing</h3>
+<ul>
+  <li>&#9744; Owner email verified; owner login works on web and POS.</li>
+  <li>&#9744; Trial/billing status reviewed; card saved; billing cycle chosen.</li>
+</ul>
+<h3>Configuration</h3>
+<ul>
+  <li>&#9744; Currency correct (it applies account-wide).</li>
+  <li>&#9744; Tax rate set; Tax ID/TRN entered if required in your country.</li>
+  <li>&#9744; Service charge configured (or confirmed off).</li>
+  <li>&#9744; Receipt design reviewed: logo, name, address, footer, receipt number start.</li>
+  <li>&#9744; E-invoicing connected and tested, if applicable.</li>
+</ul>
+<h3>Menu &amp; stock</h3>
+<ul>
+  <li>&#9744; Categories created and active; products assigned correctly.</li>
+  <li>&#9744; Add-on groups attached to the right products; required groups verified.</li>
+  <li>&#9744; Stock tracking and low-stock thresholds set where needed.</li>
+  <li>&#9744; Recipes mapped and one test sale confirmed the stock deduction.</li>
+</ul>
+<h3>Payments &amp; loyalty</h3>
+<ul>
+  <li>&#9744; Card types match your terminal; wallets/delivery apps created with logos.</li>
+  <li>&#9744; Discounts created; admin-only flags set.</li>
+  <li>&#9744; Loyalty earning rule, welcome bonus, and rewards configured; join page/QR ready at the counter.</li>
+</ul>
+<h3>Team &amp; devices</h3>
+<ul>
+  <li>&#9744; Every employee has their own login and correct role; a cashier login was tested to confirm restricted access.</li>
+  <li>&#9744; POS devices connected with the Location ID; printers added, test receipt printed; auto-print/copies/kitchen tickets set.</li>
+</ul>
+<h3>Dry run</h3>
+<ul>
+  <li>&#9744; Open shift → sale with add-ons &amp; discount → split payment tried → receipt printed → refund with restock → PAY-IN/PAY-OUT entry → close shift.</li>
+  <li>&#9744; Reports show the expected sale, payment, refund, and shift; cash discrepancy is zero.</li>
+  <li>&#9744; Offline test: airplane mode → sale → reconnect → order synced.</li>
+  <li>&#9744; Team knows the lock screen, user switching, and the offline sync badge.</li>
+</ul>
+
+<!-- ======================= CH 20 ======================= -->
+<h1 class="chapter">20. Support &amp; Resources</h1>
+<table>
+  <tr><th>Channel</th><th>Details</th></tr>
+  <tr><td>Help Center</td><td>https://mintcompos.com/support — articles, Q&amp;A, and support tickets.</td></tr>
+  <tr><td>Minto (AI assistant)</td><td>The in-app chat assistant on the website — instant answers, 24/7.</td></tr>
+  <tr><td>Support email</td><td>support@mintcompos.com</td></tr>
+  <tr><td>Security reports</td><td>admin@mintcompos.com</td></tr>
+  <tr><td>Privacy &amp; legal</td><td>info@mintcompos.com</td></tr>
+  <tr><td>Website</td><td>https://mintcompos.com</td></tr>
+</table>
+<h3>When contacting support, include</h3>
+<ul>
+  <li>Account or location name, and the page/screen where the issue happened.</li>
+  <li>The exact error message, steps already tried, and a screenshot or short recording.</li>
+  <li>Device model, app or browser version, and whether the issue affects one user, one device, or everyone.</li>
+</ul>
+<h3>Other resources</h3>
+<ul>
+  <li><b>Setup Manual</b> — hardware installation, step by step.</li>
+  <li><b>Video Tutorials</b> and the <b>Q&amp;A Center</b> — linked in Owner Portal &rsaquo; Account Management &rsaquo; Useful Resources.</li>
+</ul>
+
+<p class="footer-note">© 2026 Mintcom LLC. All rights reserved. &middot; Mintcom User Manual v9.0 &middot; mintcompos.com</p>
+</body>
+</html>

@@ -16,6 +16,8 @@ interface TourGuideProps {
   isOpen: boolean;
   onClose: () => void;
   onComplete: () => void;
+  /** Fires when the active step index changes (including when the tour opens at 0). */
+  onStepChange?: (stepIndex: number) => void;
 }
 
 type TooltipSide = 'top' | 'bottom' | 'left' | 'right';
@@ -26,7 +28,7 @@ const HIGHLIGHT_PADDING = 12;
 // Extra breathing room between the highlighted target and the tooltip card
 const TOOLTIP_GAP = 40;
 
-export const TourGuide = ({ steps, isOpen, onClose, onComplete }: TourGuideProps) => {
+export const TourGuide = ({ steps, isOpen, onClose, onComplete, onStepChange }: TourGuideProps) => {
   const { t } = useTranslation();
   const isRTL = t('common.locale') === 'ar';
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -40,6 +42,21 @@ export const TourGuide = ({ steps, isOpen, onClose, onComplete }: TourGuideProps
 
   const currentStep = steps[currentStepIndex];
   const isLastStep = currentStepIndex === steps.length - 1;
+
+  // Reset to first step when the tour opens, then notify parent
+  useLayoutEffect(() => {
+    if (!isOpen) return;
+    setCurrentStepIndex(0);
+    onStepChange?.(0);
+    // Only re-run when open flips true — step advances handled below
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
+
+  // Notify parent when step advances while open
+  useLayoutEffect(() => {
+    if (!isOpen || currentStepIndex === 0) return;
+    onStepChange?.(currentStepIndex);
+  }, [isOpen, currentStepIndex, onStepChange]);
 
   // Responsive tooltip width: never wider than the viewport (with padding on both sides)
   const responsiveTooltipWidth = useMemo(() => {
@@ -62,32 +79,53 @@ export const TourGuide = ({ steps, isOpen, onClose, onComplete }: TourGuideProps
 
     setViewport({ width: window.innerWidth, height: window.innerHeight });
 
-    const element = document.getElementById(currentStep?.targetId);
+    const id = currentStep?.targetId;
+    if (!id) return;
+
+    // Prefer a visible element: support duplicate data-tour-id / id (desktop + mobile)
+    const candidates = [
+      ...Array.from(document.querySelectorAll<HTMLElement>(`[data-tour-id="${id}"]`)),
+      ...Array.from(document.querySelectorAll<HTMLElement>(`#${CSS.escape(id)}`)),
+    ];
+    const seen = new Set<HTMLElement>();
+    const element = candidates.find((el) => {
+      if (seen.has(el)) return false;
+      seen.add(el);
+      const r = el.getBoundingClientRect();
+      return r.width > 2 && r.height > 2;
+    });
+
     if (element) {
-      // Scroll element into view if needed with some padding
       element.scrollIntoView({ behavior: 'smooth', block: 'center' });
       const rect = element.getBoundingClientRect();
       setTargetRect(rect);
+    } else {
+      setTargetRect(null);
     }
   }, [isOpen, currentStep?.targetId]);
 
-  // Update position on step change, resize, or scroll
+  // Update position on step change, resize, or scroll (retry for delayed screen mounts)
   useLayoutEffect(() => {
     requestAnimationFrame(() => updateTargetPosition());
     window.addEventListener('resize', updateTargetPosition);
     window.addEventListener('scroll', updateTargetPosition, true);
 
-    const timer = setTimeout(updateTargetPosition, 100);
+    const t1 = setTimeout(updateTargetPosition, 80);
+    const t2 = setTimeout(updateTargetPosition, 220);
+    const t3 = setTimeout(updateTargetPosition, 450);
 
     return () => {
       window.removeEventListener('resize', updateTargetPosition);
       window.removeEventListener('scroll', updateTargetPosition, true);
-      clearTimeout(timer);
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
     };
   }, [updateTargetPosition]);
 
   const handleNext = () => {
     if (isLastStep) {
+      setCurrentStepIndex(0);
       onComplete();
     } else {
       setCurrentStepIndex(prev => prev + 1);
@@ -96,6 +134,11 @@ export const TourGuide = ({ steps, isOpen, onClose, onComplete }: TourGuideProps
 
   const handleBack = () => {
     setCurrentStepIndex(prev => Math.max(0, prev - 1));
+  };
+
+  const handleClose = () => {
+    setCurrentStepIndex(0);
+    onClose();
   };
 
   if (!isOpen) return null;
@@ -283,7 +326,7 @@ export const TourGuide = ({ steps, isOpen, onClose, onComplete }: TourGuideProps
                   <span className="text-xs font-sans font-bold">{t('common.guide')}</span>
                 </div>
                 <button
-                  onClick={onClose}
+                  onClick={handleClose}
                   className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
                 >
                   <X size={16} />

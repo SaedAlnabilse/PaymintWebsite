@@ -11,7 +11,16 @@ import {
   Bell,
   ToggleLeft,
   ToggleRight,
+  AlertTriangle,
+  Plus,
+  AlertOctagon,
+  Package,
 } from 'lucide-react';
+import {
+  FeatureScreenshot,
+  isStaticFeatureScreenshot,
+  STATIC_FEATURE_SCREENSHOTS,
+} from './FeatureScreenshots';
 
 // i18next `t` accepts flexible options; keep loose for demo copy fallbacks
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -2335,17 +2344,18 @@ export const InteractiveMobileDemo = ({ t, tall = false, side: _side }: DemoProp
   };
 
   const tone = (kind: Kind) => {
+    // Stronger translucent fills so pills/icons stay visible on light + dark phone chrome
     switch (kind) {
       case 'cash_shortage':
-        return { color: '#D55263', bg: '#D5526312', icon: '!' };
+        return { color: '#FF6B7A', bg: 'rgba(213,82,99,0.22)', Icon: AlertTriangle };
       case 'cash_overage':
-        return { color: '#F59E0B', bg: '#F59E0B12', icon: '+' };
+        return { color: '#FBBF24', bg: 'rgba(245,158,11,0.22)', Icon: Plus };
       case 'stock_critical':
-        return { color: '#D55263', bg: '#D5526312', icon: '⚠' };
+        return { color: '#FF6B7A', bg: 'rgba(213,82,99,0.22)', Icon: AlertOctagon };
       case 'stock_warning':
-        return { color: '#4F46E5', bg: '#4F46E512', icon: '📦' };
+        return { color: '#818CF8', bg: 'rgba(79,70,229,0.22)', Icon: Package };
       case 'refund':
-        return { color: '#D0A62A', bg: '#D0A62A12', icon: '↺' };
+        return { color: '#E8C547', bg: 'rgba(208,166,42,0.22)', Icon: RotateCcw };
     }
   };
 
@@ -2524,10 +2534,18 @@ export const InteractiveMobileDemo = ({ t, tall = false, side: _side }: DemoProp
         {/* Ambient glow behind phone */}
         <div
           aria-hidden
-          className="pointer-events-none absolute -inset-8 -z-10 rounded-full opacity-70 blur-3xl"
+          className="pointer-events-none absolute -inset-8 -z-10 rounded-full opacity-70 blur-3xl dark:opacity-90"
           style={{
             background:
               'radial-gradient(ellipse at 50% 40%, rgba(125,198,162,0.28) 0%, rgba(0,0,0,0.06) 55%, transparent 70%)',
+          }}
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -inset-8 -z-10 hidden rounded-full opacity-80 blur-3xl dark:block"
+          style={{
+            background:
+              'radial-gradient(ellipse at 50% 40%, rgba(125,198,162,0.22) 0%, rgba(0,0,0,0) 60%)',
           }}
         />
 
@@ -2585,34 +2603,36 @@ export const InteractiveMobileDemo = ({ t, tall = false, side: _side }: DemoProp
                         exit={{ y: -80, opacity: 0, scale: 0.95 }}
                         transition={{ type: 'spring', stiffness: 380, damping: 24 }}
                         onClick={openFromBanner}
-                        className="pointer-events-auto w-full overflow-hidden rounded-[18px] text-start shadow-[0_18px_40px_-12px_rgba(0,0,0,0.45)]"
+                        className="pointer-events-auto relative w-full overflow-hidden rounded-[18px] border border-white/70 bg-white/85 text-start shadow-[0_18px_40px_-12px_rgba(0,0,0,0.45)] backdrop-blur-xl backdrop-saturate-150 dark:border-white/[0.12] dark:bg-[#2c2c2e]/[0.94] dark:shadow-[0_18px_40px_-10px_rgba(0,0,0,0.75)] dark:ring-1 dark:ring-inset dark:ring-white/[0.06]"
                         style={{
-                          background: 'rgba(255,255,255,0.82)',
                           WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-                          backdropFilter: 'blur(40px) saturate(180%)',
-                          border: '0.5px solid rgba(255,255,255,0.65)',
                         }}
                       >
-                        <div className="flex gap-2.5 p-2.5">
+                        {/* Soft mint sheen — subtle light wash / green edge in dark */}
+                        <div
+                          aria-hidden
+                          className="pointer-events-none absolute inset-0 bg-gradient-to-br from-mintcom-green/10 via-transparent to-transparent dark:from-mintcom-green/18 dark:via-mintcom-green/[0.04] dark:to-transparent"
+                        />
+                        <div className="relative flex gap-2.5 p-2.5">
                           <img
                             src="/mintcom-admin-app-icon.png"
                             alt=""
-                            className="h-10 w-10 shrink-0 rounded-[10px] shadow-md"
+                            className="h-10 w-10 shrink-0 rounded-[10px] shadow-md ring-1 ring-black/5 dark:ring-white/15"
                             draggable={false}
                           />
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center justify-between gap-2">
-                              <span className="text-[10px] font-semibold tracking-wide text-gray-500">
+                              <span className="text-[10px] font-semibold tracking-wide text-gray-500 dark:text-mintcom-green/90">
                                 {appName.toUpperCase()}
                               </span>
-                              <span className="text-[10px] text-gray-400">
+                              <span className="text-[10px] text-gray-400 dark:text-white/45">
                                 {String(t('landing.workflow.receipt.demo.mobile.now', 'now'))}
                               </span>
                             </div>
-                            <p className="truncate text-[13px] font-semibold leading-tight text-gray-900">
+                            <p className="truncate text-[13px] font-semibold leading-tight text-gray-900 dark:text-white">
                               {banner.title}
                             </p>
-                            <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-gray-600">
+                            <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-gray-600 dark:text-white/65">
                               {banner.description}
                             </p>
                           </div>
@@ -2790,10 +2810,10 @@ export const InteractiveMobileDemo = ({ t, tall = false, side: _side }: DemoProp
                               />
                             )}
                             <span
-                              className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-[11px] text-[13px] font-black"
+                              className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-[11px]"
                               style={{ backgroundColor: tn.bg, color: tn.color }}
                             >
-                              {tn.icon}
+                              <tn.Icon size={16} strokeWidth={2.25} />
                             </span>
                             <div className="min-w-0 flex-1">
                               <div className="flex items-start justify-between gap-2">
@@ -2859,11 +2879,14 @@ export const InteractiveMobileDemo = ({ t, tall = false, side: _side }: DemoProp
 };
 
 /* ─── Router ────────────────────────────────────────────────────────────── */
+
+export { isStaticFeatureScreenshot, STATIC_FEATURE_SCREENSHOTS };
+
 export const FeatureInteractiveDemo = ({
   featureId,
-  t,
-  isRtl,
-  tall,
+  t: _t,
+  isRtl: _isRtl,
+  tall: _tall,
   side,
 }: {
   featureId?: string;
@@ -2873,52 +2896,13 @@ export const FeatureInteractiveDemo = ({
   side?: boolean;
 }) => {
   if (!featureId) return null;
-  const props = { t, isRtl, side };
-  switch (featureId) {
-    case 'pointOfSale':
-      return <InteractivePosDemo {...props} />;
-    case 'salesControl':
-      return <InteractiveSalesControlDemo {...props} />;
-    case 'staffManagement':
-      return <InteractiveStaffDemo {...props} />;
-    case 'advancedReporting':
-      return <InteractiveReportingDemo {...props} />;
-    case 'production':
-      return <InteractiveRecipeDemo {...props} />;
-    case 'aiSystem':
-      return <InteractiveAiDemo {...props} />;
-    case 'multiBranch':
-      return <InteractiveBranchDemo {...props} />;
-    case 'simpleUI':
-      return <InteractiveUiDemo {...props} />;
-    case 'fastOnboarding':
-      return <InteractiveOnboardDemo {...props} />;
-    case 'secure':
-      return <InteractiveSecureDemo {...props} />;
-    case 'loyalty':
-      return <InteractiveLoyaltyDemo {...props} />;
-    case 'mobileApp':
-      return <InteractiveMobileDemo {...props} tall={tall} />;
-    default:
-      return null;
+  // All feature cards use static real-UI screenshots (consistent popup size)
+  if (isStaticFeatureScreenshot(featureId)) {
+    return <FeatureScreenshot featureId={featureId} side={side} />;
   }
+  return null;
 };
 
+/** True when the feature modal shows a right-side preview (static screenshot). */
 export const hasInteractiveDemo = (featureId?: string) =>
-  Boolean(
-    featureId &&
-      [
-        'pointOfSale',
-        'salesControl',
-        'staffManagement',
-        'advancedReporting',
-        'production',
-        'aiSystem',
-        'multiBranch',
-        'simpleUI',
-        'fastOnboarding',
-        'secure',
-        'loyalty',
-        'mobileApp',
-      ].includes(featureId),
-  );
+  isStaticFeatureScreenshot(featureId);

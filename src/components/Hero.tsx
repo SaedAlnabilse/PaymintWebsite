@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Play, X, ArrowRight, Zap } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { HERO_VIDEO_URL } from '../config/downloads';
+import { HeroPosStation } from './HeroPosStation';
 
 const SplitText = ({ text, className = "" }: { text: string; className?: string }) => {
   return (
@@ -91,7 +92,7 @@ export const Hero = ({ isVideoOpen, setIsVideoOpen }: { isVideoOpen: boolean; se
               </span>
             </motion.div>
 
-            <h1 className="mb-6 font-magilio text-4xl font-bold tracking-tight leading-tight sm:text-5xl lg:text-7xl">
+            <h1 className="mb-6 font-magilio text-3xl font-bold tracking-tight leading-tight sm:text-4xl lg:text-6xl">
               <span className="block leading-[1.1] rtl:leading-[1.2]"><SplitText text={t('landing.hero.title1')} /></span>
               <span className="block leading-[1.1] rtl:leading-[1.2]"><SplitText text={t('landing.hero.title2')} /></span>
               <span className="block leading-[1.1] rtl:leading-[1.2]"><SplitText text={t('landing.hero.title3')} /></span>
@@ -113,7 +114,7 @@ export const Hero = ({ isVideoOpen, setIsVideoOpen }: { isVideoOpen: boolean; se
 
               <motion.button
                 whileTap={{ scale: 0.95 }}
-                onClick={() => navigate('/try-pos')}
+                onClick={() => window.open('/try-pos', '_blank')}
                 className="group flex w-full items-center justify-center gap-2 rounded-xl border-2 border-mintcom-green/40 bg-mintcom-green/10 px-6 py-3.5 text-base font-bold text-gray-900 transition-colors hover:border-mintcom-green hover:bg-mintcom-green/15 dark:text-white sm:px-8 sm:py-4 sm:text-lg sm:w-auto"
               >
                 <Play size={18} fill="currentColor" className="text-mintcom-green" />
@@ -143,26 +144,14 @@ export const Hero = ({ isVideoOpen, setIsVideoOpen }: { isVideoOpen: boolean; se
             className="perspective-1000 relative mt-8 w-full max-w-[700px] flex-1 sm:mt-12 lg:mt-0 lg:max-w-[800px] lg:-translate-x-20 xl:max-w-[900px] xl:-translate-x-28"
           >
             <div className="relative w-full aspect-square sm:aspect-[4/3] flex items-center justify-center">
-              
-              {/* Decorative Background Glow */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-gradient-to-tr from-mintcom-green/20 via-transparent to-mintcom-green/5 rounded-full blur-3xl -z-20" />
-
-              {/* Generated Mintcom POS System Image - mix-blend-multiply removes white bg in all modes */}
+              {/* Mintcom POS station — code-built mockup (same approach as AdminControl / CloudControl) */}
               <motion.div
-                className="relative w-full max-w-[1100px] origin-center sm:w-[118%] lg:w-[140%] lg:origin-left"
-                style={{ isolation: 'auto' }}
+                className="relative w-full origin-center sm:w-[108%] lg:w-[118%] lg:origin-left"
                 animate={{ y: [0, -6, 0] }}
                 transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
               >
-                <div className="bg-transparent rounded-2xl overflow-hidden">
-                  <img 
-                    src="/mintcom-pos-hero.png" 
-                    alt={t('landing.hero.alt', 'Mintcom All-in-One POS System')} 
-                    className="w-full h-auto object-contain"
-                  />
-                </div>
+                <HeroPosStation />
               </motion.div>
-
             </div>
           </motion.div>
         </div>

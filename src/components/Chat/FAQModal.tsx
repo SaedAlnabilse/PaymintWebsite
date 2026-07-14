@@ -13,7 +13,8 @@ interface FAQModalProps {
 
 export function FAQModal({ isOpen, onClose }: FAQModalProps) {
   const { t, i18n } = useTranslation();
-  const isRTL = i18n.language === 'ar';
+  const isArabic = (i18n.language || '').toLowerCase().startsWith('ar');
+  const isRTL = isArabic || t('common.locale') === 'ar';
   const [search, setSearch] = useState('');
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<FAQItem['category'] | 'all'>('all');
@@ -196,7 +197,7 @@ export function FAQModal({ isOpen, onClose }: FAQModalProps) {
                         </div>
                         <div className="flex-1 min-w-0">
                           <span className="text-sm font-bold text-gray-800 dark:text-gray-200 block">
-                            {isRTL && item.questionAr ? item.questionAr : item.question}
+                            {isArabic && item.questionAr ? item.questionAr : item.question}
                           </span>
                           <span className={`text-[10px] font-bold uppercase tracking-wider ${config.color.split(' ')[0]}`}>
                             {config.label}
@@ -221,7 +222,7 @@ export function FAQModal({ isOpen, onClose }: FAQModalProps) {
                             <div className="px-3 pb-3 pt-0">
                               <div className={`p-3 bg-gray-50 dark:bg-white/[0.03] rounded-lg ${isRTL ? 'border-r-2' : 'border-l-2'} border-indigo-500`}>
                                 <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-                                  {isRTL && item.answerAr ? item.answerAr : item.answer}
+                                  {isArabic && item.answerAr ? item.answerAr : item.answer}
                                 </p>
                               </div>
                             </div>

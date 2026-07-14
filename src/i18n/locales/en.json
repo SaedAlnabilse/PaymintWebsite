@@ -81,17 +81,22 @@
       "updateProduct": "Product: update",
       "updateTax": "Update: tax"
     },
+    "activeFilters": "Filters",
     "administrativeAccount": "Administrative account",
     "allActions": "All actions",
+    "allUsers": "All users",
     "customRange": "Custom range",
     "data": "Data",
     "details": "Details",
     "export": "Export",
+    "filterByUser": "Filter by user",
     "history": "History",
     "internal": "Internal",
     "ip": "IP address",
     "loading": "Loading logs...",
     "logDetails": "Log Details",
+    "meOnly": "Me only",
+    "meOnlyUnavailable": "Your login is not linked to a staff profile at this location.",
     "noLogs": "No logs found.",
     "owner": "Owner",
     "searchPlaceholder": "Search logs...",
@@ -436,7 +441,8 @@
       "passwordRequired": "Password is required",
       "passwordsDoNotMatch": "Passwords do not match",
       "passwordUppercase": "Must contain at least one uppercase letter",
-      "termsRequired": "You must agree to the Privacy Policy and Terms of Service"
+      "termsRequired": "You must agree to the Privacy Policy and Terms of Service",
+      "passwordSymbol": "Must contain at least one symbol"
     },
     "verifyEmail": {
       "backToHome": "Back to Home",
@@ -671,55 +677,78 @@
     },
     "tasks": {
       "aboutMinutes": "About {{minutes}} minutes",
+      "addons": {
+        "action": "Create Add-on",
+        "description": "Build sizes, toppings, or extras cashiers can attach at checkout — separate from base products so the menu stays flexible.",
+        "title": "Add Modifiers & Extras"
+      },
       "allDoneSubtitle": "Your Location Is Fully Set Up and Ready to Go",
       "allDoneTitle": "All Done!",
       "categories": {
         "action": "New Category",
-        "description": "Add a clear category like Drinks, Food, or Services before adding products.",
-        "title": "Create Your First Category"
+        "description": "Group the menu first (Drinks, Food, Services) so products are easy to find on the POS.",
+        "title": "Create Menu Categories"
       },
       "completed": "Completed",
-      "congratsMessage": "You have successfully completed all the setup tasks. Your location is now fully ready to go!",
+      "congratsContinue": "Continue to Dashboard",
+      "congratsGetApp": "Install POS App",
+      "congratsMessage": "You finished every setup step. Your location is ready for real sales — install the POS app and run your first test order.",
+      "congratsProgress": "All {{total}} setup steps completed",
       "congratsTitle": "Congratulations! 🎉",
+      "discounts": {
+        "action": "Create Offer",
+        "description": "Create a welcome, happy-hour, or staff discount so promotions are ready at checkout.",
+        "title": "Create a Discount Offer"
+      },
       "goLive": {
-        "action": "Open Launch Guide",
-        "description": "Open the launch guide, sign in on POS, and complete one test order to verify your full setup.",
-        "title": "Install POS App and Run Test Sale"
+        "action": "Get Mobile App",
+        "description": "Download the Mintcom POS app on iOS or Android, sign in, run one test sale, then check Sales reports to confirm totals look right.",
+        "title": "Install POS & Run Test Sale"
+      },
+      "loyalty": {
+        "action": "Open Loyalty",
+        "description": "Turn on points and add one reward so repeat customers earn automatically after each sale.",
+        "title": "Turn On Loyalty Rewards"
       },
       "markAsCompleted": "Mark as completed",
       "payments": {
         "action": "Payment Methods",
-        "description": "Enable the payment methods your staff will use at checkout (cash, card, wallet).",
+        "description": "Enable cash, card, and any wallet methods your cashiers will accept.",
         "title": "Set Payment Methods"
       },
       "products": {
-        "action": "Add Product",
-        "description": "Create your first sellable item with price, tax behavior, and the right category.",
-        "title": "Add Your First Product"
+        "action": "Build Menu",
+        "description": "Add your opening lineup with prices and categories, then upload photos so the POS looks clear on day one — bestsellers and signature items first.",
+        "title": "Build Your Full Menu"
       },
       "profile": {
         "action": "Open Profile",
-        "description": "Set your store name, address, and contact details so receipts and reports are correct.",
+        "description": "Set store name, address, and contact details used across the dashboard and reports.",
         "title": "Complete Location Profile"
       },
       "progressText": "{{done}} of {{total}} completed",
       "receipt": {
         "action": "Receipt Settings",
-        "description": "Set logo, header, address, Tax ID, and footer message exactly how customers should see it.",
+        "description": "Set logo, header, Tax ID, and footer so printed receipts match your brand.",
         "title": "Configure Receipt Layout"
       },
-      "setupGuideSubtitle": "Set Up Your Location Step by Step, Then Run Your First Test Sale with Confidence",
+      "roles": {
+        "action": "Open Roles",
+        "description": "Review existing roles (cashier, manager, and custom ones) or create a new role with the permissions you need — do this before inviting staff.",
+        "title": "Review or Create Roles"
+      },
+      "setupGuideSubtitle": "One clear path: brand, money rules, menu, offers, team — then your first test sale",
       "setupGuideTitle": "Setup Guide",
       "staff": {
         "action": "Add Staff",
-        "description": "Create at least one staff account with the right role so operations can start safely.",
-        "title": "Add Cashier or Staff Account"
+        "description": "Invite a cashier or manager and assign one of the roles you reviewed — no shared logins.",
+        "title": "Add Your Team"
       },
       "stepsCount": "{{count}} steps",
       "taxes": {
         "action": "Tax Settings",
-        "description": "Review tax rate so totals, reports, and settlements are accurate.",
-        "title": "Set Tax"
+        "description": "Set the tax rate so order totals and settlements stay accurate.",
+        "title": "Set Tax Rate"
       },
       "title": "Tasks"
     }
@@ -1890,24 +1919,66 @@
       "mockup": {
         "adminDashboard": "Admin Dashboard",
         "ahmadClockedIn": "Ahmad clocked in",
+        "alertsLabel": "alerts",
+        "allLocations": "All Locations",
         "businessOwner": "Business Owner",
         "cashierSara": "Cashier Sara",
         "clockedOut": "clocked out 4:00 PM",
+        "criticalStock": "Critical stock",
+        "criticalStockDesc": "Espresso Beans has 3 kg remaining",
+        "criticalStockPill": "3 left",
+        "airportBranch": "Airport Branch",
+        "downtownCafe": "Downtown Café",
         "espressoBeans": "Espresso Beans",
         "espressoRemaining": "-3 kg remaining",
+        "filterByLocation": "Filter by location",
         "goodMorning": "Good morning,",
         "jod2450": "JOD 2,450",
+        "lowStock": "Low stock",
+        "lowStockDesc": "Whole Milk has 8 L remaining",
+        "lowStockPill": "8 left",
+        "mallBranch": "Mall Branch",
+        "markAllRead": "Mark all read",
         "milkAdded": "+20 L added",
+        "navAccount": "Account",
+        "navBrands": "Brands",
+        "navHome": "Home",
+        "navLocations": "Locations",
         "nineAM": "9:00 AM",
+        "notificationsTitle": "Notifications",
         "orderAmt": "JOD 24.00",
         "orderCompleted": "Order Completed",
         "orderNum": "Order #1042",
         "orders": "Orders",
+        "overageDesc": "Expected JOD 320.00 - Counted JOD 335.00",
+        "overagePill": "+JOD 15.00",
+        "overages": "Overages",
+        "overageTitle": "Overage - Ahmad",
+        "refundDesc": "Order #1042 refunded · JOD 24.00",
+        "refundPill": "Refund",
+        "refundTitle": "Refund",
         "salesActivity": "Sales Activity",
+        "searchPlaceholder": "Search notifications",
         "shiftStarted": "Shift Started",
+        "shortageDesc": "Expected JOD 500.00 - Counted JOD 480.00",
+        "shortagePill": "-JOD 20.00",
+        "shortages": "Shortages",
+        "shortageSara": "Shortage - Sara",
         "staff": "Staff",
         "stockRestocked": "Stock Restocked",
+        "stockStat": "Stock",
+        "tabAll": "All",
+        "tabCash": "Cash",
+        "tabRefunds": "Refunds",
+        "tabStock": "Stock",
+        "time12m": "12m ago",
+        "time1h": "1h ago",
+        "time2h": "2h ago",
+        "time3h": "3h ago",
+        "time4h": "4h ago",
+        "today": "Today",
         "todaysRevenue": "Today's revenue",
+        "updates": "Updates",
         "welcomeBack": "Welcome back,",
         "wholeMilk": "Whole Milk"
       },
@@ -2431,18 +2502,6 @@
             "typeFreeItem": "Free item from"
           },
           "mobile": {
-            "n1": "New order #4218 — 24.50 USD",
-            "n2": "Daily target reached 🎉",
-            "n3": "Low stock: Espresso beans",
-            "n4": "Sara clocked in"
-          },
-          "onboard": {
-            "s1": "Add staff member",
-            "s2": "Assign a role",
-            "s3": "Run first sale",
-            "s4": "Ready to go"
-          },
-          "mobile": {
             "alert": "alert",
             "alerts": "alerts",
             "appName": "Admin Portal",
@@ -2685,6 +2744,34 @@
       "subtitle": "",
       "title": "What Do You Get For",
       "titleHighlight": "20 USD/Month?"
+    },
+    "heroPos": {
+      "catAll": "All Menu",
+      "catCold": "Cold Drinks",
+      "catHot": "Hot Drinks",
+      "catDesserts": "Desserts",
+      "catSalads": "Salads",
+      "employee": "Admin Employee",
+      "role": "Cashier · Shift open",
+      "search": "Search menu…",
+      "sync": "Sync",
+      "orderDrawer": "Order Drawer",
+      "payInOut": "Pay-in / Pay-out",
+      "allMenu": "All Menu",
+      "synced": "Sync status: Synced",
+      "orderNumber": "Order",
+      "subtotal": "Subtotal",
+      "discount": "Discount",
+      "tax": "Total Tax",
+      "total": "Total",
+      "paymentMethod": "Payment Method",
+      "split": "Split",
+      "cash": "Cash",
+      "card": "Card",
+      "other": "Other",
+      "receiptOrder": "Order 41, Items:",
+      "readyForPayment": "Ready for payment",
+      "tapOrInsert": "Tap or insert card"
     }
   },
   "legal": {
@@ -3154,7 +3241,8 @@
       "selectData": "Select data to duplicate:",
       "startFresh": "Do not import (Start fresh)",
       "subtitle": "Tell Us About Your Business Location",
-      "title": "Location Details"
+      "title": "Location Details",
+      "currencyLinkedToCountry": "Currency is set from the selected country. You can change it if needed."
     },
     "step2": {
       "activateButton": "Activate & Pay",
@@ -3694,6 +3782,8 @@
       "brandLoginBadge": "Brand",
       "brandLoginHint": "Use this ID to sign in to the brand dashboard.",
       "brandLoginId": "Brand Login ID",
+      "accessCredentials": "Access Credentials",
+      "accessCredentialsSubtitle": "Login IDs for location and brand dashboards — search, copy, open, or reset.",
       "brandLogins": "Brand Logins",
       "brandLoginsSubtitle": "Login Credentials for Your Brand Dashboards",
       "brands": "Brands",
@@ -3706,19 +3796,30 @@
       "createFirst": "Create your first resource",
       "dangerZone": "Danger Zone",
       "dangerZoneHint": "Once you delete your account, there is no going back. Please be certain.",
+      "dangerZoneBullet1": "All locations and brands will be scheduled for removal",
+      "dangerZoneBullet2": "Staff access and login IDs stop working",
+      "dangerZoneBullet3": "You can cancel during the grace period if offered",
       "delete": "Delete",
       "deleteAccount": "Delete Account",
       "deleteAccountModal": {
-        "confirmDeletePrompt": "Type DELETE to confirm",
+        "confirmDeletePrompt": "Type {{keyword}} to confirm",
         "confirmFinal": "I understand this action is permanent and irreversible",
         "confirmPassword": "Confirm your password to proceed",
         "deleting": "Deleting account...",
         "feedbackHint": "Help us improve by sharing your reason (optional)",
         "passwordPlaceholder": "Enter your password",
         "title": "Delete Account",
-        "typeDeletePlaceholder": "Type DELETE here",
+        "typeDeletePlaceholder": "Type {{keyword}} here",
         "warning": "This will permanently delete your account and all associated data. This action cannot be undone.",
-        "whyLeaving": "Why are you leaving?"
+        "whyLeaving": "Why are you leaving?",
+        "reasons": {
+          "its_too_expensive": "It's too expensive",
+          "i_found_a_better_alternative": "I found a better alternative",
+          "missing_features_i_need": "Missing features I need",
+          "too_difficult_to_use": "Too difficult to use",
+          "closing_my_business": "Closing my business",
+          "other": "Other"
+        }
       },
       "deleteButton": "Delete Account",
       "deleteFailed": "Failed to initiate deletion",
@@ -3746,6 +3847,8 @@
       "locations": "Locations",
       "locationsCount": "{{count}} locations",
       "loginId": "Login ID",
+      "searchCredentials": "Search name or login ID…",
+      "totalStaff": "Staff",
       "noLocationsOrBrands": "No Locations or Brands Found",
       "noLocationsOrBrandsHint": "Get started by creating your first location or brand.",
       "privacy": "Privacy",
@@ -3758,6 +3861,8 @@
           "desc": "Learn about our mission and team",
           "title": "About Us"
         },
+        "company": "Company & legal",
+        "guides": "Guides",
         "privacyPolicy": {
           "desc": "How we protect your data",
           "title": "Privacy Policy"
@@ -3797,11 +3902,15 @@
       "save": "Save",
       "saving": "Saving...",
       "securityTips": {
+        "enable2fa": "Enable two-factor authentication when available",
         "neverShareOtp": "Never share your OTP or verification codes with anyone",
+        "subtitle": "Keep your account and logins safe",
         "title": "Security Tips",
         "uniquePasswords": "Use unique, strong passwords for each account",
         "updatePeriodically": "Update your password periodically for better security"
       },
+      "singleBrandBadge": "1 brand",
+      "singleLocationBadge": "1 location",
       "setupManual": "Setup Manual",
       "stats": {
         "admins": "Admins",
@@ -3818,8 +3927,21 @@
         "requiredFields": "Please fill in all required fields"
       },
       "verified": "Verified",
+      "unverified": "Unverified",
+      "owner": "Owner",
       "verifyEmail": "Verify email",
-      "videoTutorial": "Video Tutorial"
+      "videoTutorial": "Video Tutorial",
+      "ownerAccountTitle": "Owner Account",
+      "profileCompletion": "Profile Completion",
+      "completeProfileHint": "Complete your profile to unlock all features",
+      "systemCurrency": "System Currency",
+      "systemCurrencySubtitle": "Updates currency for all your locations.",
+      "applyingCurrencyChanges": "Applying changes to all locations...",
+      "currencyUpdated": "Global currency updated to {{currency}}",
+      "currencyUpdateFailed": "Failed to update global currency",
+      "videoGuideComingSoon": "Video guide coming soon",
+      "ownerAccount": "Owner Account",
+      "systemCurrencyDesc": "Updates currency for all your locations."
     },
     "account_employees": {
       "members_count_few": "{{count}} Members",
@@ -5827,7 +5949,8 @@
       "subtitle": "Find Answers Quickly",
       "title": "How Can We Help You?",
       "topics": "Help Topics",
-      "tryDifferent": "Try a different search term"
+      "tryDifferent": "Try a different search term",
+      "entityQuestions": "questions"
     },
     "quickLinks": {
       "community": "Join Community",
@@ -5918,6 +6041,7 @@
     "passwordNumber": "Password must contain at least one number",
     "passwordRequired": "Password is required",
     "passwordsDoNotMatch": "Passwords do not match",
-    "passwordUppercase": "Password must contain at least one uppercase letter"
+    "passwordUppercase": "Password must contain at least one uppercase letter",
+    "passwordSymbol": "Password must contain at least one symbol"
   }
 }

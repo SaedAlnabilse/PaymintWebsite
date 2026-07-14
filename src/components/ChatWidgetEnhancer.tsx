@@ -1,37 +1,25 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { DualLauncher } from './Chat/DualLauncher';
 import { FAQModal } from './Chat/FAQModal';
 import { SmartChatbot } from './Chat/SmartChatbot';
 import { TasksModal } from './Chat/TasksModal';
 import { motion, AnimatePresence } from 'framer-motion';
-import { PartyPopper, X, CheckCircle2 } from 'lucide-react';
+import { PartyPopper, X, CheckCircle2, Smartphone, Sparkles } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useLocation, useParams } from 'react-router-dom';
-
-const TOTAL_TASKS = 8;
-const getTasksStorageKey = (contextId: string) => `mintcom.widget.tasks.v1.${contextId}`;
-const getPopupSeenKey = (contextId: string) => `mintcom.widget.tasks.popup.seen.${contextId}`;
-
-const checkAllCompleted = (storageKey: string) => {
-    if (typeof window === 'undefined') return false;
-    try {
-        const raw = window.localStorage.getItem(storageKey);
-        if (!raw) return false;
-        const parsed = JSON.parse(raw);
-        if (parsed && typeof parsed === 'object') {
-            const completedCount = Object.values(parsed).filter(Boolean).length;
-            return completedCount >= TOTAL_TASKS;
-        }
-    } catch {
-        return false;
-    }
-    return false;
-};
+import { useLocation } from 'react-router-dom';
+import {
+    areAllSetupTasksCompleted,
+    countPendingSetupTasks,
+    getDashboardTasksContextId,
+    getPopupSeenKey,
+    getTasksStorageKey,
+    readCompletedTasksMap,
+    TOTAL_SETUP_TASKS,
+} from '../data/setupTasks';
 
 export const ChatWidgetEnhancer = () => {
     const { t, i18n } = useTranslation();
-    const { locationSlug } = useParams();
     const location = useLocation();
     const hideOnTryPos =
         location.pathname === '/try-pos' || location.pathname.startsWith('/try-pos/');
@@ -42,41 +30,62 @@ export const ChatWidgetEnhancer = () => {
     const [tasksCount, setTasksCount] = useState(0);
     const [showCongratsPopup, setShowCongratsPopup] = useState(false);
     const [isHiddenByOverlay, setIsHiddenByOverlay] = useState(false);
-    const storageContextId = locationSlug ? `dashboard-${locationSlug}` : 'global';
-    const storageKey = getTasksStorageKey(storageContextId);
-    const popupSeenKey = getPopupSeenKey(storageContextId);
+
+    // Must match TasksModal: ChatWidgetEnhancer sits outside the dashboard route tree,
+    // so useParams().locationSlug is always undefined — parse pathname instead.
+    const storageContextId = useMemo(
+        () => getDashboardTasksContextId(location.pathname),
+        [location.pathname],
+    );
+    const storageKey = useMemo(() => getTasksStorageKey(storageContextId), [storageContextId]);
+    const popupSeenKey = useMemo(() => getPopupSeenKey(storageContextId), [storageContextId]);
+
+    const refreshTasksCount = useCallback(() => {
+        const completedMap = readCompletedTasksMap(storageKey);
+        setTasksCount(countPendingSetupTasks(completedMap));
+        return areAllSetupTasksCompleted(completedMap);
+    }, [storageKey]);
+
+    const openCongratsOnce = useCallback(() => {
+        if (typeof window === 'undefined') return false;
+        const seen = window.localStorage.getItem(popupSeenKey);
+        if (seen) return false;
+
+        setIsTasksOpen(false);
+        setIsChatOpen(false);
+        setIsFAQOpen(false);
+        setShowCongratsPopup(true);
+        window.localStorage.setItem(popupSeenKey, 'true');
+        return true;
+    }, [popupSeenKey]);
 
     useEffect(() => {
         const handleTasksUpdate = () => {
-            const completed = checkAllCompleted(storageKey);
-
-            // Calculate pending count
-            if (typeof window !== 'undefined') {
-                try {
-                    const raw = window.localStorage.getItem(storageKey);
-                    const completedCount = raw ? Object.values(JSON.parse(raw)).filter(Boolean).length : 0;
-                    setTasksCount(TOTAL_TASKS - completedCount);
-                } catch {
-                    setTasksCount(TOTAL_TASKS);
-                }
-            }
-
-            // If completed and we haven't shown the popup yet, show it
-            if (completed && typeof window !== 'undefined') {
-                const seen = window.localStorage.getItem(popupSeenKey);
-                if (!seen) {
-                    setShowCongratsPopup(true);
-                    window.localStorage.setItem(popupSeenKey, 'true');
-                }
+            const allDone = refreshTasksCount();
+            // Fallback: if all tasks are done and we never celebrated, show the popup.
+            // Covers cases where the transition event was missed (HMR, remount, etc.).
+            if (allDone) {
+                openCongratsOnce();
             }
         };
 
-        // Check on mount as well in case it was completed while unmounted
-        handleTasksUpdate();
+        const handleAllCompleted = () => {
+            refreshTasksCount();
+            openCongratsOnce();
+        };
+
+        // Sync badge; if already fully done and never celebrated, show popup.
+        if (refreshTasksCount()) {
+            openCongratsOnce();
+        }
 
         window.addEventListener('mintcom-tasks-updated', handleTasksUpdate);
-        return () => window.removeEventListener('mintcom-tasks-updated', handleTasksUpdate);
-    }, [popupSeenKey, storageKey]);
+        window.addEventListener('mintcom-tasks-all-completed', handleAllCompleted);
+        return () => {
+            window.removeEventListener('mintcom-tasks-updated', handleTasksUpdate);
+            window.removeEventListener('mintcom-tasks-all-completed', handleAllCompleted);
+        };
+    }, [refreshTasksCount, openCongratsOnce]);
 
     const handleOpenChat = () => {
         setIsChatOpen(true);
@@ -120,6 +129,13 @@ export const ChatWidgetEnhancer = () => {
         setIsTasksOpen(false);
     };
 
+    const closeCongrats = () => setShowCongratsPopup(false);
+
+    const handleGetAppFromCongrats = () => {
+        setShowCongratsPopup(false);
+        window.dispatchEvent(new Event('mintcom-open-mobile-app'));
+    };
+
     // Full-screen POS sandbox — keep layout clean (no DualLauncher / chatbot)
     if (hideOnTryPos) {
         return null;
@@ -154,74 +170,123 @@ export const ChatWidgetEnhancer = () => {
                     onClose={() => setIsTasksOpen(false)}
                 />
             </div>
-            {/* Congratulations Popup */}
+
+            {/* Celebration popup — shown once when every setup task is done */}
             <AnimatePresence>
                 {showCongratsPopup && createPortal(
-                    <div 
+                    <div
                         dir={isRTL ? 'rtl' : 'ltr'}
                         className="fixed inset-0 z-[9999999] popup-surface flex items-end sm:items-center justify-center p-0 sm:p-4 isolate"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="setup-congrats-title"
                     >
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            onClick={() => setShowCongratsPopup(false)}
-                            className="fixed inset-0 bg-black/30 dark:bg-black/80 backdrop-blur-sm"
+                            onClick={closeCongrats}
+                            className="fixed inset-0 bg-black/40 dark:bg-black/80 backdrop-blur-sm"
                         />
                         <motion.div
-                            initial={{ opacity: 0, y: 100 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 100 }}
-                            transition={{ type: "spring", duration: 0.4, bounce: 0.2 }}
-                            className="relative w-full sm:max-w-sm bg-white dark:bg-[#0F172A] rounded-t-3xl sm:rounded-3xl shadow-2xl border border-gray-200/50 dark:border-white/10 overflow-hidden z-10"
+                            initial={{ opacity: 0, y: 80, scale: 0.96 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 40, scale: 0.96 }}
+                            transition={{ type: 'spring', duration: 0.45, bounce: 0.28 }}
+                            className="relative w-full sm:max-w-md bg-white dark:bg-[#0F172A] rounded-t-3xl sm:rounded-3xl shadow-2xl border border-gray-200/50 dark:border-white/10 overflow-hidden z-10"
                         >
-                            {/* Mobile drag handle */}
-                            <div className="sm:hidden flex justify-center pt-3 pb-1">
+                            <div
+                                className="pointer-events-none absolute inset-x-0 top-0 h-36 bg-gradient-to-b from-[#7dc6a2]/20 via-[#7dc6a2]/5 to-transparent"
+                                aria-hidden
+                            />
+
+                            <div className="sm:hidden flex justify-center pt-3 pb-1 relative z-10">
                                 <div className="w-10 h-1 bg-gray-300 dark:bg-white/20 rounded-full" />
                             </div>
 
-                            <div className="px-6 pt-8 pb-8 flex flex-col items-center text-center">
-                                <div className="w-16 h-16 mb-4 rounded-full bg-[#7dc6a2]/10 flex items-center justify-center relative">
-                                    <PartyPopper size={32} className="text-[#7dc6a2]" />
-                                    <motion.div 
-                                        initial={{ scale: 0 }}
-                                        animate={{ scale: 1 }}
-                                        transition={{ delay: 0.2, type: "spring" }}
-                                        className="absolute -bottom-1 -right-1 w-6 h-6 bg-white dark:bg-[#0F172A] rounded-full flex items-center justify-center"
-                                    >
-                                        <div className="w-5 h-5 bg-[#7dc6a2] text-white rounded-full flex items-center justify-center">
-                                            <CheckCircle2 size={12} strokeWidth={3} />
-                                        </div>
-                                    </motion.div>
-                                </div>
-                                
-                                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                                    {t('chat.tasks.congratsTitle', 'Congratulations! 🎉')}
-                                </h3>
-                                <p className="text-gray-600 dark:text-gray-300 leading-relaxed mb-6">
-                                    {t('chat.tasks.congratsMessage', 'You have successfully completed all the setup tasks. Your location is now fully ready to go!')}
-                                </p>
-
-                                <button
-                                    onClick={() => setShowCongratsPopup(false)}
-                                    className="w-full py-3.5 px-4 bg-gradient-to-r from-[#7dc6a2] to-[#5BA882] hover:brightness-105 text-white font-bold rounded-xl shadow-lg shadow-[#7dc6a2]/30 transition-all active:scale-[0.98]"
-                                >
-                                    {t('common.continue', 'Continue')}
-                                </button>
-                            </div>
-                            
                             <button
-                                onClick={() => setShowCongratsPopup(false)}
-                                className="absolute top-4 right-4 rtl:left-4 rtl:right-auto p-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 text-gray-400 transition-colors"
+                                onClick={closeCongrats}
+                                className="absolute top-4 end-4 z-20 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 text-gray-400 transition-colors"
+                                aria-label={t('common.close', 'Close')}
                             >
                                 <X size={16} />
                             </button>
+
+                            <div className="relative px-6 pt-10 pb-8 flex flex-col items-center text-center">
+                                <div className="relative mb-5">
+                                    <motion.div
+                                        initial={{ scale: 0.6, opacity: 0 }}
+                                        animate={{ scale: 1, opacity: 1 }}
+                                        transition={{ type: 'spring', delay: 0.05 }}
+                                        className="w-20 h-20 rounded-full bg-gradient-to-br from-[#7dc6a2]/25 to-[#5BA882]/15 flex items-center justify-center ring-8 ring-[#7dc6a2]/10"
+                                    >
+                                        <PartyPopper size={36} className="text-[#5BA882]" />
+                                    </motion.div>
+                                    <motion.div
+                                        initial={{ scale: 0 }}
+                                        animate={{ scale: 1 }}
+                                        transition={{ delay: 0.25, type: 'spring' }}
+                                        className="absolute -bottom-1 -end-1 w-8 h-8 bg-white dark:bg-[#0F172A] rounded-full flex items-center justify-center shadow-sm"
+                                    >
+                                        <div className="w-6 h-6 bg-[#7dc6a2] text-white rounded-full flex items-center justify-center">
+                                            <CheckCircle2 size={14} strokeWidth={3} />
+                                        </div>
+                                    </motion.div>
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 6 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: 0.35 }}
+                                        className="absolute -top-1 -start-2 text-[#7dc6a2]"
+                                    >
+                                        <Sparkles size={16} />
+                                    </motion.div>
+                                </div>
+
+                                <p className="text-xs font-bold uppercase tracking-widest text-[#5BA882] mb-2">
+                                    {t('chat.tasks.allDoneTitle', 'All Done!')}
+                                </p>
+                                <h3
+                                    id="setup-congrats-title"
+                                    className="text-2xl font-bold text-gray-900 dark:text-white mb-2"
+                                >
+                                    {t('chat.tasks.congratsTitle', 'Congratulations! 🎉')}
+                                </h3>
+                                <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed mb-2 max-w-sm">
+                                    {t(
+                                        'chat.tasks.congratsMessage',
+                                        'You finished every setup step. Your location is ready for real sales — install the POS app and run your first test order.',
+                                    )}
+                                </p>
+                                <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 mb-6">
+                                    {t('chat.tasks.congratsProgress', {
+                                        total: TOTAL_SETUP_TASKS,
+                                        defaultValue: `All ${TOTAL_SETUP_TASKS} setup steps completed`,
+                                    })}
+                                </p>
+
+                                <div className="w-full space-y-2.5">
+                                    <button
+                                        type="button"
+                                        onClick={handleGetAppFromCongrats}
+                                        className="w-full inline-flex items-center justify-center gap-2 py-3.5 px-4 bg-gradient-to-r from-[#7dc6a2] to-[#5BA882] hover:brightness-105 text-white font-bold rounded-xl shadow-lg shadow-[#7dc6a2]/25 transition-all active:scale-[0.98]"
+                                    >
+                                        <Smartphone size={18} />
+                                        <span>{t('chat.tasks.congratsGetApp', 'Install POS App')}</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={closeCongrats}
+                                        className="w-full py-3 px-4 rounded-xl font-bold text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
+                                    >
+                                        {t('chat.tasks.congratsContinue', 'Continue to Dashboard')}
+                                    </button>
+                                </div>
+                            </div>
                         </motion.div>
                     </div>,
-                    document.body
+                    document.body,
                 )}
             </AnimatePresence>
         </>
     );
 };
-

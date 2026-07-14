@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ElementType } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -15,14 +15,12 @@ import {
     Shield,
     Info,
     KeyRound,
-    Users,
     AlertTriangle,
     Lock,
-    Zap,
     Trash2,
     AlertCircle,
     X,
-    XCircle,
+    Users,
     BookOpen,
     Download,
     Settings,
@@ -33,6 +31,7 @@ import {
     CreditCard,
     Library,
     HelpCircle,
+    Search,
 } from 'lucide-react';
 import api from '../../config/api';
 import { ONBOARDING_VIDEO_URL } from '../../config/downloads';
@@ -41,11 +40,14 @@ import { useAuth } from '../../context/AuthContext';
 import { PasswordResetOtpModal } from '../../components/PasswordResetOtpModal';
 import { ConfirmModal } from '../../components/ConfirmModal';
 import { BusyOverlay } from '../../components/BusyOverlay';
-import { StatValue } from '../../components/ui/StatValue';
 import toast from 'react-hot-toast';
 import { getBusinessTypeIcon } from '../../utils/businessTypeIcons';
 import { SectionLoader } from '../../components/LoadingState';
+import { Pagination } from '../../components/ui';
 import { formatInputPlaceholder } from '../../utils/textCase';
+import { getLocalizedManual } from '../../utils/localizedDocs';
+
+const CRED_ITEMS_PER_PAGE = 3;
 
 interface AccountDetails {
     id: string;
@@ -77,27 +79,37 @@ interface BrandCredential {
     };
 }
 
-interface AdminUser {
-    id: string;
-    email: string;
-    firstName: string;
-    lastName: string;
-}
-
 const MAX_OWNER_PROFILE_NAME_LENGTH = 100;
 const MAX_OWNER_PROFILE_EMAIL_LENGTH = 254;
+
+/**
+ * Experimental Account Management layout: desktop fits the viewport (no page scroll).
+ * Set to false for classic scrollable page (full Resources, paginated credentials).
+ */
+const ACCOUNT_MGMT_VIEWPORT_FIT = false;
 
 const sanitizeOwnerProfileText = (value: unknown, maxLength: number) =>
     String(value ?? '').slice(0, maxLength);
 
+const DELETE_REASON_OPTIONS = [
+    { key: 'its_too_expensive', value: "It's too expensive" },
+    { key: 'i_found_a_better_alternative', value: 'I found a better alternative' },
+    { key: 'missing_features_i_need', value: 'Missing features I need' },
+    { key: 'too_difficult_to_use', value: 'Too difficult to use' },
+    { key: 'closing_my_business', value: 'Closing my business' },
+    { key: 'other', value: 'Other' },
+] as const;
+
 export function OwnerAccountManagementPage() {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const { account, establishments, logout, updateAccount } = useAuth();
     const navigate = useNavigate();
     const hasOnboardingVideo = Boolean(ONBOARDING_VIDEO_URL);
+    const userManualDoc = getLocalizedManual('user', i18n.language);
+    const setupManualDoc = getLocalizedManual('setup', i18n.language);
     const [accountDetails, setAccountDetails] = useState<AccountDetails | null>(null);
     const [brands, setBrands] = useState<BrandCredential[]>([]);
-    const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
+    const [totalStaff, setTotalStaff] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
     const [isRestoring, setIsRestoring] = useState(false);
     const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -139,13 +151,18 @@ export function OwnerAccountManagementPage() {
     // Currency awaiting confirmation (warning popup) before it is applied.
     const [pendingCurrency, setPendingCurrency] = useState<string | null>(null);
 
+    // Access credentials hub (locations + brands) — compact list for large counts
+    const [credTab, setCredTab] = useState<'locations' | 'brands'>('locations');
+    const [credSearch, setCredSearch] = useState('');
+    const [credPage, setCredPage] = useState(1);
+
     const handleUpdateGlobalCurrency = async (newCurrency: string) => {
         try {
             setIsUpdatingCurrency(true);
             const response = await api.put('/api/accounts/currency', { currency: newCurrency });
             if (response.data?.success) {
                 setGlobalCurrency(newCurrency);
-                toast.success(`Global currency updated to ${newCurrency}`);
+                toast.success(t('owner.account.currencyUpdated', { currency: newCurrency }));
                 
                 // Update local establishments data
                 if (accountDetails?.establishments) {
@@ -157,7 +174,7 @@ export function OwnerAccountManagementPage() {
             }
         } catch (err: any) {
             console.error('Failed to update currency:', err);
-            toast.error(err.response?.data?.message || 'Failed to update global currency');
+            toast.error(err.response?.data?.message || t('owner.account.currencyUpdateFailed'));
         } finally {
             setIsUpdatingCurrency(false);
         }
@@ -177,6 +194,74 @@ export function OwnerAccountManagementPage() {
 
         return contextEstablishments;
     }, [accountDetails?.establishments, establishments]);
+
+    const brandLoginRows = useMemo(() => {
+        return brands.map((brand) => {
+            let count = brand.establishmentCount || brand._count?.establishments || (brand.establishments ? brand.establishments.length : 0);
+            if (!count && establishments) {
+                const directMatches = establishments.filter((e: any) => e.brandId === brand.id || e.brand?.id === brand.id).length;
+                if (directMatches > 0) {
+                    count = directMatches;
+                } else if (brands.length === 1 && establishments.length > 0) {
+                    count = establishments.length;
+                }
+            }
+            return { ...brand, locationCount: count || 0 };
+        });
+    }, [brands, establishments]);
+
+    const filteredLocationLogins = useMemo(() => {
+        const q = credSearch.trim().toLowerCase();
+        if (!q) return locationLoginEstablishments;
+        return locationLoginEstablishments.filter((est: any) => {
+            const slug = String(est.establishmentLoginId || est.loginId || est.locationLoginId || est.id || '').toLowerCase();
+            const name = String(est.name || '').toLowerCase();
+            const currency = String(est.currency || '').toLowerCase();
+            return name.includes(q) || slug.includes(q) || currency.includes(q);
+        });
+    }, [locationLoginEstablishments, credSearch]);
+
+    const filteredBrandLogins = useMemo(() => {
+        const q = credSearch.trim().toLowerCase();
+        if (!q) return brandLoginRows;
+        return brandLoginRows.filter((brand) => {
+            const slug = String(brand.establishmentLoginId || '').toLowerCase();
+            const name = String(brand.name || '').toLowerCase();
+            return name.includes(q) || slug.includes(q);
+        });
+    }, [brandLoginRows, credSearch]);
+
+    const hasAccessCredentials = locationLoginEstablishments.length > 0 || brands.length > 0;
+    /** One location, no brands — featured credential card instead of a sparse table. */
+    const isSingleLocationOnly =
+        locationLoginEstablishments.length === 1 && brands.length === 0;
+    /** One brand, no locations. */
+    const isSingleBrandOnly =
+        brands.length === 1 && locationLoginEstablishments.length === 0;
+    const isSingleCredential = isSingleLocationOnly || isSingleBrandOnly;
+    const showCredTabs = locationLoginEstablishments.length > 0 && brands.length > 0;
+
+    // Prefer the tab that has items; keep user choice when both exist.
+    useEffect(() => {
+        if (credTab === 'locations' && locationLoginEstablishments.length === 0 && brands.length > 0) {
+            setCredTab('brands');
+        } else if (credTab === 'brands' && brands.length === 0 && locationLoginEstablishments.length > 0) {
+            setCredTab('locations');
+        }
+    }, [credTab, locationLoginEstablishments.length, brands.length]);
+
+    // Reset credentials page when filters change (same pattern as locations table)
+    useEffect(() => {
+        setCredPage(1);
+    }, [credTab, credSearch]);
+
+    // Clamp page if the filtered list shrinks
+    useEffect(() => {
+        const total =
+            credTab === 'locations' ? filteredLocationLogins.length : filteredBrandLogins.length;
+        const pages = Math.max(1, Math.ceil(total / CRED_ITEMS_PER_PAGE));
+        setCredPage((p) => Math.min(p, pages));
+    }, [credTab, filteredLocationLogins.length, filteredBrandLogins.length]);
 
     const handleEditClick = () => {
         if (accountDetails) {
@@ -248,20 +333,11 @@ export function OwnerAccountManagementPage() {
             }
         } catch (err: any) {
             console.error('Failed to update profile:', err);
-            toast.error(err.response?.data?.message || 'Failed to update profile');
+            toast.error(err.response?.data?.message || t('owner.account.updateFailed'));
         } finally {
             setIsSaving(false);
         }
     };
-
-    const deleteReasons = [
-        "It's too expensive",
-        "I found a better alternative",
-        "Missing features I need",
-        "Too difficult to use",
-        "Closing my business",
-        "Other"
-    ];
 
     useEffect(() => {
         if (!showDeleteConfirm) {
@@ -276,18 +352,16 @@ export function OwnerAccountManagementPage() {
         try {
             setIsLoading(true);
 
-            // Fetch both profile and employees to get accurate stats
             const [profileRes, employeesRes] = await Promise.all([
                 api.get('/api/accounts/profile'),
-                api.get('/api/accounts/all-employees').catch(err => {
-                    console.error('Failed to fetch employees for admin count:', err);
+                api.get('/api/accounts/all-employees').catch((err) => {
+                    console.error('Failed to fetch staff count:', err);
                     return { data: [] };
-                })
+                }),
             ]);
 
             const data = profileRes.data;
-            const employees = employeesRes.data || [];
-            const adminsFromEmployees = employees.filter((e: any) => e.role === 'ADMIN');
+            const employees = Array.isArray(employeesRes.data) ? employeesRes.data : [];
 
             setAccountDetails({
                 id: data.id,
@@ -309,13 +383,8 @@ export function OwnerAccountManagementPage() {
             }
 
             setBrands(data.brands || []);
-            
-            // Sync adminUsers with the employees list to ensure consistency with the Staff page
-            if (adminsFromEmployees.length > 0) {
-                setAdminUsers(adminsFromEmployees);
-            } else {
-                setAdminUsers(data.adminUsers || []);
-            }
+            // Unique staff across the owner account (exclude pure owners if tagged)
+            setTotalStaff(employees.length);
         } catch (err) {
             console.error('Failed to fetch account data:', err);
             // Use context data as fallback
@@ -413,7 +482,13 @@ export function OwnerAccountManagementPage() {
     const formatDate = (dateString: string) => {
         try {
             const date = new Date(dateString);
-            return date.toLocaleDateString(t('common.language') === 'Arabic' ? 'ar-SA' : 'en-US', {
+            const lang = (i18n.language || 'en').toLowerCase();
+            const locale = lang.startsWith('ar')
+                ? 'ar-SA'
+                : lang.startsWith('zh')
+                    ? 'zh-CN'
+                    : 'en-US';
+            return date.toLocaleDateString(locale, {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
@@ -424,46 +499,6 @@ export function OwnerAccountManagementPage() {
     };
 
 
-
-    const getStatusBadge = (status: string) => {
-        switch (status?.toUpperCase()) {
-            case 'ACTIVE':
-                return (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-mintcom-green/ border border-mintcom-green/ rounded-lg text-xs font-bold tracking-widest text-mintcom-green">
-                        <CheckCircle2 size={12} />
-                        {t('common.status.active')}
-                    </span>
-                );
-            case 'TRIAL':
-            case 'TRIALING':
-                return (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-500/10 border border-blue-500/20 rounded-lg text-xs font-bold tracking-widest text-blue-500">
-                        <Zap size={12} />
-                        {t('common.status.trial')}
-                    </span>
-                );
-            case 'PAST_DUE':
-                return (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-red-500/10 border border-red-500/20 rounded-lg text-xs font-bold tracking-widest text-red-500">
-                        <AlertTriangle size={12} />
-                        {t('common.status.pastDue')}
-                    </span>
-                );
-            case 'CANCELED':
-                return (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-red-500/10 border border-red-500/20 rounded-lg text-xs font-bold tracking-widest text-red-500">
-                        <XCircle size={12} />
-                        {t('common.status.canceled')}
-                    </span>
-                );
-            default:
-                return (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-gray-500/10 border border-gray-500/20 rounded-lg text-xs font-bold tracking-widest text-gray-500">
-                        {status ? status.charAt(0).toUpperCase() + status.slice(1).toLowerCase() : ''}
-                    </span>
-                );
-        }
-    };
 
     const getProfileCompletion = () => {
         if (!accountDetails) return 0;
@@ -496,26 +531,34 @@ export function OwnerAccountManagementPage() {
 
     const profileCompletion = getProfileCompletion();
 
+    const fit = ACCOUNT_MGMT_VIEWPORT_FIT;
+
     return (
-        <div className="space-y-8">
+        <div
+            className={
+                fit
+                    ? 'flex flex-col gap-3 lg:h-[calc(100dvh-5.25rem)] lg:min-h-0 lg:overflow-hidden'
+                    : 'space-y-8'
+            }
+        >
             {/* Full-screen blocker while data loads, so no second action can
                 be stacked on an in-flight request. */}
             <BusyOverlay visible={isLoading} />
-            {/* Header */}
+            {/* Header — compact in viewport-fit mode */}
             <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="flex items-center justify-between"
+                className={`flex items-center justify-between shrink-0 ${fit ? 'gap-3' : ''}`}
             >
-                <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-mintcom-green to-emerald-600 flex items-center justify-center shadow-lg shadow-mintcom-green/20">
-                        <KeyRound className="w-7 h-7 text-black" />
+                <div className={`flex items-center ${fit ? 'gap-3' : 'gap-4'}`}>
+                    <div className={`${fit ? 'w-10 h-10 rounded-xl' : 'w-14 h-14 rounded-2xl'} bg-gradient-to-br from-mintcom-green to-emerald-600 flex items-center justify-center shadow-lg shadow-mintcom-green/20 shrink-0`}>
+                        <KeyRound className={fit ? 'w-5 h-5 text-black' : 'w-7 h-7 text-black'} />
                     </div>
-                    <div>
-                        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
+                    <div className="min-w-0">
+                        <h1 className={`${fit ? 'text-xl sm:text-2xl' : 'text-2xl sm:text-3xl'} font-bold text-gray-900 dark:text-white tracking-tight truncate`}>
                             {t('owner.account.title')}
                         </h1>
-                        <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-2">
+                        <p className={`${fit ? 'text-xs mt-0.5 line-clamp-1' : 'text-sm sm:text-base mt-2'} text-gray-500 dark:text-gray-400`}>
                             {t('owner.account.subtitle')}
                         </p>
                     </div>
@@ -523,762 +566,1120 @@ export function OwnerAccountManagementPage() {
 
             </motion.div>
 
-            {/* Quick Stats */}
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.05 }}
-                className="grid grid-cols-2 md:grid-cols-3 gap-4"
-            >
-                {/* Locations Card */}
-                <div className="group relative bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.03] p-4 sm:p-5 transition-all duration-300 overflow-hidden">
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-
-                    <div className="relative z-10">
-                        <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
-                            <Store className="w-5 h-5 text-blue-500" />
-                        </div>
-                        <div>
-                            <p className="dashboard-stat-title mb-1 truncate">
-                                {t('owner.account.stats.locations')}
-                            </p>
-                            <StatValue value={establishments?.length || 0} isInteger={true} className="text-xl" />
-                        </div>
-                    </div>
-                </div>
-
-                {/* Brands Card */}
-                <div className="group relative bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.03] p-4 sm:p-5 transition-all duration-300 overflow-hidden">
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-
-                    <div className="relative z-10">
-                        <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
-                            <Building2 className="w-5 h-5 text-purple-500" />
-                        </div>
-                        <div>
-                            <p className="dashboard-stat-title mb-1 truncate">
-                                {t('owner.account.stats.brands')}
-                            </p>
-                            <StatValue value={brands.length} isInteger={true} className="text-xl" />
-                        </div>
-                    </div>
-                </div>
-
-                {/* Admin Users Card */}
-                <div className="group relative bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.03] p-4 sm:p-5 transition-all duration-300 overflow-hidden">
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-
-                    <div className="relative z-10">
-                        <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
-                            <Users className="w-5 h-5 text-amber-500" />
-                        </div>
-                        <div>
-                            <p className="dashboard-stat-title mb-1 truncate">
-                                {t('owner.account.stats.admins')}
-                            </p>
-                            <StatValue value={adminUsers.length} isInteger={true} className="text-xl" />
-                        </div>
-                    </div>
-                </div>
-            </motion.div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Left Column - Account Info */}
-                <div className="lg:col-span-2 space-y-6">
+            <div className={fit ? 'flex-1 min-h-0 flex flex-col gap-3' : 'space-y-6'}>
+            {/* Row 1: Owner Account + System Currency — same height, right column width matches Resources/Danger */}
+            <div className={`flex flex-col lg:flex-row lg:items-stretch ${fit ? 'gap-3 shrink-0' : 'gap-6'}`}>
                     {/* Account Information Card */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1 }}
-                        className="relative bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.05] p-6 shadow-sm transition-all duration-300 overflow-hidden"
+                        className={`flex-1 min-w-0 bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.05] shadow-sm overflow-hidden ${fit ? 'lg:max-h-[11.5rem]' : ''}`}
                     >
-                        <div className="absolute top-0 right-0 w-40 h-40 bg-mintcom-green/10 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-                        <div className="relative z-10">
-                            <div className="flex items-center justify-between mb-6">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-xl bg-mintcom-green/10 flex items-center justify-center">
-                                        <User className="w-5 h-5 text-mintcom-green" />
-                                    </div>
-                                    <h2 className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">Owner Account</h2>
+                        {/* Top bar — shared metrics with System Currency header (padding / icon / title) */}
+                        <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 dark:border-white/[0.05] ${fit ? 'px-4 py-2.5' : 'px-5 sm:px-6 py-3.5 gap-3'}`}>
+                            <div className="flex items-center gap-3 min-w-0">
+                                <div className="w-10 h-10 rounded-xl bg-mintcom-green/10 flex items-center justify-center shrink-0">
+                                    <User className="w-5 h-5 text-mintcom-green" />
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    {isEditing ? (
-                                        <>
-                                            <button
-                                                onClick={handleCancelEdit}
-                                                className="px-4 py-2 bg-gray-100 dark:bg-white/[0.05] hover:bg-gray-200 dark:hover:bg-white/[0.1] text-gray-600 dark:text-gray-300 rounded-xl text-sm font-bold transition-all"
-                                                disabled={isSaving}
-                                            >
-                                                Cancel
-                                            </button>
-                                            <button
-                                                onClick={handleSaveProfile}
-                                                className="flex items-center gap-2 px-4 py-2 bg-mintcom-green hover:bg-[#5fa888] text-black rounded-xl text-sm font-bold transition-all disabled:opacity-70"
-                                                disabled={isSaving}
-                                            >
-                                                {isSaving ? (
-                                                    <>
-                                                        <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
-                                                        Saving...
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <CheckCircle2 size={16} />
-                                                        Save
-                                                    </>
-                                                )}
-                                            </button>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <button
-                                                onClick={handleEditClick}
-                                                className="px-4 py-2 bg-gray-100 dark:bg-white/[0.05] hover:bg-gray-200 dark:hover:bg-white/[0.1] text-gray-600 dark:text-gray-300 rounded-xl text-sm font-bold transition-all"
-                                            >
-                                                Edit Profile
-                                            </button>
-                                            <button
-                                                onClick={() => openPasswordModal('account')}
-                                                className="flex items-center gap-2 px-4 py-2 bg-mintcom-green/10 hover:bg-mintcom-green/20 text-mintcom-green rounded-xl text-sm font-bold transition-all"
-                                            >
-                                                <Key size={16} />
-                                                Reset Password
-                                            </button>
-                                        </>
-                                    )}
-                                </div>
+                                <h2 className="text-lg font-bold tracking-tight text-gray-900 dark:text-white leading-none">
+                                    {t('owner.account.ownerAccountTitle')}
+                                </h2>
                             </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                                {isEditing ? (
+                                    <>
+                                        <button
+                                            onClick={handleCancelEdit}
+                                            className="px-3.5 py-2 bg-gray-100 dark:bg-white/[0.05] hover:bg-gray-200 dark:hover:bg-white/[0.1] text-gray-600 dark:text-gray-300 rounded-xl text-sm font-bold transition-all"
+                                            disabled={isSaving}
+                                        >
+                                            {t('owner.account.cancel')}
+                                        </button>
+                                        <button
+                                            onClick={handleSaveProfile}
+                                            className="flex items-center gap-2 px-3.5 py-2 bg-mintcom-green hover:bg-[#5fa888] text-black rounded-xl text-sm font-bold transition-all disabled:opacity-70"
+                                            disabled={isSaving}
+                                        >
+                                            {isSaving ? (
+                                                <>
+                                                    <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
+                                                    {t('owner.account.saving')}
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <CheckCircle2 size={16} />
+                                                    {t('owner.account.save')}
+                                                </>
+                                            )}
+                                        </button>
+                                    </>
+                                ) : (
+                                    <>
+                                        <button
+                                            onClick={handleEditClick}
+                                            className="px-3.5 py-2 bg-gray-100 dark:bg-white/[0.05] hover:bg-gray-200 dark:hover:bg-white/[0.1] text-gray-600 dark:text-gray-300 rounded-xl text-sm font-bold transition-all"
+                                        >
+                                            {t('owner.account.editProfile')}
+                                        </button>
+                                        <button
+                                            onClick={() => openPasswordModal('account')}
+                                            className="flex items-center gap-2 px-3.5 py-2 bg-mintcom-green/10 hover:bg-mintcom-green/20 text-mintcom-green rounded-xl text-sm font-bold transition-all"
+                                        >
+                                            <Key size={15} />
+                                            {t('owner.account.resetPassword')}
+                                        </button>
+                                    </>
+                                )}
+                            </div>
+                        </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                    <label className="label-strong capitalize-none flex items-center gap-2">
-                                        <User size={12} />
-                                        {t('owner.account.fullName')}
-                                    </label>
-                                    {isEditing ? (
-                                        <div className="flex gap-2">
-                                            <input maxLength={MAX_OWNER_PROFILE_NAME_LENGTH}
-                                                type="text"
-                                                value={editForm.firstName}
-                                                onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })}
-                                                placeholder={formatInputPlaceholder(t('owner.account.firstName'), t('common.locale'))}
-                                                className="w-full px-3 py-2 bg-gray-50 dark:bg-[#0F172A] border border-gray-200 dark:border-white/[0.1] rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-mintcom-green/50"
-                                            />
-                                            <input maxLength={MAX_OWNER_PROFILE_NAME_LENGTH}
-                                                type="text"
-                                                value={editForm.lastName}
-                                                onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })}
-                                                placeholder={formatInputPlaceholder(t('owner.account.lastName'), t('common.locale'))}
-                                                className="w-full px-3 py-2 bg-gray-50 dark:bg-[#0F172A] border border-gray-200 dark:border-white/[0.1] rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-mintcom-green/50"
-                                            />
-                                        </div>
-                                    ) : (
-                                        <p className="text-sm font-bold text-gray-900 dark:text-white">
-                                            {accountDetails?.firstName} {accountDetails?.lastName}
-                                        </p>
-                                    )}
-                                </div>
-
-                                <div className="space-y-2">
-                                    <label className="label-strong capitalize-none flex items-center gap-2">
-                                        <Mail size={12} />
-                                        {t('owner.account.email')}
-                                    </label>
-                                    {isEditing ? (
-                                        <input maxLength={MAX_OWNER_PROFILE_EMAIL_LENGTH}
+                        <div className={fit ? 'p-3 sm:p-4' : 'p-5 sm:p-6'}>
+                            {isEditing ? (
+                                <div className={`grid grid-cols-1 sm:grid-cols-2 ${fit ? 'gap-2.5' : 'gap-4'}`}>
+                                    <div className="space-y-1.5 sm:col-span-1">
+                                        <label className="text-[11px] font-bold text-gray-500 flex items-center gap-1.5">
+                                            <User size={12} />
+                                            {t('owner.account.firstName')}
+                                        </label>
+                                        <input
+                                            maxLength={MAX_OWNER_PROFILE_NAME_LENGTH}
+                                            type="text"
+                                            value={editForm.firstName}
+                                            onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })}
+                                            placeholder={formatInputPlaceholder(t('owner.account.firstName'), t('common.locale'))}
+                                            className="w-full h-11 px-3 bg-gray-50 dark:bg-[#0F172A] border border-gray-200 dark:border-white/[0.1] rounded-xl text-sm font-semibold text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-mintcom-green/30 focus:border-mintcom-green"
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-[11px] font-bold text-gray-500 flex items-center gap-1.5">
+                                            <User size={12} />
+                                            {t('owner.account.lastName')}
+                                        </label>
+                                        <input
+                                            maxLength={MAX_OWNER_PROFILE_NAME_LENGTH}
+                                            type="text"
+                                            value={editForm.lastName}
+                                            onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })}
+                                            placeholder={formatInputPlaceholder(t('owner.account.lastName'), t('common.locale'))}
+                                            className="w-full h-11 px-3 bg-gray-50 dark:bg-[#0F172A] border border-gray-200 dark:border-white/[0.1] rounded-xl text-sm font-semibold text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-mintcom-green/30 focus:border-mintcom-green"
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5 sm:col-span-2">
+                                        <label className="text-[11px] font-bold text-gray-500 flex items-center gap-1.5">
+                                            <Mail size={12} />
+                                            {t('owner.account.email')}
+                                        </label>
+                                        <input
+                                            maxLength={MAX_OWNER_PROFILE_EMAIL_LENGTH}
                                             type="email"
                                             value={editForm.email}
                                             onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
                                             placeholder={formatInputPlaceholder(t('owner.account.email'), t('common.locale'))}
-                                            className="w-full px-3 py-2 bg-gray-50 dark:bg-[#0F172A] border border-gray-200 dark:border-white/[0.1] rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-mintcom-green/50"
+                                            className="w-full h-11 px-3 bg-gray-50 dark:bg-[#0F172A] border border-gray-200 dark:border-white/[0.1] rounded-xl text-sm font-semibold text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-mintcom-green/30 focus:border-mintcom-green"
                                         />
-                                    ) : (
-                                        <div className="flex items-center gap-2">
-                                            <p className="text-sm font-bold text-gray-900 dark:text-white">
-                                                {accountDetails?.email}
-                                            </p>
-                                            {accountDetails?.emailVerified && (
-                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-mintcom-green/ border border-mintcom-green/ rounded-md text-xs font-bold tracking-widest text-mintcom-green">
-                                                    <Shield size={10} />
-                                                    {t('owner.account.verified')}
-                                                </span>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="space-y-2">
-                                    <label className="label-strong capitalize-none flex items-center gap-2">
-                                        <Calendar size={12} />
-                                        {t('owner.account.joined')}
-                                    </label>
-                                    <p className="text-sm font-bold text-gray-900 dark:text-white">
-                                        {formatDate(accountDetails?.createdAt || '')}
-                                    </p>
-                                </div>
-                            </div>
-
-                            {/* Profile Completion Bar */}
-                            {profileCompletion < 100 && (
-                                <div className="mt-6 pt-6 border-t border-gray-100 dark:border-white/[0.05]">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <span className="label-strong">Profile Completion</span>
-                                        <span className="text-sm font-bold text-mintcom-green">{profileCompletion}%</span>
                                     </div>
-                                    <div className="h-2 bg-gray-100 dark:bg-white/[0.05] rounded-full overflow-hidden">
+                                </div>
+                            ) : (
+                                <div className="flex flex-col sm:flex-row sm:items-center gap-5">
+                                    {/* Avatar + identity */}
+                                    <div className="flex items-center gap-4 min-w-0 flex-1">
+                                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-mintcom-green to-[#5BA882] text-white flex items-center justify-center text-lg font-black shadow-md shadow-mintcom-green/20 shrink-0">
+                                            {(accountDetails?.firstName?.[0] || accountDetails?.email?.[0] || 'O').toUpperCase()}
+                                            {(accountDetails?.lastName?.[0] || '').toUpperCase()}
+                                        </div>
+                                        <div className="min-w-0">
+                                            <h3 className="text-lg font-bold text-gray-900 dark:text-white truncate">
+                                                {accountDetails?.firstName} {accountDetails?.lastName}
+                                            </h3>
+                                            <div className="flex items-center flex-wrap gap-2 mt-1">
+                                                <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-600 dark:text-gray-300 truncate">
+                                                    <Mail size={13} className="text-gray-400 shrink-0" />
+                                                    <span className="truncate">{accountDetails?.email}</span>
+                                                </span>
+                                                {accountDetails?.emailVerified ? (
+                                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-mintcom-green/10 border border-mintcom-green/20 rounded-md text-[10px] font-bold text-mintcom-green shrink-0">
+                                                        <Shield size={10} />
+                                                        {t('owner.account.verified')}
+                                                    </span>
+                                                ) : (
+                                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 rounded-md text-[10px] font-bold text-amber-600 dark:text-amber-400 shrink-0">
+                                                        {t('owner.account.unverified', { defaultValue: 'Unverified' })}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Meta chips */}
+                                    <div className="flex flex-wrap items-center gap-2 sm:justify-end shrink-0">
+                                        <div className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-gray-50 dark:bg-white/[0.04] border border-gray-100 dark:border-white/[0.06]">
+                                            <Calendar size={14} className="text-gray-400 shrink-0" />
+                                            <div className="leading-tight">
+                                                <p className="text-[10px] font-bold uppercase tracking-wide text-gray-400">
+                                                    {t('owner.account.joined')}
+                                                </p>
+                                                <p className="text-xs font-bold text-gray-900 dark:text-white">
+                                                    {formatDate(accountDetails?.createdAt || '')}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-gray-50 dark:bg-white/[0.04] border border-gray-100 dark:border-white/[0.06]">
+                                            <Shield size={14} className="text-mintcom-green shrink-0" />
+                                            <div className="leading-tight">
+                                                <p className="text-[10px] font-bold uppercase tracking-wide text-gray-400">
+                                                    {t('owner.account.badge', { defaultValue: 'Role' })}
+                                                </p>
+                                                <p className="text-xs font-bold text-gray-900 dark:text-white">
+                                                    {t('owner.account.owner', { defaultValue: 'Owner' })}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Profile Completion Bar — hide in viewport-fit to save vertical space */}
+                            {profileCompletion < 100 && !fit && (
+                                <div className="mt-5 pt-4 border-t border-gray-100 dark:border-white/[0.05]">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="text-xs font-bold text-gray-500">{t('owner.account.profileCompletion')}</span>
+                                        <span className="text-xs font-bold text-mintcom-green">{profileCompletion}%</span>
+                                    </div>
+                                    <div className="h-1.5 bg-gray-100 dark:bg-white/[0.05] rounded-full overflow-hidden">
                                         <div
                                             className="h-full bg-gradient-to-r from-mintcom-green to-emerald-500 rounded-full transition-all duration-500"
                                             style={{ width: `${profileCompletion}%` }}
                                         />
                                     </div>
-                                    <p className="text-sm font-bold text-gray-500 mt-2">
-                                        Complete your profile to unlock all features
+                                    <p className="text-xs font-medium text-gray-500 mt-2">
+                                        {t('owner.account.completeProfileHint')}
                                     </p>
                                 </div>
                             )}
                         </div>
                     </motion.div>
 
-                    {/* Location Logins */}
-                    {locationLoginEstablishments && locationLoginEstablishments.length > 0 && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.2 }}
-                            className="bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.05] p-6 shadow-sm"
-                        >
-                            <div className="flex items-center gap-3 mb-6">
-                                <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
-                                    <Store className="w-5 h-5 text-blue-500" />
+                    {/* Global System Currency — header matches Owner Account (same padding, icon, title row) */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.15 }}
+                        className={`relative w-full lg:w-[24rem] shrink-0 flex flex-col bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.05] shadow-sm overflow-hidden ${fit ? 'lg:max-h-[11.5rem]' : ''}`}
+                    >
+                        <div className="absolute top-0 right-0 w-40 h-40 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+                        {/* Top bar — same structure as Owner Account */}
+                        <div className={`relative z-10 flex items-center border-b border-gray-100 dark:border-white/[0.05] ${fit ? 'px-4 py-2.5' : 'px-5 sm:px-6 py-3.5'}`}>
+                            <div className="flex items-center gap-3 min-w-0">
+                                <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center shrink-0">
+                                    <Landmark className="w-5 h-5 text-amber-500" />
                                 </div>
-                                <div>
-                                    <h2 className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">
-                                        {t('owner.account.locationLogins', { count: locationLoginEstablishments.length })}
+                                <div className="min-w-0">
+                                    <h2 className="text-lg font-bold tracking-tight text-gray-900 dark:text-white leading-none">
+                                        {t('owner.account.systemCurrency')}
                                     </h2>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400">{t('owner.account.locationLoginsSubtitle')}</p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-1">
+                                        {t('owner.account.systemCurrencySubtitle')}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div className={`relative z-10 flex-1 flex flex-col justify-center ${fit ? 'p-4' : 'p-5 sm:p-6'}`}>
+                            <div className="relative">
+                                <select
+                                    value={globalCurrency}
+                                    onChange={(e) => {
+                                        const next = e.target.value;
+                                        if (next !== globalCurrency) setPendingCurrency(next);
+                                    }}
+                                    disabled={isUpdatingCurrency}
+                                    className="w-full h-12 bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/[0.08] rounded-xl px-4 font-bold text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 transition-all appearance-none cursor-pointer disabled:opacity-50"
+                                >
+                                    {CURRENCIES.map((c) => (
+                                        <option key={c.code} value={c.code} className="bg-white dark:bg-gray-800">
+                                            {c.code} ({c.symbol})
+                                        </option>
+                                    ))}
+                                </select>
+                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </div>
+                            </div>
+                            {isUpdatingCurrency && (
+                                <p className="text-xs font-bold text-amber-500 animate-pulse text-center mt-2">
+                                    {t('owner.account.applyingCurrencyChanges')}
+                                </p>
+                            )}
+                        </div>
+                    </motion.div>
+            </div>
+
+            {/* Credentials — full width (locations-style). Avoids empty gap when list has < 8 rows. */}
+            {hasAccessCredentials && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.15 }}
+                            className={
+                                fit
+                                    ? 'flex flex-col min-h-0 max-h-[min(28rem,55vh)] lg:max-h-[min(36rem,60vh)] bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.05] shadow-sm overflow-hidden'
+                                    : 'w-full flex flex-col bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.05] shadow-sm overflow-hidden'
+                            }
+                        >
+                            {/* Header */}
+                            <div className={`shrink-0 border-b border-gray-100 dark:border-white/[0.05] ${fit ? 'p-3 sm:p-4' : 'p-5 sm:p-6'}`}>
+                                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <div className="w-10 h-10 rounded-xl bg-mintcom-green/10 flex items-center justify-center shrink-0">
+                                            <Key className="w-5 h-5 text-mintcom-green" />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <h2 className="text-lg sm:text-xl font-bold tracking-tight text-gray-900 dark:text-white">
+                                                {t('owner.account.accessCredentials', {
+                                                    defaultValue: 'Access Credentials',
+                                                })}
+                                            </h2>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                                {t('owner.account.accessCredentialsSubtitle', {
+                                                    defaultValue: 'Login IDs for location and brand dashboards — search, copy, open, or reset.',
+                                                })}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    {!isSingleCredential && (
+                                    <div className="relative w-full lg:w-72 shrink-0">
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                                        <input
+                                            type="text"
+                                            value={credSearch}
+                                            onChange={(e) => setCredSearch(e.target.value)}
+                                            placeholder={formatInputPlaceholder(
+                                                t('owner.account.searchCredentials', {
+                                                    defaultValue: 'Search name or login ID…',
+                                                }),
+                                                t('common.locale'),
+                                            )}
+                                            className="w-full h-10 pl-9 pr-9 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm font-semibold text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-mintcom-green/20 focus:border-mintcom-green transition-all"
+                                        />
+                                        {credSearch && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setCredSearch('')}
+                                                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                                                aria-label={t('common.clearSearch', { defaultValue: 'Clear search' })}
+                                            >
+                                                <X size={14} />
+                                            </button>
+                                        )}
+                                    </div>
+                                    )}
+                                </div>
+
+                                {/* Tabs (only when both types exist) + Staff */}
+                                <div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                                    {showCredTabs ? (
+                                    <div className="flex items-center gap-1 p-1 rounded-xl bg-gray-100/80 dark:bg-white/[0.04] w-full sm:w-auto min-w-0">
+                                        {([
+                                            {
+                                                id: 'locations' as const,
+                                                show: locationLoginEstablishments.length > 0,
+                                                count: locationLoginEstablishments.length,
+                                                icon: Store,
+                                                label: t('owner.account.locations', { defaultValue: 'Locations' }),
+                                            },
+                                            {
+                                                id: 'brands' as const,
+                                                show: brands.length > 0,
+                                                count: brands.length,
+                                                icon: Building2,
+                                                label: t('owner.account.brands', { defaultValue: 'Brands' }),
+                                            },
+                                        ]).filter((tab) => tab.show).map((tab) => {
+                                            const active = credTab === tab.id;
+                                            const TabIcon = tab.icon;
+                                            const isBrandTab = tab.id === 'brands';
+                                            return (
+                                                <button
+                                                    key={tab.id}
+                                                    type="button"
+                                                    onClick={() => setCredTab(tab.id)}
+                                                    className={`flex-1 sm:flex-none inline-flex items-center justify-center gap-2 h-9 px-3.5 rounded-lg text-xs font-bold transition-all ${
+                                                        active
+                                                            ? isBrandTab
+                                                                ? 'bg-white dark:bg-[#0F172A] text-purple-600 dark:text-purple-400 shadow-sm ring-1 ring-purple-500/20'
+                                                                : 'bg-white dark:bg-[#0F172A] text-mintcom-green shadow-sm'
+                                                            : 'text-gray-500 hover:text-gray-800 dark:hover:text-gray-200'
+                                                    }`}
+                                                >
+                                                    <TabIcon size={14} className="shrink-0" />
+                                                    <span className="truncate">{tab.label}</span>
+                                                    <span
+                                                        className={`min-w-[1.25rem] h-5 px-1.5 rounded-md text-[10px] font-black flex items-center justify-center tabular-nums ${
+                                                            active
+                                                                ? isBrandTab
+                                                                    ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400'
+                                                                    : 'bg-mintcom-green/10 text-mintcom-green'
+                                                                : 'bg-gray-200/80 dark:bg-white/10 text-gray-500'
+                                                        }`}
+                                                    >
+                                                        {tab.count}
+                                                    </span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                    ) : (
+                                        <div
+                                            className={`inline-flex items-center gap-2 h-9 px-3 rounded-xl text-xs font-bold ${
+                                                isSingleBrandOnly || (brands.length > 0 && locationLoginEstablishments.length === 0)
+                                                    ? 'bg-purple-500/10 border border-purple-500/15 text-purple-600 dark:text-purple-400'
+                                                    : 'bg-mintcom-green/10 border border-mintcom-green/15 text-mintcom-green'
+                                            }`}
+                                        >
+                                            {isSingleLocationOnly || locationLoginEstablishments.length > 0 ? (
+                                                <Store size={14} className="shrink-0" />
+                                            ) : (
+                                                <Building2 size={14} className="shrink-0" />
+                                            )}
+                                            <span>
+                                                {isSingleLocationOnly
+                                                    ? t('owner.account.singleLocationBadge', {
+                                                        defaultValue: '1 location',
+                                                    })
+                                                    : isSingleBrandOnly
+                                                        ? t('owner.account.singleBrandBadge', {
+                                                            defaultValue: '1 brand',
+                                                        })
+                                                        : locationLoginEstablishments.length > 0
+                                                            ? t('owner.account.locations', { defaultValue: 'Locations' })
+                                                            : t('owner.account.brands', { defaultValue: 'Brands' })}
+                                            </span>
+                                        </div>
+                                    )}
+
+                                    <button
+                                        type="button"
+                                        onClick={() => navigate('/owner/employees')}
+                                        className="inline-flex items-center justify-center gap-2 h-11 sm:h-11 px-3.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-xs font-bold text-gray-700 dark:text-gray-200 hover:border-mintcom-green/40 hover:text-mintcom-green hover:bg-mintcom-green/5 transition-all shrink-0"
+                                        title={t('owner.overview.staffManagement', { defaultValue: 'Staff management' })}
+                                    >
+                                        <Users size={14} className="shrink-0 text-pink-500" />
+                                        <span>{t('owner.account.totalStaff', { defaultValue: 'Staff' })}</span>
+                                        <span className="min-w-[1.25rem] h-5 px-1.5 rounded-md text-[10px] font-black flex items-center justify-center tabular-nums bg-pink-500/10 text-pink-600 dark:text-pink-400">
+                                            {totalStaff}
+                                        </span>
+                                        <ExternalLink size={12} className="text-gray-400 shrink-0" />
+                                    </button>
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {locationLoginEstablishments.map((est: any) => {
-                                    const slug = (est.establishmentLoginId || est.loginId || est.locationLoginId || est.id || '').trim();
-                                    const Icon = getBusinessTypeIcon(est.type);
-                                    return (
-                                        <div
-                                            key={est.id}
-                                            className="relative bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.05] p-5 shadow-sm transition-all duration-300 overflow-hidden flex flex-col justify-between h-full"
-                                        >
-                                            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                            {/* Column header — fixed outside scroll so nothing can appear above it */}
+                            {!isSingleCredential && (
+                                <div className="shrink-0 hidden sm:grid grid-cols-[minmax(0,1fr)_13.5rem_5.25rem] gap-0 table-header-row bg-gray-50 dark:bg-[#1E293B] border-b border-gray-200 dark:border-white/10">
+                                    <div className="text-left font-semibold px-5 lg:px-6 py-3.5">
+                                        {credTab === 'locations'
+                                            ? t('owner.account.locations', { defaultValue: 'Locations' })
+                                            : t('owner.account.brands', { defaultValue: 'Brands' })}
+                                    </div>
+                                    <div className="text-center font-semibold px-2 py-3.5">
+                                        {t('owner.account.loginId', { defaultValue: 'Login ID' })}
+                                    </div>
+                                    <div className="text-center font-semibold px-1 py-3.5">
+                                        {t('common.actions', { defaultValue: 'Actions' })}
+                                    </div>
+                                </div>
+                            )}
 
-                                            <div className="relative z-10 flex flex-col h-full">
-                                                {/* Header Section */}
-                                                <div className="flex items-start justify-between gap-3 mb-4">
-                                                    <div className="flex items-start gap-3">
-                                                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/10 to-indigo-500/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
-                                                            <Icon className="w-5 h-5 text-blue-500" />
+                            {/* Rows grow with page (locations-style); no internal table scroll when not viewport-fit */}
+                            <div
+                                className={
+                                    fit
+                                        ? 'flex-1 min-h-0 overflow-y-auto overscroll-contain custom-scrollbar [scrollbar-gutter:stable]'
+                                        : 'min-h-0'
+                                }
+                            >
+                                {(() => {
+                                    type CredRow = {
+                                        key: string;
+                                        name: string;
+                                        meta: string;
+                                        loginId: string;
+                                        copyKey: string;
+                                        isActive: boolean;
+                                        statusLabel: string;
+                                        icon: ElementType;
+                                        onOpen?: () => void;
+                                        onReset: () => void;
+                                        kind: 'location' | 'brand';
+                                    };
+
+                                    const locationRows: CredRow[] = filteredLocationLogins.map((est: any) => {
+                                        const slug = (est.establishmentLoginId || est.loginId || est.locationLoginId || est.id || '').trim();
+                                        const status = String(est.subscriptionStatus || '').toUpperCase();
+                                        const isActive = status === 'ACTIVE' || status === 'TRIAL' || status === 'TRIALING';
+                                        let statusLabel = t('common.status.inactive');
+                                        if (status === 'ACTIVE') statusLabel = t('common.status.active');
+                                        else if (status === 'TRIAL' || status === 'TRIALING') statusLabel = t('common.status.trial');
+                                        else if (status === 'PAST_DUE') statusLabel = t('common.status.pastDue');
+                                        else if (status === 'CANCELED' || status === 'CANCELLED') statusLabel = t('common.status.canceled', { defaultValue: 'Canceled' });
+
+                                        const metaParts = [
+                                            est.currency?.toUpperCase() || 'JOD',
+                                            est.createdAt ? formatDate(est.createdAt) : null,
+                                        ].filter(Boolean);
+
+                                        return {
+                                            key: est.id,
+                                            name: est.name,
+                                            meta: metaParts.join(' · '),
+                                            loginId: slug,
+                                            copyKey: `est-login-${est.id}`,
+                                            isActive,
+                                            statusLabel,
+                                            icon: getBusinessTypeIcon(est.type),
+                                            onOpen: slug ? () => window.open(`/dashboard/${slug}`, '_blank') : undefined,
+                                            onReset: () => openPasswordModal('establishment', est.id, est.name),
+                                            kind: 'location' as const,
+                                        };
+                                    });
+
+                                    const brandRows: CredRow[] = filteredBrandLogins.map((brand) => {
+                                        const slug = (brand.establishmentLoginId || '').trim();
+                                        const metaParts = [
+                                            t('owner.account.locationsCount', { count: brand.locationCount }),
+                                            brand.createdAt ? formatDate(brand.createdAt) : null,
+                                        ].filter(Boolean);
+
+                                        return {
+                                            key: brand.id,
+                                            name: brand.name,
+                                            meta: metaParts.join(' · '),
+                                            loginId: slug,
+                                            copyKey: `brand-${brand.id}`,
+                                            isActive: Boolean(brand.isActive),
+                                            statusLabel: brand.isActive ? t('common.status.active') : t('common.status.inactive'),
+                                            icon: Building2,
+                                            // Same as brands page: open brand dashboard in a new tab
+                                            onOpen: slug
+                                                ? () => window.open(`/brand/${slug}`, '_blank')
+                                                : undefined,
+                                            onReset: () => openPasswordModal('brand', brand.id, brand.name),
+                                            kind: 'brand' as const,
+                                        };
+                                    });
+
+                                    const allRows = isSingleCredential
+                                        ? (isSingleLocationOnly ? locationRows : brandRows)
+                                        : (credTab === 'locations' ? locationRows : brandRows);
+
+                                    if (allRows.length === 0) {
+                                        return (
+                                            <div className="py-12 px-6 text-center">
+                                                <p className="text-sm font-bold text-gray-500">
+                                                    {credSearch.trim()
+                                                        ? t('common.noResults', { defaultValue: 'No results found' })
+                                                        : t('owner.account.noLocationsOrBrands')}
+                                                </p>
+                                            </div>
+                                        );
+                                    }
+
+                                    // —— Single establishment / brand: hero credential card ——
+                                    if (isSingleCredential && allRows.length === 1) {
+                                        const row = allRows[0];
+                                        const RowIcon = row.icon;
+                                        const isBrand = row.kind === 'brand';
+                                        return (
+                                            <div className="h-full flex flex-col items-center justify-center p-5 sm:p-8">
+                                                <div
+                                                    className={`w-full max-w-lg rounded-2xl border border-gray-200 dark:border-white/[0.08] p-5 sm:p-6 shadow-sm bg-gradient-to-br from-gray-50/90 via-white ${
+                                                        isBrand
+                                                            ? 'to-purple-500/10 dark:from-white/[0.04] dark:via-white/[0.02] dark:to-purple-500/15'
+                                                            : 'to-mintcom-green/5 dark:from-white/[0.04] dark:via-white/[0.02] dark:to-mintcom-green/10'
+                                                    }`}
+                                                >
+                                                    <div className="flex items-start gap-4">
+                                                        <div
+                                                            className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ring-1 ${
+                                                                isBrand
+                                                                    ? 'bg-purple-500/15 dark:bg-purple-500/20 ring-purple-500/20'
+                                                                    : 'bg-mintcom-green/15 dark:bg-mintcom-green/20 ring-mintcom-green/20'
+                                                            }`}
+                                                        >
+                                                            <RowIcon className={`w-7 h-7 ${isBrand ? 'text-purple-500' : 'text-mintcom-green'}`} />
                                                         </div>
-                                                        <div className="min-w-0">
-                                                            <h3 className="text-sm font-bold tracking-tight text-gray-900 dark:text-white truncate pr-1" title={est.name}>
-                                                                {est.name}
-                                                            </h3>
-                                                            <div className="flex items-center flex-wrap gap-x-2 gap-y-1 mt-1.5">
-                                                                {getStatusBadge(est.subscriptionStatus)}
-                                                                <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-gray-100 dark:bg-white/[0.05] border border-gray-200 dark:border-white/[0.05] text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400">
-                                                                    {est.currency?.toUpperCase() || 'JOD'}
+                                                        <div className="min-w-0 flex-1">
+                                                            <div className="flex flex-wrap items-center gap-2">
+                                                                <h3 className="text-lg font-black tracking-tight text-gray-900 dark:text-white truncate" title={row.name}>
+                                                                    {row.name}
+                                                                </h3>
+                                                                <span
+                                                                    className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-md border ${
+                                                                        row.isActive
+                                                                            ? isBrand
+                                                                                ? 'bg-purple-500/10 text-purple-600 border-purple-500/20'
+                                                                                : 'bg-mintcom-green/10 text-mintcom-green border-mintcom-green/20'
+                                                                            : 'bg-gray-100 dark:bg-white/5 text-gray-400 border-gray-200 dark:border-white/10'
+                                                                    }`}
+                                                                >
+                                                                    {row.statusLabel}
                                                                 </span>
-                                                                {est.createdAt && (
-                                                                    <>
-                                                                        <span className="text-gray-300 dark:text-gray-600 text-[10px]">&bull;</span>
-                                                                        <span className="flex items-center gap-1 text-xs font-medium text-gray-500 dark:text-gray-400">
-                                                                            <Calendar size={12} className="opacity-70" />
-                                                                            {t('owner.account.createdDate', { date: formatDate(est.createdAt) })}
-                                                                        </span>
-                                                                    </>
-                                                                )}
+                                                            </div>
+                                                            {row.meta && (
+                                                                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mt-1">
+                                                                    {row.meta}
+                                                                </p>
+                                                            )}
+                                                            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mt-3 mb-1.5">
+                                                                {t('owner.account.loginId', { defaultValue: 'Login ID' })}
+                                                            </p>
+                                                            <div className="flex items-center gap-2 h-12 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-black/20 px-3 shadow-inner">
+                                                                <code className="flex-1 min-w-0 text-sm font-mono font-black text-gray-900 dark:text-white truncate select-all" title={row.loginId}>
+                                                                    {row.loginId || t('common.na')}
+                                                                </code>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => copyToClipboard(row.loginId, row.copyKey)}
+                                                                    disabled={!row.loginId}
+                                                                    className="shrink-0 inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-xs font-bold text-gray-600 dark:text-gray-300 hover:text-mintcom-green hover:bg-mintcom-green/10 transition-colors disabled:opacity-40"
+                                                                    title={t('common.copy')}
+                                                                >
+                                                                    {copiedId === row.copyKey ? (
+                                                                        <>
+                                                                            <CheckCircle2 size={14} className="text-mintcom-green" />
+                                                                            {t('common.copied', { defaultValue: 'Copied' })}
+                                                                        </>
+                                                                    ) : (
+                                                                        <>
+                                                                            <Copy size={14} />
+                                                                            {t('common.copy')}
+                                                                        </>
+                                                                    )}
+                                                                </button>
                                                             </div>
                                                         </div>
                                                     </div>
-
-                                                    <button
-                                                        onClick={() => window.open(`/dashboard/${slug}`, '_blank')}
-                                                        className="flex items-center justify-center w-8 h-8 rounded-lg bg-gray-50 dark:bg-white/5 text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-all ml-auto shrink-0"
-                                                        title={t('owner.brands.viewDashboard')}
-                                                    >
-                                                        <ExternalLink size={16} />
-                                                    </button>
-                                                </div>
-
-                                                {/* Login ID Section */}
-                                                <div className="mt-auto">
-                                                    <div className="p-3 bg-blue-50/70 dark:bg-blue-500/10 rounded-xl border border-blue-100 dark:border-blue-500/20 transition-colors">
-                                                        <div className="flex items-center justify-between gap-2 mb-2">
-                                                            <label className="text-[10px] font-semibold text-blue-700 dark:text-blue-300 tracking-wide flex items-center gap-1">
-                                                                <Key size={10} />
-                                                                {t('owner.account.locationLoginId', { defaultValue: 'Location Login ID' })}
-                                                            </label>
-                                                            <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 dark:bg-blue-500/15 px-2 py-1 text-[10px] font-bold text-blue-700 dark:text-blue-300">
-                                                                <Shield size={10} />
-                                                                {t('owner.account.locationLoginBadge', { defaultValue: 'Location' })}
-                                                            </span>
-                                                        </div>
-                                                        <div className="flex items-center justify-between gap-2">
+                                                    <div className="mt-5 flex flex-col sm:flex-row gap-2.5">
+                                                        {row.onOpen && (
                                                             <button
-                                                                onClick={() => copyToClipboard(slug, `est-login-${est.id}`)}
-                                                                disabled={!slug}
-                                                                className="text-xs font-bold text-blue-500 hover:text-blue-600 transition-colors flex items-center gap-1"
+                                                                type="button"
+                                                                onClick={row.onOpen}
+                                                                className={`flex-1 inline-flex items-center justify-center gap-2 h-11 px-4 rounded-xl text-sm font-black transition-all shadow-sm ${
+                                                                    isBrand
+                                                                        ? 'bg-purple-600 hover:bg-purple-500 text-white shadow-purple-500/20'
+                                                                        : 'bg-mintcom-green hover:bg-[#5fa888] text-black shadow-mintcom-green/20'
+                                                                }`}
                                                             >
-                                                                {copiedId === `est-login-${est.id}` ? (
-                                                                    <span className="flex items-center gap-1 text-mintcom-green"><CheckCircle2 size={10} /> {t('common.copied')}</span>
-                                                                ) : (
-                                                                    <span className="flex items-center gap-1"><Copy size={10} /> {t('common.copy')}</span>
-                                                                )}
+                                                                <ExternalLink size={16} />
+                                                                {isBrand
+                                                                    ? t('owner.brands.viewDashboard', { defaultValue: 'View brand dashboard' })
+                                                                    : t('owner.brands.viewDashboard', { defaultValue: 'Open dashboard' })}
                                                             </button>
-                                                        </div>
-                                                        <code className="mt-2 block text-xs font-mono font-bold text-gray-900 dark:text-white truncate select-all">
-                                                            {slug || t('common.na')}
-                                                        </code>
-                                                        <p className="mt-2 text-[11px] font-medium text-blue-700/80 dark:text-blue-200/80 leading-relaxed">
-                                                            {t('owner.account.locationLoginHint', { defaultValue: 'Use this ID to sign in to this location dashboard.' })}
-                                                        </p>
-                                                    </div>
-
-                                                    <div className="mt-3 flex justify-end">
+                                                        )}
                                                         <button
-                                                            onClick={() => openPasswordModal('establishment', est.id, est.name)}
-                                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all ml-auto"
+                                                            type="button"
+                                                            onClick={row.onReset}
+                                                            className={`inline-flex items-center justify-center gap-2 h-11 px-4 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.04] text-sm font-bold text-gray-700 dark:text-gray-200 hover:border-red-300 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all ${row.onOpen ? 'sm:flex-none' : 'flex-1'}`}
                                                         >
-                                                            <Lock size={12} />
+                                                            <Lock size={16} />
                                                             {t('owner.account.resetPassword')}
                                                         </button>
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    )
-                                })}
-                            </div>
-                        </motion.div>
-                    )}
-
-                    {/* Brand Logins */}
-                    {brands.length > 0 && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.25 }}
-                            className="bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.05] p-6 shadow-sm"
-                        >
-                            <div className="flex items-center gap-3 mb-6">
-                                <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center">
-                                    <Building2 className="w-5 h-5 text-purple-500" />
-                                </div>
-                                <div>
-                                    <h2 className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">
-                                        {t('owner.account.brandLogins', { count: brands.length })}
-                                    </h2>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400">{t('owner.account.brandLoginsSubtitle')}</p>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 gap-4">
-                                {brands.map((brand) => {
-                                    // Robust counting logic
-                                    let count = brand.establishmentCount || brand._count?.establishments || (brand.establishments ? brand.establishments.length : 0);
-
-                                    // If count is missing from profile, try to calculate from global establishments
-                                    if (!count && establishments) {
-                                        const directMatches = establishments.filter((e: any) => e.brandId === brand.id || e.brand?.id === brand.id).length;
-                                        if (directMatches > 0) {
-                                            count = directMatches;
-                                        } else if (brands.length === 1 && establishments.length > 0) {
-                                            // Fallback: If owner has only 1 brand and we can't link, assume all establishments belong to this brand
-                                            count = establishments.length;
-                                        }
+                                        );
                                     }
 
+                                    // Paginate like locations table (10 per page)
+                                    const totalPages = Math.max(1, Math.ceil(allRows.length / CRED_ITEMS_PER_PAGE));
+                                    const page = Math.min(Math.max(1, credPage), totalPages);
+                                    const pageStart = (page - 1) * CRED_ITEMS_PER_PAGE;
+                                    const rows = allRows.slice(pageStart, pageStart + CRED_ITEMS_PER_PAGE);
+
+                                    // Rows only (column header is fixed above this scroll area)
                                     return (
-                                        <div
-                                            key={brand.id}
-                                            className="relative bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.05] p-5 shadow-sm transition-all duration-300 overflow-hidden"
-                                        >
-                                            <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-                                            <div className="relative z-10 space-y-5">
-                                                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                                                    <div className="flex items-start gap-4">
-                                                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-500/10 to-fuchsia-500/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shrink-0">
-                                                            <Building2 className="w-6 h-6 text-purple-500" />
+                                        <div className="divide-y divide-gray-100 dark:divide-white/5">
+                                            {rows.map((row) => {
+                                                const RowIcon = row.icon;
+                                                return (
+                                                    <div
+                                                        key={row.key}
+                                                        className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_13.5rem_5.25rem] gap-3 sm:gap-0 items-center px-5 lg:px-0 py-4 hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors"
+                                                    >
+                                                        <div className="flex items-center gap-3 min-w-0 sm:px-5 lg:px-6">
+                                                            <div
+                                                                className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                                                                    row.kind === 'brand'
+                                                                        ? 'bg-purple-500/10 text-purple-500'
+                                                                        : 'bg-gray-100 dark:bg-white/5 text-gray-400'
+                                                                }`}
+                                                            >
+                                                                <RowIcon className="w-5 h-5" />
+                                                            </div>
+                                                            <div className="min-w-0 flex-1">
+                                                                <div className="flex items-center gap-2 min-w-0">
+                                                                    <h3 className="text-sm font-bold tracking-tight text-gray-900 dark:text-white truncate" title={row.name}>
+                                                                        {row.name}
+                                                                    </h3>
+                                                                    <span
+                                                                        className={`shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-black tracking-wider border ${
+                                                                            row.isActive
+                                                                                ? row.kind === 'brand'
+                                                                                    ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20'
+                                                                                    : 'bg-mintcom-green/10 text-mintcom-green border-mintcom-green/20'
+                                                                                : 'bg-gray-100 dark:bg-white/5 text-gray-400 border-gray-200 dark:border-white/10'
+                                                                        }`}
+                                                                    >
+                                                                        {row.statusLabel}
+                                                                    </span>
+                                                                </div>
+                                                                {row.meta && (
+                                                                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5 truncate">
+                                                                        {row.meta}
+                                                                    </p>
+                                                                )}
+                                                            </div>
                                                         </div>
-                                                        <div>
-                                                            <h3 className="text-lg font-bold tracking-tight text-gray-900 dark:text-white">{brand.name}</h3>
-                                                            <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-1.5 text-xs text-gray-500 dark:text-gray-400">
-                                                                <span className="font-medium bg-gray-100 dark:bg-white/[0.05] px-2 py-0.5 rounded-md border border-gray-200 dark:border-white/[0.05]">
-                                                                    {t('owner.account.locationsCount', { count })}
-                                                                </span>
-                                                                <span className="text-gray-300 dark:text-gray-600">&bull;</span>
-                                                                <span className={`font-bold ${brand.isActive ? 'text-mintcom-green' : 'text-gray-400'}`}>
-                                                                    {brand.isActive ? t('common.status.active') : t('common.status.inactive')}
-                                                                </span>
-                                                                <span className="text-gray-300 dark:text-gray-600">&bull;</span>
-                                                                <span className="flex items-center gap-1.5 font-medium">
-                                                                    <Calendar size={12} className="opacity-70" />
-                                                                    {t('owner.account.createdDate', { date: formatDate(brand.createdAt) })}
-                                                                </span>
+
+                                                        <div className="min-w-0 w-full sm:px-2 flex items-center">
+                                                            <div className="min-w-0 w-full flex items-center gap-1.5 h-9 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/[0.04] px-2.5">
+                                                                <code className="flex-1 min-w-0 text-sm font-bold text-gray-900 dark:text-white truncate select-all font-mono" title={row.loginId}>
+                                                                    {row.loginId || t('common.na')}
+                                                                </code>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => copyToClipboard(row.loginId, row.copyKey)}
+                                                                    disabled={!row.loginId}
+                                                                    className={`shrink-0 p-1 rounded-md text-gray-500 transition-colors disabled:opacity-40 ${
+                                                                        row.kind === 'brand'
+                                                                            ? 'hover:text-purple-600 hover:bg-purple-500/10'
+                                                                            : 'hover:text-mintcom-green hover:bg-mintcom-green/10'
+                                                                    }`}
+                                                                    title={t('common.copy')}
+                                                                >
+                                                                    {copiedId === row.copyKey ? (
+                                                                        <CheckCircle2
+                                                                            size={14}
+                                                                            className={row.kind === 'brand' ? 'text-purple-500' : 'text-mintcom-green'}
+                                                                        />
+                                                                    ) : (
+                                                                        <Copy size={14} />
+                                                                    )}
+                                                                </button>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="flex items-center justify-center sm:px-1">
+                                                            <div className="inline-flex items-center justify-center gap-0.5">
+                                                                <div className="relative group/action">
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={row.onOpen}
+                                                                        disabled={!row.onOpen}
+                                                                        className={`w-7 h-7 rounded-lg inline-flex items-center justify-center text-gray-400 transition-all disabled:opacity-0 disabled:pointer-events-none sm:disabled:opacity-30 sm:disabled:pointer-events-none sm:disabled:hover:bg-transparent sm:disabled:hover:text-gray-400 ${
+                                                                            row.kind === 'brand'
+                                                                                ? 'hover:text-purple-600 hover:bg-purple-500/10'
+                                                                                : 'hover:text-mintcom-green hover:bg-mintcom-green/10'
+                                                                        }`}
+                                                                        aria-label={
+                                                                            row.onOpen
+                                                                                ? row.kind === 'brand'
+                                                                                    ? t('owner.brands.viewDashboard', { defaultValue: 'View brand dashboard' })
+                                                                                    : t('owner.brands.viewDashboard', { defaultValue: 'Open dashboard' })
+                                                                                : undefined
+                                                                        }
+                                                                        aria-hidden={!row.onOpen}
+                                                                    >
+                                                                        <ExternalLink size={14} />
+                                                                    </button>
+                                                                    {row.onOpen && (
+                                                                        <span
+                                                                            role="tooltip"
+                                                                            className="pointer-events-none absolute right-full top-1/2 -translate-y-1/2 mr-2 z-30 whitespace-nowrap rounded-lg bg-gray-900 dark:bg-gray-100 px-2.5 py-1.5 text-[11px] font-bold text-white dark:text-gray-900 opacity-0 translate-x-1 group-hover/action:opacity-100 group-hover/action:translate-x-0 transition-all shadow-lg"
+                                                                        >
+                                                                            {row.kind === 'brand'
+                                                                                ? t('owner.brands.viewDashboard', { defaultValue: 'View brand dashboard' })
+                                                                                : t('owner.brands.viewDashboard', { defaultValue: 'Open dashboard' })}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                <div className="relative group/action">
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={row.onReset}
+                                                                        className="w-7 h-7 rounded-lg inline-flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
+                                                                        aria-label={t('owner.account.resetPassword')}
+                                                                    >
+                                                                        <Lock size={14} />
+                                                                    </button>
+                                                                    <span
+                                                                        role="tooltip"
+                                                                        className="pointer-events-none absolute right-full top-1/2 -translate-y-1/2 mr-2 z-30 whitespace-nowrap rounded-lg bg-gray-900 dark:bg-gray-100 px-2.5 py-1.5 text-[11px] font-bold text-white dark:text-gray-900 opacity-0 translate-x-1 group-hover/action:opacity-100 group-hover/action:translate-x-0 transition-all shadow-lg"
+                                                                    >
+                                                                        {t('owner.account.resetPassword')}
+                                                                    </span>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>
-
-                                                    <button
-                                                        onClick={() => openPasswordModal('brand', brand.id, brand.name)}
-                                                        className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-white/[0.05] border border-gray-200 dark:border-white/[0.1] hover:border-red-500/30 hover:bg-red-50 dark:hover:bg-red-900/10 text-gray-600 dark:text-gray-300 hover:text-red-500 rounded-xl text-xs font-bold transition-all shadow-sm shrink-0 self-start sm:self-center"
-                                                    >
-                                                        <Lock size={14} />
-                                                        {t('owner.account.resetPassword')}
-                                                    </button>
-                                                </div>
-
-                                                <div className="mt-5 p-4 bg-blue-50/70 dark:bg-blue-500/10 rounded-xl border border-blue-100 dark:border-blue-500/20 transition-colors">
-                                                    <div className="flex items-center justify-between gap-2 mb-2">
-                                                        <label className="text-[10px] font-semibold text-blue-700 dark:text-blue-300 tracking-wide flex items-center gap-1.5">
-                                                            <Key size={10} />
-                                                            {t('owner.account.brandLoginId')}
-                                                        </label>
-                                                        <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 dark:bg-blue-500/15 px-2 py-1 text-[10px] font-bold text-blue-700 dark:text-blue-300">
-                                                            <Shield size={10} />
-                                                            {t('owner.account.brandLoginBadge', { defaultValue: 'Brand' })}
-                                                        </span>
-                                                    </div>
-                                                    <div className="flex items-center justify-between gap-2">
-                                                        <button
-                                                            onClick={() => copyToClipboard(brand.establishmentLoginId, `brand-${brand.id}`)}
-                                                            className="text-xs font-bold text-blue-500 hover:text-blue-600 transition-colors flex items-center gap-1"
-                                                        >
-                                                            {copiedId === `brand-${brand.id}` ? (
-                                                                <span className="flex items-center gap-1 text-mintcom-green"><CheckCircle2 size={10} /> {t('common.copied')}</span>
-                                                            ) : (
-                                                                <span className="flex items-center gap-1"><Copy size={10} /> {t('common.copy')}</span>
-                                                            )}
-                                                        </button>
-                                                    </div>
-                                                    <code className="mt-2 block text-sm font-mono font-bold text-gray-900 dark:text-white tracking-wide truncate select-all">
-                                                        {brand.establishmentLoginId}
-                                                    </code>
-                                                    <p className="mt-2 text-[11px] font-medium text-blue-700/80 dark:text-blue-200/80 leading-relaxed">
-                                                        {t('owner.account.brandLoginHint', { defaultValue: 'Use this ID to sign in to the brand dashboard.' })}
-                                                    </p>
-                                                </div>
-                                            </div>
+                                                );
+                                            })}
                                         </div>
-                                    )
-                                })}
+                                    );
+                                })()}
                             </div>
-                        </motion.div>
-                    )}
-                </div>
 
-                {/* Right Column - Security & Info */}
-                <div className="space-y-6">
-
-                    {/* Global System Currency */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.15 }}
-                        className="relative bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.05] p-6 shadow-sm transition-all duration-300 overflow-hidden"
-                    >
-                        <div className="absolute top-0 right-0 w-40 h-40 bg-amber-500/10 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-                        <div className="relative z-10">
-                            <div className="flex items-center gap-3 mb-6">
-                                <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
-                                    <Landmark className="w-5 h-5 text-amber-500" />
-                                </div>
-                                <div>
-                                    <h2 className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">System Currency</h2>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400">Updates currency for all your locations.</p>
-                                </div>
-                            </div>
-                            <div className="space-y-4">
-                                <div className="relative">
-                                    <select
-                                        value={globalCurrency}
-                                        onChange={(e) => {
-                                            const next = e.target.value;
-                                            if (next !== globalCurrency) setPendingCurrency(next);
-                                        }}
-                                        disabled={isUpdatingCurrency}
-                                        className="w-full h-12 bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/[0.08] rounded-xl px-4 font-bold text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 transition-all appearance-none cursor-pointer disabled:opacity-50"
-                                    >
-                                        {CURRENCIES.map((c) => (
-                                            <option key={c.code} value={c.code} className="bg-white dark:bg-gray-800">
-                                                {c.name} ({c.symbol})
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                        </svg>
-                                    </div>
-                                </div>
-                                {isUpdatingCurrency && (
-                                    <p className="text-xs font-bold text-amber-500 animate-pulse text-center">
-                                        Applying changes to all locations...
+                            {/* Hint + pagination (same Pagination component as locations table) */}
+                            <div className="shrink-0 border-t border-gray-100 dark:border-white/[0.05]">
+                                <div className="px-5 py-2.5 bg-gray-50/50 dark:bg-white/[0.02]">
+                                    <p className="text-[11px] font-medium text-gray-500 dark:text-gray-400 leading-relaxed">
+                                        {credTab === 'locations'
+                                            ? t('owner.account.locationLoginHint', {
+                                                defaultValue: 'Use this ID to sign in to this location dashboard.',
+                                            })
+                                            : t('owner.account.brandLoginHint', {
+                                                defaultValue: 'Use this ID to sign in to the brand dashboard.',
+                                            })}
                                     </p>
+                                </div>
+                                {!isSingleCredential && (
+                                    <Pagination
+                                        currentPage={credPage}
+                                        totalPages={Math.max(
+                                            1,
+                                            Math.ceil(
+                                                (credTab === 'locations'
+                                                    ? filteredLocationLogins.length
+                                                    : filteredBrandLogins.length) / CRED_ITEMS_PER_PAGE,
+                                            ),
+                                        )}
+                                        onPageChange={setCredPage}
+                                        variant="footer"
+                                        totalItems={
+                                            credTab === 'locations'
+                                                ? filteredLocationLogins.length
+                                                : filteredBrandLogins.length
+                                        }
+                                        itemsPerPage={CRED_ITEMS_PER_PAGE}
+                                        className={fit ? '!py-2.5 !px-4' : undefined}
+                                    />
                                 )}
                             </div>
-                        </div>
-                    </motion.div>
+                        </motion.div>
+            )}
 
+            {/* Resources | Safety column (security tips + danger) — equal height, no dead space under danger */}
+            <div className={`grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch ${fit ? 'flex-1 min-h-0' : ''}`}>
                     {/* Resources & Help */}
                     <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2 }}
-                        className="relative bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.05] p-6 shadow-sm transition-all duration-300 overflow-hidden"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.15 }}
+                        className={`lg:col-span-2 bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.05] shadow-sm overflow-hidden h-full ${
+                            fit ? 'min-h-0 flex flex-col' : ''
+                        }`}
                     >
-                        <div className="absolute top-0 right-0 w-40 h-40 bg-blue-500/10 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-                        <div className="relative z-10">
-                            <div className="flex items-center gap-3 mb-6">
-                                <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                        <div className={`${fit ? 'p-3 sm:p-4 flex-1 min-h-0 overflow-y-auto custom-scrollbar' : 'p-5 sm:p-6'}`}>
+                            {/* Header — same icon/title metrics as Security Tips & Owner Account cards */}
+                            <div className={`flex items-center gap-3 ${fit ? 'mb-3' : 'mb-5'}`}>
+                                <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0">
                                     <Library className="w-5 h-5 text-blue-500" />
                                 </div>
-                                <div>
-                                    <h2 className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">{t('owner.account.resources.title')}</h2>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400">{t('owner.account.resources.subtitle')}</p>
+                                <div className="min-w-0">
+                                    <h2 className="text-lg font-bold tracking-tight text-gray-900 dark:text-white leading-none">
+                                        {t('owner.account.resources.title')}
+                                    </h2>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-1">
+                                        {t('owner.account.resources.subtitle')}
+                                    </p>
                                 </div>
                             </div>
 
-                            <div className="space-y-3">
-                                {/* User Manual */}
+                            {/* Guides — 2-column tiles */}
+                            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2.5 px-0.5">
+                                {t('owner.account.resources.guides', { defaultValue: 'Guides' })}
+                            </p>
+                            <div className={`grid grid-cols-1 sm:grid-cols-2 gap-2.5 ${fit ? 'mb-3' : 'mb-5'}`}>
                                 <a
-                                    href="/docs/mintcom-user-manual.pdf"
-                                    download="Mintcom_User_Manual.pdf"
-                                    className="flex items-center gap-4 p-3 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-100 dark:border-white/[0.05] transition-all"
+                                    href={userManualDoc.path}
+                                    download={userManualDoc.filename}
+                                    className="group relative flex flex-col gap-3 p-3.5 rounded-2xl border border-blue-100 dark:border-blue-500/15 bg-gradient-to-br from-blue-50/90 to-white dark:from-blue-500/10 dark:to-white/[0.02] hover:border-blue-300 dark:hover:border-blue-500/30 hover:shadow-md hover:shadow-blue-500/5 transition-all"
                                 >
-                                    <div className="w-10 h-10 rounded-lg bg-white dark:bg-white/[0.05] flex items-center justify-center shadow-sm border border-gray-100 dark:border-white/[0.05]">
-                                        <BookOpen size={20} className="text-blue-500 group-hover/item:scale-110 transition-transform" />
+                                    <div className="flex items-start justify-between gap-2">
+                                        <div className="w-9 h-9 rounded-xl bg-blue-500 text-white flex items-center justify-center shadow-sm shadow-blue-500/25">
+                                            <BookOpen size={16} />
+                                        </div>
+                                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 dark:text-blue-400 opacity-70 group-hover:opacity-100 transition-opacity">
+                                            <Download size={12} />
+                                            PDF
+                                        </span>
                                     </div>
-                                    <div className="flex-1">
-                                        <h4 className="text-sm font-bold tracking-tight text-gray-900 dark:text-white">{t('owner.account.resources.userManual.title')}</h4>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400">{t('owner.account.resources.userManual.desc')}</p>
+                                    <div>
+                                        <h4 className="text-sm font-bold text-gray-900 dark:text-white leading-tight">
+                                            {t('owner.account.resources.userManual.title')}
+                                        </h4>
+                                        <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 leading-snug line-clamp-2">
+                                            {t('owner.account.resources.userManual.desc')}
+                                        </p>
                                     </div>
-                                    <Download size={16} className="text-gray-400 group-hover/item:text-blue-500 transition-colors" />
                                 </a>
 
-                                {/* Setup Manual */}
                                 <a
-                                    href="/docs/mintcom-setup-manual.pdf"
-                                    download="Mintcom_Setup_Manual.pdf"
-                                    className="flex items-center gap-4 p-3 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-100 dark:border-white/[0.05] transition-all"
+                                    href={setupManualDoc.path}
+                                    download={setupManualDoc.filename}
+                                    className="group relative flex flex-col gap-3 p-3.5 rounded-2xl border border-amber-100 dark:border-amber-500/15 bg-gradient-to-br from-amber-50/90 to-white dark:from-amber-500/10 dark:to-white/[0.02] hover:border-amber-300 dark:hover:border-amber-500/30 hover:shadow-md hover:shadow-amber-500/5 transition-all"
                                 >
-                                    <div className="w-10 h-10 rounded-lg bg-white dark:bg-white/[0.05] flex items-center justify-center shadow-sm border border-gray-100 dark:border-white/[0.05]">
-                                        <Settings size={20} className="text-amber-500 group-hover/item:scale-110 transition-transform" />
+                                    <div className="flex items-start justify-between gap-2">
+                                        <div className="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-sm shadow-amber-500/25">
+                                            <Settings size={16} />
+                                        </div>
+                                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-600 dark:text-amber-400 opacity-70 group-hover:opacity-100 transition-opacity">
+                                            <Download size={12} />
+                                            PDF
+                                        </span>
                                     </div>
-                                    <div className="flex-1">
-                                        <h4 className="text-sm font-bold tracking-tight text-gray-900 dark:text-white">{t('owner.account.resources.setupManual.title')}</h4>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400">{t('owner.account.resources.setupManual.desc')}</p>
+                                    <div>
+                                        <h4 className="text-sm font-bold text-gray-900 dark:text-white leading-tight">
+                                            {t('owner.account.resources.setupManual.title')}
+                                        </h4>
+                                        <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 leading-snug line-clamp-2">
+                                            {t('owner.account.resources.setupManual.desc')}
+                                        </p>
                                     </div>
-                                    <Download size={16} className="text-gray-400 group-hover/item:text-amber-500 transition-colors" />
                                 </a>
 
-                                {/* Video Tutorial */}
                                 {hasOnboardingVideo ? (
                                     <a
                                         href={ONBOARDING_VIDEO_URL}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="flex items-center gap-4 p-3 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-100 dark:border-white/[0.05] transition-all"
+                                        className="group relative sm:col-span-2 flex items-center gap-3 p-3.5 rounded-2xl border border-red-100 dark:border-red-500/15 bg-gradient-to-r from-red-50/90 via-white to-white dark:from-red-500/10 dark:via-white/[0.02] dark:to-transparent hover:border-red-300 dark:hover:border-red-500/30 hover:shadow-md hover:shadow-red-500/5 transition-all"
                                     >
-                                        <div className="w-10 h-10 rounded-lg bg-white dark:bg-white/[0.05] flex items-center justify-center shadow-sm border border-gray-100 dark:border-white/[0.05]">
-                                            <PlayCircle size={20} className="text-red-500 group-hover/item:scale-110 transition-transform" />
+                                        <div className="w-10 h-10 rounded-xl bg-red-500 text-white flex items-center justify-center shadow-sm shadow-red-500/25 shrink-0">
+                                            <PlayCircle size={18} />
                                         </div>
-                                        <div className="flex-1">
-                                            <h4 className="text-sm font-bold tracking-tight text-gray-900 dark:text-white">{t('owner.account.resources.videoTutorial.title')}</h4>
-                                            <p className="text-xs text-gray-500 dark:text-gray-400">{t('owner.account.resources.videoTutorial.desc')}</p>
+                                        <div className="flex-1 min-w-0">
+                                            <h4 className="text-sm font-bold text-gray-900 dark:text-white">
+                                                {t('owner.account.resources.videoTutorial.title')}
+                                            </h4>
+                                            <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate">
+                                                {t('owner.account.resources.videoTutorial.desc')}
+                                            </p>
                                         </div>
-                                        <ExternalLink size={16} className="text-gray-400 group-hover/item:text-red-500 transition-colors" />
+                                        <ExternalLink size={15} className="text-red-400 shrink-0 opacity-70 group-hover:opacity-100" />
                                     </a>
                                 ) : (
-                                    <button
-                                        type="button"
-                                        disabled
-                                        aria-label="Video guide coming soon"
-                                        className="flex w-full items-center gap-4 p-3 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-100 dark:border-white/[0.05] transition-all opacity-60 cursor-not-allowed text-left"
+                                    <div
+                                        aria-label={t('owner.account.videoGuideComingSoon')}
+                                        className="sm:col-span-2 flex items-center gap-3 p-3.5 rounded-2xl border border-gray-100 dark:border-white/10 bg-gray-50/80 dark:bg-white/[0.03] opacity-60"
                                     >
-                                        <div className="w-10 h-10 rounded-lg bg-white dark:bg-white/[0.05] flex items-center justify-center shadow-sm border border-gray-100 dark:border-white/[0.05]">
-                                            <PlayCircle size={20} className="text-red-500" />
+                                        <div className="w-10 h-10 rounded-xl bg-gray-200 dark:bg-white/10 text-gray-500 flex items-center justify-center shrink-0">
+                                            <PlayCircle size={18} />
                                         </div>
-                                        <div className="flex-1">
-                                            <h4 className="text-sm font-bold tracking-tight text-gray-900 dark:text-white">{t('owner.account.resources.videoTutorial.title')}</h4>
-                                            <p className="text-xs text-gray-500 dark:text-gray-400">{t('owner.account.resources.videoTutorial.desc')}</p>
+                                        <div className="flex-1 min-w-0">
+                                            <h4 className="text-sm font-bold text-gray-900 dark:text-white">
+                                                {t('owner.account.resources.videoTutorial.title')}
+                                            </h4>
+                                            <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                                                {t('common.comingSoon', { defaultValue: 'Coming soon' })}
+                                            </p>
                                         </div>
-                                        <ExternalLink size={16} className="text-gray-400" />
-                                    </button>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Company / legal — compact chips */}
+                            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2.5 px-0.5">
+                                {t('owner.account.resources.company', { defaultValue: 'Company & legal' })}
+                            </p>
+                            <div className="grid grid-cols-2 gap-2">
+                                {[
+                                    {
+                                        href: '/qa',
+                                        icon: HelpCircle,
+                                        title: t('owner.account.resources.qa.title'),
+                                        tone: 'text-purple-500 bg-purple-500/10 border-purple-500/10 hover:border-purple-400/40',
+                                    },
+                                    {
+                                        href: '/legal/privacy',
+                                        icon: Shield,
+                                        title: t('owner.account.resources.privacyPolicy.title'),
+                                        tone: 'text-mintcom-green bg-mintcom-green/10 border-mintcom-green/10 hover:border-mintcom-green/40',
+                                    },
+                                    {
+                                        href: '/legal/terms',
+                                        icon: Scale,
+                                        title: t('owner.account.resources.termsOfUse.title'),
+                                        tone: 'text-blue-500 bg-blue-500/10 border-blue-500/10 hover:border-blue-400/40',
+                                    },
+                                    {
+                                        href: '/about',
+                                        icon: Info,
+                                        title: t('owner.account.resources.aboutUs.title'),
+                                        tone: 'text-mintcom-green border-mintcom-green/10 hover:border-mintcom-green/40',
+                                    },
+                                ].map((item) => (
+                                    <a
+                                        key={item.href}
+                                        href={item.href}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className={`group flex items-center gap-2.5 p-2.5 rounded-xl border bg-white dark:bg-white/[0.02] transition-all hover:shadow-sm ${item.tone}`}
+                                    >
+                                        <div className="w-8 h-8 rounded-lg bg-white dark:bg-white/5 flex items-center justify-center shrink-0 shadow-sm border border-black/[0.03] dark:border-white/5">
+                                            <item.icon size={15} className="shrink-0" />
+                                        </div>
+                                        <span className="text-xs font-bold text-gray-800 dark:text-gray-100 truncate flex-1">
+                                            {item.title}
+                                        </span>
+                                        <ExternalLink size={12} className="text-gray-300 group-hover:text-gray-500 shrink-0 transition-colors" />
+                                    </a>
+                                ))}
+                            </div>
+                        </div>
+                    </motion.div>
+
+                    {/* Right safety column — fills full height of Resources (no empty under Danger) */}
+                    <div className="flex flex-col gap-4 h-full min-h-0">
+                        {/* Security tips */}
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.18 }}
+                            className="flex-1 min-h-0 rounded-2xl border border-mintcom-green/20 dark:border-mintcom-green/25 bg-gradient-to-br from-mintcom-green/10 via-emerald-50/90 to-white dark:from-mintcom-green/15 dark:via-mintcom-green/5 dark:to-[#1E293B] p-5 sm:p-6 shadow-sm shadow-mintcom-green/5 flex flex-col"
+                        >
+                            {/* Header — matches Useful Resources (same padding, icon size, title row) */}
+                            <div className="flex items-center gap-3 mb-5 shrink-0">
+                                <div className="w-10 h-10 rounded-xl bg-mintcom-green/20 dark:bg-mintcom-green/25 flex items-center justify-center shrink-0">
+                                    <Shield className="w-5 h-5 text-mintcom-green" />
+                                </div>
+                                <div className="min-w-0">
+                                    <h2 className="text-lg font-bold tracking-tight text-gray-900 dark:text-white leading-none">
+                                        {t('owner.account.securityTips.title')}
+                                    </h2>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-1">
+                                        {t('owner.account.securityTips.subtitle', {
+                                            defaultValue: 'Keep your account and logins safe',
+                                        })}
+                                    </p>
+                                </div>
+                            </div>
+                            {/* Indent to match title/subtitle text column (icon is w-10 + gap-3) */}
+                            <ul className="space-y-2 flex-1 text-xs font-medium text-gray-600 dark:text-gray-300 ps-[3.25rem]">
+                                {[
+                                    t('owner.account.securityTips.uniquePasswords'),
+                                    t('owner.account.securityTips.updatePeriodically'),
+                                    t('owner.account.securityTips.neverShareOtp'),
+                                    t('owner.account.securityTips.enable2fa', {
+                                        defaultValue: 'Enable two-factor authentication when available',
+                                    }),
+                                ].map((tip) => (
+                                    <li key={tip} className="flex items-start gap-2 leading-snug">
+                                        <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-mintcom-green shrink-0" />
+                                        <span>{tip}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </motion.div>
+
+                        {/* Danger Zone — full panel, action pinned to bottom */}
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.22 }}
+                            className={`relative flex flex-col rounded-2xl border shadow-sm overflow-hidden min-h-[14rem] ${
+                                accountDetails?.deletionRequestedAt
+                                    ? 'border-mintcom-green/25 bg-gradient-to-b from-white via-white to-mintcom-green/5 dark:from-[#1E293B] dark:to-mintcom-green/10'
+                                    : 'border-red-500/25 bg-gradient-to-b from-white via-white to-red-50/80 dark:from-[#1E293B] dark:via-[#1E293B] dark:to-red-500/10'
+                            }`}
+                        >
+                            <div
+                                className={`absolute -top-10 -right-10 w-36 h-36 rounded-full blur-3xl pointer-events-none ${
+                                    accountDetails?.deletionRequestedAt ? 'bg-mintcom-green/20' : 'bg-red-500/15'
+                                }`}
+                            />
+                            <div className="relative z-10 flex flex-col flex-1 p-5 sm:p-6">
+                                {/* Header — same icon/title metrics as Resources & Security Tips */}
+                                <div className="flex items-center gap-3 mb-5 shrink-0">
+                                    <div
+                                        className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                                            accountDetails?.deletionRequestedAt ? 'bg-mintcom-green/15' : 'bg-red-500/10'
+                                        }`}
+                                    >
+                                        {accountDetails?.deletionRequestedAt ? (
+                                            <div className="w-5 h-5 border-2 border-mintcom-green/30 border-t-mintcom-green rounded-full" />
+                                        ) : (
+                                            <AlertCircle className="w-5 h-5 text-red-500" />
+                                        )}
+                                    </div>
+                                    <div className="min-w-0">
+                                        <h2 className="text-lg font-bold tracking-tight text-gray-900 dark:text-white leading-none">
+                                            {accountDetails?.deletionRequestedAt
+                                                ? t('owner.account.restoreAccount')
+                                                : t('owner.account.dangerZone')}
+                                        </h2>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
+                                            {accountDetails?.deletionRequestedAt
+                                                ? t('owner.account.deletionScheduledHint')
+                                                : t('owner.account.dangerZoneHint')}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {!accountDetails?.deletionRequestedAt && (
+                                    /* Indent to match title/subtitle text column (icon is w-10 + gap-3) */
+                                    <ul className="mb-4 space-y-2 text-xs font-medium text-gray-600 dark:text-gray-300 ps-[3.25rem]">
+                                        {[
+                                            t('owner.account.dangerZoneBullet1', {
+                                                defaultValue: 'All locations and brands will be scheduled for removal',
+                                            }),
+                                            t('owner.account.dangerZoneBullet2', {
+                                                defaultValue: 'Staff access and login IDs stop working',
+                                            }),
+                                            t('owner.account.dangerZoneBullet3', {
+                                                defaultValue: 'You can cancel during the grace period if offered',
+                                            }),
+                                        ].map((line) => (
+                                            <li key={line} className="flex items-start gap-2">
+                                                <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" />
+                                                <span>{line}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
                                 )}
 
-                                {/* Q&A */}
-                                <a
-                                    href="/qa"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center gap-4 p-3 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-100 dark:border-white/[0.05] transition-all"
-                                >
-                                    <div className="w-10 h-10 rounded-lg bg-white dark:bg-white/[0.05] flex items-center justify-center shadow-sm border border-gray-100 dark:border-white/[0.05]">
-                                        <HelpCircle size={20} className="text-purple-500 group-hover/item:scale-110 transition-transform" />
-                                    </div>
-                                    <div className="flex-1">
-                                        <h4 className="text-sm font-bold tracking-tight text-gray-900 dark:text-white">{t('owner.account.resources.qa.title')}</h4>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400">{t('owner.account.resources.qa.desc')}</p>
-                                    </div>
-                                    <ExternalLink size={16} className="text-gray-400 group-hover/item:text-purple-500 transition-colors" />
-                                </a>
-
-                                {/* Privacy Policy */}
-                                <a
-                                    href="/legal/privacy"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center gap-4 p-3 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-100 dark:border-white/[0.05] transition-all"
-                                >
-                                    <div className="w-10 h-10 rounded-lg bg-white dark:bg-white/[0.05] flex items-center justify-center shadow-sm border border-gray-100 dark:border-white/[0.05]">
-                                        <Shield size={20} className="text-mintcom-green group-hover/item:scale-110 transition-transform" />
-                                    </div>
-                                    <div className="flex-1">
-                                        <h4 className="text-sm font-bold tracking-tight text-gray-900 dark:text-white">{t('owner.account.resources.privacyPolicy.title')}</h4>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400">{t('owner.account.resources.privacyPolicy.desc')}</p>
-                                    </div>
-                                    <ExternalLink size={16} className="text-gray-400 group-hover/item:text-mintcom-green transition-colors" />
-                                </a>
-
-                                {/* Terms of Use */}
-                                <a
-                                    href="/legal/terms"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center gap-4 p-3 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-100 dark:border-white/[0.05] transition-all"
-                                >
-                                    <div className="w-10 h-10 rounded-lg bg-white dark:bg-white/[0.05] flex items-center justify-center shadow-sm border border-gray-100 dark:border-white/[0.05]">
-                                        <Scale size={20} className="text-blue-500 group-hover/item:scale-110 transition-transform" />
-                                    </div>
-                                    <div className="flex-1">
-                                        <h4 className="text-sm font-bold tracking-tight text-gray-900 dark:text-white">{t('owner.account.resources.termsOfUse.title')}</h4>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400">{t('owner.account.resources.termsOfUse.desc')}</p>
-                                    </div>
-                                    <ExternalLink size={16} className="text-gray-400 group-hover/item:text-blue-500 transition-colors" />
-                                </a>
-
-                                {/* About Us */}
-                                <a
-                                    href="/about"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center gap-4 p-3 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-100 dark:border-white/[0.05] transition-all"
-                                >
-                                    <div className="w-10 h-10 rounded-lg bg-white dark:bg-white/[0.05] flex items-center justify-center shadow-sm border border-gray-100 dark:border-white/[0.05]">
-                                        <Info size={20} className="text-mintcom-green group-hover/item:scale-110 transition-transform" />
-                                    </div>
-                                    <div className="flex-1">
-                                        <h4 className="text-sm font-bold tracking-tight text-gray-900 dark:text-white">{t('owner.account.resources.aboutUs.title')}</h4>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400">{t('owner.account.resources.aboutUs.desc')}</p>
-                                    </div>
-                                    <ExternalLink size={16} className="text-gray-400 group-hover/item:text-mintcom-green transition-colors" />
-                                </a>
-                            </div>
-                        </div>
-                    </motion.div>
-
-
-
-
-                    {/* Quick Tips */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.25 }}
-                        className="relative bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.05] p-6 shadow-sm transition-all duration-300 overflow-hidden"
-                    >
-                        <div className="absolute top-0 right-0 w-40 h-40 bg-mintcom-green/10 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-                        <div className="relative z-10">
-                            <div className="flex items-center gap-3 mb-4">
-                                <div className="w-10 h-10 rounded-xl bg-mintcom-green/20 flex items-center justify-center">
-                                    <Info className="w-5 h-5 text-mintcom-green" />
-                                </div>
-                                <h2 className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">{t('owner.account.securityTips.title')}</h2>
-                            </div>
-
-                            <ul className="space-y-3 text-sm text-gray-600 dark:text-gray-300">
-                                <li className="flex items-start gap-2">
-                                    <CheckCircle2 size={16} className="text-mintcom-green mt-0.5 shrink-0" />
-                                    <span>{t('owner.account.securityTips.uniquePasswords')}</span>
-                                </li>
-                                <li className="flex items-start gap-2">
-                                    <CheckCircle2 size={16} className="text-mintcom-green mt-0.5 shrink-0" />
-                                    <span>{t('owner.account.securityTips.updatePeriodically')}</span>
-                                </li>
-                                <li className="flex items-start gap-2">
-                                    <CheckCircle2 size={16} className="text-mintcom-green mt-0.5 shrink-0" />
-                                    <span>{t('owner.account.securityTips.neverShareOtp')}</span>
-                                </li>
-                            </ul>
-                        </div>
-                    </motion.div>
-
-                    {/* Danger Zone / Restoration Zone */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.3 }}
-                        className={`relative bg-white dark:bg-[#1E293B] rounded-2xl border p-6 shadow-sm transition-all duration-300 overflow-hidden ${accountDetails?.deletionRequestedAt ? 'border-mintcom-green/20' : 'border-red-500/20'}`}
-                    >
-                        <div className={`absolute top-0 right-0 w-40 h-40 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none ${accountDetails?.deletionRequestedAt ? 'bg-mintcom-green/10' : 'bg-red-500/10'}`} />
-                        <div className="relative z-10">
-                            <div className="flex items-center gap-3 mb-4">
-                                <div className={`w-10 h-10 rounded-xl ${accountDetails?.deletionRequestedAt ? 'bg-mintcom-green/10' : 'bg-red-500/10'} flex items-center justify-center`}>
+                                <div className="mt-auto pt-2">
                                     {accountDetails?.deletionRequestedAt ? (
-                                        <div className="w-5 h-5 border-2 border-mintcom-green/30 border-t-mintcom-green rounded-full" />
+                                        <button
+                                            onClick={handleRestoreAccount}
+                                            disabled={isRestoring}
+                                            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-mintcom-green hover:bg-[#5fa888] text-black rounded-xl text-sm font-black transition-all shadow-lg shadow-mintcom-green/20 disabled:opacity-70"
+                                        >
+                                            {isRestoring ? (
+                                                <>
+                                                    <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
+                                                    {t('common.restoring')}
+                                                </>
+                                            ) : (
+                                                t('owner.account.restoreMyAccount')
+                                            )}
+                                        </button>
                                     ) : (
-                                        <AlertCircle className="w-5 h-5 text-red-500" />
+                                        <button
+                                            onClick={handleDeleteClick}
+                                            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-red-500/20"
+                                        >
+                                            <Trash2 size={18} />
+                                            {t('owner.account.deleteAccount')}
+                                        </button>
                                     )}
                                 </div>
-                                <h2 className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">
-                                    {accountDetails?.deletionRequestedAt ? t('owner.account.restoreAccount') : t('owner.account.dangerZone')}
-                                </h2>
                             </div>
-
-                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-                                {accountDetails?.deletionRequestedAt
-                                    ? t('owner.account.deletionScheduledHint')
-                                    : t('owner.account.dangerZoneHint')}
-                            </p>
-
-                            {accountDetails?.deletionRequestedAt ? (
-                                <button
-                                    onClick={handleRestoreAccount}
-                                    disabled={isRestoring}
-                                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-mintcom-green hover:bg-[#5fa888] text-black rounded-xl text-sm font-black transition-all shadow-lg shadow-mintcom-green/20 disabled:opacity-70"
-                                >
-                                    {isRestoring ? (
-                                        <>
-                                            <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
-                                            {t('common.restoring')}
-                                        </>
-                                    ) : (
-                                        <>
-                                            {t('owner.account.restoreMyAccount')}
-                                        </>
-                                    )}
-                                </button>
-                            ) : (
-                                <button
-                                    onClick={handleDeleteClick}
-                                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-red-500/20"
-                                >
-                                    <Trash2 size={18} />
-                                    {t('owner.account.deleteAccount')}
-                                </button>
-                            )}
-                        </div>
-                    </motion.div>
-                </div>
+                        </motion.div>
+                    </div>
+            </div>
             </div>
 
             {/* Empty State */}
@@ -1356,16 +1757,16 @@ export function OwnerAccountManagementPage() {
                                     <p className="text-sm text-gray-500 dark:text-gray-400">{t('owner.account.deleteAccountModal.feedbackHint')}</p>
                                 </div>
                                 <div className="grid grid-cols-1 gap-2">
-                                    {deleteReasons.map((reason) => (
+                                    {DELETE_REASON_OPTIONS.map((reason) => (
                                         <button
-                                            key={reason}
-                                            onClick={() => setDeleteReason(reason)}
-                                            className={`w-full text-left px-4 py-3 rounded-xl border transition-all text-sm font-medium ${deleteReason === reason
+                                            key={reason.key}
+                                            onClick={() => setDeleteReason(reason.value)}
+                                            className={`w-full text-start px-4 py-3 rounded-xl border transition-all text-sm font-medium ${deleteReason === reason.value
                                                 ? 'bg-mintcom-green/10 border-mintcom-green text-mintcom-green'
                                                 : 'bg-gray-50 dark:bg-white/[0.02] border-gray-100 dark:border-white/[0.05] text-gray-600 dark:text-gray-400 hover:border-gray-300'
                                                 }`}
                                         >
-                                            {t(`owner.account.deleteAccountModal.reasons.${reason.toLowerCase().replace(/ /g, '_').replace("'", '')}`, { defaultValue: reason })}
+                                            {t(`owner.account.deleteAccountModal.reasons.${reason.key}`)}
                                         </button>
                                     ))}
                                 </div>
@@ -1407,7 +1808,7 @@ export function OwnerAccountManagementPage() {
                                     </button>
                                     <button
                                         onClick={() => setDeleteStep(3)}
-                                        disabled={deleteConfirmationText !== t('common.delete')}
+                                        disabled={deleteConfirmationText.trim().toLocaleLowerCase(i18n.language) !== t('common.delete').toLocaleLowerCase(i18n.language)}
                                         className="flex-1 py-4 bg-red-500 text-white rounded-2xl text-sm font-black disabled:opacity-50 transition-all"
                                     >
                                         {t('common.next')}
