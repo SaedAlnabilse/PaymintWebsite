@@ -200,7 +200,7 @@ const DEMO_POS_PERMISSIONS = [
 ] as const;
 
 /** Mirrors mintcom-pos BACKOFFICE_PERMISSIONS */
-const DEMO_BACKOFFICE_PERMISSIONS = [
+const DEMO_BACKOFFICE_PERMISSIONS: { id: string; label: string; desc?: string }[] = [
   { id: 'view_reports', label: 'Access full report', desc: 'Dashboard and analytics' },
   { id: 'cancel_receipts', label: 'Make refunds', desc: 'Refund completed orders from back office' },
   { id: 'manage_inventory', label: 'Manage recipe operations' },
@@ -210,16 +210,24 @@ const DEMO_BACKOFFICE_PERMISSIONS = [
   { id: 'manage_settings', label: 'Change establishment settings' },
   { id: 'manage_service_charge', label: 'Service Charge' },
   { id: 'export_data', label: 'Allow data export' },
-] as const;
+];
 
 /** Demo custom roles (like Settings → Roles templates on POS) */
-const DEMO_CUSTOM_ROLES = [
+const DEMO_CUSTOM_ROLES: {
+  id: string;
+  name: string;
+  permissions: string[];
+  posAccess: boolean;
+  backofficeAccess: boolean;
+  backofficePermissions: string[];
+}[] = [
   {
     id: 'role-cashier',
     name: 'Cashier',
     permissions: ['discounts', 'refunds', 'reprint_receipts', 'loyalty_system_access'],
     posAccess: true,
     backofficeAccess: false,
+    backofficePermissions: [],
   },
   {
     id: 'role-manager',
@@ -235,8 +243,9 @@ const DEMO_CUSTOM_ROLES = [
     permissions: ['discounts', 'reprint_receipts', 'restock_items'],
     posAccess: true,
     backofficeAccess: false,
+    backofficePermissions: [],
   },
-] as const;
+];
 
 type DemoPrinter = {
   id: string;
