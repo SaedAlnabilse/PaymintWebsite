@@ -50,6 +50,8 @@ export default defineConfig({
 
   // Build optimization settings
   build: {
+    // Never ship source maps to production (harder to reverse-engineer the bundle).
+    sourcemap: false,
     rollupOptions: {
       output: {
         // Optimized chunking strategy to reduce HTTP requests
@@ -108,8 +110,6 @@ export default defineConfig({
         },
       },
     },
-    // Disable source maps for production
-    sourcemap: false,
     // Increase chunk size warning limit
     chunkSizeWarningLimit: 600,
     // Use default esbuild minification (faster than terser)

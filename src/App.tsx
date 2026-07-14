@@ -189,39 +189,41 @@ function RouteSeo() {
 // ============================================================================
 // Maintenance Mode Configuration
 // ============================================================================
+// Client flag for local/dev only. Production maintenance is enforced at the
+// Cloudflare Worker edge (MAINTENANCE_MODE + QA_ACCESS_KEY secrets), so the
+// bypass key is never baked into the public JS bundle.
 const MAINTENANCE_MODE = env.VITE_MAINTENANCE_MODE;
 
 /**
- * Handles secret access to the site during maintenance.
- * Visit /qa-access?key=<VITE_QA_ACCESS_KEY> to bypass the coming soon page.
- *
- * Access is only granted when a non-empty key is configured AND the supplied
- * `key` query parameter matches it exactly. Without a configured key the bypass
- * is disabled entirely, so the maintenance lockout cannot be trivially defeated.
+ * /qa-access is handled by the Cloudflare Worker in production (sets an
+ * HttpOnly signed cookie). This client handler is a local-dev fallback only
+ * when VITE_QA_ACCESS_KEY is present in .env.local — never commit that key.
  */
 function SecretAccessHandler() {
   useEffect(() => {
+    // Production: Worker already validated & redirected; if we still render
+    // this route, just go home (cookie may already be set).
     const expectedKey = env.VITE_QA_ACCESS_KEY?.trim();
     const providedKey = new URLSearchParams(window.location.search).get('key')?.trim();
 
-    const granted = Boolean(expectedKey) && providedKey === expectedKey;
-
-    if (granted) {
+    if (expectedKey && providedKey === expectedKey) {
+      // Dev-only soft flag (Worker uses HttpOnly cookie in production).
       localStorage.setItem('mintcom_preview_access', 'true');
       toast.success('Preview access granted. Redirecting...', {
         icon: '🔐',
         duration: 2000,
       });
-    } else {
-      // Ensure a stale/forged flag can never linger and unlock the site.
+    } else if (expectedKey) {
       localStorage.removeItem('mintcom_preview_access');
       toast.error('Invalid or missing access key.', {
         icon: '🔒',
         duration: 2500,
       });
+    } else {
+      // No client key configured — edge Worker handles real access.
+      toast.success('Redirecting…', { duration: 1200 });
     }
 
-    // Brief delay to allow the toast to be seen before redirecting
     const timer = setTimeout(() => {
       window.location.href = '/';
     }, 1200);
@@ -234,7 +236,8 @@ function SecretAccessHandler() {
 
 /**
  * Wraps the application to show Coming Soon page if maintenance is active
- * and the user doesn't have a bypass key.
+ * and the user doesn't have a bypass key (local/dev soft check).
+ * Production also gates HTML at the Worker edge.
  */
 function MaintenanceWrapper() {
   const hasAccess = localStorage.getItem('mintcom_preview_access') === 'true';

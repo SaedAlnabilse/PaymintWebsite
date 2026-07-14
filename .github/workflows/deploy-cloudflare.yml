@@ -1,0 +1,67 @@
+# Deploy the Mintcom website Worker + static assets to Cloudflare on every
+# successful push to main.
+#
+# Required GitHub repository secrets (Settings → Secrets and variables → Actions):
+#   CLOUDFLARE_API_TOKEN   — API token with Workers Scripts Edit for this account
+#   CLOUDFLARE_ACCOUNT_ID  — Cloudflare account ID
+#
+# Optional GitHub variables (Settings → Variables):
+#   VITE_API_URL, VITE_SITE_URL, VITE_GA_MEASUREMENT_ID, …
+#
+# Edge-only secrets (set in Cloudflare, NOT in GitHub/VITE_):
+#   npx wrangler secret put QA_ACCESS_KEY
+#   (used by the Worker for /qa-access during maintenance)
+
+name: Deploy Cloudflare
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-cloudflare-main
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Build & deploy Worker
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build production assets
+        run: npm run build
+        env:
+          # Public frontend config only — never bake QA_ACCESS_KEY into the client.
+          VITE_API_URL: ${{ vars.VITE_API_URL || 'https://grateful-liberation-production-d036.up.railway.app' }}
+          VITE_SITE_URL: ${{ vars.VITE_SITE_URL || 'https://mintcompos.com' }}
+          VITE_GA_MEASUREMENT_ID: ${{ vars.VITE_GA_MEASUREMENT_ID || 'G-QHV2SVCG99' }}
+          VITE_GOOGLE_CLIENT_ID: ${{ vars.VITE_GOOGLE_CLIENT_ID || '' }}
+          VITE_APPLE_SERVICE_ID: ${{ vars.VITE_APPLE_SERVICE_ID || '' }}
+          VITE_APPLE_REDIRECT_URI: ${{ vars.VITE_APPLE_REDIRECT_URI || '' }}
+          VITE_MAINTENANCE_MODE: ${{ vars.VITE_MAINTENANCE_MODE || 'false' }}
+          # Explicitly empty — production bypass is Worker secret QA_ACCESS_KEY only.
+          VITE_QA_ACCESS_KEY: ''
+
+      - name: Deploy to Cloudflare Workers
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy
+          # Fail the job clearly if secrets are missing
+          packageManager: npm
