@@ -2,11 +2,19 @@ name = "mintcom"
 compatibility_date = "2024-09-23"
 main = "src/worker.ts"
 
+# Non-secret public config only. Secrets (QA_ACCESS_KEY, API tokens) must be set
+# via Cloudflare dashboard → Workers → mintcom → Settings → Variables
+# or: npx wrangler secret put QA_ACCESS_KEY
+# Never commit secrets here.
+
 [assets]
 directory = "dist"
 binding = "ASSETS"
 
 [vars]
+# Public backend origin for the Worker API proxy (not a credential).
 API_TARGET = "https://grateful-liberation-production-d036.up.railway.app"
+# Public GA4 measurement ID (safe to expose in the browser).
 VITE_GA_MEASUREMENT_ID = "G-QHV2SVCG99"
-VITE_QA_ACCESS_KEY = "fDJg_HNS87_R5QNjWWt-cxJXf557sMBI"
+# Maintenance lock at the edge: "true" | "false". Default off.
+MAINTENANCE_MODE = "false"

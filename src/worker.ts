@@ -1,6 +1,14 @@
 interface Env {
     ASSETS: { fetch: (request: Request) => Promise<Response> };
     API_TARGET?: string;
+    /** Edge maintenance gate: "true" | "false" */
+    MAINTENANCE_MODE?: string;
+    /**
+     * Secret for /qa-access bypass during maintenance.
+     * Set with: npx wrangler secret put QA_ACCESS_KEY
+     * Never commit this value.
+     */
+    QA_ACCESS_KEY?: string;
 }
 
 const PRODUCTION_WEB_ORIGINS = [
@@ -17,6 +25,10 @@ const PRODUCTION_WEB_HOSTS = new Set(
 // across two hostnames (the "a new domain loaded your tag" GA warning) and
 // duplicates SEO signals, so www navigations are permanently redirected here.
 const CANONICAL_HOST = 'mintcompos.com';
+
+const PREVIEW_COOKIE = 'mintcom_preview';
+/** Signed preview cookie lifetime: 7 days */
+const PREVIEW_MAX_AGE_SEC = 60 * 60 * 24 * 7;
 
 const SECURITY_HEADERS: Record<string, string> = {
     'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
@@ -97,6 +109,116 @@ function withSecurityHeaders(response: Response, noIndex = false): Response {
     return secured;
 }
 
+function isMaintenanceOn(env: Env): boolean {
+    return ['1', 'true', 'yes', 'on'].includes(String(env.MAINTENANCE_MODE || '').trim().toLowerCase());
+}
+
+function parseCookies(header: string | null): Record<string, string> {
+    if (!header) return {};
+    const out: Record<string, string> = {};
+    for (const part of header.split(';')) {
+        const idx = part.indexOf('=');
+        if (idx === -1) continue;
+        const k = part.slice(0, idx).trim();
+        const v = part.slice(idx + 1).trim();
+        if (k) out[k] = decodeURIComponent(v);
+    }
+    return out;
+}
+
+async function hmacSign(secret: string, message: string): Promise<string> {
+    const enc = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+        'raw',
+        enc.encode(secret),
+        { name: 'HMAC', hash: 'SHA-256' },
+        false,
+        ['sign'],
+    );
+    const sig = await crypto.subtle.sign('HMAC', key, enc.encode(message));
+    return [...new Uint8Array(sig)].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function createPreviewCookieValue(secret: string): Promise<string> {
+    const exp = Math.floor(Date.now() / 1000) + PREVIEW_MAX_AGE_SEC;
+    const payload = `v1.${exp}`;
+    const sig = await hmacSign(secret, payload);
+    return `${payload}.${sig}`;
+}
+
+async function isValidPreviewCookie(secret: string | undefined, cookieHeader: string | null): Promise<boolean> {
+    if (!secret?.trim()) return false;
+    const raw = parseCookies(cookieHeader)[PREVIEW_COOKIE];
+    if (!raw) return false;
+    const parts = raw.split('.');
+    if (parts.length !== 3 || parts[0] !== 'v1') return false;
+    const exp = Number(parts[1]);
+    if (!Number.isFinite(exp) || exp < Math.floor(Date.now() / 1000)) return false;
+    const payload = `${parts[0]}.${parts[1]}`;
+    const expected = await hmacSign(secret, payload);
+    // Constant-time-ish compare
+    if (expected.length !== parts[2].length) return false;
+    let diff = 0;
+    for (let i = 0; i < expected.length; i++) {
+        diff |= expected.charCodeAt(i) ^ parts[2].charCodeAt(i);
+    }
+    return diff === 0;
+}
+
+function isHtmlNavigation(request: Request): boolean {
+    if (request.method !== 'GET' && request.method !== 'HEAD') return false;
+    const accept = request.headers.get('Accept') || '';
+    // Asset requests often omit text/html or prefer */*
+    if (accept.includes('text/html')) return true;
+    // Some browsers send empty Accept on SPA navigations
+    const path = new URL(request.url).pathname;
+    return !path.match(/\.[^/.]+$/);
+}
+
+function maintenanceHtml(): Response {
+    const body = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>Mintcom · Coming Soon</title>
+  <style>
+    body{margin:0;min-height:100dvh;display:flex;align-items:center;justify-content:center;
+      font-family:system-ui,sans-serif;background:#0a0e17;color:#e8eaed;text-align:center;padding:24px}
+    h1{font-size:1.5rem;margin:0 0 8px}
+    p{opacity:.7;margin:0;max-width:28rem;line-height:1.5}
+  </style>
+</head>
+<body>
+  <div>
+    <h1>We&rsquo;ll be right back</h1>
+    <p>Mintcom is undergoing scheduled maintenance. Please check again shortly.</p>
+  </div>
+</body>
+</html>`;
+    return withSecurityHeaders(
+        new Response(body, {
+            status: 503,
+            headers: {
+                'Content-Type': 'text/html; charset=utf-8',
+                'Cache-Control': 'no-store',
+                'Retry-After': '3600',
+            },
+        }),
+        true,
+    );
+}
+
+function timingSafeEqualString(a: string, b: string): boolean {
+    if (a.length !== b.length) return false;
+    let diff = 0;
+    for (let i = 0; i < a.length; i++) {
+        diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+    }
+    return diff === 0;
+}
+
 export default {
     async fetch(request: Request, env: Env) {
         try {
@@ -124,6 +246,34 @@ export default {
                 return Response.redirect(url.toString(), 301);
             }
 
+            // ── Edge QA / preview access (secret never shipped in client JS) ──
+            if (url.pathname === '/qa-access' && (request.method === 'GET' || request.method === 'HEAD')) {
+                const expected = env.QA_ACCESS_KEY?.trim() || '';
+                const provided = url.searchParams.get('key')?.trim() || '';
+                const ok =
+                    Boolean(expected) &&
+                    Boolean(provided) &&
+                    timingSafeEqualString(expected, provided);
+
+                const redirectTo = new URL('/', url.origin);
+                if (ok && expected) {
+                    const value = await createPreviewCookieValue(expected);
+                    const headers = new Headers({
+                        Location: redirectTo.toString(),
+                        'Set-Cookie': `${PREVIEW_COOKIE}=${encodeURIComponent(value)}; Path=/; Max-Age=${PREVIEW_MAX_AGE_SEC}; Secure; HttpOnly; SameSite=Lax`,
+                        'Cache-Control': 'no-store',
+                    });
+                    return withSecurityHeaders(new Response(null, { status: 302, headers }), true);
+                }
+                // Clear any forged cookie and bounce home
+                const headers = new Headers({
+                    Location: redirectTo.toString(),
+                    'Set-Cookie': `${PREVIEW_COOKIE}=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Lax`,
+                    'Cache-Control': 'no-store',
+                });
+                return withSecurityHeaders(new Response(null, { status: 302, headers }), true);
+            }
+
             const targetBase = env.API_TARGET || 'https://grateful-liberation-production-d036.up.railway.app';
             const noIndexPath = /^\/(api|uploads|files|dashboard|owner|brand|login|signup|verify-email|forgot-password|reset-password|select-establishment)(\/|$)/.test(url.pathname);
             const isProxyPath = url.pathname.startsWith('/api/') || url.pathname.startsWith('/reports/') || url.pathname.startsWith('/app-settings/') || url.pathname.startsWith('/files/') || url.pathname.startsWith('/customers/') || url.pathname.startsWith('/uploads/');
@@ -146,6 +296,14 @@ export default {
                 const newUrl = new URL(url.pathname + url.search, targetBase);
 
                 return withSecurityHeaders(await fetch(createProxyRequest(request, newUrl)), true);
+            }
+
+            // Edge maintenance: block HTML navigations without a valid signed preview cookie
+            if (isMaintenanceOn(env) && isHtmlNavigation(request)) {
+                const allowed = await isValidPreviewCookie(env.QA_ACCESS_KEY, request.headers.get('Cookie'));
+                if (!allowed) {
+                    return maintenanceHtml();
+                }
             }
 
             // 3. Try to fetch the asset
