@@ -539,12 +539,12 @@ function WhyCreateBranchPreview({ isRtl }: { isRtl?: boolean }) {
                     >
                       {step.state === 'done' ? (
                         <Check size={13} strokeWidth={3} />
-                      ) : step.icon === 'home' ? (
-                        <Home size={12} strokeWidth={2.25} />
                       ) : step.icon === 'map' ? (
                         <MapPin size={12} strokeWidth={2.25} />
-                      ) : (
+                      ) : step.icon === 'team' ? (
                         <Users size={12} strokeWidth={2.25} />
+                      ) : (
+                        <Home size={12} strokeWidth={2.25} />
                       )}
                     </span>
                     <span
