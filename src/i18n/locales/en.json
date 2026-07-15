@@ -1809,7 +1809,14 @@
     "resources": "Resources",
     "submitTicket": "Ticket",
     "termsOfService": "Terms of Service",
-    "viewOnAmazon": "View on Amazon"
+    "viewOnAmazon": "View on Amazon",
+    "industries": "Industries",
+    "security": "Security",
+    "howItWorks": "How it works",
+    "loyalty": "Loyalty",
+    "whyMintcom": "Why Mintcom",
+    "multiLocation": "Multi-location",
+    "pricingPage": "Pricing"
   },
   "hardware": {
     "tip": "Pro Tip: All recommended hardware is plug-and-play with the Mintcom POS app."
@@ -3151,6 +3158,34 @@
     "terms": {
       "description": "Review our terms of service for using the Mintcom platform and services.",
       "title": "Terms of Service | Mintcom"
+    },
+    "industries": {
+      "title": "Industries | Mintcom POS",
+      "description": "Mintcom POS for restaurants, cafés, retail, bakeries, quick service, and multi-branch brands."
+    },
+    "security": {
+      "title": "Security | Mintcom POS",
+      "description": "Learn how Mintcom protects business data with encryption, roles, cloud reliability, and privacy controls."
+    },
+    "pricingPage": {
+      "title": "Pricing | Mintcom POS",
+      "description": "Simple Mintcom POS pricing per location. No hardware sales, no confusing add-ons. Start your free trial."
+    },
+    "howItWorks": {
+      "title": "How it works | Mintcom POS",
+      "description": "See how to go from signup to first sale with Mintcom POS in a few clear steps."
+    },
+    "loyaltyPage": {
+      "title": "Loyalty | Mintcom POS",
+      "description": "Built-in loyalty and rewards for Mintcom POS — points, discounts, and free items at the register."
+    },
+    "multiLocation": {
+      "title": "Multi-location | Mintcom POS",
+      "description": "Run multiple branches and brands from one Mintcom owner account with clear dashboards and fair pricing."
+    },
+    "whyMintcom": {
+      "title": "Why Mintcom | Mintcom POS",
+      "description": "Why owners choose Mintcom: clear pricing, all-in-one tools, fast training, and strong access control."
     }
   },
   "nav": {
@@ -3165,7 +3200,13 @@
     "logout": "Log Out",
     "owner": "Owner Portal",
     "pricing": "Pricing",
-    "support": "Support"
+    "support": "Support",
+    "industries": "Industries",
+    "security": "Security",
+    "howItWorks": "How it works",
+    "loyalty": "Loyalty",
+    "whyMintcom": "Why Mintcom",
+    "multiLocation": "Multi-location"
   },
   "onboarding": {
     "back": "Back",
@@ -3941,8 +3982,7 @@
       "applyingCurrencyChanges": "Applying changes to all locations...",
       "currencyUpdated": "Global currency updated to {{currency}}",
       "currencyUpdateFailed": "Failed to update global currency",
-      "videoGuideComingSoon": "Video guide coming soon",
-      "ownerAccount": "Owner Account"
+      "videoGuideComingSoon": "Video guide coming soon"
     },
     "account_employees": {
       "members_count_few": "{{count}} Members",
@@ -6044,5 +6084,266 @@
     "passwordsDoNotMatch": "Passwords do not match",
     "passwordUppercase": "Password must contain at least one uppercase letter",
     "passwordSymbol": "Password must contain at least one symbol"
+  },
+  "pages": {
+    "industries": {
+      "badge": "Who it's for",
+      "title": "Built for restaurants, cafés, and growing retail",
+      "subtitle": "You do not need a custom system for every business type. Mintcom adapts to how you sell — tables, takeaway, counters, and multi-branch brands.",
+      "ctaTitle": "Not sure if Mintcom fits?",
+      "ctaDesc": "Try the free POS demo or contact us. We will help you map Mintcom to your menu, staff, and locations.",
+      "contactUs": "Contact us",
+      "items": {
+        "restaurant": {
+          "title": "Restaurants",
+          "description": "Handle dine-in and takeaway orders, modifiers, and shift cash without slowing the floor.",
+          "points": [
+            "Fast order building with add-ons",
+            "Staff roles for cashiers and managers",
+            "Sales and peak-hour reporting"
+          ]
+        },
+        "cafe": {
+          "title": "Cafés & coffee shops",
+          "description": "Speed through morning rushes with simple menus, loyalty rewards, and clear end-of-day totals.",
+          "points": [
+            "Quick checkout for repeat items",
+            "Loyalty points and free-item rewards",
+            "Live overview of the active shift"
+          ]
+        },
+        "retail": {
+          "title": "Retail & specialty stores",
+          "description": "Catalog products, track what sells, and keep payment methods organized in one place.",
+          "points": [
+            "Categories and product catalog",
+            "Discounts and payment methods",
+            "Item-level sales insights"
+          ]
+        },
+        "bakery": {
+          "title": "Bakeries & production",
+          "description": "Connect recipes to finished goods so you understand cost and stock as production moves.",
+          "points": [
+            "Raw materials and recipes",
+            "Low-stock visibility",
+            "Prepared-item costing support"
+          ]
+        },
+        "qsr": {
+          "title": "Quick service",
+          "description": "Keep lines short with a UI designed for real cashiers — not long training manuals.",
+          "points": [
+            "Intuitive POS layout",
+            "Multiple tenders at checkout",
+            "Shift close and cash tracking"
+          ]
+        },
+        "multi": {
+          "title": "Multi-branch brands",
+          "description": "Owners manage brands and locations centrally while each store keeps its own daily operations.",
+          "points": [
+            "Owner portal for brands",
+            "Per-location dashboards",
+            "Discounted pricing for extra branches"
+          ]
+        }
+      }
+    },
+    "security": {
+      "badge": "Trust & security",
+      "title": "Your business data deserves serious protection",
+      "subtitle": "Mintcom is built so owners can share access with staff without sharing full control — and so your operational data stays private, encrypted, and auditable.",
+      "trustTitle": "Transparent policies, practical controls",
+      "trustBody": "Security is not only infrastructure. It is how staff log in, who can refund, and how long activity is retained. Review our privacy and terms anytime, and contact support if you need help securing your account.",
+      "pillars": {
+        "encryption": {
+          "title": "Encrypted data",
+          "description": "Business data is protected in transit and stored securely in the cloud so day-to-day operations stay private."
+        },
+        "access": {
+          "title": "Role-based access",
+          "description": "Give cashiers, managers, and owners different permissions. Sensitive actions can require re-authentication."
+        },
+        "cloud": {
+          "title": "Cloud reliability",
+          "description": "Your catalog, reports, and settings live in the cloud so devices stay in sync across locations."
+        },
+        "audit": {
+          "title": "Activity visibility",
+          "description": "Track important changes and operational events so you can review what happened on a busy shift."
+        },
+        "privacy": {
+          "title": "Privacy-first",
+          "description": "Clear privacy practices for account data, with options to manage consent and request deletion when needed."
+        },
+        "ops": {
+          "title": "Operational safeguards",
+          "description": "From secure staff logins to owner-level controls, Mintcom helps reduce risk without slowing service."
+        }
+      }
+    },
+    "pricing": {
+      "badge": "Simple pricing",
+      "title": "One plan. Everything included.",
+      "subtitle": "No hardware packages, no confusing add-ons. Mintcom is software that runs on the devices you already own — with transparent pricing per location.",
+      "perLocation": "per location",
+      "extraLocation": "Additional locations from {{price}} USD {{period}} — discounted so growth stays affordable.",
+      "trialNote": "Start with a free trial. Cancel anytime from your owner portal.",
+      "includedTitle": "What’s included",
+      "noHardware": "We don’t sell hardware. Use your own tablets, phones, or computers — Mintcom works with what you already have.",
+      "save": "Save ${{amount}}",
+      "faqTitle": "Pricing questions",
+      "included": {
+        "pos": "Full POS checkout on mobile & tablet",
+        "dashboard": "Cloud dashboard for products & settings",
+        "staff": "Unlimited staff with roles & permissions",
+        "reports": "Sales, payments, peak hours & shift reports",
+        "loyalty": "Built-in loyalty & rewards",
+        "multi": "Multi-location & brand tools",
+        "mobile": "Owner mobile alerts & monitoring",
+        "ai": "AI business assistant",
+        "support": "Help center & support tickets",
+        "updates": "Ongoing product updates"
+      },
+      "faq": {
+        "q1": {
+          "q": "Is hardware included?",
+          "a": "No. Mintcom is software only. You can use phones, tablets, or computers you already own — we never force you to buy equipment from us."
+        },
+        "q2": {
+          "q": "What do I pay for each location?",
+          "a": "Your first location uses the main plan price. Extra branches are discounted so multi-store growth stays predictable."
+        },
+        "q3": {
+          "q": "Is there a free trial?",
+          "a": "Yes. You can start a free trial when you create your account and explore POS, dashboard, and reports before committing."
+        },
+        "q4": {
+          "q": "Are there hidden fees?",
+          "a": "No surprise feature unlocks. Core POS, staff, reports, loyalty, and multi-location tools are part of the plan — not sold as separate paid modules."
+        },
+        "q5": {
+          "q": "Can I switch monthly and yearly?",
+          "a": "Yes. Choose monthly for flexibility or yearly to save. Billing is managed from your owner account."
+        },
+        "q6": {
+          "q": "What if I only need one store?",
+          "a": "Perfect. Mintcom works great for a single location — and is ready when you open the next one."
+        }
+      }
+    },
+    "howItWorks": {
+      "badge": "Getting started",
+      "title": "From signup to first sale — without the chaos",
+      "subtitle": "Mintcom is designed so owners and staff can go live quickly. Here’s the simple path most businesses follow.",
+      "tryDemo": "Try POS free",
+      "ctaTitle": "Ready to try it yourself?",
+      "ctaDesc": "Create an account or open the interactive demo and sell a sample order in minutes.",
+      "steps": {
+        "s1": {
+          "title": "Create your account",
+          "description": "Sign up online, verify your email, and enter the owner portal. No sales call required to start exploring."
+        },
+        "s2": {
+          "title": "Add your business & location",
+          "description": "Set up your establishment, basic details, and working hours so every sale is tied to the right store."
+        },
+        "s3": {
+          "title": "Build your menu or catalog",
+          "description": "Add categories, products, modifiers, taxes, and payment methods from the cloud dashboard."
+        },
+        "s4": {
+          "title": "Invite staff & open the POS",
+          "description": "Create usernames and roles, then log in on a phone or tablet and start taking real orders."
+        },
+        "s5": {
+          "title": "Watch reports & grow",
+          "description": "Track sales, shifts, and top items. When you open another branch, manage it from the same account."
+        }
+      }
+    },
+    "loyalty": {
+      "badge": "Customer loyalty",
+      "title": "Turn regulars into your growth engine",
+      "subtitle": "Loyalty is built into Mintcom — not a separate app. Reward repeat visits at the register and keep customer relationships close to your sales data.",
+      "whyTitle": "Why built-in loyalty wins",
+      "whyBody": "Staff redeem rewards in the same POS they already use. Owners see the impact next to real sales — without juggling another subscription.",
+      "cta": "Start rewarding customers",
+      "cards": {
+        "earn": {
+          "title": "Earn on every visit",
+          "description": "Customers collect points as they buy, so every order can build a reason to come back."
+        },
+        "discounts": {
+          "title": "Redeem real discounts",
+          "description": "Offer percentage rewards at checkout so loyalty feels valuable — not like a gimmick."
+        },
+        "gifts": {
+          "title": "Gift free items",
+          "description": "Surprise guests with free products from a category and turn one happy visit into habit."
+        },
+        "customers": {
+          "title": "Know your customers",
+          "description": "Keep a customer list connected to purchases so your team can recognize and reward regulars."
+        }
+      }
+    },
+    "multi": {
+      "badge": "Multi-location",
+      "title": "One owner account. Many locations.",
+      "subtitle": "Whether you run two cafés or a growing brand, Mintcom keeps branches organized without losing local control on the floor.",
+      "priceTitle": "Grow without punishing pricing",
+      "priceBody": "Additional locations start from {{price}} USD/month — designed so expansion is an opportunity, not a shock.",
+      "priceNote": "Yearly billing saves more. See the full pricing page for monthly and yearly options.",
+      "cards": {
+        "brands": {
+          "title": "Brands & branches",
+          "description": "Group locations under brands from the owner portal and keep structure clear as you scale."
+        },
+        "dashboards": {
+          "title": "Per-location dashboards",
+          "description": "Open each store’s products, staff, and reports without mixing data between branches."
+        },
+        "teams": {
+          "title": "Right people, right access",
+          "description": "Owners, brand managers, and store staff get the access they need — nothing more."
+        },
+        "grow": {
+          "title": "Add locations when ready",
+          "description": "Start with one store. When the next door opens, link it and keep selling the same day."
+        }
+      }
+    },
+    "why": {
+      "badge": "Why Mintcom",
+      "title": "Built for owners who want clarity — not complexity",
+      "subtitle": "Lots of POS tools look powerful until the bill, the add-ons, or the training get in the way. Mintcom focuses on what busy businesses actually use every day.",
+      "ctaTitle": "See the difference in a live demo",
+      "ctaDesc": "No pitch deck required. Try the POS yourself, then start a trial when you’re ready.",
+      "tryDemo": "Open Try POS",
+      "reasons": {
+        "r1": {
+          "title": "Transparent pricing",
+          "description": "One clear plan direction, discounted extra locations, and no hardware upsell. You know what you’re paying for."
+        },
+        "r2": {
+          "title": "All-in-one operations",
+          "description": "Sales, staff, reports, loyalty, recipes/cost tools, and multi-location control live in one system."
+        },
+        "r3": {
+          "title": "Fast to learn",
+          "description": "Designed with real cashiers and owners in mind — so training doesn’t steal a whole weekend."
+        },
+        "r4": {
+          "title": "Serious access control",
+          "description": "Roles, permissions, and re-auth for sensitive actions help protect the business without slowing service."
+        },
+        "r5": {
+          "title": "Modern extras that help",
+          "description": "Owner mobile visibility and AI assistance when you want answers — without replacing good operations basics."
+        }
+      }
+    }
   }
 }

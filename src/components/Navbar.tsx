@@ -40,7 +40,8 @@ export const Navbar = () => {
     ? []
     : [
         { name: t('nav.features'), href: '/#features', id: 'features' },
-        { name: t('nav.pricing'), href: '/#pricing', id: 'pricing' },
+        { name: t('nav.pricing'), href: '/pricing', id: 'pricing' },
+        { name: t('nav.howItWorks'), href: '/how-it-works', id: 'how-it-works' },
         { name: 'Try POS', href: '/try-pos', id: 'try-pos', target: '_blank', rel: 'noopener noreferrer' },
         { name: t('nav.support'), href: '/support', id: 'support' },
       ];
