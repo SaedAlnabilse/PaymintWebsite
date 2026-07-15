@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, useRef, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
@@ -3385,6 +3385,19 @@ function OrderPanel({
   const empty = cart.length === 0;
   // Accordion expand like POS OrderSummaryPanel — one open at a time
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const linesContainerRef = useRef<HTMLDivElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  // Scroll to bottom when a new item is added to the cart
+  const prevCartLength = useRef(cart.length);
+  useEffect(() => {
+    if (cart.length > prevCartLength.current && bottomRef.current) {
+      window.setTimeout(() => {
+        bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 50);
+    }
+    prevCartLength.current = cart.length;
+  }, [cart.length]);
   /** POS Apply Discount is an anchored dropdown, not a full-screen modal */
   const [discountOpen, setDiscountOpen] = useState(false);
   /** Per-line discount dropdown (cartItemId) */
@@ -3615,7 +3628,10 @@ function OrderPanel({
       </div>
 
       {/* Lines */}
-      <div className={`min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain px-3 py-2 ${compact ? '' : ''}`}>
+      <div
+        ref={linesContainerRef}
+        className={`min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain px-3 py-2 ${compact ? '' : ''}`}
+      >
         {empty ? (
           /* POS OrderSummaryPanel emptyState + EmptyCartIcon */
           <div className="flex h-full min-h-[180px] flex-col items-center justify-center px-6 py-12 text-center">
@@ -3634,6 +3650,7 @@ function OrderPanel({
             return (
               <div
                 key={line.id}
+                id={`cart-line-${line.id}`}
                 className="overflow-hidden rounded-xl border border-gray-200 bg-cream-100 dark:border-white/10 dark:bg-mintcom-dark"
               >
                 {/* Collapsed header — tap to expand like POS SwipeableOrderItem */}
@@ -3687,6 +3704,12 @@ function OrderPanel({
                       exit={{ height: 0, opacity: 0 }}
                       transition={{ duration: 0.18 }}
                       className="overflow-hidden"
+                      onAnimationComplete={() => {
+                        const el = linesContainerRef.current?.querySelector(`#cart-line-${line.id}`);
+                        if (el) {
+                          el.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                        }
+                      }}
                     >
                       <div className="space-y-2.5 border-t border-gray-200/80 bg-[#e8e8e8]/60 px-2.5 pb-2.5 pt-2 dark:border-white/8 dark:bg-white/5">
                         <div className="flex items-center justify-between text-[11px]">
@@ -3952,6 +3975,7 @@ function OrderPanel({
             Note: {freeTextOrderNote(orderNote)}
           </p>
         ) : null}
+        <div ref={bottomRef} />
       </div>
 
       {/* Totals + payment methods — mirrors POS OrderSummaryPanel */}

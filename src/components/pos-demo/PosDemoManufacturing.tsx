@@ -638,14 +638,14 @@ export function DemoManufacturingPanel({ onActivity }: { onActivity?: (action: s
     setDName(edit?.name ?? '');
     setDUnit(edit?.unit ?? 'kg');
     setDQty(edit ? String(edit.quantity) : '0');
-    setDCost(edit ? String(edit.costPerUnit) : '0');
+    setDCost(edit ? edit.costPerUnit.toFixed(2) : '0.00');
     setDLow(edit ? String(edit.lowStockThreshold) : '1');
     setModal({ type: 'material', edit });
   };
 
   const openRestock = (material: RawMaterial) => {
     setDQty('1');
-    setDCost(String(material.costPerUnit));
+    setDCost(material.costPerUnit.toFixed(2));
     setModal({ type: 'restock', material });
   };
 
@@ -1525,8 +1525,12 @@ export function DemoManufacturingPanel({ onActivity }: { onActivity?: (action: s
                 <input
                   className={inputNumericCls}
                   value={dCost}
-                  inputMode="decimal"
-                  onChange={(e) => setDCost(e.target.value)}
+                  inputMode="numeric"
+                  onChange={(e) => {
+                    const digits = e.target.value.replace(/\D/g, '').slice(0, 8);
+                    const cents = digits === '' ? 0 : parseInt(digits, 10);
+                    setDCost((cents / 100).toFixed(2));
+                  }}
                   placeholder="0.00"
                 />
               </Field>

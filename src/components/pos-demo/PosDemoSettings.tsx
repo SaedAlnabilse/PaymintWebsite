@@ -758,7 +758,7 @@ export function DemoSettingsScreen({
   // Loyalty (mirrors LoyaltyGroup: earning rule + rewards)
   const [loyaltyOn, setLoyaltyOn] = useState(true);
   const [loyaltyPoints, setLoyaltyPoints] = useState(10);
-  const [loyaltySpend, setLoyaltySpend] = useState('1');
+  const [loyaltySpend, setLoyaltySpend] = useState('1.00');
   const [rewards, setRewards] = useState<Reward[]>([
     { id: 'rw1', name: 'Free coffee', type: 'FREE_ITEM', points: 100 },
     { id: 'rw2', name: '10% off order', type: 'DISCOUNT', points: 250, value: 10 },
@@ -1116,7 +1116,7 @@ export function DemoSettingsScreen({
   };
   const openDiscount = (d?: Disc) => {
     setDraftName(d?.name ?? '');
-    setDraftPct(String(d?.percentage ?? 10));
+    setDraftPct((d?.percentage ?? 10).toFixed(2));
     setDraftAdminOnly(false);
     setModal({ type: 'discount', d });
   };
@@ -1124,7 +1124,7 @@ export function DemoSettingsScreen({
     setDraftName(r?.name ?? '');
     setDraftRewardType(r?.type ?? 'FREE_ITEM');
     setDraftRewardPoints(String(r?.points ?? 100));
-    setDraftPct(String(r?.value ?? 10));
+    setDraftPct((r?.value ?? 10).toFixed(2));
     setModal({ type: 'reward', r });
   };
   const openPay = (p?: PayMethod) => {
@@ -1279,7 +1279,7 @@ export function DemoSettingsScreen({
   };
   const openAddonOpt = (groupId: string, opt?: { id: string; name: string; price: number }) => {
     setDraftName(opt?.name ?? '');
-    setDraftPrice(String(opt?.price ?? 0));
+    setDraftPrice((opt?.price ?? 0).toFixed(2));
     setModal({ type: 'addon-opt', groupId, opt });
   };
   const openAddonGroup = (g?: AddonGroup) => {
@@ -2076,14 +2076,16 @@ export function DemoSettingsScreen({
                   <input
                     value={taxRate}
                     onChange={(e) => {
-                      const raw = e.target.value.replace(/[^\d.]/g, '');
-                      setTaxRate(raw);
+                      const digits = e.target.value.replace(/\D/g, '').slice(0, 5);
+                      const cents = digits === '' ? 0 : parseInt(digits, 10);
+                      if (cents > 10000) return;
+                      const formatted = (cents / 100).toFixed(2);
+                      setTaxRate(formatted);
                       markDirty();
-                      const n = Math.max(0, Math.min(100, parseFloat(raw) || 0));
-                      emitSalesSettings({ taxRate: n, taxEnabled: taxOn });
+                      emitSalesSettings({ taxRate: cents / 100, taxEnabled: taxOn });
                     }}
-                    inputMode="decimal"
-                    className="h-[46px] flex-1 bg-transparent px-3 text-[17px] font-bold outline-none dark:text-white"
+                    inputMode="numeric"
+                    className="h-[46px] flex-1 bg-transparent px-3 text-[17px] font-bold outline-none dark:text-white tabular-nums"
                   />
                 </div>
 
@@ -2205,15 +2207,17 @@ export function DemoSettingsScreen({
                       <input
                         value={serviceRate}
                         onChange={(e) => {
-                          const raw = e.target.value.replace(/[^\d.]/g, '');
-                          setServiceRate(raw);
+                          const digits = e.target.value.replace(/\D/g, '').slice(0, 7);
+                          const cents = digits === '' ? 0 : parseInt(digits, 10);
+                          const formatted = (cents / 100).toFixed(2);
+                          setServiceRate(formatted);
                           markDirty();
                           emitSalesSettings({
-                            serviceChargeValue: Math.max(0, parseFloat(raw) || 0),
+                            serviceChargeValue: cents / 100,
                           });
                         }}
-                        inputMode="decimal"
-                        className="h-11 flex-1 bg-transparent px-3 text-sm font-bold outline-none dark:text-white"
+                        inputMode="numeric"
+                        className="h-11 flex-1 bg-transparent px-3 text-sm font-bold outline-none dark:text-white tabular-nums"
                       />
                     </div>
                     <div className="my-2 h-px bg-gray-200 dark:bg-white/8" />
@@ -2381,30 +2385,36 @@ export function DemoSettingsScreen({
                     <p className="mb-2 flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-wide text-mintcom-green">
                       <TrendingUp size={15} /> Earning Rule
                     </p>
-                    <div className="mb-4 flex flex-wrap items-end gap-3 rounded-xl bg-cream-50 p-3 dark:bg-mintcom-dark">
-                      <div>
+                    <div className="mb-4 flex flex-wrap items-end gap-4 rounded-xl bg-cream-50 p-3 dark:bg-mintcom-dark">
+                      <div className="flex-1 min-w-[120px]">
                         <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-text-tertiary">For every</p>
-                        <div className="flex items-center overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/10 dark:bg-mintcom-surface">
-                          <span className="flex h-9 w-8 items-center justify-center text-sm font-black text-mintcom-green">$</span>
+                        <div className="flex w-full items-center overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/10 dark:bg-mintcom-surface">
+                          <span className="flex h-9 w-8 shrink-0 items-center justify-center text-sm font-black text-mintcom-green">$</span>
                           <input
                             value={loyaltySpend}
-                            onChange={(e) => { setLoyaltySpend(e.target.value.replace(/[^\d.]/g, '')); markDirty(); }}
-                            inputMode="decimal"
-                            className="h-9 w-16 bg-transparent px-2 text-sm font-bold outline-none dark:text-white"
+                            onChange={(e) => {
+                              const digits = e.target.value.replace(/\D/g, '').slice(0, 6);
+                              const cents = digits === '' ? 0 : parseInt(digits, 10);
+                              const formatted = (cents / 100).toFixed(2);
+                              setLoyaltySpend(formatted);
+                              markDirty();
+                            }}
+                            inputMode="numeric"
+                            className="h-9 w-full min-w-0 bg-transparent px-2 text-sm font-bold outline-none dark:text-white tabular-nums"
                           />
                         </div>
                       </div>
-                      <div>
+                      <div className="flex-1 min-w-[120px]">
                         <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-text-tertiary">Customer earns</p>
-                        <div className="flex items-center overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/10 dark:bg-mintcom-surface">
+                        <div className="flex w-full items-center overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/10 dark:bg-mintcom-surface">
                           <input
                             type="number"
                             min={0}
                             value={loyaltyPoints}
                             onChange={(e) => { setLoyaltyPoints(Number(e.target.value)); markDirty(); }}
-                            className="h-9 w-16 bg-transparent px-2 text-sm font-bold outline-none dark:text-white"
+                            className="h-9 w-full min-w-0 bg-transparent px-2 text-sm font-bold outline-none dark:text-white"
                           />
-                          <span className="flex h-9 items-center pe-2 text-[11px] font-black text-mintcom-green">PTS</span>
+                          <span className="flex h-9 items-center pe-3 text-[11px] font-black text-mintcom-green shrink-0">PTS</span>
                         </div>
                       </div>
                     </div>
@@ -4216,11 +4226,16 @@ export function DemoSettingsScreen({
               <div className="flex items-center overflow-hidden rounded-xl border border-gray-200 dark:border-white/10">
                 <span className="flex h-11 w-11 items-center justify-center bg-mintcom-green/10 text-base font-extrabold text-mintcom-green">%</span>
                 <input
-                  className="h-11 flex-1 bg-transparent px-3 text-sm font-bold outline-none dark:text-white"
+                  className="h-11 flex-1 bg-transparent px-3 text-sm font-bold outline-none dark:text-white tabular-nums"
                   value={draftPct}
-                  inputMode="decimal"
+                  inputMode="numeric"
                   placeholder="0.00"
-                  onChange={(e) => setDraftPct(e.target.value)}
+                  onChange={(e) => {
+                    const digits = e.target.value.replace(/\D/g, '').slice(0, 5);
+                    const cents = digits === '' ? 0 : parseInt(digits, 10);
+                    if (cents > 10000) return;
+                    setDraftPct((cents / 100).toFixed(2));
+                  }}
                 />
               </div>
             </Field>
@@ -4328,10 +4343,15 @@ export function DemoSettingsScreen({
                 <div className="flex items-center overflow-hidden rounded-xl border border-gray-200 dark:border-white/10">
                   <span className="flex h-11 w-11 items-center justify-center bg-mintcom-green/10 text-base font-extrabold text-mintcom-green">%</span>
                   <input
-                    className="h-11 flex-1 bg-transparent px-3 text-sm font-bold outline-none dark:text-white"
+                    className="h-11 flex-1 bg-transparent px-3 text-sm font-bold outline-none dark:text-white tabular-nums"
                     value={draftPct}
-                    inputMode="decimal"
-                    onChange={(e) => setDraftPct(e.target.value)}
+                    inputMode="numeric"
+                    onChange={(e) => {
+                      const digits = e.target.value.replace(/\D/g, '').slice(0, 5);
+                      const cents = digits === '' ? 0 : parseInt(digits, 10);
+                      if (cents > 10000) return;
+                      setDraftPct((cents / 100).toFixed(2));
+                    }}
                   />
                 </div>
               </Field>
@@ -4556,11 +4576,15 @@ export function DemoSettingsScreen({
               <div className="flex items-center overflow-hidden rounded-xl border border-gray-200 dark:border-white/10">
                 <span className="flex h-11 w-11 items-center justify-center bg-mintcom-green/10 text-base font-extrabold text-mintcom-green">$</span>
                 <input
-                  className="h-11 flex-1 bg-transparent px-3 text-sm font-bold outline-none dark:text-white"
+                  className="h-11 flex-1 bg-transparent px-3 text-sm font-bold outline-none dark:text-white tabular-nums"
                   value={draftPrice}
-                  inputMode="decimal"
+                  inputMode="numeric"
                   placeholder="0.00"
-                  onChange={(e) => setDraftPrice(e.target.value)}
+                  onChange={(e) => {
+                    const digits = e.target.value.replace(/\D/g, '').slice(0, 7);
+                    const cents = digits === '' ? 0 : parseInt(digits, 10);
+                    setDraftPrice((cents / 100).toFixed(2));
+                  }}
                 />
               </div>
             </Field>
