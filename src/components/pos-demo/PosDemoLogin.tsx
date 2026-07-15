@@ -11,8 +11,6 @@ import { AnimatePresence, motion } from 'framer-motion';
 import {
   ArrowLeft,
   ArrowRight,
-  Eye,
-  EyeOff,
   Lock,
   MapPin,
   User,
@@ -43,11 +41,8 @@ export function PosDemoLogin({
   onBack,
   onSuccess,
 }: Props) {
-  const [username, setUsername] = useState('Sara');
-  const [password, setPassword] = useState('1234');
-  const [passwordVisible, setPasswordVisible] = useState(false);
-  const [usernameFocused, setUsernameFocused] = useState(false);
-  const [passwordFocused, setPasswordFocused] = useState(false);
+  const username = 'Sara';
+  const password = '1234';
   const [usernameError, setUsernameError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -189,33 +184,19 @@ export function PosDemoLogin({
 
             {/* Username */}
             <div className="mb-4">
-              <div
-                className={`flex h-14 items-center rounded-xl border bg-white px-4 transition-colors dark:bg-mintcom-surface ${
-                  usernameError
-                    ? 'border-[#D55263]'
-                    : usernameFocused
-                      ? 'border-mintcom-green'
-                      : 'border-[#d1d5db] dark:border-white/15'
-                }`}
-              >
-                <User
-                  size={20}
-                  className={`me-3 shrink-0 ${
-                    usernameFocused ? 'text-mintcom-green' : 'text-[#999]'
-                  }`}
-                />
+              <label className="block text-[11px] font-black uppercase tracking-wider text-text-secondary dark:text-mintcom-textSecondary mb-2">
+                Username
+              </label>
+              <div className="flex h-14 items-center rounded-xl border border-[#d1d5db] bg-white px-4 dark:border-white/15 dark:bg-mintcom-surface">
+                <User size={20} className="me-3 shrink-0 text-[#999]" />
                 <input
                   ref={usernameRef}
                   type="text"
-                  autoComplete="username"
-                  autoCapitalize="none"
+                  readOnly
                   placeholder="Username"
                   value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  onFocus={() => setUsernameFocused(true)}
-                  onBlur={() => setUsernameFocused(false)}
                   onKeyDown={onKeyDown}
-                  className="h-full min-w-0 flex-1 bg-transparent text-[15px] text-[#333] outline-none placeholder:text-[#B0B0B0] dark:text-white"
+                  className="h-full min-w-0 flex-1 bg-transparent text-[15px] text-[#555] dark:text-[#ccc] outline-none cursor-not-allowed select-none"
                 />
               </div>
               {usernameError && (
@@ -225,42 +206,20 @@ export function PosDemoLogin({
 
             {/* Password / PIN */}
             <div className="mb-1">
-              <div
-                className={`flex h-14 items-center rounded-xl border bg-white px-4 transition-colors dark:bg-mintcom-surface ${
-                  passwordError
-                    ? 'border-[#D55263]'
-                    : passwordFocused
-                      ? 'border-mintcom-green'
-                      : 'border-[#d1d5db] dark:border-white/15'
-                }`}
-              >
-                <Lock
-                  size={20}
-                  className={`me-3 shrink-0 ${
-                    passwordFocused ? 'text-mintcom-green' : 'text-[#999]'
-                  }`}
-                />
+              <label className="block text-[11px] font-black uppercase tracking-wider text-text-secondary dark:text-mintcom-textSecondary mb-2">
+                Password or PIN
+              </label>
+              <div className="flex h-14 items-center rounded-xl border border-[#d1d5db] bg-white px-4 dark:border-white/15 dark:bg-mintcom-surface">
+                <Lock size={20} className="me-3 shrink-0 text-[#999]" />
                 <input
                   ref={passwordRef}
-                  type={passwordVisible ? 'text' : 'password'}
-                  autoComplete="current-password"
-                  inputMode="numeric"
+                  type="password"
+                  readOnly
                   placeholder="Password or PIN"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  onFocus={() => setPasswordFocused(true)}
-                  onBlur={() => setPasswordFocused(false)}
                   onKeyDown={onKeyDown}
-                  className="h-full min-w-0 flex-1 bg-transparent text-[15px] text-[#333] outline-none placeholder:text-[#B0B0B0] dark:text-white"
+                  className="h-full min-w-0 flex-1 bg-transparent text-[15px] text-[#555] dark:text-[#ccc] outline-none cursor-not-allowed select-none"
                 />
-                <button
-                  type="button"
-                  onClick={() => setPasswordVisible((v) => !v)}
-                  className="p-2 text-[#B0B0B0] transition-colors hover:text-text-secondary"
-                  aria-label={passwordVisible ? 'Hide password' : 'Show password'}
-                >
-                  {passwordVisible ? <Eye size={20} /> : <EyeOff size={20} />}
-                </button>
               </div>
               {passwordError && (
                 <p className="mt-1 text-[13px] text-[#D55263]">{passwordError}</p>

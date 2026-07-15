@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type HTMLAttributes, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, useRef, type HTMLAttributes, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowDownLeft,
@@ -1222,8 +1222,28 @@ function SmallMetric({
   info?: string;
 }) {
   const [showInfo, setShowInfo] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showInfo) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setShowInfo(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showInfo]);
+
   return (
-    <div className="relative flex min-h-[90px] items-center gap-3 rounded-xl border border-[#D3D6DE] bg-[#E8E8E8] p-3 dark:border-white/10 dark:bg-mintcom-dark">
+    <div
+      ref={containerRef}
+      className="relative flex min-h-[90px] items-center gap-3 rounded-xl border border-[#D3D6DE] bg-[#E8E8E8] p-3 dark:border-white/10 dark:bg-mintcom-dark"
+    >
       {info && (
         <button
           type="button"

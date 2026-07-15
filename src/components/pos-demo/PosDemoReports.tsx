@@ -920,6 +920,23 @@ function StatCard({
   info?: string;
 }) {
   const [showInfo, setShowInfo] = useState(false);
+  const containerRef = useRef<HTMLButtonElement | HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!showInfo) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setShowInfo(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showInfo]);
+
   // Match POS SalesSummaryCards: icon 42×42 r12, title 11/500, value 15/700
   const className = `relative flex min-h-[72px] min-w-0 flex-1 items-center gap-3 rounded-xl border p-3 text-start transition-all ${
     primary
@@ -1004,12 +1021,12 @@ function StatCard({
 
   if (onClick) {
     return (
-      <button type="button" onClick={onClick} className={className}>
+      <button ref={containerRef as any} type="button" onClick={onClick} className={className}>
         {inner}
       </button>
     );
   }
-  return <div className={className}>{inner}</div>;
+  return <div ref={containerRef as any} className={className}>{inner}</div>;
 }
 
 /** Labeled filter control — mirrors POS PERIOD / DATE RANGE / TIME RANGE */
