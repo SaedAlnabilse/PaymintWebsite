@@ -27,16 +27,28 @@ export const isSafeDownloadUrl = (value?: string): value is string => {
 const readSafeDownloadUrl = (value?: string, fallback = '') =>
   isSafeDownloadUrl(value) ? value.trim() : fallback;
 
-export const ANDROID_DOWNLOAD_URL = readSafeDownloadUrl(env.VITE_ANDROID_DOWNLOAD_URL);
+/** Temporary placeholder until real App Store / Play Store (or beta) URLs are configured. */
+const TEMP_STORE_PLACEHOLDER_URL = 'https://www.google.com';
 
-export const IOS_DOWNLOAD_URL = readSafeDownloadUrl(env.VITE_IOS_DOWNLOAD_URL);
+export const ANDROID_DOWNLOAD_URL = readSafeDownloadUrl(
+  env.VITE_ANDROID_DOWNLOAD_URL,
+  TEMP_STORE_PLACEHOLDER_URL
+);
+
+export const IOS_DOWNLOAD_URL = readSafeDownloadUrl(
+  env.VITE_IOS_DOWNLOAD_URL,
+  TEMP_STORE_PLACEHOLDER_URL
+);
 
 export const OWNER_ANDROID_DOWNLOAD_URL = readSafeDownloadUrl(
   env.VITE_OWNER_ANDROID_DOWNLOAD_URL,
-  'https://play.google.com/store/apps/details?id=com.Mintcom.owner'
+  TEMP_STORE_PLACEHOLDER_URL
 );
 
-export const OWNER_IOS_DOWNLOAD_URL = readSafeDownloadUrl(env.VITE_OWNER_IOS_DOWNLOAD_URL);
+export const OWNER_IOS_DOWNLOAD_URL = readSafeDownloadUrl(
+  env.VITE_OWNER_IOS_DOWNLOAD_URL,
+  TEMP_STORE_PLACEHOLDER_URL
+);
 
 export const ONBOARDING_VIDEO_URL = readSafeDownloadUrl(env.VITE_ONBOARDING_VIDEO_URL);
 

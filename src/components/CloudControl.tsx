@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   AnimatePresence,
   motion,
@@ -17,7 +17,6 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
-  Check,
   LayoutDashboard,
   Store,
   Shield,
@@ -37,6 +36,22 @@ import {
   Activity,
   CornerDownLeft,
   ChevronDown,
+  Receipt,
+  Percent,
+  TrendingDown,
+  Award,
+  Target,
+  Clock,
+  Timer,
+  LogOut,
+  Moon,
+  Smartphone,
+  FileBarChart,
+  Heart,
+  Sliders,
+  Settings,
+  MapPin,
+  type LucideIcon,
 } from 'lucide-react';
 import AppStoreBadge from '../assets/app-store-badge.svg';
 import GooglePlayBadge from '../assets/google-play-badge.svg';
@@ -100,346 +115,536 @@ const SplitText = ({ text, className = "" }: { text: string; className?: string 
 
 
 // ---------------------------------------------------------------------------
-// Live scope previews — fill their frame (no CSS scale). size: lg for modal.
+// Real product scope previews — OwnerOverview / BrandDashboard / Location Dashboard
+// Static (select-text), Why-card fidelity. size: lg for modal, sm for device frames.
 // ---------------------------------------------------------------------------
 
 type PreviewSize = 'sm' | 'lg';
 
-const Chrome = ({
-  url,
-  label,
-  size = 'sm',
-}: {
-  url: string;
-  label: string;
-  size?: PreviewSize;
-}) => (
-  <div
-    className={`flex shrink-0 items-center gap-1.5 border-b border-gray-200/90 bg-gradient-to-b from-gray-50 to-gray-100/90 dark:border-white/[0.08] dark:from-[#222226] dark:to-[#1a1a1e] ${
-      size === 'lg' ? 'h-8 px-2.5' : 'h-[15px] px-1.5'
-    }`}
-  >
-    <span className={`rounded-full bg-red-400/90 ${size === 'lg' ? 'h-2 w-2' : 'h-1.5 w-1.5'}`} />
-    <span className={`rounded-full bg-amber-400/90 ${size === 'lg' ? 'h-2 w-2' : 'h-1.5 w-1.5'}`} />
-    <span className={`rounded-full bg-mintcom-green ${size === 'lg' ? 'h-2 w-2' : 'h-1.5 w-1.5'}`} />
-    <div
-      className={`ms-auto max-w-[75%] truncate rounded-md bg-white font-mono leading-none text-gray-500 shadow-sm dark:bg-black/50 dark:text-gray-400 ${
-        size === 'lg' ? 'px-2 py-1 text-[10px]' : 'px-1.5 py-px text-[7px]'
-      }`}
-    >
-      <span className="text-mintcom-green">●</span> {url}
-    </div>
-    <span className="sr-only">{label}</span>
-  </div>
-);
+type RailItem = { id: string; Icon: LucideIcon };
+/** Owner/Brand: EN · phone · theme · logout. Location: settings gear only. */
+type RailFooter = 'owner' | 'location';
 
-const PreviewShell = ({
-  children,
-  url,
-  label,
-  size = 'sm',
+/**
+ * Collapsed portal rail — same chrome as OwnerLayout / BrandLayout / DashboardLayout
+ * (leaf · nav · footer). Scaled to fit the modal preview height.
+ */
+const PortalRail = ({
+  items,
+  active,
+  lg,
+  footer = 'owner',
+  showSwitchLocation,
 }: {
-  children: ReactNode;
-  url: string;
-  label: string;
-  size?: PreviewSize;
-}) => (
-  <div className="flex h-full min-h-0 w-full flex-col overflow-hidden rounded-[inherit] bg-white dark:bg-[#141416] select-none">
-    <Chrome url={url} label={label} size={size} />
-    <div
-      className={`flex min-h-0 flex-1 flex-col ${
-        size === 'lg' ? 'gap-2.5 p-3' : 'gap-1 p-1.5'
-      }`}
-    >
-      {children}
-    </div>
-  </div>
-);
-
-// Owner — total revenue + per-brand breakdown + mini spark bars
-const OwnerScopePreview = ({ t, size = 'sm' }: { t: any; size?: PreviewSize }) => {
-  const lg = size === 'lg';
-  const brands = [
-    { name: t('landing.cloudControl.scope.preview.brandA', 'Cafe Delight'), val: 58420, change: 12.4, locs: 6, bar: 92 },
-    { name: t('landing.cloudControl.scope.preview.brandB', 'Urban Eats'), val: 42180, change: 8.1, locs: 4, bar: 68 },
-    { name: t('landing.cloudControl.scope.preview.brandC', 'Pizza Yard'), val: 47650, change: 4.6, locs: 3, bar: 76 },
-  ];
-  const total = brands.reduce((s, b) => s + b.val, 0);
+  items: readonly RailItem[];
+  active: string;
+  lg: boolean;
+  footer?: RailFooter;
+  /** DashboardLayout: MapPin switch-location above nav when multi-site */
+  showSwitchLocation?: boolean;
+}) => {
+  const w = lg ? 'w-[68px]' : 'w-8';
+  const iconBox = lg ? 'h-8 w-8' : 'h-4 w-4';
+  const iconSize = lg ? 16 : 10;
+  const leafBox = lg ? 'h-9 w-9' : 'h-5 w-5';
+  const leafImg = lg ? 'h-5 w-5' : 'h-3 w-3';
 
   return (
-    <PreviewShell
-      url="dashboard.mintcom.app/owner"
-      label={t('landing.cloudControl.scope.preview.owner', 'Owner')}
-      size={size}
+    <aside
+      className={`relative flex h-full shrink-0 flex-col border-e border-gray-200 bg-white dark:border-white/[0.05] dark:bg-[#1E293B] ${w} ${
+        lg ? 'py-2.5' : 'py-1'
+      }`}
     >
-      <div className={`flex min-h-0 flex-1 gap-2 ${lg ? 'gap-3' : 'gap-1.5'}`}>
-        <div
-          className={`flex shrink-0 flex-col justify-center rounded-xl border border-mintcom-green/30 bg-gradient-to-br from-mintcom-green/20 to-mintcom-green/5 ${
-            lg ? 'w-[38%] p-3' : 'w-[42%] rounded-md px-1.5 py-1'
-          }`}
-        >
-          <p className={`font-bold uppercase tracking-wider text-gray-500 ${lg ? 'text-[10px]' : 'text-[7px]'}`}>
-            {t('landing.cloudControl.scope.preview.totalRevenue', 'Total revenue')}
-          </p>
-          <p className={`mt-0.5 font-mono font-black tabular-nums text-gray-900 dark:text-white ${lg ? 'text-2xl' : 'text-[12px]'}`}>
-            ${(total / 1000).toFixed(1)}K
-          </p>
-          <div className={`mt-1 flex items-center gap-1 font-bold text-mintcom-green ${lg ? 'text-xs' : 'text-[7px]'}`}>
-            <TrendingUp size={lg ? 12 : 6} /> +9.2%
-          </div>
-          <span
-            className={`mt-1.5 self-start rounded-md bg-mintcom-green/20 font-bold uppercase tracking-wider text-mintcom-green ${
-              lg ? 'px-2 py-0.5 text-[9px]' : 'px-1 py-px text-[6px]'
-            }`}
-          >
-            {t('landing.cloudControl.scope.preview.billingActive', 'Billing · Active')}
-          </span>
-        </div>
+      <div className="pointer-events-none absolute end-0 top-0 h-full w-px bg-gradient-to-b from-transparent via-mintcom-green/25 to-transparent opacity-60" />
 
-        <div className={`flex min-w-0 flex-1 flex-col ${lg ? 'gap-2' : 'gap-[3px]'}`}>
-          {brands.map((b, i) => (
-            <motion.div
-              key={b.name}
-              initial={{ opacity: 0, x: 8 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.12 + i * 0.08 }}
-              className={`flex min-h-0 flex-1 flex-col justify-center rounded-xl border border-gray-200/90 bg-gray-50/90 dark:border-white/[0.08] dark:bg-white/[0.04] ${
-                lg ? 'px-2.5 py-1.5' : 'rounded-md px-1 py-[2px]'
-              }`}
-            >
-              <div className="flex items-center justify-between gap-1">
-                <div className="flex min-w-0 items-center gap-1">
-                  <Tags size={lg ? 11 : 6} className="shrink-0 text-mintcom-green" />
-                  <span className={`truncate font-bold text-gray-800 dark:text-gray-100 ${lg ? 'text-xs' : 'text-[7px]'}`}>
-                    {b.name}
-                  </span>
-                  <span className={`shrink-0 font-mono text-gray-400 ${lg ? 'text-[10px]' : 'text-[6px]'}`}>
-                    ·{b.locs}
-                  </span>
-                </div>
-                <span className={`shrink-0 font-mono font-bold text-mintcom-green ${lg ? 'text-xs' : 'text-[7px]'}`}>
-                  +{b.change}%
-                </span>
-              </div>
-              {lg && (
-                <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-gray-200 dark:bg-white/10">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${b.bar}%` }}
-                    transition={{ delay: 0.25 + i * 0.1, duration: 0.55 }}
-                    className="h-full rounded-full bg-gradient-to-r from-mintcom-green to-emerald-400"
-                  />
-                </div>
-              )}
-            </motion.div>
-          ))}
-        </div>
-      </div>
-    </PreviewShell>
-  );
-};
-
-// Brand — locations + roles
-const BrandScopePreview = ({ t, size = 'sm' }: { t: any; size?: PreviewSize }) => {
-  const lg = size === 'lg';
-  const locations = [
-    { name: t('landing.cloudControl.scope.preview.locDowntown', 'Downtown'), online: true, orders: 48 },
-    { name: t('landing.cloudControl.scope.preview.locMall', 'Mall'), online: true, orders: 36 },
-    { name: t('landing.cloudControl.scope.preview.locAirport', 'Airport'), online: true, orders: 29 },
-    { name: t('landing.cloudControl.scope.preview.locWest', 'West Side'), online: false, orders: 0 },
-  ];
-  const roles = [
-    { pct: 18, name: t('landing.cloudControl.scope.preview.roleManager', 'Manager'), color: 'bg-mintcom-green' },
-    { pct: 38, name: t('landing.cloudControl.scope.preview.roleCashier', 'Cashier'), color: 'bg-emerald-400' },
-    { pct: 28, name: t('landing.cloudControl.scope.preview.roleBarista', 'Barista'), color: 'bg-mintcom-green/60' },
-    { pct: 16, name: t('landing.cloudControl.scope.preview.roleStaff', 'Staff'), color: 'bg-mintcom-green/35' },
-  ];
-
-  return (
-    <PreviewShell
-      url="dashboard.mintcom.app/brand"
-      label={t('landing.cloudControl.scope.preview.brand', 'Brand')}
-      size={size}
-    >
-      {/* Brand header */}
-      <div className={`flex items-center justify-between gap-2 ${lg ? '' : ''}`}>
-        <div className="flex min-w-0 items-center gap-2">
-          <div
-            className={`flex shrink-0 items-center justify-center rounded-lg bg-mintcom-green ${
-              lg ? 'h-8 w-8' : 'h-3 w-3 rounded-sm'
-            }`}
-          >
-            <Tags size={lg ? 14 : 6} className="text-white" />
-          </div>
-          <div className="min-w-0">
-            <p className={`truncate font-bold text-gray-900 dark:text-white ${lg ? 'text-sm' : 'text-[8px]'}`}>
-              {t('landing.cloudControl.scope.preview.brandA', 'Cafe Delight')}
-            </p>
-            {lg && (
-              <p className="text-[10px] font-medium text-gray-400">
-                {t('landing.cloudControl.scope.preview.brandSub', '4 locations · multi-site brand')}
-              </p>
-            )}
-          </div>
-        </div>
+      <div className={`flex shrink-0 items-center justify-center ${lg ? 'mb-1.5 px-2' : 'mb-0.5 px-0.5'}`}>
         <span
-          className={`flex shrink-0 items-center gap-1 font-mono font-bold uppercase tracking-wider text-mintcom-green ${
-            lg ? 'rounded-full bg-mintcom-green/15 px-2 py-1 text-[10px]' : 'text-[6px]'
-          }`}
+          className={`flex items-center justify-center rounded-xl border border-mintcom-green/20 bg-gradient-to-br from-mintcom-green/20 to-mintcom-green/5 ${leafBox}`}
         >
-          <span className={`rounded-full bg-mintcom-green ${lg ? 'h-1.5 w-1.5 animate-pulse' : 'h-1 w-1 animate-pulse'}`} />
-          3/4
+          <img
+            src={MintcomLeafIcon}
+            alt=""
+            className={`${leafImg} object-contain`}
+            draggable={false}
+          />
         </span>
       </div>
 
-      {/* Locations */}
-      <div className={`grid min-h-0 flex-1 grid-cols-2 ${lg ? 'gap-2' : 'gap-[3px]'}`}>
-        {locations.map((l, i) => (
-          <motion.div
-            key={l.name}
-            initial={{ opacity: 0, scale: 0.94 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.1 + i * 0.06 }}
-            className={`flex flex-col justify-center rounded-xl border border-gray-200/90 bg-gray-50/90 dark:border-white/[0.08] dark:bg-white/[0.04] ${
-              lg ? 'px-2.5 py-2' : 'rounded-md px-1 py-[2px]'
-            } ${!l.online ? 'opacity-60' : ''}`}
+      {showSwitchLocation && (
+        <div className={`flex shrink-0 justify-center ${lg ? 'mb-1 px-2' : 'mb-0.5 px-0.5'}`}>
+          <span
+            className={`flex items-center justify-center rounded-xl text-gray-500 dark:text-gray-400 ${iconBox}`}
           >
-            <div className="flex items-center gap-1.5">
-              <span
-                className={`shrink-0 rounded-full ${l.online ? 'bg-mintcom-green' : 'bg-gray-400'} ${
-                  lg ? 'h-2 w-2' : 'h-1 w-1'
-                }`}
-              />
-              <Building2 size={lg ? 12 : 6} className="shrink-0 text-gray-400" />
-              <span className={`truncate font-bold text-gray-800 dark:text-gray-100 ${lg ? 'text-xs' : 'text-[7px]'}`}>
-                {l.name}
-              </span>
-            </div>
-            {lg && (
-              <p className="mt-1 ps-3.5 text-[10px] font-medium text-gray-400">
-                {l.online
-                  ? `${l.orders} ${t('landing.cloudControl.scope.preview.ordersToday', 'orders today')}`
-                  : t('landing.cloudControl.scope.preview.offline', 'Offline')}
-              </p>
-            )}
-          </motion.div>
-        ))}
+            <MapPin size={iconSize} strokeWidth={2} />
+          </span>
+        </div>
+      )}
+
+      <div
+        className={`relative z-10 flex min-h-0 flex-1 flex-col items-center justify-evenly overflow-hidden ${
+          lg ? 'px-2' : 'px-0.5'
+        }`}
+      >
+        {items.map(({ id, Icon }) => {
+          const on = id === active;
+          return (
+            <span
+              key={id}
+              className={`flex shrink-0 items-center justify-center rounded-xl transition-all ${iconBox} ${
+                on
+                  ? 'bg-mintcom-green font-semibold text-black shadow-md shadow-mintcom-green/25'
+                  : 'text-gray-500 dark:text-gray-400'
+              }`}
+            >
+              <Icon size={iconSize} strokeWidth={on ? 2.25 : 2} />
+            </span>
+          );
+        })}
       </div>
 
-      {/* Roles bar */}
-      <div className="shrink-0">
-        <div className={`mb-1 flex items-center gap-1 font-bold uppercase tracking-wider text-gray-500 ${lg ? 'text-[10px]' : 'text-[6px]'}`}>
-          <Users size={lg ? 11 : 6} />
-          {t('landing.cloudControl.scope.preview.rolesAcrossLocations', 'Roles across locations')}
-        </div>
-        <div className={`flex overflow-hidden rounded-full bg-gray-200 dark:bg-white/10 ${lg ? 'h-2.5' : 'h-1.5'}`}>
-          {roles.map((r, i) => (
-            <motion.div
-              key={r.name}
-              initial={{ width: 0 }}
-              animate={{ width: `${r.pct}%` }}
-              transition={{ delay: 0.25 + i * 0.08, duration: 0.5 }}
-              title={`${r.name} ${r.pct}%`}
-              className={`${r.color} first:rounded-s-full last:rounded-e-full`}
-            />
-          ))}
-        </div>
-        {lg && (
-          <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5">
-            {roles.map((r) => (
-              <span key={r.name} className="text-[9px] font-semibold text-gray-500 dark:text-gray-400">
-                <span className={`me-1 inline-block h-1.5 w-1.5 rounded-full ${r.color}`} />
-                {r.name} {r.pct}%
-              </span>
-            ))}
-          </div>
+      {/* Footer — matches real collapsed portal footers */}
+      <div
+        className={`flex shrink-0 flex-col items-center border-t border-gray-100 dark:border-white/[0.05] ${
+          lg ? 'mt-1 gap-1 px-2 pt-2' : 'gap-0.5 px-0.5 pt-0.5'
+        }`}
+      >
+        {footer === 'location' ? (
+          /* DashboardLayout collapsed: single Settings control (opens popover in real app) */
+          <span
+            className={`flex items-center justify-center rounded-xl text-gray-500 dark:text-gray-400 ${iconBox}`}
+          >
+            <Settings size={iconSize} strokeWidth={2} />
+          </span>
+        ) : (
+          /* OwnerLayout / BrandLayout collapsed: EN · mobile · theme · logout */
+          <>
+            <span
+              className={`flex items-center justify-center rounded-xl font-black tracking-wider text-gray-600 dark:text-gray-300 ${iconBox} ${
+                lg ? 'text-[10px]' : 'text-[6px]'
+              }`}
+            >
+              EN
+            </span>
+            <span
+              className={`flex items-center justify-center rounded-xl text-gray-500 dark:text-gray-400 ${iconBox}`}
+            >
+              <Smartphone size={iconSize} strokeWidth={2} />
+            </span>
+            <span
+              className={`flex items-center justify-center rounded-xl text-gray-500 dark:text-gray-400 ${iconBox}`}
+            >
+              <Moon size={iconSize} strokeWidth={2} />
+            </span>
+            <span
+              className={`flex items-center justify-center rounded-xl text-gray-500 dark:text-gray-400 ${iconBox}`}
+            >
+              <LogOut size={iconSize} strokeWidth={2} />
+            </span>
+          </>
         )}
       </div>
-    </PreviewShell>
+    </aside>
   );
 };
 
-// Location — KPIs + live orders
-const LocationScopePreview = ({ t, size = 'sm' }: { t: any; size?: PreviewSize }) => {
+/** OwnerLayout collapsed menu order */
+const OwnerRail = ({ active = 'overview', lg }: { active?: string; lg: boolean }) => (
+  <PortalRail
+    lg={lg}
+    active={active}
+    footer="owner"
+    items={[
+      { id: 'overview', Icon: LayoutDashboard },
+      { id: 'locations', Icon: Store },
+      { id: 'brands', Icon: Building2 },
+      { id: 'employees', Icon: Users },
+      { id: 'roles', Icon: Shield },
+      { id: 'billing', Icon: CreditCard },
+      { id: 'account', Icon: KeyRound },
+    ]}
+  />
+);
+
+/** BrandLayout collapsed menu: Overview · Locations · Team */
+const BrandRail = ({ active = 'overview', lg }: { active?: string; lg: boolean }) => (
+  <PortalRail
+    lg={lg}
+    active={active}
+    footer="owner"
+    items={[
+      { id: 'overview', Icon: LayoutDashboard },
+      { id: 'locations', Icon: Store },
+      { id: 'team', Icon: Users },
+    ]}
+  />
+);
+
+/**
+ * Exact DashboardLayout collapsed top-level nav (sidebarOpen=false):
+ * Dashboard · Sales & Reporting · Orders · Items · Payments · Team · Loyalty · System
+ * Footer: Settings gear only (not the owner 4-icon stack)
+ */
+const LocationRail = ({ active = 'dashboard', lg }: { active?: string; lg: boolean }) => (
+  <PortalRail
+    lg={lg}
+    active={active}
+    footer="location"
+    showSwitchLocation
+    items={[
+      { id: 'dashboard', Icon: LayoutDashboard },
+      { id: 'reports', Icon: FileBarChart },
+      { id: 'orders', Icon: ShoppingCart },
+      { id: 'items', Icon: Package },
+      { id: 'payments', Icon: CreditCard },
+      { id: 'team', Icon: Users },
+      { id: 'loyalty', Icon: Heart },
+      { id: 'system', Icon: Sliders },
+    ]}
+  />
+);
+
+/** Real dashboard stat tile — mirrors DashboardStatsCards / OwnerOverview KPI cards */
+function RealStatTile({
+  label,
+  value,
+  sub,
+  Icon,
+  lg,
+  change,
+}: {
+  label: string;
+  value: string;
+  sub?: string;
+  Icon: typeof Wallet;
+  lg: boolean;
+  change?: number | null;
+}) {
+  return (
+    <div
+      className={`relative flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-white/[0.06] dark:bg-[#1E293B] ${
+        lg ? 'p-3' : 'rounded-xl p-1.5'
+      }`}
+    >
+      <div className="flex items-start justify-between gap-1">
+        <span
+          className={`flex items-center justify-center rounded-xl bg-mintcom-green/10 text-mintcom-green ${
+            lg ? 'h-9 w-9' : 'h-5 w-5'
+          }`}
+        >
+          <Icon size={lg ? 17 : 10} strokeWidth={2.15} />
+        </span>
+        {change != null && lg && (
+          <span
+            className={`inline-flex items-center gap-0.5 rounded-lg px-1.5 py-0.5 text-[10px] font-bold ${
+              change >= 0
+                ? 'bg-mintcom-green/10 text-mintcom-green'
+                : 'bg-red-50 text-red-500 dark:bg-red-500/10'
+            }`}
+          >
+            {change >= 0 ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
+            {change >= 0 ? '+' : ''}
+            {change}%
+          </span>
+        )}
+      </div>
+      <p className={`mt-2 font-medium text-gray-500 dark:text-gray-400 ${lg ? 'text-[11px]' : 'text-[6px]'}`}>
+        {label}
+      </p>
+      <p
+        className={`mt-0.5 font-barlow font-black tabular-nums leading-tight text-gray-900 dark:text-white ${
+          lg ? 'text-[18px]' : 'text-[10px]'
+        }`}
+      >
+        {value}
+      </p>
+      {sub && lg && (
+        <p className="mt-0.5 truncate text-[10px] font-medium text-gray-400">{sub}</p>
+      )}
+    </div>
+  );
+}
+
+// Owner — real OwnerOverviewPage layout
+const OwnerScopePreview = ({ t, size = 'sm' }: { t: any; size?: PreviewSize }) => {
   const lg = size === 'lg';
   const kpis = [
-    { label: t('landing.cloudControl.scope.preview.orders', 'Orders'), val: '142' },
-    { label: t('landing.cloudControl.scope.preview.revenue', 'Revenue'), val: lg ? '2.4K' : '2.4K USD' },
-    { label: t('landing.cloudControl.scope.preview.aov', 'AOV'), val: lg ? '$16.9' : '16.9 USD' },
-  ];
-  const orders = [
-    { id: '#4218', amt: '24.50', method: t('landing.cloudControl.scope.preview.methodCard', 'Card') },
-    { id: '#4217', amt: '8.75', method: t('landing.cloudControl.scope.preview.methodCash', 'Cash') },
-    { id: '#4216', amt: '32.00', method: t('landing.cloudControl.scope.preview.methodMobile', 'Mobile') },
-    ...(lg
-      ? [{ id: '#4215', amt: '11.25', method: t('landing.cloudControl.scope.preview.methodCard', 'Card') }]
-      : []),
+    { label: t('owner.overview.activeLocations', 'Active locations'), val: '13', sub: t('landing.cloudControl.scope.preview.acrossPortfolio', 'Across portfolio'), Icon: Store },
+    { label: t('owner.overview.totalBrands', 'Total brands'), val: '3', sub: t('landing.cloudControl.scope.preview.activeBrands', 'Active brands'), Icon: Building2 },
+    { label: t('owner.overview.totalStaff', 'Total staff'), val: '48', sub: t('landing.cloudControl.scope.preview.allLocations', 'All locations'), Icon: Users },
+    { label: t('owner.overview.netSales', 'Net sales'), val: lg ? '128,420' : '128K', sub: t('owner.overview.netSalesSub', 'Excl. tax & charges'), Icon: DollarSign },
+    { label: t('owner.overview.totalSales', 'Total sales'), val: lg ? '148,250' : '148K', sub: t('owner.overview.totalSalesSub', 'Incl. tax & charges'), Icon: Wallet },
+    { label: t('owner.overview.totalProfit', 'Total profit'), val: lg ? '41,680' : '42K', sub: t('landing.cloudControl.scope.preview.thisWeek', 'This week'), Icon: TrendingUp },
   ];
 
   return (
-    <PreviewShell
-      url="dashboard.mintcom.app/location"
-      label={t('landing.cloudControl.scope.preview.location', 'Location')}
-      size={size}
+    <div
+      role="img"
+      aria-label={t('landing.cloudControl.scope.preview.owner', 'Owner overview')}
+      className="flex h-full w-full cursor-text select-text overflow-hidden bg-gray-50 font-sans dark:bg-[#050505]"
     >
-      <div className={`grid grid-cols-3 ${lg ? 'gap-2' : 'gap-1'}`}>
-        {kpis.map((k, i) => (
-          <motion.div
-            key={k.label}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.08 + i * 0.06 }}
-            className={`flex flex-col rounded-xl border border-mintcom-green/25 bg-gradient-to-br from-mintcom-green/15 to-transparent ${
-              lg ? 'px-2.5 py-2' : 'rounded-md px-1 py-[2px]'
+      <OwnerRail active="overview" lg={lg} />
+      <div className={`flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden ${lg ? 'gap-2.5 p-3' : 'gap-1 p-1.5'}`}>
+        <div className="flex shrink-0 items-center justify-between gap-2">
+          <div className="min-w-0">
+            <p className={`font-barlow font-bold tracking-tight text-gray-900 dark:text-white ${lg ? 'text-[17px]' : 'text-[10px]'}`}>
+              {t('owner.overview.title', 'Overview')}
+            </p>
+            {lg && (
+              <p className="mt-0.5 text-[11px] font-medium text-gray-500">
+                {t('landing.cloudControl.scope.preview.portfolio', 'Portfolio performance')}
+              </p>
+            )}
+          </div>
+          <span
+            className={`inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-gray-200 bg-white font-bold text-gray-700 dark:border-white/10 dark:bg-[#1E293B] dark:text-gray-200 ${
+              lg ? 'px-2.5 py-1.5 text-[11px]' : 'px-1.5 py-0.5 text-[7px]'
             }`}
           >
-            <span className={`font-bold uppercase tracking-wider text-gray-500 ${lg ? 'text-[9px]' : 'text-[6px]'}`}>
-              {k.label}
-            </span>
-            <span className={`mt-0.5 font-mono font-black text-mintcom-green ${lg ? 'text-base' : 'text-[9px]'}`}>
-              {k.val}
-            </span>
-          </motion.div>
-        ))}
-      </div>
-
-      <div className="flex min-h-0 flex-1 flex-col">
-        <div className={`mb-1 flex items-center gap-1.5 font-bold uppercase tracking-wider text-gray-500 ${lg ? 'text-[10px]' : 'text-[6px]'}`}>
-          <span className={`rounded-full bg-mintcom-green ${lg ? 'h-1.5 w-1.5 animate-pulse' : 'h-1 w-1 animate-pulse'}`} />
-          {t('landing.cloudControl.scope.preview.liveOrders', 'Live orders')}
+            <Calendar size={lg ? 12 : 8} className="text-mintcom-green" />
+            {t('landing.cloudControl.scope.preview.thisWeek', 'This week')}
+            <ChevronDown size={lg ? 12 : 8} className="text-gray-400" />
+          </span>
         </div>
-        <div className={`flex min-h-0 flex-1 flex-col ${lg ? 'gap-1.5' : 'gap-[2px]'}`}>
-          {orders.map((o, i) => (
-            <motion.div
-              key={o.id}
-              initial={{ opacity: 0, x: -6 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.18 + i * 0.07 }}
-              className={`flex items-center justify-between rounded-xl border border-gray-200/90 bg-gray-50/90 dark:border-white/[0.08] dark:bg-white/[0.04] ${
-                lg ? 'px-2.5 py-2' : 'rounded-md px-1 py-[2px]'
-              }`}
-            >
-              <div className="flex min-w-0 items-center gap-1.5">
-                <ShoppingCart size={lg ? 12 : 6} className="shrink-0 text-mintcom-green" />
-                <span className={`font-mono text-gray-600 dark:text-gray-300 ${lg ? 'text-xs' : 'text-[7px]'}`}>
-                  {o.id}
-                </span>
-                <span
-                  className={`rounded-md bg-gray-200/80 font-bold uppercase tracking-wide text-gray-500 dark:bg-white/10 dark:text-gray-400 ${
-                    lg ? 'px-1.5 py-0.5 text-[9px]' : 'text-[6px]'
-                  }`}
-                >
-                  {o.method}
-                </span>
-              </div>
-              <span className={`shrink-0 font-mono font-bold text-gray-900 dark:text-white ${lg ? 'text-xs' : 'text-[7px]'}`}>
-                {o.amt} {lg ? 'USD' : 'USD'}
-              </span>
-            </motion.div>
+
+        <div className={`grid min-h-0 flex-1 grid-cols-3 content-stretch ${lg ? 'gap-2.5' : 'gap-1'}`}>
+          {kpis.slice(0, lg ? 6 : 3).map((k) => (
+            <RealStatTile key={k.label} label={k.label} value={k.val} sub={k.sub} Icon={k.Icon} lg={lg} />
           ))}
         </div>
       </div>
-    </PreviewShell>
+    </div>
+  );
+};
+
+// Brand — real BrandDashboardPage KPIs + ranked locations
+const BrandScopePreview = ({ t, size = 'sm' }: { t: any; size?: PreviewSize }) => {
+  const lg = size === 'lg';
+  const stats = [
+    { label: t('brand.dashboard.totalRevenue', 'Total revenue'), val: lg ? '53,320' : '53K', Icon: DollarSign },
+    { label: t('brand.dashboard.totalOrders', 'Total orders'), val: '1,370', Icon: ShoppingBag },
+    { label: t('brand.dashboard.avgOrderValue', 'Avg order'), val: lg ? '38.90' : '$39', Icon: Target },
+    { label: t('brand.dashboard.teamSize', 'Team size'), val: '24', Icon: Users },
+  ];
+  const locations = [
+    { name: t('landing.cloudControl.scope.preview.locDowntown', 'Downtown'), rev: '18,240', orders: 486, staff: 8, growth: 12.4 },
+    { name: t('landing.cloudControl.scope.preview.locMall', 'Mall Branch'), rev: '14,620', orders: 372, staff: 6, growth: 8.1 },
+    { name: t('landing.cloudControl.scope.preview.locAirport', 'Airport Kiosk'), rev: '11,080', orders: 298, staff: 5, growth: 4.2 },
+    { name: t('landing.cloudControl.scope.preview.locWest', 'West Side'), rev: '9,380', orders: 214, staff: 5, growth: -1.8 },
+  ];
+
+  return (
+    <div
+      role="img"
+      aria-label={t('landing.cloudControl.scope.preview.brand', 'Brand dashboard')}
+      className="flex h-full w-full cursor-text select-text overflow-hidden bg-gray-50 font-sans dark:bg-[#050505]"
+    >
+      <BrandRail active="overview" lg={lg} />
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+        <div
+          className={`flex shrink-0 items-center justify-between gap-2 border-b border-gray-200 bg-white dark:border-white/[0.06] dark:bg-[#1E293B] ${
+            lg ? 'px-3.5 py-2.5' : 'px-1.5 py-1'
+          }`}
+        >
+          <div className="min-w-0">
+            <p className={`truncate font-barlow font-bold text-gray-900 dark:text-white ${lg ? 'text-[16px]' : 'text-[9px]'}`}>
+              {t('landing.cloudControl.scope.preview.brandA', 'Cafe Delight')}
+            </p>
+            {lg && (
+              <p className="text-[11px] font-medium text-gray-500">
+                {t('brand.dashboard.rankedByRevenue', 'Ranked by revenue')} · 4 {t('common.locations', 'locations')}
+              </p>
+            )}
+          </div>
+          <span
+            className={`inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-gray-200 bg-white font-bold text-gray-700 dark:border-white/10 dark:bg-white/5 ${
+              lg ? 'px-2.5 py-1.5 text-[11px]' : 'px-1 py-0.5 text-[7px]'
+            }`}
+          >
+            <Calendar size={lg ? 12 : 8} className="text-mintcom-green" />
+            {t('landing.cloudControl.scope.preview.thisWeek', 'This week')}
+          </span>
+        </div>
+
+        <div className={`flex min-h-0 flex-1 flex-col overflow-hidden ${lg ? 'gap-2.5 p-3' : 'gap-1 p-1.5'}`}>
+          <div className={`grid shrink-0 grid-cols-2 ${lg ? 'gap-2 sm:grid-cols-4' : 'grid-cols-4 gap-1'}`}>
+            {stats.map((s) => (
+              <RealStatTile
+                key={s.label}
+                label={s.label}
+                value={s.val}
+                Icon={s.Icon}
+                lg={lg}
+              />
+            ))}
+          </div>
+
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-white/[0.06] dark:bg-[#1E293B]">
+            <div className={`flex shrink-0 items-center justify-between border-b border-gray-100 dark:border-white/5 ${lg ? 'px-3 py-2.5' : 'px-1.5 py-1'}`}>
+              <div>
+                <p className={`font-bold text-gray-900 dark:text-white ${lg ? 'text-[13px]' : 'text-[8px]'}`}>
+                  {t('brand.dashboard.locationPerformance', 'Location performance')}
+                </p>
+                {lg && (
+                  <p className="text-[10px] font-medium text-gray-500">
+                    {t('brand.dashboard.rankedByRevenue', 'Ranked by revenue')}
+                  </p>
+                )}
+              </div>
+              {lg && (
+                <span className="text-[11px] font-bold text-mintcom-green">
+                  {t('brand.dashboard.viewAll', 'View all')}
+                </span>
+              )}
+            </div>
+            <div className="min-h-0 flex-1 divide-y divide-gray-100 overflow-hidden dark:divide-white/5">
+              {locations.slice(0, lg ? 4 : 3).map((l, i) => (
+                <div
+                  key={l.name}
+                  className={`flex h-[25%] min-h-0 items-center gap-2.5 ${lg ? 'px-3' : 'px-1.5'}`}
+                >
+                  <span
+                    className={`flex shrink-0 items-center justify-center rounded-xl text-[10px] font-black ${
+                      i === 0
+                        ? 'bg-amber-100 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400'
+                        : i === 1
+                          ? 'bg-gray-200 text-gray-600 dark:bg-white/10 dark:text-gray-300'
+                          : i === 2
+                            ? 'bg-orange-100 text-orange-600 dark:bg-orange-500/20'
+                            : 'bg-gray-100 text-gray-500 dark:bg-white/5'
+                    } ${lg ? 'h-8 w-8' : 'h-4 w-4'}`}
+                  >
+                    {i === 0 && lg ? <Award size={14} /> : `#${i + 1}`}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className={`truncate font-bold text-gray-900 dark:text-white ${lg ? 'text-[12px]' : 'text-[8px]'}`}>
+                      {l.name}
+                    </p>
+                    {lg && (
+                      <p className="flex items-center gap-2 text-[10px] font-medium text-gray-500">
+                        <span className="inline-flex items-center gap-0.5">
+                          <ShoppingBag size={10} /> {l.orders}
+                        </span>
+                        <span className="inline-flex items-center gap-0.5">
+                          <Users size={10} /> {l.staff}
+                        </span>
+                      </p>
+                    )}
+                  </div>
+                  <div className="shrink-0 text-end">
+                    <p className={`font-barlow font-black tabular-nums text-gray-900 dark:text-white ${lg ? 'text-[12px]' : 'text-[8px]'}`}>
+                      {l.rev}
+                    </p>
+                    <p
+                      className={`font-bold ${l.growth >= 0 ? 'text-mintcom-green' : 'text-red-500'} ${
+                        lg ? 'text-[10px]' : 'text-[6px]'
+                      }`}
+                    >
+                      {l.growth >= 0 ? '+' : ''}
+                      {l.growth}%
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Location — real location DashboardPage (stats + top products / orders)
+const LocationScopePreview = ({ t, size = 'sm' }: { t: any; size?: PreviewSize }) => {
+  const lg = size === 'lg';
+  const kpis = [
+    {
+      label: t('dashboard.stats.totalSales', 'Total sales'),
+      val: lg ? '2,418.50' : '2.4K',
+      sub: t('dashboard.stats.includingTaxServiceCharge', 'Incl. tax & service'),
+      Icon: Wallet,
+    },
+    {
+      label: t('dashboard.stats.netSales', 'Net sales'),
+      val: lg ? '2,104.20' : '2.1K',
+      sub: t('dashboard.stats.excludingTaxServiceCharge', 'Excl. tax & service'),
+      Icon: DollarSign,
+    },
+    {
+      label: t('dashboard.stats.profit', 'Profit'),
+      val: lg ? '684.00' : '684',
+      sub: t('dashboard.stats.netSalesCosts', 'Net − costs'),
+      Icon: TrendingUp,
+    },
+    {
+      label: t('dashboard.stats.totalOrders', 'Orders'),
+      val: '142',
+      sub: t('dashboard.stats.thisShift', 'This shift'),
+      Icon: Receipt,
+    },
+    {
+      label: t('dashboard.stats.avgOrder', 'Avg order'),
+      val: lg ? '16.90' : '$17',
+      sub: t('dashboard.stats.averageValue', 'Average value'),
+      Icon: Target,
+    },
+    {
+      label: t('dashboard.stats.tax', 'Tax'),
+      val: lg ? '241.80' : '242',
+      sub: t('dashboard.stats.totalTax', 'Total tax'),
+      Icon: Percent,
+    },
+  ];
+
+  return (
+    <div
+      role="img"
+      aria-label={t('landing.cloudControl.scope.preview.location', 'Location dashboard')}
+      className="flex h-full w-full cursor-text select-text overflow-hidden bg-gray-50 font-sans dark:bg-[#050505]"
+    >
+      <LocationRail active="dashboard" lg={lg} />
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+        {/* Real dashboard page header */}
+        <div
+          className={`flex shrink-0 items-center justify-between gap-2 border-b border-gray-200 bg-white dark:border-white/[0.06] dark:bg-[#1E293B] ${
+            lg ? 'px-3 py-2.5' : 'px-1.5 py-1'
+          }`}
+        >
+          <div className="min-w-0">
+            <p className={`truncate font-barlow font-bold text-gray-900 dark:text-white ${lg ? 'text-[15px]' : 'text-[9px]'}`}>
+              {t('landing.cloudControl.scope.preview.locDowntown', 'Downtown')}
+            </p>
+            {lg && (
+              <p className="text-[10px] font-medium text-gray-500">
+                Cafe Delight · {t('dashboard.viewMode.showingSince', 'Shift since 8:00 AM')}
+              </p>
+            )}
+          </div>
+          <span
+            className={`inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-mintcom-green/30 bg-mintcom-green/10 font-bold text-mintcom-green ${
+              lg ? 'px-2.5 py-1.5 text-[11px]' : 'px-1.5 py-0.5 text-[7px]'
+            }`}
+          >
+            <Timer size={lg ? 12 : 8} />
+            {t('dashboard.viewMode.currentShift', 'Current shift')}
+            <ChevronDown size={lg ? 12 : 8} />
+          </span>
+        </div>
+
+        <div className={`flex min-h-0 flex-1 flex-col overflow-hidden ${lg ? 'gap-2 p-2.5' : 'gap-1 p-1.5'}`}>
+          {lg && (
+            <span className="w-fit shrink-0 rounded-lg border border-mintcom-green/20 bg-mintcom-green/10 px-2 py-0.5 text-[10px] font-bold tracking-wide text-mintcom-green">
+              {t('dashboard.stats.overview', 'Overview')}
+            </span>
+          )}
+
+          <div className={`grid min-h-0 flex-1 grid-cols-3 content-stretch ${lg ? 'gap-2.5' : 'gap-1'}`}>
+            {kpis.slice(0, lg ? 6 : 3).map((k) => (
+              <RealStatTile key={k.label} label={k.label} value={k.val} sub={k.sub} Icon={k.Icon} lg={lg} />
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -457,40 +662,10 @@ const ScopePreview = ({
   return <LocationScopePreview t={t} size={size} />;
 };
 
-const SCOPE_META: Record<
-  ScopeId,
-  { teaser: string; kpis: { label: string; value: string }[]; motif: string }
-> = {
-  owner: {
-    teaser: 'Portfolio · all brands',
-    kpis: [
-      { label: 'Rev', value: '$148K' },
-      { label: 'Brands', value: '3' },
-      { label: 'Δ', value: '+9%' },
-    ],
-    motif: 'from-emerald-400/20 via-mintcom-green/10 to-transparent',
-  },
-  brand: {
-    teaser: 'One brand · many sites',
-    kpis: [
-      { label: 'Sites', value: '4' },
-      { label: 'Live', value: '3/4' },
-      { label: 'Roles', value: '12' },
-    ],
-    motif: 'from-teal-400/20 via-cyan-400/5 to-transparent',
-  },
-  location: {
-    teaser: 'Today on the floor',
-    kpis: [
-      { label: 'Orders', value: '142' },
-      { label: 'AOV', value: '$17' },
-      { label: 'Live', value: '●' },
-    ],
-    motif: 'from-lime-300/20 via-mintcom-green/10 to-transparent',
-  },
-};
-
-/** Calm text card — click opens modal. Minimal motion. */
+/**
+ * Same chrome as Features WorkflowFeatureCard / Why FeatureCard:
+ * icon + title, description, Read more — opens scope modal.
+ */
 const DashboardCard = ({
   dashboard,
   index,
@@ -503,80 +678,49 @@ const DashboardCard = ({
   onOpen: (index: number) => void;
 }) => {
   const Icon = dashboard.icon;
-  const rank = dashboard.scope === 'owner' ? 3 : dashboard.scope === 'brand' ? 2 : 1;
-  const meta = SCOPE_META[dashboard.scope];
 
   return (
-    <button
-      type="button"
-      onClick={() => onOpen(index)}
-      className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white p-6 text-start shadow-lg shadow-gray-200/30 transition-colors duration-300 hover:border-mintcom-green/40 hover:shadow-xl hover:shadow-mintcom-green/10 dark:border-white/5 dark:bg-[#121212] dark:shadow-none dark:hover:border-mintcom-green/30"
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay: (index % 3) * 0.08, duration: 0.5 }}
+      whileHover={{ y: -6, scale: 1.02 }}
+      className="group relative flex h-full min-h-[248px] flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white p-6 shadow-lg shadow-gray-200/30 transition-all duration-500 hover:border-mintcom-green/40 hover:shadow-2xl hover:shadow-mintcom-green/10 dark:border-white/5 dark:bg-[#121212] dark:shadow-none"
     >
-      <div
-        aria-hidden
-        className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${meta.motif} opacity-40`}
-      />
-
-      <div className="absolute end-4 top-4 z-10 flex items-center gap-1">
-        {[0, 1, 2].map((i) => (
-          <span
-            key={i}
-            className={`h-1.5 w-1.5 rounded-full ${
-              i < rank ? 'bg-mintcom-green' : 'bg-gray-300 dark:bg-white/15'
-            }`}
-          />
-        ))}
-      </div>
-
-      <div className="relative z-10 mb-4 flex items-start gap-4">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-mintcom-green/10 transition-colors duration-300 group-hover:bg-mintcom-green dark:bg-mintcom-green/15">
+      <div className="relative z-10 mb-4 flex min-h-[56px] items-start gap-4">
+        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-mintcom-green/10 shadow-inner transition-all duration-500 group-hover:rotate-3 group-hover:scale-110 group-hover:bg-mintcom-green dark:bg-mintcom-green/15">
           <Icon
             size={22}
-            className="text-mintcom-green transition-colors duration-300 group-hover:text-white"
+            className="text-mintcom-green transition-colors duration-500 group-hover:text-white"
           />
         </div>
-        <div className="min-w-0 flex-1 pe-8 pt-0.5">
-          <p className="mb-1 text-[9px] font-bold uppercase tracking-[0.18em] text-gray-500 dark:text-gray-400">
-            {dashboard.scopeLabel}
-          </p>
-          <h3 className="font-barlow text-base font-bold leading-tight tracking-tight text-gray-900 transition-colors group-hover:text-mintcom-green dark:text-white sm:text-lg">
-            {dashboard.title}
-          </h3>
-          <p className="mt-1 text-[11px] font-semibold text-mintcom-green/80">{meta.teaser}</p>
-        </div>
+        <h3 className="mt-1 line-clamp-2 min-h-[2.5rem] font-barlow text-base font-bold leading-tight tracking-tight text-gray-900 transition-colors group-hover:text-mintcom-green dark:text-white">
+          {dashboard.title}
+        </h3>
       </div>
 
-      <p className="relative z-10 line-clamp-3 flex-1 font-barlow text-sm font-medium leading-relaxed text-gray-600 dark:text-gray-400">
-        {dashboard.description}
-      </p>
+      <div className="relative z-10 flex min-h-0 flex-1 flex-col justify-between">
+        <p className="line-clamp-3 min-h-[3.75rem] font-barlow text-sm font-medium leading-relaxed text-gray-600 dark:text-gray-400">
+          {dashboard.description}
+        </p>
 
-      <div className="relative z-10 mt-4 grid grid-cols-3 gap-1.5">
-        {meta.kpis.map((k) => (
-          <div
-            key={k.label}
-            className="rounded-xl border border-gray-100 bg-gray-50/80 px-2 py-1.5 text-center dark:border-white/[0.06] dark:bg-white/[0.03]"
-          >
-            <p className="text-[8px] font-bold uppercase tracking-wider text-gray-400">{k.label}</p>
-            <p className="font-barlow text-xs font-black tabular-nums text-gray-900 dark:text-white">
-              {k.value}
-            </p>
-          </div>
-        ))}
+        <button
+          type="button"
+          onClick={() => onOpen(index)}
+          className="mt-3 self-start font-barlow text-xs font-bold text-mintcom-green transition-colors hover:text-mintcom-green/80 focus:outline-none"
+        >
+          {t('landing.features.readMore', 'Read more')}
+        </button>
       </div>
-
-      <div className="relative z-10 mt-4 flex items-center justify-between border-t border-gray-100 pt-3 dark:border-white/[0.06]">
-        <span className="text-xs font-bold text-mintcom-green">
-          {t('landing.features.readMore', 'Read more')} →
-        </span>
-        <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400">
-          {index + 1}/3
-        </span>
-      </div>
-    </button>
+    </motion.div>
   );
 };
 
-/** Immersive scope modal — hierarchy story + floating live preview. */
+/**
+ * Scope modal — same shell as Features / Why modals for site-wide consistency:
+ * counter · close · title + copy + dots · product preview · prev / dots / next.
+ */
 const ScopeDashboardModal = ({
   dashboards,
   activeIndex,
@@ -600,9 +744,6 @@ const ScopeDashboardModal = ({
 }) => {
   const item = dashboards[activeIndex];
   if (!item) return null;
-  const Icon = item.icon;
-  const rank = item.scope === 'owner' ? 3 : item.scope === 'brand' ? 2 : 1;
-  const meta = SCOPE_META[item.scope];
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4">
@@ -610,94 +751,38 @@ const ScopeDashboardModal = ({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        transition={{ duration: 0.3 }}
-        className="absolute inset-0 bg-black/65 backdrop-blur-md"
+        transition={{ duration: 0.2 }}
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       />
 
       <motion.div
-        initial={{ opacity: 0, scale: 0.96, y: 16 }}
+        initial={{ opacity: 0, scale: 0.97, y: 16 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.98, y: 12 }}
-        transition={{ duration: 0.25 }}
-        className="relative z-10 w-full max-w-5xl overflow-hidden rounded-[1.75rem] border border-white/10 bg-white shadow-[0_40px_100px_-24px_rgba(0,0,0,0.55)] dark:border-white/[0.08] dark:bg-[#121214]"
+        exit={{ opacity: 0, scale: 0.97, y: 16 }}
+        transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+        className="relative z-10 flex max-h-[min(92vh,900px)] w-full max-w-5xl flex-col overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-[0_24px_80px_-16px_rgba(0,0,0,0.35)] dark:border-white/10 dark:bg-[#161616]"
         dir={isRtl ? 'rtl' : 'ltr'}
         role="dialog"
         aria-modal="true"
         aria-label={item.title}
       >
-        {/* Top header */}
-        <div className="relative overflow-hidden border-b border-gray-100 bg-gradient-to-br from-mintcom-green/15 via-transparent to-transparent px-6 pb-5 pt-14 dark:border-white/[0.06] dark:from-mintcom-green/20 sm:px-8">
-          <div
-            aria-hidden
-            className="pointer-events-none absolute -top-16 end-10 h-48 w-48 rounded-full bg-mintcom-green/20 blur-3xl"
-          />
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label={String(t('common.close', 'Close'))}
+          className="absolute end-4 top-4 z-30 flex h-9 w-9 items-center justify-center rounded-xl bg-gray-100 text-gray-500 transition-colors hover:bg-gray-200 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/15"
+        >
+          <X size={16} strokeWidth={2.5} />
+        </button>
 
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label={String(t('common.close', 'Close'))}
-            className="absolute end-4 top-4 z-30 flex h-9 w-9 items-center justify-center rounded-xl bg-white/80 text-gray-500 shadow-sm backdrop-blur transition-colors hover:bg-white dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/15"
-          >
-            <X size={16} strokeWidth={2.5} />
-          </button>
-
-          <div className="absolute start-4 top-4 z-30 flex items-center gap-2">
-            <span className="flex items-center gap-1 rounded-full bg-black/5 px-2.5 py-1 text-[11px] font-bold text-mintcom-green dark:bg-white/10">
-              <AnimatePresence mode="popLayout" initial={false}>
-                <motion.span
-                  key={activeIndex}
-                  initial={{ y: 10, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  exit={{ y: -10, opacity: 0 }}
-                  className="tabular-nums"
-                >
-                  {activeIndex + 1}
-                </motion.span>
-              </AnimatePresence>
-              <span className="opacity-40">/</span>
-              <span className="opacity-60">{dashboards.length}</span>
-            </span>
-            <span className="hidden items-center gap-1.5 rounded-full bg-mintcom-green/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-mintcom-green sm:inline-flex">
-              <span className="relative flex h-1.5 w-1.5">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-mintcom-green opacity-60" />
-                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-mintcom-green" />
-              </span>
-              {t('landing.cloudControl.scope.live', 'Live scope')}
-            </span>
-          </div>
-
-          {/* Hierarchy path: Owner → Brand → Location */}
-          <div className="relative z-10 flex flex-wrap items-center gap-1.5 sm:gap-2">
-            {dashboards.map((d, i) => {
-              const on = i === activeIndex;
-              const DIcon = d.icon;
-              return (
-                <div key={d.scope} className="flex items-center gap-1.5 sm:gap-2">
-                  {i > 0 && (
-                    <span className="text-gray-300 dark:text-white/20" aria-hidden>
-                      →
-                    </span>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => onJumpTo(i)}
-                    className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[11px] font-bold transition-all ${
-                      on
-                        ? 'bg-mintcom-green text-black shadow-md shadow-mintcom-green/30'
-                        : 'bg-white/70 text-gray-500 hover:bg-white dark:bg-white/5 dark:text-gray-400 dark:hover:bg-white/10'
-                    }`}
-                  >
-                    <DIcon size={12} />
-                    <span className="hidden xs:inline sm:inline">{d.scopeLabel.replace(/ scope/i, '')}</span>
-                  </button>
-                </div>
-              );
-            })}
-          </div>
+        <div className="absolute start-4 top-4 z-30 flex items-center gap-1 px-1 py-1 text-xs font-bold text-mintcom-green">
+          <span className="tabular-nums">{activeIndex + 1}</span>
+          <span className="opacity-50">/</span>
+          <span className="tabular-nums opacity-70">{dashboards.length}</span>
         </div>
 
-        <div className="relative max-h-[min(78vh,720px)] overflow-y-auto overflow-x-hidden">
+        <div className="relative min-h-0 overflow-x-hidden overflow-y-auto">
           <AnimatePresence mode="wait" custom={direction} initial={false}>
             <motion.div
               key={activeIndex}
@@ -706,111 +791,35 @@ const ScopeDashboardModal = ({
               initial="enter"
               animate="center"
               exit="exit"
-              className="relative z-10 p-6 md:p-8 lg:p-10"
+              className="relative z-10 p-5 pt-12 will-change-transform sm:p-6 sm:pt-12 md:p-8 md:pt-14"
             >
-              <div className="grid items-stretch gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(300px,1.05fr)] lg:gap-12">
-                {/* Story column */}
-                <div className="order-2 flex min-w-0 flex-col lg:order-1">
-                  <motion.div
-                    initial={{ scale: 0.5, rotate: -18, opacity: 0 }}
-                    animate={{ scale: 1, rotate: 0, opacity: 1 }}
-                    transition={{ type: 'spring', stiffness: 260, damping: 16 }}
-                    className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-mintcom-green to-emerald-600 text-white shadow-lg shadow-mintcom-green/35"
-                  >
-                    <Icon size={28} />
-                  </motion.div>
-
-                  <motion.p
-                    initial={{ opacity: 0, x: -8 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="mb-2 text-[10px] font-bold uppercase tracking-[0.22em] text-mintcom-green"
-                  >
-                    {item.scopeLabel} · {meta.teaser}
-                  </motion.p>
-
-                  <motion.h3
-                    initial={{ y: 18, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.06, duration: 0.4 }}
-                    className="font-barlow text-2xl font-black leading-snug tracking-tight text-gray-900 dark:text-white md:text-3xl lg:text-[2.1rem]"
-                  >
+              <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,0.78fr)_minmax(340px,1.22fr)] lg:gap-8 xl:grid-cols-[minmax(0,0.72fr)_minmax(380px,1.28fr)]">
+                {/* Story — Features modal language */}
+                <div className="order-2 min-w-0 lg:order-1">
+                  <h3 className="line-clamp-2 font-barlow text-2xl font-bold leading-snug tracking-tight text-gray-900 dark:text-white md:text-3xl lg:text-[2rem]">
                     {item.title}
-                  </motion.h3>
-
-                  <motion.p
-                    initial={{ y: 16, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.14, duration: 0.45 }}
-                    className="mt-4 max-w-md font-barlow text-[15px] font-medium leading-relaxed text-gray-600 dark:text-gray-300 md:text-base"
-                  >
+                  </h3>
+                  <p className="mt-3 line-clamp-5 max-w-md font-barlow text-[15px] font-medium leading-relaxed text-gray-600 dark:text-gray-300 md:text-base">
                     {item.description}
-                  </motion.p>
-
-                  <ul className="mt-7 space-y-3">
-                    {item.highlights.map((line, i) => (
-                      <motion.li
+                  </p>
+                  <ul className="mt-5 space-y-2.5">
+                    {item.highlights.map((line) => (
+                      <li
                         key={line}
-                        initial={{ opacity: 0, x: -16 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.22 + i * 0.08, type: 'spring', stiffness: 200, damping: 20 }}
-                        className="group/row flex items-start gap-3 rounded-xl border border-transparent bg-gray-50/80 px-3 py-2.5 transition-colors hover:border-mintcom-green/25 hover:bg-mintcom-green/5 dark:bg-white/[0.03] dark:hover:bg-mintcom-green/10"
+                        className="flex items-start gap-2.5 text-sm font-semibold text-gray-700 dark:text-gray-200"
                       >
-                        <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-mintcom-green text-black shadow-sm shadow-mintcom-green/30">
-                          <Check size={11} strokeWidth={3} />
-                        </span>
-                        <span className="text-sm font-semibold leading-snug text-gray-800 dark:text-gray-100">
-                          {line}
-                        </span>
-                      </motion.li>
+                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-mintcom-green" />
+                        <span className="line-clamp-2">{line}</span>
+                      </li>
                     ))}
                   </ul>
-
-                  {/* Scope depth meter */}
-                  <div className="mt-auto pt-8">
-                    <div className="mb-2 flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-gray-400">
-                      <span>{isRtl ? 'عمق النطاق' : 'Scope depth'}</span>
-                      <span className="tabular-nums text-mintcom-green">{rank}/3</span>
-                    </div>
-                    <div className="flex h-2 overflow-hidden rounded-full bg-gray-100 dark:bg-white/10">
-                      <motion.div
-                        key={`bar-${activeIndex}`}
-                        initial={{ width: 0 }}
-                        animate={{ width: `${(rank / 3) * 100}%` }}
-                        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-                        className="rounded-full bg-gradient-to-r from-mintcom-green to-emerald-400 shadow-[0_0_12px_rgba(125,198,162,0.5)]"
-                      />
-                    </div>
-                  </div>
                 </div>
 
-                {/* Live preview stage */}
-                <div className="order-1 flex w-full flex-col justify-center lg:order-2">
-                  <div className="relative">
-                    <div className="relative overflow-hidden rounded-3xl border border-gray-200/80 bg-gradient-to-b from-white to-gray-50 p-3 shadow-xl dark:border-white/10 dark:from-[#1a1a1c] dark:to-[#0e0e10] sm:p-4">
-                      <div
-                        aria-hidden
-                        className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${meta.motif}`}
-                      />
-                      {/* Live badge */}
-                      <div className="relative z-10 mb-3 flex items-center justify-between gap-2">
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-mintcom-green/15 px-2.5 py-1 text-[10px] font-bold text-mintcom-green">
-                          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-mintcom-green" />
-                          dashboard.mintcom.app/{item.scope}
-                        </span>
-                        <span className="font-mono text-[10px] tabular-nums text-gray-400">
-                          {meta.kpis.map((k) => k.value).join(' · ')}
-                        </span>
-                      </div>
-                      {/* Full-bleed preview — no scale; size="lg" fills the frame */}
-                      <div className="relative z-10 h-[240px] overflow-hidden rounded-2xl border border-gray-200/90 shadow-inner ring-1 ring-black/5 dark:border-white/[0.08] dark:ring-white/5 sm:h-[280px]">
-                        <ScopePreview scope={item.scope} t={t} size="lg" />
-                      </div>
-                      <p className="relative z-10 mt-3 text-center text-[11px] font-medium text-gray-400">
-                        {t(
-                          'landing.cloudControl.scope.livePreview',
-                          'Live preview',
-                        )}
-                      </p>
+                {/* Product preview — same frame as Why feature shots */}
+                <div className="order-1 w-full min-w-0 lg:order-2">
+                  <div className="overflow-hidden rounded-2xl border border-gray-200/90 bg-white shadow-lg shadow-black/10 dark:border-white/10 dark:bg-[#0f0f0f]">
+                    <div className="h-[min(52vh,380px)] w-full overflow-hidden sm:h-[420px] md:h-[440px]">
+                      <ScopePreview scope={item.scope} t={t} size="lg" />
                     </div>
                   </div>
                 </div>
@@ -819,43 +828,38 @@ const ScopeDashboardModal = ({
           </AnimatePresence>
         </div>
 
-        {/* Footer: prev / labeled scopes / next */}
-        <div className="relative z-10 flex items-center justify-between gap-3 border-t border-gray-100 bg-gray-50/80 px-4 py-4 backdrop-blur dark:border-white/[0.06] dark:bg-black/30 sm:px-8">
+        <div className="relative z-10 mx-6 flex shrink-0 items-center justify-between gap-4 border-t border-gray-100 py-3.5 dark:border-white/10 md:mx-8 md:py-4">
           <button
             type="button"
             onClick={onPrev}
-            className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-bold text-gray-700 transition-all hover:-translate-x-0.5 hover:bg-gray-50 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10 sm:px-4"
+            aria-label={String(t('common.previous', 'Previous'))}
+            className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-bold text-gray-700 transition-colors hover:bg-gray-50 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
           >
             {isRtl ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
             <span className="hidden sm:inline">{t('common.previous', 'Previous')}</span>
           </button>
 
-          <div className="flex max-w-[58%] items-center gap-1.5 overflow-x-auto no-scrollbar sm:gap-2">
-            {dashboards.map((d, i) => {
-              const DIcon = d.icon;
-              const on = i === activeIndex;
-              return (
-                <button
-                  key={d.scope}
-                  type="button"
-                  onClick={() => onJumpTo(i)}
-                  className={`flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[10px] font-bold transition-all sm:text-[11px] ${
-                    on
-                      ? 'bg-mintcom-green text-black shadow-md shadow-mintcom-green/30'
-                      : 'bg-white text-gray-500 ring-1 ring-gray-200 hover:ring-mintcom-green/40 dark:bg-white/5 dark:text-gray-400 dark:ring-white/10'
-                  }`}
-                >
-                  <DIcon size={12} />
-                  <span className="hidden md:inline">{d.title.split(' ')[0]}</span>
-                </button>
-              );
-            })}
+          <div className="no-scrollbar flex max-w-[55%] items-center gap-1.5 overflow-x-auto">
+            {dashboards.map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => onJumpTo(i)}
+                aria-label={`Go to ${i + 1}`}
+                className={`h-2 flex-shrink-0 rounded-full transition-all duration-300 ${
+                  i === activeIndex
+                    ? 'w-5 bg-mintcom-green'
+                    : 'w-2 bg-gray-300 hover:bg-gray-400 dark:bg-white/15 dark:hover:bg-white/25'
+                }`}
+              />
+            ))}
           </div>
 
           <button
             type="button"
             onClick={onNext}
-            className="flex items-center gap-2 rounded-xl bg-mintcom-green px-3 py-2.5 text-sm font-bold text-black shadow-[0_6px_24px_-6px_rgba(125,198,162,0.65)] transition-all hover:-translate-y-0.5 hover:shadow-[0_10px_32px_-6px_rgba(125,198,162,0.75)] sm:px-4"
+            aria-label={String(t('common.next', 'Next'))}
+            className="flex items-center gap-2 rounded-xl bg-mintcom-green px-4 py-2.5 text-sm font-bold text-black shadow-[0_4px_20px_-4px_rgba(125,198,162,0.5)] transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_28px_-4px_rgba(125,198,162,0.65)]"
           >
             <span className="hidden sm:inline">{t('common.next', 'Next')}</span>
             {isRtl ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
