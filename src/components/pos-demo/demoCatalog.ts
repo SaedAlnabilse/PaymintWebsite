@@ -142,6 +142,26 @@ const SEED_CATEGORIES: DemoCatalogCategory[] = [
   { id: 'desserts', name: 'Desserts', emoji: '', icon: 'cake', active: true },
 ];
 
+/** Cafe Delight demo photos — served from public/demo-products */
+const DEMO_PRODUCT_IMAGES: Record<string, string> = {
+  espresso: '/demo-products/espresso.jpg',
+  latte: '/demo-products/latte.jpg',
+  cappuccino: '/demo-products/cappuccino.jpg',
+  coldbrew: '/demo-products/coldbrew.jpg',
+  soda: '/demo-products/soda.jpg',
+  tea: '/demo-products/tea.jpg',
+  croissant: '/demo-products/croissant.jpg',
+  muffin: '/demo-products/muffin.jpg',
+  bagel: '/demo-products/bagel.jpg',
+  cookie: '/demo-products/cookie.jpg',
+  salad: '/demo-products/salad.jpg',
+  sandwich: '/demo-products/sandwich.jpg',
+  soup: '/demo-products/soup.jpg',
+  wrap: '/demo-products/wrap.jpg',
+  cheesecake: '/demo-products/cheesecake.jpg',
+  brownie: '/demo-products/brownie.jpg',
+};
+
 const SEED_PRODUCTS: DemoCatalogProduct[] = [
   {
     id: 'espresso',
@@ -313,6 +333,7 @@ export function createInitialCatalog(): DemoCatalog {
     categories: SEED_CATEGORIES.map((c) => ({ ...c })),
     products: SEED_PRODUCTS.map((p) => ({
       ...p,
+      imageDataUrl: p.imageDataUrl ?? DEMO_PRODUCT_IMAGES[p.id] ?? null,
       attributeIds: p.attributeIds ? [...p.attributeIds] : [],
     })),
     addons: SEED_ADDONS.map((a) => ({
