@@ -2612,9 +2612,18 @@ export function DemoSettingsScreen({
                         }`}
                       >
                         {/* Image + badge */}
-                        <button type="button" onClick={() => openProduct(p)} className="block text-start">
-                          <div className="relative flex h-[130px] w-full items-center justify-center bg-gray-50 dark:bg-mintcom-dark">
-                            <Package size={40} className="text-gray-300 dark:text-white/20" />
+                        <button type="button" onClick={() => openProduct(p)} className="block w-full text-start">
+                          <div className="relative flex h-[130px] w-full items-center justify-center overflow-hidden bg-gray-50 dark:bg-mintcom-dark">
+                            {p.imageDataUrl ? (
+                              <img
+                                src={p.imageDataUrl}
+                                alt={p.name}
+                                className="h-full w-full object-cover"
+                                loading="lazy"
+                              />
+                            ) : (
+                              <Package size={40} className="text-gray-300 dark:text-white/20" />
+                            )}
                             {archived ? (
                               <span className="absolute end-2 top-2 inline-flex items-center gap-1 rounded-xl bg-slate-500 px-2 py-1 text-[10px] font-black text-white">
                                 <Archive size={11} /> Inactive
@@ -2872,10 +2881,26 @@ export function DemoSettingsScreen({
                                   : 'border-gray-200 dark:border-white/8'
                             }`}
                           >
-                            <p className="text-[15px] font-bold text-text-primary dark:text-white">{p.name}</p>
-                            <p className="mt-0.5 text-[12px] text-text-secondary dark:text-mintcom-textSecondary">
-                              Current: {current} units
-                            </p>
+                            <div className="flex items-start gap-3">
+                              <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gray-50 dark:bg-mintcom-dark">
+                                {p.imageDataUrl ? (
+                                  <img
+                                    src={p.imageDataUrl}
+                                    alt=""
+                                    className="h-full w-full object-cover"
+                                    loading="lazy"
+                                  />
+                                ) : (
+                                  <Package size={22} className="text-gray-300 dark:text-white/20" />
+                                )}
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-[15px] font-bold text-text-primary dark:text-white">{p.name}</p>
+                                <p className="mt-0.5 text-[12px] text-text-secondary dark:text-mintcom-textSecondary">
+                                  Current: {current} units
+                                </p>
+                              </div>
+                            </div>
                             <p className="mb-1.5 mt-3 text-[10px] font-bold uppercase tracking-wider text-text-tertiary">
                               New Quantity
                             </p>
