@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Play, X, ArrowRight, Zap } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { HERO_VIDEO_URL } from '../config/downloads';
+import heroImage from '../assets/mintcom-pos-hero.png';
 
 const SplitText = ({ text, className = "" }: { text: string; className?: string }) => {
   return (
@@ -104,27 +105,27 @@ export const Hero = ({ isVideoOpen, setIsVideoOpen }: { isVideoOpen: boolean; se
             <div className="flex w-full flex-col justify-start gap-3 sm:w-auto sm:flex-row sm:flex-wrap">
               <motion.button
                 whileTap={{ scale: 0.95 }}
-                onClick={handleCtaClick}
-                className="group flex w-full items-center justify-center gap-2 rounded-xl bg-mintcom-green px-6 py-3.5 text-base font-bold text-black transition-all sm:px-8 sm:py-4 sm:text-lg sm:w-auto"
+                onClick={() => window.open('/try-pos', '_blank')}
+                className="group flex w-full items-center justify-center gap-2 rounded-xl border-2 border-mintcom-green/40 bg-mintcom-green/10 px-6 py-3.5 text-base font-bold text-gray-900 transition-colors hover:border-mintcom-green hover:bg-mintcom-green/15 dark:text-white sm:px-8 sm:py-4 sm:text-lg sm:w-72 whitespace-nowrap"
               >
-                {isAuthenticated ? t('nav.dashboard', 'Go to Dashboard') : t('landing.hero.cta')}
-                <ArrowRight size={20} className={`transition-transform ${t('common.locale') === 'ar' ? 'rotate-180 group-hover:-translate-x-1' : 'group-hover:translate-x-1'}`} />
+                <Play size={18} fill="currentColor" className="text-mintcom-green" />
+                Try free POS demo
               </motion.button>
 
               <motion.button
                 whileTap={{ scale: 0.95 }}
-                onClick={() => window.open('/try-pos', '_blank')}
-                className="group flex w-full items-center justify-center gap-2 rounded-xl border-2 border-mintcom-green/40 bg-mintcom-green/10 px-6 py-3.5 text-base font-bold text-gray-900 transition-colors hover:border-mintcom-green hover:bg-mintcom-green/15 dark:text-white sm:px-8 sm:py-4 sm:text-lg sm:w-auto"
+                onClick={handleCtaClick}
+                className="group flex w-full items-center justify-center gap-2 rounded-xl bg-mintcom-green px-6 py-3.5 text-base font-bold text-black transition-all sm:px-8 sm:py-4 sm:text-lg sm:w-72 whitespace-nowrap"
               >
-                <Play size={18} fill="currentColor" className="text-mintcom-green" />
-                Try free POS demo
+                {isAuthenticated ? t('nav.dashboard', 'Go to Dashboard') : t('landing.hero.cta')}
+                <ArrowRight size={20} className={`transition-transform ${t('common.locale') === 'ar' ? 'rotate-180 group-hover:-translate-x-1' : 'group-hover:translate-x-1'}`} />
               </motion.button>
 
               {HERO_VIDEO_URL && (
                 <motion.button
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setIsVideoOpen(true)}
-                  className="flex w-full items-center justify-center gap-3 rounded-xl border border-gray-200 bg-gray-100 px-6 py-3.5 text-base font-bold text-gray-900 transition-colors hover:bg-gray-200 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10 sm:px-8 sm:py-4 sm:text-lg sm:w-auto"
+                  className="flex w-full items-center justify-center gap-3 rounded-xl border border-gray-200 bg-gray-100 px-6 py-3.5 text-base font-bold text-gray-900 transition-colors hover:bg-gray-200 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10 sm:px-8 sm:py-4 sm:text-lg sm:w-72 whitespace-nowrap"
                 >
                   <Play size={20} fill="currentColor" className="text-mintcom-green" />
                   {t('landing.hero.watchVideo')}
@@ -148,7 +149,7 @@ export const Hero = ({ isVideoOpen, setIsVideoOpen }: { isVideoOpen: boolean; se
               transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
             >
               <img
-                src="/mintcom-pos-hero.png"
+                src={heroImage}
                 alt={t('landing.hero.alt', 'Mintcom All-in-One POS System')}
                 className="h-auto w-full max-w-full object-contain drop-shadow-2xl"
                 width={1053}
