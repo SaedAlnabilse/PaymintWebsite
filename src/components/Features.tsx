@@ -276,7 +276,10 @@ const WorkflowFeatureModal = ({
                   {/* Fixed-height frame like Why Mintcom — scale measures a real box on first paint */}
                   <div className="order-1 w-full min-w-0 lg:order-2">
                     <div className="overflow-hidden rounded-2xl border border-gray-200/90 bg-white shadow-lg shadow-black/10 dark:border-white/10 dark:bg-mintcom-dark dark:shadow-black/40">
-                      <div className={FEATURE_PREVIEW_H_CLASS}>
+                      {/* Phone demo keeps the fixed frame (portrait mock centers); every
+                          other feature uses the 3:2 canvas ratio so the screenshot fills
+                          the frame edge-to-edge with no side letterbox. */}
+                      <div className={isPhoneDemo ? FEATURE_PREVIEW_H_CLASS : 'aspect-[3/2] w-full overflow-hidden'}>
                         <FeatureInteractiveDemo
                           featureId={feature.id}
                           t={t}
