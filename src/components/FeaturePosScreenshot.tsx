@@ -4,6 +4,9 @@
  * Design approach: paint the full POS at a fixed “design size”, then
  * scale-to-fit the container with ResizeObserver so every label, badge,
  * product card and pay button stays crisp and never clips.
+ *
+ * Order summary panel mirrors FullPosPlayground OrderPanel (expandable
+ * line cards, totals with tax/SC pencils, outlined payment tiles).
  */
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
@@ -17,35 +20,36 @@ import {
   PauseCircle,
   Star,
   Printer,
-  Monitor,
   Trash2,
-  Banknote,
-  CreditCard,
-  Wallet,
-  SplitSquareHorizontal,
   Menu,
   LogOut,
   Inbox,
   BookOpen,
   SlidersHorizontal,
   ChevronDown,
-  Coffee,
-  ShoppingBag,
-  Truck,
-  Home,
-  Minus,
   User,
   PieChart,
   Headphones,
   LayoutGrid,
+  Home,
 } from 'lucide-react';
 import { Logo } from './Logo';
+import {
+  PosCashIcon,
+  PosCardIcon,
+  PosOtherReceiptIcon,
+  PosSplitReceiptIcon,
+} from './pos-demo/posPaymentIcons';
 
-/** Logical design size of the POS frame (px). Scaled down to fit the modal. */
+/** Logical design size of the POS frame (px). Scaled down to fit the modal.
+ *  Keep in sync with FeatureScreenshots DESIGN_H for consistent card height. */
 const DESIGN_W = 900;
-const DESIGN_H = 560;
+const DESIGN_H = 600;
 
 const DEFAULT_IMG = '/default_product.png?v=pos-box';
+
+const money = (n: number) =>
+  n.toLocaleString(undefined, { style: 'currency', currency: 'USD', minimumFractionDigits: 2 });
 
 const moneyParts = (n: number) => {
   const amount = n.toLocaleString(undefined, {
@@ -101,8 +105,10 @@ const ORDER_LINES = [
 ] as const;
 
 const SUBTOTAL = ORDER_LINES.reduce((s, l) => s + l.price * l.qty, 0);
-const TAX = Math.round(SUBTOTAL * 0.08 * 100) / 100;
-const TOTAL = SUBTOTAL + TAX;
+const TAX_RATE = 8;
+const TAX = Math.round(SUBTOTAL * (TAX_RATE / 100) * 100) / 100;
+const SERVICE_CHARGE = Math.round(SUBTOTAL * 0.05 * 100) / 100;
+const TOTAL = SUBTOTAL + TAX + SERVICE_CHARGE;
 
 /** Exact try-pos side rail order (FullPosPlayground NAV_ITEMS) */
 const NAV = [
@@ -128,7 +134,6 @@ export function FeaturePosScreenshot({ side }: Props) {
     const measure = () => {
       const w = el.clientWidth;
       if (w <= 0) return;
-      // Fit width; height follows design aspect (shell uses padding-bottom).
       setScale(Math.min(1, w / DESIGN_W));
     };
 
@@ -151,23 +156,6 @@ export function FeaturePosScreenshot({ side }: Props) {
           side ? 'shadow-lg shadow-black/10 dark:shadow-black/40' : 'shadow-inner'
         }`}
       >
-        {/* Chrome */}
-        <div className="flex items-center justify-between border-b border-gray-100 bg-gradient-to-b from-gray-50 to-white px-3.5 py-2 dark:border-white/5 dark:from-[#141414] dark:to-[#0f0f0f]">
-          <div className="flex items-center gap-2">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-mintcom-green opacity-45" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-mintcom-green" />
-            </span>
-            <span className="text-[11px] font-semibold normal-case text-gray-500 dark:text-gray-400">
-              Sales
-            </span>
-          </div>
-          <span className="rounded-full bg-mintcom-green/12 px-2 py-0.5 text-[9px] font-bold text-mintcom-green">
-            Live UI
-          </span>
-        </div>
-
-        {/* Scale shell: width 100%, height = design × scale */}
         <div
           ref={shellRef}
           className="relative w-full overflow-hidden bg-[#f6f3ec]"
@@ -227,7 +215,6 @@ function PosDesignCanvas() {
       {/* ── Menu pane ── */}
       <section className="flex min-w-0 flex-1 flex-col overflow-hidden bg-[#f6f3ec]">
         <header className="shrink-0 border-b border-black/[0.05] bg-white px-4 py-3">
-          {/* Staff + badges — single non-wrapping row */}
           <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-mintcom-green">
@@ -244,18 +231,13 @@ function PosDesignCanvas() {
             <div className="flex shrink-0 items-center gap-1.5">
               <Chip icon={<Wifi size={13} className="text-mintcom-green" />} label="Synced" />
               <Chip icon={<BookOpen size={13} />} label="Train" />
-              <Chip
-                icon={<LayoutGrid size={13} />}
-                label="Grid"
-                active
-              />
+              <Chip icon={<LayoutGrid size={13} />} label="Grid" active />
               <Chip icon={<Inbox size={13} className="text-mintcom-green" />} label="Drawer" green />
             </div>
           </div>
 
           <div className="my-3 h-px bg-gray-200" />
 
-          {/* Toolbar */}
           <div className="flex items-center gap-2.5">
             <span className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-xl bg-mintcom-green px-3.5 text-[11px] font-extrabold uppercase tracking-wide text-white shadow-md shadow-mintcom-green/30">
               Pay-in / Out
@@ -278,7 +260,6 @@ function PosDesignCanvas() {
           </div>
         </header>
 
-        {/* Product grid — 3×2, balanced cards */}
         <div className="min-h-0 flex-1 overflow-hidden p-3.5">
           <div className="grid h-full grid-cols-3 gap-3">
             {PRODUCTS.map((p) => (
@@ -311,10 +292,11 @@ function PosDesignCanvas() {
         </div>
       </section>
 
-      {/* ── Order panel ── */}
-      <aside className="flex w-[280px] shrink-0 flex-col overflow-hidden border-s border-gray-200 bg-white">
+      {/* ── Order panel — mirrors try-pos OrderPanel ── */}
+      <aside className="flex w-[300px] shrink-0 flex-col overflow-hidden border-s border-gray-200 bg-white">
+        {/* Header actions */}
         <div className="shrink-0 border-b border-[#f0f0f0] px-3.5 py-3">
-          <div className="mb-2.5 flex items-stretch gap-1.5">
+          <div className="mb-2.5 flex items-stretch justify-between gap-2">
             {(
               [
                 { icon: BadgePercent, danger: false },
@@ -322,17 +304,16 @@ function PosDesignCanvas() {
                 { icon: PauseCircle, danger: false },
                 { icon: Star, danger: false },
                 { icon: Printer, danger: false },
-                { icon: Monitor, danger: false },
                 { icon: Trash2, danger: true },
               ] as const
             ).map(({ icon: Icon, danger }, i) => (
               <span
                 key={i}
-                className={`relative flex h-[42px] flex-1 items-center justify-center rounded-[10px] text-white shadow-[0_1px_2px_rgba(0,0,0,0.12)] ${
+                className={`relative flex h-[42px] flex-1 items-center justify-center rounded-xl text-white shadow-[0_1px_2px_rgba(0,0,0,0.12)] ${
                   danger ? 'bg-[#D55263]' : 'bg-[#7dc6a2]'
                 }`}
               >
-                <Icon size={18} strokeWidth={2} />
+                <Icon size={20} strokeWidth={2} />
               </span>
             ))}
           </div>
@@ -342,108 +323,100 @@ function PosDesignCanvas() {
           </div>
         </div>
 
-        <div className="flex shrink-0 gap-2 border-b border-gray-100 px-3 py-2">
-          {(
-            [
-              { label: 'Dine in', Icon: Coffee, on: true },
-              { label: 'Takeaway', Icon: ShoppingBag, on: false },
-              { label: 'Delivery', Icon: Truck, on: false },
-            ] as const
-          ).map(({ label, Icon, on }) => (
-            <span
-              key={label}
-              className={`flex flex-1 items-center justify-center gap-1.5 rounded-[10px] border-[1.5px] py-2.5 text-[11px] font-bold ${
-                on
-                  ? 'border-mintcom-green bg-mintcom-green/10 text-mintcom-green'
-                  : 'border-gray-200 bg-white text-gray-500'
-              }`}
-            >
-              <Icon size={14} />
-              <span className="truncate">{label}</span>
-            </span>
-          ))}
-        </div>
-
-        <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden px-3 py-2.5">
+        {/* Lines — expandable cards like POS SwipeableOrderItem (collapsed) */}
+        <div className="min-h-0 flex-1 space-y-2 overflow-hidden px-3 py-2">
           {ORDER_LINES.map((l) => (
             <div
               key={l.name}
-              className="flex shrink-0 items-center gap-2.5 rounded-xl border border-gray-100 bg-white p-2.5 shadow-sm"
+              className="overflow-hidden rounded-xl border border-gray-200 bg-[#f6f3ec]"
             >
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-gray-100 bg-white">
-                <img
-                  src={DEFAULT_IMG}
-                  alt=""
-                  className="h-full w-full object-contain p-1"
-                  draggable={false}
-                />
-              </span>
-              <div className="min-w-0 flex-1 leading-tight">
-                <p className="truncate text-[13px] font-bold text-[#111827]">{l.name}</p>
-                {l.note && (
-                  <p className="mt-0.5 truncate text-[11px] font-medium text-gray-400">{l.note}</p>
-                )}
-                <div className="mt-0.5">
-                  <Price value={l.price * l.qty} size="sm" muted />
+              <div className="flex w-full items-center gap-2 p-2.5">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
+                  <img
+                    src={DEFAULT_IMG}
+                    alt=""
+                    className="h-full w-full object-contain p-1"
+                    draggable={false}
+                  />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-xs font-bold text-[#111827]">{l.name}</p>
+                  {l.note && (
+                    <p className="mt-0.5 line-clamp-1 text-[10px] text-gray-500">Note: {l.note}</p>
+                  )}
+                  <p className="mt-0.5">
+                    <Price value={l.price * l.qty} size="sm" muted />
+                  </p>
                 </div>
-              </div>
-              <div className="flex shrink-0 items-center gap-0.5 rounded-lg bg-gray-100 px-1 py-0.5">
-                <span className="flex h-6 w-6 items-center justify-center text-gray-500">
-                  <Minus size={12} strokeWidth={2.5} />
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-mintcom-green text-[13px] font-bold tracking-wide text-white shadow-sm">
+                  ×{l.qty}
                 </span>
-                <span className="min-w-[18px] text-center text-[13px] font-black text-[#111827]">
-                  {l.qty}
-                </span>
-                <span className="flex h-6 w-6 items-center justify-center text-mintcom-green">
-                  <Plus size={12} strokeWidth={2.5} />
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white">
+                  <ChevronDown size={16} className="text-gray-400" />
                 </span>
               </div>
             </div>
           ))}
         </div>
 
-        <div className="shrink-0 border-t border-gray-100 px-3.5 py-3">
-          <div className="space-y-1 text-[12px] text-gray-500">
-            <div className="flex justify-between">
+        {/* Totals + payment — mirrors OrderSummaryPanel footer */}
+        <div className="shrink-0 border-t border-gray-100 px-3 py-3">
+          <div className="space-y-0.5 text-[11px]">
+            <div className="flex justify-between text-gray-500">
               <span>Subtotal</span>
+              <span className="tabular-nums font-semibold text-[#111827]">{money(SUBTOTAL)}</span>
+            </div>
+            <div className="flex items-center justify-between gap-2 py-0.5">
+              <span className="inline-flex items-center gap-1 text-gray-500">
+                Service Charge
+                <Pencil size={12} className="text-gray-400" />
+              </span>
               <span className="tabular-nums font-semibold text-[#111827]">
-                {moneyParts(SUBTOTAL).amount}
+                {money(SERVICE_CHARGE)}
               </span>
             </div>
-            <div className="flex justify-between">
-              <span>Tax 8%</span>
-              <span className="tabular-nums font-semibold text-[#111827]">
-                {moneyParts(TAX).amount}
+            <div className="flex items-center justify-between gap-2 py-0.5">
+              <span className="inline-flex items-center gap-1 text-gray-500">
+                Tax {TAX_RATE}%
+                <Pencil size={12} className="text-gray-400" />
               </span>
+              <span className="tabular-nums font-semibold text-[#111827]">{money(TAX)}</span>
             </div>
-          </div>
-          <div className="mt-2 flex items-center justify-between border-t border-gray-100 pt-2">
-            <span className="text-[15px] font-black text-[#111827]">Total</span>
-            <Price value={TOTAL} size="lg" />
+            <div className="flex justify-between border-t border-gray-100 pt-1.5 text-sm font-black text-[#111827]">
+              <span>Total</span>
+              <span className="tabular-nums text-mintcom-green">{money(TOTAL)}</span>
+            </div>
           </div>
 
-          <div className="mt-2.5 flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
-              Payment
-            </span>
-            <span className="inline-flex items-center gap-1 rounded-full bg-mintcom-green/15 px-2 py-0.5 text-[10px] font-black text-mintcom-green">
-              <SplitSquareHorizontal size={10} />
+          <div className="mt-2.5 flex items-center justify-between gap-2">
+            <p className="text-[12px] font-bold text-gray-500">Payment Method</p>
+            <span className="inline-flex items-center justify-center gap-1.5 rounded-xl border-[1.5px] border-mintcom-green bg-mintcom-green/12 px-2.5 py-1.5 text-[13px] font-bold text-mintcom-green">
+              <PosSplitReceiptIcon size={16} className="text-mintcom-green" />
               Split
             </span>
           </div>
 
-          <div className="mt-2 grid grid-cols-3 gap-1.5">
-            {[
-              { icon: Banknote, label: 'Cash' },
-              { icon: CreditCard, label: 'Card' },
-              { icon: Wallet, label: 'Other' },
-            ].map(({ icon: Icon, label }) => (
+          <div className="mx-auto mt-2 grid w-full max-w-[280px] grid-cols-3 gap-2">
+            {(
+              [
+                { icon: <PosCashIcon size={28} className="text-mintcom-green" />, label: 'Cash' },
+                { icon: <PosCardIcon size={28} className="text-mintcom-green" />, label: 'Card' },
+                {
+                  icon: <PosOtherReceiptIcon size={30} className="text-mintcom-green" />,
+                  label: 'Other',
+                },
+              ] as const
+            ).map(({ icon, label }) => (
               <span
                 key={label}
-                className="flex flex-col items-center gap-1 rounded-xl bg-mintcom-green py-2.5 text-[11px] font-black uppercase tracking-wide text-white shadow-sm shadow-mintcom-green/25"
+                className="flex min-h-[75px] w-full flex-col items-center justify-center gap-1.5 overflow-hidden rounded-xl border-[1.5px] border-mintcom-green/45 bg-mintcom-green/[0.07] px-2.5 py-3"
               >
-                <Icon size={16} strokeWidth={2.5} />
-                {label}
+                <span className="flex h-10 w-10 items-center justify-center text-mintcom-green">
+                  {icon}
+                </span>
+                <span className="text-[12.5px] font-semibold leading-none tracking-tight text-[#111827]">
+                  {label}
+                </span>
               </span>
             ))}
           </div>

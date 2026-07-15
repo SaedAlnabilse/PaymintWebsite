@@ -2,8 +2,8 @@ import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { useScrollLock } from '../hooks/useScrollLock';
-import MintcomLeafIcon from '../assets/small-logo.svg';
 import AppStoreBadge from '../assets/app-store-badge.svg';
 import GooglePlayBadge from '../assets/google-play-badge.svg';
 import { isDirectInstallerDownload } from '../config/downloads';
@@ -19,6 +19,8 @@ export function MobileAppModal({ isOpen, onClose, androidUrl = '', iosUrl = '' }
   const { t } = useTranslation();
   const hasAndroidDownload = Boolean(androidUrl);
   const hasIosDownload = Boolean(iosUrl);
+  // Prefer Android for phone scans; fall back to iOS / any configured store URL.
+  const qrTargetUrl = androidUrl || iosUrl || 'https://www.google.com';
 
   useScrollLock(isOpen);
 
@@ -63,9 +65,28 @@ export function MobileAppModal({ isOpen, onClose, androidUrl = '', iosUrl = '' }
             <div className="p-6 pt-2 pb-6">
               <div className="bg-gray-50 dark:bg-white/5 rounded-2xl p-6 mb-4 border border-gray-100 dark:border-white/5">
                 <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.04] px-5 py-6 text-center shadow-sm">
-                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-mintcom-green/10">
-                    <img src={MintcomLeafIcon} alt="Mintcom" className="h-8 w-8 object-contain" />
-                  </div>
+                  <a
+                    href={qrTargetUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mx-auto mb-4 flex w-fit flex-col items-center gap-3 rounded-2xl p-2 transition-transform hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-mintcom-green/60"
+                    aria-label={t('landing.download.qrCode', 'Scan QR code to download')}
+                    title={qrTargetUrl}
+                  >
+                    <div className="rounded-xl bg-white p-3 shadow-sm ring-1 ring-gray-100 dark:ring-white/10">
+                      <QRCodeSVG
+                        value={qrTargetUrl}
+                        size={168}
+                        level="M"
+                        includeMargin={false}
+                        bgColor="#ffffff"
+                        fgColor="#0f172a"
+                      />
+                    </div>
+                    <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 dark:text-gray-400">
+                      {t('landing.download.scanToDownload', 'Scan To Download')}
+                    </p>
+                  </a>
                   <p className="text-base font-bold text-gray-900 dark:text-white leading-tight">
                     {t('brand.name')} {t('common.app')}
                   </p>
@@ -85,6 +106,7 @@ export function MobileAppModal({ isOpen, onClose, androidUrl = '', iosUrl = '' }
                     <a
                       href={iosUrl}
                       download={isDirectInstallerDownload(iosUrl) ? true : undefined}
+                      target="_blank"
                       rel="noopener noreferrer"
                       className="block transition-transform hover:scale-[1.03] active:scale-[0.98] focus:outline-none"
                       aria-label="Download on the App Store"
@@ -105,6 +127,7 @@ export function MobileAppModal({ isOpen, onClose, androidUrl = '', iosUrl = '' }
                     <a
                       href={androidUrl}
                       download={isDirectInstallerDownload(androidUrl) ? true : undefined}
+                      target="_blank"
                       rel="noopener noreferrer"
                       className="block transition-transform hover:scale-[1.03] active:scale-[0.98] focus:outline-none"
                       aria-label="Get it on Google Play"
@@ -131,4 +154,3 @@ export function MobileAppModal({ isOpen, onClose, androidUrl = '', iosUrl = '' }
     document.body
   );
 }
-

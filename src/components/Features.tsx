@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import {
@@ -47,26 +47,27 @@ const WorkflowFeatureCard = ({
       viewport={{ once: true }}
       transition={{ delay: (index % 4) * 0.08, duration: 0.5 }}
       whileHover={{ y: -6, scale: 1.02 }}
-      className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white p-6 shadow-lg shadow-gray-200/30 transition-all duration-500 hover:border-mintcom-green/40 hover:shadow-2xl hover:shadow-mintcom-green/10 dark:border-white/5 dark:bg-[#121212] dark:shadow-none"
+      className="group relative flex h-full min-h-[248px] flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white p-6 shadow-lg shadow-gray-200/30 transition-all duration-500 hover:border-mintcom-green/40 hover:shadow-2xl hover:shadow-mintcom-green/10 dark:border-white/5 dark:bg-[#121212] dark:shadow-none"
     >
-      <div className="relative z-10 mb-4 flex items-start gap-4">
-        <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-mintcom-green/10 dark:bg-mintcom-green/15 flex items-center justify-center group-hover:bg-mintcom-green group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 shadow-inner">
-          <feature.icon size={22} className="text-mintcom-green group-hover:text-white transition-colors duration-500" />
+      {/* Fixed header band so titles wrap like “Recipe & Cost Management” without changing card height */}
+      <div className="relative z-10 mb-4 flex min-h-[56px] items-start gap-4">
+        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-mintcom-green/10 shadow-inner transition-all duration-500 group-hover:rotate-3 group-hover:scale-110 group-hover:bg-mintcom-green dark:bg-mintcom-green/15">
+          <feature.icon size={22} className="text-mintcom-green transition-colors duration-500 group-hover:text-white" />
         </div>
-        <h3 className="font-barlow text-gray-900 dark:text-white font-bold text-base mt-2 group-hover:text-mintcom-green transition-colors leading-tight tracking-tight">
+        <h3 className="mt-1 line-clamp-2 min-h-[2.5rem] font-barlow text-base font-bold leading-tight tracking-tight text-gray-900 transition-colors group-hover:text-mintcom-green dark:text-white">
           {feature.title}
         </h3>
       </div>
 
-      <div className="flex-1 flex flex-col justify-between relative z-10">
-        <p className="font-barlow text-gray-600 dark:text-gray-400 text-sm leading-relaxed font-medium line-clamp-3">
+      <div className="relative z-10 flex min-h-0 flex-1 flex-col justify-between">
+        <p className="line-clamp-3 min-h-[3.75rem] font-barlow text-sm font-medium leading-relaxed text-gray-600 dark:text-gray-400">
           {feature.description}
         </p>
 
         <button
           type="button"
           onClick={() => onOpen(index)}
-          className="mt-3 text-xs font-bold font-barlow text-mintcom-green hover:text-mintcom-green/80 self-start transition-colors focus:outline-none"
+          className="mt-3 self-start font-barlow text-xs font-bold text-mintcom-green transition-colors hover:text-mintcom-green/80 focus:outline-none"
         >
           {t('landing.features.readMore', 'Read more')}
         </button>
@@ -75,39 +76,30 @@ const WorkflowFeatureCard = ({
   );
 };
 
-// Slide variants for the inner content panel.
-// `direction` is 1 when going to next, -1 when going to previous.
+// Soft crossfade + gentle directional drift (no blur — keeps it smooth).
 const slideVariants: Variants = {
   enter: (direction: number) => ({
-    x: direction * 80,
+    x: direction * 40,
     opacity: 0,
-    scale: 0.96,
-    rotateY: direction * 8,
-    filter: 'blur(8px)',
   }),
   center: {
     x: 0,
     opacity: 1,
-    scale: 1,
-    rotateY: 0,
-    filter: 'blur(0px)',
     transition: {
-      duration: 0.45,
-      ease: [0.22, 1, 0.36, 1],
+      x: { type: 'spring', stiffness: 300, damping: 34, mass: 0.85 },
+      opacity: { duration: 0.28, ease: [0.22, 1, 0.36, 1] },
     },
   },
   exit: (direction: number) => ({
-    x: direction * -80,
+    x: direction * -28,
     opacity: 0,
-    scale: 0.96,
-    rotateY: direction * -8,
-    filter: 'blur(8px)',
     transition: {
-      duration: 0.3,
-      ease: [0.4, 0, 1, 1],
+      x: { duration: 0.24, ease: [0.4, 0, 0.2, 1] },
+      opacity: { duration: 0.2, ease: [0.4, 0, 1, 1] },
     },
   }),
 };
+
 
 const WorkflowFeatureModal = ({
   features,
@@ -133,11 +125,34 @@ const WorkflowFeatureModal = ({
 }) => {
   const feature = features[activeIndex];
   if (!feature) return null;
-  const Icon = feature.icon;
   const hasPreview = hasInteractiveDemo(feature.id);
   // All feature cards use the same split layout + modal size
   const isSplitLayout = hasPreview;
   const isPhoneDemo = feature.id === 'mobileApp';
+
+  /** Keep body height stable while slides crossfade (avoids jump/glitch). */
+  const slideNodeRef = useRef<HTMLDivElement | null>(null);
+  const [bodyHeight, setBodyHeight] = useState<number | undefined>(undefined);
+
+  useLayoutEffect(() => {
+    const el = slideNodeRef.current;
+    if (!el) return;
+    const measure = () => {
+      const h = el.getBoundingClientRect().height;
+      if (h > 0) setBodyHeight(Math.ceil(h));
+    };
+    measure();
+    // Previews scale via ResizeObserver — remeasure when layout settles
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    const t = window.setTimeout(measure, 60);
+    const t2 = window.setTimeout(measure, 200);
+    return () => {
+      ro.disconnect();
+      window.clearTimeout(t);
+      window.clearTimeout(t2);
+    };
+  }, [activeIndex, feature.id]);
 
   const featureHighlights = (id?: string): string[] => {
     const key = id ?? '';
@@ -153,7 +168,7 @@ const WorkflowFeatureModal = ({
         'Tax + service charge configured once',
       ],
       staffManagement: [
-        'Add team members with PIN clock-in',
+        'Add team members with username & password',
         'Assign roles & fine-grained permissions',
         'Access updates instantly on every POS',
       ],
@@ -163,34 +178,34 @@ const WorkflowFeatureModal = ({
         'Top sellers ranked by revenue',
       ],
       production: [
-        'Track raw materials with stock value',
-        'Low-stock alerts and restock on the fly',
-        'Link recipes so sales deduct inventory',
+        'Raw materials grid with stock & unit cost',
+        'Low-stock badges and one-tap restock',
+        'Recipes for prepared items & menu products',
       ],
       aiSystem: [
-        'Ask sales & staffing questions',
-        'Get clear, business-ready answers',
-        'Built into every Mintcom workspace',
+        'Morning briefings & top sellers on demand',
+        'Stock and staff answers scoped per location',
+        'Same AI agent as the admin mobile app',
       ],
       multiBranch: [
-        'Link locations under one brand',
-        'Unified brand totals in real time',
-        'Compare Downtown, Mall & more',
+        'Create brands from the owner portal',
+        'Link Downtown, Mall & more locations',
+        'Open each brand dashboard in one click',
       ],
       simpleUI: [
-        'Open shift with My Orders & Close Shift',
-        'Net, cash, card & pay-in/out at a glance',
-        'Live sales trend for the active shift',
+        'My Orders & Close Shift on one card',
+        'Net, cash, card, pay-in/out & hours',
+        'Live Sales Overview for the active shift',
       ],
       fastOnboarding: [
-        'Guided setup from location to sale',
-        'Progress that staff can follow',
-        'Productive on day one',
+        'Add staff from dashboard Staff in seconds',
+        'Set role, username & password once',
+        'They log in on POS with the same password',
       ],
       secure: [
-        'Encrypted backups & 2FA ready',
-        'Role-based access by design',
-        'Live protection score per location',
+        'Password re-auth for high-impact actions',
+        'Role-based access for every staff member',
+        'Security tips built into the owner portal',
       ],
       loyalty: [
         'Redeem % discounts at the register',
@@ -198,9 +213,9 @@ const WorkflowFeatureModal = ({
         'Points earn just like real POS loyalty',
       ],
       mobileApp: [
-        'Cash shortage & overage alerts',
-        'Stock warnings with location context',
-        'Refunds and push banners on the go',
+        'Live Notifications feed for all locations',
+        'Cash, stock & refund tabs with unread badges',
+        'iOS push banners that open the right alert',
       ],
     };
     // Do NOT load these via t('…highlights.x.0') — missing keys hit parseMissingKeyHandler
@@ -212,60 +227,26 @@ const WorkflowFeatureModal = ({
     ];
   };
 
-  const previewHint = (id?: string): string => {
-    const hints: Record<string, string> = {
-      pointOfSale: 'Real Mintcom POS sales screen →',
-      salesControl: 'Real payment settings screen →',
-      staffManagement: 'Real team & roles screen →',
-      advancedReporting: 'Real reporting dashboard →',
-      production: 'Real Recipe Operations · raw materials →',
-      aiSystem: 'Real Mintcom AI assistant →',
-      multiBranch: 'Real multi-location brand view →',
-      simpleUI: 'Real try-pos Dashboard →',
-      fastOnboarding: 'Real onboarding checklist →',
-      secure: 'Real security controls →',
-      loyalty: 'Real loyalty panel on POS →',
-      mobileApp: 'Real owner mobile alerts →',
-    };
-    return hints[id ?? ''] ?? 'Real Mintcom interface →';
-  };
-
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4">
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        transition={{ duration: 0.25 }}
+        transition={{ duration: 0.2 }}
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       />
 
+      {/* Height hugs content — no empty white band under the preview */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.94, y: 24 }}
+        initial={{ opacity: 0, scale: 0.97, y: 16 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.94, y: 24 }}
-        transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-        className="relative z-10 w-full max-w-5xl overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-[0_24px_80px_-16px_rgba(0,0,0,0.35)] dark:border-white/10 dark:bg-[#161616]"
+        exit={{ opacity: 0, scale: 0.97, y: 16 }}
+        transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+        className="relative z-10 flex max-h-[min(92vh,900px)] w-full max-w-5xl flex-col overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-[0_24px_80px_-16px_rgba(0,0,0,0.35)] dark:border-white/10 dark:bg-[#161616]"
         dir={isRtl ? 'rtl' : 'ltr'}
-        style={{ perspective: 1200 }}
       >
-        <motion.div
-          key={`glow-${activeIndex}`}
-          initial={{ opacity: 0, scale: 0.4 }}
-          animate={{ opacity: [0, 0.55, 0], scale: [0.4, 1.4, 1.6] }}
-          transition={{ duration: 0.9, ease: 'easeOut' }}
-          className="pointer-events-none absolute -top-24 left-1/2 -z-0 h-64 w-64 -translate-x-1/2 rounded-full bg-mintcom-green/30 blur-3xl"
-        />
-
-        <motion.div
-          key={`sweep-${activeIndex}`}
-          initial={{ x: direction * -120 + '%', opacity: 0 }}
-          animate={{ x: direction * 120 + '%', opacity: [0, 0.45, 0] }}
-          transition={{ duration: 0.7, ease: 'easeOut' }}
-          className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 -skew-x-12 bg-gradient-to-r from-transparent via-mintcom-green/15 to-transparent"
-        />
-
         <button
           type="button"
           onClick={onClose}
@@ -275,140 +256,83 @@ const WorkflowFeatureModal = ({
           <X size={16} strokeWidth={2.5} />
         </button>
 
-        <div className="absolute start-4 top-4 z-30 flex items-center gap-1 rounded-full bg-mintcom-green/10 px-3 py-1 text-xs font-bold text-mintcom-green">
-          <AnimatePresence mode="popLayout" initial={false} custom={direction}>
-            <motion.span
-              key={`count-${activeIndex}`}
-              custom={direction}
-              initial={{ y: direction * 12, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: direction * -12, opacity: 0 }}
-              transition={{ duration: 0.25 }}
-              className="tabular-nums"
-            >
-              {activeIndex + 1}
-            </motion.span>
-          </AnimatePresence>
+        <div className="absolute start-4 top-4 z-30 flex items-center gap-1 px-1 py-1 text-xs font-bold text-mintcom-green">
+          <span className="tabular-nums">{activeIndex + 1}</span>
           <span className="opacity-50">/</span>
           <span className="tabular-nums opacity-70">{features.length}</span>
         </div>
 
-        <div className="relative max-h-[min(90vh,860px)] overflow-x-hidden overflow-y-auto">
+        {/* Height eases between slides; content crossfades on top */}
+        <div
+          className="relative min-h-0 overflow-x-hidden overflow-y-auto"
+          style={
+            bodyHeight
+              ? {
+                  height: bodyHeight,
+                  transition: 'height 0.32s cubic-bezier(0.22, 1, 0.36, 1)',
+                }
+              : undefined
+          }
+        >
           <AnimatePresence mode="wait" custom={direction} initial={false}>
             <motion.div
               key={activeIndex}
+              ref={slideNodeRef}
               custom={direction}
               variants={slideVariants}
               initial="enter"
               animate="center"
               exit="exit"
-              className="relative z-10 select-text p-6 pt-14 md:p-8 md:pt-16 lg:p-10 lg:pt-16"
-              style={{ transformStyle: 'preserve-3d' }}
+              className="relative z-10 w-full select-text p-5 pt-12 will-change-transform sm:p-6 sm:pt-12 md:p-8 md:pt-14"
+              style={{ backfaceVisibility: 'hidden' }}
             >
               {isSplitLayout ? (
-                <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,0.78fr)_minmax(340px,1.22fr)] lg:gap-10 xl:grid-cols-[minmax(0,0.72fr)_minmax(380px,1.28fr)]">
-                  {/* Left: story copy */}
+                <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,0.78fr)_minmax(340px,1.22fr)] lg:gap-8 xl:grid-cols-[minmax(0,0.72fr)_minmax(380px,1.28fr)]">
                   <div className="order-2 min-w-0 lg:order-1">
-                    <motion.div
-                      initial={{ scale: 0.7, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ delay: 0.05, type: 'spring', stiffness: 220, damping: 18 }}
-                      className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-mintcom-green/10 text-mintcom-green dark:bg-white/5"
-                    >
-                      <Icon size={26} />
-                    </motion.div>
-                    <motion.h3
-                      initial={{ y: 14, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      transition={{ delay: 0.1, duration: 0.4 }}
-                      className="font-barlow text-2xl font-bold leading-snug tracking-tight text-gray-900 dark:text-white md:text-3xl lg:text-[2rem]"
-                    >
+                    <h3 className="line-clamp-2 font-barlow text-2xl font-bold leading-snug tracking-tight text-gray-900 dark:text-white md:text-3xl lg:text-[2rem]">
                       {feature.title}
-                    </motion.h3>
-                    <motion.p
-                      initial={{ y: 16, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      transition={{ delay: 0.18, duration: 0.45 }}
-                      className="mt-4 max-w-md font-barlow text-[15px] font-medium leading-relaxed text-gray-600 dark:text-gray-300 md:text-base"
-                    >
+                    </h3>
+                    <p className="mt-3 line-clamp-5 max-w-md font-barlow text-[15px] font-medium leading-relaxed text-gray-600 dark:text-gray-300 md:text-base">
                       {feature.description}
-                    </motion.p>
-                    <motion.ul
-                      initial={{ y: 12, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      transition={{ delay: 0.26, duration: 0.4 }}
-                      className="mt-6 space-y-2.5"
-                    >
+                    </p>
+                    <ul className="mt-5 space-y-2.5">
                       {featureHighlights(feature.id).map((line) => (
-                        <li key={line} className="flex items-start gap-2.5 text-sm font-semibold text-gray-700 dark:text-gray-200">
+                        <li
+                          key={line}
+                          className="flex items-start gap-2.5 text-sm font-semibold text-gray-700 dark:text-gray-200"
+                        >
                           <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-mintcom-green" />
-                          <span>{line}</span>
+                          <span className="line-clamp-2">{line}</span>
                         </li>
                       ))}
-                    </motion.ul>
-                    <motion.p
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.35 }}
-                      className="mt-6 hidden text-xs font-medium text-gray-400 lg:block"
-                    >
-                      {previewHint(feature.id)}
-                    </motion.p>
+                    </ul>
                   </div>
 
-                  {/* Right: static real-UI screenshot — same size for every card */}
-                  <motion.div
-                    initial={{ y: 24, opacity: 0, scale: 0.96 }}
-                    animate={{ y: 0, opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.2, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                    className="order-1 flex w-full justify-center lg:order-2 lg:justify-stretch"
-                  >
-                    <div className="w-full max-w-none">
-                      <FeatureInteractiveDemo
-                        featureId={feature.id}
-                        t={t}
-                        isRtl={isRtl}
-                        tall={isPhoneDemo}
-                        side
-                      />
-                    </div>
-                  </motion.div>
+                  <div className="order-1 w-full min-w-0 lg:order-2">
+                    <FeatureInteractiveDemo
+                      featureId={feature.id}
+                      t={t}
+                      isRtl={isRtl}
+                      tall={isPhoneDemo}
+                      side
+                    />
+                  </div>
                 </div>
               ) : (
-                <>
-                  <motion.div
-                    initial={{ scale: 0.6, rotate: -12, opacity: 0 }}
-                    animate={{ scale: 1, rotate: 0, opacity: 1 }}
-                    transition={{ delay: 0.05, duration: 0.5, type: 'spring', stiffness: 220, damping: 18 }}
-                    className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-mintcom-green/10 dark:bg-white/5 text-mintcom-green"
-                  >
-                    <Icon size={28} />
-                  </motion.div>
-
-                  <motion.h3
-                    initial={{ y: 14, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.12, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                    className="font-barlow text-2xl md:text-3xl font-bold text-gray-900 dark:text-white tracking-tight leading-snug"
-                  >
+                <div className="min-w-0">
+                  <h3 className="line-clamp-2 font-barlow text-2xl font-bold leading-snug tracking-tight text-gray-900 dark:text-white md:text-3xl">
                     {feature.title}
-                  </motion.h3>
-
-                  <motion.p
-                    initial={{ y: 16, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.2, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-                    className="mt-4 font-barlow text-base md:text-[17px] text-gray-600 dark:text-gray-300 leading-relaxed font-medium whitespace-pre-line"
-                  >
+                  </h3>
+                  <p className="mt-4 line-clamp-8 font-barlow text-base font-medium leading-relaxed text-gray-600 dark:text-gray-300 md:text-[17px]">
                     {feature.description}
-                  </motion.p>
-                </>
+                  </p>
+                </div>
               )}
             </motion.div>
           </AnimatePresence>
         </div>
 
-        <div className="relative z-10 mx-8 flex items-center justify-between gap-4 border-t border-gray-100 dark:border-white/10 py-5 md:mx-10">
+        <div className="relative z-10 mx-6 flex shrink-0 items-center justify-between gap-4 border-t border-gray-100 py-3.5 dark:border-white/10 md:mx-8 md:py-4">
           <button
             type="button"
             onClick={onPrev}
@@ -419,15 +343,17 @@ const WorkflowFeatureModal = ({
             <span className="hidden sm:inline">{t('common.previous', 'Previous')}</span>
           </button>
 
-          <div className="flex items-center gap-1.5 overflow-x-auto max-w-[55%] no-scrollbar">
+          <div className="no-scrollbar flex max-w-[55%] items-center gap-1.5 overflow-x-auto">
             {features.map((_, i) => (
               <button
                 key={i}
                 type="button"
                 onClick={() => onJumpTo(i)}
                 aria-label={`Go to ${i + 1}`}
-                className={`h-2 rounded-full transition-all duration-300 flex-shrink-0 ${
-                  i === activeIndex ? 'w-5 bg-mintcom-green' : 'w-2 bg-gray-300 hover:bg-gray-400 dark:bg-white/15 dark:hover:bg-white/25'
+                className={`h-2 flex-shrink-0 rounded-full transition-all duration-300 ${
+                  i === activeIndex
+                    ? 'w-5 bg-mintcom-green'
+                    : 'w-2 bg-gray-300 hover:bg-gray-400 dark:bg-white/15 dark:hover:bg-white/25'
                 }`}
               />
             ))}
