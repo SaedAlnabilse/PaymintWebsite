@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { Play, X, ArrowRight, Zap } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { HERO_VIDEO_URL } from '../config/downloads';
-import { HeroPosStation } from './HeroPosStation';
 
 const SplitText = ({ text, className = "" }: { text: string; className?: string }) => {
   return (
@@ -63,15 +62,15 @@ export const Hero = ({ isVideoOpen, setIsVideoOpen }: { isVideoOpen: boolean; se
         />
       </div>
 
-      <div className="mx-auto w-[95%] max-w-[1200px] px-5 md:px-7 relative z-10">
-        <div className="flex flex-col items-start gap-10 lg:flex-row lg:items-center lg:gap-16">
+      <div className="relative z-10 mx-auto w-full max-w-[1280px] px-5 md:px-8 lg:px-10">
+        <div className="flex flex-col items-start gap-8 lg:flex-row lg:items-center lg:gap-10 xl:gap-12">
 
-          {/* Text Content */}
+          {/* Text Content — reserve real width so the title never clips */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className="w-full min-w-0 flex-1 text-start"
+            className="w-full min-w-0 shrink-0 text-start lg:w-[40%] lg:max-w-xl"
           >
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -92,13 +91,13 @@ export const Hero = ({ isVideoOpen, setIsVideoOpen }: { isVideoOpen: boolean; se
               </span>
             </motion.div>
 
-            <h1 className="mb-6 font-magilio text-3xl font-bold tracking-tight leading-tight sm:text-4xl lg:text-6xl">
-              <span className="block leading-[1.1] rtl:leading-[1.2]"><SplitText text={t('landing.hero.title1')} /></span>
-              <span className="block leading-[1.1] rtl:leading-[1.2]"><SplitText text={t('landing.hero.title2')} /></span>
-              <span className="block leading-[1.1] rtl:leading-[1.2]"><SplitText text={t('landing.hero.title3')} /></span>
+            <h1 className="mb-6 font-magilio text-3xl font-bold tracking-tight leading-tight sm:text-4xl lg:text-5xl xl:text-6xl">
+              <span className="block leading-[1.15] rtl:leading-[1.25]"><SplitText text={t('landing.hero.title1')} /></span>
+              <span className="block leading-[1.15] rtl:leading-[1.25]"><SplitText text={t('landing.hero.title2')} /></span>
+              <span className="block leading-[1.15] rtl:leading-[1.25]"><SplitText text={t('landing.hero.title3')} /></span>
             </h1>
 
-            <p className="mb-8 max-w-2xl text-base font-light leading-relaxed text-gray-600 dark:text-gray-400 sm:text-lg md:text-xl">
+            <p className="mb-8 max-w-md text-base font-light leading-relaxed text-gray-600 dark:text-gray-400 sm:text-lg md:text-xl lg:max-w-none">
               {t('landing.hero.description')}
             </p>
 
@@ -136,23 +135,29 @@ export const Hero = ({ isVideoOpen, setIsVideoOpen }: { isVideoOpen: boolean; se
 
           </motion.div>
 
-          {/* Visual Content / Hardware Mockups */}
+          {/* Visual — product photo (natural aspect, no left-shift over text) */}
           <motion.div
-            initial={{ opacity: 0, x: 50, rotateY: -10 }}
-            animate={{ opacity: 1, x: 0, rotateY: 0 }}
+            initial={{ opacity: 0, x: 40 }}
+            animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 1, delay: 0.2, ease: "easeOut" }}
-            className="perspective-1000 relative mt-8 w-full max-w-[700px] flex-1 sm:mt-12 lg:mt-0 lg:max-w-[800px] lg:-translate-x-20 xl:max-w-[900px] xl:-translate-x-28"
+            className="relative mt-4 w-full min-w-0 flex-1 sm:mt-8 lg:mt-0"
           >
-            <div className="relative w-full aspect-square sm:aspect-[4/3] flex items-center justify-center">
-              {/* Mintcom POS station — code-built mockup (same approach as AdminControl / CloudControl) */}
-              <motion.div
-                className="relative w-full origin-center sm:w-[108%] lg:w-[118%] lg:origin-left"
-                animate={{ y: [0, -6, 0] }}
-                transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-              >
-                <HeroPosStation />
-              </motion.div>
-            </div>
+            <motion.div
+              className="relative w-full"
+              animate={{ y: [0, -6, 0] }}
+              transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <img
+                src="/mintcom-pos-hero.png"
+                alt={t('landing.hero.alt', 'Mintcom All-in-One POS System')}
+                className="h-auto w-full max-w-full object-contain drop-shadow-2xl"
+                width={1053}
+                height={927}
+                decoding="async"
+                fetchPriority="high"
+                draggable={false}
+              />
+            </motion.div>
           </motion.div>
         </div>
       </div>

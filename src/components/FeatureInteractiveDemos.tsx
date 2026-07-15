@@ -2888,17 +2888,20 @@ export const FeatureInteractiveDemo = ({
   isRtl: _isRtl,
   tall: _tall,
   side,
+  fill,
 }: {
   featureId?: string;
   t: DemoProps['t'];
   isRtl: boolean;
   tall?: boolean;
   side?: boolean;
+  /** Fill a fixed-height parent (Why Mintcom style) instead of self-sizing by scale */
+  fill?: boolean;
 }) => {
   if (!featureId) return null;
   // All feature cards use static real-UI screenshots (consistent popup size)
   if (isStaticFeatureScreenshot(featureId)) {
-    return <FeatureScreenshot featureId={featureId} side={side} />;
+    return <FeatureScreenshot featureId={featureId} side={side} fill={fill} />;
   }
   return null;
 };

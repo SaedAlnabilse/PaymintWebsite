@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import {
@@ -76,29 +76,27 @@ const WorkflowFeatureCard = ({
   );
 };
 
-// Soft crossfade + gentle directional drift (no blur — keeps it smooth).
+/** Same open/slide motion language as Why Mintcom FeatureModal */
 const slideVariants: Variants = {
   enter: (direction: number) => ({
-    x: direction * 40,
+    x: direction * 56,
     opacity: 0,
   }),
   center: {
     x: 0,
     opacity: 1,
-    transition: {
-      x: { type: 'spring', stiffness: 300, damping: 34, mass: 0.85 },
-      opacity: { duration: 0.28, ease: [0.22, 1, 0.36, 1] },
-    },
+    transition: { duration: 0.28, ease: [0.22, 1, 0.36, 1] },
   },
   exit: (direction: number) => ({
-    x: direction * -28,
+    x: direction * -56,
     opacity: 0,
-    transition: {
-      x: { duration: 0.24, ease: [0.4, 0, 0.2, 1] },
-      opacity: { duration: 0.2, ease: [0.4, 0, 1, 1] },
-    },
+    transition: { duration: 0.22 },
   }),
 };
+
+/** Fixed preview frame (Why-style, but shorter so the modal fits like the old scale height). */
+const FEATURE_PREVIEW_H_CLASS =
+  'h-[min(46vh,320px)] w-full overflow-hidden sm:h-[340px] md:h-[360px]';
 
 
 const WorkflowFeatureModal = ({
@@ -126,33 +124,9 @@ const WorkflowFeatureModal = ({
   const feature = features[activeIndex];
   if (!feature) return null;
   const hasPreview = hasInteractiveDemo(feature.id);
-  // All feature cards use the same split layout + modal size
+  // All feature cards use the same split layout + modal size (Why Mintcom pattern)
   const isSplitLayout = hasPreview;
   const isPhoneDemo = feature.id === 'mobileApp';
-
-  /** Keep body height stable while slides crossfade (avoids jump/glitch). */
-  const slideNodeRef = useRef<HTMLDivElement | null>(null);
-  const [bodyHeight, setBodyHeight] = useState<number | undefined>(undefined);
-
-  useLayoutEffect(() => {
-    const el = slideNodeRef.current;
-    if (!el) return;
-    const measure = () => {
-      const h = el.getBoundingClientRect().height;
-      if (h > 0) setBodyHeight(Math.ceil(h));
-    };
-    measure();
-    // Previews scale via ResizeObserver — remeasure when layout settles
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    const t = window.setTimeout(measure, 60);
-    const t2 = window.setTimeout(measure, 200);
-    return () => {
-      ro.disconnect();
-      window.clearTimeout(t);
-      window.clearTimeout(t2);
-    };
-  }, [activeIndex, feature.id]);
 
   const featureHighlights = (id?: string): string[] => {
     const key = id ?? '';
@@ -238,14 +212,17 @@ const WorkflowFeatureModal = ({
         onClick={onClose}
       />
 
-      {/* Height hugs content — no empty white band under the preview */}
+      {/* Same shell / open animation as Why Mintcom FeatureModal */}
       <motion.div
         initial={{ opacity: 0, scale: 0.97, y: 16 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.97, y: 16 }}
         transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-        className="relative z-10 flex max-h-[min(92vh,900px)] w-full max-w-5xl flex-col overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-[0_24px_80px_-16px_rgba(0,0,0,0.35)] dark:border-white/10 dark:bg-[#161616]"
+        className="relative z-10 flex max-h-[min(92vh,900px)] w-full max-w-5xl flex-col overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-[0_24px_80px_-16px_rgba(0,0,0,0.35)] dark:border-white/10 dark:bg-[#121212]"
         dir={isRtl ? 'rtl' : 'ltr'}
+        role="dialog"
+        aria-modal="true"
+        aria-label={feature.title}
       >
         <button
           type="button"
@@ -262,32 +239,20 @@ const WorkflowFeatureModal = ({
           <span className="tabular-nums opacity-70">{features.length}</span>
         </div>
 
-        {/* Height eases between slides; content crossfades on top */}
-        <div
-          className="relative min-h-0 overflow-x-hidden overflow-y-auto"
-          style={
-            bodyHeight
-              ? {
-                  height: bodyHeight,
-                  transition: 'height 0.32s cubic-bezier(0.22, 1, 0.36, 1)',
-                }
-              : undefined
-          }
-        >
+        {/* Natural scroll body like Why — no locked bodyHeight (that fought first-open scale) */}
+        <div className="relative min-h-0 overflow-x-hidden overflow-y-auto">
           <AnimatePresence mode="wait" custom={direction} initial={false}>
             <motion.div
               key={activeIndex}
-              ref={slideNodeRef}
               custom={direction}
               variants={slideVariants}
               initial="enter"
               animate="center"
               exit="exit"
               className="relative z-10 w-full select-text p-5 pt-12 will-change-transform sm:p-6 sm:pt-12 md:p-8 md:pt-14"
-              style={{ backfaceVisibility: 'hidden' }}
             >
               {isSplitLayout ? (
-                <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,0.78fr)_minmax(340px,1.22fr)] lg:gap-8 xl:grid-cols-[minmax(0,0.72fr)_minmax(380px,1.28fr)]">
+                <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,0.78fr)_minmax(320px,1.22fr)] lg:gap-8">
                   <div className="order-2 min-w-0 lg:order-1">
                     <h3 className="line-clamp-2 font-barlow text-2xl font-bold leading-snug tracking-tight text-gray-900 dark:text-white md:text-3xl lg:text-[2rem]">
                       {feature.title}
@@ -308,14 +273,20 @@ const WorkflowFeatureModal = ({
                     </ul>
                   </div>
 
+                  {/* Fixed-height frame like Why Mintcom — scale measures a real box on first paint */}
                   <div className="order-1 w-full min-w-0 lg:order-2">
-                    <FeatureInteractiveDemo
-                      featureId={feature.id}
-                      t={t}
-                      isRtl={isRtl}
-                      tall={isPhoneDemo}
-                      side
-                    />
+                    <div className="overflow-hidden rounded-2xl border border-gray-200/90 bg-white shadow-lg shadow-black/10 dark:border-white/10 dark:bg-mintcom-dark dark:shadow-black/40">
+                      <div className={FEATURE_PREVIEW_H_CLASS}>
+                        <FeatureInteractiveDemo
+                          featureId={feature.id}
+                          t={t}
+                          isRtl={isRtl}
+                          tall={isPhoneDemo}
+                          side
+                          fill
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
               ) : (

@@ -151,7 +151,7 @@ const PortalRail = ({
 
   return (
     <aside
-      className={`relative flex h-full shrink-0 flex-col border-e border-gray-200 bg-white dark:border-white/[0.05] dark:bg-[#1E293B] ${w} ${
+      className={`relative flex h-full shrink-0 flex-col border-e border-gray-200 bg-white dark:border-white/10 dark:bg-mintcom-surface ${w} ${
         lg ? 'py-2.5' : 'py-1'
       }`}
     >
@@ -204,7 +204,7 @@ const PortalRail = ({
 
       {/* Footer — matches real collapsed portal footers */}
       <div
-        className={`flex shrink-0 flex-col items-center border-t border-gray-100 dark:border-white/[0.05] ${
+        className={`flex shrink-0 flex-col items-center border-t border-gray-100 dark:border-white/10 ${
           lg ? 'mt-1 gap-1 px-2 pt-2' : 'gap-0.5 px-0.5 pt-0.5'
         }`}
       >
@@ -321,7 +321,7 @@ function RealStatTile({
 }) {
   return (
     <div
-      className={`relative flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-white/[0.06] dark:bg-[#1E293B] ${
+      className={`relative flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-white/10 dark:bg-mintcom-surface ${
         lg ? 'p-3' : 'rounded-xl p-1.5'
       }`}
     >
@@ -380,7 +380,7 @@ const OwnerScopePreview = ({ t, size = 'sm' }: { t: any; size?: PreviewSize }) =
     <div
       role="img"
       aria-label={t('landing.cloudControl.scope.preview.owner', 'Owner overview')}
-      className="flex h-full w-full cursor-text select-text overflow-hidden bg-gray-50 font-sans dark:bg-[#050505]"
+      className="flex h-full w-full cursor-text select-text overflow-hidden bg-gray-50 font-sans dark:bg-mintcom-dark"
     >
       <OwnerRail active="overview" lg={lg} />
       <div className={`flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden ${lg ? 'gap-2.5 p-3' : 'gap-1 p-1.5'}`}>
@@ -396,7 +396,7 @@ const OwnerScopePreview = ({ t, size = 'sm' }: { t: any; size?: PreviewSize }) =
             )}
           </div>
           <span
-            className={`inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-gray-200 bg-white font-bold text-gray-700 dark:border-white/10 dark:bg-[#1E293B] dark:text-gray-200 ${
+            className={`inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-gray-200 bg-white font-bold text-gray-700 dark:border-white/10 dark:bg-mintcom-surface dark:text-gray-200 ${
               lg ? 'px-2.5 py-1.5 text-[11px]' : 'px-1.5 py-0.5 text-[7px]'
             }`}
           >
@@ -436,12 +436,12 @@ const BrandScopePreview = ({ t, size = 'sm' }: { t: any; size?: PreviewSize }) =
     <div
       role="img"
       aria-label={t('landing.cloudControl.scope.preview.brand', 'Brand dashboard')}
-      className="flex h-full w-full cursor-text select-text overflow-hidden bg-gray-50 font-sans dark:bg-[#050505]"
+      className="flex h-full w-full cursor-text select-text overflow-hidden bg-gray-50 font-sans dark:bg-mintcom-dark"
     >
       <BrandRail active="overview" lg={lg} />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <div
-          className={`flex shrink-0 items-center justify-between gap-2 border-b border-gray-200 bg-white dark:border-white/[0.06] dark:bg-[#1E293B] ${
+          className={`flex shrink-0 items-center justify-between gap-2 border-b border-gray-200 bg-white dark:border-white/10 dark:bg-mintcom-surface ${
             lg ? 'px-3.5 py-2.5' : 'px-1.5 py-1'
           }`}
         >
@@ -478,7 +478,7 @@ const BrandScopePreview = ({ t, size = 'sm' }: { t: any; size?: PreviewSize }) =
             ))}
           </div>
 
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-white/[0.06] dark:bg-[#1E293B]">
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-white/10 dark:bg-mintcom-surface">
             <div className={`flex shrink-0 items-center justify-between border-b border-gray-100 dark:border-white/5 ${lg ? 'px-3 py-2.5' : 'px-1.5 py-1'}`}>
               <div>
                 <p className={`font-bold text-gray-900 dark:text-white ${lg ? 'text-[13px]' : 'text-[8px]'}`}>
@@ -599,13 +599,13 @@ const LocationScopePreview = ({ t, size = 'sm' }: { t: any; size?: PreviewSize }
     <div
       role="img"
       aria-label={t('landing.cloudControl.scope.preview.location', 'Location dashboard')}
-      className="flex h-full w-full cursor-text select-text overflow-hidden bg-gray-50 font-sans dark:bg-[#050505]"
+      className="flex h-full w-full cursor-text select-text overflow-hidden bg-gray-50 font-sans dark:bg-mintcom-dark"
     >
       <LocationRail active="dashboard" lg={lg} />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         {/* Real dashboard page header */}
         <div
-          className={`flex shrink-0 items-center justify-between gap-2 border-b border-gray-200 bg-white dark:border-white/[0.06] dark:bg-[#1E293B] ${
+          className={`flex shrink-0 items-center justify-between gap-2 border-b border-gray-200 bg-white dark:border-white/10 dark:bg-mintcom-surface ${
             lg ? 'px-3 py-2.5' : 'px-1.5 py-1'
           }`}
         >
@@ -761,7 +761,7 @@ const ScopeDashboardModal = ({
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.97, y: 16 }}
         transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-        className="relative z-10 flex max-h-[min(92vh,900px)] w-full max-w-5xl flex-col overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-[0_24px_80px_-16px_rgba(0,0,0,0.35)] dark:border-white/10 dark:bg-[#161616]"
+        className="relative z-10 flex max-h-[min(92vh,900px)] w-full max-w-5xl flex-col overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-[0_24px_80px_-16px_rgba(0,0,0,0.35)] dark:border-white/10 dark:bg-mintcom-dark"
         dir={isRtl ? 'rtl' : 'ltr'}
         role="dialog"
         aria-modal="true"
@@ -817,7 +817,7 @@ const ScopeDashboardModal = ({
 
                 {/* Product preview — same frame as Why feature shots */}
                 <div className="order-1 w-full min-w-0 lg:order-2">
-                  <div className="overflow-hidden rounded-2xl border border-gray-200/90 bg-white shadow-lg shadow-black/10 dark:border-white/10 dark:bg-[#0f0f0f]">
+                  <div className="overflow-hidden rounded-2xl border border-gray-200/90 bg-white shadow-lg shadow-black/10 dark:border-white/10 dark:bg-mintcom-dark dark:shadow-black/40">
                     <div className="h-[min(52vh,380px)] w-full overflow-hidden sm:h-[420px] md:h-[440px]">
                       <ScopePreview scope={item.scope} t={t} size="lg" />
                     </div>

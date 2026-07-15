@@ -8,7 +8,7 @@
  * Order summary panel mirrors FullPosPlayground OrderPanel (expandable
  * line cards, totals with tax/SC pencils, outlined payment tiles).
  */
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import {
   Bell,
   Settings,
@@ -63,10 +63,12 @@ const Price = ({
   value,
   size = 'md',
   muted = false,
+  forceLight = false,
 }: {
   value: number;
   size?: 'sm' | 'md' | 'lg';
   muted?: boolean;
+  forceLight?: boolean;
 }) => {
   const { amount, currency } = moneyParts(value);
   const amountCls =
@@ -80,7 +82,11 @@ const Price = ({
   return (
     <span
       className={`inline-flex items-baseline gap-1 tabular-nums ${
-        muted ? 'text-[#111827]' : 'text-mintcom-green'
+        muted
+          ? forceLight
+            ? 'text-gray-900'
+            : 'text-gray-900 dark:text-white'
+          : 'text-mintcom-green'
       }`}
     >
       <span className={amountCls}>{amount}</span>
@@ -120,56 +126,89 @@ const NAV = [
   { icon: Settings, active: false, label: 'Settings' },
 ] as const;
 
-type Props = { side?: boolean };
+type Props = {
+  side?: boolean;
+  fill?: boolean;
+  /** Scale up to fully cover the box (for hero tablet glass). */
+  cover?: boolean;
+  /** Prefer light cream UI even when the site is in dark mode (product photos). */
+  forceLight?: boolean;
+  className?: string;
+};
 
 /** Frozen try-pos sales frame — scales to fit, never clips. */
-export function FeaturePosScreenshot({ side }: Props) {
+export function FeaturePosScreenshot({ side, fill, cover, forceLight, className = '' }: Props) {
   const shellRef = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(0.55);
+  const [scale, setScale] = useState(1);
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const el = shellRef.current;
     if (!el) return;
 
     const measure = () => {
       const w = el.clientWidth;
-      if (w <= 0) return;
-      setScale(Math.min(1, w / DESIGN_W));
+      const h = el.clientHeight;
+      if (w <= 0 || h <= 0) return;
+      if (cover || fill) {
+        // Cover: scale to fill both axes (may crop slightly). Contain when fill-only.
+        const next = cover
+          ? Math.max(w / DESIGN_W, h / DESIGN_H)
+          : Math.min(w / DESIGN_W, h / DESIGN_H);
+        const ox = (w - DESIGN_W * next) / 2;
+        const oy = (h - DESIGN_H * next) / 2;
+        setScale((prev) => (Math.abs(prev - next) < 0.002 ? prev : next));
+        setOffset((prev) =>
+          Math.abs(prev.x - ox) < 0.5 && Math.abs(prev.y - oy) < 0.5 ? prev : { x: ox, y: oy },
+        );
+      } else {
+        const next = Math.min(1, w / DESIGN_W, h / DESIGN_H);
+        setScale((prev) => (Math.abs(prev - next) < 0.002 ? prev : next));
+        setOffset({ x: 0, y: 0 });
+      }
     };
 
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(el);
     return () => ro.disconnect();
-  }, []);
+  }, [cover, fill]);
 
-  const scaledH = DESIGN_H * scale;
+  const outer = fill || cover
+    ? `h-full w-full select-none ${className}`
+    : `${side ? 'mt-0 w-full' : 'mt-5'} select-text ${className}`;
+  const card = fill || cover
+    ? 'relative h-full w-full overflow-hidden'
+    : `relative overflow-hidden rounded-2xl border border-gray-200/90 bg-white dark:border-white/10 dark:bg-mintcom-dark ${
+        side ? 'shadow-lg shadow-black/10 dark:shadow-black/40' : 'shadow-inner'
+      }`;
 
   return (
     <div
       role="img"
       aria-label="Mintcom POS sales screen — same as Try POS"
-      className={`${side ? 'mt-0 w-full' : 'mt-5'} select-text`}
+      className={outer}
     >
-      <div
-        className={`relative overflow-hidden rounded-2xl border border-gray-200/90 bg-white dark:border-white/10 ${
-          side ? 'shadow-lg shadow-black/10 dark:shadow-black/40' : 'shadow-inner'
-        }`}
-      >
+      <div className={card}>
         <div
           ref={shellRef}
-          className="relative w-full overflow-hidden bg-[#f6f3ec]"
-          style={{ height: scaledH }}
+          className={`relative overflow-hidden bg-[#f6f3ec] ${
+            forceLight ? '' : 'dark:bg-mintcom-dark'
+          } ${fill || cover ? 'h-full w-full' : 'w-full'}`}
+          style={fill || cover ? undefined : { height: DESIGN_H * scale }}
         >
           <div
-            className="absolute left-0 top-0 origin-top-left"
+            className="absolute origin-top-left"
             style={{
+              left: offset.x,
+              top: offset.y,
               width: DESIGN_W,
               height: DESIGN_H,
               transform: `scale(${scale})`,
+              transformOrigin: 'top left',
             }}
           >
-            <PosDesignCanvas />
+            <PosDesignCanvas forceLight={forceLight} />
           </div>
         </div>
       </div>
@@ -178,10 +217,14 @@ export function FeaturePosScreenshot({ side }: Props) {
 }
 
 /** Full-fidelity POS painted at DESIGN_W × DESIGN_H */
-function PosDesignCanvas() {
+function PosDesignCanvas({ forceLight = false }: { forceLight?: boolean }) {
+  // When forceLight (hero product photo), never apply dark: variants so the
+  // tablet glass always shows the cream try-pos sales look.
+  const d = (light: string, darkCls: string) => (forceLight ? light : `${light} ${darkCls}`);
+
   return (
     <div
-      className="flex h-full w-full overflow-hidden text-[#1f2a26]"
+      className={`flex h-full w-full overflow-hidden ${d('text-gray-900', 'dark:text-white')}`}
       style={{ width: DESIGN_W, height: DESIGN_H }}
     >
       {/* ── Side rail ── */}
@@ -213,15 +256,15 @@ function PosDesignCanvas() {
       </nav>
 
       {/* ── Menu pane ── */}
-      <section className="flex min-w-0 flex-1 flex-col overflow-hidden bg-[#f6f3ec]">
-        <header className="shrink-0 border-b border-black/[0.05] bg-white px-4 py-3">
+      <section className={d('flex min-w-0 flex-1 flex-col overflow-hidden bg-[#f6f3ec]', 'dark:bg-mintcom-dark')}>
+        <header className={d('shrink-0 border-b border-black/[0.05] bg-white px-4 py-3', 'dark:bg-mintcom-surface')}>
           <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-mintcom-green">
                 <span className="text-[14px] font-bold text-white">SA</span>
               </div>
               <div className="min-w-0">
-                <p className="truncate text-[15px] font-bold leading-tight text-[#111827]">
+                <p className={d('truncate text-[15px] font-bold leading-tight text-gray-900', 'dark:text-white')}>
                   Sam Cashier
                 </p>
                 <p className="truncate text-[12px] text-gray-500">Tue, 14 Jul 2026</p>
@@ -229,10 +272,10 @@ function PosDesignCanvas() {
               </div>
             </div>
             <div className="flex shrink-0 items-center gap-1.5">
-              <Chip icon={<Wifi size={13} className="text-mintcom-green" />} label="Synced" />
-              <Chip icon={<BookOpen size={13} />} label="Train" />
-              <Chip icon={<LayoutGrid size={13} />} label="Grid" active />
-              <Chip icon={<Inbox size={13} className="text-mintcom-green" />} label="Drawer" green />
+              <Chip forceLight={forceLight} icon={<Wifi size={13} className="text-mintcom-green" />} label="Synced" />
+              <Chip forceLight={forceLight} icon={<BookOpen size={13} />} label="Train" />
+              <Chip forceLight={forceLight} icon={<LayoutGrid size={13} />} label="Grid" active />
+              <Chip forceLight={forceLight} icon={<Inbox size={13} className="text-mintcom-green" />} label="Drawer" green />
             </div>
           </div>
 
@@ -254,7 +297,7 @@ function PosDesignCanvas() {
                 <ChevronDown size={13} className="opacity-70" />
               </span>
             </div>
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-gray-100 text-mintcom-green">
+            <span className={d('flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-gray-100 text-mintcom-green', 'dark:border-white/10')}>
               <SlidersHorizontal size={18} />
             </span>
           </div>
@@ -265,9 +308,9 @@ function PosDesignCanvas() {
             {PRODUCTS.map((p) => (
               <div
                 key={p.name}
-                className="relative flex min-h-0 flex-col overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm"
+                className={d('relative flex min-h-0 flex-col overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm', 'dark:border-white/10 dark:bg-mintcom-surface')}
               >
-                <div className="relative flex h-[110px] w-full shrink-0 items-center justify-center overflow-hidden bg-white">
+                <div className={d('relative flex h-[110px] w-full shrink-0 items-center justify-center overflow-hidden border-b border-gray-100 bg-[#F8FAF9]', 'dark:border-white/8 dark:bg-[#F3F4F6]')}>
                   <img
                     src={DEFAULT_IMG}
                     alt=""
@@ -276,11 +319,11 @@ function PosDesignCanvas() {
                   />
                 </div>
                 <div className="flex flex-1 flex-col justify-between px-3.5 py-3">
-                  <p className="truncate text-[14px] font-bold leading-snug text-[#111827]">
+                  <p className={d('truncate text-[14px] font-bold leading-snug text-gray-900', 'dark:text-white')}>
                     {p.name}
                   </p>
                   <div className="mt-2 flex items-center justify-between gap-2">
-                    <Price value={p.price} size="sm" />
+                    <Price value={p.price} size="sm" forceLight={forceLight} />
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-mintcom-green text-white shadow-sm">
                       <Plus size={16} strokeWidth={2.5} />
                     </span>
@@ -293,8 +336,7 @@ function PosDesignCanvas() {
       </section>
 
       {/* ── Order panel — mirrors try-pos OrderPanel ── */}
-      <aside className="flex w-[300px] shrink-0 flex-col overflow-hidden border-s border-gray-200 bg-white">
-        {/* Header actions */}
+      <aside className={d('flex w-[300px] shrink-0 flex-col overflow-hidden border-s border-gray-200 bg-white', 'dark:border-white/10 dark:bg-mintcom-surface')}>
         <div className="shrink-0 border-b border-[#f0f0f0] px-3.5 py-3">
           <div className="mb-2.5 flex items-stretch justify-between gap-2">
             {(
@@ -318,20 +360,19 @@ function PosDesignCanvas() {
             ))}
           </div>
           <div className="flex items-center justify-between">
-            <p className="text-sm font-semibold text-[#6B7280]">Order number</p>
-            <p className="text-lg font-extrabold text-[#111827]">#41</p>
+            <p className={d('text-sm font-semibold text-gray-500', 'dark:text-gray-400')}>Order number</p>
+            <p className={d('text-lg font-extrabold text-gray-900', 'dark:text-white')}>#41</p>
           </div>
         </div>
 
-        {/* Lines — expandable cards like POS SwipeableOrderItem (collapsed) */}
         <div className="min-h-0 flex-1 space-y-2 overflow-hidden px-3 py-2">
           {ORDER_LINES.map((l) => (
             <div
               key={l.name}
-              className="overflow-hidden rounded-xl border border-gray-200 bg-[#f6f3ec]"
+              className={d('overflow-hidden rounded-xl border border-gray-200 bg-[#f6f3ec]', 'dark:border-white/10 dark:bg-mintcom-dark')}
             >
               <div className="flex w-full items-center gap-2 p-2.5">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
+                <span className={d('flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-gray-100 bg-[#F8FAF9] shadow-sm', 'dark:border-white/10 dark:bg-[#F3F4F6]')}>
                   <img
                     src={DEFAULT_IMG}
                     alt=""
@@ -340,18 +381,18 @@ function PosDesignCanvas() {
                   />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-xs font-bold text-[#111827]">{l.name}</p>
+                  <p className={d('truncate text-xs font-bold text-gray-900', 'dark:text-white')}>{l.name}</p>
                   {l.note && (
                     <p className="mt-0.5 line-clamp-1 text-[10px] text-gray-500">Note: {l.note}</p>
                   )}
                   <p className="mt-0.5">
-                    <Price value={l.price * l.qty} size="sm" muted />
+                    <Price value={l.price * l.qty} size="sm" muted forceLight={forceLight} />
                   </p>
                 </div>
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-mintcom-green text-[13px] font-bold tracking-wide text-white shadow-sm">
                   ×{l.qty}
                 </span>
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white">
+                <span className={d('flex h-7 w-7 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white', 'dark:border-white/10 dark:bg-mintcom-surface')}>
                   <ChevronDown size={16} className="text-gray-400" />
                 </span>
               </div>
@@ -359,19 +400,18 @@ function PosDesignCanvas() {
           ))}
         </div>
 
-        {/* Totals + payment — mirrors OrderSummaryPanel footer */}
-        <div className="shrink-0 border-t border-gray-100 px-3 py-3">
+        <div className={d('shrink-0 border-t border-gray-100 px-3 py-3', 'dark:border-white/10')}>
           <div className="space-y-0.5 text-[11px]">
             <div className="flex justify-between text-gray-500">
               <span>Subtotal</span>
-              <span className="tabular-nums font-semibold text-[#111827]">{money(SUBTOTAL)}</span>
+              <span className={d('tabular-nums font-semibold text-gray-900', 'dark:text-white')}>{money(SUBTOTAL)}</span>
             </div>
             <div className="flex items-center justify-between gap-2 py-0.5">
               <span className="inline-flex items-center gap-1 text-gray-500">
                 Service Charge
                 <Pencil size={12} className="text-gray-400" />
               </span>
-              <span className="tabular-nums font-semibold text-[#111827]">
+              <span className={d('tabular-nums font-semibold text-gray-900', 'dark:text-white')}>
                 {money(SERVICE_CHARGE)}
               </span>
             </div>
@@ -380,9 +420,9 @@ function PosDesignCanvas() {
                 Tax {TAX_RATE}%
                 <Pencil size={12} className="text-gray-400" />
               </span>
-              <span className="tabular-nums font-semibold text-[#111827]">{money(TAX)}</span>
+              <span className={d('tabular-nums font-semibold text-gray-900', 'dark:text-white')}>{money(TAX)}</span>
             </div>
-            <div className="flex justify-between border-t border-gray-100 pt-1.5 text-sm font-black text-[#111827]">
+            <div className={d('flex justify-between border-t border-gray-100 pt-1.5 text-sm font-black text-gray-900', 'dark:border-white/10 dark:text-white')}>
               <span>Total</span>
               <span className="tabular-nums text-mintcom-green">{money(TOTAL)}</span>
             </div>
@@ -414,7 +454,7 @@ function PosDesignCanvas() {
                 <span className="flex h-10 w-10 items-center justify-center text-mintcom-green">
                   {icon}
                 </span>
-                <span className="text-[12.5px] font-semibold leading-none tracking-tight text-[#111827]">
+                <span className={d('text-[12.5px] font-semibold leading-none tracking-tight text-gray-900', 'dark:text-white')}>
                   {label}
                 </span>
               </span>
@@ -431,20 +471,23 @@ function Chip({
   label,
   active,
   green,
+  forceLight = false,
 }: {
   icon: ReactNode;
   label: string;
   active?: boolean;
   green?: boolean;
+  forceLight?: boolean;
 }) {
+  const d = (light: string, darkCls: string) => (forceLight ? light : `${light} ${darkCls}`);
   return (
     <span
       className={`inline-flex h-9 items-center gap-1.5 rounded-[10px] border px-2.5 text-[12px] font-semibold ${
         active
           ? 'border-mintcom-green/30 bg-mintcom-green/10 text-mintcom-green'
           : green
-            ? 'border-gray-200 bg-white text-mintcom-green'
-            : 'border-gray-200 bg-white text-gray-600'
+            ? d('border-gray-200 bg-white text-mintcom-green', 'dark:border-white/10 dark:bg-mintcom-surface')
+            : d('border-gray-200 bg-white text-gray-600', 'dark:border-white/10 dark:bg-mintcom-surface')
       }`}
     >
       {icon}

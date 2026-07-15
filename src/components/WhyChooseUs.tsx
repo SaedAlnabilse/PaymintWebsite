@@ -156,7 +156,7 @@ function WhyRealPosLoginPreview({ isRtl }: { isRtl?: boolean }) {
               <span className="block text-[9px] font-extrabold uppercase tracking-wide text-mintcom-green sm:text-[10px]">
                 {isRtl ? 'الموقع الحالي' : 'Current location'}
               </span>
-              <span className="block truncate text-[13px] font-semibold text-[#333] dark:text-white sm:text-sm">
+              <span className="block truncate text-[13px] font-semibold text-gray-900 dark:text-white sm:text-sm">
                 Cafe Delight
               </span>
             </span>
@@ -166,10 +166,10 @@ function WhyRealPosLoginPreview({ isRtl }: { isRtl?: boolean }) {
         {/* Centered form body */}
         <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-4 py-3 sm:px-6 sm:py-4">
           <div className="w-full max-w-[320px]">
-            <p className="text-center font-barlow text-[22px] font-extrabold leading-tight text-[#333] dark:text-white sm:text-[26px] md:text-[28px]">
+            <p className="text-center font-barlow text-[22px] font-extrabold leading-tight text-gray-900 dark:text-white sm:text-[26px] md:text-[28px]">
               {isRtl ? 'مرحباً بعودتك!' : 'Welcome Back!'}
             </p>
-            <p className="mb-4 mt-1.5 text-center text-[12px] text-[#999] sm:mb-5 sm:text-[13px]">
+            <p className="mb-4 mt-1.5 text-center text-[12px] text-gray-500 dark:text-gray-400 sm:mb-5 sm:text-[13px]">
               {isRtl
                 ? 'سجّل دخولك ببيانات الموظف'
                 : 'Log in using your employee credentials'}
@@ -178,18 +178,18 @@ function WhyRealPosLoginPreview({ isRtl }: { isRtl?: boolean }) {
             {/* Username — full field, icons inside padding */}
             <div className="mb-3 flex h-11 w-full items-center gap-2.5 rounded-xl border border-mintcom-green bg-white px-3.5 dark:bg-mintcom-surface sm:mb-3.5 sm:h-12">
               <User size={18} className="shrink-0 text-mintcom-green" />
-              <span className="min-w-0 truncate text-[14px] text-[#333] dark:text-white sm:text-[15px]">
+              <span className="min-w-0 truncate text-[14px] text-gray-900 dark:text-white sm:text-[15px]">
                 Sara
               </span>
             </div>
 
             {/* Password */}
-            <div className="mb-1 flex h-11 w-full items-center gap-2.5 rounded-xl border border-[#d1d5db] bg-white px-3.5 dark:border-white/15 dark:bg-mintcom-surface sm:h-12">
-              <Lock size={18} className="shrink-0 text-[#999]" />
-              <span className="min-w-0 flex-1 text-[14px] tracking-widest text-[#333] dark:text-white sm:text-[15px]">
+            <div className="mb-1 flex h-11 w-full items-center gap-2.5 rounded-xl border border-gray-300 bg-white px-3.5 dark:border-white/15 dark:bg-mintcom-surface sm:h-12">
+              <Lock size={18} className="shrink-0 text-gray-400" />
+              <span className="min-w-0 flex-1 text-[14px] tracking-widest text-gray-900 dark:text-white sm:text-[15px]">
                 ••••
               </span>
-              <Eye size={18} className="shrink-0 text-[#B0B0B0]" />
+              <Eye size={18} className="shrink-0 text-gray-400" />
             </div>
 
             <div className="mb-3.5 flex w-full justify-end sm:mb-4">
@@ -209,13 +209,13 @@ function WhyRealPosLoginPreview({ isRtl }: { isRtl?: boolean }) {
             </div>
 
             <div className="mt-3.5 text-center sm:mt-4">
-              <p className="text-[12px] text-[#666] sm:text-[13px]">
+              <p className="text-[12px] text-gray-600 dark:text-gray-400 sm:text-[13px]">
                 {isRtl ? 'تحتاج مساعدة؟ ' : 'Need help? '}
                 <span className="font-bold text-mintcom-green underline">
                   {isRtl ? 'تواصل مع الدعم' : 'Contact support'}
                 </span>
               </p>
-              <p className="mt-1.5 text-[11px] text-[#666] sm:text-[12px]">
+              <p className="mt-1.5 text-[11px] text-gray-600 dark:text-gray-400 sm:text-[12px]">
                 <span className="font-medium text-mintcom-green">
                   {isRtl ? 'سياسة الخصوصية' : 'Privacy Policy'}
                 </span>
@@ -290,7 +290,7 @@ function WhyAppSettingsPreview({ isRtl }: { isRtl?: boolean }) {
           <span className="absolute -start-[7px] top-[172px] h-9 w-[3px] rounded-s-sm bg-[#2c2c32]" />
           <span className="absolute -end-[7px] top-[148px] h-14 w-[3px] rounded-e-sm bg-[#2c2c32]" />
 
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[32px] bg-[#F5F7F6] dark:bg-[#121816]">
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[32px] bg-gray-50 dark:bg-mintcom-dark">
             {/* Status bar on brand green */}
             <div className="relative flex shrink-0 items-center justify-between bg-[#7dc6a2] px-5 pb-0.5 pt-3 text-white">
               <span className="w-11 text-[11px] font-semibold tracking-tight">
@@ -324,17 +324,17 @@ function WhyAppSettingsPreview({ isRtl }: { isRtl?: boolean }) {
             </div>
 
             {/* Screen body */}
-            <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[#F5F7F6] px-3.5 pt-3 dark:bg-[#121816]">
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-gray-50 dark:bg-mintcom-dark px-3.5 pt-3 dark:bg-mintcom-dark">
               {/* Profile card */}
-              <div className="mb-3.5 flex shrink-0 items-center gap-3 rounded-2xl border border-[#E8ECEA] bg-white p-3 shadow-[0_1px_2px_rgba(15,23,42,0.04)] dark:border-[#2A322E] dark:bg-[#1C2420]">
+              <div className="mb-3.5 flex shrink-0 items-center gap-3 rounded-2xl border border-gray-200 dark:border-white/10 bg-white p-3 shadow-[0_1px_2px_rgba(15,23,42,0.04)] dark:border-white/10 dark:bg-mintcom-surface">
                 <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#7dc6a2] font-barlow text-[16px] font-black text-white shadow-sm shadow-[#7dc6a2]/35">
                   SH
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-barlow text-[14px] font-black text-[#1F1D2B] dark:text-[#F8FAFC]">
+                  <p className="truncate font-barlow text-[14px] font-black text-gray-900 dark:text-white">
                     Sara Hassan
                   </p>
-                  <p className="mt-0.5 truncate font-barlow text-[11px] font-semibold text-[#828287]">
+                  <p className="mt-0.5 truncate font-barlow text-[11px] font-semibold text-gray-500 dark:text-gray-400">
                     sara@cafedelight.com
                   </p>
                 </div>
@@ -343,19 +343,19 @@ function WhyAppSettingsPreview({ isRtl }: { isRtl?: boolean }) {
               <div className="min-h-0 flex-1 space-y-3 overflow-hidden">
                 {/* Security */}
                 <div>
-                  <p className="mb-1.5 ms-1 font-barlow text-[10px] font-black uppercase tracking-[1.2px] text-[#828287]">
+                  <p className="mb-1.5 ms-1 font-barlow text-[10px] font-black uppercase tracking-[1.2px] text-gray-500 dark:text-gray-400">
                     {isRtl ? 'الأمان' : 'Security'}
                   </p>
-                  <div className="overflow-hidden rounded-2xl border border-[#E8ECEA] bg-white p-1 shadow-[0_1px_2px_rgba(15,23,42,0.04)] dark:border-[#2A322E] dark:bg-[#1C2420]">
+                  <div className="overflow-hidden rounded-2xl border border-gray-200 dark:border-white/10 bg-white p-1 shadow-[0_1px_2px_rgba(15,23,42,0.04)] dark:border-white/10 dark:bg-mintcom-surface">
                     <div className="flex items-start gap-2.5 px-2.5 py-3">
                       <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#7dc6a2]/12 text-[#7dc6a2]">
                         <Shield size={17} strokeWidth={2.25} />
                       </span>
                       <div className="min-w-0 flex-1 pe-1">
-                        <p className="font-barlow text-[13px] font-extrabold text-[#1F1D2B] dark:text-[#F8FAFC]">
+                        <p className="font-barlow text-[13px] font-extrabold text-gray-900 dark:text-white">
                           Face ID
                         </p>
-                        <p className="mt-0.5 font-barlow text-[10px] font-semibold leading-snug text-[#828287]">
+                        <p className="mt-0.5 font-barlow text-[10px] font-semibold leading-snug text-gray-500 dark:text-gray-400">
                           {isRtl
                             ? 'تسجيل دخول بيومتري للجهاز مع كلمة المرور كاحتياطي.'
                             : 'Use device biometric login with password fallback.'}
@@ -369,10 +369,10 @@ function WhyAppSettingsPreview({ isRtl }: { isRtl?: boolean }) {
                         <Smartphone size={17} strokeWidth={2.25} />
                       </span>
                       <div className="min-w-0 flex-1 pe-1">
-                        <p className="font-barlow text-[13px] font-extrabold text-[#1F1D2B] dark:text-[#F8FAFC]">
+                        <p className="font-barlow text-[13px] font-extrabold text-gray-900 dark:text-white">
                           {isRtl ? 'قفل تلقائي عند الإغلاق' : 'Auto-lock when closed'}
                         </p>
-                        <p className="mt-0.5 line-clamp-2 font-barlow text-[10px] font-semibold leading-snug text-[#828287]">
+                        <p className="mt-0.5 line-clamp-2 font-barlow text-[10px] font-semibold leading-snug text-gray-500 dark:text-gray-400">
                           {isRtl
                             ? 'يُقفل التطبيق فور انتقاله للخلفية. افتح بالبيومتري أو كلمة المرور.'
                             : 'For your security, the app always locks the moment it goes to the background.'}
@@ -389,19 +389,19 @@ function WhyAppSettingsPreview({ isRtl }: { isRtl?: boolean }) {
 
                 {/* Notifications — partial peek like real scroll */}
                 <div>
-                  <p className="mb-1.5 ms-1 font-barlow text-[10px] font-black uppercase tracking-[1.2px] text-[#828287]">
+                  <p className="mb-1.5 ms-1 font-barlow text-[10px] font-black uppercase tracking-[1.2px] text-gray-500 dark:text-gray-400">
                     {isRtl ? 'الإشعارات' : 'Notifications'}
                   </p>
-                  <div className="overflow-hidden rounded-2xl border border-[#E8ECEA] bg-white p-1 shadow-[0_1px_2px_rgba(15,23,42,0.04)] dark:border-[#2A322E] dark:bg-[#1C2420]">
+                  <div className="overflow-hidden rounded-2xl border border-gray-200 dark:border-white/10 bg-white p-1 shadow-[0_1px_2px_rgba(15,23,42,0.04)] dark:border-white/10 dark:bg-mintcom-surface">
                     <div className="flex items-center gap-2.5 px-2.5 py-2.5">
                       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#7dc6a2]/12 text-[#7dc6a2]">
                         <Bell size={17} strokeWidth={2.25} />
                       </span>
                       <div className="min-w-0 flex-1">
-                        <p className="font-barlow text-[13px] font-extrabold text-[#1F1D2B] dark:text-[#F8FAFC]">
+                        <p className="font-barlow text-[13px] font-extrabold text-gray-900 dark:text-white">
                           {isRtl ? 'إشعارات الدفع' : 'Push notifications'}
                         </p>
-                        <p className="mt-0.5 line-clamp-1 font-barlow text-[10px] font-semibold text-[#828287]">
+                        <p className="mt-0.5 line-clamp-1 font-barlow text-[10px] font-semibold text-gray-500 dark:text-gray-400">
                           {isRtl
                             ? 'تنبيهات خارج التطبيق — متاحة دائماً داخل Mintcom'
                             : 'Outside-app alerts. Always available inside Mintcom.'}
@@ -414,7 +414,7 @@ function WhyAppSettingsPreview({ isRtl }: { isRtl?: boolean }) {
                       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#7dc6a2]/12 text-[#7dc6a2]">
                         <DollarSign size={17} strokeWidth={2.25} />
                       </span>
-                      <p className="min-w-0 flex-1 font-barlow text-[13px] font-extrabold text-[#1F1D2B] dark:text-[#F8FAFC]">
+                      <p className="min-w-0 flex-1 font-barlow text-[13px] font-extrabold text-gray-900 dark:text-white">
                         {isRtl ? 'تنبيهات النقد' : 'Cash alerts'}
                       </p>
                       <WhySwitchOn />
@@ -424,27 +424,46 @@ function WhyAppSettingsPreview({ isRtl }: { isRtl?: boolean }) {
               </div>
             </div>
 
-            {/* BottomNav + home indicator */}
-            <div className="shrink-0 border-t border-[#E5E7EB] bg-[#EFEFF4] dark:border-[#2A322E] dark:bg-[#0E1311]">
+            {/* BottomNav + home indicator — elevated strip, readable in light & dark */}
+            <div className="shrink-0 border-t border-gray-200 bg-white shadow-[0_-6px_18px_-10px_rgba(15,23,42,0.12)] dark:border-white/10 dark:bg-mintcom-surface dark:shadow-[0_-8px_24px_-12px_rgba(0,0,0,0.55)]">
               <div className="flex items-center justify-around px-1 pb-1 pt-2">
-                {navItems.map((item) => (
-                  <div
-                    key={item.label}
-                    className="flex flex-1 flex-col items-center gap-0.5 py-0.5"
-                  >
-                    <item.Icon
-                      size={16}
-                      strokeWidth={2.2}
-                      className="text-[#8B8B93]"
-                    />
-                    <span className="font-barlow text-[9px] font-bold text-[#8B8B93]">
-                      {item.label}
-                    </span>
-                  </div>
-                ))}
+                {navItems.map((item, i) => {
+                  const active = i === 0;
+                  return (
+                    <div
+                      key={item.label}
+                      className="flex flex-1 flex-col items-center gap-0.5 py-0.5"
+                    >
+                      {active ? (
+                        <span className="mb-0.5 flex h-7 w-7 items-center justify-center rounded-xl bg-mintcom-green/15">
+                          <item.Icon
+                            size={16}
+                            strokeWidth={2.3}
+                            className="text-mintcom-green"
+                          />
+                        </span>
+                      ) : (
+                        <item.Icon
+                          size={16}
+                          strokeWidth={2.2}
+                          className="mb-0.5 text-gray-400 dark:text-gray-400"
+                        />
+                      )}
+                      <span
+                        className={`font-barlow text-[9px] font-bold ${
+                          active
+                            ? 'text-mintcom-green'
+                            : 'text-gray-400 dark:text-gray-400'
+                        }`}
+                      >
+                        {item.label}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
-              <div className="flex justify-center pb-2 pt-0.5">
-                <span className="h-1 w-24 rounded-full bg-[#1a1a1e]/75" />
+              <div className="flex justify-center pb-2 pt-1">
+                <span className="h-[5px] w-[112px] rounded-full bg-gray-900 shadow-[0_1px_2px_rgba(0,0,0,0.18)] dark:bg-white/90 dark:shadow-[0_0_12px_rgba(255,255,255,0.18)]" />
               </div>
             </div>
           </div>
@@ -496,10 +515,10 @@ function WhyCreateBranchPreview({ isRtl }: { isRtl?: boolean }) {
           ? 'إنشاء علامة تجارية — اختيار المواقع'
           : 'Create new brand — select locations to link'
       }
-      className="flex h-full w-full cursor-text select-text flex-col overflow-hidden bg-[#F5F7F6] font-sans dark:bg-[#0F1412]"
+      className="flex h-full w-full cursor-text select-text flex-col overflow-hidden bg-gray-50 dark:bg-mintcom-dark font-sans dark:bg-mintcom-dark"
     >
       {/* Wizard modal shell */}
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden m-2.5 rounded-2xl border border-[#E8ECEA] bg-white shadow-[0_8px_28px_-8px_rgba(15,23,42,0.12)] dark:border-[#2A322E] dark:bg-[#1C2420] sm:m-3">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden m-2.5 rounded-2xl border border-gray-200 dark:border-white/10 bg-white shadow-[0_8px_28px_-8px_rgba(15,23,42,0.12)] dark:border-white/10 dark:bg-mintcom-surface sm:m-3">
         {/* Wizard header — Create new brand */}
         <div className="shrink-0 border-b border-black/[0.05] px-3.5 pb-3 pt-3.5 dark:border-white/10 sm:px-4">
           <div className="mb-3 flex items-start justify-between gap-2">
@@ -508,17 +527,17 @@ function WhyCreateBranchPreview({ isRtl }: { isRtl?: boolean }) {
                 <Briefcase size={18} strokeWidth={2.25} />
               </span>
               <div className="min-w-0">
-                <p className="truncate font-barlow text-[15px] font-black text-[#1F1D2B] dark:text-white sm:text-[16px]">
+                <p className="truncate font-barlow text-[15px] font-black text-gray-900 dark:text-white sm:text-[16px]">
                   {isRtl ? 'إنشاء علامة تجارية جديدة' : 'Create new brand'}
                 </p>
-                <p className="truncate text-[11px] font-medium text-[#828287]">
+                <p className="truncate text-[11px] font-medium text-gray-500 dark:text-gray-400">
                   {isRtl
                     ? 'Cafe Delight · ربط المواقع'
                     : 'Cafe Delight · Link locations'}
                 </p>
               </div>
             </div>
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-black/[0.04] text-[#828287] dark:bg-white/10">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-black/[0.04] text-gray-500 dark:text-gray-400 dark:bg-white/10">
               <X size={16} strokeWidth={2.25} />
             </span>
           </div>
@@ -534,7 +553,7 @@ function WhyCreateBranchPreview({ isRtl }: { isRtl?: boolean }) {
                       className={`flex h-7 w-7 items-center justify-center rounded-full border-2 ${
                         filled
                           ? 'border-[#7dc6a2] bg-[#7dc6a2] text-white'
-                          : 'border-[#E5E7EB] bg-white text-[#828287] dark:border-[#2A322E] dark:bg-[#121816]'
+                          : 'border-gray-200 dark:border-white/10 bg-white text-gray-500 dark:text-gray-400 dark:border-white/10 dark:bg-mintcom-dark'
                       }`}
                     >
                       {step.state === 'done' ? (
@@ -549,7 +568,7 @@ function WhyCreateBranchPreview({ isRtl }: { isRtl?: boolean }) {
                     </span>
                     <span
                       className={`truncate text-[9px] font-bold sm:text-[10px] ${
-                        filled ? 'text-[#7dc6a2]' : 'text-[#828287]'
+                        filled ? 'text-[#7dc6a2]' : 'text-gray-500 dark:text-gray-400'
                       }`}
                     >
                       {step.label}
@@ -572,10 +591,10 @@ function WhyCreateBranchPreview({ isRtl }: { isRtl?: boolean }) {
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-3.5 py-3 sm:px-4 sm:py-3.5">
           <div className="mb-2.5 flex shrink-0 items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
-              <p className="font-barlow text-[14px] font-black text-[#1F1D2B] dark:text-white sm:text-[15px]">
+              <p className="font-barlow text-[14px] font-black text-gray-900 dark:text-white sm:text-[15px]">
                 {isRtl ? 'اختر المواقع للربط' : 'Select locations to link'}
               </p>
-              <p className="mt-0.5 text-[10px] font-medium leading-snug text-[#828287] sm:text-[11px]">
+              <p className="mt-0.5 text-[10px] font-medium leading-snug text-gray-500 dark:text-gray-400 sm:text-[11px]">
                 {isRtl
                   ? 'تظهر فقط المواقع غير المرتبطة. المواقع في علامة أخرى مخفية.'
                   : 'Only unlinked locations are shown. Locations already in another brand are hidden.'}
@@ -595,7 +614,7 @@ function WhyCreateBranchPreview({ isRtl }: { isRtl?: boolean }) {
                 className={`flex items-center gap-2.5 rounded-2xl border px-2.5 py-2.5 sm:px-3 sm:py-3 ${
                   loc.selected
                     ? 'border-[#7dc6a2] bg-[#7dc6a2]/10'
-                    : 'border-[#E8ECEA] bg-white dark:border-[#2A322E] dark:bg-[#121816]'
+                    : 'border-gray-200 dark:border-white/10 bg-white dark:border-white/10 dark:bg-mintcom-dark'
                 }`}
               >
                 <span
@@ -608,10 +627,10 @@ function WhyCreateBranchPreview({ isRtl }: { isRtl?: boolean }) {
                   <loc.Icon size={18} strokeWidth={2.2} />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-barlow text-[13px] font-extrabold text-[#1F1D2B] dark:text-white">
+                  <p className="truncate font-barlow text-[13px] font-extrabold text-gray-900 dark:text-white">
                     {loc.name}
                   </p>
-                  <p className="text-[10px] font-semibold text-[#828287]">
+                  <p className="text-[10px] font-semibold text-gray-500 dark:text-gray-400">
                     {loc.type}
                   </p>
                 </div>
@@ -631,7 +650,7 @@ function WhyCreateBranchPreview({ isRtl }: { isRtl?: boolean }) {
 
         {/* Footer — Back + Continue */}
         <div className="flex shrink-0 items-center gap-2 border-t border-black/[0.05] px-3.5 py-2.5 dark:border-white/10 sm:px-4 sm:py-3">
-          <div className="flex h-11 flex-1 items-center justify-center rounded-xl border border-[#7dc6a2] bg-white text-[12px] font-bold text-[#7dc6a2] dark:bg-transparent">
+          <div className="flex h-11 flex-1 items-center justify-center rounded-xl border border-mintcom-green bg-white text-[12px] font-bold text-mintcom-green dark:bg-mintcom-surface/50">
             {isRtl ? 'رجوع' : 'Back'}
           </div>
           <div className="relative flex h-11 flex-[1.2] items-center justify-center rounded-xl bg-[#7dc6a2] text-[12px] font-black text-white shadow-md shadow-[#7dc6a2]/25">
@@ -775,7 +794,7 @@ const FeatureModal = ({
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.97, y: 16 }}
         transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-        className="relative z-10 flex max-h-[min(92vh,900px)] w-full max-w-5xl flex-col overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-[0_24px_80px_-16px_rgba(0,0,0,0.35)] dark:border-white/10 dark:bg-[#161616]"
+        className="relative z-10 flex max-h-[min(92vh,900px)] w-full max-w-5xl flex-col overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-[0_24px_80px_-16px_rgba(0,0,0,0.35)] dark:border-white/10 dark:bg-mintcom-dark"
         dir={isRtl ? 'rtl' : 'ltr'}
         role="dialog"
         aria-modal="true"
@@ -831,7 +850,7 @@ const FeatureModal = ({
 
                 {/* Shared-height product previews — all Why cards match */}
                 <div className="order-1 w-full min-w-0 lg:order-2">
-                  <div className="overflow-hidden rounded-2xl border border-gray-200/90 bg-white shadow-lg shadow-black/10 dark:border-white/10 dark:bg-[#0f0f0f]">
+                  <div className="overflow-hidden rounded-2xl border border-gray-200/90 bg-white shadow-lg shadow-black/10 dark:border-white/10 dark:bg-mintcom-dark dark:shadow-black/40">
                     <div className={WHY_PREVIEW_H_CLASS}>
                       <FeaturePreview id={feature.id} isRtl={isRtl} />
                     </div>
