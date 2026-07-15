@@ -46,7 +46,16 @@ import {
 const DESIGN_W = 900;
 const DESIGN_H = 600;
 
-const DEFAULT_IMG = '/default_product.png?v=pos-box';
+/** Cafe Delight demo photos — same set the Try POS playground now shows. */
+const IMG = {
+  espresso: '/demo-products/espresso.jpg',
+  latte: '/demo-products/latte.jpg',
+  cappuccino: '/demo-products/cappuccino.jpg',
+  coldbrew: '/demo-products/coldbrew.jpg',
+  croissant: '/demo-products/croissant.jpg',
+  muffin: '/demo-products/muffin.jpg',
+  cookie: '/demo-products/cookie.jpg',
+} as const;
 
 const money = (n: number) =>
   n.toLocaleString(undefined, { style: 'currency', currency: 'USD', minimumFractionDigits: 2 });
@@ -96,18 +105,18 @@ const Price = ({
 };
 
 const PRODUCTS = [
-  { name: 'Espresso', price: 3.5 },
-  { name: 'Latte', price: 4.5 },
-  { name: 'Cappuccino', price: 4.25 },
-  { name: 'Cold brew', price: 4.75 },
-  { name: 'Croissant', price: 4.0 },
-  { name: 'Muffin', price: 3.25 },
+  { name: 'Espresso', price: 3.5, img: IMG.espresso },
+  { name: 'Latte', price: 4.5, img: IMG.latte },
+  { name: 'Cappuccino', price: 4.25, img: IMG.cappuccino },
+  { name: 'Cold brew', price: 4.75, img: IMG.coldbrew },
+  { name: 'Croissant', price: 4.0, img: IMG.croissant },
+  { name: 'Muffin', price: 3.25, img: IMG.muffin },
 ] as const;
 
 const ORDER_LINES = [
-  { name: 'Latte', price: 5.25, qty: 2, note: 'L · Oat · Extra shot' },
-  { name: 'Croissant', price: 4.25, qty: 1, note: 'Warmed' },
-  { name: 'Cookie', price: 2.0, qty: 1, note: null as string | null },
+  { name: 'Latte', price: 5.25, qty: 2, note: 'L · Oat · Extra shot', img: IMG.latte },
+  { name: 'Croissant', price: 4.25, qty: 1, note: 'Warmed', img: IMG.croissant },
+  { name: 'Cookie', price: 2.0, qty: 1, note: null as string | null, img: IMG.cookie },
 ] as const;
 
 const SUBTOTAL = ORDER_LINES.reduce((s, l) => s + l.price * l.qty, 0);
@@ -312,9 +321,9 @@ function PosDesignCanvas({ forceLight = false }: { forceLight?: boolean }) {
               >
                 <div className={d('relative flex h-[110px] w-full shrink-0 items-center justify-center overflow-hidden border-b border-gray-100 bg-[#F8FAF9]', 'dark:border-white/8 dark:bg-[#F3F4F6]')}>
                   <img
-                    src={DEFAULT_IMG}
+                    src={p.img}
                     alt=""
-                    className="h-full w-full object-contain object-center p-5"
+                    className="h-full w-full object-cover object-center"
                     draggable={false}
                   />
                 </div>
@@ -374,16 +383,16 @@ function PosDesignCanvas({ forceLight = false }: { forceLight?: boolean }) {
               <div className="flex w-full items-center gap-2 p-2.5">
                 <span className={d('flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-gray-100 bg-[#F8FAF9] shadow-sm', 'dark:border-white/10 dark:bg-[#F3F4F6]')}>
                   <img
-                    src={DEFAULT_IMG}
+                    src={l.img}
                     alt=""
-                    className="h-full w-full object-contain p-1"
+                    className="h-full w-full object-cover"
                     draggable={false}
                   />
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className={d('truncate text-xs font-bold text-gray-900', 'dark:text-white')}>{l.name}</p>
                   {l.note && (
-                    <p className="mt-0.5 line-clamp-1 text-[10px] text-gray-500">Note: {l.note}</p>
+                    <p className="mt-0.5 line-clamp-1 text-[10px] text-gray-500">{l.note}</p>
                   )}
                   <p className="mt-0.5">
                     <Price value={l.price * l.qty} size="sm" muted forceLight={forceLight} />
