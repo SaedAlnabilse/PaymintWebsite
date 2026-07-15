@@ -33,18 +33,12 @@ export const Footer = ({ minimal = false }: { minimal?: boolean }) => {
 
   const productLinks: FooterLink[] = [
     { name: t('nav.features'), href: '/#features' },
-    { name: t('footer.pricingPage'), href: '/pricing' },
-    { name: t('footer.loyalty'), href: '/loyalty' },
-    { name: t('footer.multiLocation'), href: '/multi-location' },
-    { name: t('footer.industries'), href: '/industries' },
+    { name: t('nav.pricing'), href: '/#pricing' },
     { name: t('nav.support'), href: '/support' },
   ];
 
   const companyLinks: FooterLink[] = [
     { name: t('footer.aboutUs'), href: '/about' },
-    { name: t('footer.whyMintcom'), href: '/why-mintcom' },
-    { name: t('footer.howItWorks'), href: '/how-it-works' },
-    { name: t('footer.security'), href: '/security' },
     { name: t('contact.title'), href: '/#contact' },
   ];
 
