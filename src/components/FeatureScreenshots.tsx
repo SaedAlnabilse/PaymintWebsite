@@ -3,7 +3,7 @@
  * Layouts are mirrored from FullPosPlayground + pos-demo screens (new version).
  * All use the same 900×560 design size + scale-to-fit for consistent popup size.
  */
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import {
   Home,
   User,
@@ -107,49 +107,73 @@ export function FeatureShotFrame({
   title,
   children,
   side,
+  fill,
   bg = '#f6f3ec',
 }: {
   title: string;
   children: ReactNode;
   side?: boolean;
+  /** Fill a fixed-height parent (Why Mintcom). Scale fits both width & height. */
+  fill?: boolean;
+  /** Light-mode canvas color; dark mode always uses mintcom-dark */
   bg?: string;
 }) {
   const shellRef = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(0.55);
+  const [scale, setScale] = useState(1);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const el = shellRef.current;
     if (!el) return;
+
     const measure = () => {
       const w = el.clientWidth;
-      if (w <= 0) return;
-      setScale(Math.min(1, w / DESIGN_W));
+      const h = el.clientHeight;
+      if (w <= 0 || h <= 0) return;
+      // Fit design canvas inside the real box (Why-style fixed frame)
+      const next = Math.min(1, w / DESIGN_W, h / DESIGN_H);
+      setScale((prev) => (Math.abs(prev - next) < 0.002 ? prev : next));
     };
+
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
 
+  const lightBg = bg === 'transparent' ? 'transparent' : bg;
+  // When fill: outer chrome is the Why-style frame parent — no second border card
+  const outer = fill
+    ? 'h-full w-full select-text'
+    : `${side ? 'mt-0 w-full' : 'mt-5'} select-text`;
+  const card = fill
+    ? 'relative h-full w-full overflow-hidden'
+    : `relative overflow-hidden rounded-2xl border border-gray-200/90 bg-white dark:border-white/10 dark:bg-mintcom-dark ${
+        side ? 'shadow-lg shadow-black/10 dark:shadow-black/40' : 'shadow-inner'
+      }`;
+
   return (
-    <div
-      role="img"
-      aria-label={title}
-      className={`${side ? 'mt-0 w-full' : 'mt-5'} select-text`}
-    >
-      <div
-        className={`relative overflow-hidden rounded-2xl border border-gray-200/90 bg-white dark:border-white/10 ${
-          side ? 'shadow-lg shadow-black/10 dark:shadow-black/40' : 'shadow-inner'
-        }`}
-      >
+    <div role="img" aria-label={title} className={outer}>
+      <div className={card}>
         <div
           ref={shellRef}
-          className="relative w-full overflow-hidden"
-          style={{ height: DESIGN_H * scale, background: bg }}
+          className={`relative overflow-hidden dark:bg-mintcom-dark ${
+            fill ? 'h-full w-full' : 'w-full'
+          } ${lightBg === 'transparent' ? 'bg-transparent' : ''}`}
+          style={{
+            ...(fill ? {} : { height: DESIGN_H * scale }),
+            ...(lightBg !== 'transparent' ? { backgroundColor: lightBg } : {}),
+          }}
         >
+          {/* Dark mode paint — overrides inline light canvas bg */}
+          <div className="pointer-events-none absolute inset-0 hidden bg-mintcom-dark dark:block" />
           <div
-            className="absolute left-0 top-0 origin-top-left"
-            style={{ width: DESIGN_W, height: DESIGN_H, transform: `scale(${scale})` }}
+            className="absolute left-0 top-0 z-[1] origin-top-left"
+            style={{
+              width: DESIGN_W,
+              height: DESIGN_H,
+              transform: `scale(${scale})`,
+              transformOrigin: 'top left',
+            }}
           >
             {children}
           </div>
@@ -210,7 +234,7 @@ function Toggle({ on }: { on: boolean }) {
   return (
     <span
       className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors ${
-        on ? 'bg-mintcom-green' : 'bg-gray-300'
+        on ? 'bg-mintcom-green' : 'bg-gray-300 dark:bg-mintcom-tertiary'
       }`}
     >
       <span
@@ -255,19 +279,20 @@ function SettingsShell({
 }) {
   return (
     // font-sans — site CSS forces Magilio on h1/h2; try-pos Settings uses Inter
+    // Dark tokens match PosDemoSettings: canvas mintcom-dark, panels surface, cards surface
     <div
-      className="flex h-full w-full flex-col overflow-hidden bg-white p-3.5 font-sans"
+      className="flex h-full w-full flex-col overflow-hidden bg-white p-3.5 font-sans dark:bg-mintcom-dark"
       style={{ width: DESIGN_W, height: DESIGN_H }}
     >
       {/* Use p not h1 — matches PosDemoSettings title typography */}
-      <p className="mb-3 shrink-0 text-[22px] font-bold tracking-[-0.02em] text-[#111827]">
+      <p className="mb-3 shrink-0 text-[22px] font-bold tracking-[-0.02em] text-gray-900 dark:text-white">
         Settings
       </p>
 
-      {/* Two separate cards — sidebar + content */}
+      {/* Two separate cards — sidebar + content (must stay visually distinct in dark) */}
       <div className="flex min-h-0 flex-1 gap-4 overflow-hidden">
         {/* Left card — green active pill, icon + label only */}
-        <aside className="flex w-[220px] shrink-0 flex-col overflow-hidden rounded-xl bg-gray-100 p-2">
+        <aside className="flex w-[220px] shrink-0 flex-col overflow-hidden rounded-xl border border-transparent bg-gray-100 p-2 dark:border-white/10 dark:bg-mintcom-surface dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
           <div className="flex flex-col gap-1.5 overflow-hidden py-0.5">
             {SETTINGS_NAV.map((item) => {
               const on = item.id === active;
@@ -278,7 +303,7 @@ function SettingsShell({
                   className={`flex items-center gap-3.5 rounded-xl px-3.5 py-2.5 ${
                     on
                       ? 'bg-mintcom-green text-white shadow-md shadow-mintcom-green/25'
-                      : 'text-[#111827]'
+                      : 'text-gray-900 dark:text-gray-300'
                   }`}
                 >
                   <Icon size={18} className="shrink-0" />
@@ -289,16 +314,16 @@ function SettingsShell({
           </div>
         </aside>
 
-        {/* Right card — content */}
-        <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl bg-gray-100">
-          <div className="shrink-0 border-b border-gray-200 px-4 py-3.5">
-            <p className="text-[17px] font-semibold tracking-normal text-[#111827]">{title}</p>
-            <p className="mt-0.5 text-[13px] font-normal text-gray-500">{sub}</p>
+        {/* Right card — content (POS light: #F3F4F6 · dark: elevated surface, separate from nav) */}
+        <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-transparent bg-[#F3F4F6] dark:border-white/10 dark:bg-mintcom-surface dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+          <div className="shrink-0 border-b border-gray-200 px-4 py-3.5 dark:border-white/10">
+            <p className="text-[17px] font-semibold tracking-normal text-gray-900 dark:text-white">{title}</p>
+            <p className="mt-0.5 text-[13px] font-normal text-gray-500 dark:text-gray-400">{sub}</p>
           </div>
           <div className="min-h-0 flex-1 overflow-hidden p-3.5">{children}</div>
           {showFooter && (
-            <div className="flex shrink-0 gap-3 border-t border-gray-200 px-4 py-3">
-              <span className="flex flex-1 items-center justify-center rounded-xl bg-gray-200/80 py-3 text-[13px] font-semibold text-gray-500">
+            <div className="flex shrink-0 gap-3 border-t border-gray-200 px-4 py-3 dark:border-white/10">
+              <span className="flex flex-1 items-center justify-center rounded-xl bg-gray-200/80 py-3 text-[13px] font-semibold text-gray-500 dark:bg-white/10 dark:text-gray-300">
                 Discard Changes
               </span>
               <span className="flex flex-1 items-center justify-center rounded-xl bg-mintcom-green py-3 text-[13px] font-black text-white shadow-sm shadow-mintcom-green/25">
@@ -324,28 +349,28 @@ function SalesControlShot() {
       <div className="flex h-full gap-3 overflow-hidden">
         <div className="min-w-0 flex-1 space-y-2.5 overflow-hidden">
           {/* Cash — always required */}
-          <div className="rounded-xl border border-gray-300 bg-white p-3.5 shadow-sm">
+          <div className="rounded-xl border border-gray-300 bg-white p-3.5 shadow-sm dark:border-white/10 dark:bg-mintcom-dark dark:shadow-none">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-mintcom-green/15 text-mintcom-green">
                   <Banknote size={20} />
                 </span>
                 <div>
-                  <p className="text-[14px] font-bold text-[#111827]">Cash</p>
+                  <p className="text-[14px] font-bold text-gray-900 dark:text-white">Cash</p>
                   <p className="text-[11px] text-gray-500">Always available at checkout</p>
                 </div>
               </div>
-              <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-700">
+              <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
                 Required
               </span>
             </div>
           </div>
 
           {/* Card Types group */}
-          <div className="overflow-hidden rounded-xl border border-gray-300 bg-white shadow-sm">
-            <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
+          <div className="overflow-hidden rounded-xl border border-gray-300 bg-white shadow-sm dark:border-white/10 dark:bg-mintcom-dark dark:shadow-none">
+            <div className="flex items-center justify-between border-b border-gray-100 dark:border-white/10 px-4 py-3">
               <div>
-                <p className="text-[14px] font-semibold text-[#111827]">Card Types</p>
+                <p className="text-[14px] font-semibold text-gray-900 dark:text-white">Card Types</p>
                 <p className="text-[11px] text-gray-400">Choose what type of card payments you accept</p>
               </div>
               <ChevronDown size={18} className="text-gray-400" />
@@ -357,12 +382,12 @@ function SalesControlShot() {
             ].map((c) => (
               <div
                 key={c.name}
-                className="flex items-center gap-3 border-b border-gray-50 px-4 py-2.5 last:border-0"
+                className="flex items-center gap-3 border-b border-gray-50 px-4 py-2.5 last:border-0 dark:border-white/5"
               >
                 <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-mintcom-green/15 text-mintcom-green">
                   <CreditCard size={18} />
                 </span>
-                <span className="flex-1 text-[13px] font-bold text-[#111827]">{c.name}</span>
+                <span className="flex-1 text-[13px] font-bold text-gray-900 dark:text-white">{c.name}</span>
                 <Pencil size={15} className="text-mintcom-green" />
                 <Trash2 size={15} className="text-[#D55263]" />
               </div>
@@ -373,9 +398,9 @@ function SalesControlShot() {
           </div>
 
           {/* Other methods */}
-          <div className="overflow-hidden rounded-xl border border-gray-300 bg-white shadow-sm">
-            <div className="border-b border-gray-100 px-4 py-3">
-              <p className="text-[14px] font-semibold text-[#111827]">Other Payment Methods</p>
+          <div className="overflow-hidden rounded-xl border border-gray-300 bg-white shadow-sm dark:border-white/10 dark:bg-mintcom-dark dark:shadow-none">
+            <div className="border-b border-gray-100 dark:border-white/10 px-4 py-3">
+              <p className="text-[14px] font-semibold text-gray-900 dark:text-white">Other Payment Methods</p>
               <p className="text-[11px] text-gray-400">Digital wallets or delivery apps</p>
             </div>
             {[
@@ -384,12 +409,12 @@ function SalesControlShot() {
             ].map((p) => (
               <div
                 key={p.name}
-                className="flex items-center gap-3 border-b border-gray-50 px-4 py-2.5 last:border-0"
+                className="flex items-center gap-3 border-b border-gray-50 px-4 py-2.5 last:border-0 dark:border-white/5"
               >
                 <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-mintcom-green/15 text-mintcom-green">
                   <WalletIcon />
                 </span>
-                <span className="flex-1 text-[13px] font-bold text-[#111827]">{p.name}</span>
+                <span className="flex-1 text-[13px] font-bold text-gray-900 dark:text-white">{p.name}</span>
                 <Toggle on={p.on} />
               </div>
             ))}
@@ -401,57 +426,57 @@ function SalesControlShot() {
 
         <div className="w-[280px] shrink-0 space-y-2.5 overflow-hidden">
           {/* Tax */}
-          <div className="rounded-xl border border-gray-300 bg-white p-3.5 shadow-sm">
+          <div className="rounded-xl border border-gray-300 bg-white p-3.5 shadow-sm dark:border-white/10 dark:bg-mintcom-dark dark:shadow-none">
             <div className="mb-2 flex items-center justify-between">
-              <p className="text-[14px] font-semibold text-[#111827]">Tax</p>
+              <p className="text-[14px] font-semibold text-gray-900 dark:text-white">Tax</p>
               <Toggle on />
             </div>
             <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-gray-400">Rate</p>
-            <div className="flex items-center overflow-hidden rounded-xl border border-gray-200 bg-gray-50">
+            <div className="flex items-center overflow-hidden rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5">
               <span className="flex h-10 w-10 items-center justify-center bg-mintcom-green/10 text-sm font-extrabold text-mintcom-green">
                 %
               </span>
-              <span className="px-3 text-[14px] font-bold text-[#111827]">8.00</span>
+              <span className="px-3 text-[14px] font-bold text-gray-900 dark:text-white">8.00</span>
             </div>
           </div>
 
           {/* Service charge */}
-          <div className="rounded-xl border border-gray-300 bg-white p-3.5 shadow-sm">
+          <div className="rounded-xl border border-gray-300 bg-white p-3.5 shadow-sm dark:border-white/10 dark:bg-mintcom-dark dark:shadow-none">
             <div className="mb-2 flex items-center justify-between">
-              <p className="text-[14px] font-semibold text-[#111827]">Service Charge</p>
+              <p className="text-[14px] font-semibold text-gray-900 dark:text-white">Service Charge</p>
               <Toggle on />
             </div>
             <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-gray-400">Charge name</p>
-            <div className="mb-2 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-[13px] font-bold text-[#111827]">
+            <div className="mb-2 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 px-3 py-2 text-[13px] font-bold text-gray-900 dark:text-white">
               Service Charge
             </div>
             <div className="grid grid-cols-2 gap-1.5">
               <span className="flex items-center justify-center gap-1 rounded-xl bg-mintcom-green py-2 text-[12px] font-bold text-white">
                 % Percentage <Check size={12} />
               </span>
-              <span className="flex items-center justify-center rounded-xl border border-gray-200 py-2 text-[12px] font-bold text-gray-500">
+              <span className="flex items-center justify-center rounded-xl border border-gray-200 py-2 text-[12px] font-bold text-gray-500 dark:border-white/10 dark:text-gray-400">
                 $ Fixed
               </span>
             </div>
-            <div className="mt-2 flex items-center overflow-hidden rounded-xl border border-gray-200 bg-gray-50">
+            <div className="mt-2 flex items-center overflow-hidden rounded-xl border border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-white/5">
               <span className="flex h-9 w-9 items-center justify-center bg-mintcom-green/10 text-sm font-extrabold text-mintcom-green">
                 %
               </span>
-              <span className="px-3 text-[13px] font-bold">5.00</span>
+              <span className="px-3 text-[13px] font-bold text-gray-900 dark:text-white">5.00</span>
             </div>
           </div>
 
           {/* Loyalty snippet */}
-          <div className="rounded-xl border border-gray-300 bg-white shadow-sm">
+          <div className="rounded-xl border border-gray-300 bg-white shadow-sm dark:border-white/10 dark:bg-mintcom-dark dark:shadow-none">
             <div className="flex items-center justify-between px-3.5 py-3">
-              <span className="text-[14px] font-semibold text-[#111827]">Loyalty Program</span>
+              <span className="text-[14px] font-semibold text-gray-900 dark:text-white">Loyalty Program</span>
               <Toggle on />
             </div>
-            <div className="border-t border-gray-100 px-3.5 py-2.5">
+            <div className="border-t border-gray-100 dark:border-white/10 px-3.5 py-2.5">
               <p className="mb-1.5 flex items-center gap-1 text-[11px] font-black uppercase tracking-wide text-mintcom-green">
                 <TrendingUp size={13} /> Earning Rule
               </p>
-              <p className="text-[12px] font-semibold text-gray-600">
+              <p className="text-[12px] font-semibold text-gray-600 dark:text-gray-300">
                 For every <span className="text-mintcom-green">$1</span> → customer earns{' '}
                 <span className="text-mintcom-green">10 PTS</span>
               </p>
@@ -491,12 +516,12 @@ function StaffShot() {
       <div className="mx-auto flex h-full max-w-2xl flex-col overflow-hidden font-sans">
         {/* Employees — primary content for Staff Management card */}
         <div className="min-h-0 flex-1 overflow-hidden">
-          <p className="mb-2.5 px-1 text-lg font-black text-[#111827]">Employees (4)</p>
-          <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-            <div className="flex items-center gap-2 border-b border-gray-100 px-4 py-3">
-              <span className="flex-1 text-[13px] font-bold text-[#111827]">Employee Name</span>
-              <span className="flex-1 text-[13px] font-bold text-[#111827]">Username</span>
-              <span className="w-24 text-[13px] font-bold text-[#111827]">Role</span>
+          <p className="mb-2.5 px-1 text-lg font-black text-gray-900 dark:text-white">Employees (4)</p>
+          <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-mintcom-dark dark:shadow-none">
+            <div className="flex items-center gap-2 border-b border-gray-100 px-4 py-3 dark:border-white/10 dark:bg-white/[0.03]">
+              <span className="flex-1 text-[13px] font-bold text-gray-900 dark:text-white">Employee Name</span>
+              <span className="flex-1 text-[13px] font-bold text-gray-900 dark:text-white">Username</span>
+              <span className="w-24 text-[13px] font-bold text-gray-900 dark:text-white">Role</span>
               <div className="w-24 text-end">
                 <span className="inline-flex items-center gap-1 rounded-xl bg-mintcom-green px-3 py-1.5 text-[12px] font-black text-white shadow-sm shadow-mintcom-green/25">
                   <span className="text-sm leading-none">+</span> Add
@@ -506,14 +531,17 @@ function StaffShot() {
             {employees.map((e) => (
               <div
                 key={e.username}
-                className="flex items-center gap-2 border-b border-gray-50 px-4 py-3 last:border-0"
-                style={e.owner ? { background: '#FFFBEB' } : undefined}
+                className={`flex items-center gap-2 border-b border-gray-50 px-4 py-3 last:border-0 dark:border-white/5 ${
+                  e.owner ? 'bg-[#FFFBEB] dark:bg-amber-500/10' : ''
+                }`}
               >
-                <span className="flex-1 truncate text-[13px] font-medium text-[#111827]">{e.name}</span>
-                <span className="flex-1 truncate text-[13px] text-gray-500">{e.username}</span>
+                <span className="flex-1 truncate text-[13px] font-medium text-gray-900 dark:text-white">{e.name}</span>
+                <span className="flex-1 truncate text-[13px] text-gray-500 dark:text-gray-400">{e.username}</span>
                 <span
                   className={`w-24 text-[13px] ${
-                    e.owner ? 'font-bold text-amber-700' : 'font-semibold text-mintcom-green'
+                    e.owner
+                      ? 'font-bold text-amber-700 dark:text-amber-300'
+                      : 'font-semibold text-mintcom-green'
                   }`}
                 >
                   {e.role}
@@ -523,7 +551,7 @@ function StaffShot() {
                     <Pencil size={16} />
                   </span>
                   {e.owner ? (
-                    <span className="flex h-8 w-8 items-center justify-center rounded-xl text-amber-700">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-xl text-amber-700 dark:text-amber-300">
                       <Shield size={16} />
                     </span>
                   ) : (
@@ -568,7 +596,7 @@ function ReportStatCard({
       className={`relative flex min-h-[68px] min-w-0 items-center gap-2.5 rounded-xl border p-2.5 text-start ${
         primary
           ? 'border-transparent bg-mintcom-green text-white shadow-sm shadow-mintcom-green/20'
-          : 'border-gray-200/90 bg-white'
+          : 'border-gray-200/90 bg-white dark:bg-mintcom-surface'
       }`}
     >
       <span
@@ -600,7 +628,7 @@ function ReportStatCard({
         )}
         <p
           className={`mt-0.5 text-[14px] font-bold tabular-nums leading-tight ${
-            primary ? 'text-white' : 'text-[#111827]'
+            primary ? 'text-white' : 'text-gray-900 dark:text-white'
           }`}
         >
           {value}
@@ -627,10 +655,10 @@ function ReportingShot() {
       style={{ width: DESIGN_W, height: DESIGN_H }}
     >
       <PosRail active="reports" />
-      <div className="flex min-w-0 flex-1 flex-col overflow-hidden bg-[#F5F5F7] p-3">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden bg-gray-100 dark:bg-mintcom-dark p-3">
         {/* Header — Reporting + Print only (employee moved to filter row) */}
         <div className="mb-2 flex shrink-0 items-center justify-between gap-2">
-          <p className="text-[18px] font-bold tracking-[-0.02em] text-[#111827]">Reporting</p>
+          <p className="text-[18px] font-bold tracking-[-0.02em] text-gray-900 dark:text-white">Reporting</p>
           <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-mintcom-green text-white shadow-sm shadow-mintcom-green/30">
             <Printer size={16} />
           </span>
@@ -640,7 +668,7 @@ function ReportingShot() {
         <div className="mb-2 flex shrink-0 flex-wrap items-end gap-2">
           <div className="w-[120px] shrink-0">
             <p className="mb-0.5 text-[10px] font-medium text-gray-400">Period</p>
-            <span className="flex h-9 items-center justify-between rounded-xl border border-gray-200 bg-white px-2.5 text-[11px] font-semibold text-[#111827]">
+            <span className="flex h-9 items-center justify-between rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-mintcom-surface px-2.5 text-[11px] font-semibold text-gray-900 dark:text-white">
               <span className="inline-flex min-w-0 items-center gap-1.5">
                 <Calendar size={14} className="shrink-0 text-mintcom-green" />
                 <span className="truncate">Last 7 days</span>
@@ -650,14 +678,14 @@ function ReportingShot() {
           </div>
           <div className="min-w-0 flex-1">
             <p className="mb-0.5 text-[10px] font-medium text-gray-400">Date range</p>
-            <span className="flex h-9 items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-2.5 text-[11px] font-semibold text-[#111827]">
+            <span className="flex h-9 items-center gap-1.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-mintcom-surface px-2.5 text-[11px] font-semibold text-gray-900 dark:text-white">
               <Calendar size={13} className="shrink-0 text-mintcom-green" />
               <span className="truncate">8 Jul 2026 - 14 Jul 2026</span>
             </span>
           </div>
           <div className="min-w-[140px] flex-1">
             <p className="mb-0.5 text-[10px] font-medium text-gray-400">Time range</p>
-            <span className="flex h-9 items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-2.5 text-[11px] font-semibold text-[#111827]">
+            <span className="flex h-9 items-center gap-1.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-mintcom-surface px-2.5 text-[11px] font-semibold text-gray-900 dark:text-white">
               <Clock size={13} className="shrink-0 text-mintcom-green" />
               <span className="truncate">12:00 AM - 11:59 PM</span>
             </span>
@@ -665,7 +693,7 @@ function ReportingShot() {
           <div className="min-w-[150px] flex-1">
             <p className="mb-0.5 text-[10px] font-medium text-gray-400">Employee</p>
             <div className="relative">
-              <span className="flex h-9 w-full items-center rounded-xl border border-gray-200 bg-white py-2 ps-8 pe-7 text-[12px] font-semibold text-[#111827]">
+              <span className="flex h-9 w-full items-center rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-mintcom-surface py-2 ps-8 pe-7 text-[12px] font-semibold text-gray-900 dark:text-white">
                 All Employees
               </span>
               <User
@@ -681,7 +709,7 @@ function ReportingShot() {
         </div>
 
         {/* Tabs — full-width underline like POS */}
-        <div className="relative mb-2 flex shrink-0 border-b border-gray-200">
+        <div className="relative mb-2 flex shrink-0 border-b border-gray-200 dark:border-white/10">
           {['General Report', 'Item Report'].map((t, i) => (
             <span
               key={t}
@@ -747,10 +775,10 @@ function ReportingShot() {
 
         {/* Orders & Receipts | Top 3 Selling Items */}
         <div className="grid min-h-0 flex-1 grid-cols-[1.35fr_1fr] gap-2.5 overflow-hidden">
-          <div className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-            <div className="flex h-10 shrink-0 items-center justify-between gap-2 border-b border-gray-200 px-3">
-              <p className="text-[14px] font-semibold text-[#111827]">Orders & Receipts</p>
-              <span className="inline-flex items-center gap-1 rounded-xl border border-gray-200 bg-white px-2 py-1 text-[10px] font-semibold text-gray-500">
+          <div className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-mintcom-surface shadow-sm">
+            <div className="flex h-10 shrink-0 items-center justify-between gap-2 border-b border-gray-200 dark:border-white/10 px-3">
+              <p className="text-[14px] font-semibold text-gray-900 dark:text-white">Orders & Receipts</p>
+              <span className="inline-flex items-center gap-1 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-mintcom-surface px-2 py-1 text-[10px] font-semibold text-gray-500">
                 <SlidersHorizontal size={12} />
                 Filters
               </span>
@@ -788,11 +816,11 @@ function ReportingShot() {
               ].map((o) => (
                 <div
                   key={o.no}
-                  className="flex items-center gap-2 border-b border-gray-100 px-3 py-2 last:border-0"
+                  className="flex items-center gap-2 border-b border-gray-100 dark:border-white/10 px-3 py-2 last:border-0"
                 >
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <p className="text-[12px] font-bold text-[#111827]">{o.no}</p>
+                      <p className="text-[12px] font-bold text-gray-900 dark:text-white">{o.no}</p>
                       <span
                         className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold ${
                           o.status === 'Refunded'
@@ -809,7 +837,7 @@ function ReportingShot() {
                   </div>
                   <span
                     className={`text-[12px] font-bold tabular-nums ${
-                      o.status === 'Refunded' ? 'text-[#D55263]' : 'text-[#111827]'
+                      o.status === 'Refunded' ? 'text-[#D55263]' : 'text-gray-900 dark:text-white'
                     }`}
                   >
                     {o.total}
@@ -819,12 +847,12 @@ function ReportingShot() {
             </div>
           </div>
 
-          <div className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-            <div className="flex h-10 shrink-0 items-center justify-between gap-2 border-b border-gray-200 px-3">
-              <p className="min-w-0 truncate text-[14px] font-semibold text-[#111827]">
+          <div className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-mintcom-surface shadow-sm">
+            <div className="flex h-10 shrink-0 items-center justify-between gap-2 border-b border-gray-200 dark:border-white/10 px-3">
+              <p className="min-w-0 truncate text-[14px] font-semibold text-gray-900 dark:text-white">
                 Top 3 Selling Items
               </p>
-              <span className="inline-flex h-7 shrink-0 items-center gap-1 rounded-xl border border-gray-200 bg-white py-0.5 ps-1.5 pe-1 text-[10px] font-semibold text-[#111827]">
+              <span className="inline-flex h-7 shrink-0 items-center gap-1 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-mintcom-surface py-0.5 ps-1.5 pe-1 text-[10px] font-semibold text-gray-900 dark:text-white">
                 <Calendar size={12} className="text-mintcom-green" />
                 This Week
                 <span className="flex h-4 w-4 items-center justify-center rounded-full bg-mintcom-green/10 text-mintcom-green">
@@ -840,13 +868,13 @@ function ReportingShot() {
               ].map((item, i) => (
                 <div
                   key={item.name}
-                  className="flex min-h-0 flex-1 items-center gap-2 border-b border-gray-100 px-1 last:border-0"
+                  className="flex min-h-0 flex-1 items-center gap-2 border-b border-gray-100 dark:border-white/10 px-1 last:border-0"
                 >
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-gray-100 bg-gray-50">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-gray-100 bg-[#F8FAF9] dark:border-white/10 dark:bg-[#F3F4F6]">
                     <img src={DEFAULT_IMG} alt="" className="h-7 w-7 object-contain" />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[12px] font-semibold text-[#111827]">{item.name}</p>
+                    <p className="truncate text-[12px] font-semibold text-gray-900 dark:text-white">{item.name}</p>
                     <p className="text-[10px] text-gray-400">{item.qty} sold</p>
                   </div>
                   <p className="text-[12px] font-semibold tabular-nums text-mintcom-green">
@@ -911,20 +939,20 @@ function ProductionShot() {
   }: {
     options: { label: string; icon: ReactNode; on?: boolean; count?: number }[];
   }) => (
-    <div className="relative flex shrink-0 rounded-lg bg-[#E8E8E8] p-0.5">
+    <div className="relative flex shrink-0 rounded-lg bg-[#E8E8E8] p-0.5 dark:bg-white/10">
       {options.map((o) => (
         <span
           key={o.label}
           className={`relative z-10 flex flex-1 items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-[12px] font-semibold sm:text-[13px] ${
-            o.on ? 'bg-mintcom-green text-white shadow-sm' : 'text-[#6B7280]'
+            o.on ? 'bg-mintcom-green text-white shadow-sm' : 'text-gray-500 dark:text-gray-400'
           }`}
         >
-          <span className={`shrink-0 ${o.on ? 'text-white' : 'text-[#6B7280]'}`}>{o.icon}</span>
+          <span className={`shrink-0 ${o.on ? 'text-white' : 'text-gray-500 dark:text-gray-400'}`}>{o.icon}</span>
           <span className="truncate">{o.label}</span>
           {typeof o.count === 'number' && (
             <span
               className={`rounded-md px-1.5 py-px text-[10px] font-bold tabular-nums ${
-                o.on ? 'bg-white/30 text-white' : 'bg-[#E5E7EB] text-[#6B7280]'
+                o.on ? 'bg-white/30 text-white' : 'bg-[#E5E7EB] text-gray-500 dark:bg-white/10 dark:text-gray-400'
               }`}
             >
               {o.count}
@@ -969,20 +997,20 @@ function ProductionShot() {
             {materials.map((m) => (
               <div
                 key={m.name}
-                className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-[#E5E7EB] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)]"
+                className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-[#E5E7EB] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)] dark:border-white/10 dark:bg-mintcom-dark dark:shadow-none"
               >
                 {/* Header */}
                 <div className="flex items-center justify-between gap-2 p-3.5 sm:p-[18px]">
                   <div className="min-w-0 flex-1">
                     <div className="mb-0.5 flex flex-wrap items-center gap-2">
-                      <p className="truncate text-[14px] font-semibold leading-snug text-[#111827] sm:text-base">
+                      <p className="truncate text-[14px] font-semibold leading-snug text-gray-900 dark:text-white sm:text-base">
                         {m.name}
                       </p>
                       <span className="rounded-full bg-[#7dc6a2]/20 px-2 py-[3px] text-[10px] font-extrabold leading-none text-[#5fa888]">
                         Active
                       </span>
                     </div>
-                    <p className="text-[12px] text-[#6B7280] sm:text-[13px]">Unit: {m.unit}</p>
+                    <p className="text-[12px] text-gray-500 dark:text-gray-400 sm:text-[13px]">Unit: {m.unit}</p>
                   </div>
                   <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
                     <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#7dc6a2]/20 text-[#5fa888]">
@@ -995,13 +1023,13 @@ function ProductionShot() {
                 </div>
 
                 {/* Stock + cost */}
-                <div className="flex items-start justify-between gap-3 border-t border-[#E5E7EB] px-3.5 pb-2.5 pt-2.5 sm:gap-6 sm:px-4 sm:pb-3 sm:pt-3">
+                <div className="flex items-start justify-between gap-3 border-t border-[#E5E7EB] px-3.5 pb-2.5 pt-2.5 dark:border-white/10 sm:gap-6 sm:px-4 sm:pb-3 sm:pt-3">
                   <div className="min-w-0 flex-1">
-                    <p className="mb-1 text-[11px] font-semibold text-[#6B7280]">Current Stock</p>
+                    <p className="mb-1 text-[11px] font-semibold text-gray-500 dark:text-gray-400">Current Stock</p>
                     <div className="flex flex-wrap items-center gap-1.5">
                       <span
                         className={`text-[15px] font-bold tabular-nums leading-tight sm:text-lg ${
-                          m.status === 'low' ? 'text-[#F59E0B]' : 'text-[#111827]'
+                          m.status === 'low' ? 'text-[#F59E0B]' : 'text-gray-900 dark:text-white'
                         }`}
                       >
                         {m.qty.toFixed(2)} {m.unit}
@@ -1014,8 +1042,8 @@ function ProductionShot() {
                     </div>
                   </div>
                   <div className="shrink-0 text-end">
-                    <p className="mb-1 text-[11px] font-semibold text-[#6B7280]">Cost per Unit</p>
-                    <p className="text-[13px] font-semibold tabular-nums text-[#111827] sm:text-base">
+                    <p className="mb-1 text-[11px] font-semibold text-gray-500 dark:text-gray-400">Cost per Unit</p>
+                    <p className="text-[13px] font-semibold tabular-nums text-gray-900 dark:text-white sm:text-base">
                       {mfgMoney(m.cost)}
                     </p>
                   </div>
@@ -1043,7 +1071,7 @@ function AiShot() {
 
   /** Bold span like AIMessageBubble **markdown** */
   const B = ({ children }: { children: ReactNode }) => (
-    <span className="font-bold text-[#111827]">{children}</span>
+    <span className="font-bold text-gray-900 dark:text-white">{children}</span>
   );
 
   return (
@@ -1051,10 +1079,10 @@ function AiShot() {
       className="relative flex h-full w-full items-center justify-center overflow-hidden font-sans"
       style={{ width: DESIGN_W, height: DESIGN_H }}
     >
-      {/* Soft studio backdrop */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#e8f5ef] via-[#f4f7f5] to-[#dfece6]" />
-      <div className="absolute -left-12 top-10 h-52 w-52 rounded-full bg-mintcom-green/25 blur-3xl" />
-      <div className="absolute -right-8 bottom-6 h-56 w-56 rounded-full bg-[#7dc6a2]/20 blur-3xl" />
+      {/* Soft studio backdrop — light in light mode, product dark in dark mode */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#e8f5ef] via-[#f4f7f5] to-[#dfece6] dark:from-mintcom-dark dark:via-[#0c1525] dark:to-mintcom-dark" />
+      <div className="absolute -left-12 top-10 h-52 w-52 rounded-full bg-mintcom-green/25 blur-3xl dark:bg-mintcom-green/15" />
+      <div className="absolute -right-8 bottom-6 h-56 w-56 rounded-full bg-[#7dc6a2]/20 blur-3xl dark:bg-mintcom-green/10" />
 
       <div className="relative z-10 flex items-center gap-8 pe-2">
         {/* iPhone 15-style frame */}
@@ -1069,14 +1097,14 @@ function AiShot() {
           <span className="absolute -end-[9px] top-[160px] h-16 w-[3px] rounded-e-sm bg-[#2a2a30]" />
 
           {/* Screen */}
-          <div className="flex h-full flex-col overflow-hidden rounded-[35px] bg-white">
+          <div className="flex h-full flex-col overflow-hidden rounded-[35px] bg-white dark:bg-mintcom-surface">
             {/* Status bar + Dynamic Island */}
             <div className="relative z-20 flex shrink-0 items-center justify-between px-5 pb-1 pt-3">
-              <span className="w-12 text-[11px] font-semibold tracking-tight text-[#111827]">
+              <span className="w-12 text-[11px] font-semibold tracking-tight text-gray-900 dark:text-white">
                 9:41
               </span>
               <div className="absolute left-1/2 top-2 h-[26px] w-[96px] -translate-x-1/2 rounded-full bg-black shadow-inner" />
-              <div className="flex w-14 items-center justify-end gap-[3px] text-[#111827]">
+              <div className="flex w-14 items-center justify-end gap-[3px] text-gray-900 dark:text-white">
                 {/* Signal */}
                 <svg width="15" height="10" viewBox="0 0 15 10" fill="currentColor" aria-hidden>
                   <rect x="0" y="6" width="2.5" height="4" rx="0.6" />
@@ -1126,14 +1154,14 @@ function AiShot() {
             </div>
 
             {/* Assistant UI */}
-            <div className="flex min-h-0 flex-1 flex-col bg-white">
+            <div className="flex min-h-0 flex-1 flex-col bg-white dark:bg-mintcom-surface">
               {/* Header */}
-              <div className="flex shrink-0 items-center gap-2 border-b border-gray-100 px-3 py-2.5">
+              <div className="flex shrink-0 items-center gap-2 border-b border-gray-100 dark:border-white/10 px-3 py-2.5">
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-mintcom-green/15 text-mintcom-green">
                   <MessageCircle size={16} strokeWidth={2.25} />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[14px] font-bold leading-tight tracking-tight text-[#111827]">
+                  <p className="text-[14px] font-bold leading-tight tracking-tight text-gray-900 dark:text-white">
                     AI Assistant
                   </p>
                   <span className="mt-0.5 inline-flex items-center gap-1 rounded-md bg-mintcom-green/12 px-1.5 py-px text-[10px] font-bold text-mintcom-green">
@@ -1142,10 +1170,10 @@ function AiShot() {
                     <Repeat2 size={9} strokeWidth={2.5} />
                   </span>
                 </div>
-                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-gray-100 text-gray-500">
+                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-gray-100 text-gray-500 dark:bg-white/10 dark:text-gray-300">
                   <Trash2 size={14} />
                 </span>
-                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-gray-100 text-gray-500">
+                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-gray-100 text-gray-500 dark:bg-white/10 dark:text-gray-300">
                   <X size={14} />
                 </span>
               </div>
@@ -1154,7 +1182,7 @@ function AiShot() {
                 Chat mirrors real AIMessageBubble + persona rules:
                 warm short prose, **bold** figures, "- " bullets, money as "1284.50 USD".
               */}
-              <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-hidden px-3 py-3">
+              <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-hidden bg-white px-3 py-3 dark:bg-mintcom-dark">
                 <div className="flex justify-end">
                   <div className="rounded-2xl rounded-br-md bg-mintcom-green px-3.5 py-2 text-[12px] font-semibold text-white shadow-sm shadow-mintcom-green/25">
                     Morning briefing
@@ -1165,11 +1193,11 @@ function AiShot() {
                   <span className="mb-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-mintcom-green/20">
                     <span className="h-2 w-2 rounded-full bg-mintcom-green" />
                   </span>
-                  <div className="min-w-0 max-w-[88%] rounded-2xl rounded-bl-md border border-gray-200 bg-white px-3.5 py-2.5 shadow-sm">
-                    <p className="text-[12px] font-medium leading-[17px] text-[#111827]">
+                  <div className="min-w-0 max-w-[88%] rounded-2xl rounded-bl-md border border-gray-200 dark:border-white/10 bg-white dark:bg-mintcom-surface px-3.5 py-2.5 shadow-sm">
+                    <p className="text-[12px] font-medium leading-[17px] text-gray-900 dark:text-white">
                       Good morning! Here&apos;s how <B>Cafe Delight</B> is doing so far today:
                     </p>
-                    <div className="mt-1.5 space-y-0.5 text-[12px] font-medium leading-[17px] text-[#111827]">
+                    <div className="mt-1.5 space-y-0.5 text-[12px] font-medium leading-[17px] text-gray-900 dark:text-white">
                       <p className="flex gap-1.5">
                         <span className="shrink-0 w-2.5">-</span>
                         <span>
@@ -1189,7 +1217,7 @@ function AiShot() {
                         </span>
                       </p>
                     </div>
-                    <p className="mt-1.5 text-[12px] font-medium leading-[17px] text-[#111827]">
+                    <p className="mt-1.5 text-[12px] font-medium leading-[17px] text-gray-900 dark:text-white">
                       Strong start — keep the rush covered!
                     </p>
                   </div>
@@ -1205,8 +1233,8 @@ function AiShot() {
                   <span className="mb-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-mintcom-green/20">
                     <span className="h-2 w-2 rounded-full bg-mintcom-green" />
                   </span>
-                  <div className="min-w-0 max-w-[88%] rounded-2xl rounded-bl-md border border-gray-200 bg-white px-3.5 py-2.5 shadow-sm">
-                    <p className="text-[12px] font-medium leading-[17px] text-[#111827]">
+                  <div className="min-w-0 max-w-[88%] rounded-2xl rounded-bl-md border border-gray-200 dark:border-white/10 bg-white dark:bg-mintcom-surface px-3.5 py-2.5 shadow-sm">
+                    <p className="text-[12px] font-medium leading-[17px] text-gray-900 dark:text-white">
                       <B>Oat milk</B> is running low — only <B>1.5 L</B> left
                       (threshold <B>3 L</B>). Worth restocking before the
                       afternoon rush.
@@ -1232,8 +1260,8 @@ function AiShot() {
               </div>
 
               {/* Input */}
-              <div className="shrink-0 border-t border-gray-100 bg-white px-3 pb-2 pt-2">
-                <div className="flex items-center gap-1.5 rounded-full border border-black/[0.07] bg-[#F0F2F5] py-1 pe-1 ps-3.5">
+              <div className="shrink-0 border-t border-gray-100 bg-white px-3 pb-2 pt-2 dark:border-white/10 dark:bg-mintcom-surface">
+                <div className="flex items-center gap-1.5 rounded-full border border-black/[0.07] bg-[#F0F2F5] py-1 pe-1 ps-3.5 dark:border-white/10 dark:bg-white/5">
                   <span className="min-w-0 flex-1 truncate py-1.5 text-[12px] font-medium text-gray-400">
                     Ask about your business…
                   </span>
@@ -1242,7 +1270,13 @@ function AiShot() {
                   </span>
                 </div>
                 {/* Home indicator */}
-                <div className="mx-auto mt-2.5 h-1 w-[108px] rounded-full bg-[#111827]/85" />
+                {/* iOS home indicator */}
+                <div className="flex items-center justify-center pb-1.5 pt-2">
+                  <span
+                    className="h-[5px] w-[112px] rounded-full bg-gray-900 shadow-[0_1px_2px_rgba(0,0,0,0.18)] dark:bg-white/90 dark:shadow-[0_0_14px_rgba(255,255,255,0.18)]"
+                    aria-hidden
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -1250,22 +1284,22 @@ function AiShot() {
 
         {/* Side story cards */}
         <div className="flex w-[270px] flex-col gap-3">
-          <div className="rounded-2xl border border-white/90 bg-white/95 p-4 shadow-lg shadow-black/5 backdrop-blur">
+          <div className="rounded-2xl border border-white/90 bg-white/95 p-4 shadow-lg shadow-black/5 backdrop-blur dark:border-white/10 dark:bg-mintcom-surface dark:shadow-black/40">
             <div className="mb-2 flex items-center gap-2.5">
               <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-mintcom-green/15 text-mintcom-green">
                 <MessageCircle size={18} />
               </span>
               <div>
-                <p className="text-[14px] font-bold text-[#111827]">Admin AI agent</p>
+                <p className="text-[14px] font-bold text-gray-900 dark:text-white">Admin AI agent</p>
                 <p className="text-[11px] font-semibold text-mintcom-green">Same as the mobile app</p>
               </div>
             </div>
-            <p className="text-[12px] leading-relaxed text-gray-500">
+            <p className="text-[12px] leading-relaxed text-gray-500 dark:text-gray-400">
               Sales, stock, and staffing answers — scoped to one location or your whole brand.
             </p>
           </div>
 
-          <div className="rounded-2xl border border-white/90 bg-white/95 p-4 shadow-lg shadow-black/5">
+          <div className="rounded-2xl border border-white/90 bg-white/95 p-4 shadow-lg shadow-black/5 dark:border-white/10 dark:bg-mintcom-surface dark:shadow-black/40">
             <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-gray-400">
               Try asking
             </p>
@@ -1273,7 +1307,7 @@ function AiShot() {
               {['Morning briefing', 'Revenue last 3 months', 'Compare my locations'].map((q) => (
                 <span
                   key={q}
-                  className="inline-flex items-center gap-2 rounded-xl border border-mintcom-green/25 bg-mintcom-green/[0.07] px-3 py-2 text-[12px] font-semibold text-mintcom-green"
+                  className="inline-flex items-center gap-2 rounded-xl border border-mintcom-green/25 bg-mintcom-green/[0.07] px-3 py-2 text-[12px] font-semibold text-mintcom-green dark:border-mintcom-green/30 dark:bg-mintcom-green/10"
                 >
                   <Zap size={13} className="shrink-0" />
                   {q}
@@ -1282,7 +1316,7 @@ function AiShot() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-mintcom-green/20 bg-gradient-to-br from-mintcom-green/15 to-mintcom-green/5 p-4">
+          <div className="rounded-2xl border border-mintcom-green/20 bg-gradient-to-br from-mintcom-green/15 to-mintcom-green/5 p-4 dark:border-mintcom-green/25 dark:from-mintcom-green/20 dark:to-mintcom-green/5">
             <div className="flex items-center gap-2 text-[12px] font-bold text-mintcom-green">
               <span className="relative flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-mintcom-green opacity-45" />
@@ -1290,7 +1324,7 @@ function AiShot() {
               </span>
               Live on iOS & Android
             </div>
-            <p className="mt-1.5 text-[12px] font-medium leading-snug text-[#1f2a26]/90">
+            <p className="mt-1.5 text-[12px] font-medium leading-snug text-gray-900 dark:text-white/90">
               Open the assistant from any screen in the admin portal.
             </p>
           </div>
@@ -1337,7 +1371,7 @@ function BranchShot() {
       style={{ width: DESIGN_W, height: DESIGN_H }}
     >
       {/* Owner sidebar — collapsed rail, identical to OwnerLayout (sidebarOpen=false) */}
-      <aside className="relative flex w-[100px] shrink-0 flex-col border-e border-gray-200 bg-white py-4">
+      <aside className="relative flex w-[100px] shrink-0 flex-col border-e border-gray-200 dark:border-white/10 bg-white dark:bg-mintcom-surface py-4">
         {/* Glow line like OwnerLayout */}
         <div className="pointer-events-none absolute end-0 top-0 h-full w-px bg-gradient-to-b from-transparent via-mintcom-green/20 to-transparent opacity-50" />
 
@@ -1382,7 +1416,7 @@ function BranchShot() {
         </div>
 
         {/* Footer — language · mobile app · theme · logout */}
-        <div className="flex shrink-0 flex-col items-center gap-2 border-t border-gray-100 p-3">
+        <div className="flex shrink-0 flex-col items-center gap-2 border-t border-gray-100 dark:border-white/10 p-3">
           <span className="flex h-12 w-12 items-center justify-center rounded-xl text-gray-600">
             <Globe size={24} />
           </span>
@@ -1398,12 +1432,12 @@ function BranchShot() {
         </div>
       </aside>
 
-      {/* Brands page content — OwnerLayout main is bg-gray-100 */}
-      <div className="flex min-w-0 flex-1 flex-col overflow-hidden border-s border-gray-200 bg-gray-100">
+      {/* Brands page content — OwnerLayout main is bg-gray-100 / mintcom-dark */}
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden border-s border-gray-200 bg-gray-100 dark:border-white/10 dark:bg-mintcom-dark">
         {/* Header */}
         <div className="flex shrink-0 items-end justify-between gap-4 px-5 pb-3 pt-4">
           <div className="min-w-0">
-            <p className="text-[20px] font-bold tracking-tight text-[#111827]">Brands</p>
+            <p className="text-[20px] font-bold tracking-tight text-gray-900 dark:text-white">Brands</p>
             <p className="mt-0.5 text-[12px] text-gray-500">
               Group locations under one brand dashboard
             </p>
@@ -1442,7 +1476,7 @@ function BranchShot() {
           ).map((s) => (
             <div
               key={s.label}
-              className="flex items-center gap-3 rounded-2xl border border-gray-200 bg-white p-3 shadow-sm"
+              className="flex items-center gap-3 rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-mintcom-surface p-3 shadow-sm"
             >
               <span
                 className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${s.bg} ${s.color}`}
@@ -1451,7 +1485,7 @@ function BranchShot() {
               </span>
               <div className="min-w-0">
                 <p className="truncate text-[11px] font-medium text-gray-500">{s.label}</p>
-                <p className="text-[18px] font-bold leading-none tracking-tight text-[#111827]">
+                <p className="text-[18px] font-bold leading-none tracking-tight text-gray-900 dark:text-white">
                   {s.value}
                 </p>
               </div>
@@ -1460,17 +1494,17 @@ function BranchShot() {
         </div>
 
         {/* Search / sort bar */}
-        <div className="mx-5 mb-3 flex shrink-0 items-center gap-3 rounded-2xl border border-gray-200 bg-white p-3 shadow-sm">
+        <div className="mx-5 mb-3 flex shrink-0 items-center gap-3 rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-mintcom-surface p-3 shadow-sm">
           <div className="relative min-w-0 flex-1">
             <Search
               size={15}
               className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-gray-400"
             />
-            <span className="flex h-10 w-full items-center rounded-xl border border-gray-200 bg-gray-50 ps-9 pe-3 text-[12px] font-medium text-gray-400">
+            <span className="flex h-10 w-full items-center rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 ps-9 pe-3 text-[12px] font-medium text-gray-400">
               Search brands by name or login ID…
             </span>
           </div>
-          <span className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-xl border border-gray-200 bg-gray-50 px-3 text-[12px] font-semibold text-[#111827]">
+          <span className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 px-3 text-[12px] font-semibold text-gray-900 dark:text-white">
             Sort by name
             <ChevronDown size={14} className="text-gray-400" />
           </span>
@@ -1482,10 +1516,10 @@ function BranchShot() {
             {brands.map((brand) => (
               <div
                 key={brand.name}
-                className={`relative flex min-h-0 flex-col overflow-hidden rounded-2xl border bg-white p-4 shadow-sm ${
+                className={`relative flex min-h-0 flex-col overflow-hidden rounded-2xl border bg-white dark:bg-mintcom-surface p-4 shadow-sm ${
                   brand.featured
                     ? 'border-mintcom-green bg-mintcom-green/[0.02]'
-                    : 'border-gray-200'
+                    : 'border-gray-200 dark:border-white/10'
                 }`}
               >
                 {/* Soft purple wash like owner hover accent */}
@@ -1498,7 +1532,7 @@ function BranchShot() {
                         <Building2 size={24} className="text-purple-500" />
                       </span>
                       <div className="min-w-0">
-                        <p className="truncate text-[16px] font-bold tracking-tight text-[#111827]">
+                        <p className="truncate text-[16px] font-bold tracking-tight text-gray-900 dark:text-white">
                           {brand.name}
                         </p>
                         <div className="mt-1 flex flex-wrap items-center gap-1.5">
@@ -1517,25 +1551,25 @@ function BranchShot() {
                   </div>
 
                   <div className="mb-3 grid grid-cols-2 gap-2">
-                    <div className="rounded-xl border border-gray-100 bg-gray-50 p-2.5">
+                    <div className="rounded-xl border border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-white/5 p-2.5">
                       <div className="mb-1 flex items-center gap-1.5">
                         <Hash size={12} className="text-purple-500" />
                         <span className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">
                           Login ID
                         </span>
                       </div>
-                      <p className="truncate font-mono text-[12px] font-bold text-[#111827]">
+                      <p className="truncate font-mono text-[12px] font-bold text-gray-900 dark:text-white">
                         {brand.loginId}
                       </p>
                     </div>
-                    <div className="rounded-xl border border-gray-100 bg-gray-50 p-2.5">
+                    <div className="rounded-xl border border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-white/5 p-2.5">
                       <div className="mb-1 flex items-center gap-1.5">
                         <Calendar size={12} className="text-blue-500" />
                         <span className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">
                           Created
                         </span>
                       </div>
-                      <p className="text-[12px] font-bold text-[#111827]">{brand.created}</p>
+                      <p className="text-[12px] font-bold text-gray-900 dark:text-white">{brand.created}</p>
                     </div>
                   </div>
 
@@ -1547,21 +1581,21 @@ function BranchShot() {
                       {brand.locations.map((loc) => (
                         <span
                           key={loc.name}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5"
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-mintcom-surface px-2.5 py-1.5"
                         >
                           {loc.type === 'retail' ? (
                             <Store size={11} className="text-gray-400" />
                           ) : (
                             <Coffee size={11} className="text-gray-400" />
                           )}
-                          <span className="text-[11px] font-bold text-gray-600">{loc.name}</span>
+                          <span className="text-[11px] font-bold text-gray-600 dark:text-gray-300">{loc.name}</span>
                         </span>
                       ))}
                     </div>
                   </div>
 
-                  <div className="mt-auto border-t border-gray-100 pt-3">
-                    <span className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 bg-gray-50 py-2.5 text-[12px] font-bold text-gray-700">
+                  <div className="mt-auto border-t border-gray-100 dark:border-white/10 pt-3">
+                    <span className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 bg-gray-50 py-2.5 text-[12px] font-bold text-gray-700 dark:border-white/10 dark:bg-white/5 dark:text-gray-200">
                       <ExternalLink size={14} />
                       Open brand dashboard
                     </span>
@@ -1609,7 +1643,7 @@ function SimpleUiShot() {
       .join(' ');
 
   const cardShell =
-    'rounded-xl border border-[#D3D6DE] bg-[#E8E8E8]';
+    'rounded-xl border border-[#D3D6DE] bg-[#E8E8E8] dark:border-white/10 dark:bg-mintcom-surface dark:shadow-none';
 
   return (
     <div
@@ -1617,18 +1651,18 @@ function SimpleUiShot() {
       style={{ width: DESIGN_W, height: DESIGN_H }}
     >
       <PosRail active="dashboard" />
-      <div className="flex min-w-0 flex-1 flex-col gap-2.5 overflow-hidden bg-[#F5F5F7] p-3">
+      <div className="flex min-w-0 flex-1 flex-col gap-2.5 overflow-hidden bg-gray-100 dark:bg-mintcom-dark p-3">
         {/* Shift management card — open shift state */}
-        <div className="shrink-0 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div className="shrink-0 overflow-hidden rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-mintcom-surface shadow-sm">
           <div className="flex flex-wrap items-start justify-between gap-3 p-3 sm:p-3.5">
             <div className="min-w-0">
-              <p className="text-sm font-black text-[#111827] sm:text-base">
+              <p className="text-sm font-black text-gray-900 dark:text-white sm:text-base">
                 You&apos;re Doing Great, Sam Cashier
               </p>
-              <p className="mt-0.5 text-[11px] text-gray-500">Tuesday, 14 Jul 2026</p>
+              <p className="mt-0.5 text-[11px] text-gray-500 dark:text-gray-400">Tuesday, 14 Jul 2026</p>
             </div>
             <div className="flex flex-wrap items-center gap-1.5">
-              <span className="inline-flex items-center gap-1.5 rounded-xl border-[1.5px] border-mintcom-green bg-white px-3.5 py-2 text-[12px] font-bold text-mintcom-green">
+              <span className="inline-flex items-center gap-1.5 rounded-xl border-[1.5px] border-mintcom-green bg-white dark:bg-mintcom-surface px-3.5 py-2 text-[12px] font-bold text-mintcom-green">
                 <List size={16} /> My Orders
               </span>
               <span className="inline-flex items-center gap-1.5 rounded-xl bg-[#D55263] px-3.5 py-2 text-[12px] font-bold text-white">
@@ -1653,7 +1687,7 @@ function SimpleUiShot() {
             {/* Net Sales primary */}
             <div className="flex min-h-0 flex-1 flex-col justify-between rounded-xl bg-mintcom-green p-3.5 text-white">
               <div className="flex items-center gap-3">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white text-mintcom-green">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white dark:bg-mintcom-surface text-mintcom-green">
                   <TrendingUp size={22} strokeWidth={2.25} />
                 </span>
                 <div className="min-w-0 text-start">
@@ -1675,13 +1709,13 @@ function SimpleUiShot() {
                   <PosCashIcon size={22} className="text-white" />
                 </span>
                 <div className="min-w-0 text-start">
-                  <p className="text-[13px] font-medium text-[#737182]">Cash Sales</p>
-                  <p className="mt-0.5 text-[11px] font-normal text-[#828287]">
+                  <p className="text-[13px] font-medium text-[#737182] dark:text-gray-300">Cash Sales</p>
+                  <p className="mt-0.5 text-[11px] font-normal text-[#828287] dark:text-gray-400">
                     Excludes tax and other charges
                   </p>
                 </div>
               </div>
-              <p className="mt-2 text-center text-[22px] font-bold tabular-nums tracking-normal text-[#1F1D2B] sm:text-[26px]">
+              <p className="mt-2 text-center text-[22px] font-bold tabular-nums tracking-normal text-gray-900 dark:text-white sm:text-[26px]">
                 {reportMoney(displayCash)}
               </p>
             </div>
@@ -1693,13 +1727,13 @@ function SimpleUiShot() {
                   <PosCardIcon size={22} className="text-white" />
                 </span>
                 <div className="min-w-0 text-start">
-                  <p className="text-[13px] font-medium text-[#737182]">Card Sales</p>
-                  <p className="mt-0.5 text-[11px] font-normal text-[#828287]">
+                  <p className="text-[13px] font-medium text-[#737182] dark:text-gray-300">Card Sales</p>
+                  <p className="mt-0.5 text-[11px] font-normal text-[#828287] dark:text-gray-400">
                     Excludes tax and other charges
                   </p>
                 </div>
               </div>
-              <p className="mt-2 text-center text-[22px] font-bold tabular-nums tracking-normal text-[#1F1D2B] sm:text-[26px]">
+              <p className="mt-2 text-center text-[22px] font-bold tabular-nums tracking-normal text-gray-900 dark:text-white sm:text-[26px]">
                 {reportMoney(displayCard)}
               </p>
             </div>
@@ -1709,15 +1743,15 @@ function SimpleUiShot() {
           <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3">
             <div className="grid shrink-0 grid-cols-2 gap-3">
               <div className={`relative flex min-h-[80px] items-center gap-3 p-3 ${cardShell}`}>
-                <span className="absolute end-2 top-2 text-[#9CA3AF]">
+                <span className="absolute end-2 top-2 text-[#9CA3AF] dark:text-gray-500">
                   <Info size={14} />
                 </span>
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-mintcom-green text-white">
                   <Receipt size={20} />
                 </span>
                 <div className="min-w-0 flex-1 pe-4 text-start">
-                  <p className="truncate text-[11px] font-medium text-[#737182]">Number of Orders</p>
-                  <p className="mt-0.5 truncate text-[15px] font-bold tabular-nums text-[#1F1D2B]">
+                  <p className="truncate text-[11px] font-medium text-[#737182] dark:text-gray-300">Number of Orders</p>
+                  <p className="mt-0.5 truncate text-[15px] font-bold tabular-nums text-gray-900 dark:text-white">
                     {displayOrders}
                   </p>
                 </div>
@@ -1729,16 +1763,16 @@ function SimpleUiShot() {
                 </span>
                 <div className="min-w-0 flex-1 space-y-1.5">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-[11px] font-semibold uppercase tracking-wide text-[#737182]">
+                    <span className="text-[11px] font-semibold uppercase tracking-wide text-[#737182] dark:text-gray-300">
                       PAY-IN
                     </span>
                     <span className="text-[13px] font-bold tabular-nums text-mintcom-green">
                       {reportMoney(displayPayIn)}
                     </span>
                   </div>
-                  <div className="h-px bg-[#D3D6DE]" />
+                  <div className="h-px bg-[#D3D6DE] dark:bg-white/10" />
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-[11px] font-semibold uppercase tracking-wide text-[#737182]">
+                    <span className="text-[11px] font-semibold uppercase tracking-wide text-[#737182] dark:text-gray-300">
                       PAY-OUT
                     </span>
                     <span className="text-[13px] font-bold tabular-nums text-[#D55263]">
@@ -1751,31 +1785,31 @@ function SimpleUiShot() {
 
             <div className="grid shrink-0 grid-cols-2 gap-3">
               <div className={`relative flex min-h-[80px] items-center gap-3 p-3 ${cardShell}`}>
-                <span className="absolute end-2 top-2 text-[#9CA3AF]">
+                <span className="absolute end-2 top-2 text-[#9CA3AF] dark:text-gray-500">
                   <Info size={14} />
                 </span>
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-mintcom-green text-white">
                   <PosOtherReceiptIcon size={22} className="text-white" />
                 </span>
                 <div className="min-w-0 flex-1 pe-4 text-start">
-                  <p className="truncate text-[11px] font-medium text-[#737182]">
+                  <p className="truncate text-[11px] font-medium text-[#737182] dark:text-gray-300">
                     Other Payment Methods
                   </p>
-                  <p className="mt-0.5 truncate text-[15px] font-bold tabular-nums text-[#1F1D2B]">
+                  <p className="mt-0.5 truncate text-[15px] font-bold tabular-nums text-gray-900 dark:text-white">
                     {reportMoney(displayOther)}
                   </p>
                 </div>
               </div>
               <div className={`relative flex min-h-[80px] items-center gap-3 p-3 ${cardShell}`}>
-                <span className="absolute end-2 top-2 text-[#9CA3AF]">
+                <span className="absolute end-2 top-2 text-[#9CA3AF] dark:text-gray-500">
                   <Info size={14} />
                 </span>
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-mintcom-green text-white">
                   <Clock size={20} />
                 </span>
                 <div className="min-w-0 flex-1 pe-4 text-start">
-                  <p className="truncate text-[11px] font-medium text-[#737182]">Total Hours Worked</p>
-                  <p className="mt-0.5 truncate text-[15px] font-bold tabular-nums text-[#1F1D2B]">
+                  <p className="truncate text-[11px] font-medium text-[#737182] dark:text-gray-300">Total Hours Worked</p>
+                  <p className="mt-0.5 truncate text-[15px] font-bold tabular-nums text-gray-900 dark:text-white">
                     {displayHours}
                   </p>
                 </div>
@@ -1783,16 +1817,16 @@ function SimpleUiShot() {
             </div>
 
             {/* Sales Overview — DemoSalesTrendChart shell */}
-            <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-[#D3D6DE] bg-[#E8E8E8] p-3">
+            <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-[#D3D6DE] bg-[#E8E8E8] p-3 dark:border-white/10 dark:bg-mintcom-surface">
               <div className="mb-2 flex shrink-0 items-center justify-between gap-2">
                 <div className="flex min-w-0 items-center gap-1.5">
-                  <p className="text-[13px] font-semibold text-[#111827]">Sales Overview</p>
+                  <p className="text-[13px] font-semibold text-gray-900 dark:text-white">Sales Overview</p>
                   <span className="inline-flex items-center gap-1 rounded-full bg-mintcom-green px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-white">
                     <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
                     Live
                   </span>
                 </div>
-                <span className="inline-flex max-w-[160px] items-center gap-1.5 rounded-xl border border-[#D3D6DE] bg-[#E8E8E8] px-2.5 py-1.5 text-[11px] font-semibold text-[#111827]">
+                <span className="inline-flex max-w-[160px] items-center gap-1.5 rounded-xl border border-[#D3D6DE] bg-[#E8E8E8] px-2.5 py-1.5 text-[11px] font-semibold text-gray-900 dark:border-white/10 dark:bg-white/5 dark:text-white">
                   Active shift
                   <span className="rounded-xl bg-mintcom-green px-1 py-0.5 text-[8px] font-black text-white">
                     LIVE
@@ -1810,7 +1844,7 @@ function SimpleUiShot() {
                     { c: '#D8A85B', l: 'Other' },
                   ] as const
                 ).map((s) => (
-                  <span key={s.l} className="inline-flex items-center gap-1.5 text-[#737182]">
+                  <span key={s.l} className="inline-flex items-center gap-1.5 text-[#737182] dark:text-gray-400">
                     <span className="h-2 w-2 rounded-full" style={{ background: s.c }} />
                     {s.l}
                   </span>
@@ -1825,14 +1859,14 @@ function SimpleUiShot() {
                     {yTicks.map((t, idx) => (
                       <span
                         key={`y-${t}`}
-                        className="absolute end-0 -translate-y-1/2 pe-1 text-[9px] font-medium tabular-nums leading-none text-[#6B7280]"
+                        className="absolute end-0 -translate-y-1/2 pe-1 text-[9px] font-medium tabular-nums leading-none text-gray-500 dark:text-gray-400"
                         style={{ top: `${(idx / (yTicks.length - 1)) * 100}%` }}
                       >
                         {t >= 1000 ? `${(t / 1000).toFixed(t % 1000 === 0 ? 0 : 1)}k` : t}
                       </span>
                     ))}
                   </div>
-                  <span className="h-4 shrink-0 pe-1 pt-0.5 text-end text-[9px] font-medium leading-none text-[#6B7280]">
+                  <span className="h-4 shrink-0 pe-1 pt-0.5 text-end text-[9px] font-medium leading-none text-gray-500 dark:text-gray-400">
                     Sales
                   </span>
                 </div>
@@ -1917,14 +1951,14 @@ function OnboardShot() {
     opts?: { required?: boolean; optional?: boolean; trailing?: ReactNode },
   ) => (
     <div className="space-y-1.5">
-      <p className="flex items-center gap-1 text-[13px] font-normal tracking-tight text-gray-900">
+      <p className="flex items-center gap-1 text-[13px] font-normal tracking-tight text-gray-900 dark:text-gray-200">
         {label}
         {opts?.required && <span className="text-[#D55263]">*</span>}
         {opts?.optional && (
-          <span className="text-gray-400"> (Optional)</span>
+          <span className="text-gray-400 dark:text-gray-500"> (Optional)</span>
         )}
       </p>
-      <div className="relative flex h-11 items-center rounded-xl border border-gray-200 bg-gray-50 px-4 text-[13px] font-bold text-gray-900">
+      <div className="relative flex h-11 items-center rounded-xl border border-gray-200 bg-gray-50 px-4 text-[13px] font-bold text-gray-900 dark:border-white/10 dark:bg-white/5 dark:text-white">
         <span className="min-w-0 flex-1 truncate">{value}</span>
         {opts?.trailing}
       </div>
@@ -1937,11 +1971,11 @@ function OnboardShot() {
       style={{ width: DESIGN_W, height: DESIGN_H }}
     >
       {/* Dashboard Staff page (StaffPage) behind the popup */}
-      <div className="absolute inset-0 bg-gray-50 p-4">
+      <div className="absolute inset-0 bg-gray-50 p-4 dark:bg-mintcom-dark">
         <div className="mb-3 flex items-end justify-between gap-3">
           <div>
-            <p className="text-[22px] font-bold tracking-tight text-gray-900">Staff</p>
-            <p className="mt-1 flex flex-wrap items-center gap-2 text-[12px] text-gray-500">
+            <p className="text-[22px] font-bold tracking-tight text-gray-900 dark:text-white">Staff</p>
+            <p className="mt-1 flex flex-wrap items-center gap-2 text-[12px] text-gray-500 dark:text-gray-400">
               <span>Manage your team</span>
               <span className="rounded-lg border border-mintcom-green/20 bg-mintcom-green/10 px-2.5 py-0.5 text-[11px] font-bold text-mintcom-green">
                 Cafe Delight
@@ -1962,18 +1996,18 @@ function OnboardShot() {
               { label: 'Standard users', value: '3', color: 'text-orange-500', bg: 'bg-orange-500/10', Icon: Star },
             ] as const
           ).map((s) => (
-            <div key={s.label} className="rounded-2xl border border-gray-200 bg-white p-3.5 shadow-sm">
+            <div key={s.label} className="rounded-2xl border border-gray-200 bg-white p-3.5 shadow-sm dark:border-white/10 dark:bg-mintcom-surface dark:shadow-none">
               <span className={`mb-2 flex h-9 w-9 items-center justify-center rounded-xl ${s.bg} ${s.color}`}>
                 <s.Icon size={16} />
               </span>
-              <p className="text-[10px] font-medium text-gray-500">{s.label}</p>
-              <p className="text-[20px] font-bold tabular-nums text-gray-900">{s.value}</p>
+              <p className="text-[10px] font-medium text-gray-500 dark:text-gray-400">{s.label}</p>
+              <p className="text-[20px] font-bold tabular-nums text-gray-900 dark:text-white">{s.value}</p>
             </div>
           ))}
         </div>
 
-        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-          <div className="grid grid-cols-[1.4fr_1fr_0.9fr_0.7fr] gap-2 border-b border-gray-100 px-4 py-3 text-[11px] font-bold text-gray-500">
+        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-mintcom-surface dark:shadow-none">
+          <div className="grid grid-cols-[1.4fr_1fr_0.9fr_0.7fr] gap-2 border-b border-gray-100 px-4 py-3 text-[11px] font-bold text-gray-500 dark:border-white/10 dark:text-gray-400">
             <span>Employee</span>
             <span>Username</span>
             <span>Role</span>
@@ -1982,7 +2016,7 @@ function OnboardShot() {
           {team.map((m) => (
             <div
               key={m.user}
-              className="grid grid-cols-[1.4fr_1fr_0.9fr_0.7fr] items-center gap-2 border-b border-gray-50 px-4 py-3 last:border-0"
+              className="grid grid-cols-[1.4fr_1fr_0.9fr_0.7fr] items-center gap-2 border-b border-gray-50 px-4 py-3 last:border-0 dark:border-white/5"
             >
               <div className="flex min-w-0 items-center gap-2.5">
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-mintcom-green/15 text-[11px] font-bold text-mintcom-green">
@@ -1991,9 +2025,9 @@ function OnboardShot() {
                     .map((p) => p[0])
                     .join('')}
                 </span>
-                <span className="truncate text-[13px] font-semibold text-gray-900">{m.name}</span>
+                <span className="truncate text-[13px] font-semibold text-gray-900 dark:text-white">{m.name}</span>
               </div>
-              <span className="truncate text-[12px] text-gray-500">{m.user}</span>
+              <span className="truncate text-[12px] text-gray-500 dark:text-gray-400">{m.user}</span>
               <span className="w-fit rounded-lg border border-mintcom-green/20 bg-mintcom-green/10 px-2 py-0.5 text-[10px] font-bold text-mintcom-green">
                 {m.role}
               </span>
@@ -2006,15 +2040,15 @@ function OnboardShot() {
       </div>
 
       {/* Real EmployeeFormModal chrome (dashboard Staff → New Employee) */}
-      <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/30 p-4 backdrop-blur-sm">
+      <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm dark:bg-black/55">
         {/* font-sans = Inter like .popup-surface (global h2 would force Magilio) */}
-        <div className="flex h-full max-h-full w-full max-w-xl flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white font-sans shadow-2xl">
+        <div className="flex h-full max-h-full w-full max-w-xl flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white font-sans shadow-2xl dark:border-white/10 dark:bg-mintcom-surface dark:shadow-black/50">
           {/* Header — matches EmployeeFormModal h2: text-xl font-bold tracking-tight */}
-          <div className="flex shrink-0 items-center justify-between border-b border-gray-200 px-6 py-4 sm:px-8 sm:py-5">
-            <p className="font-sans text-xl font-bold tracking-tight text-gray-900">
+          <div className="flex shrink-0 items-center justify-between border-b border-gray-200 px-6 py-4 dark:border-white/10 sm:px-8 sm:py-5">
+            <p className="font-sans text-xl font-bold tracking-tight text-gray-900 dark:text-white">
               New Employee
             </p>
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl text-gray-400">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl text-gray-400 dark:text-gray-300">
               <X size={20} />
             </span>
           </div>
@@ -2029,11 +2063,11 @@ function OnboardShot() {
             })}
 
             {/* Location disclaimer (dashboard has no establishments prop) */}
-            <div className="flex items-start gap-3 rounded-xl border border-gray-100 bg-gray-50 p-3.5">
+            <div className="flex items-start gap-3 rounded-xl border border-gray-100 bg-gray-50 p-3.5 dark:border-white/10 dark:bg-white/5">
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-mintcom-green/10 text-mintcom-green">
                 <MapPin size={16} />
               </span>
-              <p className="text-[11px] font-bold leading-relaxed text-gray-500">
+              <p className="text-[11px] font-bold leading-relaxed text-gray-500 dark:text-gray-300">
                 This employee is added to the current location only. Use the{' '}
                 <span className="text-mintcom-green">Owner portal</span> to assign staff across
                 multiple locations.
@@ -2044,24 +2078,24 @@ function OnboardShot() {
             {field('Username', 'layla', { required: true })}
             {field('Phone', '+1 555 0142', { optional: true })}
 
-            <div className="space-y-4 border-t border-gray-100 pt-3">
+            <div className="space-y-4 border-t border-gray-100 pt-3 dark:border-white/10">
               {field('Password', '••••••••', {
                 required: true,
-                trailing: <Eye size={18} className="text-gray-500" />,
+                trailing: <Eye size={18} className="text-gray-500 dark:text-gray-400" />,
               })}
-              <p className="-mt-2 text-[11px] font-bold text-gray-500">
+              <p className="-mt-2 text-[11px] font-bold text-gray-500 dark:text-gray-400">
                 At least 8 characters with uppercase, lowercase, and a number.
               </p>
               {field('Confirm Password', '••••••••', {
                 required: true,
-                trailing: <Eye size={18} className="text-gray-500" />,
+                trailing: <Eye size={18} className="text-gray-500 dark:text-gray-400" />,
               })}
             </div>
           </div>
 
           {/* Footer — Cancel + ADD */}
-          <div className="flex shrink-0 items-center gap-3 border-t border-gray-100 bg-white px-6 py-4 sm:gap-4 sm:px-8">
-            <span className="flex h-12 flex-1 items-center justify-center rounded-xl border border-gray-200 text-xs font-black tracking-widest text-gray-600">
+          <div className="flex shrink-0 items-center gap-3 border-t border-gray-100 bg-white px-6 py-4 dark:border-white/10 dark:bg-mintcom-surface sm:gap-4 sm:px-8">
+            <span className="flex h-12 flex-1 items-center justify-center rounded-xl border border-gray-200 text-xs font-black tracking-widest text-gray-600 dark:border-white/10 dark:text-gray-300">
               CANCEL
             </span>
             <span className="flex h-12 flex-1 items-center justify-center rounded-xl bg-mintcom-green text-xs font-black tracking-widest text-black shadow-lg shadow-mintcom-green/20">
@@ -2092,25 +2126,25 @@ function SecureShot() {
       style={{ width: DESIGN_W, height: DESIGN_H }}
     >
       {/* Owner Account Management canvas */}
-      <div className="absolute inset-0 bg-gray-50 p-4">
+      <div className="absolute inset-0 bg-gray-50 p-4 dark:bg-mintcom-dark">
         <div className="mb-3">
-          <p className="text-[20px] font-bold tracking-tight text-gray-900">Account</p>
-          <p className="mt-0.5 text-[12px] text-gray-500">Owner portal · security &amp; access</p>
+          <p className="text-[20px] font-bold tracking-tight text-gray-900 dark:text-white">Account</p>
+          <p className="mt-0.5 text-[12px] text-gray-500 dark:text-gray-400">Owner portal · security &amp; access</p>
         </div>
 
         <div className="grid h-[calc(100%-3rem)] grid-cols-[1.15fr_0.95fr] gap-3">
           {/* Security tips — OwnerAccountManagementPage */}
-          <div className="flex min-h-0 flex-col rounded-2xl border border-mintcom-green/20 bg-gradient-to-br from-mintcom-green/10 via-emerald-50/90 to-white p-5 shadow-sm">
+          <div className="flex min-h-0 flex-col rounded-2xl border border-mintcom-green/20 bg-gradient-to-br from-mintcom-green/10 via-emerald-50/90 to-white p-5 shadow-sm dark:border-mintcom-green/25 dark:from-mintcom-green/15 dark:via-mintcom-surface dark:to-mintcom-surface dark:shadow-none">
             <div className="mb-4 flex items-center gap-3">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-mintcom-green/20">
                 <Shield size={20} className="text-mintcom-green" />
               </span>
               <div>
-                <p className="text-[16px] font-bold tracking-tight text-gray-900">Security tips</p>
-                <p className="text-[11px] text-gray-500">Keep your account and logins safe</p>
+                <p className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-white">Security tips</p>
+                <p className="text-[11px] text-gray-500 dark:text-gray-400">Keep your account and logins safe</p>
               </div>
             </div>
-            <ul className="space-y-2 ps-[3.25rem] text-[12px] font-medium text-gray-600">
+            <ul className="space-y-2 ps-[3.25rem] text-[12px] font-medium text-gray-600 dark:text-gray-300">
               {tips.map((tip) => (
                 <li key={tip} className="flex items-start gap-2 leading-snug">
                   <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-mintcom-green" />
@@ -2127,29 +2161,29 @@ function SecureShot() {
               ).map((c) => (
                 <div
                   key={c.label}
-                  className="rounded-xl border border-mintcom-green/15 bg-white/80 px-3 py-2.5"
+                  className="rounded-xl border border-mintcom-green/15 bg-white/80 px-3 py-2.5 dark:border-mintcom-green/20 dark:bg-mintcom-dark/60"
                 >
                   <c.icon size={14} className="mb-1 text-mintcom-green" />
-                  <p className="text-[11px] font-bold text-gray-900">{c.label}</p>
-                  <p className="text-[10px] text-gray-500">{c.sub}</p>
+                  <p className="text-[11px] font-bold text-gray-900 dark:text-white">{c.label}</p>
+                  <p className="text-[10px] text-gray-500 dark:text-gray-400">{c.sub}</p>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Danger zone panel (real owner account) */}
-          <div className="relative flex min-h-0 flex-col overflow-hidden rounded-2xl border border-red-500/25 bg-gradient-to-b from-white to-red-50/80 p-5 shadow-sm">
+          <div className="relative flex min-h-0 flex-col overflow-hidden rounded-2xl border border-red-500/25 bg-gradient-to-b from-white to-red-50/80 p-5 shadow-sm dark:border-red-500/30 dark:from-mintcom-surface dark:to-red-950/40 dark:shadow-none">
             <div className="absolute -end-8 -top-8 h-28 w-28 rounded-full bg-red-500/15 blur-3xl" />
             <div className="relative z-10 mb-3 flex items-center gap-3">
               <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-500/10">
                 <AlertTriangle size={18} className="text-red-500" />
               </span>
               <div>
-                <p className="text-[16px] font-bold tracking-tight text-gray-900">Danger zone</p>
-                <p className="text-[11px] text-gray-500">High-impact actions need re-auth</p>
+                <p className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-white">Danger zone</p>
+                <p className="text-[11px] text-gray-500 dark:text-gray-400">High-impact actions need re-auth</p>
               </div>
             </div>
-            <ul className="relative z-10 space-y-1.5 ps-[3.25rem] text-[11px] font-medium text-gray-600">
+            <ul className="relative z-10 space-y-1.5 ps-[3.25rem] text-[11px] font-medium text-gray-600 dark:text-gray-300">
               <li className="flex items-start gap-2">
                 <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-red-400" />
                 Locations &amp; brands scheduled for removal
@@ -2159,7 +2193,7 @@ function SecureShot() {
                 Staff access and login IDs stop working
               </li>
             </ul>
-            <span className="relative z-10 mt-auto flex items-center justify-center rounded-xl border border-red-500/20 bg-red-500/10 py-2.5 text-[12px] font-black tracking-wide text-red-600">
+            <span className="relative z-10 mt-auto flex items-center justify-center rounded-xl border border-red-500/20 bg-red-500/10 py-2.5 text-[12px] font-black tracking-wide text-red-600 dark:text-red-400">
               Delete account
             </span>
           </div>
@@ -2167,31 +2201,31 @@ function SecureShot() {
       </div>
 
       {/* SecurityVerificationModal — password re-auth for high-impact actions */}
-      <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40 p-5 backdrop-blur-sm">
-        <div className="flex w-full max-w-md flex-col overflow-hidden rounded-xl border border-gray-200 bg-white font-sans shadow-2xl shadow-black/20">
+      <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40 p-5 backdrop-blur-sm dark:bg-black/55">
+        <div className="flex w-full max-w-md flex-col overflow-hidden rounded-xl border border-gray-200 bg-white font-sans shadow-2xl shadow-black/20 dark:border-white/10 dark:bg-mintcom-surface dark:shadow-black/50">
           {/* Header */}
-          <div className="flex items-start justify-between border-b border-gray-100 bg-gray-50/50 px-6 py-5">
+          <div className="flex items-start justify-between border-b border-gray-100 bg-gray-50/50 px-6 py-5 dark:border-white/10 dark:bg-white/[0.04]">
             <div className="flex items-center gap-4">
               <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-red-500/10 text-red-500 shadow-sm">
                 <ShieldAlert size={24} />
               </span>
               <div>
-                <p className="text-lg font-black tracking-tight text-gray-900">Delete employee</p>
+                <p className="text-lg font-black tracking-tight text-gray-900 dark:text-white">Delete employee</p>
                 <p className="mt-0.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">
                   High-impact action
                 </p>
               </div>
             </div>
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl text-gray-400">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl text-gray-400 dark:text-gray-300">
               <X size={18} strokeWidth={2.5} />
             </span>
           </div>
 
           <div className="space-y-4 px-6 py-5">
-            <div className="rounded-xl border border-amber-100 bg-amber-50 p-4 shadow-sm">
+            <div className="rounded-xl border border-amber-100 bg-amber-50 p-4 shadow-sm dark:border-amber-500/25 dark:bg-amber-500/10 dark:shadow-none">
               <div className="flex gap-3">
-                <AlertTriangle size={18} className="mt-0.5 shrink-0 text-amber-600" />
-                <p className="text-[13px] font-bold leading-relaxed text-amber-700">
+                <AlertTriangle size={18} className="mt-0.5 shrink-0 text-amber-600 dark:text-amber-400" />
+                <p className="text-[13px] font-bold leading-relaxed text-amber-700 dark:text-amber-200">
                   You are about to deactivate <span className="font-black">Sara Hassan</span>. Past
                   orders stay linked; they lose POS and portal access.
                 </p>
@@ -2202,9 +2236,9 @@ function SecureShot() {
               <p className="px-1 text-[10px] font-normal uppercase tracking-[0.2em] text-gray-400">
                 Account email
               </p>
-              <div className="relative flex h-12 items-center rounded-xl border border-gray-200 bg-gray-50 px-4">
+              <div className="relative flex h-12 items-center rounded-xl border border-gray-200 bg-gray-50 px-4 dark:border-white/10 dark:bg-white/5">
                 <Mail size={16} className="me-3 shrink-0 text-gray-400" />
-                <span className="text-[13px] font-bold text-gray-900">owner@cafedelight.com</span>
+                <span className="text-[13px] font-bold text-gray-900 dark:text-white">owner@cafedelight.com</span>
               </div>
             </div>
 
@@ -2212,9 +2246,9 @@ function SecureShot() {
               <p className="px-1 text-[10px] font-normal uppercase tracking-[0.2em] text-gray-400">
                 Password
               </p>
-              <div className="relative flex h-12 items-center rounded-xl border border-mintcom-green/40 bg-white px-4 shadow-sm shadow-mintcom-green/10">
+              <div className="relative flex h-12 items-center rounded-xl border border-mintcom-green/40 bg-white px-4 shadow-sm shadow-mintcom-green/10 dark:bg-mintcom-dark">
                 <Lock size={16} className="me-3 shrink-0 text-mintcom-green" />
-                <span className="flex-1 text-[13px] font-bold tracking-widest text-gray-900">
+                <span className="flex-1 text-[13px] font-bold tracking-widest text-gray-900 dark:text-white">
                   ••••••••••
                 </span>
                 <Eye size={16} className="text-gray-400" />
@@ -2222,8 +2256,8 @@ function SecureShot() {
             </div>
           </div>
 
-          <div className="flex gap-3 border-t border-gray-100 px-6 py-4">
-            <span className="flex h-12 flex-1 items-center justify-center rounded-xl border border-gray-200 text-xs font-black tracking-widest text-gray-600">
+          <div className="flex gap-3 border-t border-gray-100 px-6 py-4 dark:border-white/10">
+            <span className="flex h-12 flex-1 items-center justify-center rounded-xl border border-gray-200 text-xs font-black tracking-widest text-gray-600 dark:border-white/10 dark:text-gray-300">
               CANCEL
             </span>
             <span className="flex h-12 flex-1 items-center justify-center rounded-xl bg-red-500 text-xs font-black tracking-widest text-white shadow-lg shadow-red-500/20">
@@ -2242,16 +2276,16 @@ function LoyaltyShot() {
   return (
     <div className="flex h-full w-full overflow-hidden" style={{ width: DESIGN_W, height: DESIGN_H }}>
       <PosRail active="sales" />
-      <div className="relative flex min-w-0 flex-1 overflow-hidden bg-[#f6f3ec]">
+      <div className="relative flex min-w-0 flex-1 overflow-hidden bg-[#f6f3ec] dark:bg-mintcom-dark">
         {/* Dimmed sales grid behind */}
         <div className="flex min-w-0 flex-1 flex-col opacity-35">
-          <div className="border-b border-gray-100 bg-white px-4 py-3">
+          <div className="border-b border-gray-100 dark:border-white/10 bg-white dark:bg-mintcom-surface px-4 py-3">
             <p className="text-[13px] font-bold text-gray-500">Sales · Order #41</p>
           </div>
           <div className="grid flex-1 grid-cols-3 gap-2 p-3">
             {['Espresso', 'Latte', 'Croissant', 'Muffin', 'Cookie', 'Tea'].map((n) => (
-              <div key={n} className="rounded-xl border border-gray-100 bg-white p-2">
-                <div className="mb-1 flex h-12 items-center justify-center">
+              <div key={n} className="rounded-xl border border-gray-100 dark:border-white/10 bg-white dark:bg-mintcom-surface p-2">
+                <div className="mb-1 flex h-12 items-center justify-center rounded-lg bg-[#F8FAF9] dark:bg-[#F3F4F6]">
                   <img src={DEFAULT_IMG} alt="" className="h-10 w-10 object-contain" />
                 </div>
                 <p className="text-[11px] font-bold">{n}</p>
@@ -2261,16 +2295,16 @@ function LoyaltyShot() {
         </div>
         {/* Overlay */}
         <div className="absolute inset-0 flex items-center justify-center bg-black/70 p-4">
-          <div className="flex h-full max-h-[500px] w-[380px] flex-col overflow-hidden rounded-xl bg-white shadow-2xl">
-            <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
+          <div className="flex h-full max-h-[500px] w-[380px] flex-col overflow-hidden rounded-xl bg-white dark:bg-mintcom-surface shadow-2xl">
+            <div className="flex items-center justify-between border-b border-gray-100 dark:border-white/10 px-4 py-3">
               <div className="flex items-center gap-2">
                 <Heart size={18} className="text-mintcom-green" />
-                <p className="text-[15px] font-bold text-[#111827]">Loyalty</p>
+                <p className="text-[15px] font-bold text-gray-900 dark:text-white">Loyalty</p>
               </div>
               <X size={18} className="text-gray-400" />
             </div>
             {/* Tabs like real modal */}
-            <div className="flex border-b border-gray-100">
+            <div className="flex border-b border-gray-100 dark:border-white/10">
               {[
                 { label: 'Search', icon: Search },
                 { label: 'Scan QR', icon: Hash },
@@ -2287,14 +2321,14 @@ function LoyaltyShot() {
                 </span>
               ))}
             </div>
-            <div className="border-b border-gray-50 px-4 py-3.5">
+            <div className="border-b border-gray-50 px-4 py-3.5 dark:border-white/10">
               <div className="flex items-center gap-3">
                 <span className="flex h-12 w-12 items-center justify-center rounded-full bg-mintcom-green text-[14px] font-bold text-white">
                   NA
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[15px] font-bold text-[#111827]">Nora Alami</p>
-                  <p className="text-[12px] text-gray-500">+1 555 0142 · Gold</p>
+                  <p className="text-[15px] font-bold text-gray-900 dark:text-white">Nora Alami</p>
+                  <p className="text-[12px] text-gray-500 dark:text-gray-400">+1 555 0142 · Gold</p>
                 </div>
                 <div className="text-end">
                   <p className="text-[20px] font-extrabold tabular-nums text-mintcom-green">1,240</p>
@@ -2313,13 +2347,13 @@ function LoyaltyShot() {
               ].map((r) => (
                 <div
                   key={r.name}
-                  className="flex items-center gap-3 rounded-xl border border-gray-100 bg-[#fafaf9] px-3 py-2.5"
+                  className="flex items-center gap-3 rounded-xl border border-gray-100 bg-[#fafaf9] px-3 py-2.5 dark:border-white/10 dark:bg-mintcom-dark"
                 >
                   <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-mintcom-green/15 text-mintcom-green">
                     <Gift size={16} />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="text-[13px] font-bold text-[#111827]">{r.name}</p>
+                    <p className="text-[13px] font-bold text-gray-900 dark:text-white">{r.name}</p>
                     <p className="text-[11px] text-gray-400">
                       {r.type} · {r.pts} points
                     </p>
@@ -2330,7 +2364,7 @@ function LoyaltyShot() {
                 </div>
               ))}
             </div>
-            <div className="border-t border-gray-100 px-4 py-3">
+            <div className="border-t border-gray-100 dark:border-white/10 px-4 py-3">
               <span className="flex w-full items-center justify-center rounded-xl bg-mintcom-green py-3 text-[13px] font-bold text-white">
                 Attach to order
               </span>
@@ -2411,9 +2445,9 @@ function MobileShot() {
       className="relative flex h-full w-full items-center justify-center overflow-hidden font-sans"
       style={{ width: DESIGN_W, height: DESIGN_H }}
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-[#e8f5ef] via-[#f4f7f5] to-[#dfece6]" />
-      <div className="absolute -left-10 top-12 h-48 w-48 rounded-full bg-mintcom-green/25 blur-3xl" />
-      <div className="absolute -right-8 bottom-8 h-52 w-52 rounded-full bg-[#7dc6a2]/20 blur-3xl" />
+      <div className="absolute inset-0 bg-gradient-to-br from-[#e8f5ef] via-[#f4f7f5] to-[#dfece6] dark:from-mintcom-dark dark:via-[#0c1525] dark:to-mintcom-dark" />
+      <div className="absolute -left-10 top-12 h-48 w-48 rounded-full bg-mintcom-green/25 blur-3xl dark:bg-mintcom-green/15" />
+      <div className="absolute -right-8 bottom-8 h-52 w-52 rounded-full bg-[#7dc6a2]/20 blur-3xl dark:bg-mintcom-green/10" />
 
       <div className="relative z-10 flex items-center gap-9">
         {/* Phone + floating lock-screen push */}
@@ -2423,7 +2457,8 @@ function MobileShot() {
             real system notification (AdminPortalAlertsView cash shortage).
           */}
           <div className="absolute -top-1 left-1/2 z-40 w-[268px] -translate-x-1/2">
-            <div className="rounded-[20px] border border-white/40 bg-white/90 p-2.5 shadow-[0_12px_40px_-8px_rgba(0,0,0,0.35)] backdrop-blur-xl">
+            {/* iOS push — light glass in light mode, solid product surface in dark (must beat bg-white/90) */}
+            <div className="rounded-[20px] border border-black/5 bg-white/95 p-2.5 shadow-[0_12px_40px_-8px_rgba(0,0,0,0.35)] backdrop-blur-xl dark:border-white/12 dark:!bg-mintcom-surface dark:shadow-[0_12px_40px_-8px_rgba(0,0,0,0.55)] dark:backdrop-blur-none">
               <div className="flex items-start gap-2.5">
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-[10px] bg-mintcom-green shadow-sm">
                   <img
@@ -2435,15 +2470,15 @@ function MobileShot() {
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="text-[11px] font-bold uppercase tracking-wide text-gray-500">
+                    <p className="text-[11px] font-bold uppercase tracking-wide text-gray-500 dark:!text-gray-400">
                       Mintcom
                     </p>
-                    <p className="text-[10px] font-semibold text-gray-400">now</p>
+                    <p className="text-[10px] font-semibold text-gray-400 dark:!text-gray-500">now</p>
                   </div>
-                  <p className="mt-0.5 text-[13px] font-bold leading-tight text-gray-900">
+                  <p className="mt-0.5 text-[13px] font-bold leading-tight text-gray-900 dark:!text-white">
                     Shortage - Sara
                   </p>
-                  <p className="mt-0.5 line-clamp-2 text-[11px] font-medium leading-snug text-gray-600">
+                  <p className="mt-0.5 line-clamp-2 text-[11px] font-medium leading-snug text-gray-600 dark:!text-gray-300">
                     Expected $420.00 - Counted $395.50 · Downtown
                   </p>
                 </div>
@@ -2457,7 +2492,7 @@ function MobileShot() {
             <span className="absolute -start-[9px] top-[150px] h-12 w-[3px] rounded-s-sm bg-[#2a2a30]" />
             <span className="absolute -end-[9px] top-[170px] h-16 w-[3px] rounded-e-sm bg-[#2a2a30]" />
 
-            <div className="flex h-full flex-col overflow-hidden rounded-[33px] bg-[#F5F7F6]">
+            <div className="flex h-full flex-col overflow-hidden rounded-[33px] bg-[#F5F7F6] dark:bg-mintcom-dark">
               {/* Status + Dynamic Island */}
               <div className="relative flex shrink-0 items-center justify-between bg-mintcom-green px-5 pb-1 pt-3 text-white">
                 <span className="w-12 text-[11px] font-semibold">9:41</span>
@@ -2486,20 +2521,20 @@ function MobileShot() {
               </div>
 
               {/* Tabs — All / Cash / Stock / Refunds */}
-              <div className="flex shrink-0 gap-1.5 overflow-hidden bg-white px-3 py-2.5 shadow-sm">
+              <div className="flex shrink-0 gap-1.5 overflow-hidden bg-white dark:bg-mintcom-surface px-3 py-2.5 shadow-sm">
                 {tabs.map((t, i) => (
                   <span
                     key={t.id}
                     className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold ${
                       i === 0
                         ? 'bg-mintcom-green text-black'
-                        : 'bg-gray-100 text-gray-500'
+                        : 'bg-gray-100 text-gray-500 dark:bg-white/10 dark:text-gray-300'
                     }`}
                   >
                     {t.label}
                     <span
                       className={`rounded-md px-1 text-[9px] font-black ${
-                        i === 0 ? 'bg-black/10' : 'bg-white text-gray-400'
+                        i === 0 ? 'bg-black/10' : 'bg-white text-gray-400 dark:bg-white/10 dark:text-gray-400'
                       }`}
                     >
                       {t.count}
@@ -2509,14 +2544,14 @@ function MobileShot() {
               </div>
 
               {/* Feed cards — AdminPortalAlertsView layout */}
-              <div className="min-h-0 flex-1 space-y-0 overflow-hidden bg-white">
+              <div className="min-h-0 flex-1 space-y-0 overflow-hidden bg-white dark:bg-mintcom-surface">
                 {alerts.map((a, idx) => {
                   const Icon = a.Icon;
                   return (
                     <div
                       key={a.title}
                       className={`relative flex items-start gap-2.5 px-3 py-3 ${
-                        idx < alerts.length - 1 ? 'border-b border-gray-100' : ''
+                        idx < alerts.length - 1 ? 'border-b border-gray-100 dark:border-white/10' : ''
                       }`}
                     >
                       {a.unread && (
@@ -2533,14 +2568,14 @@ function MobileShot() {
                       </span>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-start justify-between gap-2">
-                          <p className="min-w-0 text-[13px] font-bold leading-snug text-gray-900">
+                          <p className="min-w-0 text-[13px] font-bold leading-snug text-gray-900 dark:text-white">
                             {a.title}
                           </p>
                           <p className="shrink-0 text-[10px] font-semibold text-gray-400">
                             {a.time}
                           </p>
                         </div>
-                        <p className="mt-0.5 line-clamp-2 text-[11px] font-medium leading-snug text-gray-500">
+                        <p className="mt-0.5 line-clamp-2 text-[11px] font-medium leading-snug text-gray-500 dark:text-gray-400">
                           {a.desc}
                         </p>
                         <div className="mt-1.5 flex items-center justify-between gap-2">
@@ -2560,30 +2595,39 @@ function MobileShot() {
                 })}
               </div>
 
-              <div className="mx-auto mb-2 mt-1 h-1 w-[108px] shrink-0 rounded-full bg-gray-900/80" />
+              {/* iOS home indicator — always readable in light + dark */}
+              <div className="relative shrink-0 bg-white dark:bg-mintcom-surface">
+                <div className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent dark:via-white/12" />
+                <div className="flex items-center justify-center pb-2.5 pt-2">
+                  <span
+                    className="h-[5px] w-[118px] rounded-full bg-gray-900 shadow-[0_1px_2px_rgba(0,0,0,0.18)] dark:bg-white/90 dark:shadow-[0_0_14px_rgba(255,255,255,0.18)]"
+                    aria-hidden
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Side story */}
         <div className="flex w-[260px] flex-col gap-3">
-          <div className="rounded-2xl border border-white/90 bg-white/95 p-4 shadow-lg shadow-black/5">
+          <div className="rounded-2xl border border-white/90 bg-white/95 p-4 shadow-lg shadow-black/5 dark:border-white/10 dark:bg-mintcom-surface dark:shadow-black/40">
             <div className="mb-2 flex items-center gap-2.5">
               <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-mintcom-green/15 text-mintcom-green">
                 <Bell size={18} />
               </span>
               <div>
-                <p className="text-[14px] font-bold text-gray-900">Owner notifications</p>
+                <p className="text-[14px] font-bold text-gray-900 dark:text-white">Owner notifications</p>
                 <p className="text-[11px] font-semibold text-mintcom-green">Live push + in-app feed</p>
               </div>
             </div>
-            <p className="text-[12px] leading-relaxed text-gray-500">
+            <p className="text-[12px] leading-relaxed text-gray-500 dark:text-gray-400">
               Cash shortage, stock, and refunds — same feed as the admin portal Notifications
               screen.
             </p>
           </div>
 
-          <div className="rounded-2xl border border-white/90 bg-white/95 p-4 shadow-lg">
+          <div className="rounded-2xl border border-white/90 bg-white/95 p-4 shadow-lg dark:border-white/10 dark:bg-mintcom-surface dark:shadow-black/40">
             <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-gray-400">
               Alert types
             </p>
@@ -2595,7 +2639,7 @@ function MobileShot() {
                   { c: WARNING, l: 'Refunds & updates' },
                 ] as const
               ).map((x) => (
-                <div key={x.l} className="flex items-center gap-2 text-[12px] font-semibold text-gray-700">
+                <div key={x.l} className="flex items-center gap-2 text-[12px] font-semibold text-gray-700 dark:text-gray-300">
                   <span className="h-2 w-2 rounded-full" style={{ background: x.c }} />
                   {x.l}
                 </div>
@@ -2611,7 +2655,7 @@ function MobileShot() {
               </span>
               Real-time push
             </div>
-            <p className="mt-1.5 text-[12px] font-medium leading-snug text-[#1f2a26]/90">
+            <p className="mt-1.5 text-[12px] font-medium leading-snug text-gray-900 dark:text-white/90">
               Banners land on the lock screen — tap to open the matching tab.
             </p>
           </div>
@@ -2665,13 +2709,15 @@ const TITLES: Record<string, string> = {
 export function FeatureScreenshot({
   featureId,
   side,
+  fill,
 }: {
   featureId?: string;
   side?: boolean;
+  fill?: boolean;
 }) {
   if (!featureId) return null;
   if (featureId === 'pointOfSale') {
-    return <FeaturePosScreenshot side={side} />;
+    return <FeaturePosScreenshot side={side} fill={fill} />;
   }
 
   const title = TITLES[featureId] ?? 'Mintcom POS';
@@ -2719,7 +2765,7 @@ export function FeatureScreenshot({
   }
 
   return (
-    <FeatureShotFrame title={title} side={side} bg={bg}>
+    <FeatureShotFrame title={title} side={side} fill={fill} bg={bg}>
       {body}
     </FeatureShotFrame>
   );

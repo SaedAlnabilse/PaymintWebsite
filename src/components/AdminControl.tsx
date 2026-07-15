@@ -99,6 +99,10 @@ const NotificationsScreenMock = ({
   const TAB_BG = isDarkMode ? 'rgba(0,0,0,0.25)' : '#F1F5F9';
   const FILTER_LABEL = isDarkMode ? '#7a9e93' : '#4d7c6e';
   const MARK_READ = isDarkMode ? G1 : '#3d8f68';
+  /** Elevated bottom tab bar — must separate from page BG in both themes */
+  const NAV_BG = isDarkMode ? '#252836' : '#FFFFFF';
+  const NAV_IDLE = isDarkMode ? '#9CA3AF' : '#64748B';
+  const HOME_PILL = isDarkMode ? 'rgba(255,255,255,0.88)' : 'rgba(15,23,42,0.88)';
 
   const alerts: MockAlert[] = [
     {
@@ -209,7 +213,7 @@ const NotificationsScreenMock = ({
   ];
 
   const navItems = [
-    { icon: Home, label: t('landing.admin.mockup.navHome'), active: false },
+    { icon: Home, label: t('landing.admin.mockup.navHome'), active: true },
     { icon: MapPin, label: t('landing.admin.mockup.navLocations'), active: false },
     { icon: Briefcase, label: t('landing.admin.mockup.navBrands'), active: false },
     { icon: KeyRound, label: t('landing.admin.mockup.navAccount'), active: false },
@@ -457,27 +461,61 @@ const NotificationsScreenMock = ({
         </div>
       </div>
 
-      {/* ── BottomNav (owner) ── */}
+      {/* ── BottomNav (owner) + home indicator — distinct bar in light & dark ── */}
       <div
-        className="flex-shrink-0 flex items-center justify-around border-t px-1 pt-1.5 pb-2.5 transition-colors duration-300"
-        style={{ backgroundColor: BG, borderColor: BORDER }}
+        className="relative z-20 flex-shrink-0 border-t transition-colors duration-300"
+        style={{
+          backgroundColor: NAV_BG,
+          borderColor: BORDER,
+          boxShadow: isDarkMode
+            ? '0 -8px 24px -12px rgba(0,0,0,0.55)'
+            : '0 -6px 18px -10px rgba(15,23,42,0.12)',
+        }}
       >
-        {navItems.map((item) => (
-          <div key={item.label} className="flex flex-col items-center gap-0.5 flex-1">
-            <item.icon
-              size={compact ? 13 : 14}
-              style={{ color: item.active ? MARK_READ : SUB }}
-              strokeWidth={2.25}
-              className="transition-colors duration-300"
-            />
-            <span
-              className="text-[7px] font-bold leading-none transition-colors duration-300"
-              style={{ color: item.active ? MARK_READ : SUB }}
-            >
-              {item.label}
-            </span>
-          </div>
-        ))}
+        <div className="flex items-center justify-around px-1 pt-2 pb-1">
+          {navItems.map((item) => (
+            <div key={item.label} className="flex flex-1 flex-col items-center gap-0.5">
+              {item.active ? (
+                <span
+                  className="mb-0.5 flex h-7 w-7 items-center justify-center rounded-xl transition-colors duration-300"
+                  style={{ backgroundColor: `${G1}22` }}
+                >
+                  <item.icon
+                    size={compact ? 13 : 14}
+                    style={{ color: G1 }}
+                    strokeWidth={2.4}
+                  />
+                </span>
+              ) : (
+                <item.icon
+                  size={compact ? 13 : 14}
+                  style={{ color: NAV_IDLE }}
+                  strokeWidth={2.25}
+                  className="mb-0.5 transition-colors duration-300"
+                />
+              )}
+              <span
+                className="text-[7px] font-bold leading-none transition-colors duration-300"
+                style={{ color: item.active ? G1 : NAV_IDLE }}
+              >
+                {item.label}
+              </span>
+            </div>
+          ))}
+        </div>
+        {/* iOS home indicator — sits on the same bar (no extra dark bezel below) */}
+        <div className="flex items-center justify-center pb-1.5 pt-0.5">
+          <span
+            className="h-[4px] w-[100px] rounded-full transition-colors duration-300"
+            style={{
+              backgroundColor: HOME_PILL,
+              boxShadow: isDarkMode
+                ? '0 0 10px rgba(255,255,255,0.16)'
+                : '0 1px 2px rgba(15,23,42,0.16)',
+            }}
+            aria-hidden
+          />
+        </div>
       </div>
     </div>
   );
@@ -547,15 +585,12 @@ const IPhoneFrame = ({
           }}
         />
 
-        {/* Screen glass — continuous green top via app header + absolute chrome overlays */}
-        <div
-          className="relative w-full h-full rounded-[32px] overflow-hidden"
-          style={{ background: '#1f1d2b' }}
-        >
-          <div className="absolute inset-0 pb-5 overflow-hidden flex flex-col">
+        {/* Screen glass — app content fills edge-to-edge (no dead bezel strip under BottomNav) */}
+        <div className="relative h-full w-full overflow-hidden rounded-[32px] bg-white dark:bg-[#1f1d2b]">
+          <div className="absolute inset-0 flex flex-col overflow-hidden">
             {/* Status icons only — no separate green strip (avoids seam line) */}
-            <div className="absolute top-0 inset-x-0 h-[28px] z-30 pointer-events-none flex items-end justify-between px-5 pb-0.5">
-              <span className="text-[10px] font-semibold text-white tracking-tight">9:41</span>
+            <div className="absolute top-0 inset-x-0 z-30 flex h-[28px] items-end justify-between px-5 pb-0.5 pointer-events-none">
+              <span className="text-[10px] font-semibold tracking-tight text-white">9:41</span>
               <div className="flex items-center gap-1">
                 <div className="flex items-end gap-[1.5px] h-2.5">
                   {[3, 5, 7, 9].map((h) => (
@@ -609,8 +644,7 @@ const IPhoneFrame = ({
             <div className="flex-1 min-h-0 overflow-hidden">{children}</div>
           </div>
 
-          {/* Home indicator */}
-          <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 z-30 w-[100px] h-[4px] rounded-full bg-white/35" />
+          {/* Home indicator lives inside the app BottomNav for theme-aware contrast */}
         </div>
       </div>
     </div>
@@ -672,12 +706,9 @@ const AndroidFrame = ({
           }}
         />
 
-        {/* Screen — no separate green strip (avoids seam line under header) */}
-        <div
-          className="relative w-full h-full rounded-[26px] overflow-hidden"
-          style={{ background: '#1f1d2b' }}
-        >
-          <div className="absolute inset-0 overflow-hidden flex flex-col">
+        {/* Screen — app fills edge-to-edge; no fixed dark strip under BottomNav */}
+        <div className="relative h-full w-full overflow-hidden rounded-[26px] bg-white dark:bg-[#1f1d2b]">
+          <div className="absolute inset-0 flex flex-col overflow-hidden">
             {/* Status icons + punch-hole overlay on app green header */}
             <div className="absolute top-0 inset-x-0 h-[24px] z-30 pointer-events-none flex items-center justify-between px-4">
               <span className="text-[10px] font-medium text-white">9:41</span>
