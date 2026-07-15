@@ -40,13 +40,9 @@ const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage').then(
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage').then(m => ({ default: m.ResetPasswordPage })));
 const CookiePolicyPage = lazy(() => import('./pages/CookiePolicyPage').then(m => ({ default: m.CookiePolicyPage })));
 const AboutUsPage = lazy(() => import('./pages/AboutUsPage').then(m => ({ default: m.AboutUsPage })));
-const IndustriesPage = lazy(() => import('./pages/IndustriesPage').then(m => ({ default: m.IndustriesPage })));
-const SecurityPage = lazy(() => import('./pages/SecurityPage').then(m => ({ default: m.SecurityPage })));
-const PricingPage = lazy(() => import('./pages/PricingPage').then(m => ({ default: m.PricingPage })));
-const HowItWorksPage = lazy(() => import('./pages/HowItWorksPage').then(m => ({ default: m.HowItWorksPage })));
-const MarketingLoyaltyPage = lazy(() => import('./pages/LoyaltyPage').then(m => ({ default: m.LoyaltyPage })));
-const MultiLocationPage = lazy(() => import('./pages/MultiLocationPage').then(m => ({ default: m.MultiLocationPage })));
-const WhyMintcomPage = lazy(() => import('./pages/WhyMintcomPage').then(m => ({ default: m.WhyMintcomPage })));
+// Draft marketing pages (kept on disk; hidden from public routes until review is done)
+// IndustriesPage, SecurityPage, PricingPage, HowItWorksPage, LoyaltyPage (marketing),
+// MultiLocationPage, WhyMintcomPage — re-enable in routes when ready to publish.
 const QAPage = lazy(() => import('./pages/QAPage').then(m => ({ default: m.QAPage })));
 const PrivacyPolicyPage = lazy(() => import('./pages/PrivacyPolicyPage').then(m => ({ default: m.PrivacyPolicyPage })));
 const TermsPage = lazy(() => import('./pages/TermsPage').then(m => ({ default: m.TermsPage })));
@@ -151,13 +147,6 @@ const routeSeo = [
   { path: '/privacy', title: 'Privacy Policy | Mintcom POS', description: 'Read how Mintcom POS protects your data and how to request account or data deletion.' },
   { path: '/legal/privacy', title: 'Privacy Policy | Mintcom POS', description: 'Read how Mintcom POS protects your data and how to request account or data deletion.' },
   { path: '/about', title: 'About Mintcom', description: 'Learn about Mintcom POS and business management.' },
-  { path: '/industries', title: 'Industries | Mintcom POS', description: 'Mintcom POS for restaurants, cafés, retail, bakeries, and multi-branch brands.' },
-  { path: '/security', title: 'Security | Mintcom POS', description: 'How Mintcom protects business data with encryption, roles, and privacy controls.' },
-  { path: '/pricing', title: 'Pricing | Mintcom POS', description: 'Simple Mintcom POS pricing per location. No hardware sales.' },
-  { path: '/how-it-works', title: 'How it works | Mintcom POS', description: 'Go from signup to first sale with Mintcom POS.' },
-  { path: '/loyalty', title: 'Loyalty | Mintcom POS', description: 'Built-in loyalty and rewards for Mintcom POS.' },
-  { path: '/multi-location', title: 'Multi-location | Mintcom POS', description: 'Run multiple branches and brands with Mintcom.' },
-  { path: '/why-mintcom', title: 'Why Mintcom | Mintcom POS', description: 'Why owners choose Mintcom POS.' },
   { path: '/dashboard', title: 'Dashboard | Mintcom POS', description: 'Manage your Mintcom business dashboard.' },
   { path: '/owner', title: 'Owner Portal | Mintcom POS', description: 'Manage Mintcom account ownership, billing, brands, and establishments.' },
   { path: '/brand', title: 'Brand Portal | Mintcom POS', description: 'Manage Mintcom brand locations and teams.' },
@@ -378,66 +367,15 @@ const router = createBrowserRouter([
         path: "/features",
         element: <Navigate to="/#features" replace />,
       },
-      {
-        path: "/industries",
-        element: (
-          <PageSuspense>
-            <IndustriesPage />
-          </PageSuspense>
-        ),
-      },
-      {
-        path: "/security",
-        element: (
-          <PageSuspense>
-            <SecurityPage />
-          </PageSuspense>
-        ),
-      },
-      {
-        path: "/pricing",
-        element: (
-          <PageSuspense>
-            <PricingPage />
-          </PageSuspense>
-        ),
-      },
-      {
-        path: "/how-it-works",
-        element: (
-          <PageSuspense>
-            <HowItWorksPage />
-          </PageSuspense>
-        ),
-      },
-      {
-        path: "/loyalty",
-        element: (
-          <PageSuspense>
-            <MarketingLoyaltyPage />
-          </PageSuspense>
-        ),
-      },
-      {
-        path: "/multi-location",
-        element: (
-          <PageSuspense>
-            <MultiLocationPage />
-          </PageSuspense>
-        ),
-      },
-      {
-        path: "/faq",
-        element: <Navigate to="/support" replace />,
-      },
-      {
-        path: "/why-mintcom",
-        element: (
-          <PageSuspense>
-            <WhyMintcomPage />
-          </PageSuspense>
-        ),
-      },
+      // Draft marketing pages hidden until review — page components remain in src/pages/
+      { path: "/industries", element: <Navigate to="/" replace /> },
+      { path: "/security", element: <Navigate to="/" replace /> },
+      { path: "/pricing", element: <Navigate to="/#pricing" replace /> },
+      { path: "/how-it-works", element: <Navigate to="/" replace /> },
+      { path: "/loyalty", element: <Navigate to="/" replace /> },
+      { path: "/multi-location", element: <Navigate to="/" replace /> },
+      { path: "/why-mintcom", element: <Navigate to="/" replace /> },
+      { path: "/faq", element: <Navigate to="/support" replace /> },
       {
         path: "/qa",
         element: (
