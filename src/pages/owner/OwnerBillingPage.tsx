@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { Plus, CreditCard, DollarSign, Trash2, AlertCircle, Calendar, CheckCircle2, XCircle, Zap, MoreVertical, Eye, ArrowUpDown, RotateCcw, Check } from 'lucide-react';
@@ -813,88 +814,124 @@ export function OwnerBillingPage() {
                 linkEstablishmentName={addCardEstablishmentName}
             />
 
-            <AnimatePresence>
-                {cardAssignmentEstablishment && billingData && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[9998] flex items-end justify-center bg-black/45 p-0 sm:items-center sm:p-4"
-                        onClick={() => !isAssigningCard && setCardAssignmentEstablishment(null)}
-                    >
-                        <motion.div
-                            initial={{ opacity: 0, y: 24 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 24 }}
-                            className="w-full max-w-md rounded-t-2xl border border-gray-200 bg-white p-5 shadow-2xl dark:border-white/10 dark:bg-[#1E293B] sm:rounded-2xl"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <div className="mb-4 flex items-start justify-between gap-4">
-                                <div>
-                                    <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                                        {t('owner.billing.change_card', { defaultValue: 'Change card' })}
-                                    </h3>
-                                    <p className="mt-1 text-sm font-medium text-gray-500 dark:text-gray-400">
-                                        {cardAssignmentEstablishment.name}
-                                    </p>
-                                </div>
-                                <button
-                                    type="button"
-                                    disabled={isAssigningCard}
-                                    onClick={() => setCardAssignmentEstablishment(null)}
-                                    className="rounded-lg p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50 dark:hover:bg-white/5 dark:hover:text-white"
-                                >
-                                    <XCircle size={18} />
-                                </button>
-                            </div>
-
-                            <div className="space-y-2">
-                                {billingData.savedCards.map((card) => {
-                                    const isCurrent = cardAssignmentEstablishment.paymentCard?.id === card.id;
-                                    return (
-                                        <button
-                                            key={card.id}
-                                            type="button"
-                                            disabled={isAssigningCard || isCurrent}
-                                            onClick={() => handleAssignCardToEstablishment(card.id, cardAssignmentEstablishment.id)}
-                                            className={`flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left transition ${
-                                                isCurrent
-                                                    ? 'border-mintcom-green/40 bg-mintcom-green/10'
-                                                    : 'border-gray-200 hover:border-mintcom-green/40 hover:bg-gray-50 dark:border-white/10 dark:hover:bg-white/5'
-                                            } disabled:cursor-default`}
-                                        >
-                                            <span>
-                                                <span className="block text-sm font-bold text-gray-900 dark:text-white">
-                                                    {card.brand} •••• {card.last4}
-                                                </span>
-                                                <span className="block text-xs font-medium text-gray-500 dark:text-gray-400">
-                                                    {card.cardholderName || t('owner.billing.cardholder', { defaultValue: 'Cardholder' })}
-                                                </span>
-                                            </span>
-                                            {isCurrent && <Check size={18} className="text-mintcom-green" />}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-
-                            <button
-                                type="button"
-                                disabled={isAssigningCard}
-                                onClick={() => {
-                                    const establishmentId = cardAssignmentEstablishment.id;
-                                    const establishmentName = cardAssignmentEstablishment.name;
-                                    setCardAssignmentEstablishment(null);
-                                    openAddCardModal(establishmentId, establishmentName);
-                                }}
-                                className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-mintcom-green px-4 py-3 text-sm font-bold text-black transition hover:bg-[#5fa888] disabled:opacity-60"
+            {typeof document !== 'undefined' &&
+                createPortal(
+                    <AnimatePresence>
+                        {cardAssignmentEstablishment && billingData && (
+                            <div
+                                dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}
+                                className="fixed inset-0 z-[9999] popup-surface flex items-end justify-center p-0 sm:items-center sm:p-4 font-sans"
                             >
-                                <Plus size={16} />
-                                {t('owner.billing.add_new_card', { defaultValue: 'Add new card' })}
-                            </button>
-                        </motion.div>
-                    </motion.div>
+                                {/* Full-viewport dimmer — same layering as other owner popups */}
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    className="fixed inset-0 bg-black/40 dark:bg-black/80 backdrop-blur-sm"
+                                    onClick={() =>
+                                        !isAssigningCard && setCardAssignmentEstablishment(null)
+                                    }
+                                />
+
+                                <motion.div
+                                    initial={{ opacity: 0, y: 24 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: 24 }}
+                                    className="relative z-10 w-full max-w-md rounded-t-2xl border border-gray-200 bg-white p-5 shadow-2xl dark:border-white/10 dark:bg-[#1E293B] sm:rounded-2xl"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    <div className="mb-4 flex items-start justify-between gap-4">
+                                        <div>
+                                            <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                                                {t('owner.billing.change_card', {
+                                                    defaultValue: 'Change card',
+                                                })}
+                                            </h3>
+                                            <p className="mt-1 text-sm font-medium text-gray-500 dark:text-gray-400">
+                                                {cardAssignmentEstablishment.name}
+                                            </p>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            disabled={isAssigningCard}
+                                            onClick={() => setCardAssignmentEstablishment(null)}
+                                            className="rounded-lg p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50 dark:hover:bg-white/5 dark:hover:text-white"
+                                        >
+                                            <XCircle size={18} />
+                                        </button>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        {billingData.savedCards.map((card) => {
+                                            const isCurrent =
+                                                cardAssignmentEstablishment.paymentCard?.id ===
+                                                card.id;
+                                            return (
+                                                <button
+                                                    key={card.id}
+                                                    type="button"
+                                                    disabled={isAssigningCard || isCurrent}
+                                                    onClick={() =>
+                                                        handleAssignCardToEstablishment(
+                                                            card.id,
+                                                            cardAssignmentEstablishment.id,
+                                                        )
+                                                    }
+                                                    className={`flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left transition ${
+                                                        isCurrent
+                                                            ? 'border-mintcom-green/40 bg-mintcom-green/10'
+                                                            : 'border-gray-200 hover:border-mintcom-green/40 hover:bg-gray-50 dark:border-white/10 dark:hover:bg-white/5'
+                                                    } disabled:cursor-default`}
+                                                >
+                                                    <span>
+                                                        <span className="block text-sm font-bold text-gray-900 dark:text-white">
+                                                            {card.brand} •••• {card.last4}
+                                                        </span>
+                                                        <span className="block text-xs font-medium text-gray-500 dark:text-gray-400">
+                                                            {card.cardholderName ||
+                                                                t('owner.billing.cardholder', {
+                                                                    defaultValue: 'Cardholder',
+                                                                })}
+                                                        </span>
+                                                    </span>
+                                                    {isCurrent && (
+                                                        <Check
+                                                            size={18}
+                                                            className="text-mintcom-green"
+                                                        />
+                                                    )}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        disabled={isAssigningCard}
+                                        onClick={() => {
+                                            const establishmentId =
+                                                cardAssignmentEstablishment.id;
+                                            const establishmentName =
+                                                cardAssignmentEstablishment.name;
+                                            setCardAssignmentEstablishment(null);
+                                            openAddCardModal(
+                                                establishmentId,
+                                                establishmentName,
+                                            );
+                                        }}
+                                        className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-mintcom-green px-4 py-3 text-sm font-bold text-black transition hover:bg-[#5fa888] disabled:opacity-60"
+                                    >
+                                        <Plus size={16} />
+                                        {t('owner.billing.add_new_card', {
+                                            defaultValue: 'Add new card',
+                                        })}
+                                    </button>
+                                </motion.div>
+                            </div>
+                        )}
+                    </AnimatePresence>,
+                    document.body,
                 )}
-            </AnimatePresence>
 
             <SecurityVerificationModal
                 isOpen={securityModal.isOpen}
