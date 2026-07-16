@@ -13,7 +13,7 @@ binding = "ASSETS"
 
 [vars]
 # Public backend origin for the Worker API proxy (not a credential).
-API_TARGET = "https://grateful-liberation-production-d036.up.railway.app"
+API_TARGET = "https://api.mintcompos.com"
 # Public GA4 measurement ID (safe to expose in the browser).
 VITE_GA_MEASUREMENT_ID = "G-QHV2SVCG99"
 # Maintenance lock at the edge: "true" | "false". Default off.
