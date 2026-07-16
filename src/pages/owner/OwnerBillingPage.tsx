@@ -603,12 +603,12 @@ export function OwnerBillingPage() {
                     <div className="bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/5 overflow-visible shadow-sm">
                         {/* Table Header */}
                         <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-4 bg-gray-50 dark:bg-white/[0.02] border-b border-gray-200 dark:border-white/5 table-header-row items-center">
-                            <div className="col-span-4 flex items-center gap-3">
+                            <div className="col-span-3 flex items-center gap-3">
                                 <div className="w-10" />
                                 <span>{toHeaderCase(t('owner.billing.location'))}</span>
                             </div>
                             <div className="col-span-2 text-center flex justify-center">{toHeaderCase(t('owner.billing.status'))}</div>
-                            <div className="col-span-1 text-center flex justify-center">{toHeaderCase(t('owner.billing.cost'))}</div>
+                            <div className="col-span-2 text-center flex justify-center">{toHeaderCase(t('owner.billing.cost'))}</div>
                             <div className="col-span-2 text-center flex justify-center">
                                 <button
                                     type="button"
@@ -642,7 +642,7 @@ export function OwnerBillingPage() {
                                         className="grid grid-cols-1 md:grid-cols-12 gap-4 px-6 py-5 hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors items-center group relative"
                                     >
                                         {/* Location */}
-                                        <div className="col-span-4 flex items-center gap-3 min-w-0">
+                                        <div className="col-span-3 flex items-center gap-3 min-w-0">
                                             <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-white/5 flex items-center justify-center text-sm font-bold text-gray-400 group-hover:text-mintcom-green transition-colors shrink-0">
                                                 {est.name.charAt(0)}
                                             </div>
@@ -661,22 +661,26 @@ export function OwnerBillingPage() {
                                             {getStatusBadge(est)}
                                         </div>
 
-                                        {/* Cost */}
-                                        <div className="col-span-1 text-center flex justify-center">
+                                        {/* Cost — plain price (not StatValue) so narrow table cells never ellipsis "20.00" → "2..." */}
+                                        <div className="col-span-2 text-center flex justify-center">
                                             {(() => {
                                                 // Find original index in full list for correct pricing
                                                 const fullIndex = billingData?.establishments.findIndex(e => e.id === est.id) ?? 0;
                                                 const price = getEstablishmentPrice(est, fullIndex);
                                                 const isYearly = est.billingCycle === 'yearly';
+                                                const formattedPrice = Number(price).toLocaleString(t('common.locale'), {
+                                                    minimumFractionDigits: 2,
+                                                    maximumFractionDigits: 2,
+                                                });
                                                 return (
-                                                    <div className="flex min-w-0 flex-col items-center gap-0.5">
-                                                        <StatValue
-                                                            value={price}
-                                                            currency="USD"
-                                                            className="text-sm"
-                                                            containerClassName="justify-center whitespace-nowrap"
-                                                        />
-                                                        <span className="whitespace-nowrap text-[11px] font-medium text-gray-400 dark:text-gray-500">
+                                                    <div className="flex flex-col items-center gap-0.5 whitespace-nowrap">
+                                                        <span className="inline-flex items-baseline gap-1 text-sm font-bold tracking-tight text-gray-900 dark:text-white">
+                                                            <span>{formattedPrice}</span>
+                                                            <span className="text-[10px] font-black uppercase text-gray-400 dark:text-gray-500">
+                                                                USD
+                                                            </span>
+                                                        </span>
+                                                        <span className="text-[11px] font-medium text-gray-400 dark:text-gray-500">
                                                             {isYearly ? t('common.yearly') : t('common.monthly')}
                                                         </span>
                                                     </div>
