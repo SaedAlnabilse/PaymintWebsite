@@ -5,7 +5,7 @@ import { z } from 'zod';
  * This ensures that the app fails early if required configuration is missing.
  */
 const envSchema = z.object({
-  VITE_API_URL: z.string().url().default('https://grateful-liberation-production-d036.up.railway.app'),
+  VITE_API_URL: z.string().url().default('https://api.mintcompos.com'),
   VITE_GOOGLE_CLIENT_ID: z.string().optional(),
   VITE_APPLE_SERVICE_ID: z.string().optional(),
   VITE_APPLE_REDIRECT_URI: z.string().optional(),

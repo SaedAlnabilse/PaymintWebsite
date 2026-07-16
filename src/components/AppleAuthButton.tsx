@@ -49,7 +49,7 @@ const APPLE_JS_SRC =
 // The env vars win when provided; these are just the fallback defaults.
 const DEFAULT_APPLE_SERVICE_ID = 'com.mintcom.website.service';
 const DEFAULT_APPLE_REDIRECT_URI =
-  'https://grateful-liberation-production-d036.up.railway.app/api/accounts/apple-callback';
+  'https://api.mintcompos.com/api/accounts/apple-callback';
 
 export const APPLE_SERVICE_ID = (
   import.meta.env.VITE_APPLE_SERVICE_ID || DEFAULT_APPLE_SERVICE_ID
