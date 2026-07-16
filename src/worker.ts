@@ -44,12 +44,12 @@ const SECURITY_HEADERS: Record<string, string> = {
         "object-src 'none'",
         "frame-ancestors 'none'",
         "form-action 'self'",
-        "img-src 'self' data: blob: https://mintcompos.com https://www.mintcompos.com https://upload.wikimedia.org https://cdn-icons-png.flaticon.com https://accounts.google.com https://*.googleusercontent.com https://www.gstatic.com https://ssl.gstatic.com https://*.gstatic.com https://*.google.com",
+        "img-src 'self' data: blob: https://mintcompos.com https://www.mintcompos.com https://images.unsplash.com https://*.unsplash.com https://upload.wikimedia.org https://cdn-icons-png.flaticon.com https://accounts.google.com https://*.googleusercontent.com https://www.gstatic.com https://ssl.gstatic.com https://*.gstatic.com https://*.google.com",
         "font-src 'self' data: https://fonts.gstatic.com https://fonts.cdnfonts.com",
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.cdnfonts.com https://accounts.google.com",
         // gsi/client + button iframe assets load from accounts.google.com and gstatic
         "script-src 'self' https://www.googletagmanager.com https://connect.facebook.net https://accounts.google.com https://apis.google.com https://www.gstatic.com https://*.gstatic.com https://appleid.cdn-apple.com https://static.cloudflareinsights.com",
-        "connect-src 'self' https://grateful-liberation-production-d036.up.railway.app wss://grateful-liberation-production-d036.up.railway.app https://accounts.google.com https://*.google.com https://*.googleapis.com https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://connect.facebook.net https://appleid.apple.com https://cloudflareinsights.com",
+        "connect-src 'self' https://api.mintcompos.com wss://api.mintcompos.com https://accounts.google.com https://*.google.com https://*.googleapis.com https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://connect.facebook.net https://appleid.apple.com https://cloudflareinsights.com",
         // GIS button is an iframe under accounts.google.com/gsi/...
         "frame-src https://player.vimeo.com https://www.youtube.com https://www.youtube-nocookie.com https://accounts.google.com https://*.google.com https://appleid.apple.com",
         "media-src 'self' https://player.vimeo.com",
@@ -274,7 +274,7 @@ export default {
                 return withSecurityHeaders(new Response(null, { status: 302, headers }), true);
             }
 
-            const targetBase = env.API_TARGET || 'https://grateful-liberation-production-d036.up.railway.app';
+            const targetBase = env.API_TARGET || 'https://api.mintcompos.com';
             const noIndexPath = /^\/(api|uploads|files|dashboard|owner|brand|login|signup|verify-email|forgot-password|reset-password|select-establishment)(\/|$)/.test(url.pathname);
             const isProxyPath = url.pathname.startsWith('/api/') || url.pathname.startsWith('/reports/') || url.pathname.startsWith('/app-settings/') || url.pathname.startsWith('/files/') || url.pathname.startsWith('/customers/') || url.pathname.startsWith('/uploads/');
             const isRealtimePath = url.pathname.startsWith('/realtime') || url.pathname.startsWith('/socket.io/');
