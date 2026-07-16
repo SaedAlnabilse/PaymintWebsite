@@ -575,7 +575,9 @@ export function OnboardingPage() {
   const selectedCountry = form1.watch('country');
   const isCurrencyLocked = establishments.length > 0;
 
-  // Keep currency linked to the selected country/city region during first registration.
+  // When the country changes on first registration, auto-select that country's
+  // primary currency. The currency field stays fully editable so the user can
+  // pick any other currency afterwards.
   useEffect(() => {
     if (isCurrencyLocked || !selectedCountry) return;
     const primaryCurrency = getCountryPrimaryCurrency(selectedCountry);
@@ -584,16 +586,8 @@ export function OnboardingPage() {
     }
   }, [selectedCountry, isCurrencyLocked, form1]);
 
-  const currencyOptions = useMemo(() => {
-    const countryMeta = countryOptions.find((option) => option.code === selectedCountry);
-    const allowedCodes = countryMeta?.currencyCodes || [];
-    if (allowedCodes.length === 0) return allCurrencyOptions;
-
-    const allowedSet = new Set(allowedCodes);
-    const linked = allCurrencyOptions.filter((option) => allowedSet.has(option.code));
-    // Prefer country-linked currencies; fall back to full list if mapping is incomplete.
-    return linked.length > 0 ? linked : allCurrencyOptions;
-  }, [allCurrencyOptions, countryOptions, selectedCountry]);
+  // Always offer the full currency list so owners can override the country default.
+  const currencyOptions = allCurrencyOptions;
 
   const cardNumberValue = form4.watch('cardNumber') || '';
   const cardDigits = getCardDigits(cardNumberValue);
@@ -1019,7 +1013,7 @@ export function OnboardingPage() {
                       {form1.formState.errors.country && <p className="text-mintcom-red text-xs font-sans text-gray-500 mt-1 mx-1">{form1.formState.errors.country.message as string}</p>}
                     </div>
 
-                    {/* Base Currency Row (auto-filled from country; still editable when not locked) */}
+                    {/* Base Currency Row: auto-filled from country, always free to change on first location */}
                     <div className="space-y-2">
                       <label className="text-xs font-sans text-gray-400 mx-1 flex items-center">
                         {t('onboarding.step1.currency')} <span className="text-mintcom-red mx-1">*</span>
