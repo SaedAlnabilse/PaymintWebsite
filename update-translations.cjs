@@ -14,7 +14,7 @@ const updateTranslations = () => {
     title1: "Earn More.",
     title2: "Manage Better.",
     title3: "Work Smarter.",
-    description: "Mintcom is a complete 360° POS solution built for modern businesses. Manage sales, inventory, staff, reporting, and operations—all from one simple system.",
+    description: "Mintcom is a complete 360° POS solution built for modern businesses. Manage sales, inventory, staff, reporting, and operations, all from one simple system.",
     cta: "Start Free Trial",
     watchVideo: "See how it works",
     freeTrial: ""
@@ -41,7 +41,7 @@ const updateTranslations = () => {
     cards: {
       complete: {
         title: "A Complete Solution — No Hidden Costs",
-        description: "Mintcom is more than a checkout system. You get a powerful reporting engine with advanced filters, staff and role management, customer profiles and loyalty programs, discounts, raw material and stock tracking, and much more—all included in one fixed monthly plan."
+        description: "Mintcom is more than just a POS system. It brings together the features that other providers often lock behind complex plans and bundled packages into one simple tier that covers all your business needs. From staff management and inventory management to loyalty programs, advanced reporting, and much more, Mintcom gives you everything you need in a single, straightforward solution."
       },
       realUsers: {
         title: "Designed for Real Users",
@@ -53,7 +53,7 @@ const updateTranslations = () => {
       },
       multiBranch: {
         title: "Multi-Branch Management",
-        description: "Run one store or many—Mintcom supports multiple merged branches or separate stores under one unified dashboard. Manage staff, products, sales, and performance across all locations from a single control panel."
+        description: "Run one or multiple stores and POS points effortlessly through our centralized brand management service. Connect all your locations and POS points within a single portal, giving you complete visibility and control. As your business grows, easily add new locations or POS points and benefit from special discounts on additional connections."
       }
     }
   };

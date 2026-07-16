@@ -140,16 +140,29 @@ type Props = {
   fill?: boolean;
   /** Scale up to fully cover the box (for hero tablet glass). */
   cover?: boolean;
+  /**
+   * Blend between contain and cover — fills most of a fixed-height frame
+   * (e.g. Why Mintcom modal) with only mild edge crop, no big letterbox gaps.
+   */
+  snug?: boolean;
   /** Prefer light cream UI even when the site is in dark mode (product photos). */
   forceLight?: boolean;
   className?: string;
 };
 
 /** Frozen try-pos sales frame — scales to fit, never clips. */
-export function FeaturePosScreenshot({ side, fill, cover, forceLight, className = '' }: Props) {
+export function FeaturePosScreenshot({
+  side,
+  fill,
+  cover,
+  snug,
+  forceLight,
+  className = '',
+}: Props) {
   const shellRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const fitMode = cover || fill || snug;
 
   useLayoutEffect(() => {
     const el = shellRef.current;
@@ -159,11 +172,15 @@ export function FeaturePosScreenshot({ side, fill, cover, forceLight, className 
       const w = el.clientWidth;
       const h = el.clientHeight;
       if (w <= 0 || h <= 0) return;
-      if (cover || fill) {
-        // Cover: scale to fill both axes (may crop slightly). Contain when fill-only.
+      if (cover || fill || snug) {
+        const contain = Math.min(w / DESIGN_W, h / DESIGN_H);
+        const coverScale = Math.max(w / DESIGN_W, h / DESIGN_H);
+        // snug: ~half way to cover — fills the card without heavy cropping
         const next = cover
-          ? Math.max(w / DESIGN_W, h / DESIGN_H)
-          : Math.min(w / DESIGN_W, h / DESIGN_H);
+          ? coverScale
+          : snug
+            ? contain + (coverScale - contain) * 0.45
+            : contain;
         const ox = (w - DESIGN_W * next) / 2;
         const oy = (h - DESIGN_H * next) / 2;
         setScale((prev) => (Math.abs(prev - next) < 0.002 ? prev : next));
@@ -181,12 +198,12 @@ export function FeaturePosScreenshot({ side, fill, cover, forceLight, className 
     const ro = new ResizeObserver(measure);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [cover, fill]);
+  }, [cover, fill, snug]);
 
-  const outer = fill || cover
+  const outer = fitMode
     ? `h-full w-full select-none ${className}`
     : `${side ? 'mt-0 w-full' : 'mt-5'} select-text ${className}`;
-  const card = fill || cover
+  const card = fitMode
     ? 'relative h-full w-full overflow-hidden'
     : `relative overflow-hidden rounded-2xl border border-gray-200/90 bg-white dark:border-white/10 dark:bg-mintcom-dark ${
         side ? 'shadow-lg shadow-black/10 dark:shadow-black/40' : 'shadow-inner'
@@ -203,8 +220,8 @@ export function FeaturePosScreenshot({ side, fill, cover, forceLight, className 
           ref={shellRef}
           className={`relative overflow-hidden bg-[#f6f3ec] ${
             forceLight ? '' : 'dark:bg-mintcom-dark'
-          } ${fill || cover ? 'h-full w-full' : 'w-full'}`}
-          style={fill || cover ? undefined : { height: DESIGN_H * scale }}
+          } ${fitMode ? 'h-full w-full' : 'w-full'}`}
+          style={fitMode ? undefined : { height: DESIGN_H * scale }}
         >
           <div
             className="absolute origin-top-left"
@@ -233,7 +250,7 @@ function PosDesignCanvas({ forceLight = false }: { forceLight?: boolean }) {
 
   return (
     <div
-      className={`flex h-full w-full overflow-hidden ${d('text-gray-900', 'dark:text-white')}`}
+      className={`flex h-full w-full overflow-hidden font-sans ${d('text-gray-900', 'dark:text-white')}`}
       style={{ width: DESIGN_W, height: DESIGN_H }}
     >
       {/* ── Side rail ── */}

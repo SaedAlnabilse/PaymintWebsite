@@ -37,13 +37,16 @@ import {
   Briefcase,
 } from 'lucide-react';
 import { Logo } from './Logo';
+import { FeaturePosScreenshot } from './FeaturePosScreenshot';
+import { FeatureScreenshot } from './FeatureScreenshots';
 
 /**
- * Shared Why-modal product preview height.
- * All four cards use this so “Designed for Real Users” and the rest stay aligned.
+ * Shared outer frame for ALL 4 Why cards.
+ * Fixed 3:2 ratio — identical pixel size on every slide (matches card 2 sales).
+ * Story column is forced to this height so the modal never grows on card 1.
  */
-const WHY_PREVIEW_H_CLASS =
-  'h-[min(58vh,440px)] w-full overflow-hidden sm:h-[460px] md:h-[480px]';
+const WHY_PREVIEW_FRAME_CLASS = 'relative aspect-[3/2] w-full overflow-hidden';
+
 
 type FeatureId = 'complete' | 'realUsers' | 'security' | 'multiBranch';
 
@@ -73,7 +76,7 @@ const slideVariants: Variants = {
   }),
 };
 
-/** Card chrome matches Features WorkflowFeatureCard — icon + title row, Read more. */
+/** Card chrome matches Features WorkflowFeatureCard — icon + title row, Learn more. */
 const FeatureCard = ({
   feature,
   index,
@@ -103,22 +106,22 @@ const FeatureCard = ({
             className="text-mintcom-green transition-colors duration-500 group-hover:text-white"
           />
         </div>
-        <h3 className="mt-1 line-clamp-2 min-h-[2.5rem] font-barlow text-base font-bold leading-tight tracking-tight text-gray-900 transition-colors group-hover:text-mintcom-green dark:text-white">
+        <h3 className="mt-1 line-clamp-2 min-h-[2.5rem] font-sans text-base font-bold leading-tight tracking-tight text-gray-900 transition-colors group-hover:text-mintcom-green dark:text-white">
           {feature.title}
         </h3>
       </div>
 
       <div className="relative z-10 flex min-h-0 flex-1 flex-col justify-between">
-        <p className="line-clamp-3 min-h-[3.75rem] font-barlow text-sm font-medium leading-relaxed text-gray-600 dark:text-gray-400">
+        <p className="line-clamp-3 min-h-[3.75rem] font-sans text-sm font-medium leading-relaxed text-gray-600 dark:text-gray-400">
           {feature.description}
         </p>
 
         <button
           type="button"
           onClick={() => onOpen(index)}
-          className="mt-3 self-start font-barlow text-xs font-bold text-mintcom-green transition-colors hover:text-mintcom-green/80 focus:outline-none"
+          className="mt-3 self-start font-sans text-xs font-bold tracking-wide text-mintcom-green transition-colors hover:text-mintcom-green/80 focus:outline-none"
         >
-          {t('landing.features.readMore', 'Read more')}
+          {t('landing.features.readMore', 'Learn more')}
         </button>
       </div>
     </motion.div>
@@ -166,7 +169,7 @@ function WhyRealPosLoginPreview({ isRtl }: { isRtl?: boolean }) {
         {/* Centered form body */}
         <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-4 py-3 sm:px-6 sm:py-4">
           <div className="w-full max-w-[320px]">
-            <p className="text-center font-barlow text-[22px] font-extrabold leading-tight text-gray-900 dark:text-white sm:text-[26px] md:text-[28px]">
+            <p className="text-center font-sans text-[22px] font-extrabold leading-tight text-gray-900 dark:text-white sm:text-[26px] md:text-[28px]">
               {isRtl ? 'مرحباً بعودتك!' : 'Welcome Back!'}
             </p>
             <p className="mb-4 mt-1.5 text-center text-[12px] text-gray-500 dark:text-gray-400 sm:mb-5 sm:text-[13px]">
@@ -312,7 +315,7 @@ function WhyAppSettingsPreview({ isRtl }: { isRtl?: boolean }) {
               <span className="flex h-9 w-9 items-center justify-center rounded-xl">
                 <Menu size={20} strokeWidth={2.25} />
               </span>
-              <p className="flex-1 text-center font-barlow text-[16px] font-bold tracking-tight text-white">
+              <p className="flex-1 text-center font-sans text-[16px] font-bold tracking-tight text-white">
                 {isRtl ? 'إعدادات التطبيق' : 'App Settings'}
               </p>
               <span className="relative flex h-9 w-9 items-center justify-center rounded-xl">
@@ -327,14 +330,14 @@ function WhyAppSettingsPreview({ isRtl }: { isRtl?: boolean }) {
             <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-gray-50 dark:bg-mintcom-dark px-3.5 pt-3 dark:bg-mintcom-dark">
               {/* Profile card */}
               <div className="mb-3.5 flex shrink-0 items-center gap-3 rounded-2xl border border-gray-200 dark:border-white/10 bg-white p-3 shadow-[0_1px_2px_rgba(15,23,42,0.04)] dark:border-white/10 dark:bg-mintcom-surface">
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#7dc6a2] font-barlow text-[16px] font-black text-white shadow-sm shadow-[#7dc6a2]/35">
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#7dc6a2] font-sans text-[16px] font-black text-white shadow-sm shadow-[#7dc6a2]/35">
                   SH
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-barlow text-[14px] font-black text-gray-900 dark:text-white">
+                  <p className="truncate font-sans text-[14px] font-black text-gray-900 dark:text-white">
                     Sara Hassan
                   </p>
-                  <p className="mt-0.5 truncate font-barlow text-[11px] font-semibold text-gray-500 dark:text-gray-400">
+                  <p className="mt-0.5 truncate font-sans text-[11px] font-semibold text-gray-500 dark:text-gray-400">
                     sara@cafedelight.com
                   </p>
                 </div>
@@ -343,7 +346,7 @@ function WhyAppSettingsPreview({ isRtl }: { isRtl?: boolean }) {
               <div className="min-h-0 flex-1 space-y-3 overflow-hidden">
                 {/* Security */}
                 <div>
-                  <p className="mb-1.5 ms-1 font-barlow text-[10px] font-black uppercase tracking-[1.2px] text-gray-500 dark:text-gray-400">
+                  <p className="mb-1.5 ms-1 font-sans text-[10px] font-black uppercase tracking-[1.2px] text-gray-500 dark:text-gray-400">
                     {isRtl ? 'الأمان' : 'Security'}
                   </p>
                   <div className="overflow-hidden rounded-2xl border border-gray-200 dark:border-white/10 bg-white p-1 shadow-[0_1px_2px_rgba(15,23,42,0.04)] dark:border-white/10 dark:bg-mintcom-surface">
@@ -352,10 +355,10 @@ function WhyAppSettingsPreview({ isRtl }: { isRtl?: boolean }) {
                         <Shield size={17} strokeWidth={2.25} />
                       </span>
                       <div className="min-w-0 flex-1 pe-1">
-                        <p className="font-barlow text-[13px] font-extrabold text-gray-900 dark:text-white">
+                        <p className="font-sans text-[13px] font-extrabold text-gray-900 dark:text-white">
                           Face ID
                         </p>
-                        <p className="mt-0.5 font-barlow text-[10px] font-semibold leading-snug text-gray-500 dark:text-gray-400">
+                        <p className="mt-0.5 font-sans text-[10px] font-semibold leading-snug text-gray-500 dark:text-gray-400">
                           {isRtl
                             ? 'تسجيل دخول بيومتري للجهاز مع كلمة المرور كاحتياطي.'
                             : 'Use device biometric login with password fallback.'}
@@ -369,10 +372,10 @@ function WhyAppSettingsPreview({ isRtl }: { isRtl?: boolean }) {
                         <Smartphone size={17} strokeWidth={2.25} />
                       </span>
                       <div className="min-w-0 flex-1 pe-1">
-                        <p className="font-barlow text-[13px] font-extrabold text-gray-900 dark:text-white">
+                        <p className="font-sans text-[13px] font-extrabold text-gray-900 dark:text-white">
                           {isRtl ? 'قفل تلقائي عند الإغلاق' : 'Auto-lock when closed'}
                         </p>
-                        <p className="mt-0.5 line-clamp-2 font-barlow text-[10px] font-semibold leading-snug text-gray-500 dark:text-gray-400">
+                        <p className="mt-0.5 line-clamp-2 font-sans text-[10px] font-semibold leading-snug text-gray-500 dark:text-gray-400">
                           {isRtl
                             ? 'يُقفل التطبيق فور انتقاله للخلفية. افتح بالبيومتري أو كلمة المرور.'
                             : 'For your security, the app always locks the moment it goes to the background.'}
@@ -389,7 +392,7 @@ function WhyAppSettingsPreview({ isRtl }: { isRtl?: boolean }) {
 
                 {/* Notifications — partial peek like real scroll */}
                 <div>
-                  <p className="mb-1.5 ms-1 font-barlow text-[10px] font-black uppercase tracking-[1.2px] text-gray-500 dark:text-gray-400">
+                  <p className="mb-1.5 ms-1 font-sans text-[10px] font-black uppercase tracking-[1.2px] text-gray-500 dark:text-gray-400">
                     {isRtl ? 'الإشعارات' : 'Notifications'}
                   </p>
                   <div className="overflow-hidden rounded-2xl border border-gray-200 dark:border-white/10 bg-white p-1 shadow-[0_1px_2px_rgba(15,23,42,0.04)] dark:border-white/10 dark:bg-mintcom-surface">
@@ -398,10 +401,10 @@ function WhyAppSettingsPreview({ isRtl }: { isRtl?: boolean }) {
                         <Bell size={17} strokeWidth={2.25} />
                       </span>
                       <div className="min-w-0 flex-1">
-                        <p className="font-barlow text-[13px] font-extrabold text-gray-900 dark:text-white">
+                        <p className="font-sans text-[13px] font-extrabold text-gray-900 dark:text-white">
                           {isRtl ? 'إشعارات الدفع' : 'Push notifications'}
                         </p>
-                        <p className="mt-0.5 line-clamp-1 font-barlow text-[10px] font-semibold text-gray-500 dark:text-gray-400">
+                        <p className="mt-0.5 line-clamp-1 font-sans text-[10px] font-semibold text-gray-500 dark:text-gray-400">
                           {isRtl
                             ? 'تنبيهات خارج التطبيق — متاحة دائماً داخل Mintcom'
                             : 'Outside-app alerts. Always available inside Mintcom.'}
@@ -414,7 +417,7 @@ function WhyAppSettingsPreview({ isRtl }: { isRtl?: boolean }) {
                       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#7dc6a2]/12 text-[#7dc6a2]">
                         <DollarSign size={17} strokeWidth={2.25} />
                       </span>
-                      <p className="min-w-0 flex-1 font-barlow text-[13px] font-extrabold text-gray-900 dark:text-white">
+                      <p className="min-w-0 flex-1 font-sans text-[13px] font-extrabold text-gray-900 dark:text-white">
                         {isRtl ? 'تنبيهات النقد' : 'Cash alerts'}
                       </p>
                       <WhySwitchOn />
@@ -450,7 +453,7 @@ function WhyAppSettingsPreview({ isRtl }: { isRtl?: boolean }) {
                         />
                       )}
                       <span
-                        className={`font-barlow text-[9px] font-bold ${
+                        className={`font-sans text-[9px] font-bold ${
                           active
                             ? 'text-mintcom-green'
                             : 'text-gray-400 dark:text-gray-400'
@@ -474,23 +477,86 @@ function WhyAppSettingsPreview({ isRtl }: { isRtl?: boolean }) {
 }
 
 /**
- * BrandsScreen create-brand wizard — step 2 “Select locations to link”.
- * Real owner flow: Create new brand → choose which locations join the brand.
- * Static snapshot; text is selectable to copy.
+ * Card 1 — fluid full-bleed modules. Fills the same 3:2 frame as sales/reports
+ * (no fixed canvas / FeatureShotFrame scale).
+ */
+function WhyCompletePreview({ isRtl }: { isRtl?: boolean }) {
+  const mods = isRtl
+    ? [
+        { Icon: Store, name: 'نقطة البيع', sub: 'بيع سريع' },
+        { Icon: Cloud, name: 'السحابة', sub: 'مزامنة' },
+        { Icon: BarChart3, name: 'تقارير', sub: 'تحليلات' },
+        { Icon: Users, name: 'فريق', sub: 'أدوار' },
+        { Icon: Heart, name: 'ولاء', sub: 'نقاط' },
+        { Icon: Package, name: 'مخزون', sub: 'تتبع' },
+        { Icon: ChefHat, name: 'وصفات', sub: 'تكاليف' },
+        { Icon: CreditCard, name: 'مدفوعات', sub: 'طرق' },
+        { Icon: Smartphone, name: 'الجوال', sub: 'تنبيهات' },
+      ]
+    : [
+        { Icon: Store, name: 'POS', sub: 'Fast Checkout' },
+        { Icon: Cloud, name: 'Cloud', sub: 'Live Sync' },
+        { Icon: BarChart3, name: 'Reports', sub: 'Analytics' },
+        { Icon: Users, name: 'Team', sub: 'Roles' },
+        { Icon: Heart, name: 'Loyalty', sub: 'Points' },
+        { Icon: Package, name: 'Stock', sub: 'Tracking' },
+        { Icon: ChefHat, name: 'Recipes', sub: 'Costing' },
+        { Icon: CreditCard, name: 'Payments', sub: 'Methods' },
+        { Icon: Smartphone, name: 'Mobile', sub: 'Alerts' },
+      ];
+
+  return (
+    <div className="flex h-full w-full flex-col overflow-hidden bg-white font-sans dark:bg-mintcom-dark">
+      <div className="flex shrink-0 items-center gap-2.5 border-b border-gray-100 px-3 py-2.5 dark:border-white/10 sm:px-3.5 sm:py-3">
+        <Logo variant="icon" size="sm" />
+        <div className="min-w-0">
+          <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-mintcom-green sm:text-[10px]">
+            {isRtl ? 'باقة واحدة' : 'One subscription'}
+          </p>
+          <p className="truncate text-[13px] font-bold leading-tight text-gray-900 dark:text-white sm:text-[14px]">
+            {isRtl ? 'كل شيء مشمول' : 'Everything Included'}
+          </p>
+        </div>
+      </div>
+      <div className="grid min-h-0 flex-1 grid-cols-3 grid-rows-3 gap-1.5 p-2 sm:gap-2 sm:p-2.5">
+        {mods.map((m) => (
+          <div
+            key={m.name}
+            className="flex min-h-0 flex-col items-center justify-center rounded-xl border border-gray-200/80 bg-gradient-to-b from-white to-gray-50 px-1 text-center shadow-sm dark:border-white/10 dark:from-[#1a1a1a] dark:to-[#141414] sm:rounded-2xl"
+          >
+            <span className="mb-1 flex h-8 w-8 items-center justify-center rounded-lg bg-mintcom-green/12 text-mintcom-green sm:mb-1.5 sm:h-9 sm:w-9 sm:rounded-xl">
+              <m.Icon size={16} strokeWidth={2} className="sm:hidden" />
+              <m.Icon size={18} strokeWidth={2} className="hidden sm:block" />
+            </span>
+            <p className="truncate px-0.5 text-[10px] font-bold leading-tight text-gray-900 dark:text-white sm:text-[11px]">
+              {m.name}
+            </p>
+            <p className="mt-0.5 truncate px-0.5 text-[8px] font-medium leading-tight text-gray-400 sm:text-[9px]">
+              {m.sub}
+            </p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Card 4 — fluid Create New Brand. Same 3:2 outer frame as cards 2 & 3.
  */
 function WhyCreateBranchPreview({ isRtl }: { isRtl?: boolean }) {
   const locations = isRtl
     ? [
-        { name: 'وسط البلد', type: 'مقهى', selected: true, Icon: Coffee },
-        { name: 'فرع المول', type: 'مقهى', selected: true, Icon: Coffee },
-        { name: 'كشك المطار', type: 'تجزئة', selected: false, Icon: ShoppingBag },
-        { name: 'حي الجامعة', type: 'مطعم', selected: false, Icon: Store },
+        { name: 'وسط البلد', type: 'موقع · مقهى', selected: true, Icon: Coffee },
+        { name: 'فرع المول', type: 'موقع · مقهى', selected: true, Icon: Coffee },
+        { name: 'كشك المطار', type: 'نقطة بيع · تجزئة', selected: false, Icon: ShoppingBag },
+        { name: 'حي الجامعة', type: 'نقطة بيع · مطعم', selected: false, Icon: Store },
       ]
     : [
-        { name: 'Downtown', type: 'Cafe', selected: true, Icon: Coffee },
-        { name: 'Mall Branch', type: 'Cafe', selected: true, Icon: Coffee },
-        { name: 'Airport Kiosk', type: 'Retail', selected: false, Icon: ShoppingBag },
-        { name: 'University District', type: 'Restaurant', selected: false, Icon: Store },
+        { name: 'Downtown', type: 'Location · Cafe', selected: true, Icon: Coffee },
+        { name: 'Mall Branch', type: 'Location · Cafe', selected: true, Icon: Coffee },
+        { name: 'Airport Kiosk', type: 'POS · Retail', selected: false, Icon: ShoppingBag },
+        { name: 'University District', type: 'POS · Restaurant', selected: false, Icon: Store },
       ];
 
   const selectedCount = locations.filter((l) => l.selected).length;
@@ -508,155 +574,132 @@ function WhyCreateBranchPreview({ isRtl }: { isRtl?: boolean }) {
       ];
 
   return (
-    <div
-      role="img"
-      aria-label={
-        isRtl
-          ? 'إنشاء علامة تجارية — اختيار المواقع'
-          : 'Create new brand — select locations to link'
-      }
-      className="flex h-full w-full cursor-text select-text flex-col overflow-hidden bg-gray-50 dark:bg-mintcom-dark font-sans dark:bg-mintcom-dark"
-    >
-      {/* Wizard modal shell */}
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden m-2.5 rounded-2xl border border-gray-200 dark:border-white/10 bg-white shadow-[0_8px_28px_-8px_rgba(15,23,42,0.12)] dark:border-white/10 dark:bg-mintcom-surface sm:m-3">
-        {/* Wizard header — Create new brand */}
-        <div className="shrink-0 border-b border-black/[0.05] px-3.5 pb-3 pt-3.5 dark:border-white/10 sm:px-4">
-          <div className="mb-3 flex items-start justify-between gap-2">
-            <div className="flex min-w-0 items-center gap-2.5">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#7dc6a2]/20 text-[#7dc6a2]">
-                <Briefcase size={18} strokeWidth={2.25} />
-              </span>
-              <div className="min-w-0">
-                <p className="truncate font-barlow text-[15px] font-black text-gray-900 dark:text-white sm:text-[16px]">
-                  {isRtl ? 'إنشاء علامة تجارية جديدة' : 'Create new brand'}
-                </p>
-                <p className="truncate text-[11px] font-medium text-gray-500 dark:text-gray-400">
-                  {isRtl
-                    ? 'Cafe Delight · ربط المواقع'
-                    : 'Cafe Delight · Link locations'}
-                </p>
-              </div>
-            </div>
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-black/[0.04] text-gray-500 dark:text-gray-400 dark:bg-white/10">
-              <X size={16} strokeWidth={2.25} />
-            </span>
+    <div className="flex h-full w-full flex-col overflow-hidden bg-white font-sans dark:bg-mintcom-dark">
+      <div className="flex shrink-0 items-center justify-between gap-2 border-b border-gray-100 px-3 py-2 dark:border-white/10 sm:px-3.5 sm:py-2.5">
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-mintcom-green/15 text-mintcom-green">
+            <Briefcase size={15} strokeWidth={2.25} />
+          </span>
+          <div className="min-w-0">
+            <p className="truncate font-sans text-[13px] font-black leading-tight text-gray-900 dark:text-white">
+              {isRtl ? 'إنشاء علامة تجارية جديدة' : 'Create New Brand'}
+            </p>
+            <p className="truncate text-[10px] font-medium text-gray-500 dark:text-gray-400">
+              {isRtl ? 'Cafe Delight · ربط المواقع / نقاط البيع' : 'Cafe Delight · Link Location/POS'}
+            </p>
           </div>
+        </div>
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-400 dark:bg-white/10">
+          <X size={14} strokeWidth={2.25} />
+        </span>
+      </div>
 
-          {/* Stepper: Details ✓ → Locations (active) → Team */}
-          <div className="flex items-center">
-            {wizardSteps.map((step, idx) => {
-              const filled = step.state === 'done' || step.state === 'active';
-              return (
-                <Fragment key={step.label}>
-                  <div className="flex min-w-0 flex-1 flex-col items-center gap-1">
-                    <span
-                      className={`flex h-7 w-7 items-center justify-center rounded-full border-2 ${
-                        filled
-                          ? 'border-[#7dc6a2] bg-[#7dc6a2] text-white'
-                          : 'border-gray-200 dark:border-white/10 bg-white text-gray-500 dark:text-gray-400 dark:border-white/10 dark:bg-mintcom-dark'
-                      }`}
-                    >
-                      {step.state === 'done' ? (
-                        <Check size={13} strokeWidth={3} />
-                      ) : step.icon === 'map' ? (
-                        <MapPin size={12} strokeWidth={2.25} />
-                      ) : step.icon === 'team' ? (
-                        <Users size={12} strokeWidth={2.25} />
-                      ) : (
-                        <Home size={12} strokeWidth={2.25} />
-                      )}
-                    </span>
-                    <span
-                      className={`truncate text-[9px] font-bold sm:text-[10px] ${
-                        filled ? 'text-[#7dc6a2]' : 'text-gray-500 dark:text-gray-400'
-                      }`}
-                    >
-                      {step.label}
-                    </span>
-                  </div>
-                  {idx < wizardSteps.length - 1 && (
-                    <div
-                      className={`mx-1 mb-4 h-0.5 w-6 shrink-0 rounded-full sm:w-8 ${
-                        step.state === 'done' ? 'bg-[#7dc6a2]' : 'bg-[#E5E7EB] dark:bg-[#2A322E]'
-                      }`}
-                    />
+      <div className="flex shrink-0 items-center justify-center gap-1 border-b border-gray-100 px-3 py-1.5 dark:border-white/10 sm:gap-2 sm:py-2">
+        {wizardSteps.map((step, idx) => {
+          const filled = step.state === 'done' || step.state === 'active';
+          return (
+            <Fragment key={step.label}>
+              <div className="flex items-center gap-1 sm:gap-1.5">
+                <span
+                  className={`flex h-5 w-5 items-center justify-center rounded-full border-[1.5px] sm:h-6 sm:w-6 ${
+                    filled
+                      ? 'border-mintcom-green bg-mintcom-green text-white'
+                      : 'border-gray-200 bg-white text-gray-400 dark:border-white/15 dark:bg-mintcom-surface'
+                  }`}
+                >
+                  {step.state === 'done' ? (
+                    <Check size={10} strokeWidth={3} />
+                  ) : step.icon === 'map' ? (
+                    <MapPin size={10} strokeWidth={2.25} />
+                  ) : step.icon === 'team' ? (
+                    <Users size={10} strokeWidth={2.25} />
+                  ) : (
+                    <Home size={10} strokeWidth={2.25} />
                   )}
-                </Fragment>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Step 2 body — Select locations to link */}
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-3.5 py-3 sm:px-4 sm:py-3.5">
-          <div className="mb-2.5 flex shrink-0 items-start justify-between gap-2">
-            <div className="min-w-0 flex-1">
-              <p className="font-barlow text-[14px] font-black text-gray-900 dark:text-white sm:text-[15px]">
-                {isRtl ? 'اختر المواقع للربط' : 'Select locations to link'}
-              </p>
-              <p className="mt-0.5 text-[10px] font-medium leading-snug text-gray-500 dark:text-gray-400 sm:text-[11px]">
-                {isRtl
-                  ? 'تظهر فقط المواقع غير المرتبطة. المواقع في علامة أخرى مخفية.'
-                  : 'Only unlinked locations are shown. Locations already in another brand are hidden.'}
-              </p>
-            </div>
-            <span className="shrink-0 rounded-full bg-[#7dc6a2]/15 px-2.5 py-1 text-[10px] font-black text-[#7dc6a2]">
-              {isRtl
-                ? `${selectedCount} محدد`
-                : `${selectedCount} selected`}
-            </span>
-          </div>
-
-          <div className="min-h-0 flex-1 space-y-2 overflow-hidden">
-            {locations.map((loc) => (
-              <div
-                key={loc.name}
-                className={`flex items-center gap-2.5 rounded-2xl border px-2.5 py-2.5 sm:px-3 sm:py-3 ${
-                  loc.selected
-                    ? 'border-[#7dc6a2] bg-[#7dc6a2]/10'
-                    : 'border-gray-200 dark:border-white/10 bg-white dark:border-white/10 dark:bg-mintcom-dark'
-                }`}
-              >
-                <span
-                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
-                    loc.selected
-                      ? 'bg-[#7dc6a2] text-white'
-                      : 'bg-[#7dc6a2]/14 text-[#7dc6a2]'
-                  }`}
-                >
-                  <loc.Icon size={18} strokeWidth={2.2} />
                 </span>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-barlow text-[13px] font-extrabold text-gray-900 dark:text-white">
-                    {loc.name}
-                  </p>
-                  <p className="text-[10px] font-semibold text-gray-500 dark:text-gray-400">
-                    {loc.type}
-                  </p>
-                </div>
                 <span
-                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 ${
-                    loc.selected
-                      ? 'border-[#7dc6a2] bg-[#7dc6a2] text-white'
-                      : 'border-[#D1D5DB] bg-transparent dark:border-[#3A4440]'
+                  className={`text-[9px] font-bold sm:text-[10px] ${
+                    filled ? 'text-mintcom-green' : 'text-gray-400'
                   }`}
                 >
-                  {loc.selected && <Check size={12} strokeWidth={3} />}
+                  {step.label}
                 </span>
               </div>
-            ))}
-          </div>
-        </div>
+              {idx < wizardSteps.length - 1 && (
+                <div
+                  className={`mx-0.5 h-0.5 w-5 rounded-full sm:w-8 ${
+                    step.state === 'done' ? 'bg-mintcom-green' : 'bg-gray-200 dark:bg-white/10'
+                  }`}
+                />
+              )}
+            </Fragment>
+          );
+        })}
+      </div>
 
-        {/* Footer — Back + Continue */}
-        <div className="flex shrink-0 items-center gap-2 border-t border-black/[0.05] px-3.5 py-2.5 dark:border-white/10 sm:px-4 sm:py-3">
-          <div className="flex h-11 flex-1 items-center justify-center rounded-xl border border-mintcom-green bg-white text-[12px] font-bold text-mintcom-green dark:bg-mintcom-surface/50">
-            {isRtl ? 'رجوع' : 'Back'}
+      <div className="@container shrink-0 px-3 pt-2 sm:px-3.5 sm:pt-2.5">
+        <div className="flex items-center justify-between gap-2">
+          <p className="min-w-0 truncate font-sans text-[12px] font-black text-gray-900 dark:text-white sm:text-[13px]">
+            {isRtl ? 'اختر موقع / نقطة بيع للربط' : 'Select Location/POS to Link'}
+          </p>
+          <span className="shrink-0 rounded-full bg-mintcom-green/15 px-2 py-0.5 text-[9px] font-black text-mintcom-green">
+            {isRtl ? `${selectedCount} محدد` : `${selectedCount} selected`}
+          </span>
+        </div>
+        <p className="mt-0.5 w-full overflow-hidden text-ellipsis whitespace-nowrap font-medium leading-none text-gray-500 dark:text-gray-400 [font-size:clamp(7.5px,2.1cqi,10px)]">
+          {isRtl
+            ? 'تظهر فقط المواقع غير المرتبطة. المواقع الموجودة في علامة أخرى مخفية.'
+            : 'Only unlinked locations are shown. Locations already in another brand are hidden.'}
+        </p>
+      </div>
+
+      <div className="grid min-h-0 flex-1 grid-cols-2 grid-rows-2 gap-1.5 p-2.5 sm:gap-2 sm:p-3">
+        {locations.map((loc) => (
+          <div
+            key={loc.name}
+            className={`flex min-h-0 items-center gap-2 rounded-xl border px-2 sm:px-2.5 ${
+              loc.selected
+                ? 'border-mintcom-green bg-mintcom-green/10'
+                : 'border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-white/[0.03]'
+            }`}
+          >
+            <span
+              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg sm:h-9 sm:w-9 ${
+                loc.selected
+                  ? 'bg-mintcom-green text-white'
+                  : 'bg-mintcom-green/12 text-mintcom-green'
+              }`}
+            >
+              <loc.Icon size={15} strokeWidth={2.2} />
+            </span>
+            <div className="min-w-0 flex-1 leading-tight">
+              <p className="truncate font-sans text-[11px] font-extrabold text-gray-900 dark:text-white sm:text-[12px]">
+                {loc.name}
+              </p>
+              <p className="truncate text-[9px] font-semibold text-gray-500 dark:text-gray-400">
+                {loc.type}
+              </p>
+            </div>
+            <span
+              className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
+                loc.selected
+                  ? 'border-mintcom-green bg-mintcom-green text-white'
+                  : 'border-gray-300 bg-transparent dark:border-white/20'
+              }`}
+            >
+              {loc.selected && <Check size={10} strokeWidth={3} />}
+            </span>
           </div>
-          <div className="relative flex h-11 flex-[1.2] items-center justify-center rounded-xl bg-[#7dc6a2] text-[12px] font-black text-white shadow-md shadow-[#7dc6a2]/25">
-            <span>{isRtl ? 'متابعة' : 'Continue'}</span>
-            <ArrowRight size={15} className="absolute end-3.5" strokeWidth={2.5} />
-          </div>
+        ))}
+      </div>
+
+      <div className="flex shrink-0 items-center gap-2 border-t border-gray-100 px-3 py-2 dark:border-white/10 sm:px-3.5">
+        <div className="flex h-8 flex-1 items-center justify-center rounded-xl border border-mintcom-green bg-white text-[11px] font-bold text-mintcom-green dark:bg-transparent">
+          {isRtl ? 'رجوع' : 'Back'}
+        </div>
+        <div className="relative flex h-8 flex-[1.2] items-center justify-center rounded-xl bg-mintcom-green text-[11px] font-black text-white shadow-sm shadow-mintcom-green/30">
+          <span>{isRtl ? 'متابعة' : 'Continue'}</span>
+          <ArrowRight size={13} className="absolute end-3" strokeWidth={2.5} />
         </div>
       </div>
     </div>
@@ -664,91 +707,22 @@ function WhyCreateBranchPreview({ isRtl }: { isRtl?: boolean }) {
 }
 
 /**
- * Unique previews for Why Mintcom only — real product patterns,
- * intentionally different from Features section screenshots.
- *
- * complete  → all-included product modules (not Sales / Reports)
- * realUsers → static Try POS login snapshot (copy text only)
- * security  → admin portal AppSettingsScreen (polished iPhone component)
- * multiBranch → Brands create-brand wizard step 2 (select locations)
+ * Why Mintcom previews — all sit in the same 3:2 outer frame.
+ * Cards 2–3: real try-pos screenshots (fill). Cards 1 & 4: fluid full-bleed UI.
  */
 const FeaturePreview = ({ id, isRtl }: { id: FeatureId; isRtl?: boolean }) => {
   if (id === 'complete') {
-    const mods = isRtl
-      ? [
-          { Icon: Store, name: 'نقطة البيع', sub: 'بيع سريع' },
-          { Icon: Cloud, name: 'السحابة', sub: 'مزامنة' },
-          { Icon: BarChart3, name: 'تقارير', sub: 'تحليلات' },
-          { Icon: Users, name: 'فريق', sub: 'أدوار' },
-          { Icon: Heart, name: 'ولاء', sub: 'نقاط' },
-          { Icon: Package, name: 'مخزون', sub: 'تتبع' },
-          { Icon: ChefHat, name: 'وصفات', sub: 'تكاليف' },
-          { Icon: CreditCard, name: 'مدفوعات', sub: 'طرق' },
-          { Icon: Smartphone, name: 'الجوال', sub: 'تنبيهات' },
-        ]
-      : [
-          { Icon: Store, name: 'POS', sub: 'Fast checkout' },
-          { Icon: Cloud, name: 'Cloud', sub: 'Live sync' },
-          { Icon: BarChart3, name: 'Reports', sub: 'Analytics' },
-          { Icon: Users, name: 'Team', sub: 'Roles' },
-          { Icon: Heart, name: 'Loyalty', sub: 'Points' },
-          { Icon: Package, name: 'Stock', sub: 'Tracking' },
-          { Icon: ChefHat, name: 'Recipes', sub: 'Costing' },
-          { Icon: CreditCard, name: 'Payments', sub: 'Methods' },
-          { Icon: Smartphone, name: 'Mobile', sub: 'Alerts' },
-        ];
-
-    return (
-      <div className="flex h-full flex-col bg-gradient-to-b from-white to-gray-50 font-sans dark:from-[#141414] dark:to-[#0c0c0c]">
-        <div className="flex shrink-0 items-center justify-between border-b border-gray-100 px-4 py-3.5 dark:border-white/10">
-          <div className="flex items-center gap-2.5">
-            <Logo variant="icon" size="sm" />
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-mintcom-green">
-                {isRtl ? 'باقة واحدة' : 'One subscription'}
-              </p>
-              <p className="text-[14px] font-bold text-gray-900 dark:text-white">
-                {isRtl ? 'كل شيء مشمول' : 'Everything included'}
-              </p>
-            </div>
-          </div>
-          <span className="rounded-full bg-mintcom-green px-2.5 py-1 text-[10px] font-black text-black">
-            {isRtl ? 'بدون رسوم خفية' : 'No add-ons'}
-          </span>
-        </div>
-        <div className="grid min-h-0 flex-1 grid-cols-3 content-center gap-2.5 p-3.5 sm:gap-3 sm:p-4">
-          {mods.map((m) => (
-            <div
-              key={m.name}
-              className="flex min-h-0 flex-col items-center justify-center rounded-2xl border border-gray-200/90 bg-white px-2 py-3 text-center shadow-sm dark:border-white/10 dark:bg-[#1a1a1a] sm:py-4"
-            >
-              <span className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-mintcom-green/12 text-mintcom-green">
-                <m.Icon size={18} />
-              </span>
-              <p className="text-[11px] font-bold text-gray-900 dark:text-white sm:text-[12px]">
-                {m.name}
-              </p>
-              <p className="mt-0.5 text-[9px] font-medium text-gray-400 sm:text-[10px]">
-                {m.sub}
-              </p>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
+    return <WhyCompletePreview isRtl={isRtl} />;
   }
 
   if (id === 'realUsers') {
-    // Static try-pos sign-in snapshot — copyable text only, not interactive
-    return <WhyRealPosLoginPreview isRtl={isRtl} />;
+    return <FeaturePosScreenshot side fill forceLight className="h-full w-full" />;
   }
 
   if (id === 'security') {
-    // Admin portal AppSettingsScreen — polished phone component (static)
-    return <WhyAppSettingsPreview isRtl={isRtl} />;
+    return <FeatureScreenshot featureId="advancedReporting" side fill />;
   }
 
-  // multiBranch — real LocationOnboarding create-branch step 1
   return <WhyCreateBranchPreview isRtl={isRtl} />;
 };
 
@@ -824,36 +798,54 @@ const FeatureModal = ({
               initial="enter"
               animate="center"
               exit="exit"
-              className="relative z-10 p-5 pt-12 will-change-transform sm:p-6 sm:pt-12 md:p-8 md:pt-14"
+              className="relative z-10 w-full select-text p-5 pt-12 will-change-transform sm:p-6 sm:pt-12 md:p-8 md:pt-14"
             >
-              <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,0.78fr)_minmax(320px,1.22fr)] lg:gap-8">
-                {/* Story — no icon, top-aligned like Features */}
-                <div className="order-2 min-w-0 lg:order-1">
-                  <h3 className="line-clamp-2 font-barlow text-2xl font-bold leading-snug tracking-tight text-gray-900 dark:text-white md:text-3xl lg:text-[2rem]">
-                    {feature.title}
-                  </h3>
-                  <p className="mt-3 line-clamp-5 max-w-md font-barlow text-[15px] font-medium leading-relaxed text-gray-600 dark:text-gray-300 md:text-base">
-                    {feature.description}
-                  </p>
-                  <ul className="mt-5 space-y-2.5">
-                    {feature.highlights.map((line) => (
-                      <li
-                        key={line}
-                        className="flex items-start gap-2.5 text-sm font-semibold text-gray-700 dark:text-gray-200"
-                      >
-                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-mintcom-green" />
-                        <span className="line-clamp-2">{line}</span>
-                      </li>
-                    ))}
-                  </ul>
+              {/*
+                Preview defines row height (always 3:2 of the same column width).
+                Story uses h-0 + min-h-full so long card-1 copy cannot enlarge
+                the modal — it scrolls instead. Result: card 1 = card 2 size.
+              */}
+              <div className="grid gap-6 lg:grid-cols-[minmax(0,0.78fr)_minmax(320px,1.22fr)] lg:gap-8">
+                {/* Preview anchors size — same box on every slide */}
+                <div className="order-1 w-full min-w-0 lg:order-2 lg:col-start-2 lg:row-start-1">
+                  <div
+                    className={`overflow-hidden rounded-2xl border border-gray-200/90 shadow-lg shadow-black/10 dark:border-white/10 dark:shadow-black/40 ${
+                      feature.id === 'realUsers'
+                        ? 'bg-[#f6f3ec]'
+                        : feature.id === 'security'
+                          ? 'bg-gray-100 dark:bg-mintcom-dark'
+                          : 'bg-white dark:bg-mintcom-dark'
+                    }`}
+                  >
+                    <div className={WHY_PREVIEW_FRAME_CLASS}>
+                      <div className="absolute inset-0 overflow-hidden">
+                        <FeaturePreview id={feature.id} isRtl={isRtl} />
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Shared-height product previews — all Why cards match */}
-                <div className="order-1 w-full min-w-0 lg:order-2">
-                  <div className="overflow-hidden rounded-2xl border border-gray-200/90 bg-white shadow-lg shadow-black/10 dark:border-white/10 dark:bg-mintcom-dark dark:shadow-black/40">
-                    <div className={WHY_PREVIEW_H_CLASS}>
-                      <FeaturePreview id={feature.id} isRtl={isRtl} />
-                    </div>
+                {/* Story height = preview height; full description + all bullets (scroll if needed) */}
+                <div className="order-2 flex min-w-0 flex-col lg:order-1 lg:col-start-1 lg:row-start-1 lg:h-0 lg:min-h-full lg:overflow-hidden">
+                  <h3 className="shrink-0 font-sans text-xl font-bold leading-snug tracking-tight text-gray-900 dark:text-white sm:text-2xl md:text-[1.75rem] lg:text-[1.85rem]">
+                    {feature.title}
+                  </h3>
+                  <div className="mt-2.5 min-h-0 flex-1 overflow-y-auto overscroll-contain pe-1 [scrollbar-width:thin] [scrollbar-color:rgba(125,198,162,0.45)_transparent]">
+                    {/* Full copy — no line-clamp; every word + every bullet is in the DOM */}
+                    <p className="max-w-md font-sans text-[13px] font-medium leading-relaxed text-gray-600 dark:text-gray-300 sm:text-[14px] md:text-[15px]">
+                      {feature.description}
+                    </p>
+                    <ul className="mt-3.5 space-y-1.5 pb-2 sm:mt-4 sm:space-y-2">
+                      {feature.highlights.map((line) => (
+                        <li
+                          key={line}
+                          className="flex items-start gap-2 text-[13px] font-semibold leading-snug text-gray-700 dark:text-gray-200 sm:gap-2.5 sm:text-sm"
+                        >
+                          <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-mintcom-green" />
+                          <span>{line}</span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 </div>
               </div>
@@ -865,7 +857,7 @@ const FeatureModal = ({
           <button
             type="button"
             onClick={onPrev}
-            className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-bold text-gray-700 transition-colors hover:bg-gray-50 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
+            className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 font-sans text-sm font-bold text-gray-700 transition-colors hover:bg-gray-50 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
           >
             {isRtl ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
             <span className="hidden sm:inline">{t('common.previous', 'Previous')}</span>
@@ -890,7 +882,7 @@ const FeatureModal = ({
           <button
             type="button"
             onClick={onNext}
-            className="flex items-center gap-2 rounded-xl bg-mintcom-green px-4 py-2.5 text-sm font-bold text-black shadow-[0_4px_20px_-4px_rgba(125,198,162,0.5)] transition-all hover:-translate-y-0.5"
+            className="flex items-center gap-2 rounded-xl bg-mintcom-green px-4 py-2.5 font-sans text-sm font-bold text-black shadow-[0_4px_20px_-4px_rgba(125,198,162,0.5)] transition-all hover:-translate-y-0.5"
           >
             <span className="hidden sm:inline">{t('common.next', 'Next')}</span>
             {isRtl ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
@@ -920,14 +912,20 @@ export const WhyChooseUs = () => {
       teaser: isRtl ? 'حل كامل' : 'Complete',
       highlights: isRtl
         ? [
-            'تقارير متقدمة مع فلاتر وموظفين وأدوار',
-            'لا رسوم خفية — كل شيء في الباقة',
-            'محرك تقارير قوي جاهز من اليوم الأول',
+            'إدارة الموظفين والصلاحيات حسب الدور',
+            'مخزون وتتبع مخزون في الوقت الفعلي',
+            'تطبيق جوال مع تنبيهات فورية',
+            'الفوترة الإلكترونية المتكاملة',
+            'برنامج ولاء ومكافآت العملاء',
+            'دعم طرق دفع متعددة',
           ]
         : [
-            'Advanced reporting with filters, staff & roles',
-            'No hidden fees — everything in the package',
-            'Powerful reporting engine from day one',
+            'Staff Management & Role-Based Access',
+            'Real-Time Inventory & Stock Control',
+            'Mobile App with Instant Alerts',
+            'Integrated E-Invoicing',
+            'Customer Loyalty & Rewards Program',
+            'Support for Multiple Payment Methods',
           ],
     },
     {
@@ -938,14 +936,16 @@ export const WhyChooseUs = () => {
       teaser: isRtl ? 'مستخدمون حقيقيون' : 'Real users',
       highlights: isRtl
         ? [
-            'مصمم مع أصحاب أعمال وكاشيرين ومديرين',
-            'واجهة بسيطة بدون خبرة تقنية',
-            'تدفقات عمل مبنية من الاستخدام اليومي',
+            'رحلة مستخدم بسيطة وبديهية',
+            'واجهة نظيفة وسهلة الاستخدام',
+            'أداء سريع وفعّال',
+            'مزامنة فورية عبر جميع القنوات',
           ]
         : [
-            'Designed with owners, cashiers & managers',
-            'Simple UI — no tech expertise required',
-            'Workflows shaped by real daily use',
+            'Simple & Intuitive User Journey',
+            'Clean, User-Friendly Interface',
+            'Fast & Efficient Performance',
+            'Real-Time Synchronization Across All Channels',
           ],
     },
     {
@@ -974,14 +974,14 @@ export const WhyChooseUs = () => {
       teaser: isRtl ? 'فروع متعددة' : 'Multi-branch',
       highlights: isRtl
         ? [
-            'متجر واحد أو فروع متعددة تحت لوحة واحدة',
-            'علامات تجارية منفصلة أو مدمجة',
-            'تقارير موحدة عبر كل المواقع',
+            'لوحة تحكم مركزية للعلامة التجارية للمواقع المرتبطة',
+            'إنشاء مواقع جديدة أو نقاط بيع إضافية داخل المواقع الحالية بسهولة',
+            'فصل المواقع أو العلامات التجارية في أي وقت بسلاسة',
           ]
         : [
-            'One store or many under a single dashboard',
-            'Merged branches or separate brands',
-            'Unified reporting across every location',
+            'Access a Centralized Brand Dashboard for Connected Locations',
+            'Easily Create New Locations or Additional POS Points Within Existing Locations',
+            'Seamlessly Disconnect Locations or Separate Brands Anytime',
           ],
     },
   ];
@@ -1135,7 +1135,7 @@ export const WhyChooseUs = () => {
                     {t('landing.features.liveDemo')}
                   </span>
                 </div>
-                <h4 className="mb-2 font-barlow text-2xl font-bold tracking-tighter text-white xs:text-3xl md:text-5xl">
+                <h4 className="mb-2 font-sans text-2xl font-bold tracking-tighter text-white xs:text-3xl md:text-5xl">
                   {t('landing.features.seeInAction')}
                 </h4>
                 <p className="text-base font-medium text-white/70 md:text-lg">

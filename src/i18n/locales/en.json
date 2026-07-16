@@ -1827,7 +1827,7 @@
     "badge": "All-in-One Point of Sale System",
     "cta": "Start Free Trial",
     "customers": "Customers",
-    "description": "Mintcom is a complete 360° POS solution built for modern businesses. Manage sales, inventory, staff, reporting, and operations—all from one simple system.",
+    "description": "Mintcom is a complete 360° POS solution built for modern businesses. Manage sales, inventory, staff, reporting, and operations, all from one simple system.",
     "freeTrial": "30-Day Free Trial",
     "fromYesterday": "from yesterday",
     "growth": "Growth",
@@ -2137,11 +2137,12 @@
       "cardLabel": "Pillar",
       "cards": {
         "complete": {
-          "description": "Mintcom is more than a checkout system. You get a powerful reporting engine with advanced filters, staff and role management, customer profiles and loyalty programs, discounts, raw material and stock tracking, and much more, all included in one fixed monthly plan.",
+          "description": "Mintcom is more than just a POS system. It brings together the features that other providers often lock behind complex plans and bundled packages into one simple tier that covers all your business needs. From staff management and inventory management to loyalty programs, advanced reporting, and much more, Mintcom gives you everything you need in a single, straightforward solution.",
           "title": "A Complete Solution with No Hidden Costs"
         },
+
         "multiBranch": {
-          "description": "Run one store or many. Mintcom supports multiple merged branches or separate stores under one unified dashboard. Manage staff, products, sales, and performance across all locations from a single control panel.",
+          "description": "Run one or multiple stores and POS points effortlessly through our centralized brand management service. Connect all your locations and POS points within a single portal, giving you complete visibility and control. As your business grows, easily add new locations or POS points and benefit from special discounts on additional connections.",
           "title": "Multi-Branch Management"
         },
         "realUsers": {
@@ -2155,7 +2156,7 @@
       },
       "liveDemo": "LIVE DEMO",
       "readLess": "Read less",
-      "readMore": "Read more",
+      "readMore": "Learn more",
       "seamlessSync": "Seamless real-time synchronization across all devices",
       "seeInAction": "See Mintcom in Action",
       "subtitle": "At Mintcom, we believe in keeping things simple: simple onboarding, simple installation, simple setup, and simple pricing",
@@ -2275,7 +2276,7 @@
       "badge": "All-in-One Point of Sale System",
       "cta": "Start Free Trial",
       "customers": "Customers",
-      "description": "Mintcom is a complete 360° POS solution built for modern businesses. Manage sales, inventory, staff, reporting, and operations—all from one simple system.",
+      "description": "Mintcom is a complete 360° POS solution built for modern businesses. Manage sales, inventory, staff, reporting, and operations, all from one simple system.",
       "freeTrial": "",
       "fromYesterday": "from yesterday",
       "getStarted": "Get Started",
@@ -2397,7 +2398,7 @@
     },
     "workflow": {
       "advancedReporting": {
-        "description": "Access real-time reports and business insights to track sales, profits, inventory movement, and operational performance across your business.",
+        "description": "Gain complete visibility into your business performance by tracking sales, profits, shifts, daily activities, tax reports, and much more. With advanced filtering options, you can explore different combinations of insights and generate the exact data you need. Easily export and share reports, making decision-making faster and more efficient.",
         "title": "Advanced Reporting"
       },
       "aiSystem": {
