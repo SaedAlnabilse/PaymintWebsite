@@ -627,6 +627,8 @@ export function OnboardingPage() {
     try {
         const response = await api.get('/api/brands/availability/establishment-login-id', {
             params: { establishmentLoginId: rawLoginId },
+            // Onboarding has no location yet — never attach a stale establishment header.
+            headers: { 'X-Skip-Establishment-Header': 'true' },
         });
 
         if (!response.data?.available) {
@@ -638,9 +640,26 @@ export function OnboardingPage() {
             return;
         }
     } catch (err: any) {
+        const rawMessage = err?.response?.data?.message;
+        const serverMessage = Array.isArray(rawMessage)
+          ? rawMessage.filter(Boolean).join(' ')
+          : typeof rawMessage === 'string'
+            ? rawMessage
+            : '';
+        // Prefer a clear auth hint over the generic verify failure when session expired.
+        const status = err?.response?.status;
+        const fallback =
+          status === 401 || status === 403
+            ? t('owner.brands.validation.loginIdAuthFailed', {
+                defaultValue:
+                  'Your session could not be verified. Please refresh the page and log in again as the account owner.',
+              })
+            : t('owner.brands.validation.loginIdCheckFailed', {
+                defaultValue: 'Could not verify this Login ID right now. Please try again.',
+              });
         form2.setError('establishmentLoginId', {
             type: 'server',
-            message: err.response?.data?.message || t('owner.brands.validation.loginIdCheckFailed', { defaultValue: 'Could not verify this Login ID right now. Please try again.' })
+            message: serverMessage || fallback,
         });
         setIsLoading(false);
         return;
@@ -736,6 +755,7 @@ export function OnboardingPage() {
     try {
       const response = await api.get('/api/brands/availability/establishment-login-id', {
           params: { establishmentLoginId: formData.establishmentLoginId },
+          headers: { 'X-Skip-Establishment-Header': 'true' },
       });
 
       if (!response.data?.available) {
