@@ -27,6 +27,7 @@ interface SavedCard {
 interface EstablishmentBilling {
     id: string;
     name: string;
+    establishmentLoginId?: string;
     subscriptionStatus: string;
     cancelAtPeriodEnd: boolean;
     canceledAt?: string;
@@ -75,7 +76,45 @@ export function OwnerBillingPage() {
     const [addCardEstablishmentName, setAddCardEstablishmentName] = useState<string | null>(null);
     const [isAssigningCard, setIsAssigningCard] = useState(false);
 
-    const { refreshEstablishments } = useAuth();
+    const { refreshEstablishments, setCurrentEstablishment, establishments } = useAuth();
+
+    const openLocationDashboard = useCallback(
+        (est: EstablishmentBilling) => {
+            setActiveMenu(null);
+
+            // Prefer login slug (matches /dashboard/:locationSlug routes).
+            // Fall back to auth establishments list, then establishment id.
+            const fromAuth = establishments?.find((e) => e.id === est.id) as
+                | { id: string; name?: string; establishmentLoginId?: string; type?: string; currency?: string }
+                | undefined;
+            const slug = (
+                est.establishmentLoginId ||
+                fromAuth?.establishmentLoginId ||
+                est.id
+            )
+                .toString()
+                .trim();
+
+            // Seed this tab's session so resolver has a matching location
+            // if the new tab reuses the same origin storage (same browser).
+            const establishmentPayload = {
+                id: est.id,
+                name: est.name,
+                establishmentLoginId: slug,
+                type: fromAuth?.type || 'RESTAURANT',
+                currency: fromAuth?.currency || 'USD',
+            } as any;
+            try {
+                setCurrentEstablishment(establishmentPayload);
+                localStorage.setItem('selectedEstablishmentId', est.id);
+            } catch {
+                // Non-blocking — URL slug is the primary deep-link.
+            }
+
+            window.open(`/dashboard/${encodeURIComponent(slug)}`, '_blank');
+        },
+        [establishments, setCurrentEstablishment],
+    );
 
     const fetchBillingInfo = useCallback(async (silent = false) => {
         try {
@@ -728,7 +767,7 @@ export function OwnerBillingPage() {
                                                         className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-[#1E293B] rounded-xl border border-gray-200 dark:border-white/10 shadow-xl z-50 overflow-hidden"
                                                     >
                                                         <button
-                                                            onClick={() => window.open(`/dashboard`, '_blank')}
+                                                            onClick={() => openLocationDashboard(est)}
                                                             className="w-full px-4 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 tracking-wide transition-colors flex items-center gap-2"
                                                         >
                                                             <Eye size={14} />
