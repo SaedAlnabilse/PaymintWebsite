@@ -45,7 +45,7 @@ npx wrangler secret put QA_ACCESS_KEY
 Optional public vars (dashboard or `wrangler.toml` `[vars]` only for non-secrets):
 
 - `MAINTENANCE_MODE` = `true` \| `false`  
-- `API_TARGET` = Railway API origin  
+- `API_TARGET` = production API origin (`https://api.mintcompos.com`)
 
 ### 5. Maintenance bypass (production)
 
