@@ -113,13 +113,14 @@ export function FeatureShotFrame({
   title: string;
   children: ReactNode;
   side?: boolean;
-  /** Fill a fixed-height parent (Why Mintcom). Scale fits both width & height. */
+  /** Fill a fixed-height parent (Why Mintcom). Scale + center to fit the box. */
   fill?: boolean;
   /** Light-mode canvas color; dark mode always uses mintcom-dark */
   bg?: string;
 }) {
   const shellRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
 
   useLayoutEffect(() => {
     const el = shellRef.current;
@@ -129,22 +130,37 @@ export function FeatureShotFrame({
       const w = el.clientWidth;
       const h = el.clientHeight;
       if (w <= 0 || h <= 0) return;
-      // Fit design canvas inside the real box (Why-style fixed frame)
-      const next = Math.min(1, w / DESIGN_W, h / DESIGN_H);
-      setScale((prev) => (Math.abs(prev - next) < 0.002 ? prev : next));
+
+      if (fill) {
+        // Pure contain + center. Parent Why frame is locked to 3:2 (same as
+        // DESIGN_W×DESIGN_H) so this paints edge-to-edge with zero crop.
+        const next = Math.min(w / DESIGN_W, h / DESIGN_H);
+        const ox = (w - DESIGN_W * next) / 2;
+        const oy = (h - DESIGN_H * next) / 2;
+        setScale((prev) => (Math.abs(prev - next) < 0.002 ? prev : next));
+        setOffset((prev) =>
+          Math.abs(prev.x - ox) < 0.5 && Math.abs(prev.y - oy) < 0.5
+            ? prev
+            : { x: ox, y: oy },
+        );
+      } else {
+        const next = Math.min(1, w / DESIGN_W, h / DESIGN_H);
+        setScale((prev) => (Math.abs(prev - next) < 0.002 ? prev : next));
+        setOffset({ x: 0, y: 0 });
+      }
     };
 
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(el);
     return () => ro.disconnect();
-  }, []);
+  }, [fill]);
 
   const lightBg = bg === 'transparent' ? 'transparent' : bg;
   // When fill: outer chrome is the Why-style frame parent — no second border card
   const outer = fill
-    ? 'h-full w-full select-text'
-    : `${side ? 'mt-0 w-full' : 'mt-5'} select-text`;
+    ? 'h-full w-full select-text font-sans'
+    : `${side ? 'mt-0 w-full' : 'mt-5'} select-text font-sans`;
   const card = fill
     ? 'relative h-full w-full overflow-hidden'
     : `relative overflow-hidden rounded-2xl border border-gray-200/90 bg-white dark:border-white/10 dark:bg-mintcom-dark ${
@@ -167,8 +183,10 @@ export function FeatureShotFrame({
           {/* Dark mode paint — overrides inline light canvas bg */}
           <div className="pointer-events-none absolute inset-0 hidden bg-mintcom-dark dark:block" />
           <div
-            className="absolute left-0 top-0 z-[1] origin-top-left"
+            className="absolute z-[1] origin-top-left"
             style={{
+              left: offset.x,
+              top: offset.y,
               width: DESIGN_W,
               height: DESIGN_H,
               transform: `scale(${scale})`,
@@ -1335,8 +1353,8 @@ function AiShot() {
 }
 
 /**
- * Multi-Branch Management — mirrors Owner portal Brands screen
- * (OwnerBrandsPage): stats row, search/sort, brand cards with linked locations.
+ * Multi-Branch Management — Owner Brands screen, cleaned for the 3:2 Features
+ * frame: slim rail (no cramped side banner), stats + brand cards fill cleanly.
  */
 function BranchShot() {
   const brands = [
@@ -1358,102 +1376,127 @@ function BranchShot() {
       locations: [
         { name: 'University', type: 'cafe' },
         { name: 'Riverside', type: 'cafe' },
+        { name: 'Harbor', type: 'cafe' },
+      ],
+      featured: false,
+    },
+    {
+      name: 'Artisan Bakery',
+      loginId: 'artisan-bakery',
+      created: 'Jun 3, 2025',
+      locations: [
+        { name: 'Main Street', type: 'cafe' },
+        { name: 'Central Plaza', type: 'retail' },
+        { name: 'West End', type: 'cafe' },
+      ],
+      featured: false,
+    },
+    {
+      name: 'Urban Kitchen',
+      loginId: 'urban-kitchen',
+      created: 'Sep 21, 2025',
+      locations: [
+        { name: 'North Point', type: 'cafe' },
+        { name: 'City Center', type: 'retail' },
+        { name: 'East Village', type: 'cafe' },
       ],
       featured: false,
     },
   ] as const;
 
-  const linkedCount = brands.reduce((s, b) => s + b.locations.length, 0);
+  const activeBrands = brands.length; // 4
+  const linkedCount = brands.reduce((s, b) => s + b.locations.length, 0); // 12
+  const availableLocations = 2; // unlinked locations ready to join a brand
 
   return (
     <div
       className="flex h-full w-full overflow-hidden font-sans"
       style={{ width: DESIGN_W, height: DESIGN_H }}
     >
-      {/* Owner sidebar — collapsed rail, identical to OwnerLayout (sidebarOpen=false) */}
-      <aside className="relative flex w-[100px] shrink-0 flex-col border-e border-gray-200 dark:border-white/10 bg-white dark:bg-mintcom-surface py-4">
-        {/* Glow line like OwnerLayout */}
-        <div className="pointer-events-none absolute end-0 top-0 h-full w-px bg-gradient-to-b from-transparent via-mintcom-green/20 to-transparent opacity-50" />
+      {/*
+        Owner portal collapsed rail — same chrome as MINTCOM DASHBOARDS
+        Owner Dashboard (CloudControl OwnerRail / PortalRail).
+      */}
+      <aside className="relative flex h-full w-[68px] shrink-0 flex-col border-e border-gray-200 bg-white py-2.5 dark:border-white/10 dark:bg-mintcom-surface">
+        <div className="pointer-events-none absolute end-0 top-0 h-full w-px bg-gradient-to-b from-transparent via-mintcom-green/25 to-transparent opacity-60" />
 
-        {/* Brand header — leaf expand control */}
-        <div className="mb-2 flex h-20 shrink-0 items-center justify-center px-3">
-          <span className="flex h-12 w-12 items-center justify-center rounded-xl border border-mintcom-green/20 bg-gradient-to-br from-mintcom-green/20 to-mintcom-green/5 text-mintcom-green">
+        {/* Leaf logo */}
+        <div className="mb-1.5 flex shrink-0 items-center justify-center px-2">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-mintcom-green/20 bg-gradient-to-br from-mintcom-green/20 to-mintcom-green/5">
             <img
               src={MintcomLeafIcon}
               alt=""
-              width={32}
-              height={32}
-              className="h-8 w-8 object-contain"
+              className="h-5 w-5 object-contain"
               draggable={false}
             />
           </span>
         </div>
 
-        {/* Main menu icons — exact OwnerLayout order */}
-        <div className="relative z-10 flex min-h-0 flex-1 flex-col space-y-1.5 overflow-hidden px-3 pb-4">
+        {/* Nav — OwnerLayout order; Brands (Building2) active */}
+        <div className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-evenly overflow-hidden px-2">
           {(
             [
-              { Icon: LayoutDashboard, on: false },
-              { Icon: Store, on: false },
-              { Icon: Building2, on: true },
-              { Icon: Users, on: false },
-              { Icon: Shield, on: false },
-              { Icon: CreditCard, on: false },
-              { Icon: KeyRound, on: false },
+              { id: 'overview', Icon: LayoutDashboard, on: false },
+              { id: 'locations', Icon: Store, on: false },
+              { id: 'brands', Icon: Building2, on: true },
+              { id: 'employees', Icon: Users, on: false },
+              { id: 'roles', Icon: Shield, on: false },
+              { id: 'billing', Icon: CreditCard, on: false },
+              { id: 'account', Icon: KeyRound, on: false },
             ] as const
-          ).map(({ Icon, on }, i) => (
+          ).map(({ id, Icon, on }) => (
             <span
-              key={i}
-              className={`mx-auto flex h-12 w-12 items-center justify-center rounded-xl transition-all ${
+              key={id}
+              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl transition-all ${
                 on
-                  ? 'bg-mintcom-green font-semibold text-black shadow-lg shadow-mintcom-green/20'
-                  : 'text-gray-500'
+                  ? 'bg-mintcom-green font-semibold text-black shadow-md shadow-mintcom-green/25'
+                  : 'text-gray-500 dark:text-gray-400'
               }`}
             >
-              <Icon size={24} />
+              <Icon size={16} strokeWidth={on ? 2.25 : 2} />
             </span>
           ))}
         </div>
 
-        {/* Footer — language · mobile app · theme · logout */}
-        <div className="flex shrink-0 flex-col items-center gap-2 border-t border-gray-100 dark:border-white/10 p-3">
-          <span className="flex h-12 w-12 items-center justify-center rounded-xl text-gray-600">
-            <Globe size={24} />
+        {/* Footer — EN · mobile · theme · logout (matches Owner Dashboard card) */}
+        <div className="mt-1 flex shrink-0 flex-col items-center gap-1 border-t border-gray-100 px-2 pt-2 dark:border-white/10">
+          <span className="flex h-8 w-8 items-center justify-center rounded-xl text-[10px] font-black tracking-wider text-gray-600 dark:text-gray-300">
+            EN
           </span>
-          <span className="flex h-12 w-12 items-center justify-center rounded-xl text-gray-500">
-            <Smartphone size={24} />
+          <span className="flex h-8 w-8 items-center justify-center rounded-xl text-gray-500 dark:text-gray-400">
+            <Smartphone size={16} strokeWidth={2} />
           </span>
-          <span className="flex h-12 w-12 items-center justify-center rounded-xl text-gray-500">
-            <Moon size={24} />
+          <span className="flex h-8 w-8 items-center justify-center rounded-xl text-gray-500 dark:text-gray-400">
+            <Moon size={16} strokeWidth={2} />
           </span>
-          <span className="flex h-12 w-12 items-center justify-center rounded-xl text-gray-500">
-            <LogOut size={24} />
+          <span className="flex h-8 w-8 items-center justify-center rounded-xl text-gray-500 dark:text-gray-400">
+            <LogOut size={16} strokeWidth={2} />
           </span>
         </div>
       </aside>
 
-      {/* Brands page content — OwnerLayout main is bg-gray-100 / mintcom-dark */}
-      <div className="flex min-w-0 flex-1 flex-col overflow-hidden border-s border-gray-200 bg-gray-100 dark:border-white/10 dark:bg-mintcom-dark">
-        {/* Header */}
-        <div className="flex shrink-0 items-end justify-between gap-4 px-5 pb-3 pt-4">
+      {/* Brands page content */}
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden bg-gray-50 dark:bg-mintcom-dark">
+        <div className="flex shrink-0 items-center justify-between gap-3 px-4 pb-2.5 pt-3.5">
           <div className="min-w-0">
-            <p className="text-[20px] font-bold tracking-tight text-gray-900 dark:text-white">Brands</p>
-            <p className="mt-0.5 text-[12px] text-gray-500">
+            <p className="text-[18px] font-bold tracking-tight text-gray-900 dark:text-white">
+              Brands
+            </p>
+            <p className="mt-0.5 text-[11px] font-medium text-gray-500">
               Group locations under one brand dashboard
             </p>
           </div>
-          <span className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-mintcom-green px-4 py-2.5 text-[12px] font-bold text-black shadow-sm">
-            <Plus size={16} /> Create Brand
+          <span className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-mintcom-green px-3.5 py-2 text-[12px] font-bold text-black shadow-sm shadow-mintcom-green/25">
+            <Plus size={15} strokeWidth={2.5} /> Create Brand
           </span>
         </div>
 
-        {/* Stats */}
-        <div className="grid shrink-0 grid-cols-3 gap-3 px-5 pb-3">
+        <div className="grid shrink-0 grid-cols-3 gap-2 px-3.5 pb-2">
           {(
             [
               {
                 label: 'Active brands',
-                value: '2',
+                value: String(activeBrands),
                 Icon: Building2,
                 color: 'text-blue-500',
                 bg: 'bg-blue-500/10',
@@ -1467,7 +1510,7 @@ function BranchShot() {
               },
               {
                 label: 'Available locations',
-                value: '1',
+                value: String(availableLocations),
                 Icon: Store,
                 color: 'text-orange-500',
                 bg: 'bg-orange-500/10',
@@ -1476,16 +1519,16 @@ function BranchShot() {
           ).map((s) => (
             <div
               key={s.label}
-              className="flex items-center gap-3 rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-mintcom-surface p-3 shadow-sm"
+              className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-2.5 py-2 shadow-sm dark:border-white/10 dark:bg-mintcom-surface"
             >
               <span
-                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${s.bg} ${s.color}`}
+                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${s.bg} ${s.color}`}
               >
-                <s.Icon size={18} />
+                <s.Icon size={15} />
               </span>
               <div className="min-w-0">
-                <p className="truncate text-[11px] font-medium text-gray-500">{s.label}</p>
-                <p className="text-[18px] font-bold leading-none tracking-tight text-gray-900 dark:text-white">
+                <p className="truncate text-[9px] font-medium text-gray-500">{s.label}</p>
+                <p className="text-[15px] font-bold leading-none tracking-tight text-gray-900 dark:text-white">
                   {s.value}
                 </p>
               </div>
@@ -1493,110 +1536,112 @@ function BranchShot() {
           ))}
         </div>
 
-        {/* Search / sort bar */}
-        <div className="mx-5 mb-3 flex shrink-0 items-center gap-3 rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-mintcom-surface p-3 shadow-sm">
+        <div className="mx-3.5 mb-2 flex shrink-0 items-center gap-2 rounded-xl border border-gray-200 bg-white p-1.5 shadow-sm dark:border-white/10 dark:bg-mintcom-surface">
           <div className="relative min-w-0 flex-1">
             <Search
-              size={15}
-              className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-gray-400"
+              size={13}
+              className="pointer-events-none absolute start-2.5 top-1/2 -translate-y-1/2 text-gray-400"
             />
-            <span className="flex h-10 w-full items-center rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 ps-9 pe-3 text-[12px] font-medium text-gray-400">
+            <span className="flex h-8 w-full items-center rounded-lg border border-gray-200 bg-gray-50 ps-8 pe-2 text-[10px] font-medium text-gray-400 dark:border-white/10 dark:bg-white/5">
               Search brands by name or login ID…
             </span>
           </div>
-          <span className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 px-3 text-[12px] font-semibold text-gray-900 dark:text-white">
+          <span className="inline-flex h-8 shrink-0 items-center gap-1 rounded-lg border border-gray-200 bg-gray-50 px-2 text-[10px] font-semibold text-gray-900 dark:border-white/10 dark:bg-white/5 dark:text-white">
             Sort by name
-            <ChevronDown size={14} className="text-gray-400" />
+            <ChevronDown size={12} className="text-gray-400" />
           </span>
         </div>
 
-        {/* Brand cards */}
-        <div className="min-h-0 flex-1 overflow-hidden px-5 pb-4">
-          <div className="grid h-full grid-cols-2 gap-3.5">
+        {/* 2×2 brand grid — 4 brands × 3 locations each fills the frame */}
+        <div className="min-h-0 flex-1 overflow-hidden px-3.5 pb-3">
+          <div className="grid h-full grid-cols-2 grid-rows-2 gap-2">
             {brands.map((brand) => (
               <div
                 key={brand.name}
-                className={`relative flex min-h-0 flex-col overflow-hidden rounded-2xl border bg-white dark:bg-mintcom-surface p-4 shadow-sm ${
+                className={`relative flex min-h-0 flex-col overflow-hidden rounded-xl border bg-white p-2.5 shadow-sm dark:bg-mintcom-surface ${
                   brand.featured
                     ? 'border-mintcom-green bg-mintcom-green/[0.02]'
                     : 'border-gray-200 dark:border-white/10'
                 }`}
               >
-                {/* Soft purple wash like owner hover accent */}
-                <div className="pointer-events-none absolute -end-6 -top-6 h-24 w-24 rounded-full bg-purple-500/10 blur-2xl" />
+                <div className="pointer-events-none absolute -end-4 -top-4 h-14 w-14 rounded-full bg-purple-500/10 blur-xl" />
 
                 <div className="relative z-10 flex min-h-0 flex-1 flex-col">
-                  <div className="mb-3 flex items-start justify-between gap-2">
-                    <div className="flex min-w-0 items-center gap-3">
-                      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-purple-500/10 shadow-sm">
-                        <Building2 size={24} className="text-purple-500" />
+                  <div className="mb-1.5 flex items-start justify-between gap-1.5">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-purple-500/10">
+                        <Building2 size={15} className="text-purple-500" />
                       </span>
                       <div className="min-w-0">
-                        <p className="truncate text-[16px] font-bold tracking-tight text-gray-900 dark:text-white">
+                        <p className="truncate text-[12px] font-bold leading-tight tracking-tight text-gray-900 dark:text-white">
                           {brand.name}
                         </p>
-                        <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                          <span className="rounded bg-mintcom-green/10 px-1.5 py-0.5 text-[10px] font-bold text-mintcom-green">
+                        <div className="mt-0.5 flex flex-wrap items-center gap-1">
+                          <span className="rounded bg-mintcom-green/10 px-1 py-px text-[8px] font-bold text-mintcom-green">
                             Active
                           </span>
-                          <span className="text-[11px] font-medium text-gray-500">
+                          <span className="text-[9px] font-medium text-gray-500">
                             {brand.locations.length} locations
                           </span>
                         </div>
                       </div>
                     </div>
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-gray-400">
-                      <MoreVertical size={16} />
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center text-gray-400">
+                      <MoreVertical size={12} />
                     </span>
                   </div>
 
-                  <div className="mb-3 grid grid-cols-2 gap-2">
-                    <div className="rounded-xl border border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-white/5 p-2.5">
-                      <div className="mb-1 flex items-center gap-1.5">
-                        <Hash size={12} className="text-purple-500" />
-                        <span className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">
+                  <div className="mb-1.5 grid grid-cols-2 gap-1">
+                    <div className="rounded-lg border border-gray-100 bg-gray-50 px-1.5 py-1 dark:border-white/10 dark:bg-white/5">
+                      <div className="mb-px flex items-center gap-0.5">
+                        <Hash size={9} className="text-purple-500" />
+                        <span className="text-[7px] font-semibold uppercase tracking-wide text-gray-400">
                           Login ID
                         </span>
                       </div>
-                      <p className="truncate font-mono text-[12px] font-bold text-gray-900 dark:text-white">
+                      <p className="truncate font-mono text-[10px] font-bold text-gray-900 dark:text-white">
                         {brand.loginId}
                       </p>
                     </div>
-                    <div className="rounded-xl border border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-white/5 p-2.5">
-                      <div className="mb-1 flex items-center gap-1.5">
-                        <Calendar size={12} className="text-blue-500" />
-                        <span className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">
+                    <div className="rounded-lg border border-gray-100 bg-gray-50 px-1.5 py-1 dark:border-white/10 dark:bg-white/5">
+                      <div className="mb-px flex items-center gap-0.5">
+                        <Calendar size={9} className="text-blue-500" />
+                        <span className="text-[7px] font-semibold uppercase tracking-wide text-gray-400">
                           Created
                         </span>
                       </div>
-                      <p className="text-[12px] font-bold text-gray-900 dark:text-white">{brand.created}</p>
+                      <p className="truncate text-[10px] font-bold text-gray-900 dark:text-white">
+                        {brand.created}
+                      </p>
                     </div>
                   </div>
 
-                  <div className="mb-3 min-h-0 flex-1">
-                    <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-gray-400">
+                  <div className="mb-1.5 min-h-0 flex-1">
+                    <p className="mb-0.5 text-[7px] font-semibold uppercase tracking-wide text-gray-400">
                       Locations
                     </p>
-                    <div className="flex flex-wrap gap-1.5">
+                    <div className="flex flex-wrap gap-0.5">
                       {brand.locations.map((loc) => (
                         <span
                           key={loc.name}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-mintcom-surface px-2.5 py-1.5"
+                          className="inline-flex items-center gap-0.5 rounded-md border border-gray-200 bg-white px-1.5 py-0.5 dark:border-white/10 dark:bg-mintcom-surface"
                         >
                           {loc.type === 'retail' ? (
-                            <Store size={11} className="text-gray-400" />
+                            <Store size={9} className="text-gray-400" />
                           ) : (
-                            <Coffee size={11} className="text-gray-400" />
+                            <Coffee size={9} className="text-gray-400" />
                           )}
-                          <span className="text-[11px] font-bold text-gray-600 dark:text-gray-300">{loc.name}</span>
+                          <span className="text-[9px] font-bold text-gray-600 dark:text-gray-300">
+                            {loc.name}
+                          </span>
                         </span>
                       ))}
                     </div>
                   </div>
 
-                  <div className="mt-auto border-t border-gray-100 dark:border-white/10 pt-3">
-                    <span className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 bg-gray-50 py-2.5 text-[12px] font-bold text-gray-700 dark:border-white/10 dark:bg-white/5 dark:text-gray-200">
-                      <ExternalLink size={14} />
+                  <div className="mt-auto border-t border-gray-100 pt-1.5 dark:border-white/10">
+                    <span className="flex w-full items-center justify-center gap-1 rounded-lg border border-gray-200 bg-gray-50 py-1.5 text-[10px] font-bold text-gray-700 dark:border-white/10 dark:bg-white/5 dark:text-gray-200">
+                      <ExternalLink size={11} />
                       Open brand dashboard
                     </span>
                   </div>

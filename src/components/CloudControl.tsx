@@ -351,7 +351,7 @@ function RealStatTile({
         {label}
       </p>
       <p
-        className={`mt-0.5 font-barlow font-black tabular-nums leading-tight text-gray-900 dark:text-white ${
+        className={`mt-0.5 font-sans font-black tabular-nums leading-tight text-gray-900 dark:text-white ${
           lg ? 'text-[18px]' : 'text-[10px]'
         }`}
       >
@@ -386,7 +386,7 @@ const OwnerScopePreview = ({ t, size = 'sm' }: { t: any; size?: PreviewSize }) =
       <div className={`flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden ${lg ? 'gap-2.5 p-3' : 'gap-1 p-1.5'}`}>
         <div className="flex shrink-0 items-center justify-between gap-2">
           <div className="min-w-0">
-            <p className={`font-barlow font-bold tracking-tight text-gray-900 dark:text-white ${lg ? 'text-[17px]' : 'text-[10px]'}`}>
+            <p className={`font-sans font-bold tracking-tight text-gray-900 dark:text-white ${lg ? 'text-[17px]' : 'text-[10px]'}`}>
               {t('owner.overview.title', 'Overview')}
             </p>
             {lg && (
@@ -446,7 +446,7 @@ const BrandScopePreview = ({ t, size = 'sm' }: { t: any; size?: PreviewSize }) =
           }`}
         >
           <div className="min-w-0">
-            <p className={`truncate font-barlow font-bold text-gray-900 dark:text-white ${lg ? 'text-[16px]' : 'text-[9px]'}`}>
+            <p className={`truncate font-sans font-bold text-gray-900 dark:text-white ${lg ? 'text-[16px]' : 'text-[9px]'}`}>
               {t('landing.cloudControl.scope.preview.brandA', 'Cafe Delight')}
             </p>
             {lg && (
@@ -531,7 +531,7 @@ const BrandScopePreview = ({ t, size = 'sm' }: { t: any; size?: PreviewSize }) =
                     )}
                   </div>
                   <div className="shrink-0 text-end">
-                    <p className={`font-barlow font-black tabular-nums text-gray-900 dark:text-white ${lg ? 'text-[12px]' : 'text-[8px]'}`}>
+                    <p className={`font-sans font-black tabular-nums text-gray-900 dark:text-white ${lg ? 'text-[12px]' : 'text-[8px]'}`}>
                       {l.rev}
                     </p>
                     <p
@@ -610,7 +610,7 @@ const LocationScopePreview = ({ t, size = 'sm' }: { t: any; size?: PreviewSize }
           }`}
         >
           <div className="min-w-0">
-            <p className={`truncate font-barlow font-bold text-gray-900 dark:text-white ${lg ? 'text-[15px]' : 'text-[9px]'}`}>
+            <p className={`truncate font-sans font-bold text-gray-900 dark:text-white ${lg ? 'text-[15px]' : 'text-[9px]'}`}>
               {t('landing.cloudControl.scope.preview.locDowntown', 'Downtown')}
             </p>
             {lg && (
@@ -664,7 +664,7 @@ const ScopePreview = ({
 
 /**
  * Same chrome as Features WorkflowFeatureCard / Why FeatureCard:
- * icon + title, description, Read more — opens scope modal.
+ * icon + title, description, Learn more — opens scope modal.
  */
 const DashboardCard = ({
   dashboard,
@@ -695,22 +695,22 @@ const DashboardCard = ({
             className="text-mintcom-green transition-colors duration-500 group-hover:text-white"
           />
         </div>
-        <h3 className="mt-1 line-clamp-2 min-h-[2.5rem] font-barlow text-base font-bold leading-tight tracking-tight text-gray-900 transition-colors group-hover:text-mintcom-green dark:text-white">
+        <h3 className="mt-1 line-clamp-2 min-h-[2.5rem] font-sans text-base font-bold leading-tight tracking-tight text-gray-900 transition-colors group-hover:text-mintcom-green dark:text-white">
           {dashboard.title}
         </h3>
       </div>
 
       <div className="relative z-10 flex min-h-0 flex-1 flex-col justify-between">
-        <p className="line-clamp-3 min-h-[3.75rem] font-barlow text-sm font-medium leading-relaxed text-gray-600 dark:text-gray-400">
+        <p className="line-clamp-3 min-h-[3.75rem] font-sans text-sm font-medium leading-relaxed text-gray-600 dark:text-gray-400">
           {dashboard.description}
         </p>
 
         <button
           type="button"
           onClick={() => onOpen(index)}
-          className="mt-3 self-start font-barlow text-xs font-bold text-mintcom-green transition-colors hover:text-mintcom-green/80 focus:outline-none"
+          className="mt-3 self-start font-sans text-xs font-bold tracking-wide text-mintcom-green transition-colors hover:text-mintcom-green/80 focus:outline-none"
         >
-          {t('landing.features.readMore', 'Read more')}
+          {t('landing.features.readMore', 'Learn more')}
         </button>
       </div>
     </motion.div>
@@ -796,10 +796,10 @@ const ScopeDashboardModal = ({
               <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,0.78fr)_minmax(340px,1.22fr)] lg:gap-8 xl:grid-cols-[minmax(0,0.72fr)_minmax(380px,1.28fr)]">
                 {/* Story — Features modal language */}
                 <div className="order-2 min-w-0 lg:order-1">
-                  <h3 className="line-clamp-2 font-barlow text-2xl font-bold leading-snug tracking-tight text-gray-900 dark:text-white md:text-3xl lg:text-[2rem]">
+                  <h3 className="line-clamp-2 font-sans text-2xl font-bold leading-snug tracking-tight text-gray-900 dark:text-white md:text-3xl lg:text-[2rem]">
                     {item.title}
                   </h3>
-                  <p className="mt-3 line-clamp-5 max-w-md font-barlow text-[15px] font-medium leading-relaxed text-gray-600 dark:text-gray-300 md:text-base">
+                  <p className="mt-3 line-clamp-5 max-w-md font-sans text-[15px] font-medium leading-relaxed text-gray-600 dark:text-gray-300 md:text-base">
                     {item.description}
                   </p>
                   <ul className="mt-5 space-y-2.5">
@@ -833,7 +833,7 @@ const ScopeDashboardModal = ({
             type="button"
             onClick={onPrev}
             aria-label={String(t('common.previous', 'Previous'))}
-            className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-bold text-gray-700 transition-colors hover:bg-gray-50 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
+            className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 font-sans text-sm font-bold text-gray-700 transition-colors hover:bg-gray-50 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
           >
             {isRtl ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
             <span className="hidden sm:inline">{t('common.previous', 'Previous')}</span>
@@ -859,7 +859,7 @@ const ScopeDashboardModal = ({
             type="button"
             onClick={onNext}
             aria-label={String(t('common.next', 'Next'))}
-            className="flex items-center gap-2 rounded-xl bg-mintcom-green px-4 py-2.5 text-sm font-bold text-black shadow-[0_4px_20px_-4px_rgba(125,198,162,0.5)] transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_28px_-4px_rgba(125,198,162,0.65)]"
+            className="flex items-center gap-2 rounded-xl bg-mintcom-green px-4 py-2.5 font-sans text-sm font-bold text-black shadow-[0_4px_20px_-4px_rgba(125,198,162,0.5)] transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_28px_-4px_rgba(125,198,162,0.65)]"
           >
             <span className="hidden sm:inline">{t('common.next', 'Next')}</span>
             {isRtl ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}

@@ -47,29 +47,29 @@ const WorkflowFeatureCard = ({
       viewport={{ once: true }}
       transition={{ delay: (index % 4) * 0.08, duration: 0.5 }}
       whileHover={{ y: -6, scale: 1.02 }}
-      className="group relative flex h-full min-h-[248px] flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white p-6 shadow-lg shadow-gray-200/30 transition-all duration-500 hover:border-mintcom-green/40 hover:shadow-2xl hover:shadow-mintcom-green/10 dark:border-white/5 dark:bg-[#121212] dark:shadow-none"
+      className="group relative flex h-full min-h-[260px] flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white p-6 shadow-lg shadow-gray-200/30 transition-all duration-500 hover:border-mintcom-green/40 hover:shadow-2xl hover:shadow-mintcom-green/10 dark:border-white/5 dark:bg-[#121212] dark:shadow-none"
     >
       {/* Fixed header band so titles wrap like “Recipe & Cost Management” without changing card height */}
       <div className="relative z-10 mb-4 flex min-h-[56px] items-start gap-4">
         <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-mintcom-green/10 shadow-inner transition-all duration-500 group-hover:rotate-3 group-hover:scale-110 group-hover:bg-mintcom-green dark:bg-mintcom-green/15">
           <feature.icon size={22} className="text-mintcom-green transition-colors duration-500 group-hover:text-white" />
         </div>
-        <h3 className="mt-1 line-clamp-2 min-h-[2.5rem] font-barlow text-base font-bold leading-tight tracking-tight text-gray-900 transition-colors group-hover:text-mintcom-green dark:text-white">
+        <h3 className="mt-1 line-clamp-2 min-h-[2.5rem] font-sans text-base font-bold leading-tight tracking-tight text-gray-900 transition-colors group-hover:text-mintcom-green dark:text-white">
           {feature.title}
         </h3>
       </div>
 
       <div className="relative z-10 flex min-h-0 flex-1 flex-col justify-between">
-        <p className="line-clamp-3 min-h-[3.75rem] font-barlow text-sm font-medium leading-relaxed text-gray-600 dark:text-gray-400">
+        <p className="line-clamp-3 min-h-[3.75rem] font-sans text-sm font-medium leading-relaxed text-gray-600 dark:text-gray-400">
           {feature.description}
         </p>
 
         <button
           type="button"
           onClick={() => onOpen(index)}
-          className="mt-3 self-start font-barlow text-xs font-bold text-mintcom-green transition-colors hover:text-mintcom-green/80 focus:outline-none"
+          className="mt-3 self-start font-sans text-xs font-bold tracking-wide text-mintcom-green transition-colors hover:text-mintcom-green/80 focus:outline-none"
         >
-          {t('landing.features.readMore', 'Read more')}
+          {t('landing.features.readMore', 'Learn more')}
         </button>
       </div>
     </motion.div>
@@ -94,9 +94,8 @@ const slideVariants: Variants = {
   }),
 };
 
-/** Fixed preview frame (Why-style, but shorter so the modal fits like the old scale height). */
-const FEATURE_PREVIEW_H_CLASS =
-  'h-[min(46vh,320px)] w-full overflow-hidden sm:h-[340px] md:h-[360px]';
+/** Shared preview frame for every Features modal card (incl. mobile) — same 3:2 as sales. */
+const FEATURE_PREVIEW_FRAME_CLASS = 'aspect-[3/2] w-full overflow-hidden';
 
 
 const WorkflowFeatureModal = ({
@@ -126,20 +125,19 @@ const WorkflowFeatureModal = ({
   const hasPreview = hasInteractiveDemo(feature.id);
   // All feature cards use the same split layout + modal size (Why Mintcom pattern)
   const isSplitLayout = hasPreview;
-  const isPhoneDemo = feature.id === 'mobileApp';
 
   const featureHighlights = (id?: string): string[] => {
     const key = id ?? '';
-    const defaults: Record<string, [string, string, string]> = {
+    const defaults: Record<string, string[]> = {
       pointOfSale: [
         'Browse by category or All menu',
         'Build orders with add-ons & qty',
         'Charge with card, cash, or other',
       ],
       salesControl: [
-        'Cash always available at checkout',
-        'Card brands, wallets & delivery apps',
-        'Tax + service charge configured once',
+        'Accept Cash, Card, and Multiple Payment Methods',
+        'Integrated E-Invoicing and E-Tax Configuration',
+        'Add Custom Fixed Charges or Fees with the Flexibility to Modify Them During Orders',
       ],
       staffManagement: [
         'Add team members with username & password',
@@ -147,9 +145,10 @@ const WorkflowFeatureModal = ({
         'Access updates instantly on every POS',
       ],
       advancedReporting: [
-        'Net sales, card, cash & order counts',
-        'Weekly charts and peak-day insights',
-        'Top sellers ranked by revenue',
+        'Sales Reports by Payment Method',
+        'Pay-In and Pay-Out Transaction Reports',
+        'Detailed Shift and Working Hours Reports Across Different Time Periods',
+        'Reports by Items, Categories, and Add-Ons for Deeper Sales Insights',
       ],
       production: [
         'Raw materials grid with stock & unit cost',
@@ -157,14 +156,15 @@ const WorkflowFeatureModal = ({
         'Recipes for prepared items & menu products',
       ],
       aiSystem: [
-        'Morning briefings & top sellers on demand',
-        'Stock and staff answers scoped per location',
-        'Same AI agent as the admin mobile app',
+        'Generate Product Images Easily',
+        'Receive Full, Streamlined Guidance Throughout the App',
+        'Get Morning and Weekly Business Operation Briefs',
+        'Receive Smart Suggestions to Improve Location Management and Increase Sales',
       ],
       multiBranch: [
-        'Create brands from the owner portal',
-        'Link Downtown, Mall & more locations',
-        'Open each brand dashboard in one click',
+        'Create and Manage Multiple POS Points and Locations Through One Centralized Portal',
+        'Enjoy Special Discounts for Additional Locations',
+        'Streamline Staff Management and Role Assignments Across All Locations',
       ],
       simpleUI: [
         'My Orders & Close Shift on one card',
@@ -254,10 +254,10 @@ const WorkflowFeatureModal = ({
               {isSplitLayout ? (
                 <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,0.78fr)_minmax(320px,1.22fr)] lg:gap-8">
                   <div className="order-2 min-w-0 lg:order-1">
-                    <h3 className="line-clamp-2 font-barlow text-2xl font-bold leading-snug tracking-tight text-gray-900 dark:text-white md:text-3xl lg:text-[2rem]">
+                    <h3 className="line-clamp-2 font-sans text-2xl font-bold leading-snug tracking-tight text-gray-900 dark:text-white md:text-3xl lg:text-[2rem]">
                       {feature.title}
                     </h3>
-                    <p className="mt-3 line-clamp-5 max-w-md font-barlow text-[15px] font-medium leading-relaxed text-gray-600 dark:text-gray-300 md:text-base">
+                    <p className="mt-3 line-clamp-5 max-w-md font-sans text-[15px] font-medium leading-relaxed text-gray-600 dark:text-gray-300 md:text-base">
                       {feature.description}
                     </p>
                     <ul className="mt-5 space-y-2.5">
@@ -273,18 +273,14 @@ const WorkflowFeatureModal = ({
                     </ul>
                   </div>
 
-                  {/* Fixed-height frame like Why Mintcom — scale measures a real box on first paint */}
+                  {/* Identical 3:2 frame on every card (incl. #12 mobile) for height consistency */}
                   <div className="order-1 w-full min-w-0 lg:order-2">
                     <div className="overflow-hidden rounded-2xl border border-gray-200/90 bg-white shadow-lg shadow-black/10 dark:border-white/10 dark:bg-mintcom-dark dark:shadow-black/40">
-                      {/* Phone demo keeps the fixed frame (portrait mock centers); every
-                          other feature uses the 3:2 canvas ratio so the screenshot fills
-                          the frame edge-to-edge with no side letterbox. */}
-                      <div className={isPhoneDemo ? FEATURE_PREVIEW_H_CLASS : 'aspect-[3/2] w-full overflow-hidden'}>
+                      <div className={FEATURE_PREVIEW_FRAME_CLASS}>
                         <FeatureInteractiveDemo
                           featureId={feature.id}
                           t={t}
                           isRtl={isRtl}
-                          tall={isPhoneDemo}
                           side
                           fill
                         />
@@ -294,10 +290,10 @@ const WorkflowFeatureModal = ({
                 </div>
               ) : (
                 <div className="min-w-0">
-                  <h3 className="line-clamp-2 font-barlow text-2xl font-bold leading-snug tracking-tight text-gray-900 dark:text-white md:text-3xl">
+                  <h3 className="line-clamp-2 font-sans text-2xl font-bold leading-snug tracking-tight text-gray-900 dark:text-white md:text-3xl">
                     {feature.title}
                   </h3>
-                  <p className="mt-4 line-clamp-8 font-barlow text-base font-medium leading-relaxed text-gray-600 dark:text-gray-300 md:text-[17px]">
+                  <p className="mt-4 line-clamp-8 font-sans text-base font-medium leading-relaxed text-gray-600 dark:text-gray-300 md:text-[17px]">
                     {feature.description}
                   </p>
                 </div>
@@ -311,7 +307,7 @@ const WorkflowFeatureModal = ({
             type="button"
             onClick={onPrev}
             aria-label={String(t('common.previous', 'Previous'))}
-            className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-bold text-gray-700 transition-colors hover:bg-gray-50 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
+            className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 font-sans text-sm font-bold text-gray-700 transition-colors hover:bg-gray-50 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
           >
             {isRtl ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
             <span className="hidden sm:inline">{t('common.previous', 'Previous')}</span>
@@ -337,7 +333,7 @@ const WorkflowFeatureModal = ({
             type="button"
             onClick={onNext}
             aria-label={String(t('common.next', 'Next'))}
-            className="flex items-center gap-2 rounded-xl bg-mintcom-green px-4 py-2.5 text-sm font-bold text-black shadow-[0_4px_20px_-4px_rgba(125,198,162,0.5)] transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_28px_-4px_rgba(125,198,162,0.65)]"
+            className="flex items-center gap-2 rounded-xl bg-mintcom-green px-4 py-2.5 font-sans text-sm font-bold text-black shadow-[0_4px_20px_-4px_rgba(125,198,162,0.5)] transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_28px_-4px_rgba(125,198,162,0.65)]"
           >
             <span className="hidden sm:inline">{t('common.next', 'Next')}</span>
             {isRtl ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
@@ -520,7 +516,7 @@ export const Features = () => {
           )}
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 lg:gap-6 items-stretch">
+        <div className="grid auto-rows-fr grid-cols-1 items-stretch gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6 xl:grid-cols-4">
           {workflowFeatures.map((feature, index) => (
             <WorkflowFeatureCard
               key={feature.id ?? index}

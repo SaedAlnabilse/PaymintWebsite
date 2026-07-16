@@ -334,7 +334,7 @@ export const InteractivePosDemo = ({ t, isRtl, side }: DemoProps) => {
                 <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 400, damping: 14 }} className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-mintcom-green text-black shadow-[0_8px_28px_-6px_rgba(125,198,162,0.7)]">
                   <Check size={28} strokeWidth={3} />
                 </motion.div>
-                <p className="font-barlow text-lg font-bold text-gray-900 dark:text-white">Transaction approved</p>
+                <p className="font-sans text-lg font-bold text-gray-900 dark:text-white">Transaction approved</p>
                 <p className="mt-1 text-sm font-semibold text-mintcom-green">
                   {money(total)}{' '}
                   <span className="text-gray-400">
@@ -1370,7 +1370,7 @@ export const InteractiveReportingDemo = ({ t, side }: DemoProps) => {
             key={selected.id}
             initial={{ opacity: 0.4, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
-            className="font-barlow text-xl font-black tabular-nums text-gray-900 dark:text-white"
+            className="font-sans text-xl font-black tabular-nums text-gray-900 dark:text-white"
           >
             {money(selected.sales)}
           </motion.p>

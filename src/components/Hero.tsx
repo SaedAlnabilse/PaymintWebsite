@@ -109,7 +109,7 @@ export const Hero = ({ isVideoOpen, setIsVideoOpen }: { isVideoOpen: boolean; se
                 className="group flex w-full items-center justify-center gap-2 rounded-xl border-2 border-mintcom-green/40 bg-mintcom-green/10 px-6 py-3.5 text-base font-bold text-gray-900 transition-colors hover:border-mintcom-green hover:bg-mintcom-green/15 dark:text-white sm:px-8 sm:py-4 sm:text-lg sm:w-72 whitespace-nowrap"
               >
                 <Play size={18} fill="currentColor" className="text-mintcom-green" />
-                Try free POS demo
+                Try on Desktop Now!
               </motion.button>
 
               <motion.button
@@ -136,22 +136,22 @@ export const Hero = ({ isVideoOpen, setIsVideoOpen }: { isVideoOpen: boolean; se
 
           </motion.div>
 
-          {/* Visual — product photo (natural aspect, no left-shift over text) */}
+          {/* Visual — product photo, constrained so POS + tablet don't dominate the hero */}
           <motion.div
             initial={{ opacity: 0, x: 40 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 1, delay: 0.2, ease: "easeOut" }}
-            className="relative mt-4 w-full min-w-0 flex-1 sm:mt-8 lg:mt-0"
+            className="relative mt-4 flex w-full min-w-0 flex-1 justify-center sm:mt-8 lg:mt-0 lg:justify-end"
           >
             <motion.div
-              className="relative w-full"
+              className="relative w-full max-w-[320px] sm:max-w-[380px] md:max-w-[440px] lg:max-w-[500px] xl:max-w-[540px]"
               animate={{ y: [0, -6, 0] }}
               transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
             >
               <img
                 src={heroImage}
                 alt={t('landing.hero.alt', 'Mintcom All-in-One POS System')}
-                className="h-auto w-full max-w-full object-contain drop-shadow-2xl"
+                className="h-auto w-full object-contain drop-shadow-2xl"
                 width={1053}
                 height={927}
                 decoding="async"
