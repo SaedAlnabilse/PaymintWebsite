@@ -169,6 +169,7 @@ export function OwnerBrandsPage() {
         try {
             const response = await api.get('/api/brands/availability/establishment-login-id', {
                 params: { establishmentLoginId: rawLoginId },
+                headers: { 'X-Skip-Establishment-Header': 'true' },
             });
 
             if (loginIdCheckRequestRef.current !== requestId) {
