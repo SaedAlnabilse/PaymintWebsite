@@ -968,83 +968,102 @@ export function DashboardLayout() {
             document.body,
           )}
 
-        {/* Mobile App Download - With QR Code Popup */}
-        {sidebarOpen && (
-          <div className="px-3 mt-auto mb-2 shrink-0">
-            <button onClick={() => setMobileAppModalOpen(true)} className="w-full flex items-center gap-3 px-3 py-2.5 bg-gray-50 dark:bg-white/[0.03] border border-gray-200 dark:border-white/5 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 transition-all">
-              <Smartphone size={16} className="text-gray-400" />
-              <span className="text-sm font-bold">{t('dashboard.menu.getMobileApp')}</span>
-            </button>
-          </div>
-        )}
-
-
-        {/* Footer — expanded: profile row; collapsed: direct action icons (no settings gear) */}
-        <div className={`border-t border-gray-100 dark:border-white/5 relative shrink-0 ${sidebarOpen ? 'p-3' : 'px-2 py-3'}`}>
+        {/* Footer — match OwnerLayout: expanded list, collapsed icon column */}
+        <div className="p-3 border-t border-gray-100 dark:border-white/5 relative shrink-0 mt-auto">
           {sidebarOpen ? (
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-mintcom-green to-emerald-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-mintcom-green/20 outline outline-2 outline-white dark:outline-black">
-                <span className="text-black font-bold text-xs">
+            <div className="space-y-1">
+              <div className="flex items-center gap-3 p-3 mb-2 bg-gray-50 dark:bg-white/5 rounded-xl">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-mintcom-green to-emerald-600 flex items-center justify-center flex-shrink-0 shadow-sm text-black font-bold text-xs">
                   {account?.firstName?.charAt(0).toUpperCase()}
-                </span>
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-gray-900 dark:text-white truncate">
+                    {account?.firstName} {account?.lastName}
+                  </p>
+                  <p className="text-xs text-gray-500 truncate">{account?.email || t('staff.roles.manager')}</p>
+                </div>
               </div>
 
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold text-gray-900 dark:text-white truncate">
-                  {account?.firstName} {account?.lastName}
-                </p>
-                <p className="text-xs text-gray-500 truncate">{t('staff.roles.manager')}</p>
+              <div className="flex justify-end">
+                <LanguageSwitcher
+                  dropdownDirection="up"
+                  className="w-full"
+                  buttonClassName="w-full justify-start gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-gray-500 dark:text-gray-400 hover:!bg-gray-100 dark:hover:!bg-white/5 hover:text-gray-900 dark:hover:text-white transition-all text-left !bg-transparent dark:!bg-transparent !border-transparent focus:outline-none focus:ring-0 focus:!bg-transparent focus:!border-transparent active:!bg-transparent active:!border-transparent"
+                  menuClassName="w-full min-w-0"
+                  iconSize={20}
+                />
               </div>
 
-              <div className="flex items-center gap-1">
-                <ThemeToggle dropdownDirection="up" className="w-12 h-12 rounded-xl flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white" />
-                <button
-                  onClick={handleLogout}
-                  className="w-12 h-12 flex items-center justify-center rounded-xl text-gray-400 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-500 transition-all"
-                  title={t('dashboard.menu.logout')}
-                >
-                  <LogOut size={20} />
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center gap-2">
-              {/* Language (EN / AR) */}
-              <LanguageSwitcher
-                compact
-                showGlobeIcon={false}
-                dropdownDirection="right"
-                className="relative z-20"
-                buttonClassName="!w-12 !h-12 !p-0 !justify-center !rounded-xl !bg-gray-50 dark:!bg-white/5 !border !border-gray-200 dark:!border-white/10 !text-gray-700 dark:!text-gray-200 hover:!bg-gray-100 dark:hover:!bg-white/10 hover:!text-gray-900 dark:hover:!text-white"
+              <ThemeToggle
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white transition-all text-left"
+                showLabel={true}
+                dropdownDirection="up"
+                iconSize={20}
               />
 
-              {/* Get Mobile App */}
               <button
                 type="button"
                 onClick={() => setMobileAppModalOpen(true)}
-                title={t('dashboard.menu.getMobileApp')}
-                aria-label={t('dashboard.menu.getMobileApp')}
-                className="w-12 h-12 flex items-center justify-center rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white transition-all"
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white transition-all text-left"
               >
-                <Smartphone size={22} />
+                <Smartphone size={16} className="text-gray-400" />
+                <span>{t('dashboard.menu.getMobileApp')}</span>
               </button>
 
-              {/* Theme */}
-              <ThemeToggle
-                dropdownDirection="right"
-                iconSize={20}
-                className="w-12 h-12 rounded-xl flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white border-0 bg-transparent"
-              />
-
-              {/* Log out */}
               <button
                 type="button"
                 onClick={handleLogout}
-                title={t('dashboard.menu.logout')}
-                aria-label={t('dashboard.menu.logout')}
-                className="w-12 h-12 flex items-center justify-center rounded-xl text-gray-500 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-500 transition-all"
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-gray-500 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-500 transition-all text-left"
               >
                 <LogOut size={20} />
+                <span>{t('dashboard.menu.logout')}</span>
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-2">
+              <div className="relative group">
+                <LanguageSwitcher
+                  compact
+                  showGlobeIcon={false}
+                  dropdownDirection="right"
+                  buttonClassName="w-12 h-12 rounded-xl !px-0 !py-0 flex items-center justify-center gap-0 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white"
+                />
+                <div className="absolute left-full rtl:left-auto rtl:right-full top-1/2 -translate-y-1/2 ml-2 rtl:ml-0 rtl:mr-2 px-3 py-1.5 bg-gray-900/90 backdrop-blur-md text-white text-xs font-sans font-medium tracking-normal rounded-lg opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all duration-300 pointer-events-none z-[80] whitespace-nowrap border border-white/10 shadow-xl translate-x-1 rtl:-translate-x-1 group-hover:translate-x-0 group-focus-within:translate-x-0">
+                  {t('common.aria.changeLanguage')}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setMobileAppModalOpen(true)}
+                className="w-12 h-12 flex items-center justify-center rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white transition-all relative group"
+              >
+                <Smartphone size={24} />
+                <div className="absolute left-full rtl:left-auto rtl:right-full top-1/2 -translate-y-1/2 ml-2 rtl:ml-0 rtl:mr-2 px-3 py-1.5 bg-gray-900/90 backdrop-blur-md text-white text-xs font-sans font-medium tracking-normal rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none z-[80] whitespace-nowrap border border-white/10 shadow-xl translate-x-1 rtl:-translate-x-1 group-hover:translate-x-0">
+                  {t('dashboard.menu.getMobileApp')}
+                </div>
+              </button>
+
+              <div className="relative group">
+                <ThemeToggle
+                  dropdownDirection="right"
+                  className="w-12 h-12 rounded-xl flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white transition-all"
+                  iconSize={24}
+                />
+                <div className="absolute left-full rtl:left-auto rtl:right-full top-1/2 -translate-y-1/2 ml-2 rtl:ml-0 rtl:mr-2 px-3 py-1.5 bg-gray-900/90 backdrop-blur-md text-white text-xs font-sans font-medium tracking-normal rounded-lg opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all duration-300 pointer-events-none z-[80] whitespace-nowrap border border-white/10 shadow-xl translate-x-1 rtl:-translate-x-1 group-hover:translate-x-0 group-focus-within:translate-x-0">
+                  {t('theme.switchTheme')}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="w-12 h-12 flex items-center justify-center rounded-xl text-gray-500 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-500 transition-all relative group"
+              >
+                <LogOut size={24} />
+                <div className="absolute left-full rtl:left-auto rtl:right-full top-1/2 -translate-y-1/2 ml-2 rtl:ml-0 rtl:mr-2 px-3 py-1.5 bg-gray-900/90 backdrop-blur-md text-white text-xs font-sans font-medium tracking-normal rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none z-[80] whitespace-nowrap border border-white/10 shadow-xl translate-x-1 rtl:-translate-x-1 group-hover:translate-x-0">
+                  {t('dashboard.menu.logout')}
+                </div>
               </button>
             </div>
           )}
