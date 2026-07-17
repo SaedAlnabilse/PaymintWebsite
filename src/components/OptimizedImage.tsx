@@ -56,13 +56,24 @@ export function OptimizedImage({
   const [status, setStatus] = useState<'loading' | 'loaded' | 'error'>('loading');
   const imgRef = useRef<HTMLImageElement>(null);
   const srcRef = useRef(src);
+  const onErrorRef = useRef(onError);
+  const onLoadRef = useRef(onLoad);
   srcRef.current = src;
+  onErrorRef.current = onError;
+  onLoadRef.current = onLoad;
 
-  // Sync load state whenever src changes. Must run in layout so a cached image
-  // that is already `complete` is marked loaded before paint — and nothing
-  // later flips it back to loading without a new load event.
+  // When src changes, always re-enter loading. The follow-up effect below
+  // re-checks the <img> after it remounts — important when we were previously
+  // in `error` (no <img> in the DOM), which is common for dead card-logo
+  // hotlinks that then swap to a brand fallback.
   useLayoutEffect(() => {
     setStatus('loading');
+  }, [src]);
+
+  // Sync load state once the <img> is actually mounted. Cached images often
+  // skip onLoad; without this check they stay opacity-0 until a hard refresh.
+  useLayoutEffect(() => {
+    if (status !== 'loading') return;
     const img = imgRef.current;
     if (!img) return;
 
@@ -70,24 +81,21 @@ export function OptimizedImage({
       if (img.naturalWidth > 0) {
         setStatus('loaded');
       } else {
-        // Broken cached response
+        // Broken cached response (0×0)
         setStatus('error');
+        onErrorRef.current?.();
       }
     }
-  }, [src]);
+  }, [src, status]);
 
   const handleLoad = () => {
-    // Ignore stale events from a previous src swap
-    if (imgRef.current?.currentSrc && srcRef.current) {
-      // ok either way
-    }
     setStatus('loaded');
-    onLoad?.();
+    onLoadRef.current?.();
   };
 
   const handleError = () => {
     setStatus('error');
-    onError?.();
+    onErrorRef.current?.();
   };
 
   const dimensionStyle: React.CSSProperties = {};

@@ -572,15 +572,22 @@ export function PaymentMethodsPage() {
                       const storedUrl = getImageUrl(card.imageUrl || card.logo);
                       const fallbackUrl = getFallbackLogo(card.name);
                       // If the stored hotlink failed once, retry with the brand fallback.
+                      // Prefer reliable brand CDN logos when the stored URL is missing or
+                      // already known-dead — avoids Visa/MC blank tiles until hard refresh.
                       const displayUrl = failedCardImages[card.id]
                         ? (fallbackUrl && fallbackUrl !== storedUrl ? fallbackUrl : null)
                         : storedUrl || fallbackUrl;
                       return displayUrl ? (
                         <OptimizedImage
+                          key={`${card.id}-${displayUrl}`}
                           src={displayUrl}
                           alt={card.name}
                           className="w-full h-full drop-shadow-sm"
                           objectFit="contain"
+                          // Card tiles are above the fold in this grid — load immediately
+                          // so we don't depend on lazy + cache races.
+                          priority
+                          placeholderColor="transparent"
                           onError={() =>
                             setFailedCardImages(prev =>
                               prev[card.id] ? prev : { ...prev, [card.id]: true },
