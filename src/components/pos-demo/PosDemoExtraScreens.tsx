@@ -433,7 +433,7 @@ function ShiftCashModal({
             <button
               type="button"
               onClick={submit}
-              className="flex-[1.4] rounded-xl bg-mintcom-green py-3 text-[13px] font-extrabold text-white"
+              className="flex-[1.4] rounded-xl bg-mintcom-green py-3 text-[13px] font-extrabold !text-white"
             >
               {cta}
             </button>
@@ -809,9 +809,9 @@ export function DemoDashboardScreen({
                 type="button"
                 id="tour-open-shift"
                 onClick={() => setShiftModal('open')}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-mintcom-green px-4 py-2.5 text-[11px] font-black text-white shadow-md shadow-mintcom-green/25"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-mintcom-green px-4 py-2.5 text-[11px] font-black !text-white shadow-md shadow-mintcom-green/25"
               >
-                <LogIn size={14} /> Open Shift
+                <LogIn size={14} className="text-white" /> Open Shift
               </button>
             )}
             {!isOpen && !canOpenShift && (
@@ -822,38 +822,38 @@ export function DemoDashboardScreen({
           </div>
         </div>
 
-        {/* Green shift details bar — matches POS ShiftManagementCard.shiftDetails */}
-        <div className="mx-3 mb-3 rounded-xl bg-mintcom-green px-3.5 py-3 text-white shadow-sm sm:mx-3.5 sm:px-4">
+        {/* Green shift details bar — always white text on solid mint (never black/gray) */}
+        <div className="mx-3 mb-3 rounded-xl bg-mintcom-green px-3.5 py-3 !text-white shadow-sm sm:mx-3.5 sm:px-4">
           {isOpen ? (
             <>
-              <p className="text-[15px] font-semibold leading-tight sm:text-[16px]">
+              <p className="text-[15px] font-semibold leading-tight !text-white sm:text-[16px]">
                 Current shift of {userName}
               </p>
-              <p className="mt-1 text-[12px] font-medium text-white sm:text-[13px]">
+              <p className="mt-1 text-[12px] font-medium !text-white sm:text-[13px]">
                 Shift started {shiftStartedLabel}
               </p>
             </>
           ) : canViewAnalytics ? (
             <>
-              <p className="text-[15px] font-semibold leading-snug sm:text-[16px]">
+              <p className="text-[15px] font-semibold leading-snug !text-white sm:text-[16px]">
                 Last shift closed by {lastCashLog.name}
                 {lastCashLog.autoClose && (
-                  <span className="font-semibold text-[#D55263]">
+                  <span className="font-semibold text-[#FEE2E2]">
                     {' '}
                     (Automatically Cashed Out)
                   </span>
                 )}
               </p>
-              <p className="mt-1 text-[12px] font-medium text-white sm:text-[13px]">
+              <p className="mt-1 text-[12px] font-medium !text-white sm:text-[13px]">
                 Shift ended {formatShiftDateTime(lastCashLog.endedAt)}
               </p>
             </>
           ) : (
             <>
-              <p className="text-[15px] font-semibold leading-tight sm:text-[16px]">
+              <p className="text-[15px] font-semibold leading-tight !text-white sm:text-[16px]">
                 No Active Shift
               </p>
-              <p className="mt-1 text-[12px] font-medium text-white sm:text-[13px]">
+              <p className="mt-1 text-[12px] font-medium !text-white sm:text-[13px]">
                 Click &quot;Open Shift&quot; to start your shift
               </p>
             </>
@@ -876,7 +876,7 @@ export function DemoDashboardScreen({
           <button
             type="button"
             onClick={onGoSales}
-            className="mt-4 rounded-xl bg-mintcom-green px-4 py-2 text-xs font-black text-white"
+            className="mt-4 rounded-xl bg-mintcom-green px-4 py-2 text-xs font-black !text-white"
           >
             Go to Sales
           </button>
@@ -886,19 +886,19 @@ export function DemoDashboardScreen({
         <div className="flex min-h-0 min-w-0 flex-1 flex-row gap-4 overflow-hidden">
           {/* LEFT ~1/3 — Net / Cash / Card */}
           <div className="flex w-[32%] min-w-0 shrink-0 flex-col gap-3">
-            <div className="flex min-h-0 flex-1 flex-col justify-between rounded-xl bg-mintcom-green p-4 text-white">
+            <div className="flex min-h-0 flex-1 flex-col justify-between rounded-xl bg-mintcom-green p-4 !text-white">
               <div className="flex items-center gap-3">
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white text-mintcom-green">
-                  <TrendingUp size={22} strokeWidth={2.25} />
+                  <TrendingUp size={22} strokeWidth={2.25} className="text-mintcom-green" />
                 </span>
                 <div className="min-w-0 text-start">
-                  <p className="text-[15px] font-semibold leading-tight">Net Sales</p>
-                  <p className="mt-0.5 text-[11px] font-normal text-white/80">
+                  <p className="text-[15px] font-semibold leading-tight !text-white">Net Sales</p>
+                  <p className="mt-0.5 text-[11px] font-normal !text-white/90">
                     Excludes tax and other charges
                   </p>
                 </div>
               </div>
-              <p className="mt-3 text-center text-[28px] font-extrabold tabular-nums tracking-tight">
+              <p className="mt-3 text-center text-[28px] font-extrabold tabular-nums tracking-tight !text-white">
                 {money(displayNetSales)}
               </p>
             </div>
@@ -1045,7 +1045,7 @@ export function DemoDashboardScreen({
                   setShiftStartedSuccess(false);
                   onOpenShiftSuccessDismiss?.();
                 }}
-                className="min-w-[96px] rounded-xl bg-mintcom-green px-6 py-3 text-[15px] font-semibold text-white"
+                className="min-w-[96px] rounded-xl bg-mintcom-green px-6 py-3 text-[15px] font-semibold !text-white"
               >
                 OK
               </button>
@@ -1193,7 +1193,7 @@ function MetricSalesCard({
   return (
     <div className="flex min-h-0 flex-1 flex-col justify-between rounded-xl border border-[#D3D6DE] bg-[#E8E8E8] p-4 dark:border-white/10 dark:bg-mintcom-dark">
       <div className="flex items-center gap-3">
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-mintcom-green text-white">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-mintcom-green !text-white [&_svg]:text-white">
           {icon}
         </span>
         <div className="min-w-0 text-start">
@@ -1259,7 +1259,7 @@ function SmallMetric({
           {info}
         </div>
       )}
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-mintcom-green">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-mintcom-green text-white [&_svg]:text-white">
         {icon}
       </span>
       <div className="min-w-0 flex-1 pe-5 text-start">
@@ -1276,8 +1276,8 @@ function SmallMetric({
 function PayInOutMetric({ payIn, payOut }: { payIn: string; payOut: string }) {
   return (
     <div className="flex min-h-[90px] items-center gap-3 rounded-xl border border-[#D3D6DE] bg-[#E8E8E8] p-3 dark:border-white/10 dark:bg-mintcom-dark">
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-mintcom-green text-white">
-        <ArrowUpDown size={20} />
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-mintcom-green !text-white">
+        <ArrowUpDown size={20} className="text-white" />
       </span>
       <div className="min-w-0 flex-1 space-y-1.5">
         <div className="flex items-center justify-between gap-2">
