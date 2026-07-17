@@ -2233,57 +2233,57 @@ export function OnboardingPage() {
                     transition={{ delay: 0.6 }}
                     className="bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-white/10 rounded-2xl p-5"
                   >
-                    <div className="flex items-start gap-4 mb-2">
-                      <div className="w-14 h-14 bg-orange-500/10 dark:bg-orange-500/20 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm transition-colors">
-                        <Tablet size={28} className="text-orange-600 dark:text-orange-400" />
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-orange-500/10 shadow-sm transition-colors dark:bg-orange-500/20">
+                        <Tablet size={22} className="text-orange-600 dark:text-orange-400" />
                       </div>
-                      <div>
-                        <h3 className="font-barlow text-lg font-bold text-gray-900 dark:text-white">{t('onboarding.step5.posApp')}</h3>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">{t('onboarding.step5.posAppDesc')}</p>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-barlow text-base font-bold text-gray-900 dark:text-white">{t('onboarding.step5.posApp')}</h3>
+                        <p className="mt-0.5 text-sm leading-snug text-gray-500 dark:text-gray-400">{t('onboarding.step5.posAppDesc')}</p>
+                        <div className="mt-3 flex flex-wrap items-center gap-2">
+                          {hasAndroidDownload ? (
+                            <a
+                              href={ANDROID_DOWNLOAD_URL}
+                              download={isDirectInstallerDownload(ANDROID_DOWNLOAD_URL) ? true : undefined}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              aria-label="Get it on Google Play"
+                              className="inline-flex shrink-0 transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-mintcom-green/40 rounded-md"
+                            >
+                              <img src={GooglePlayBadge} alt="Get it on Google Play" className="block h-8 w-auto object-contain" />
+                            </a>
+                          ) : (
+                            <button
+                              type="button"
+                              disabled
+                              aria-label="Android app download coming soon"
+                              className="inline-flex shrink-0 cursor-not-allowed opacity-50"
+                            >
+                              <img src={GooglePlayBadge} alt="Get it on Google Play" className="block h-8 w-auto object-contain" />
+                            </button>
+                          )}
+                          {hasIosDownload ? (
+                            <a
+                              href={IOS_DOWNLOAD_URL}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              aria-label="Download on the App Store"
+                              className="inline-flex shrink-0 transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-mintcom-green/40 rounded-md"
+                            >
+                              <img src={AppStoreBadge} alt="Download on the App Store" className="block h-8 w-auto object-contain" />
+                            </a>
+                          ) : (
+                            <button
+                              type="button"
+                              disabled
+                              aria-label="iOS app download coming soon"
+                              className="inline-flex shrink-0 cursor-not-allowed opacity-50"
+                            >
+                              <img src={AppStoreBadge} alt="Download on the App Store" className="block h-8 w-auto object-contain" />
+                            </button>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 pt-2">
-                      {hasAndroidDownload ? (
-                        <a
-                          href={ANDROID_DOWNLOAD_URL}
-                          download={isDirectInstallerDownload(ANDROID_DOWNLOAD_URL) ? true : undefined}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          aria-label="Get it on Google Play"
-                          className="block transition-all hover:opacity-90 hover:scale-[1.02] active:scale-[0.98] focus:outline-none"
-                        >
-                          <img src={GooglePlayBadge} alt="Get it on Google Play" className="block h-[52px] w-auto max-w-full object-contain mx-auto" />
-                        </a>
-                      ) : (
-                        <button
-                          type="button"
-                          disabled
-                          aria-label="Android app download coming soon"
-                          className="block opacity-50 cursor-not-allowed"
-                        >
-                          <img src={GooglePlayBadge} alt="Get it on Google Play" className="block h-[52px] w-auto max-w-full object-contain mx-auto" />
-                        </button>
-                      )}
-                      {hasIosDownload ? (
-                        <a
-                          href={IOS_DOWNLOAD_URL}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          aria-label="Download on the App Store"
-                          className="block transition-all hover:opacity-90 hover:scale-[1.02] active:scale-[0.98] focus:outline-none"
-                        >
-                          <img src={AppStoreBadge} alt="Download on the App Store" className="block h-[52px] w-auto max-w-full object-contain mx-auto" />
-                        </a>
-                      ) : (
-                        <button
-                          type="button"
-                          disabled
-                          aria-label="iOS app download coming soon"
-                          className="block opacity-50 cursor-not-allowed"
-                        >
-                          <img src={AppStoreBadge} alt="Download on the App Store" className="block h-[52px] w-auto max-w-full object-contain mx-auto" />
-                        </button>
-                      )}
                     </div>
                   </motion.div>
 
@@ -2294,56 +2294,56 @@ export function OnboardingPage() {
                     transition={{ delay: 0.7 }}
                     className="bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-white/10 rounded-2xl p-5"
                   >
-                    <div className="flex items-start gap-4 mb-2">
-                      <div className="w-14 h-14 bg-purple-500/10 dark:bg-purple-500/20 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm transition-colors">
-                        <Smartphone size={28} className="text-purple-600 dark:text-purple-400" />
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-purple-500/10 shadow-sm transition-colors dark:bg-purple-500/20">
+                        <Smartphone size={22} className="text-purple-600 dark:text-purple-400" />
                       </div>
-                      <div>
-                        <h3 className="font-barlow text-lg font-bold text-gray-900 dark:text-white">{t('onboarding.step5.ownerApp')}</h3>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">{t('onboarding.step5.ownerAppDesc')}</p>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-barlow text-base font-bold text-gray-900 dark:text-white">{t('onboarding.step5.ownerApp')}</h3>
+                        <p className="mt-0.5 text-sm leading-snug text-gray-500 dark:text-gray-400">{t('onboarding.step5.ownerAppDesc')}</p>
+                        <div className="mt-3 flex flex-wrap items-center gap-2">
+                          {hasOwnerAndroidDownload ? (
+                            <a
+                              href={OWNER_ANDROID_DOWNLOAD_URL}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              aria-label="Get it on Google Play"
+                              className="inline-flex shrink-0 transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-mintcom-green/40 rounded-md"
+                            >
+                              <img src={GooglePlayBadge} alt="Get it on Google Play" className="block h-8 w-auto object-contain" />
+                            </a>
+                          ) : (
+                            <button
+                              type="button"
+                              disabled
+                              aria-label="Owner Android app download coming soon"
+                              className="inline-flex shrink-0 cursor-not-allowed opacity-50"
+                            >
+                              <img src={GooglePlayBadge} alt="Get it on Google Play" className="block h-8 w-auto object-contain" />
+                            </button>
+                          )}
+                          {hasOwnerIosDownload ? (
+                            <a
+                              href={OWNER_IOS_DOWNLOAD_URL}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              aria-label="Download on the App Store"
+                              className="inline-flex shrink-0 transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-mintcom-green/40 rounded-md"
+                            >
+                              <img src={AppStoreBadge} alt="Download on the App Store" className="block h-8 w-auto object-contain" />
+                            </a>
+                          ) : (
+                            <button
+                              type="button"
+                              disabled
+                              aria-label="Owner iOS app download coming soon"
+                              className="inline-flex shrink-0 cursor-not-allowed opacity-50"
+                            >
+                              <img src={AppStoreBadge} alt="Download on the App Store" className="block h-8 w-auto object-contain" />
+                            </button>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 pt-2">
-                      {hasOwnerAndroidDownload ? (
-                        <a
-                          href={OWNER_ANDROID_DOWNLOAD_URL}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          aria-label="Get it on Google Play"
-                          className="block transition-all hover:opacity-90 hover:scale-[1.02] active:scale-[0.98] focus:outline-none"
-                        >
-                          <img src={GooglePlayBadge} alt="Get it on Google Play" className="block h-[52px] w-auto max-w-full object-contain mx-auto" />
-                        </a>
-                      ) : (
-                        <button
-                          type="button"
-                          disabled
-                          aria-label="Owner Android app download coming soon"
-                          className="block opacity-50 cursor-not-allowed"
-                        >
-                          <img src={GooglePlayBadge} alt="Get it on Google Play" className="block h-[52px] w-auto max-w-full object-contain mx-auto" />
-                        </button>
-                      )}
-                      {hasOwnerIosDownload ? (
-                        <a
-                          href={OWNER_IOS_DOWNLOAD_URL}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          aria-label="Download on the App Store"
-                          className="block transition-all hover:opacity-90 hover:scale-[1.02] active:scale-[0.98] focus:outline-none"
-                        >
-                          <img src={AppStoreBadge} alt="Download on the App Store" className="block h-[52px] w-auto max-w-full object-contain mx-auto" />
-                        </a>
-                      ) : (
-                        <button
-                          type="button"
-                          disabled
-                          aria-label="Owner iOS app download coming soon"
-                          className="block opacity-50 cursor-not-allowed"
-                        >
-                          <img src={AppStoreBadge} alt="Download on the App Store" className="block h-[52px] w-auto max-w-full object-contain mx-auto" />
-                        </button>
-                      )}
                     </div>
                   </motion.div>
 
