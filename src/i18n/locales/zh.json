@@ -3973,7 +3973,11 @@
       "viewDashboard": "查看仪表盘",
       "yearly": "按年",
       "yearlyCost": "年度费用",
-      "yearlyPlan": "年付套餐"
+      "yearlyPlan": "年付套餐",
+      "then": "之后",
+      "trial": "试用",
+      "trialEnds": "试用结束",
+      "trialEndsNotice": "当前免费 · 试用后 {{price}} 美元 {{period}}"
     },
     "brands": {
       "activeBrands": "启用中的品牌",
