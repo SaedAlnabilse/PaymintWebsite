@@ -85,9 +85,6 @@ export function PaymentMethodsPage() {
   const [cardImagePreview, setCardImagePreview] = useState<string | null>(null);
   const [editingCard, setEditingCard] = useState<CardType | null>(null);
   const [cardErrors, setCardErrors] = useState<Record<string, string>>({}); // For manual forms
-  // Card ids whose stored imageUrl failed to load (dead hotlink) — retry with
-  // the brand fallback logo instead of leaving a broken image.
-  const [failedCardImages, setFailedCardImages] = useState<Record<string, boolean>>({});
   const [confirmConfig, setConfirmConfig] = useState<{
     isOpen: boolean;
     title: string;
@@ -169,6 +166,18 @@ export function PaymentMethodsPage() {
     if (!imagePath) return null;
     if (imagePath.startsWith('http')) return imagePath;
     return `${API_BASE_URL}${imagePath.startsWith('/') ? '' : '/'}${imagePath}`;
+  };
+
+  /**
+   * Resolve the logo for a card-type tile.
+   * Known brands (Visa / Mastercard / Amex / …) always use the maintained CDN
+   * set so they paint on first render — no hard refresh, no broken upload paths.
+   * Custom brands keep their stored image when present.
+   */
+  const resolveCardLogoUrl = (card: { name: string; imageUrl?: string; logo?: string }) => {
+    const brandFallback = getFallbackLogo(card.name);
+    if (brandFallback) return brandFallback;
+    return getImageUrl(card.imageUrl || card.logo);
   };
 
   useEffect(() => {
@@ -531,35 +540,33 @@ export function PaymentMethodsPage() {
               >
                 {/* Image/Icon Container */}
                 <div className="aspect-[4/3] flex items-center justify-center p-8 bg-gray-50/50 dark:bg-black/20 relative group-hover:bg-white dark:group-hover:bg-black/40 transition-colors duration-500">
-                  <div className="w-20 h-20 flex items-center justify-center transition-transform duration-500 group-hover:scale-110">
+                  <div className="relative w-20 h-20 flex items-center justify-center transition-transform duration-500 group-hover:scale-110">
                     {(() => {
-                      const storedUrl = getImageUrl(card.imageUrl || card.logo);
-                      const fallbackUrl = getFallbackLogo(card.name);
-                      // If the stored hotlink failed once, retry with the brand fallback.
-                      // Prefer reliable brand CDN logos when the stored URL is missing or
-                      // already known-dead — avoids Visa/MC blank tiles until hard refresh.
-                      const displayUrl = failedCardImages[card.id]
-                        ? (fallbackUrl && fallbackUrl !== storedUrl ? fallbackUrl : null)
-                        : storedUrl || fallbackUrl;
-                      return displayUrl ? (
-                        <OptimizedImage
-                          key={`${card.id}-${displayUrl}`}
+                      const displayUrl = resolveCardLogoUrl(card);
+                      // Plain <img> always at full opacity — OptimizedImage left
+                      // Visa/MC tiles blank until a hard refresh.
+                      if (!displayUrl) {
+                        return <CreditCard size={40} className="text-gray-300 dark:text-gray-600" />;
+                      }
+                      return (
+                        <img
                           src={displayUrl}
                           alt={card.name}
-                          className="w-full h-full drop-shadow-sm"
-                          objectFit="contain"
-                          // Card tiles are above the fold in this grid — load immediately
-                          // so we don't depend on lazy + cache races.
-                          priority
-                          placeholderColor="transparent"
-                          onError={() =>
-                            setFailedCardImages(prev =>
-                              prev[card.id] ? prev : { ...prev, [card.id]: true },
-                            )
-                          }
+                          loading="eager"
+                          decoding="async"
+                          referrerPolicy="no-referrer"
+                          className="h-full w-full object-contain drop-shadow-sm"
+                          onError={(event) => {
+                            const el = event.currentTarget;
+                            const fallback = getFallbackLogo(card.name);
+                            if (fallback && el.dataset.fallbackTried !== '1') {
+                              el.dataset.fallbackTried = '1';
+                              el.src = fallback;
+                              return;
+                            }
+                            el.style.display = 'none';
+                          }}
                         />
-                      ) : (
-                        <CreditCard size={40} className="text-gray-300 dark:text-gray-600" />
                       );
                     })()}
                   </div>
