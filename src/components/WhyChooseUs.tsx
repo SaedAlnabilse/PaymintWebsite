@@ -29,6 +29,7 @@ import {
   DollarSign,
   ArrowLeft,
   ArrowRight,
+  ArrowUpRight,
   MapPin,
   User,
   Lock,
@@ -59,6 +60,9 @@ type FeatureId = 'complete' | 'realUsers' | 'security' | 'multiBranch';
 type Feature = {
   id: FeatureId;
   icon: typeof Store;
+  /** Outer grid card title (can be shorter than the modal title). */
+  cardTitle: string;
+  /** Modal / detail title. */
   title: string;
   description: string;
   teaser: string;
@@ -98,13 +102,24 @@ const FeatureCard = ({
 
   return (
     <motion.div
+      role="button"
+      tabIndex={0}
+      aria-label={feature.cardTitle}
+      onClick={() => onOpen(index)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onOpen(index);
+        }
+      }}
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: (index % 4) * 0.08, duration: 0.5 }}
-      whileHover={{ y: -6, scale: 1.02 }}
-      className="group relative flex h-full min-h-[248px] flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white p-6 shadow-lg shadow-gray-200/30 transition-all duration-500 hover:border-mintcom-green/40 hover:shadow-2xl hover:shadow-mintcom-green/10 dark:border-white/5 dark:bg-[#121212] dark:shadow-none"
+      whileHover={{ y: -6 }}
+      className="group relative flex h-full min-h-[248px] cursor-pointer flex-col overflow-hidden rounded-2xl border border-transparent bg-white p-6 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.08)] transition-all duration-500 hover:border-mintcom-green/25 hover:shadow-[0_16px_40px_-14px_rgba(124,195,159,0.28)] focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:border-mintcom-green/30 active:outline-none active:ring-0 dark:border-transparent dark:bg-[#121212] dark:shadow-[0_8px_30px_-12px_rgba(0,0,0,0.45)] dark:hover:border-mintcom-green/20"
     >
+      {/* Icon + title row; body/CTA sit full-width so Learn more aligns with description text */}
       <div className="relative z-10 mb-4 flex min-h-[56px] items-start gap-4">
         <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-mintcom-green/10 shadow-inner transition-all duration-500 group-hover:rotate-3 group-hover:scale-110 group-hover:bg-mintcom-green dark:bg-mintcom-green/15">
           <Icon
@@ -113,7 +128,7 @@ const FeatureCard = ({
           />
         </div>
         <h3 className="mt-1 line-clamp-2 min-h-[2.5rem] font-sans text-base font-bold leading-tight tracking-tight text-gray-900 transition-colors group-hover:text-mintcom-green dark:text-white">
-          {feature.title}
+          {feature.cardTitle}
         </h3>
       </div>
 
@@ -122,13 +137,17 @@ const FeatureCard = ({
           {feature.description}
         </p>
 
-        <button
-          type="button"
-          onClick={() => onOpen(index)}
-          className="mt-3 self-start font-sans text-xs font-bold tracking-wide text-mintcom-green transition-colors hover:text-mintcom-green/80 focus:outline-none"
-        >
-          {t('landing.features.readMore', 'Learn more')}
-        </button>
+        <div className="mt-3">
+          {/* Thin divider between description and Learn more */}
+          <div className="mb-3 h-px w-full bg-gray-200 dark:bg-white/10" />
+          <span className="inline-flex items-center gap-1.5 font-sans text-xs font-bold tracking-wide text-mintcom-green transition-colors group-hover:text-mintcom-green/80">
+            {t('landing.features.readMore', 'Learn more')}
+            <ArrowUpRight
+              size={11}
+              className="text-mintcom-green opacity-0 transition-opacity group-hover:opacity-100"
+            />
+          </span>
+        </div>
       </div>
     </motion.div>
   );
@@ -917,6 +936,7 @@ export const WhyChooseUs = () => {
     {
       id: 'complete',
       icon: Store,
+      cardTitle: t('landing.features.cards.complete.cardTitle', 'No Hidden Costs'),
       title: t('landing.features.cards.complete.title'),
       description: t('landing.features.cards.complete.description'),
       teaser: isRtl ? 'حل كامل' : 'Complete',
@@ -941,6 +961,7 @@ export const WhyChooseUs = () => {
     {
       id: 'realUsers',
       icon: Zap,
+      cardTitle: t('landing.features.cards.realUsers.title'),
       title: t('landing.features.cards.realUsers.title'),
       description: t('landing.features.cards.realUsers.description'),
       teaser: isRtl ? 'مستخدمون حقيقيون' : 'Real users',
@@ -961,6 +982,7 @@ export const WhyChooseUs = () => {
     {
       id: 'security',
       icon: ShieldCheck,
+      cardTitle: t('landing.features.cards.security.title'),
       title: t('landing.features.cards.security.title'),
       description: t('landing.features.cards.security.description'),
       teaser: isRtl ? 'أمان' : 'Security',
@@ -979,6 +1001,7 @@ export const WhyChooseUs = () => {
     {
       id: 'multiBranch',
       icon: Settings,
+      cardTitle: t('landing.features.cards.multiBranch.title'),
       title: t('landing.features.cards.multiBranch.title'),
       description: t('landing.features.cards.multiBranch.description'),
       teaser: isRtl ? 'فروع متعددة' : 'Multi-branch',
