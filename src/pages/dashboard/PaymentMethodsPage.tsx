@@ -165,28 +165,6 @@ export function PaymentMethodsPage() {
     return filter === 'ACTIVE' ? isActive !== false : isActive === false;
   };
 
-  const handleSeedDefaults = async () => {
-    setIsSubmitting(true);
-    try {
-      if (cardTypes.length === 0) {
-        await Promise.all([
-          api.post('/card-types', { name: 'Visa', imageUrl: getFallbackLogo('visa') }),
-          api.post('/card-types', { name: 'Mastercard', imageUrl: getFallbackLogo('mastercard') }),
-          api.post('/card-types', { name: 'American Express', imageUrl: getFallbackLogo('amex') })
-        ]);
-      }
-
-      toast.success(t('paymentMethods.messages.seedSuccess', { defaultValue: 'Default methods and brands added successfully!' }));
-      fetchPaymentMethods();
-      fetchCardTypes();
-    } catch (err) {
-      console.error('Failed to seed defaults:', err);
-      toast.error(t('paymentMethods.messages.seedFailed', { defaultValue: 'Failed to add defaults.' }));
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   const getImageUrl = (imagePath?: string) => {
     if (!imagePath) return null;
     if (imagePath.startsWith('http')) return imagePath;
@@ -527,16 +505,6 @@ export function PaymentMethodsPage() {
                     placeholder={t('common.allStatuses', 'All Statuses')}
                   />
                 </div>
-                {cardTypes.length === 0 && !isLoading && (
-                  <button
-                    onClick={handleSeedDefaults}
-                    disabled={isSubmitting}
-                    className="px-4 py-2 bg-mintcom-green/10 text-mintcom-green text-[10px] font-black tracking-widest uppercase rounded-lg border border-mintcom-green/20 hover:bg-mintcom-green/20 transition-all flex items-center gap-2"
-                  >
-                    <Star size={12} fill="currentColor" />
-                    {t('paymentMethods.setupDefaults', 'Setup Defaults')}
-                  </button>
-                )}
               </div>
             </div>
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400 max-w-2xl">{t('paymentMethods.cardBrandsSubtitle')}</p>
