@@ -16,6 +16,7 @@ import {
   Smartphone,
   ChevronLeft,
   ChevronRight,
+  ArrowUpRight,
   X,
   type LucideIcon,
 } from 'lucide-react';
@@ -42,12 +43,22 @@ const WorkflowFeatureCard = ({
 }) => {
   return (
     <motion.div
+      role="button"
+      tabIndex={0}
+      aria-label={feature.title}
+      onClick={() => onOpen(index)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onOpen(index);
+        }
+      }}
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: (index % 4) * 0.08, duration: 0.5 }}
-      whileHover={{ y: -6, scale: 1.02 }}
-      className="group relative flex h-full min-h-[260px] flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white p-6 shadow-lg shadow-gray-200/30 transition-all duration-500 hover:border-mintcom-green/40 hover:shadow-2xl hover:shadow-mintcom-green/10 dark:border-white/5 dark:bg-[#121212] dark:shadow-none"
+      whileHover={{ y: -6 }}
+      className="group relative flex h-full min-h-[260px] cursor-pointer flex-col overflow-hidden rounded-2xl border border-transparent bg-white p-6 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.08)] transition-all duration-500 hover:border-mintcom-green/25 hover:shadow-[0_16px_40px_-14px_rgba(124,195,159,0.28)] focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:border-mintcom-green/30 active:outline-none active:ring-0 dark:border-transparent dark:bg-[#121212] dark:shadow-[0_8px_30px_-12px_rgba(0,0,0,0.45)] dark:hover:border-mintcom-green/20"
     >
       {/* Fixed header band so titles wrap like “Recipe & Cost Management” without changing card height */}
       <div className="relative z-10 mb-4 flex min-h-[56px] items-start gap-4">
@@ -64,13 +75,16 @@ const WorkflowFeatureCard = ({
           {feature.description}
         </p>
 
-        <button
-          type="button"
-          onClick={() => onOpen(index)}
-          className="mt-3 self-start font-sans text-xs font-bold tracking-wide text-mintcom-green transition-colors hover:text-mintcom-green/80 focus:outline-none"
-        >
-          {t('landing.features.readMore', 'Learn more')}
-        </button>
+        <div className="mt-3">
+          <div className="mb-3 h-px w-full bg-gray-200 dark:bg-white/10" />
+          <span className="inline-flex items-center gap-1.5 font-sans text-xs font-bold tracking-wide text-mintcom-green transition-colors group-hover:text-mintcom-green/80">
+            {t('landing.features.readMore', 'Learn more')}
+            <ArrowUpRight
+              size={11}
+              className="text-mintcom-green opacity-0 transition-opacity group-hover:opacity-100"
+            />
+          </span>
+        </div>
       </div>
     </motion.div>
   );

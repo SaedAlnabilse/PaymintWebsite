@@ -92,113 +92,113 @@ export const PricingDownload = () => {
                         transition={{ duration: 0.8, ease: "easeOut" }}
                         className="w-full"
                     >
-                        <div className="bg-white dark:bg-[#1a1a1a] border border-gray-100 dark:border-white/5 rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-10 lg:p-16 shadow-2xl shadow-mintcom-green/5 dark:shadow-none relative overflow-hidden group">
-                            <div className="flex flex-col lg:flex-row items-center lg:items-stretch gap-12 lg:gap-20">
+                        <div className="relative overflow-hidden rounded-[1.75rem] border border-gray-100 bg-white p-5 shadow-[0_8px_30px_-6px_rgba(0,0,0,0.06),0_4px_12px_-4px_rgba(0,0,0,0.04)] group sm:rounded-[2.5rem] sm:p-8 lg:p-10 dark:border-white/5 dark:bg-[#1a1a1a] dark:shadow-[0_8px_30px_-6px_rgba(0,0,0,0.35)]">
+                            <div className="flex flex-col items-center gap-8 lg:flex-row lg:items-stretch lg:gap-12">
                                 
                                 {/* Left Side: Pricing & CTA */}
-                                <div className="flex-1 flex flex-col items-center lg:items-start text-center lg:text-left">
+                                <div className="flex flex-1 flex-col items-center text-center lg:items-start lg:text-left">
                                     <div className="w-full">
-                                        <span className="text-mintcom-green font-black tracking-[0.2em] text-xs uppercase mb-4 block">
+                                        <span className="mb-2.5 block text-xs font-black uppercase tracking-[0.2em] text-mintcom-green">
                                             {t('landing.pricing.fullAccess')}
                                         </span>
-                                        <h3 className="font-barlow text-4xl font-bold text-gray-900 dark:text-white mb-10 transition-colors duration-300">
+                                        <h3 className="mb-6 font-barlow text-3xl font-bold text-gray-900 transition-colors duration-300 dark:text-white sm:text-4xl">
                                             {isYearly ? t('landing.pricing.yearlyPlan') : t('landing.pricing.monthlyPlan')}
                                         </h3>
 
                                         {/* Billing Toggle — clickable buttons */}
-                                        <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-10 sm:mb-12">
+                                        <div className="mb-6 flex flex-wrap items-center gap-2 sm:mb-7 sm:gap-3">
                                             <button
                                                 onClick={() => setIsYearly(false)}
-                                                className={`px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-black uppercase tracking-widest transition-all duration-200 active:scale-95 ${!isYearly
+                                                className={`rounded-xl px-4 py-2 text-xs font-black uppercase tracking-widest transition-all duration-200 active:scale-95 sm:px-5 sm:py-2.5 sm:text-sm ${!isYearly
                                                     ? 'bg-mintcom-green text-black shadow-lg shadow-mintcom-green/20'
-                                                    : 'bg-gray-100 dark:bg-white/5 text-gray-500 hover:bg-gray-200 dark:hover:bg-white/10 hover:text-gray-700 dark:hover:text-gray-300'
+                                                    : 'bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700 dark:bg-white/5 dark:hover:bg-white/10 dark:hover:text-gray-300'
                                                 }`}
                                             >
                                                 {t('landing.pricing.monthly')}
                                             </button>
                                             <button
                                                 onClick={() => setIsYearly(true)}
-                                                className={`px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-black uppercase tracking-widest transition-all duration-200 active:scale-95 flex items-center gap-2 ${isYearly
+                                                className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-black uppercase tracking-widest transition-all duration-200 active:scale-95 sm:px-5 sm:py-2.5 sm:text-sm ${isYearly
                                                     ? 'bg-mintcom-green text-black shadow-lg shadow-mintcom-green/20'
-                                                    : 'bg-gray-100 dark:bg-white/5 text-gray-500 hover:bg-gray-200 dark:hover:bg-white/10 hover:text-gray-700 dark:hover:text-gray-300'
+                                                    : 'bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700 dark:bg-white/5 dark:hover:bg-white/10 dark:hover:text-gray-300'
                                                 }`}
                                             >
                                                 {t('landing.pricing.yearly')}
-                                                <span className={`text-[9px] font-black tracking-wider px-2 py-0.5 rounded-xl transition-colors duration-200 ${isYearly ? 'bg-black text-mintcom-green' : 'bg-mintcom-green/20 text-mintcom-green'}`}>
+                                                <span className={`rounded-xl px-2 py-0.5 text-[9px] font-black tracking-wider transition-colors duration-200 ${isYearly ? 'bg-black text-mintcom-green' : 'bg-mintcom-green/20 text-mintcom-green'}`}>
                                                     {t('landing.pricing.save')}
                                                 </span>
                                             </button>
                                         </div>
 
-                                        <div className="mb-12 relative">
-                                            <div className="flex items-baseline justify-center lg:justify-start gap-2 mb-2">
-                                                <span className="text-5xl sm:text-7xl lg:text-8xl font-bold text-gray-900 dark:text-white tracking-tighter transition-all duration-300">
-                                                    {currentPrice}<span className="text-3xl sm:text-4xl lg:text-5xl ml-1">USD</span>
+                                        <div className="relative mb-7">
+                                            <div className="mb-1.5 flex items-baseline justify-center gap-2 lg:justify-start">
+                                                <span className="text-5xl font-bold tracking-tighter text-gray-900 transition-all duration-300 dark:text-white sm:text-6xl lg:text-7xl">
+                                                    {currentPrice}<span className="ml-1 text-2xl sm:text-3xl lg:text-4xl">USD</span>
                                                 </span>
-                                                <span className="text-gray-400 font-medium text-lg sm:text-2xl uppercase tracking-widest">
+                                                <span className="text-base font-medium uppercase tracking-widest text-gray-400 sm:text-xl">
                                                     {currentPeriod}
                                                 </span>
                                             </div>
-                                            <p className="text-gray-500 dark:text-gray-400 italic text-sm">
+                                            <p className="text-sm italic text-gray-500 dark:text-gray-400">
                                                 {isYearly ? t('landing.pricing.billedAnnually') : t('landing.pricing.noCommitment')}
                                             </p>
                                         </div>
                                     </div>
 
-                                    <div className="w-full mt-auto space-y-8">
+                                    <div className="mt-auto w-full space-y-3.5">
                                         <button
                                             onClick={handleCtaAction}
-                                            className="w-full bg-mintcom-green text-black py-6 rounded-2xl font-black text-xl transition-all hover:bg-mintcom-green/90 hover:scale-[1.02] active:scale-[0.98] shadow-2xl shadow-mintcom-green/20 flex items-center justify-center gap-4 group/btn"
+                                            className="group/btn flex w-full items-center justify-center gap-2.5 rounded-xl bg-mintcom-green py-3.5 text-base font-semibold tracking-tight text-gray-900 shadow-[0_8px_28px_-8px_rgba(125,198,162,0.55)] transition-all hover:bg-mintcom-green/90 hover:shadow-[0_12px_32px_-8px_rgba(125,198,162,0.65)] active:scale-[0.98] sm:py-4 sm:text-[17px]"
                                         >
-                                            {t('landing.pricing.getStarted', 'Get Started')}
-                                            <ArrowRight size={24} className={`transition-transform duration-300 group-hover/btn:translate-x-1.5 ${t('common.locale') === 'ar' && 'rotate-180 group-hover/btn:-translate-x-1.5'}`} />
+                                            <span className="font-semibold">{t('landing.pricing.getStarted', 'Get Started')}</span>
+                                            <ArrowRight size={18} strokeWidth={2} className={`opacity-80 transition-transform duration-300 group-hover/btn:translate-x-1.5 ${t('common.locale') === 'ar' && 'rotate-180 group-hover/btn:-translate-x-1.5'}`} />
                                         </button>
 
                                         {/* Additional Locations Hint */}
-                                        <div className="mt-8 p-4 rounded-2xl bg-mintcom-green/10 border border-mintcom-green/20 flex items-center justify-center lg:justify-start gap-3 group/discount transition-all duration-300 hover:bg-mintcom-green/15">
-                                            <div className="w-8 h-8 rounded-full bg-mintcom-green/20 flex items-center justify-center flex-shrink-0 group-hover/discount:scale-110 transition-transform">
-                                                <Tag size={16} className="text-mintcom-green" />
+                                        <div className="group/discount flex items-center justify-center gap-2.5 rounded-xl border border-mintcom-green/20 bg-mintcom-green/10 px-3 py-2.5 transition-all duration-300 hover:bg-mintcom-green/15 lg:justify-start">
+                                            <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-mintcom-green/20 transition-transform group-hover/discount:scale-110">
+                                                <Tag size={14} className="text-mintcom-green" />
                                             </div>
-                                            <span className="text-gray-700 dark:text-gray-300 text-sm font-semibold tracking-wide">
+                                            <span className="text-[13px] font-medium leading-snug tracking-tight text-gray-700 dark:text-gray-300 sm:text-sm">
                                                 <Trans 
                                                     i18nKey="landing.pricing.additionalDiscount"
                                                     defaults="Additional locations receive a <1>DISCOUNT</1> for "
-                                                    components={{ 1: <span className="font-black text-gray-900 dark:text-white uppercase" /> }}
+                                                    components={{ 1: <span className="font-semibold uppercase text-gray-900 dark:text-white" /> }}
                                                 />
-                                                <span className="text-gray-900 dark:text-white font-black">{currentAdditionalPrice} USD {currentPeriod}</span>
+                                                <span className="font-semibold text-gray-900 dark:text-white">{currentAdditionalPrice} USD {currentPeriod}</span>
                                             </span>
                                         </div>
                                     </div>
                                 </div>
 
                                 {/* Vertical Divider */}
-                                <div className="hidden lg:block w-px bg-gray-100 dark:bg-white/10 self-stretch" />
-                                <div className="block lg:hidden h-px bg-gray-100 dark:bg-white/10 w-full" />
+                                <div className="hidden w-px self-stretch bg-gray-100 dark:bg-white/10 lg:block" />
+                                <div className="block h-px w-full bg-gray-100 dark:bg-white/10 lg:hidden" />
 
                                 {/* Right Side: Features */}
-                                <div className="flex-1 w-full">
-                                    <div className="mb-10">
-                                        <h4 className="font-barlow text-gray-900 dark:text-white font-bold text-2xl mb-2">
+                                <div className="w-full flex-1">
+                                    <div className="mb-6">
+                                        <h4 className="mb-1.5 font-barlow text-xl font-bold text-gray-900 dark:text-white sm:text-2xl">
                                             {t('landing.pricing.includedTitle', 'Everything you need')}
                                         </h4>
-                                        <p className="text-gray-500 dark:text-gray-400 font-medium">
+                                        <p className="font-medium text-gray-500 dark:text-gray-400">
                                             {t('landing.pricing.includedDesc', 'All features included in a single plan.')}
                                         </p>
                                     </div>
                                     
-                                    <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-y-6 gap-x-8">
+                                    <ul className="grid grid-cols-1 gap-x-8 gap-y-3.5 sm:grid-cols-2 lg:grid-cols-1">
                                         {features.map((feature, i) => (
-                                            <li key={i} className="flex items-center gap-5 text-gray-700 dark:text-gray-300 font-semibold text-lg hover:text-gray-900 dark:hover:text-white transition-colors group/item">
-                                                <div className="w-6 h-6 rounded-lg bg-mintcom-green/10 flex items-center justify-center flex-shrink-0 group-hover/item:bg-mintcom-green/20 transition-colors">
-                                                    <Check size={16} className="text-mintcom-green stroke-[4px]" />
+                                            <li key={i} className="group/item flex items-center gap-3.5 text-base font-semibold text-gray-700 transition-colors hover:text-gray-900 dark:text-gray-300 dark:hover:text-white sm:text-[17px]">
+                                                <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-lg bg-mintcom-green/10 transition-colors group-hover/item:bg-mintcom-green/20">
+                                                    <Check size={15} className="stroke-[4px] text-mintcom-green" />
                                                 </div>
                                                 {feature}
                                             </li>
                                         ))}
                                     </ul>
 
-                                    <div className="mt-12 p-6 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5">
-                                        <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
+                                    <div className="mt-7 rounded-2xl border border-gray-100 bg-gray-50 p-4 dark:border-white/5 dark:bg-white/5">
+                                        <p className="text-sm leading-relaxed text-gray-500 dark:text-gray-400">
                                             {t('landing.pricing.setupFee', 'No setup fees or hidden charges. Cancel anytime.')}
                                         </p>
                                     </div>
