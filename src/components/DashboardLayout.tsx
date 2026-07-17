@@ -22,7 +22,6 @@ import {
   FileBarChart,
   Percent,
   CreditCard,
-  Settings,
   Sliders,
   Shield,
   History,
@@ -126,7 +125,7 @@ export function DashboardLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
-  const [settingsMenuOpen, setSettingsMenuOpen] = useState(false);
+
   const [dashboardSession, setDashboardSession] = useState<DashboardSession | null>(null);
   const [sessionConflict, setSessionConflict] = useState<DashboardSessionConflict | null>(null);
   const [isTakingOverDashboard, setIsTakingOverDashboard] = useState(false);
@@ -980,8 +979,8 @@ export function DashboardLayout() {
         )}
 
 
-        {/* Footer User Profile */}
-        <div className="p-3 border-t border-gray-100 dark:border-white/5 relative shrink-0">
+        {/* Footer — expanded: profile row; collapsed: direct action icons (no settings gear) */}
+        <div className={`border-t border-gray-100 dark:border-white/5 relative shrink-0 ${sidebarOpen ? 'p-3' : 'px-2 py-3'}`}>
           {sidebarOpen ? (
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-gradient-to-br from-mintcom-green to-emerald-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-mintcom-green/20 outline outline-2 outline-white dark:outline-black">
@@ -997,7 +996,6 @@ export function DashboardLayout() {
                 <p className="text-xs text-gray-500 truncate">{t('staff.roles.manager')}</p>
               </div>
 
-              {/* Actions: Theme & Logout */}
               <div className="flex items-center gap-1">
                 <ThemeToggle dropdownDirection="up" className="w-12 h-12 rounded-xl flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white" />
                 <button
@@ -1010,94 +1008,44 @@ export function DashboardLayout() {
               </div>
             </div>
           ) : (
-            <div className="flex justify-center">
-              {/* Settings Circle */}
+            <div className="flex flex-col items-center gap-2">
+              {/* Language (EN / AR) */}
+              <LanguageSwitcher
+                compact
+                showGlobeIcon={false}
+                dropdownDirection="right"
+                className="relative z-20"
+                buttonClassName="!w-12 !h-12 !p-0 !justify-center !rounded-xl !bg-gray-50 dark:!bg-white/5 !border !border-gray-200 dark:!border-white/10 !text-gray-700 dark:!text-gray-200 hover:!bg-gray-100 dark:hover:!bg-white/10 hover:!text-gray-900 dark:hover:!text-white"
+              />
+
+              {/* Get Mobile App */}
               <button
-                onClick={() => setSettingsMenuOpen(!settingsMenuOpen)}
-                className={`w-12 h-12 flex items-center justify-center rounded-xl transition-all relative group ${settingsMenuOpen
-                  ? 'bg-mintcom-green text-black shadow-lg shadow-mintcom-green/20'
-                  : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white'
-                  }`}
+                type="button"
+                onClick={() => setMobileAppModalOpen(true)}
+                title={t('dashboard.menu.getMobileApp')}
+                aria-label={t('dashboard.menu.getMobileApp')}
+                className="w-12 h-12 flex items-center justify-center rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white transition-all"
               >
-                <Settings size={24} />
-                {/* Tooltip */}
-                <div className="absolute left-full rtl:left-auto rtl:right-full top-1/2 -translate-y-1/2 ml-2 rtl:ml-0 rtl:mr-2 px-3 py-1.5 bg-gray-900/90 backdrop-blur-md text-white text-xs font-sans font-medium tracking-normal rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none z-[80] whitespace-nowrap border border-white/10 shadow-xl translate-x-1 rtl:-translate-x-1 group-hover:translate-x-0">
-                  {t('dashboard.menu.settings')}
-                </div>
+                <Smartphone size={22} />
               </button>
 
-              {/* Popover Menu */}
-              <AnimatePresence>
-                {settingsMenuOpen && (
-                  <>
-                    {/* Backdrop to close */}
-                    <div
-                      className="fixed inset-0 z-[95]"
-                      onClick={() => setSettingsMenuOpen(false)}
-                    />
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.95, x: 20 }}
-                      animate={{ opacity: 1, scale: 1, x: 0 }}
-                      exit={{ opacity: 0, scale: 0.95, x: 20 }}
-                      className="absolute left-full rtl:left-auto rtl:right-full bottom-10 ml-4 rtl:ml-0 rtl:mr-4 w-64 bg-white dark:bg-[#0D0D0D] border border-gray-200 dark:border-white/10 rounded-[12px] shadow-2xl z-[100] p-2"
-                    >
-                      {/* Header */}
-                      <div className="flex items-center gap-3 p-3 mb-2 bg-gray-50 dark:bg-white/5 rounded-[12px]">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-mintcom-green to-emerald-600 flex items-center justify-center flex-shrink-0 shadow-sm text-black font-bold text-xs">
-                          {account?.firstName?.charAt(0).toUpperCase()}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-bold text-gray-900 dark:text-white truncate">
-                            {account?.firstName} {account?.lastName}
-                          </p>
-                          <p className="text-xs text-gray-500 truncate">{account?.email}</p>
-                        </div>
-                      </div>
+              {/* Theme */}
+              <ThemeToggle
+                dropdownDirection="right"
+                iconSize={20}
+                className="w-12 h-12 rounded-xl flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white border-0 bg-transparent"
+              />
 
-                      {/* Menu Items */}
-                      <div className="space-y-1">
-                        <button
-                          onClick={() => {
-                            setSettingsMenuOpen(false);
-                            setMobileAppModalOpen(true);
-                          }}
-                          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-[12px] text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white transition-all text-left"
-                        >
-                          <Smartphone size={18} />
-                          <span>{t('dashboard.menu.getMobileApp')}</span>
-                        </button>
-
-                        <div className="relative">
-                          <LanguageSwitcher
-                            label={t('common.aria.changeLanguage')}
-                            dropdownDirection="right"
-                            className="w-full"
-                            buttonClassName="w-full justify-start gap-3 px-3 !py-2.5 rounded-[12px] text-sm font-medium text-gray-600 dark:text-gray-400 hover:!bg-gray-50 dark:hover:!bg-white/5 hover:!text-gray-900 dark:hover:!text-white transition-all text-left !bg-transparent dark:!bg-transparent !border-transparent"
-                          />
-                        </div>
-
-                        {/* Theme Item - We wrap accessibility of ThemeToggle or recreate it visually */}
-                        <div className="relative">
-                          <ThemeToggle
-                            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-[12px] text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white transition-all text-left"
-                            showLabel={true}
-                            dropdownDirection="right"
-                            iconSize={18}
-                          />
-                        </div>
-
-                        <button
-                          onClick={handleLogout}
-                          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-[12px] text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white transition-all text-left"
-                        >
-                          <LogOut size={18} />
-                          <span>{t('dashboard.menu.logout')}</span>
-                        </button>
-                      </div>
-                    </motion.div>
-                  </>
-                )}
-              </AnimatePresence>
+              {/* Log out */}
+              <button
+                type="button"
+                onClick={handleLogout}
+                title={t('dashboard.menu.logout')}
+                aria-label={t('dashboard.menu.logout')}
+                className="w-12 h-12 flex items-center justify-center rounded-xl text-gray-500 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-500 transition-all"
+              >
+                <LogOut size={20} />
+              </button>
             </div>
           )}
         </div>
