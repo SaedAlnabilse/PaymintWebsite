@@ -12,6 +12,7 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { createInitialCatalog } from './demoCatalog';
 import {
   ArrowLeft,
   ArrowDownLeft,
@@ -1291,6 +1292,9 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
   const [itemMainTab, setItemMainTab] = useState<'products' | 'attributes'>('products');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [itemNameFilter, setItemNameFilter] = useState<string>('all');
+  /** Attributes tab filters — mirrors POS parent attribute + add-on (sub-attribute) */
+  const [attributeGroupFilter, setAttributeGroupFilter] = useState<string>('all');
+  const [addonFilter, setAddonFilter] = useState<string>('all');
   const [topItemsPeriod, setTopItemsPeriod] = useState<'today' | 'week' | 'month'>('today');
   const [showTopPeriodMenu, setShowTopPeriodMenu] = useState(false);
   const [orderSearch, setOrderSearch] = useState('');
@@ -1699,10 +1703,40 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
     return Array.from(map.values()).sort((a, b) => b.qty - a.qty).slice(0, 12);
   }, [allOrders, topItemsRangeStart, employee, localRefunds]);
 
+  /** Demo add-on groups (parent attributes + options) — same catalog as Sales */
+  const reportAddonGroups = useMemo(() => createInitialCatalog().addons, []);
+
   const itemBreakdown = useMemo(() => {
-    const items = new Map<string, { name: string; emoji: string; cat: string; qty: number; sales: number; refunds: number }>();
+    const items = new Map<
+      string,
+      { name: string; emoji: string; cat: string; qty: number; sales: number; refunds: number }
+    >();
     const cats = new Map<string, { name: string; qty: number; sales: number; refunds: number }>();
-    const mods = new Map<string, { name: string; qty: number; sales: number }>();
+    type ModRow = {
+      name: string;
+      qty: number;
+      sales: number;
+      attributeId: string;
+      attributeName: string;
+    };
+    const mods = new Map<string, ModRow>();
+
+    // Seed every catalog add-on option so Attributes filters always have choices (POS)
+    let seedI = 0;
+    for (const group of reportAddonGroups) {
+      for (const opt of group.options) {
+        const baseQty = 6 + ((seedI * 3) % 17);
+        const sales = +(baseQty * Math.max(0.25, opt.price || 0.5)).toFixed(2);
+        mods.set(opt.name, {
+          name: opt.name,
+          qty: baseQty,
+          sales,
+          attributeId: group.id,
+          attributeName: group.name,
+        });
+        seedI += 1;
+      }
+    }
 
     for (const o of employeeFiltered) {
       const rq = mergedRefundedQty(o, localRefunds[o.id]);
@@ -1730,21 +1764,16 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
         c.refunds += refTotal;
         cats.set(l.category, c);
 
-        if (left > 1 || /oat|almond|large|extra/i.test(l.name)) {
-          const modName = left > 1 ? 'Multi-unit' : 'Customized';
-          const m = mods.get(modName) ?? { name: modName, qty: 0, sales: 0 };
-          m.qty += left;
-          m.sales += soldTotal * 0.15;
-          mods.set(modName, m);
+        // Bump matching catalog add-ons when line looks customized
+        if (left > 0) {
+          for (const m of mods.values()) {
+            if (new RegExp(m.name.replace(/\s+/g, '.*'), 'i').test(l.name)) {
+              m.qty += left;
+              m.sales += soldTotal * 0.08;
+            }
+          }
         }
       }
-    }
-
-    // Seed modifiers for empty
-    if (mods.size === 0) {
-      mods.set('Oat milk', { name: 'Oat milk', qty: 14, sales: 10.5 });
-      mods.set('Extra shot', { name: 'Extra shot', qty: 9, sales: 9 });
-      mods.set('Large size', { name: 'Large size', qty: 22, sales: 22 });
     }
 
     return {
@@ -1752,7 +1781,7 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
       categories: Array.from(cats.values()).sort((a, b) => b.sales - a.sales),
       modifiers: Array.from(mods.values()).sort((a, b) => b.sales - a.sales),
     };
-  }, [employeeFiltered, localRefunds]);
+  }, [employeeFiltered, localRefunds, reportAddonGroups]);
 
   const filteredItemBreakdown = useMemo(() => {
     let items = itemBreakdown.items;
@@ -1765,11 +1794,28 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
     return items;
   }, [itemBreakdown.items, categoryFilter, itemNameFilter]);
 
+  /** Attributes tab: parent attribute + add-on filters (POS MODIFIERS view) */
+  const filteredModifierBreakdown = useMemo(() => {
+    let mods = itemBreakdown.modifiers;
+    if (attributeGroupFilter !== 'all') {
+      mods = mods.filter((m) => m.attributeId === attributeGroupFilter);
+    }
+    if (addonFilter !== 'all') {
+      mods = mods.filter((m) => m.name === addonFilter);
+    }
+    return mods;
+  }, [itemBreakdown.modifiers, attributeGroupFilter, addonFilter]);
+
+  const addonOptionsForFilter = useMemo(() => {
+    if (attributeGroupFilter === 'all') return itemBreakdown.modifiers;
+    return itemBreakdown.modifiers.filter((m) => m.attributeId === attributeGroupFilter);
+  }, [itemBreakdown.modifiers, attributeGroupFilter]);
+
   const itemReportStats = useMemo(() => {
     const items =
       itemMainTab === 'products'
         ? filteredItemBreakdown
-        : itemBreakdown.modifiers.map((m) => ({
+        : filteredModifierBreakdown.map((m) => ({
             name: m.name,
             qty: m.qty,
             sales: m.sales,
@@ -1784,7 +1830,7 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
           ? filteredItemBreakdown.reduce((s, i) => s + i.refunds, 0)
           : 0,
     };
-  }, [itemMainTab, filteredItemBreakdown, itemBreakdown.modifiers, summary.orders]);
+  }, [itemMainTab, filteredItemBreakdown, filteredModifierBreakdown, summary.orders]);
 
   const hoursWorked = useMemo(() => {
     const fmt = (ms: number) => {
@@ -2158,12 +2204,12 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
                 </div>
 
                 {filteredTotals != null && (
-                  <div className="mx-3 mt-1.5 shrink-0 rounded-xl bg-mintcom-green px-2.5 py-1.5 text-white sm:mx-4">
-                    <div className="flex items-center justify-between text-[11px] font-semibold">
-                      <span className="inline-flex items-center gap-1.5">
-                        <Filter size={11} /> Total
+                  <div className="mx-3 mt-1.5 shrink-0 rounded-xl bg-mintcom-green px-2.5 py-1.5 !text-white sm:mx-4">
+                    <div className="flex items-center justify-between text-[11px] font-semibold !text-white">
+                      <span className="inline-flex items-center gap-1.5 !text-white">
+                        <Filter size={11} className="text-white" /> Total
                       </span>
-                      <span className="text-[13px] font-bold tabular-nums">{money(filteredTotals)}</span>
+                      <span className="text-[13px] font-bold tabular-nums !text-white">{money(filteredTotals)}</span>
                     </div>
                   </div>
                 )}
@@ -2306,12 +2352,17 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
         {/* ═══════ ITEM REPORT — exact POS layout ═══════ */}
         {reportTab === 'items' && (
           <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-hidden">
-            {/* Products | Attributes + category/item filters */}
-            <div className="flex shrink-0 flex-wrap items-center gap-2 sm:gap-3">
-              <div className="flex rounded-xl bg-transparent">
+            {/* Products | Attributes + filters (POS: Categories/Items OR Attributes/Add-ons) */}
+            <div className="flex shrink-0 flex-wrap items-center gap-2 sm:flex-nowrap sm:gap-3">
+              <div className="flex shrink-0 rounded-xl bg-transparent">
                 <button
                   type="button"
-                  onClick={() => setItemMainTab('products')}
+                  onClick={() => {
+                    setItemMainTab('products');
+                    // Real POS clears attribute filters when switching to Products
+                    setAttributeGroupFilter('all');
+                    setAddonFilter('all');
+                  }}
                   className={`rounded-xl px-5 py-2.5 text-[13px] font-semibold transition-colors ${
                     itemMainTab === 'products'
                       ? 'bg-mintcom-green text-white shadow-sm'
@@ -2322,7 +2373,12 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setItemMainTab('attributes')}
+                  onClick={() => {
+                    setItemMainTab('attributes');
+                    // Real POS clears product filters when switching to Attributes
+                    setCategoryFilter('all');
+                    setItemNameFilter('all');
+                  }}
                   className={`ms-2 rounded-xl px-5 py-2.5 text-[13px] font-semibold transition-colors ${
                     itemMainTab === 'attributes'
                       ? 'bg-mintcom-green text-white shadow-sm'
@@ -2334,8 +2390,8 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
               </div>
 
               {itemMainTab === 'products' && (
-                <>
-                  <div className="relative min-w-[140px] flex-1 sm:max-w-[200px]">
+                <div className="flex min-w-0 w-full flex-1 gap-2 sm:w-auto sm:gap-3">
+                  <div className="relative min-w-0 flex-1">
                     <span className="pointer-events-none absolute start-3 top-1.5 text-[10px] font-medium text-text-tertiary">
                       Categories
                     </span>
@@ -2362,7 +2418,7 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
                       className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-text-tertiary"
                     />
                   </div>
-                  <div className="relative min-w-[140px] flex-1 sm:max-w-[200px]">
+                  <div className="relative min-w-0 flex-1">
                     <span className="pointer-events-none absolute start-3 top-1.5 text-[10px] font-medium text-text-tertiary">
                       Items
                     </span>
@@ -2386,7 +2442,57 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
                       className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-text-tertiary"
                     />
                   </div>
-                </>
+                </div>
+              )}
+
+              {itemMainTab === 'attributes' && (
+                <div className="flex min-w-0 w-full flex-1 gap-2 sm:w-auto sm:gap-3">
+                  <div className="relative min-w-0 flex-1">
+                    <span className="pointer-events-none absolute start-3 top-1.5 text-[10px] font-medium text-text-tertiary">
+                      Attributes
+                    </span>
+                    <select
+                      value={attributeGroupFilter}
+                      onChange={(e) => {
+                        setAttributeGroupFilter(e.target.value);
+                        setAddonFilter('all');
+                      }}
+                      className="h-[48px] w-full appearance-none rounded-xl border border-gray-200 bg-white pb-1.5 ps-3 pe-8 pt-5 text-[13px] font-semibold text-text-primary outline-none dark:border-white/10 dark:bg-mintcom-surface dark:text-white"
+                    >
+                      <option value="all">All Attributes</option>
+                      {reportAddonGroups.map((g) => (
+                        <option key={g.id} value={g.id}>
+                          {g.name}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown
+                      size={14}
+                      className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-text-tertiary"
+                    />
+                  </div>
+                  <div className="relative min-w-0 flex-1">
+                    <span className="pointer-events-none absolute start-3 top-1.5 text-[10px] font-medium text-text-tertiary">
+                      Add-ons
+                    </span>
+                    <select
+                      value={addonFilter}
+                      onChange={(e) => setAddonFilter(e.target.value)}
+                      className="h-[48px] w-full appearance-none rounded-xl border border-gray-200 bg-white pb-1.5 ps-3 pe-8 pt-5 text-[13px] font-semibold text-text-primary outline-none dark:border-white/10 dark:bg-mintcom-surface dark:text-white"
+                    >
+                      <option value="all">All Add-ons</option>
+                      {addonOptionsForFilter.map((m) => (
+                        <option key={`${m.attributeId}-${m.name}`} value={m.name}>
+                          {m.name}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown
+                      size={14}
+                      className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-text-tertiary"
+                    />
+                  </div>
+                </div>
               )}
             </div>
 
@@ -2522,7 +2628,7 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
                   <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-mintcom-green/15 px-2 text-[12px] font-bold text-mintcom-green">
                     {itemMainTab === 'products'
                       ? filteredItemBreakdown.length
-                      : itemBreakdown.modifiers.length}
+                      : filteredModifierBreakdown.length}
                   </span>
                 </div>
                 <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
@@ -2563,28 +2669,37 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
                       ))
                     ))}
                   {itemMainTab === 'attributes' &&
-                    itemBreakdown.modifiers.map((row, idx) => (
-                      <div
-                        key={row.name}
-                        className={`flex items-center gap-3 px-3 py-3 sm:px-4 ${
-                          idx < itemBreakdown.modifiers.length - 1
-                            ? 'border-b border-gray-100 dark:border-white/8'
-                            : ''
-                        }`}
-                      >
-                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gray-50 dark:bg-white/5">
-                          <Package size={22} className="text-gray-400" strokeWidth={1.5} />
-                        </span>
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-[14px] font-semibold text-text-primary dark:text-white">
-                            {row.name}
-                          </p>
-                          <p className="text-[12px] text-text-tertiary">{row.qty} sold</p>
-                        </div>
-                        <p className="text-[14px] font-semibold tabular-nums text-mintcom-green">
-                          {money(row.sales)}
-                        </p>
+                    (filteredModifierBreakdown.length === 0 ? (
+                      <div className="flex flex-col items-center py-16 text-center">
+                        <Box size={36} className="mb-2 text-gray-300" />
+                        <p className="text-sm text-text-secondary">No attributes data</p>
                       </div>
+                    ) : (
+                      filteredModifierBreakdown.map((row, idx) => (
+                        <div
+                          key={`${row.attributeId}-${row.name}`}
+                          className={`flex items-center gap-3 px-3 py-3 sm:px-4 ${
+                            idx < filteredModifierBreakdown.length - 1
+                              ? 'border-b border-gray-100 dark:border-white/8'
+                              : ''
+                          }`}
+                        >
+                          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gray-50 dark:bg-white/5">
+                            <Package size={22} className="text-gray-400" strokeWidth={1.5} />
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-[14px] font-semibold text-text-primary dark:text-white">
+                              {row.name}
+                            </p>
+                            <p className="text-[12px] text-text-tertiary">
+                              {row.attributeName} · {row.qty} sold
+                            </p>
+                          </div>
+                          <p className="text-[14px] font-semibold tabular-nums text-mintcom-green">
+                            {money(row.sales)}
+                          </p>
+                        </div>
+                      ))
                     ))}
                 </div>
               </Shell>
@@ -3330,9 +3445,9 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
           >
             <div className="flex flex-col gap-3">
               <div className="grid grid-cols-2 gap-2.5">
-                <div className="rounded-xl bg-mintcom-green p-4 text-white shadow-sm">
-                  <p className="text-[12px] font-semibold text-white/90">Total pay in</p>
-                  <p className="mt-1 text-[22px] font-extrabold tabular-nums">
+                <div className="rounded-xl bg-mintcom-green p-4 !text-white shadow-sm">
+                  <p className="text-[12px] font-semibold !text-white/90">Total pay in</p>
+                  <p className="mt-1 text-[22px] font-extrabold tabular-nums !text-white">
                     {money(summary.payIn)}
                   </p>
                 </div>
@@ -3346,12 +3461,12 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
 
               {/* Table header like POS */}
               <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-white/10">
-                <div className="grid grid-cols-[72px_1fr_88px_70px] gap-1 bg-mintcom-green px-3 py-2.5 text-[11px] font-bold uppercase tracking-wide text-white sm:grid-cols-[80px_1fr_100px_90px_70px]">
-                  <span>Type</span>
-                  <span>Note</span>
-                  <span className="text-end">Amount</span>
-                  <span className="hidden text-end sm:block">Date</span>
-                  <span className="text-end">Time</span>
+                <div className="grid grid-cols-[72px_1fr_88px_70px] gap-1 bg-mintcom-green px-3 py-2.5 text-[11px] font-bold uppercase tracking-wide !text-white sm:grid-cols-[80px_1fr_100px_90px_70px]">
+                  <span className="!text-white">Type</span>
+                  <span className="!text-white">Note</span>
+                  <span className="text-end !text-white">Amount</span>
+                  <span className="hidden text-end !text-white sm:block">Date</span>
+                  <span className="text-end !text-white">Time</span>
                 </div>
                 {shift.movements.length === 0 ? (
                   <div className="px-4 py-10 text-center">

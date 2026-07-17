@@ -181,9 +181,9 @@ const WorkflowFeatureModal = ({
         'Streamline Staff Management and Role Assignments Across All Locations',
       ],
       simpleUI: [
-        'My Orders & Close Shift on one card',
-        'Net, cash, card, pay-in/out & hours',
-        'Live Sales Overview for the active shift',
+        'Clean and User-Friendly Interface',
+        'Helpful In-App Tooltips and Info Boxes for Step-by-Step Guidance',
+        'Fast, Responsive, and Efficient User Actions',
       ],
       fastOnboarding: [
         'Add staff from dashboard Staff in seconds',
@@ -196,9 +196,9 @@ const WorkflowFeatureModal = ({
         'Security tips built into the owner portal',
       ],
       loyalty: [
-        'Redeem % discounts at the register',
-        'Gift free items from a category',
-        'Points earn just like real POS loyalty',
+        'Create Custom Rewards Programs',
+        'Build and Manage a Comprehensive Customer Database',
+        'QR Code–Enabled Customer Loyalty System',
       ],
       mobileApp: [
         'Live Notifications feed for all locations',

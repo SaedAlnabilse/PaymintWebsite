@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import {
   Laptop,
@@ -16,14 +16,33 @@ import {
   Briefcase,
   KeyRound,
   AlertOctagon,
+  TrendingUp,
+  Coffee,
+  Store,
+  Users,
+  ChevronRight,
+  ChevronDown,
+  Calendar,
+  Clock,
+  CreditCard,
+  Activity,
+  ShoppingBag,
+  CornerUpLeft,
+  ExternalLink,
+  MoreHorizontal,
+  Zap,
+  Link2,
+  SlidersHorizontal,
 } from 'lucide-react';
 import AppStoreBadge from '../assets/app-store-badge.svg';
 import GooglePlayBadge from '../assets/google-play-badge.svg';
 import { OWNER_ANDROID_DOWNLOAD_URL, OWNER_IOS_DOWNLOAD_URL } from '../config/downloads';
 import { useTheme } from '../context/ThemeContext';
 
-/** Brand tokens mirrored from mintcom-admin-portal notifications screen */
+/** Brand tokens mirrored from mintcom-admin-portal owner screens */
 const G1 = '#7dc6a2';
+const G2 = '#5aab85';
+const G3 = '#3d8f6b';
 const SHORTAGE = '#D55263';
 const OVERAGE = '#F59E0B';
 const WARNING = '#D0A62A';
@@ -53,6 +72,8 @@ const SplitText = ({ text, className = '' }: { text: string; className?: string 
   );
 };
 
+type MockTone = 'shortage' | 'overage' | 'critical' | 'stock' | 'refund';
+
 type MockAlert = {
   id: string;
   title: string;
@@ -60,7 +81,7 @@ type MockAlert = {
   pill: string;
   location: string;
   time: string;
-  tone: 'shortage' | 'overage' | 'critical' | 'stock' | 'refund';
+  tone: MockTone;
   unread?: boolean;
 };
 
@@ -72,14 +93,147 @@ const toneStyle = {
   refund: { color: WARNING, bg: '#D0A62A12', Icon: RotateCcw },
 } as const;
 
+type OwnerNavKey = 'home' | 'locations' | 'brands' | 'account' | 'notifications';
+
+/** Theme tokens aligned with mintcom-admin-portal useDarkMode / owner screens */
+function useMockPalette() {
+  const { resolvedTheme } = useTheme();
+  const isDarkMode = resolvedTheme === 'dark';
+  return {
+    isDarkMode,
+    // OwnerOverview uses #f8f9fa / #13111E
+    BG: isDarkMode ? '#13111E' : '#f8f9fa',
+    CARD: isDarkMode ? '#252836' : '#FFFFFF',
+    BORDER: isDarkMode ? '#2D2B3A' : '#EEF1EF',
+    TEXT: isDarkMode ? '#F8FAFC' : '#1F1D2B',
+    TEXT_MAIN: isDarkMode ? '#F8FAFC' : '#1E293B',
+    SUB: isDarkMode ? '#737182' : '#828287',
+    SEARCH_BG: isDarkMode ? '#2D3039' : '#F1F5F9',
+    TAB_BG: isDarkMode ? 'rgba(0,0,0,0.25)' : '#F1F5F9',
+    FILTER_LABEL: isDarkMode ? '#7a9e93' : '#4d7c6e',
+    MARK_READ: isDarkMode ? G1 : '#3d8f68',
+    NAV_SHELL: isDarkMode ? '#13111E' : '#EFEFF4',
+    NAV_BG: isDarkMode ? '#252836' : '#FFFFFF',
+    NAV_IDLE: isDarkMode ? '#737182' : '#828287',
+    HOME_PILL: isDarkMode ? 'rgba(255,255,255,0.88)' : 'rgba(15,23,42,0.88)',
+    SURFACE: isDarkMode ? 'rgba(255,255,255,0.06)' : '#F3F4F6',
+    ICON_BG: isDarkMode ? '#163126' : '#E8F7F0',
+    LIST_BORDER: isDarkMode ? '#2D2B3A' : '#E5E5E5',
+  };
+}
+
+/** Shared green owner header */
+const OwnerHeader = ({
+  title,
+  statusPad = 0,
+  showBell = false,
+  bellCount = 0,
+  compact = false,
+}: {
+  title: string;
+  statusPad?: number;
+  showBell?: boolean;
+  bellCount?: number;
+  compact?: boolean;
+}) => (
+  <div className="flex-shrink-0" style={{ backgroundColor: G1, paddingTop: statusPad }}>
+    <div className="flex items-center justify-between px-3 h-11">
+      <div className="w-8 h-8 flex items-center justify-center">
+        <Menu size={compact ? 14 : 16} className="text-white" strokeWidth={2.25} />
+      </div>
+      <span className="text-white font-bold text-[13px] tracking-tight flex-1 text-center px-2">
+        {title}
+      </span>
+      <div className="w-8 h-8 flex items-center justify-center relative">
+        {showBell ? (
+          <>
+            <Bell size={compact ? 14 : 16} className="text-white" strokeWidth={2.25} />
+            {bellCount > 0 && (
+              <span
+                className="absolute top-0.5 right-0.5 min-w-[14px] h-[14px] rounded-full flex items-center justify-center text-[8px] font-black text-white border-[1.5px]"
+                style={{ backgroundColor: SHORTAGE, borderColor: G1 }}
+              >
+                {bellCount}
+              </span>
+            )}
+          </>
+        ) : (
+          <span className="w-4" />
+        )}
+      </div>
+    </div>
+  </div>
+);
+
 /**
- * Pixel-faithful recreation of AdminPortalAlertsView (owner scope, dark mode)
- * used inside the marketing phone frames.
+ * Shared owner bottom navigation — mirrors BottomNav.tsx owner mode
+ * (Home / Locations / Brands / Account with green active state).
+ */
+const OwnerBottomNav = ({
+  active,
+  compact = false,
+}: {
+  active: OwnerNavKey;
+  compact?: boolean;
+}) => {
+  const { t } = useTranslation();
+  const p = useMockPalette();
+  const navItems = [
+    { key: 'home' as const, icon: Home, label: t('landing.admin.mockup.navHome') },
+    { key: 'locations' as const, icon: MapPin, label: t('landing.admin.mockup.navLocations') },
+    { key: 'brands' as const, icon: Briefcase, label: t('landing.admin.mockup.navBrands') },
+    { key: 'account' as const, icon: KeyRound, label: t('landing.admin.mockup.navAccount') },
+  ];
+
+  return (
+    <div
+      className="relative z-20 flex-shrink-0 pt-1.5 px-2"
+      style={{ backgroundColor: p.NAV_SHELL }}
+    >
+      <div
+        className="flex items-center justify-around rounded-2xl border px-0.5"
+        style={{
+          backgroundColor: p.NAV_BG,
+          borderColor: p.BORDER,
+          height: compact ? 48 : 52,
+        }}
+      >
+        {navItems.map((item) => {
+          const isActive = item.key === active;
+          return (
+            <div key={item.key} className="flex flex-1 flex-col items-center justify-center gap-0.5">
+              <item.icon
+                size={compact ? 14 : 15}
+                style={{ color: isActive ? G1 : p.NAV_IDLE }}
+                strokeWidth={isActive ? 2.4 : 2.1}
+              />
+              <span
+                className="text-[7px] font-bold leading-none"
+                style={{ color: isActive ? G1 : p.NAV_IDLE }}
+              >
+                {item.label}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+      <div className="flex items-center justify-center pb-1.5 pt-1">
+        <span
+          className="h-[4px] w-[100px] rounded-full"
+          style={{ backgroundColor: p.HOME_PILL }}
+          aria-hidden
+        />
+      </div>
+    </div>
+  );
+};
+
+/**
+ * Pixel-faithful recreation of AdminPortalAlertsView (owner scope)
  */
 const NotificationsScreenMock = ({
   compact = false,
   activeTab = 'all',
-  /** Extra top padding inside the green header for status bar / Dynamic Island */
   statusPad = 0,
 }: {
   compact?: boolean;
@@ -87,22 +241,7 @@ const NotificationsScreenMock = ({
   statusPad?: number;
 }) => {
   const { t } = useTranslation();
-  const { resolvedTheme } = useTheme();
-  const isDarkMode = resolvedTheme === 'dark';
-
-  const BG = isDarkMode ? '#1F1D2B' : '#F8FAFC';
-  const CARD = isDarkMode ? '#252836' : '#FFFFFF';
-  const BORDER = isDarkMode ? '#3A3A4A' : '#E2E8F0';
-  const TEXT = isDarkMode ? '#F8FAFC' : '#0F172A';
-  const SUB = isDarkMode ? '#737182' : '#64748B';
-  const SEARCH_BG = isDarkMode ? '#2D3039' : '#F1F5F9';
-  const TAB_BG = isDarkMode ? 'rgba(0,0,0,0.25)' : '#F1F5F9';
-  const FILTER_LABEL = isDarkMode ? '#7a9e93' : '#4d7c6e';
-  const MARK_READ = isDarkMode ? G1 : '#3d8f68';
-  /** Elevated bottom tab bar — must separate from page BG in both themes */
-  const NAV_BG = isDarkMode ? '#252836' : '#FFFFFF';
-  const NAV_IDLE = isDarkMode ? '#9CA3AF' : '#64748B';
-  const HOME_PILL = isDarkMode ? 'rgba(255,255,255,0.88)' : 'rgba(15,23,42,0.88)';
+  const p = useMockPalette();
 
   const alerts: MockAlert[] = [
     {
@@ -212,58 +351,37 @@ const NotificationsScreenMock = ({
     { value: '1', label: t('landing.admin.mockup.updates') },
   ];
 
-  const navItems = [
-    { icon: Home, label: t('landing.admin.mockup.navHome'), active: true },
-    { icon: MapPin, label: t('landing.admin.mockup.navLocations'), active: false },
-    { icon: Briefcase, label: t('landing.admin.mockup.navBrands'), active: false },
-    { icon: KeyRound, label: t('landing.admin.mockup.navAccount'), active: false },
-  ];
-
   return (
     <div
       className="w-full h-full flex flex-col relative z-10 transition-colors duration-300"
-      style={{ backgroundColor: BG }}
+      style={{ backgroundColor: p.BG }}
     >
-      {/* ── OwnerScreenHeader (single continuous green block) ── */}
-      <div className="flex-shrink-0" style={{ backgroundColor: G1, paddingTop: statusPad }}>
-        <div className="flex items-center justify-between px-3 h-11">
-          <div className="w-8 h-8 flex items-center justify-center">
-            <Menu size={compact ? 14 : 16} className="text-white" strokeWidth={2.25} />
-          </div>
-          <span className="text-white font-bold text-[13px] tracking-tight flex-1 text-center px-2">
-            {t('landing.admin.mockup.notificationsTitle')}
-          </span>
-          <div className="w-8 h-8 flex items-center justify-center relative">
-            <Bell size={compact ? 14 : 16} className="text-white" strokeWidth={2.25} />
-            <span
-              className="absolute top-0.5 right-0.5 min-w-[14px] h-[14px] rounded-full flex items-center justify-center text-[8px] font-black text-white border-[1.5px]"
-              style={{ backgroundColor: SHORTAGE, borderColor: G1 }}
-            >
-              7
-            </span>
-          </div>
-        </div>
-      </div>
+      <OwnerHeader
+        title={t('landing.admin.mockup.notificationsTitle')}
+        statusPad={statusPad}
+        showBell
+        bellCount={7}
+        compact={compact}
+      />
 
       <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
-        {/* ── Stats panel (OwnerScreenHero pills) ── */}
         <div className="px-3 pt-2 mb-2">
           <div
-            className="flex items-stretch rounded-xl border px-1 py-2.5 transition-colors duration-300"
-            style={{ backgroundColor: CARD, borderColor: BORDER }}
+            className="flex items-stretch rounded-xl border px-1 py-2.5"
+            style={{ backgroundColor: p.CARD, borderColor: p.BORDER }}
           >
             {stats.map((s, i) => (
               <div key={s.label} className="flex flex-1 items-center">
                 {i > 0 && (
-                  <div className="w-px h-7 self-center opacity-80 transition-colors duration-300" style={{ backgroundColor: BORDER }} />
+                  <div className="w-px h-7 self-center opacity-80" style={{ backgroundColor: p.BORDER }} />
                 )}
                 <div className="flex-1 flex flex-col items-center justify-center px-0.5">
-                  <span className="font-black text-[15px] leading-none tracking-tight transition-colors duration-300" style={{ color: TEXT }}>
+                  <span className="font-black text-[15px] leading-none tracking-tight" style={{ color: p.TEXT }}>
                     {s.value}
                   </span>
                   <span
-                    className="text-[7px] font-extrabold uppercase tracking-wider mt-1 leading-none text-center transition-colors duration-300"
-                    style={{ color: SUB }}
+                    className="text-[7px] font-extrabold uppercase tracking-wider mt-1 leading-none text-center"
+                    style={{ color: p.SUB }}
                   >
                     {s.label}
                   </span>
@@ -274,32 +392,24 @@ const NotificationsScreenMock = ({
         </div>
 
         <div className="px-3 flex flex-col gap-1.5 flex-1 min-h-0">
-          {/* ── Search ── */}
           <div
-            className="flex items-center gap-2 rounded-xl px-2.5 py-2 border transition-colors duration-300"
-            style={{ backgroundColor: SEARCH_BG, borderColor: BORDER }}
+            className="flex items-center gap-2 rounded-xl px-2.5 py-2 border"
+            style={{ backgroundColor: p.SEARCH_BG, borderColor: p.BORDER }}
           >
-            <Search size={12} style={{ color: SUB }} className="transition-colors duration-300" />
-            <span className="text-[10px] font-semibold transition-colors duration-300" style={{ color: SUB }}>
+            <Search size={12} style={{ color: p.SUB }} />
+            <span className="text-[10px] font-semibold" style={{ color: p.SUB }}>
               {t('landing.admin.mockup.searchPlaceholder')}
             </span>
           </div>
 
-          {/* ── Segmented tabs ── */}
-          <div
-            className="flex rounded-xl p-0.5 transition-colors duration-300"
-            style={{ backgroundColor: TAB_BG }}
-          >
+          <div className="flex rounded-xl p-0.5" style={{ backgroundColor: p.TAB_BG }}>
             {tabs.map((tab) => {
               const isActive = tab.id === activeTab;
               return (
-                <div
-                  key={tab.id}
-                  className="flex-1 py-1.5 rounded-lg flex items-center justify-center"
-                >
+                <div key={tab.id} className="flex-1 py-1.5 rounded-lg flex items-center justify-center">
                   <span
-                    className={`text-[8px] leading-none whitespace-nowrap transition-colors duration-300 ${isActive ? 'font-black' : 'font-bold'}`}
-                    style={{ color: isActive ? MARK_READ : SUB }}
+                    className={`text-[8px] leading-none whitespace-nowrap ${isActive ? 'font-black' : 'font-bold'}`}
+                    style={{ color: isActive ? p.MARK_READ : p.SUB }}
                   >
                     {tab.label} {tab.count}
                   </span>
@@ -308,18 +418,16 @@ const NotificationsScreenMock = ({
             })}
           </div>
 
-          {/* ── Location filter (owner multi-location feed) ── */}
           {!compact && (
             <>
               <span
-                className="text-[8px] font-black uppercase tracking-widest mt-0.5 transition-colors duration-300"
-                style={{ color: FILTER_LABEL }}
+                className="text-[8px] font-black uppercase tracking-widest mt-0.5"
+                style={{ color: p.FILTER_LABEL }}
               >
                 {t('landing.admin.mockup.filterByLocation')}
               </span>
-
               <div
-                className="flex items-center justify-between rounded-xl px-2 py-1.5 border-[1.5px] transition-colors duration-300"
+                className="flex items-center justify-between rounded-xl px-2 py-1.5 border-[1.5px]"
                 style={{ backgroundColor: G1, borderColor: G1 }}
               >
                 <div className="flex items-center gap-2">
@@ -340,65 +448,28 @@ const NotificationsScreenMock = ({
                   7
                 </span>
               </div>
-
-              <div className="flex gap-1.5 overflow-hidden">
-                {[
-                  { letter: 'D', name: t('landing.admin.mockup.downtownCafe'), count: 4 },
-                  { letter: 'M', name: t('landing.admin.mockup.mallBranch'), count: 2 },
-                  { letter: 'A', name: t('landing.admin.mockup.airportBranch', 'Airport Branch'), count: 2 },
-                ].map((loc) => (
-                  <div
-                    key={loc.letter}
-                    className="flex items-center gap-1 rounded-xl border-[1.5px] px-1.5 py-1 shrink-0 transition-colors duration-300"
-                    style={{ backgroundColor: CARD, borderColor: BORDER }}
-                  >
-                    <div
-                      className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
-                      style={{ backgroundColor: 'rgba(125, 198, 162, 0.08)' }}
-                    >
-                      <span className="text-[8px] font-black transition-colors duration-300" style={{ color: MARK_READ }}>
-                        {loc.letter}
-                      </span>
-                    </div>
-                    <div className="min-w-0">
-                      <div className="text-[8px] font-black transition-colors duration-300" style={{ color: TEXT }}>
-                        {loc.name}
-                      </div>
-                      <div className="text-[7px] font-bold transition-colors duration-300" style={{ color: SUB }}>
-                        {loc.count} {t('landing.admin.mockup.alertsLabel')}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
             </>
           )}
 
-          {/* Mark all read */}
           <div className="flex justify-end">
-            <span className="text-[9px] font-black transition-colors duration-300" style={{ color: MARK_READ }}>
+            <span className="text-[9px] font-black" style={{ color: p.MARK_READ }}>
               {t('landing.admin.mockup.markAllRead')}
             </span>
           </div>
 
-          {/* ── Day group ── */}
           <div className="flex items-center gap-2 px-0.5 mb-0.5">
-            <span
-              className="text-[8px] font-black uppercase tracking-[0.12em] transition-colors duration-300"
-              style={{ color: SUB }}
-            >
+            <span className="text-[8px] font-black uppercase tracking-[0.12em]" style={{ color: p.SUB }}>
               {t('landing.admin.mockup.today')}
             </span>
-            <div className="flex-1 h-px transition-colors duration-300" style={{ backgroundColor: BORDER }} />
-            <span className="text-[8px] font-bold transition-colors duration-300" style={{ color: SUB }}>
+            <div className="flex-1 h-px" style={{ backgroundColor: p.BORDER }} />
+            <span className="text-[8px] font-bold" style={{ color: p.SUB }}>
               {displayAlerts.length} {t('landing.admin.mockup.alertsLabel')}
             </span>
           </div>
 
-          {/* ── Alert cards ── */}
           <div
-            className="rounded-xl border overflow-hidden flex-1 min-h-0 transition-colors duration-300"
-            style={{ backgroundColor: CARD, borderColor: BORDER }}
+            className="rounded-xl border overflow-hidden flex-1 min-h-0"
+            style={{ backgroundColor: p.CARD, borderColor: p.BORDER }}
           >
             {displayAlerts.map((alert, index) => {
               const tone = toneStyle[alert.tone];
@@ -407,10 +478,8 @@ const NotificationsScreenMock = ({
               return (
                 <div
                   key={alert.id}
-                  className="relative flex gap-2.5 px-2.5 py-2.5 transition-colors duration-300"
-                  style={{
-                    borderBottom: isLast ? 'none' : `1px solid ${BORDER}`,
-                  }}
+                  className="relative flex gap-2.5 px-2.5 py-2.5"
+                  style={{ borderBottom: isLast ? 'none' : `1px solid ${p.BORDER}` }}
                 >
                   {alert.unread && (
                     <div
@@ -426,20 +495,14 @@ const NotificationsScreenMock = ({
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-1.5 mb-0.5">
-                      <span
-                        className="text-[10px] font-black leading-tight truncate transition-colors duration-300"
-                        style={{ color: TEXT }}
-                      >
+                      <span className="text-[10px] font-black leading-tight truncate" style={{ color: p.TEXT }}>
                         {alert.title}
                       </span>
-                      <span className="text-[8px] font-bold flex-shrink-0 mt-0.5 transition-colors duration-300" style={{ color: SUB }}>
+                      <span className="text-[8px] font-bold flex-shrink-0 mt-0.5" style={{ color: p.SUB }}>
                         {alert.time}
                       </span>
                     </div>
-                    <p
-                      className="text-[9px] font-semibold leading-snug mb-1.5 line-clamp-2 transition-colors duration-300"
-                      style={{ color: SUB }}
-                    >
+                    <p className="text-[9px] font-semibold leading-snug mb-1.5 line-clamp-2" style={{ color: p.SUB }}>
                       {alert.description}
                     </p>
                     <div className="flex items-center justify-between gap-1.5">
@@ -449,7 +512,7 @@ const NotificationsScreenMock = ({
                       >
                         {alert.pill}
                       </span>
-                      <span className="text-[8px] font-bold truncate transition-colors duration-300" style={{ color: FILTER_LABEL }}>
+                      <span className="text-[8px] font-bold truncate" style={{ color: p.FILTER_LABEL }}>
                         {alert.location}
                       </span>
                     </div>
@@ -461,69 +524,644 @@ const NotificationsScreenMock = ({
         </div>
       </div>
 
-      {/* ── BottomNav (owner) + home indicator — distinct bar in light & dark ── */}
-      <div
-        className="relative z-20 flex-shrink-0 border-t transition-colors duration-300"
-        style={{
-          backgroundColor: NAV_BG,
-          borderColor: BORDER,
-          boxShadow: isDarkMode
-            ? '0 -8px 24px -12px rgba(0,0,0,0.55)'
-            : '0 -6px 18px -10px rgba(15,23,42,0.12)',
-        }}
-      >
-        <div className="flex items-center justify-around px-1 pt-2 pb-1">
-          {navItems.map((item) => (
-            <div key={item.label} className="flex flex-1 flex-col items-center gap-0.5">
-              {item.active ? (
-                <span
-                  className="mb-0.5 flex h-7 w-7 items-center justify-center rounded-xl transition-colors duration-300"
-                  style={{ backgroundColor: `${G1}22` }}
-                >
-                  <item.icon
-                    size={compact ? 13 : 14}
-                    style={{ color: G1 }}
-                    strokeWidth={2.4}
-                  />
-                </span>
-              ) : (
-                <item.icon
-                  size={compact ? 13 : 14}
-                  style={{ color: NAV_IDLE }}
-                  strokeWidth={2.25}
-                  className="mb-0.5 transition-colors duration-300"
-                />
-              )}
-              <span
-                className="text-[7px] font-bold leading-none transition-colors duration-300"
-                style={{ color: item.active ? G1 : NAV_IDLE }}
-              >
-                {item.label}
-              </span>
-            </div>
-          ))}
-        </div>
-        {/* iOS home indicator — sits on the same bar (no extra dark bezel below) */}
-        <div className="flex items-center justify-center pb-1.5 pt-0.5">
-          <span
-            className="h-[4px] w-[100px] rounded-full transition-colors duration-300"
-            style={{
-              backgroundColor: HOME_PILL,
-              boxShadow: isDarkMode
-                ? '0 0 10px rgba(255,255,255,0.16)'
-                : '0 1px 2px rgba(15,23,42,0.16)',
-            }}
-            aria-hidden
-          />
-        </div>
-      </div>
+      <OwnerBottomNav active="home" compact={compact} />
     </div>
   );
 };
 
 /**
- * Premium iPhone chassis — Dynamic Island, continuous corners, home indicator,
- * metallic titanium edge, volume/power rails.
+ * Owner Overview — structure/layout mirrored from OwnerOverviewScreen.tsx
+ * (hero pills → period/time filter → master total sales → metric grid → quick management)
+ */
+const OverviewScreenMock = ({ statusPad = 0, compact = false }: { statusPad?: number; compact?: boolean }) => {
+  const { t } = useTranslation();
+  const p = useMockPalette();
+
+  const heroPills = [
+    { value: '3', label: t('landing.admin.mockup.navLocations'), icon: MapPin, color: G1 },
+    {
+      value: '2',
+      label: t('landing.admin.mockup.navBrands'),
+      icon: Briefcase,
+      color: '#8B5CF6',
+      bg: 'rgba(139,92,246,0.12)',
+    },
+    {
+      value: '12',
+      label: t('landing.admin.mockup.staff'),
+      icon: Users,
+      color: '#3B82F6',
+      bg: 'rgba(59,130,246,0.12)',
+    },
+  ];
+
+  const metrics = [
+    {
+      label: t('landing.admin.mockup.totalProfit', 'Total Profit'),
+      value: '1,840',
+      currency: 'JOD',
+      icon: TrendingUp,
+      color: G1,
+      bg: 'rgba(125,198,162,0.12)',
+    },
+    {
+      label: t('landing.admin.mockup.orders'),
+      value: '148',
+      icon: ShoppingBag,
+      color: '#3B82F6',
+      bg: 'rgba(59,130,246,0.12)',
+    },
+    {
+      label: t('landing.admin.mockup.refundsLabel', 'Refunds'),
+      value: '48',
+      currency: 'JOD',
+      icon: CornerUpLeft,
+      color: '#EF4444',
+      bg: 'rgba(239,68,68,0.12)',
+    },
+    {
+      label: t('landing.admin.mockup.avgOrder', 'Avg. Order'),
+      value: '16.55',
+      currency: 'JOD',
+      icon: Activity,
+      color: '#8B5CF6',
+      bg: 'rgba(139,92,246,0.12)',
+    },
+  ];
+
+  return (
+    <div className="w-full h-full flex flex-col relative z-10" style={{ backgroundColor: p.BG }}>
+      <OwnerHeader
+        title={t('landing.admin.mockup.screenOverview', 'Overview')}
+        statusPad={statusPad}
+        showBell
+        bellCount={7}
+        compact={compact}
+      />
+
+      <div className="flex-1 min-h-0 overflow-hidden flex flex-col px-2.5 pt-2 gap-1.5">
+        {/* OwnerScreenHero — unified stats pills (Locations / Brands / Staff) */}
+        <div
+          className="flex-shrink-0 flex items-stretch rounded-2xl border px-1 py-2"
+          style={{ backgroundColor: p.CARD, borderColor: p.BORDER }}
+        >
+          {heroPills.map((pill, i) => (
+            <div key={pill.label} className="flex flex-1 items-center">
+              {i > 0 && (
+                <div className="w-px h-8 self-center" style={{ backgroundColor: p.BORDER }} />
+              )}
+              <div className="flex-1 flex flex-col items-center gap-1 px-0.5">
+                <div
+                  className="w-6 h-6 rounded-lg flex items-center justify-center"
+                  style={{ backgroundColor: pill.bg || 'rgba(125,198,162,0.12)' }}
+                >
+                  <pill.icon size={12} style={{ color: pill.color }} strokeWidth={2.3} />
+                </div>
+                <span className="font-black text-[13px] leading-none" style={{ color: p.TEXT }}>
+                  {pill.value}
+                </span>
+                <span
+                  className="text-[6.5px] font-extrabold uppercase tracking-wide leading-none text-center"
+                  style={{ color: p.SUB }}
+                >
+                  {pill.label}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/*
+          Filter panel — exact OwnerOverviewScreen structure (period + time rows),
+          scaled to fit the phone mock without clipping.
+        */}
+        <div
+          className="relative z-10 flex-shrink-0 rounded-[14px] border overflow-hidden"
+          style={{
+            backgroundColor: p.CARD,
+            borderColor: p.BORDER,
+            boxShadow: p.isDarkMode
+              ? '0 6px 16px -10px rgba(0,0,0,0.5)'
+              : '0 6px 14px -10px rgba(15,23,42,0.1)',
+          }}
+        >
+          {/* Period row */}
+          <div className="flex items-center gap-2 px-2.5 py-[9px]">
+            <div
+              className="w-7 h-7 rounded-[10px] flex items-center justify-center flex-shrink-0"
+              style={{ backgroundColor: 'rgba(125,198,162,0.12)' }}
+            >
+              <Calendar size={13} style={{ color: G1 }} strokeWidth={2.25} />
+            </div>
+            <span
+              className="text-[9px] font-semibold leading-none min-w-0 truncate"
+              style={{ color: p.SUB }}
+            >
+              {t('landing.admin.mockup.selectPeriod', 'Select Period')}
+            </span>
+            <span className="flex-1" />
+            <span className="text-[10px] font-black leading-none flex-shrink-0" style={{ color: G1 }}>
+              {t('landing.admin.mockup.today')}
+            </span>
+            <ChevronDown
+              size={13}
+              className="flex-shrink-0"
+              style={{ color: p.isDarkMode ? '#4A4856' : '#CBD5E1' }}
+              strokeWidth={2.25}
+            />
+          </div>
+
+          <div className="h-px mx-2.5" style={{ backgroundColor: p.BORDER }} />
+
+          {/* Time range row */}
+          <div className="flex items-center gap-2 px-2.5 py-[9px]">
+            <div
+              className="w-7 h-7 rounded-[10px] flex items-center justify-center flex-shrink-0"
+              style={{ backgroundColor: 'rgba(125,198,162,0.12)' }}
+            >
+              <Clock size={13} style={{ color: G1 }} strokeWidth={2.25} />
+            </div>
+            <span
+              className="text-[9px] font-semibold leading-none min-w-0 truncate"
+              style={{ color: p.SUB }}
+            >
+              {t('landing.admin.mockup.selectTimeRange', 'Select Time Range')}
+            </span>
+            <span className="flex-1" />
+            <span
+              className="text-[10px] font-black leading-none flex-shrink-0"
+              style={{ color: p.TEXT }}
+            >
+              {t('landing.admin.mockup.allDay', 'All day')}
+            </span>
+            <ChevronDown
+              size={13}
+              className="flex-shrink-0"
+              style={{ color: p.isDarkMode ? '#4A4856' : '#CBD5E1' }}
+              strokeWidth={2.25}
+            />
+          </div>
+        </div>
+
+        {/* MASTER NET SALES CARD — green feature card from OwnerOverviewScreen */}
+        <div
+          className="flex-shrink-0 rounded-[14px] p-2.5 relative overflow-hidden"
+          style={{
+            background: `linear-gradient(145deg, ${G1} 0%, ${G2} 50%, ${G3} 100%)`,
+          }}
+        >
+          <div className="flex items-center justify-between mb-1.5">
+            <div
+              className="w-7 h-7 rounded-lg flex items-center justify-center"
+              style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
+            >
+              <CreditCard size={14} className="text-white" strokeWidth={2.2} />
+            </div>
+            <div
+              className="flex items-center gap-1 px-1.5 py-0.5 rounded-full"
+              style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
+            >
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-70" />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-white" />
+              </span>
+              <span className="text-[7px] font-black text-white tracking-wide">
+                {t('landing.admin.mockup.live', 'LIVE')}
+              </span>
+            </div>
+          </div>
+          <p className="text-[7px] font-extrabold tracking-[0.12em] text-white/85 uppercase mb-0.5">
+            {t('landing.admin.mockup.totalSales', 'Total Sales')}
+          </p>
+          <p className="text-[20px] font-black text-white leading-none tracking-tight">
+            2,450 <span className="text-[12px] font-bold text-white/80">JOD</span>
+          </p>
+          <div className="flex items-center gap-1 mt-1.5">
+            <Activity size={9} className="text-white" />
+            <span className="text-[6.5px] font-bold text-white/90 tracking-wide uppercase">
+              {t('landing.admin.mockup.includesTax', 'Includes tax and other charges')}
+            </span>
+          </div>
+        </div>
+
+        {/* Metric grid — Total Profit / Orders / Refunds / Avg Order */}
+        <div className="grid grid-cols-2 gap-1.5 flex-shrink-0">
+          {metrics.map((m) => (
+            <div
+              key={m.label}
+              className="rounded-[12px] border px-2 py-1.5"
+              style={{ backgroundColor: p.CARD, borderColor: p.BORDER }}
+            >
+              <div
+                className="w-5 h-5 rounded-md flex items-center justify-center mb-1"
+                style={{ backgroundColor: m.bg }}
+              >
+                <m.icon size={11} style={{ color: m.color }} strokeWidth={2.3} />
+              </div>
+              <div className="text-[10px] font-black leading-none tracking-tight" style={{ color: p.TEXT }}>
+                {m.value}
+                {m.currency ? (
+                  <span className="text-[7px] font-bold ml-0.5" style={{ color: p.SUB }}>
+                    {m.currency}
+                  </span>
+                ) : null}
+              </div>
+              <div className="text-[6.5px] font-bold mt-0.5 truncate" style={{ color: p.SUB }}>
+                {m.label}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Quick management row — peeks if space allows */}
+        {!compact && (
+          <div
+            className="rounded-[12px] border px-2 py-1.5 flex items-center gap-2 flex-shrink-0 min-h-0"
+            style={{
+              backgroundColor: p.isDarkMode ? '#252836' : '#FAFAFA',
+              borderColor: p.isDarkMode ? '#2D2B3A' : '#EBEBEB',
+            }}
+          >
+            <div
+              className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0"
+              style={{ backgroundColor: '#EEF2FF' }}
+            >
+              <Users size={12} style={{ color: '#4F46E5' }} strokeWidth={2.2} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[8px] font-black truncate" style={{ color: p.TEXT_MAIN }}>
+                {t('landing.admin.mockup.staffManagement', 'Staff Management')}
+              </p>
+              <p className="text-[7px] font-semibold" style={{ color: p.SUB }}>
+                12 {t('landing.admin.mockup.staff')}
+              </p>
+            </div>
+            <ChevronRight size={12} style={{ color: p.isDarkMode ? '#4A4856' : '#D1D5DB' }} />
+          </div>
+        )}
+      </div>
+
+      <OwnerBottomNav active="home" compact={compact} />
+    </div>
+  );
+};
+
+/**
+ * Locations — structure mirrored from EstablishmentsScreen.tsx
+ * (hero pills → search + more → status/type filters → list card rows)
+ */
+const LocationsScreenMock = ({ statusPad = 0, compact = false }: { statusPad?: number; compact?: boolean }) => {
+  const { t } = useTranslation();
+  const p = useMockPalette();
+
+  const locations = [
+    {
+      name: t('landing.admin.mockup.downtownCafe'),
+      type: t('landing.admin.mockup.typeCafe', 'Café'),
+      currency: 'JOD',
+      active: true,
+      icon: Coffee,
+    },
+    {
+      name: t('landing.admin.mockup.mallBranch'),
+      type: t('landing.admin.mockup.typeRestaurant', 'Restaurant'),
+      currency: 'JOD',
+      active: true,
+      icon: Store,
+    },
+    {
+      name: t('landing.admin.mockup.airportBranch', 'Airport Branch'),
+      type: t('landing.admin.mockup.typeCafe', 'Café'),
+      currency: 'JOD',
+      active: true,
+      icon: Coffee,
+    },
+  ];
+
+  return (
+    <div className="w-full h-full flex flex-col relative z-10" style={{ backgroundColor: p.BG }}>
+      <OwnerHeader
+        title={t('landing.admin.mockup.navLocations')}
+        statusPad={statusPad}
+        showBell
+        bellCount={7}
+        compact={compact}
+      />
+
+      <div className="flex-1 min-h-0 overflow-hidden flex flex-col px-2.5 pt-2 gap-2">
+        {/* OwnerScreenHero pills: Locations + Active */}
+        <div
+          className="flex items-stretch rounded-2xl border px-1 py-2.5"
+          style={{ backgroundColor: p.CARD, borderColor: p.BORDER }}
+        >
+          {[
+            {
+              v: '3',
+              l: t('landing.admin.mockup.navLocations'),
+              icon: MapPin,
+              color: G1,
+              bg: 'rgba(125,198,162,0.12)',
+            },
+            {
+              v: '3',
+              l: t('landing.admin.mockup.statusActive', 'Active'),
+              icon: Zap,
+              color: G1,
+              bg: 'rgba(125,198,162,0.12)',
+            },
+          ].map((s, i) => (
+            <div key={s.l} className="flex flex-1 items-center">
+              {i > 0 && <div className="w-px h-8 self-center" style={{ backgroundColor: p.BORDER }} />}
+              <div className="flex-1 flex flex-col items-center gap-1">
+                <div
+                  className="w-6 h-6 rounded-lg flex items-center justify-center"
+                  style={{ backgroundColor: s.bg }}
+                >
+                  <s.icon size={12} style={{ color: s.color }} strokeWidth={2.3} />
+                </div>
+                <span className="font-black text-[13px] leading-none" style={{ color: p.TEXT }}>
+                  {s.v}
+                </span>
+                <span className="text-[6.5px] font-extrabold uppercase tracking-wide" style={{ color: p.SUB }}>
+                  {s.l}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Search row + more button (EstablishmentsScreen) */}
+        <div className="flex items-center gap-1.5">
+          <div
+            className="flex-1 flex items-center gap-2 rounded-xl px-2.5 py-2 border"
+            style={{ backgroundColor: p.CARD, borderColor: p.LIST_BORDER }}
+          >
+            <Search size={12} style={{ color: p.SUB }} />
+            <span className="text-[10px] font-semibold" style={{ color: p.SUB }}>
+              {t('landing.admin.mockup.searchLocationsCount', 'Search 3 locations...')}
+            </span>
+          </div>
+          <div
+            className="w-9 h-9 rounded-xl border flex items-center justify-center flex-shrink-0"
+            style={{ backgroundColor: p.CARD, borderColor: p.LIST_BORDER }}
+          >
+            <MoreHorizontal size={16} style={{ color: G1 }} strokeWidth={2.2} />
+          </div>
+        </div>
+
+        {/* ScreenFilterBar — Status + Type */}
+        <div className="flex gap-1.5">
+          {[
+            {
+              icon: SlidersHorizontal,
+              label: t('landing.admin.mockup.filterStatus', 'Status'),
+            },
+            {
+              icon: Briefcase,
+              label: t('landing.admin.mockup.filterType', 'Type'),
+            },
+          ].map((f) => (
+            <div
+              key={f.label}
+              className="flex items-center gap-1 rounded-full border px-2.5 py-1.5"
+              style={{ backgroundColor: p.CARD, borderColor: p.LIST_BORDER }}
+            >
+              <f.icon size={10} style={{ color: G1 }} strokeWidth={2.2} />
+              <span className="text-[8px] font-bold" style={{ color: p.TEXT }}>
+                {f.label}
+              </span>
+              <ChevronDown size={10} style={{ color: p.SUB }} />
+            </div>
+          ))}
+        </div>
+
+        {/* Single list card with divider rows (EstablishmentRow) */}
+        <div
+          className="rounded-2xl border overflow-hidden flex-1 min-h-0"
+          style={{ backgroundColor: p.CARD, borderColor: p.LIST_BORDER }}
+        >
+          {locations.map((loc, index) => (
+            <div
+              key={loc.name}
+              className="flex items-center gap-2.5 px-2.5 py-2.5"
+              style={{
+                borderBottom:
+                  index < locations.length - 1 ? `1px solid ${p.LIST_BORDER}` : 'none',
+              }}
+            >
+              <div
+                className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ backgroundColor: p.ICON_BG }}
+              >
+                <loc.icon size={15} style={{ color: '#1D7A52' }} strokeWidth={2.2} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[11px] font-black truncate" style={{ color: p.TEXT }}>
+                  {loc.name}
+                </p>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className="text-[8px] font-semibold" style={{ color: p.SUB }}>
+                    {loc.type}
+                  </span>
+                  <span
+                    className="text-[7px] font-black px-1.5 py-0.5 rounded-md"
+                    style={{
+                      backgroundColor: p.isDarkMode ? '#29313B' : '#F1F0F0',
+                      color: p.isDarkMode ? '#D0D7DE' : '#666666',
+                    }}
+                  >
+                    {loc.currency}
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5 flex-shrink-0">
+                <span
+                  className="w-2 h-2 rounded-full"
+                  style={{ backgroundColor: loc.active ? '#3A9E72' : '#DDDDDD' }}
+                />
+                <div
+                  className="w-7 h-7 rounded-lg flex items-center justify-center"
+                  style={{ backgroundColor: p.SURFACE }}
+                >
+                  <ExternalLink size={12} style={{ color: G1 }} strokeWidth={2.2} />
+                </div>
+                <div
+                  className="w-7 h-7 rounded-lg flex items-center justify-center"
+                  style={{ backgroundColor: p.SURFACE }}
+                >
+                  <MoreHorizontal size={12} style={{ color: p.SUB }} strokeWidth={2.2} />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <OwnerBottomNav active="locations" compact={compact} />
+    </div>
+  );
+};
+
+/**
+ * Brands — structure mirrored from BrandsScreen.tsx
+ * (hero pills → search + more → sort filter → brand list rows)
+ */
+const BrandsScreenMock = ({ statusPad = 0, compact = false }: { statusPad?: number; compact?: boolean }) => {
+  const { t } = useTranslation();
+  const p = useMockPalette();
+
+  const brands = [
+    {
+      name: t('landing.admin.mockup.brandMintCafe', 'Mint Café Group'),
+      locations: 2,
+    },
+    {
+      name: t('landing.admin.mockup.brandAirportEats', 'Airport Eats'),
+      locations: 1,
+    },
+  ];
+
+  return (
+    <div className="w-full h-full flex flex-col relative z-10" style={{ backgroundColor: p.BG }}>
+      <OwnerHeader
+        title={t('landing.admin.mockup.navBrands')}
+        statusPad={statusPad}
+        showBell
+        bellCount={7}
+        compact={compact}
+      />
+
+      <div className="flex-1 min-h-0 overflow-hidden flex flex-col px-2.5 pt-2 gap-2">
+        {/* Hero: Brands + linked Locations */}
+        <div
+          className="flex items-stretch rounded-2xl border px-1 py-2.5"
+          style={{ backgroundColor: p.CARD, borderColor: p.BORDER }}
+        >
+          {[
+            {
+              v: '2',
+              l: t('landing.admin.mockup.navBrands'),
+              icon: Briefcase,
+              color: G1,
+              bg: 'rgba(125,198,162,0.12)',
+            },
+            {
+              v: '3',
+              l: t('landing.admin.mockup.navLocations'),
+              icon: Link2,
+              color: '#8B5CF6',
+              bg: 'rgba(139,92,246,0.12)',
+            },
+          ].map((s, i) => (
+            <div key={s.l} className="flex flex-1 items-center">
+              {i > 0 && <div className="w-px h-8 self-center" style={{ backgroundColor: p.BORDER }} />}
+              <div className="flex-1 flex flex-col items-center gap-1">
+                <div
+                  className="w-6 h-6 rounded-lg flex items-center justify-center"
+                  style={{ backgroundColor: s.bg }}
+                >
+                  <s.icon size={12} style={{ color: s.color }} strokeWidth={2.3} />
+                </div>
+                <span className="font-black text-[13px] leading-none" style={{ color: p.TEXT }}>
+                  {s.v}
+                </span>
+                <span className="text-[6.5px] font-extrabold uppercase tracking-wide" style={{ color: p.SUB }}>
+                  {s.l}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-1.5">
+          <div
+            className="flex-1 flex items-center gap-2 rounded-xl px-2.5 py-2 border"
+            style={{ backgroundColor: p.CARD, borderColor: p.LIST_BORDER }}
+          >
+            <Search size={12} style={{ color: p.SUB }} />
+            <span className="text-[10px] font-semibold" style={{ color: p.SUB }}>
+              {t('landing.admin.mockup.searchBrands', 'Search brands')}
+            </span>
+          </div>
+          <div
+            className="w-9 h-9 rounded-xl border flex items-center justify-center flex-shrink-0"
+            style={{ backgroundColor: p.CARD, borderColor: p.LIST_BORDER }}
+          >
+            <MoreHorizontal size={16} style={{ color: G1 }} strokeWidth={2.2} />
+          </div>
+        </div>
+
+        <div className="flex gap-1.5">
+          <div
+            className="flex items-center gap-1 rounded-full border px-2.5 py-1.5"
+            style={{ backgroundColor: p.CARD, borderColor: p.LIST_BORDER }}
+          >
+            <Activity size={10} style={{ color: G1 }} strokeWidth={2.2} />
+            <span className="text-[8px] font-bold" style={{ color: p.TEXT }}>
+              {t('landing.admin.mockup.sortBy', 'Sort')}
+            </span>
+            <ChevronDown size={10} style={{ color: p.SUB }} />
+          </div>
+        </div>
+
+        {/* Brand list card — briefcase avatar + locations_count + RowActionButtons */}
+        <div
+          className="rounded-2xl border overflow-hidden flex-1 min-h-0"
+          style={{ backgroundColor: p.CARD, borderColor: p.LIST_BORDER }}
+        >
+          {brands.map((b, index) => (
+            <div
+              key={b.name}
+              className="flex items-center gap-2.5 px-2.5 py-3"
+              style={{
+                borderBottom: index < brands.length - 1 ? `1px solid ${p.LIST_BORDER}` : 'none',
+              }}
+            >
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{
+                  backgroundColor: p.isDarkMode ? p.SURFACE : 'rgba(125,198,162,0.08)',
+                }}
+              >
+                <Briefcase size={16} style={{ color: G1 }} strokeWidth={2.2} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[11px] font-black truncate" style={{ color: p.TEXT }}>
+                  {b.name}
+                </p>
+                <p className="text-[8px] font-semibold mt-0.5" style={{ color: p.SUB }}>
+                  {t('landing.admin.mockup.locationsCount', {
+                    count: b.locations,
+                    defaultValue: `${b.locations} locations`,
+                  })}
+                </p>
+              </div>
+              <div className="flex items-center gap-1 flex-shrink-0">
+                <div
+                  className="w-7 h-7 rounded-lg flex items-center justify-center"
+                  style={{ backgroundColor: p.SURFACE }}
+                >
+                  <ExternalLink size={12} style={{ color: G1 }} strokeWidth={2.2} />
+                </div>
+                <div
+                  className="w-7 h-7 rounded-lg flex items-center justify-center"
+                  style={{ backgroundColor: p.SURFACE }}
+                >
+                  <MoreHorizontal size={12} style={{ color: p.SUB }} strokeWidth={2.2} />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <OwnerBottomNav active="brands" compact={compact} />
+    </div>
+  );
+};
+
+/**
+ * Premium iPhone chassis
  */
 const IPhoneFrame = ({
   children,
@@ -535,7 +1173,6 @@ const IPhoneFrame = ({
   style?: React.CSSProperties;
 }) => (
   <div className={className} style={style}>
-    {/* Outer titanium shell */}
     <div
       className="relative w-full h-full rounded-[44px] p-[2px]"
       style={{
@@ -545,60 +1182,38 @@ const IPhoneFrame = ({
           '0 30px 60px -12px rgba(0,0,0,0.65), 0 12px 24px -8px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.22)',
       }}
     >
-      {/* Inner black bezel */}
       <div
         className="relative w-full h-full rounded-[42px] p-[10px] overflow-hidden"
         style={{
-          background:
-            'linear-gradient(180deg, #1a1a1c 0%, #0a0a0b 50%, #111113 100%)',
+          background: 'linear-gradient(180deg, #1a1a1c 0%, #0a0a0b 50%, #111113 100%)',
           boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.06)',
         }}
       >
-        {/* Side rails — volume (left) */}
         <div
           className="absolute -left-[3px] top-[18%] w-[3px] h-[22px] rounded-l-sm z-40"
-          style={{
-            background: 'linear-gradient(90deg, #4a4a4e, #2c2c2e)',
-            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.15)',
-          }}
+          style={{ background: 'linear-gradient(90deg, #4a4a4e, #2c2c2e)' }}
         />
         <div
           className="absolute -left-[3px] top-[26%] w-[3px] h-[36px] rounded-l-sm z-40"
-          style={{
-            background: 'linear-gradient(90deg, #4a4a4e, #2c2c2e)',
-            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.15)',
-          }}
+          style={{ background: 'linear-gradient(90deg, #4a4a4e, #2c2c2e)' }}
         />
         <div
           className="absolute -left-[3px] top-[36%] w-[3px] h-[36px] rounded-l-sm z-40"
-          style={{
-            background: 'linear-gradient(90deg, #4a4a4e, #2c2c2e)',
-            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.15)',
-          }}
+          style={{ background: 'linear-gradient(90deg, #4a4a4e, #2c2c2e)' }}
         />
-        {/* Power button (right) */}
         <div
           className="absolute -right-[3px] top-[28%] w-[3px] h-[56px] rounded-r-sm z-40"
-          style={{
-            background: 'linear-gradient(270deg, #4a4a4e, #2c2c2e)',
-            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.15)',
-          }}
+          style={{ background: 'linear-gradient(270deg, #4a4a4e, #2c2c2e)' }}
         />
 
-        {/* Screen glass — app content fills edge-to-edge (no dead bezel strip under BottomNav) */}
         <div className="relative h-full w-full overflow-hidden rounded-[32px] bg-white dark:bg-[#1f1d2b]">
           <div className="absolute inset-0 flex flex-col overflow-hidden">
-            {/* Status icons only — no separate green strip (avoids seam line) */}
             <div className="absolute top-0 inset-x-0 z-30 flex h-[28px] items-end justify-between px-5 pb-0.5 pointer-events-none">
               <span className="text-[10px] font-semibold tracking-tight text-white">9:41</span>
               <div className="flex items-center gap-1">
                 <div className="flex items-end gap-[1.5px] h-2.5">
                   {[3, 5, 7, 9].map((h) => (
-                    <div
-                      key={h}
-                      className="w-[2.5px] rounded-[0.5px] bg-white"
-                      style={{ height: h }}
-                    />
+                    <div key={h} className="w-[2.5px] rounded-[0.5px] bg-white" style={{ height: h }} />
                   ))}
                 </div>
                 <svg width="14" height="10" viewBox="0 0 14 10" className="ml-0.5">
@@ -625,7 +1240,6 @@ const IPhoneFrame = ({
               </div>
             </div>
 
-            {/* Dynamic Island */}
             <div
               className="absolute left-1/2 top-[7px] -translate-x-1/2 h-[22px] w-[90px] rounded-full flex items-center justify-end pr-2.5 z-40 pointer-events-none"
               style={{ background: '#000' }}
@@ -640,11 +1254,8 @@ const IPhoneFrame = ({
               </div>
             </div>
 
-            {/* App content fills from top — green header includes status pad */}
             <div className="flex-1 min-h-0 overflow-hidden">{children}</div>
           </div>
-
-          {/* Home indicator lives inside the app BottomNav for theme-aware contrast */}
         </div>
       </div>
     </div>
@@ -652,8 +1263,7 @@ const IPhoneFrame = ({
 );
 
 /**
- * Premium Android chassis — center punch-hole, flatter corners, graphite frame,
- * side fingerprint power button, taller aspect feel.
+ * Premium Android chassis
  */
 const AndroidFrame = ({
   children,
@@ -665,7 +1275,6 @@ const AndroidFrame = ({
   style?: React.CSSProperties;
 }) => (
   <div className={className} style={style}>
-    {/* Outer graphite shell — slightly squarer than iPhone */}
     <div
       className="relative w-full h-full rounded-[36px] p-[2.5px]"
       style={{
@@ -675,7 +1284,6 @@ const AndroidFrame = ({
           '0 36px 70px -14px rgba(0,0,0,0.7), 0 14px 28px -10px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.18)',
       }}
     >
-      {/* Accent rim */}
       <div
         className="relative w-full h-full rounded-[34px] p-[9px] overflow-hidden"
         style={{
@@ -683,33 +1291,21 @@ const AndroidFrame = ({
           boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.05)',
         }}
       >
-        {/* Left rails — volume */}
         <div
           className="absolute -left-[3.5px] top-[22%] w-[3.5px] h-[42px] rounded-l-[2px] z-40"
-          style={{
-            background: 'linear-gradient(90deg, #55555a, #2a2a2c)',
-            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.12)',
-          }}
+          style={{ background: 'linear-gradient(90deg, #55555a, #2a2a2c)' }}
         />
-        {/* Right — power + fingerprint pill */}
         <div
           className="absolute -right-[3.5px] top-[24%] w-[3.5px] h-[28px] rounded-r-[2px] z-40"
-          style={{
-            background: 'linear-gradient(270deg, #55555a, #2a2a2c)',
-          }}
+          style={{ background: 'linear-gradient(270deg, #55555a, #2a2a2c)' }}
         />
         <div
           className="absolute -right-[4px] top-[36%] w-[4px] h-[48px] rounded-r-[3px] z-40"
-          style={{
-            background: 'linear-gradient(270deg, #6a6a70, #2e2e32 40%, #4a4a4e)',
-            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.18)',
-          }}
+          style={{ background: 'linear-gradient(270deg, #6a6a70, #2e2e32 40%, #4a4a4e)' }}
         />
 
-        {/* Screen — app fills edge-to-edge; no fixed dark strip under BottomNav */}
         <div className="relative h-full w-full overflow-hidden rounded-[26px] bg-white dark:bg-[#1f1d2b]">
           <div className="absolute inset-0 flex flex-col overflow-hidden">
-            {/* Status icons + punch-hole overlay on app green header */}
             <div className="absolute top-0 inset-x-0 h-[24px] z-30 pointer-events-none flex items-center justify-between px-4">
               <span className="text-[10px] font-medium text-white">9:41</span>
               <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-40">
@@ -720,8 +1316,7 @@ const AndroidFrame = ({
                   <div
                     className="w-[7px] h-[7px] rounded-full relative"
                     style={{
-                      background:
-                        'radial-gradient(circle at 32% 32%, #1e3a5f 0%, #0b1220 50%, #000 100%)',
+                      background: 'radial-gradient(circle at 32% 32%, #1e3a5f 0%, #0b1220 50%, #000 100%)',
                     }}
                   >
                     <div className="absolute top-[1px] left-[1px] w-[2px] h-[2px] rounded-full bg-sky-300/35" />
@@ -749,10 +1344,7 @@ const AndroidFrame = ({
                 <div className="w-[18px] h-[9px] rounded-[2px] border border-white relative overflow-hidden">
                   <div
                     className="absolute inset-[1.5px] rounded-[1px]"
-                    style={{
-                      width: '70%',
-                      background: 'linear-gradient(90deg, #fff, #e8e8e8)',
-                    }}
+                    style={{ width: '70%', background: 'linear-gradient(90deg, #fff, #e8e8e8)' }}
                   />
                   <div className="absolute -right-[2px] top-1/2 -translate-y-1/2 w-[1.5px] h-[3.5px] bg-white/70 rounded-r-sm" />
                 </div>
@@ -767,24 +1359,119 @@ const AndroidFrame = ({
   </div>
 );
 
+/* ─── Screen showcase config ─── */
+
+type ScreenId = 'overview' | 'locations' | 'brands' | 'notifications';
+
+const SCREENS: { id: ScreenId; labelKey: string; labelFallback: string }[] = [
+  { id: 'overview', labelKey: 'landing.admin.mockup.screenOverview', labelFallback: 'Overview' },
+  { id: 'locations', labelKey: 'landing.admin.mockup.screenLocations', labelFallback: 'Locations' },
+  { id: 'brands', labelKey: 'landing.admin.mockup.screenBrands', labelFallback: 'Brands' },
+  { id: 'notifications', labelKey: 'landing.admin.mockup.screenAlerts', labelFallback: 'Alerts' },
+];
+
+/** Creative transition styles that cycle each advance */
+type TransitionStyle = 'flip' | 'rise' | 'cube' | 'zoom';
+
+const PHONE_TRANSITIONS: Record<
+  TransitionStyle,
+  {
+    initial: Record<string, number | string>;
+    animate: Record<string, number | string>;
+    exit: Record<string, number | string>;
+  }
+> = {
+  flip: {
+    initial: { opacity: 0, rotateY: 72, scale: 0.88, x: 40 },
+    animate: { opacity: 1, rotateY: 0, scale: 1, x: 0 },
+    exit: { opacity: 0, rotateY: -72, scale: 0.88, x: -40 },
+  },
+  rise: {
+    initial: { opacity: 0, y: 80, scale: 0.9, rotateX: 18 },
+    animate: { opacity: 1, y: 0, scale: 1, rotateX: 0 },
+    exit: { opacity: 0, y: -60, scale: 0.92, rotateX: -12 },
+  },
+  cube: {
+    initial: { opacity: 0, rotateY: -90, x: 60, scale: 0.85 },
+    animate: { opacity: 1, rotateY: 0, x: 0, scale: 1 },
+    exit: { opacity: 0, rotateY: 90, x: -60, scale: 0.85 },
+  },
+  zoom: {
+    initial: { opacity: 0, scale: 1.22, y: 24 },
+    animate: { opacity: 1, scale: 1, y: 0 },
+    exit: { opacity: 0, scale: 0.78, y: -28 },
+  },
+};
+
+const TRANSITION_ORDER: TransitionStyle[] = ['flip', 'rise', 'cube', 'zoom'];
+
+function renderOwnerScreen(id: ScreenId, device: 'iphone' | 'android') {
+  const statusPad = device === 'iphone' ? 28 : 22;
+  switch (id) {
+    case 'overview':
+      return <OverviewScreenMock statusPad={statusPad} />;
+    case 'locations':
+      return <LocationsScreenMock statusPad={statusPad} />;
+    case 'brands':
+      return <BrandsScreenMock statusPad={statusPad} />;
+    case 'notifications':
+    default:
+      return (
+        <NotificationsScreenMock
+          activeTab={device === 'android' ? 'stock' : 'all'}
+          statusPad={statusPad}
+        />
+      );
+  }
+}
+
 export const AdminControl = () => {
   const { t } = useTranslation();
   const hasOwnerAndroidDownload = Boolean(OWNER_ANDROID_DOWNLOAD_URL);
   const hasOwnerIosDownload = Boolean(OWNER_IOS_DOWNLOAD_URL);
 
-  const [isInView, setIsInView] = useState(false);
-  const [activePhone, setActivePhone] = useState<'iphone' | 'android'>('iphone');
+  const [hasStarted, setHasStarted] = useState(false);
+  const [screenIndex, setScreenIndex] = useState(0);
+  const [device, setDevice] = useState<'iphone' | 'android'>('iphone');
+  const [transitionStyle, setTransitionStyle] = useState<TransitionStyle>('flip');
+  const [animKey, setAnimKey] = useState(0);
+  const startedRef = useRef(false);
+  const userPausedRef = useRef(false);
 
+  const advance = useCallback(() => {
+    if (userPausedRef.current) return;
+    setScreenIndex((i) => (i + 1) % SCREENS.length);
+    setDevice((d) => (d === 'iphone' ? 'android' : 'iphone'));
+    setTransitionStyle((curr) => {
+      const idx = TRANSITION_ORDER.indexOf(curr);
+      return TRANSITION_ORDER[(idx + 1) % TRANSITION_ORDER.length];
+    });
+    setAnimKey((k) => k + 1);
+  }, []);
+
+  // Autoplay is independent of scroll direction — starts once when section is first seen
   useEffect(() => {
-    if (isInView) {
-      const interval = setInterval(() => {
-        setActivePhone((curr) => (curr === 'iphone' ? 'android' : 'iphone'));
-      }, 3000);
-      return () => clearInterval(interval);
-    } else {
-      setActivePhone('iphone');
-    }
-  }, [isInView]);
+    if (!hasStarted) return;
+    const interval = setInterval(advance, 3800);
+    return () => clearInterval(interval);
+  }, [hasStarted, advance]);
+
+  const goToScreen = (index: number) => {
+    if (index === screenIndex) return;
+    setScreenIndex(index);
+    setDevice((d) => (d === 'iphone' ? 'android' : 'iphone'));
+    setTransitionStyle((curr) => {
+      const idx = TRANSITION_ORDER.indexOf(curr);
+      return TRANSITION_ORDER[(idx + 1) % TRANSITION_ORDER.length];
+    });
+    setAnimKey((k) => k + 1);
+  };
+
+  const currentScreen = SCREENS[screenIndex];
+  const variants = PHONE_TRANSITIONS[transitionStyle];
+
+  const phoneShellClass =
+    'w-[230px] h-[470px] sm:w-[290px] sm:h-[590px] lg:w-[310px] lg:h-[640px]';
 
   return (
     <section
@@ -796,60 +1483,154 @@ export const AdminControl = () => {
 
       <div className="container mx-auto px-6 md:px-10 lg:px-16 max-w-[1280px]">
         <div className="flex flex-col-reverse lg:flex-row items-center gap-12 lg:gap-16">
-          <motion.div
-            initial={{ opacity: 0, x: -50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: false, margin: '-100px' }}
-            onViewportEnter={() => setIsInView(true)}
-            onViewportLeave={() => {
-              setIsInView(false);
-              setActivePhone('iphone');
+          {/* Phones showcase — animation is timer-based, not scroll-linked */}
+          <div
+            className="w-full lg:w-1/2 relative flex flex-col items-center select-none"
+            onMouseEnter={() => {
+              userPausedRef.current = true;
             }}
-            transition={{ duration: 0.8 }}
-            className="w-full lg:w-1/2 relative flex justify-center items-start pt-8 sm:pt-4 lg:pt-0 lg:items-center h-[440px] sm:h-[540px] lg:h-[620px] lg:justify-start select-none"
+            onMouseLeave={() => {
+              userPausedRef.current = false;
+            }}
           >
-            {/* Back — Android (Stock notifications) */}
+            {/* Kick off autoplay once when phones enter the viewport; never resets on scroll-up */}
             <motion.div
-              style={{
-                originY: 0,
+              className="absolute inset-0 pointer-events-none"
+              onViewportEnter={() => {
+                if (!startedRef.current) {
+                  startedRef.current = true;
+                  setHasStarted(true);
+                }
               }}
-              animate={{
-                x: "-50%",
-                rotate: activePhone === 'android' ? 0 : 5,
-                scale: activePhone === 'android' ? 0.95 : 0.85,
-                opacity: activePhone === 'android' ? 1 : 0,
-                zIndex: activePhone === 'android' ? 20 : 10,
-              }}
-              transition={{ duration: 0.6, ease: "easeInOut" }}
-              className="absolute top-2 sm:top-0 left-1/2 w-[230px] h-[470px] sm:w-[290px] sm:h-[590px] lg:w-[310px] lg:h-[640px] origin-top"
-            >
-              <AndroidFrame className="w-full h-full">
-                <NotificationsScreenMock activeTab="stock" statusPad={22} />
-              </AndroidFrame>
-            </motion.div>
+              viewport={{ once: true, amount: 0.25 }}
+            />
 
-            {/* Front — iPhone (All notifications, full fidelity) */}
-            <motion.div
-              style={{
-                originY: 0,
-              }}
-              animate={{
-                x: "-50%",
-                rotate: activePhone === 'iphone' ? 0 : -5,
-                scale: activePhone === 'iphone' ? 0.95 : 0.85,
-                opacity: activePhone === 'iphone' ? 1 : 0,
-                zIndex: activePhone === 'iphone' ? 20 : 10,
-              }}
-              transition={{ duration: 0.6, ease: "easeInOut" }}
-              className="absolute top-2 sm:top-0 left-1/2 w-[230px] h-[470px] sm:w-[290px] sm:h-[590px] lg:w-[310px] lg:h-[640px] z-20 origin-top"
-            >
-              <IPhoneFrame className="w-full h-full">
-                <NotificationsScreenMock activeTab="all" statusPad={28} />
-              </IPhoneFrame>
-            </motion.div>
+            {/* Phone stage — fixed height so controls sit cleanly underneath */}
+            <div className="relative w-full flex justify-center items-start h-[440px] sm:h-[560px] lg:h-[620px]">
+              {/* Soft orbital ring */}
+              <motion.div
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[420px] h-[420px] lg:w-[500px] lg:h-[500px] border border-mintcom-green/20 rounded-full -z-10"
+                animate={{ rotate: 360 }}
+                transition={{ duration: 28, repeat: Infinity, ease: 'linear' }}
+              />
+              <motion.div
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] lg:w-[360px] lg:h-[360px] border border-mintcom-green/10 rounded-full -z-10"
+                animate={{ rotate: -360 }}
+                transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+              />
 
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[420px] h-[420px] lg:w-[500px] lg:h-[500px] border border-mintcom-green/20 rounded-full -z-10 animate-[spin_20s_linear_infinite]" />
-          </motion.div>
+              {/* Single phone — creative transition per screen */}
+              <div
+                className={`relative z-20 ${phoneShellClass}`}
+                style={{ perspective: 1400 }}
+              >
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.div
+                    key={`${animKey}-${currentScreen.id}-${device}`}
+                    className="absolute inset-0"
+                    style={{ transformStyle: 'preserve-3d' }}
+                    initial={variants.initial}
+                    animate={variants.animate}
+                    exit={variants.exit}
+                    transition={{
+                      type: 'spring',
+                      stiffness: 180,
+                      damping: 22,
+                      mass: 0.9,
+                    }}
+                  >
+                    {/* Glow pulse on each change */}
+                    <motion.div
+                      className="absolute -inset-6 rounded-[56px] -z-10"
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: [0, 0.55, 0], scale: [0.92, 1.05, 1.1] }}
+                      transition={{ duration: 0.9, ease: 'easeOut' }}
+                      style={{
+                        background:
+                          'radial-gradient(circle, rgba(125,198,162,0.45) 0%, transparent 70%)',
+                      }}
+                    />
+                    {device === 'iphone' ? (
+                      <IPhoneFrame className="w-full h-full">
+                        {renderOwnerScreen(currentScreen.id, 'iphone')}
+                      </IPhoneFrame>
+                    ) : (
+                      <AndroidFrame className="w-full h-full">
+                        {renderOwnerScreen(currentScreen.id, 'android')}
+                      </AndroidFrame>
+                    )}
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+            </div>
+
+            {/*
+              Controls sit fully UNDER the phone (not overlaid on the bezel):
+              1) progress dots + platform/screen label
+              2) screen pills (Overview / Locations / Brands / Alerts)
+            */}
+            <div className="relative z-30 mt-3 sm:mt-4 flex w-full max-w-[340px] flex-col items-center gap-3 px-2">
+              {/* Dots + clear platform label */}
+              <div className="flex flex-col items-center gap-2">
+                <div className="flex items-center gap-1.5" role="tablist" aria-label="Owner app screens">
+                  {SCREENS.map((screen, i) => (
+                    <button
+                      key={`dot-${screen.id}`}
+                      type="button"
+                      role="tab"
+                      aria-selected={i === screenIndex}
+                      aria-label={t(screen.labelKey, screen.labelFallback)}
+                      onClick={() => goToScreen(i)}
+                      className={`h-1.5 rounded-full transition-all duration-300 ${
+                        i === screenIndex
+                          ? 'w-5 bg-mintcom-green'
+                          : 'w-1.5 bg-gray-300 hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500'
+                      }`}
+                    />
+                  ))}
+                </div>
+                <p className="text-center text-[12px] sm:text-[13px] font-bold tracking-wide text-gray-700 dark:text-gray-200">
+                  <span className="text-mintcom-green">
+                    {device === 'iphone' ? 'iOS' : 'Android'}
+                  </span>
+                  <span className="mx-1.5 text-gray-400 dark:text-gray-500" aria-hidden>
+                    ·
+                  </span>
+                  <span>{t(currentScreen.labelKey, currentScreen.labelFallback)}</span>
+                </p>
+              </div>
+
+              {/* Screen pills — below the dots / label */}
+              <div className="flex w-full items-center justify-center gap-1 rounded-full border border-gray-200 bg-white px-1.5 py-1.5 shadow-md shadow-black/8 dark:border-white/15 dark:bg-[#1a1a1a] dark:shadow-black/40">
+                {SCREENS.map((screen, i) => {
+                  const active = i === screenIndex;
+                  return (
+                    <button
+                      key={screen.id}
+                      type="button"
+                      onClick={() => goToScreen(i)}
+                      className={`relative min-w-0 flex-1 px-2 sm:px-3 py-1.5 rounded-full text-[10px] sm:text-[11px] font-bold transition-colors duration-300 ${
+                        active
+                          ? 'text-white'
+                          : 'text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white'
+                      }`}
+                    >
+                      {active && (
+                        <motion.span
+                          layoutId="owner-screen-pill"
+                          className="absolute inset-0 rounded-full bg-mintcom-green"
+                          transition={{ type: 'spring', stiffness: 380, damping: 28 }}
+                        />
+                      )}
+                      <span className="relative z-10 truncate">
+                        {t(screen.labelKey, screen.labelFallback)}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
 
           {/* Right Side: Content */}
           <motion.div

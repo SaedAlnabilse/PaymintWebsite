@@ -82,6 +82,8 @@ import {
   Eye,
   ShieldAlert,
   Mail,
+  ScanFace,
+  CircleCheck,
 } from 'lucide-react';
 import { Logo } from './Logo';
 import { FeaturePosScreenshot } from './FeaturePosScreenshot';
@@ -1715,11 +1717,12 @@ function SimpleUiShot() {
               </span>
             </div>
           </div>
+          {/* Always white on green — never black/gray on mint */}
           <div className="mx-3 mb-3 rounded-xl bg-mintcom-green px-3.5 py-3 text-white shadow-sm sm:mx-3.5 sm:px-4">
-            <p className="text-[15px] font-semibold leading-tight sm:text-[16px]">
+            <p className="text-[15px] font-semibold leading-tight !text-white sm:text-[16px]">
               Current shift of Sam Cashier
             </p>
-            <p className="mt-1 text-[12px] font-medium text-white sm:text-[13px]">
+            <p className="mt-1 text-[12px] font-medium !text-white sm:text-[13px]">
               Shift started Tuesday 7/14/26 - 09:12 AM
             </p>
           </div>
@@ -1729,20 +1732,20 @@ function SimpleUiShot() {
         <div className="flex min-h-0 flex-1 gap-3 overflow-hidden">
           {/* LEFT */}
           <div className="flex w-[30%] min-w-0 shrink-0 flex-col gap-3">
-            {/* Net Sales primary */}
-            <div className="flex min-h-0 flex-1 flex-col justify-between rounded-xl bg-mintcom-green p-3.5 text-white">
+            {/* Net Sales primary — white text only on green */}
+            <div className="flex min-h-0 flex-1 flex-col justify-between rounded-xl bg-mintcom-green p-3.5 !text-white">
               <div className="flex items-center gap-3">
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white dark:bg-mintcom-surface text-mintcom-green">
                   <TrendingUp size={22} strokeWidth={2.25} />
                 </span>
                 <div className="min-w-0 text-start">
-                  <p className="text-[15px] font-semibold leading-tight">Net Sales</p>
-                  <p className="mt-0.5 text-[11px] font-normal text-white/80">
+                  <p className="text-[15px] font-semibold leading-tight !text-white">Net Sales</p>
+                  <p className="mt-0.5 text-[11px] font-normal !text-white/90">
                     Excludes tax and other charges
                   </p>
                 </div>
               </div>
-              <p className="mt-2 text-center text-[24px] font-extrabold tabular-nums tracking-tight sm:text-[28px]">
+              <p className="mt-2 text-center text-[24px] font-extrabold tabular-nums tracking-tight !text-white sm:text-[28px]">
                 {reportMoney(displayNet)}
               </p>
             </div>
@@ -2154,160 +2157,175 @@ function OnboardShot() {
 }
 
 /**
- * Secure & Reliable — real system surfaces:
- * Owner Account “Security tips” + SecurityVerificationModal (password re-auth).
+ * Secure & Reliable — real Admin Portal App Lock
+ * (shown when leaving the app and returning: Face ID + password fallback).
+ * Layout mirrors AppLockOverlay + auth.login Face ID strings from the portal.
  */
 function SecureShot() {
-  const tips = [
-    'Use unique passwords for every account',
-    'Update passwords periodically',
-    'Never share OTP or recovery codes',
-    'Enable two-factor authentication when available',
-  ];
-
   return (
     <div
-      className="relative flex h-full w-full overflow-hidden font-sans"
+      className="relative flex h-full w-full items-center justify-center overflow-hidden font-sans"
       style={{ width: DESIGN_W, height: DESIGN_H }}
     >
-      {/* Owner Account Management canvas */}
-      <div className="absolute inset-0 bg-gray-50 p-4 dark:bg-mintcom-dark">
-        <div className="mb-3">
-          <p className="text-[20px] font-bold tracking-tight text-gray-900 dark:text-white">Account</p>
-          <p className="mt-0.5 text-[12px] text-gray-500 dark:text-gray-400">Owner portal · security &amp; access</p>
-        </div>
+      {/* Soft stage */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#E8F0EC] via-[#F2F6F4] to-[#F8FAF9] dark:from-mintcom-dark dark:via-[#0c1525] dark:to-mintcom-dark" />
+      <div className="absolute left-1/2 top-1/2 h-[420px] w-[420px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-mintcom-green/20 blur-3xl dark:bg-mintcom-green/10" />
 
-        <div className="grid h-[calc(100%-3rem)] grid-cols-[1.15fr_0.95fr] gap-3">
-          {/* Security tips — OwnerAccountManagementPage */}
-          <div className="flex min-h-0 flex-col rounded-2xl border border-mintcom-green/20 bg-gradient-to-br from-mintcom-green/10 via-emerald-50/90 to-white p-5 shadow-sm dark:border-mintcom-green/25 dark:from-mintcom-green/15 dark:via-mintcom-surface dark:to-mintcom-surface dark:shadow-none">
-            <div className="mb-4 flex items-center gap-3">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-mintcom-green/20">
-                <Shield size={20} className="text-mintcom-green" />
-              </span>
-              <div>
-                <p className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-white">Security tips</p>
-                <p className="text-[11px] text-gray-500 dark:text-gray-400">Keep your account and logins safe</p>
-              </div>
-            </div>
-            <ul className="space-y-2 ps-[3.25rem] text-[12px] font-medium text-gray-600 dark:text-gray-300">
-              {tips.map((tip) => (
-                <li key={tip} className="flex items-start gap-2 leading-snug">
-                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-mintcom-green" />
-                  <span>{tip}</span>
-                </li>
-              ))}
-            </ul>
-            <div className="mt-auto grid grid-cols-2 gap-2 pt-4">
-              {(
-                [
-                  { icon: Lock, label: 'Password protected', sub: 'Master access key' },
-                  { icon: Shield, label: 'Role-based access', sub: 'Staff permissions' },
-                ] as const
-              ).map((c) => (
-                <div
-                  key={c.label}
-                  className="rounded-xl border border-mintcom-green/15 bg-white/80 px-3 py-2.5 dark:border-mintcom-green/20 dark:bg-mintcom-dark/60"
-                >
-                  <c.icon size={14} className="mb-1 text-mintcom-green" />
-                  <p className="text-[11px] font-bold text-gray-900 dark:text-white">{c.label}</p>
-                  <p className="text-[10px] text-gray-500 dark:text-gray-400">{c.sub}</p>
+      <div className="relative z-10 flex items-center gap-8 px-8">
+        {/* ── Hero phone: App Lock (leave app → return) ── */}
+        <div className="relative shrink-0" style={{ width: 286, height: 568 }}>
+          {/* Soft phone shadow plate */}
+          <div
+            className="absolute -inset-x-6 -bottom-4 top-10 rounded-[48px] bg-mintcom-green/15 blur-2xl dark:bg-mintcom-green/10"
+            aria-hidden
+          />
+          <div className="absolute inset-0 overflow-hidden rounded-[42px] border-[7px] border-[#1a1a1e] bg-[#1a1a1e] shadow-[0_36px_72px_-16px_rgba(0,0,0,0.55)]">
+            <span className="absolute -start-[9px] top-[108px] h-7 w-[3px] rounded-s-sm bg-[#2a2a30]" />
+            <span className="absolute -start-[9px] top-[148px] h-12 w-[3px] rounded-s-sm bg-[#2a2a30]" />
+            <span className="absolute -start-[9px] top-[210px] h-12 w-[3px] rounded-s-sm bg-[#2a2a30]" />
+            <span className="absolute -end-[9px] top-[168px] h-16 w-[3px] rounded-e-sm bg-[#2a2a30]" />
+
+            {/* Pure white lock canvas — matches real resume lock UI */}
+            <div className="flex h-full flex-col overflow-hidden rounded-[35px] bg-white dark:bg-[#12141A]">
+              {/* Status bar */}
+              <div className="relative flex shrink-0 items-center justify-between px-5 pb-0.5 pt-3 text-gray-900 dark:text-white">
+                <span className="w-12 text-[11px] font-semibold tracking-tight">9:41</span>
+                <div className="absolute left-1/2 top-[7px] h-[24px] w-[96px] -translate-x-1/2 rounded-full bg-black" />
+                <div className="flex w-14 items-center justify-end gap-[3px] opacity-90">
+                  <span className="h-[6px] w-[7px] rounded-[1px] bg-gray-900 dark:bg-white" />
+                  <span className="h-[8px] w-[7px] rounded-[1px] bg-gray-900 dark:bg-white" />
+                  <span className="h-[10px] w-[7px] rounded-[1px] bg-gray-900 dark:bg-white" />
+                  <span className="ms-0.5 h-[10px] w-[18px] rounded-[3px] border border-gray-900 dark:border-white">
+                    <span className="m-[1.5px] block h-[calc(100%-3px)] w-[72%] rounded-[1px] bg-gray-900 dark:bg-white" />
+                  </span>
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
 
-          {/* Danger zone panel (real owner account) */}
-          <div className="relative flex min-h-0 flex-col overflow-hidden rounded-2xl border border-red-500/25 bg-gradient-to-b from-white to-red-50/80 p-5 shadow-sm dark:border-red-500/30 dark:from-mintcom-surface dark:to-red-950/40 dark:shadow-none">
-            <div className="absolute -end-8 -top-8 h-28 w-28 rounded-full bg-red-500/15 blur-3xl" />
-            <div className="relative z-10 mb-3 flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-500/10">
-                <AlertTriangle size={18} className="text-red-500" />
-              </span>
-              <div>
-                <p className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-white">Danger zone</p>
-                <p className="text-[11px] text-gray-500 dark:text-gray-400">High-impact actions need re-auth</p>
+              {/* Sheet grabber (modal sheet feel) */}
+              <div className="flex shrink-0 justify-center pt-2.5 pb-1">
+                <span className="h-[4px] w-10 rounded-full bg-gray-200 dark:bg-white/15" />
+              </div>
+
+              {/* Lock content */}
+              <div className="flex min-h-0 flex-1 flex-col px-6 pb-3 pt-5">
+                <div className="flex flex-col items-center text-center">
+                  <p className="text-[14px] font-semibold text-gray-400 dark:text-gray-400">
+                    Welcome back
+                  </p>
+                  <p className="mt-1 text-[26px] font-black leading-none tracking-tight text-[#0F172A] dark:text-white">
+                    Sara Hassan
+                  </p>
+                </div>
+
+                {/* Face ID card — portal biometricPrompt / scanFace copy */}
+                <div className="mt-7 flex w-full flex-col items-center rounded-[22px] border border-gray-100 bg-[#FBFCFD] px-5 py-8 shadow-[0_1px_0_rgba(15,23,42,0.03),0_12px_32px_-18px_rgba(15,23,42,0.18)] dark:border-white/10 dark:bg-white/[0.04]">
+                  <span className="mb-5 flex h-[64px] w-[64px] items-center justify-center text-mintcom-green">
+                    <ScanFace size={48} strokeWidth={1.35} className="text-mintcom-green" />
+                  </span>
+                  <p className="text-center text-[17px] font-black leading-snug tracking-tight text-[#0F172A] dark:text-white">
+                    Enter app using Face
+                    <br />
+                    ID
+                  </p>
+                  <p className="mt-2.5 text-center text-[13px] font-medium leading-snug text-gray-400 dark:text-gray-400">
+                    Scan your face to continue.
+                  </p>
+                </div>
+
+                {/* Password fallback + Log In */}
+                <div className="mt-auto w-full space-y-3.5 pt-6">
+                  <div className="flex h-[50px] items-center rounded-2xl border border-gray-100 bg-[#F7F8FA] px-4 dark:border-white/10 dark:bg-white/[0.05]">
+                    <Lock size={16} className="me-3 shrink-0 text-mintcom-green" strokeWidth={2.1} />
+                    <span className="flex-1 text-[15px] font-bold tracking-[0.28em] text-gray-300 dark:text-gray-500">
+                      ••••••••
+                    </span>
+                    <Eye size={16} className="shrink-0 text-gray-300 dark:text-gray-500" strokeWidth={2} />
+                  </div>
+                  <span className="flex h-[50px] w-full items-center justify-center rounded-2xl bg-mintcom-green text-[16px] font-bold !text-white shadow-[0_10px_24px_-8px_rgba(125,198,162,0.55)]">
+                    Log In
+                  </span>
+                </div>
+              </div>
+
+              {/* Home indicator */}
+              <div className="flex shrink-0 justify-center bg-white pb-2.5 pt-1 dark:bg-[#12141A]">
+                <span
+                  className="h-[5px] w-[118px] rounded-full bg-gray-900/90 dark:bg-white/90"
+                  aria-hidden
+                />
               </div>
             </div>
-            <ul className="relative z-10 space-y-1.5 ps-[3.25rem] text-[11px] font-medium text-gray-600 dark:text-gray-300">
-              <li className="flex items-start gap-2">
-                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-red-400" />
-                Locations &amp; brands scheduled for removal
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-red-400" />
-                Staff access and login IDs stop working
-              </li>
-            </ul>
-            <span className="relative z-10 mt-auto flex items-center justify-center rounded-xl border border-red-500/20 bg-red-500/10 py-2.5 text-[12px] font-black tracking-wide text-red-600 dark:text-red-400">
-              Delete account
-            </span>
           </div>
         </div>
-      </div>
 
-      {/* SecurityVerificationModal — password re-auth for high-impact actions */}
-      <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40 p-5 backdrop-blur-sm dark:bg-black/55">
-        <div className="flex w-full max-w-md flex-col overflow-hidden rounded-xl border border-gray-200 bg-white font-sans shadow-2xl shadow-black/20 dark:border-white/10 dark:bg-mintcom-surface dark:shadow-black/50">
-          {/* Header */}
-          <div className="flex items-start justify-between border-b border-gray-100 bg-gray-50/50 px-6 py-5 dark:border-white/10 dark:bg-white/[0.04]">
-            <div className="flex items-center gap-4">
-              <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-red-500/10 text-red-500 shadow-sm">
-                <ShieldAlert size={24} />
+        {/* ── Side copy: what this screen is ── */}
+        <div className="flex w-[min(320px,100%)] flex-col gap-3.5">
+          <div className="rounded-2xl border border-gray-200/90 bg-white/90 p-4 shadow-lg shadow-black/5 backdrop-blur-sm dark:border-white/10 dark:bg-mintcom-surface/95 dark:shadow-black/40">
+            <div className="mb-3 flex items-center gap-2.5">
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-mintcom-green/15 text-mintcom-green">
+                <Lock size={18} strokeWidth={2.25} />
               </span>
               <div>
-                <p className="text-lg font-black tracking-tight text-gray-900 dark:text-white">Delete employee</p>
-                <p className="mt-0.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">
-                  High-impact action
+                <p className="text-[15px] font-black tracking-tight text-gray-900 dark:text-white">
+                  App Lock
+                </p>
+                <p className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">
+                  When you leave &amp; return
                 </p>
               </div>
             </div>
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl text-gray-400 dark:text-gray-300">
-              <X size={18} strokeWidth={2.5} />
-            </span>
+            <p className="text-[12px] font-medium leading-relaxed text-gray-600 dark:text-gray-300">
+              The moment Mintcom goes to the background, the session locks. Come back and unlock with Face ID — or use your password.
+            </p>
           </div>
 
-          <div className="space-y-4 px-6 py-5">
-            <div className="rounded-xl border border-amber-100 bg-amber-50 p-4 shadow-sm dark:border-amber-500/25 dark:bg-amber-500/10 dark:shadow-none">
-              <div className="flex gap-3">
-                <AlertTriangle size={18} className="mt-0.5 shrink-0 text-amber-600 dark:text-amber-400" />
-                <p className="text-[13px] font-bold leading-relaxed text-amber-700 dark:text-amber-200">
-                  You are about to deactivate <span className="font-black">Sara Hassan</span>. Past
-                  orders stay linked; they lose POS and portal access.
-                </p>
-              </div>
+          <div className="overflow-hidden rounded-2xl border border-gray-200/90 bg-white shadow-md shadow-black/5 dark:border-white/10 dark:bg-mintcom-surface">
+            <div className="flex items-center justify-between bg-mintcom-green px-3.5 py-2.5 text-white">
+              <Menu size={15} strokeWidth={2.25} />
+              <p className="text-[12px] font-bold tracking-tight">App Settings</p>
+              <Bell size={14} strokeWidth={2.25} className="opacity-90" />
             </div>
-
-            <div className="space-y-1.5">
-              <p className="px-1 text-[10px] font-normal uppercase tracking-[0.2em] text-gray-400">
-                Account email
-              </p>
-              <div className="relative flex h-12 items-center rounded-xl border border-gray-200 bg-gray-50 px-4 dark:border-white/10 dark:bg-white/5">
-                <Mail size={16} className="me-3 shrink-0 text-gray-400" />
-                <span className="text-[13px] font-bold text-gray-900 dark:text-white">owner@cafedelight.com</span>
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <p className="px-1 text-[10px] font-normal uppercase tracking-[0.2em] text-gray-400">
-                Password
-              </p>
-              <div className="relative flex h-12 items-center rounded-xl border border-mintcom-green/40 bg-white px-4 shadow-sm shadow-mintcom-green/10 dark:bg-mintcom-dark">
-                <Lock size={16} className="me-3 shrink-0 text-mintcom-green" />
-                <span className="flex-1 text-[13px] font-bold tracking-widest text-gray-900 dark:text-white">
-                  ••••••••••
+            <div className="space-y-0 p-2">
+              <div className="flex items-center gap-2.5 rounded-xl px-2 py-2.5">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-mintcom-green/12 text-mintcom-green">
+                  <ScanFace size={16} strokeWidth={2} />
                 </span>
-                <Eye size={16} className="text-gray-400" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-[12px] font-extrabold text-gray-900 dark:text-white">Face ID</p>
+                  <p className="text-[10px] font-semibold text-gray-500 dark:text-gray-400">
+                    Biometric unlock on resume
+                  </p>
+                </div>
+                <span className="relative h-5 w-9 shrink-0 rounded-full bg-mintcom-green">
+                  <span className="absolute end-[2px] top-[2px] h-4 w-4 rounded-full bg-white shadow-sm" />
+                </span>
+              </div>
+              <div className="mx-2 h-px bg-gray-100 dark:bg-white/10" />
+              <div className="flex items-center gap-2.5 rounded-xl px-2 py-2.5">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-mintcom-green/12 text-mintcom-green">
+                  <Smartphone size={16} strokeWidth={2.25} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[12px] font-extrabold text-gray-900 dark:text-white">
+                    Auto-lock when closed
+                  </p>
+                  <p className="text-[10px] font-semibold text-gray-500 dark:text-gray-400">
+                    Always on for security
+                  </p>
+                </div>
+                <CircleCheck size={18} className="shrink-0 text-mintcom-green" strokeWidth={2.25} />
               </div>
             </div>
           </div>
 
-          <div className="flex gap-3 border-t border-gray-100 px-6 py-4 dark:border-white/10">
-            <span className="flex h-12 flex-1 items-center justify-center rounded-xl border border-gray-200 text-xs font-black tracking-widest text-gray-600 dark:border-white/10 dark:text-gray-300">
-              CANCEL
-            </span>
-            <span className="flex h-12 flex-1 items-center justify-center rounded-xl bg-red-500 text-xs font-black tracking-widest text-white shadow-lg shadow-red-500/20">
-              CONFIRM
-            </span>
+          <div className="rounded-2xl border border-mintcom-green/25 bg-gradient-to-br from-mintcom-green/15 to-mintcom-green/5 px-3.5 py-3">
+            <div className="flex items-center gap-2 text-[11px] font-bold text-mintcom-green">
+              <CircleCheck size={13} strokeWidth={2.5} />
+              Face ID on · Auto-lock on
+            </div>
+            <p className="mt-1 text-[11px] font-medium leading-snug text-gray-800 dark:text-white/90">
+              Background the app → lock screen. Unlock with Face ID or password.
+            </p>
           </div>
         </div>
       </div>
@@ -2746,7 +2764,7 @@ const TITLES: Record<string, string> = {
   multiBranch: 'Owner brands',
   simpleUI: 'Dashboard',
   fastOnboarding: 'Add staff',
-  secure: 'Security verification',
+  secure: 'Face ID app lock',
   loyalty: 'Loyalty',
   mobileApp: 'Mobile',
 };
@@ -2796,6 +2814,7 @@ export function FeatureScreenshot({
       break;
     case 'secure':
       body = <SecureShot />;
+      bg = 'transparent';
       break;
     case 'loyalty':
       body = <LoyaltyShot />;

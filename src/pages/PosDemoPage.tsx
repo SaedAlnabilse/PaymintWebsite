@@ -1,15 +1,14 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Wifi, Battery } from 'lucide-react';
+import { ArrowLeft, Smartphone } from 'lucide-react';
 import { FullPosPlayground } from '../components/FullPosPlayground';
 
 /**
  * Try POS — static iPad UI.
  *
  * The POS app always renders at a fixed design size (same cards, same layout).
- * We only scale that canvas to fit the glass. If the window is tiny, the stage
- * can scroll — cards never reflow or squash.
+ * We only scale that canvas to fit the glass.
  *
  * Entry: /try-pos
  */
@@ -17,24 +16,55 @@ import { FullPosPlayground } from '../components/FullPosPlayground';
 /** Fixed POS “screen” — landscape tablet. Layouts assume this size. */
 const DESIGN_W = 1100;
 const DESIGN_H = 720;
+const DESIGN_ASPECT = DESIGN_W / DESIGN_H;
 
-/** Outer iPad shell aspect (slightly wider than content). */
-const FRAME_ASPECT = 1.4;
 const MAX_FRAME_W = 1280;
-const MAX_FRAME_H = Math.round(MAX_FRAME_W / FRAME_ASPECT);
 
-const STATUS_H = 28;
-const HOME_PAD = 10;
+/** Outer metal ring (matches padding: 2.5 on the chrome shell). */
+const METAL_PAD = 2.5;
 
+function bezelPx(deviceW: number) {
+  return Math.round(Math.min(22, Math.max(10, deviceW * 0.018)));
+}
+
+/**
+ * Size the outer iPad so the glass matches DESIGN_W × DESIGN_H aspect.
+ * Then fill scale paints the POS edge-to-edge — no gutters, no crop.
+ */
 function fitFrame(availW: number, availH: number) {
-  const w = Math.min(availW, availH * FRAME_ASPECT, MAX_FRAME_W);
-  const h = Math.min(availH, availW / FRAME_ASPECT, MAX_FRAME_H);
-  const finalW = Math.min(w, h * FRAME_ASPECT);
-  return { w: finalW, h: finalW / FRAME_ASPECT };
+  const outerFor = (outerW: number) => {
+    const bezel = bezelPx(outerW);
+    const glassW = outerW - 2 * METAL_PAD - 2 * bezel;
+    if (glassW < 200) return null;
+    const glassH = glassW / DESIGN_ASPECT;
+    const outerH = glassH + 2 * METAL_PAD + 2 * bezel;
+    return { w: outerW, h: outerH };
+  };
+
+  let lo = 280;
+  let hi = Math.min(availW, MAX_FRAME_W);
+  let best = outerFor(Math.min(960, hi)) ?? {
+    w: 960,
+    h: 960 / DESIGN_ASPECT + 40,
+  };
+
+  for (let i = 0; i < 28; i++) {
+    const mid = (lo + hi) / 2;
+    const cand = outerFor(mid);
+    if (cand && cand.w <= availW + 0.5 && cand.h <= availH + 0.5) {
+      best = cand;
+      lo = mid;
+    } else {
+      hi = mid;
+    }
+  }
+  return best;
 }
 
 function estimateFrameSize() {
-  if (typeof window === 'undefined') return { w: 1000, h: 1000 / FRAME_ASPECT };
+  if (typeof window === 'undefined') {
+    return { w: 1000, h: 1000 / DESIGN_ASPECT + 48 };
+  }
   const padX = window.innerWidth >= 1024 ? 64 : window.innerWidth >= 640 ? 32 : 16;
   const padY = window.innerWidth >= 1024 ? 40 : window.innerWidth >= 640 ? 24 : 16;
   const header = window.innerWidth >= 640 ? 56 : 48;
@@ -96,60 +126,48 @@ function useFrameSize() {
 }
 
 /**
- * Renders children at DESIGN_W × DESIGN_H, then scales uniformly to fit.
- * Layout stays static — only the zoom level changes.
+ * Renders children at DESIGN_W × DESIGN_H, then scales to the glass.
+ *
+ * - fill (tablet): scale X/Y independently so every pixel of the glass is used.
+ *   With fitFrame() matching design aspect, sx ≈ sy (no visible distortion) and
+ *   nothing is cropped on the right or letterboxed at the bottom.
+ * - contain (phone): uniform scale, full UI visible.
  */
 function StaticPosCanvas({
   className = '',
+  mode = 'fill',
   children,
 }: {
   className?: string;
+  mode?: 'fill' | 'contain';
   children: ReactNode;
 }) {
   const { ref, size } = useElementSize<HTMLDivElement>();
-  const scale =
-    size.w > 0 && size.h > 0
-      ? Math.min(size.w / DESIGN_W, size.h / DESIGN_H)
-      : 1;
-  // Never blow up past 100% on huge glass; allow shrink freely
-  const s = Math.min(scale, 1);
+  const ready = size.w > 0 && size.h > 0;
+  const sx = ready ? size.w / DESIGN_W : 1;
+  const sy = ready ? size.h / DESIGN_H : 1;
+  const transform =
+    mode === 'fill'
+      ? `scale(${sx}, ${sy})`
+      : `scale(${Math.min(sx, sy)})`;
 
   return (
     <div
       ref={ref}
-      className={`relative h-full w-full overflow-auto overscroll-contain ${className}`}
-      style={{
-        // Subtle scroll affordance when the scaled canvas is larger than the box
-        // (very small phones) — otherwise centered & fully visible.
-        WebkitOverflowScrolling: 'touch',
-      }}
+      className={`relative h-full w-full overflow-hidden ${className}`}
     >
       <div
-        className="relative mx-auto"
+        className="absolute left-0 top-0 origin-top-left"
         style={{
-          width: DESIGN_W * s,
-          height: DESIGN_H * s,
-          // Center when we have spare room
-          marginTop: size.h > DESIGN_H * s ? (size.h - DESIGN_H * s) / 2 : 0,
+          width: DESIGN_W,
+          height: DESIGN_H,
+          transform,
         }}
       >
-        <div
-          className="absolute left-0 top-0 origin-top-left"
-          style={{
-            width: DESIGN_W,
-            height: DESIGN_H,
-            transform: `scale(${s})`,
-          }}
-        >
-          {children}
-        </div>
+        {children}
       </div>
     </div>
   );
-}
-
-function bezelPx(deviceW: number) {
-  return Math.round(Math.min(22, Math.max(10, deviceW * 0.018)));
 }
 
 function radiusPx(deviceW: number, outer: boolean) {
@@ -178,7 +196,7 @@ export function PosDemoPage() {
 
   const pos = (
     <div className="h-full w-full">
-      <FullPosPlayground />
+      <FullPosPlayground mobile={isCompact} />
     </div>
   );
 
@@ -210,8 +228,10 @@ export function PosDemoPage() {
             <span>Website</span>
           </Link>
           <span className="hidden text-xs text-white/15 sm:inline">|</span>
-          <span className="hidden truncate text-xs font-medium text-slate-400 sm:inline">
-            iPad Simulator
+          <span className="hidden truncate text-xs font-medium text-slate-400 sm:inline">iPad Simulator</span>
+          <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-300 sm:hidden">
+            <Smartphone size={13} className="text-mintcom-green" />
+            Pocket POS
           </span>
         </div>
 
@@ -228,7 +248,7 @@ export function PosDemoPage() {
 
       <main
         ref={stageRef}
-        className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden px-2 py-2 sm:px-4 sm:py-3 md:px-6 md:py-4 lg:px-8 lg:py-5"
+        className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden p-0 sm:px-4 sm:py-3 md:px-6 md:py-4 lg:px-8 lg:py-5"
         style={{
           background:
             'radial-gradient(ellipse 70% 55% at 50% 48%, rgba(125,198,162,0.07) 0%, transparent 58%), radial-gradient(ellipse 90% 80% at 50% 100%, rgba(0,0,0,0.55) 0%, transparent 55%), #070A10',
@@ -241,12 +261,12 @@ export function PosDemoPage() {
         />
 
         {isCompact ? (
-          /* Phone: same static canvas, scroll if needed */
+          /* Phone: render a real touch-sized POS layout instead of shrinking the tablet. */
           <div
-            className="relative h-full w-full overflow-hidden rounded-2xl border border-white/[0.06] bg-cream-50 shadow-2xl dark:bg-mintcom-dark"
+            className="relative h-full w-full overflow-hidden bg-cream-50 shadow-2xl dark:bg-mintcom-dark"
             style={{ transform: 'translate3d(0, 0, 0)' }}
           >
-            <StaticPosCanvas>{pos}</StaticPosCanvas>
+            {pos}
           </div>
         ) : (
           <div
@@ -348,27 +368,9 @@ export function PosDemoPage() {
                       'inset 0 0 0 0.5px rgba(255,255,255,0.08), 0 0 0 1px rgba(0,0,0,0.4)',
                   }}
                 >
-                  {/* Status bar (outside scaled app — always crisp) */}
-                  <div
-                    className="absolute inset-x-0 top-0 z-40 flex items-center justify-between border-b border-slate-100/80 bg-white/95 px-4 text-[10px] font-bold text-slate-800 select-none dark:border-white/5 dark:bg-[#1C1B22]/95 dark:text-white/80"
-                    style={{ height: STATUS_H }}
-                  >
-                    <div className="tabular-nums tracking-tight">9:41 AM</div>
-                    <div className="flex items-center gap-1.5">
-                      <Wifi size={10} strokeWidth={2.5} />
-                      <span className="text-[9px] font-black tracking-wide text-slate-400 dark:text-white/40">
-                        iPadOS
-                      </span>
-                      <Battery size={13} strokeWidth={2} />
-                    </div>
-                  </div>
-
-                  {/* Static scaled POS under status bar */}
-                  <div
-                    className="absolute inset-x-0 bottom-0"
-                    style={{ top: STATUS_H, paddingBottom: HOME_PAD }}
-                  >
-                    <StaticPosCanvas>{pos}</StaticPosCanvas>
+                  {/* POS fills the full glass — no fake status bar */}
+                  <div className="absolute inset-0">
+                    <StaticPosCanvas mode="fill">{pos}</StaticPosCanvas>
                   </div>
 
                   <div

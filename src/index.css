@@ -1024,7 +1024,7 @@ html[lang="ar"] [class*="tracking-"] {
 .try-pos-root .rounded-xl,
 .try-pos-root .rounded-lg,
 .try-pos-root .rounded-md,
-.try-pos-root .rounded-[28px],
+.try-pos-root .rounded-\[28px\],
 .try-pos-root [class*="rounded-"] {
   border-radius: 12px !important;
 }
@@ -1036,4 +1036,25 @@ html[lang="ar"] [class*="tracking-"] {
 .try-pos-root img.rounded-full,
 .try-pos-root div.rounded-full {
   border-radius: 9999px !important;
+}
+
+/*
+ * Try POS — solid mint fills always use white labels/icons (Open Shift pattern).
+ * Never black/gray text on full-strength green. Tints (bg-mintcom-green/10 etc.)
+ * keep their own text-mintcom-green utilities and are not matched here.
+ */
+.try-pos-root .bg-mintcom-green,
+.try-pos-root .bg-mintcom-greenDark,
+.try-pos-root .bg-\[\#7dc6a2\],
+.try-pos-root .bg-\[\#22c55e\] {
+  color: #ffffff;
+}
+
+/* SVG strokes/fills inside solid green follow the white label color */
+.try-pos-root .bg-mintcom-green > svg,
+.try-pos-root .bg-mintcom-greenDark > svg,
+.try-pos-root .bg-\[\#7dc6a2\] > svg,
+.try-pos-root .bg-\[\#22c55e\] > svg {
+  color: #ffffff;
+  stroke: currentColor;
 }

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, useRef, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
@@ -86,6 +87,9 @@ import {
  * + website light/dark tokens (mintcom-dark / cream / mintcom-green).
  * No account, no API. Labels hardcoded (demo-only).
  */
+
+/** mintcom-pos TEXT_INPUT_LIMITS.QUICK_NOTE */
+const NOTE_LIMIT = 80;
 
 type PosOption = { id: string; name: string; price: number; available?: boolean };
 type PosAttribute = { id: string; name: string; multi?: boolean; required?: boolean; options: PosOption[] };
@@ -494,7 +498,7 @@ function buildCatalog(): PosProduct[] {
   ];
 }
 
-export function FullPosPlayground() {
+export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
   const [catalog, setCatalog] = useState(() => createInitialCatalog());
   const [businessName, setBusinessName] = useState('Cafe Delight');
   const products = useMemo(() => salesProductsFromCatalog(catalog), [catalog]);
@@ -1383,22 +1387,22 @@ export function FullPosPlayground() {
           Expanded (Menu): overlays content with labels + brand mark
           Kitchen intentionally omitted from the demo.
         */}
-        {/* Permanent width reserve — static tablet chrome (scaled canvas, not viewport) */}
-        <div className="block h-full w-[72px] shrink-0" aria-hidden />
-        {sidebarExpanded && (
+        {/* Permanent width reserve for tablet; phones use a top bar and drawer. */}
+        {!mobile && <div className="block h-full w-[72px] shrink-0" aria-hidden />}
+        {!mobile && sidebarExpanded && (
           <button
             type="button"
             aria-label="Close menu"
             className="absolute inset-0 z-40 block"
-            style={{ left: 72, background: 'transparent' }}
+            style={{ left: mobile ? 0 : 72, background: mobile ? 'rgba(0,0,0,0.45)' : 'transparent' }}
             onClick={() => setSidebarExpanded(false)}
           />
         )}
         <nav
-          className="absolute inset-y-0 start-0 z-50 flex h-full flex-col items-center overflow-hidden"
+          className={`${mobile ? 'hidden' : 'absolute'} inset-y-0 start-0 z-50 h-full flex-col items-center overflow-hidden`}
           style={{
             backgroundColor: '#1F1D2B',
-            width: sidebarExpanded ? 230 : 72,
+            width: sidebarExpanded ? (mobile ? 'min(300px, 86vw)' : 230) : 72,
             paddingTop: 16,
             paddingBottom: 24,
             transition: 'width 120ms ease',
@@ -1518,28 +1522,28 @@ export function FullPosPlayground() {
           </div>
         </nav>
 
-        {/* Mobile top bar — hidden: try-pos always uses static tablet chrome */}
-        <div className="absolute inset-x-0 top-0 z-40 hidden h-12 items-center gap-2 border-b border-white/5 px-3" style={{ backgroundColor: '#1F1D2B' }}>
+        {/* Mobile top bar */}
+        <div className={`${mobile ? 'flex' : 'hidden'} absolute inset-x-0 top-0 z-40 h-14 items-center gap-2 border-b border-white/5 px-3 shadow-lg`} style={{ backgroundColor: '#1F1D2B' }}>
           <button
             type="button"
             onClick={() => setSidebarExpanded(true)}
-            className="flex h-10 w-10 items-center justify-center rounded-xl text-white"
+            className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/10 text-white"
             aria-label="Open menu"
           >
             <Menu size={22} />
           </button>
-          <Logo variant="full" theme="dark" size="sm" />
+            <Logo variant="full" theme="dark" size="sm" />
           <div className="ms-auto flex items-center gap-2">
             {screen === 'sales' && (
               <button
                 type="button"
                 onClick={() => setMobileCartOpen(true)}
-                className="relative flex h-9 items-center gap-1.5 rounded-xl bg-white/10 px-2.5 text-[11px] font-bold text-white"
+                className="relative flex h-11 items-center gap-2 rounded-xl bg-mintcom-green px-3 text-[12px] font-black !text-white shadow-md shadow-black/20"
               >
                 <ShoppingBag size={16} />
                 Cart
                 {itemCount > 0 && (
-                  <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-mintcom-green px-1 text-[9px] font-black text-white">
+                  <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-[#D55263] px-1 text-[9px] font-black text-white">
                     {itemCount}
                   </span>
                 )}
@@ -1550,7 +1554,7 @@ export function FullPosPlayground() {
 
         {/* Mobile drawer — same items/look as POS expanded SideBar */}
         <AnimatePresence>
-          {sidebarExpanded && (
+          {mobile && sidebarExpanded && (
             <>
               <motion.button
                 type="button"
@@ -1558,7 +1562,7 @@ export function FullPosPlayground() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="absolute inset-0 z-[60] bg-black/50 sm:hidden"
+                className="absolute inset-0 z-[60] bg-black/50"
                 onClick={() => setSidebarExpanded(false)}
               />
               <motion.nav
@@ -1566,7 +1570,7 @@ export function FullPosPlayground() {
                 animate={{ x: 0 }}
                 exit={{ x: -280 }}
                 transition={{ type: 'tween', duration: 0.18 }}
-                className="absolute inset-y-0 start-0 z-[70] flex w-[min(280px,86vw)] flex-col sm:hidden"
+                className="absolute inset-y-0 start-0 z-[70] flex w-[min(300px,86vw)] flex-col"
                 style={{ backgroundColor: '#1F1D2B', paddingTop: 20, paddingBottom: 28 }}
                 aria-label="POS navigation"
               >
@@ -1633,8 +1637,8 @@ export function FullPosPlayground() {
           )}
         </AnimatePresence>
 
-        {/* Main column — static tablet (no mobile top padding) */}
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden pt-0">
+        {/* Main column */}
+        <div className={`flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden ${mobile ? 'pt-14' : 'pt-0'}`}>
 
         {/* Content — static landscape: menu + order side-by-side */}
         <div className="flex min-h-0 min-w-0 flex-1 flex-row overflow-hidden">
@@ -1693,23 +1697,23 @@ export function FullPosPlayground() {
           {screen === 'sales' && (
             <>
               {/* Menu pane ~2.3 */}
-              <section className="flex h-full min-h-0 min-w-0 flex-[2.3] flex-col overflow-hidden bg-cream-50 dark:bg-mintcom-dark">
+              <section className={`flex h-full min-h-0 min-w-0 flex-[2.3] flex-col overflow-hidden bg-cream-50 dark:bg-mintcom-dark ${mobile && screen === 'sales' ? 'pb-[76px]' : ''}`}>
                 {/* Sales Header — mirrors mintcom-pos SalesHeader exactly */}
-                <header className="shrink-0 bg-white dark:bg-mintcom-surface px-4 py-3 sm:px-5">
+                <header className={`shrink-0 bg-white dark:bg-mintcom-surface ${mobile ? 'px-3 py-2.5' : 'px-4 py-3 sm:px-5'}`}>
                   {/* Top row: square avatar + stacked date/tenant · Train / Retail / Open Drawer */}
-                  <div className="flex items-start justify-between gap-3">
+                  <div className={`flex items-start justify-between ${mobile ? 'gap-2' : 'gap-3'}`}>
                     <div className="flex min-w-0 flex-1 items-start gap-3">
-                      <div className="mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-mintcom-green">
-                        <span className="text-[15px] font-bold text-white">
+                      <div className={`${mobile ? 'h-10 w-10' : 'h-11 w-11'} mt-0.5 flex shrink-0 items-center justify-center rounded-xl bg-mintcom-green !text-white`}>
+                        <span className="text-[15px] font-bold !text-white">
                           {staff ? staff.name.slice(0, 2).toUpperCase() : 'SA'}
                         </span>
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-lg font-bold leading-tight text-text-primary dark:text-white sm:text-xl">
+                        <p className={`${mobile ? 'text-base' : 'text-lg sm:text-xl'} truncate font-bold leading-tight text-text-primary dark:text-white`}>
                           {staff?.name || 'Guest'}
                         </p>
                         <div className="mt-0.5 flex flex-col items-start">
-                          <p className="text-[12px] text-text-secondary dark:text-mintcom-textSecondary sm:text-[13px]">
+                          <p className={`${mobile ? 'hidden' : ''} text-[12px] text-text-secondary dark:text-mintcom-textSecondary sm:text-[13px]`}>
                             {new Date().toLocaleDateString(undefined, {
                               weekday: 'short',
                               day: 'numeric',
@@ -1724,7 +1728,7 @@ export function FullPosPlayground() {
                       </div>
                     </div>
 
-                    <div className="mt-1 flex shrink-0 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
+                    <div className={`mt-1 shrink-0 items-center justify-end gap-1.5 sm:gap-2 ${mobile ? 'hidden' : 'flex flex-wrap'}`}>
                       {/* Sync badge — always “Synced” in demo */}
                       <span
                         className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-2.5 text-[12px] font-semibold text-text-secondary dark:border-white/10 dark:bg-mintcom-dark dark:text-mintcom-textSecondary"
@@ -1777,24 +1781,24 @@ export function FullPosPlayground() {
                   </div>
 
                   {/* Divider — matches POS SalesHeader */}
-                  <div className="my-3 h-px bg-gray-200 dark:bg-white/10" />
+                  <div className={`${mobile ? 'my-2' : 'my-3'} h-px bg-gray-200 dark:bg-white/10`} />
 
                   {/* Toolbar: PAY-IN/PAY-OUT + search/category pill + sort */}
                   <div className="flex items-center gap-2 sm:gap-2.5">
                     <button
                       type="button"
                       onClick={openCashOperation}
-                      className="inline-flex h-12 shrink-0 items-center gap-1.5 rounded-xl bg-mintcom-green px-3 text-[11px] font-extrabold uppercase tracking-wide text-white shadow-md shadow-mintcom-green/30 sm:px-4 sm:text-[12px]"
+                      className={`${mobile ? 'h-11 w-11 justify-center px-0' : 'h-12 px-3 sm:px-4'} inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-mintcom-green text-[11px] font-extrabold uppercase tracking-wide !text-white shadow-md shadow-mintcom-green/30 sm:text-[12px]`}
                       title={!shift.open ? 'Open a shift first' : 'Pay in or pay out cash'}
                     >
                       <Repeat size={14} strokeWidth={2.5} />
-                      <span className="hidden xs:inline sm:inline">PAY-IN/PAY-OUT</span>
-                      <span className="sm:hidden">PAY</span>
+                      {!mobile && <span className="hidden xs:inline sm:inline">PAY-IN/PAY-OUT</span>}
+                      {!mobile && <span className="sm:hidden">PAY</span>}
                     </button>
 
                     {/* Unified filter pill — live search + category zone (POS filterPill) */}
                     <div
-                      className={`flex h-12 min-w-0 flex-1 items-center overflow-hidden rounded-xl border-[1.5px] transition-shadow ${
+                      className={`flex ${mobile ? 'h-11' : 'h-12'} min-w-0 flex-1 items-center overflow-hidden rounded-xl border-[1.5px] transition-shadow ${
                         searchFocused || hasQuery
                           ? 'border-mintcom-green bg-[#f0f7f4] shadow-sm dark:bg-[#1c2822]'
                           : 'border-transparent bg-gray-100 dark:bg-mintcom-dark'
@@ -1837,7 +1841,7 @@ export function FullPosPlayground() {
                           setCategorySearch('');
                           setCatOpen(true);
                         }}
-                        className={`me-1 flex min-w-[100px] max-w-[180px] items-center gap-1.5 rounded-xl px-3 py-1.5 text-[12px] sm:min-w-[110px] sm:text-[13px] ${
+                        className={`me-1 ${mobile ? 'min-w-0 max-w-[92px] px-2' : 'min-w-[100px] max-w-[180px] px-3 sm:min-w-[110px]'} flex items-center gap-1.5 rounded-xl py-1.5 text-[12px] sm:text-[13px] ${
                           !isAllMenu
                             ? 'bg-mintcom-green/15 font-bold text-mintcom-green'
                             : 'font-semibold text-text-secondary dark:text-mintcom-textSecondary'
@@ -1880,7 +1884,7 @@ export function FullPosPlayground() {
                       <button
                         type="button"
                         onClick={() => setSortOpen((v) => !v)}
-                        className="flex h-12 w-12 items-center justify-center rounded-xl border border-gray-200 bg-gray-100 text-mintcom-green dark:border-white/10 dark:bg-mintcom-dark"
+                        className={`${mobile ? 'h-11 w-11' : 'h-12 w-12'} flex items-center justify-center rounded-xl border border-gray-200 bg-gray-100 text-mintcom-green dark:border-white/10 dark:bg-mintcom-dark`}
                         title="Sort products"
                       >
                         <SlidersHorizontal size={18} />
@@ -1943,7 +1947,7 @@ export function FullPosPlayground() {
                 </header>
 
                 {/* Product grid / retail list — mirrors POS ProductCard */}
-                <div id="tour-product-grid" className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3">
+                <div id="tour-product-grid" className={`min-h-0 flex-1 overflow-y-auto overscroll-contain ${mobile ? 'p-2.5' : 'p-3'}`}>
                   {retailMode ? (
                     <div className="flex flex-col gap-2">
                       {visible.map((p) => (
@@ -1979,7 +1983,7 @@ export function FullPosPlayground() {
                       ))}
                     </div>
                   ) : (
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className={`grid ${mobile ? 'grid-cols-2 gap-2.5' : 'grid-cols-3 gap-3'}`}>
                       {visible.map((p) => {
                         const cartQty = cart
                           .filter((l) => l.productId === p.id)
@@ -2001,7 +2005,7 @@ export function FullPosPlayground() {
                             openItem(p);
                           }}
                           aria-disabled={soldOut}
-                          className={`group relative flex min-h-[168px] flex-col overflow-hidden rounded-xl border border-gray-100 bg-white text-start shadow-sm transition-shadow dark:border-white/8 dark:bg-mintcom-surface sm:min-h-[200px] ${
+                          className={`group relative flex ${mobile ? 'min-h-[190px]' : 'min-h-[168px] sm:min-h-[200px]'} flex-col overflow-hidden rounded-xl border border-gray-100 bg-white text-start shadow-sm transition-shadow dark:border-white/8 dark:bg-mintcom-surface ${
                             soldOut ? 'cursor-not-allowed opacity-60' : 'hover:shadow-md'
                           }`}
                         >
@@ -2025,7 +2029,7 @@ export function FullPosPlayground() {
                               {soldOut ? 'Out of stock' : `${stockLeft} Left`}
                             </span>
                           )}
-                          <div className={productImgWrapClass(p.imageDataUrl, 'relative flex h-[100px] w-full shrink-0 items-center justify-center overflow-hidden sm:h-[140px]')}>
+                          <div className={productImgWrapClass(p.imageDataUrl, `relative flex ${mobile ? 'h-[112px]' : 'h-[100px] sm:h-[140px]'} w-full shrink-0 items-center justify-center overflow-hidden`)}>
                             <img
                               src={productImgSrc(p.imageDataUrl)}
                               alt=""
@@ -2057,7 +2061,7 @@ export function FullPosPlayground() {
               </section>
 
               {/* Order pane */}
-              <OrderPanel
+              {!mobile && <OrderPanel
                 panelId="tour-order-panel"
                 payActionsId="tour-pay-actions"
                 className="flex h-full w-full max-w-[340px] flex-[1] overflow-hidden border-s border-gray-200 bg-white dark:border-mintcom-tertiary dark:bg-mintcom-surface"
@@ -2117,7 +2121,7 @@ export function FullPosPlayground() {
                 canLoyalty={can('loyalty')}
                 canSplit={can('split')}
                 canClear={can('void_item')}
-              />
+              />}
             </>
           )}
 
@@ -2138,126 +2142,33 @@ export function FullPosPlayground() {
           )}
         </AnimatePresence>
 
-        {/* Order Note — mirrors POS NoteModal */}
-        <AnimatePresence>
-          {noteModalOpen && (
-            <div
-              className="absolute inset-0 z-[80] flex items-center justify-center bg-black/40 p-2.5"
-              onClick={() => setNoteModalOpen(false)}
-            >
-              <motion.div
-                initial={{ opacity: 0, scale: 0.96, y: 8 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.96 }}
-                onClick={(e) => e.stopPropagation()}
-                className="w-[min(94%,400px)] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl dark:border-white/10 dark:bg-mintcom-surface"
-              >
-                <div className="flex items-center border-b border-gray-100 px-4 py-3 dark:border-white/8">
-                  <span className="w-8" />
-                  <p className="flex-1 text-center text-sm font-semibold text-text-secondary">
-                    Order note
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => setNoteModalOpen(false)}
-                    className="flex h-8 w-8 items-center justify-center rounded-xl text-text-secondary hover:bg-cream-100 dark:hover:bg-white/10"
-                    aria-label="Close"
-                  >
-                    <X size={20} />
-                  </button>
-                </div>
-                <div className="p-4 sm:p-5">
-                  {/* Quick actions — write Takeaway / Delivery into the note (Dine in is default) */}
-                  <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-text-secondary dark:text-mintcom-textSecondary">
-                    Quick add to note
-                  </p>
-                  <div className="mb-4 flex gap-2">
-                    {(
-                      [
-                        { id: 'takeaway' as const, label: 'Takeaway', Icon: ShoppingBag },
-                        { id: 'delivery' as const, label: 'Delivery', Icon: Truck },
-                      ] as const
-                    ).map((t) => {
-                      const tag = `[${t.label}]`;
-                      const on = orderType === t.id;
-                      const Icon = t.Icon;
-                      return (
-                        <button
-                          key={t.id}
-                          type="button"
-                          onClick={() => {
-                            const stripType =
-                              /^\[(dine in|takeaway|delivery)\]\s*/i;
-                            const body = orderNote.replace(stripType, '');
-                            if (on) {
-                              // Toggle off → default dine-in, remove tag from note
-                              setOrderType('dine-in');
-                              setOrderNote(body.trimStart().slice(0, 120));
-                              return;
-                            }
-                            setOrderType(t.id);
-                            const next = body.trim()
-                              ? `${tag} ${body.trim()}`
-                              : `${tag} `;
-                            setOrderNote(next.slice(0, 120));
-                          }}
-                          className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl border-[1.5px] py-2.5 text-[12px] font-bold transition-colors ${
-                            on
-                              ? 'border-mintcom-green bg-mintcom-green/12 text-mintcom-green'
-                              : 'border-gray-200 bg-white text-text-secondary hover:border-mintcom-green/30 dark:border-white/10 dark:bg-mintcom-dark dark:text-mintcom-textSecondary'
-                          }`}
-                        >
-                          <Icon size={15} />
-                          <span>{t.label}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <textarea
-                    value={orderNote}
-                    onChange={(e) => {
-                      const v = e.target.value.slice(0, 120);
-                      setOrderNote(v);
-                      const tag = v.match(/^\[(dine in|takeaway|delivery)\]/i)?.[1]?.toLowerCase();
-                      if (tag === 'takeaway') setOrderType('takeaway');
-                      else if (tag === 'delivery') setOrderType('delivery');
-                      else setOrderType('dine-in');
-                    }}
-                    placeholder="Add a note for this order…"
-                    rows={4}
-                    autoFocus
-                    className="w-full resize-none rounded-xl border border-gray-200 bg-cream-50 px-4 py-3 text-sm font-medium text-text-primary outline-none focus:border-mintcom-green dark:border-white/10 dark:bg-mintcom-dark dark:text-white"
-                  />
-                  <p className="mt-1 mb-4 text-end text-xs text-text-tertiary">
-                    {orderNote.length}/120
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setNoteModalOpen(false);
-                      const typePart =
-                        orderType !== 'dine-in' ? orderTypeLabel(orderType) : '';
-                      if (orderNote.trim() || typePart) {
-                        ping(
-                          typePart
-                            ? orderNote.trim()
-                              ? `Note saved · ${typePart}`
-                              : `Order type · ${typePart}`
-                            : 'Note saved',
-                        );
-                      } else {
-                        ping('Note cleared');
-                      }
-                    }}
-                    className="w-full rounded-xl bg-mintcom-green py-3.5 text-sm font-bold text-white shadow-md shadow-mintcom-green/25"
-                  >
-                    Save
-                  </button>
-                </div>
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>
+        {/* Order Note — mintcom-pos NoteModal (showOrderTypeActions) */}
+        <DemoNoteModal
+          open={noteModalOpen}
+          title="Add Note to Order"
+          value={orderNote}
+          onChange={setOrderNote}
+          showOrderTypeActions
+          orderType={orderType}
+          onOrderTypeChange={setOrderType}
+          onCancel={() => setNoteModalOpen(false)}
+          onSave={() => {
+            setNoteModalOpen(false);
+            const typePart =
+              orderType !== 'dine-in' ? orderTypeLabel(orderType) : '';
+            if (orderNote.trim() || typePart) {
+              ping(
+                typePart
+                  ? orderNote.trim()
+                    ? `Note saved · ${typePart}`
+                    : `Order type · ${typePart}`
+                  : 'Note saved',
+              );
+            } else {
+              ping('Note cleared');
+            }
+          }}
+        />
 
         {/* Clear order confirm — mirrors POS clear-all confirmation */}
         <AnimatePresence>
@@ -2612,14 +2523,41 @@ export function FullPosPlayground() {
           )}
         </AnimatePresence>
 
+        {mobile && screen === 'sales' && (
+          <button
+            type="button"
+            onClick={() => setMobileCartOpen(true)}
+            className="absolute inset-x-3 bottom-3 z-40 flex h-14 items-center gap-3 rounded-xl bg-[#1F1D2B] px-3 text-white shadow-[0_12px_32px_rgba(0,0,0,0.35)] active:scale-[0.99]"
+            aria-label={`Open order with ${itemCount} items`}
+          >
+            <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-mintcom-green !text-white">
+              <ShoppingBag size={19} />
+              {itemCount > 0 && (
+                <span className="absolute -end-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#D55263] px-1 text-[10px] font-black text-white">
+                  {itemCount}
+                </span>
+              )}
+            </span>
+            <span className="min-w-0 flex-1 text-start">
+              <span className="block text-[10px] font-bold uppercase text-white/55">Current order</span>
+              <span className="block truncate text-sm font-black">{itemCount ? `${itemCount} item${itemCount === 1 ? '' : 's'}` : 'Tap products to begin'}</span>
+            </span>
+            <span className="text-end">
+              <span className="block text-[10px] font-bold uppercase text-white/55">Total</span>
+              <span className="block text-base font-black text-mintcom-green">{money(total)}</span>
+            </span>
+            <ChevronDown size={18} className="-rotate-90 text-white/60" />
+          </button>
+        )}
+
         {/* Mobile order sheet */}
         <AnimatePresence>
-          {mobileCartOpen && screen === 'sales' && (
+          {mobile && mobileCartOpen && screen === 'sales' && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 z-50 hidden bg-black/40 backdrop-blur-sm"
+              className="absolute inset-0 z-50 bg-black/45 backdrop-blur-sm"
               onClick={() => setMobileCartOpen(false)}
             >
               <motion.div
@@ -2628,7 +2566,7 @@ export function FullPosPlayground() {
                 exit={{ y: '100%' }}
                 transition={{ type: 'spring', stiffness: 320, damping: 32 }}
                 onClick={(e) => e.stopPropagation()}
-                className="absolute inset-x-0 bottom-0 flex max-h-[min(85%,560px)] flex-col rounded-t-xl border border-gray-200 bg-white shadow-2xl dark:border-mintcom-tertiary dark:bg-mintcom-surface"
+                className="absolute inset-x-0 bottom-0 flex h-[min(88%,680px)] flex-col rounded-t-xl border border-gray-200 bg-white shadow-2xl dark:border-mintcom-tertiary dark:bg-mintcom-surface"
               >
                 <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3 dark:border-white/8">
                   <p className="text-sm font-black">Order #{orderNo}</p>
@@ -3398,15 +3336,76 @@ function OrderPanel({
     }
     prevCartLength.current = cart.length;
   }, [cart.length]);
+
   /** POS Apply Discount is an anchored dropdown, not a full-screen modal */
   const [discountOpen, setDiscountOpen] = useState(false);
-  /** Per-line discount dropdown (cartItemId) */
-  const [lineDiscountMenuId, setLineDiscountMenuId] = useState<string | null>(null);
+  /**
+   * Item discount menu — mirrors mintcom-pos OrderSummaryPanel Modal dropdown:
+   * measured from the trigger, portaled over the full try-pos frame so it is
+   * never clipped by the cart card / scroll pane.
+   */
+  const [lineDiscountMenu, setLineDiscountMenu] = useState<{
+    id: string;
+    top: number;
+    left: number;
+    width: number;
+  } | null>(null);
   /** Per-line special note editor */
   const [lineNoteEdit, setLineNoteEdit] = useState<{ id: string; draft: string } | null>(null);
 
+  // Real POS closes the discount Modal on interaction — dismiss on cart scroll
+  useEffect(() => {
+    const el = linesContainerRef.current;
+    if (!el) return;
+    const onScroll = () => setLineDiscountMenu(null);
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
+  }, []);
+
+  const closeLineDiscountMenu = () => setLineDiscountMenu(null);
+
+  const openLineDiscountMenu = (lineId: string, anchor: HTMLElement) => {
+    const root =
+      (document.querySelector('.try-pos-root') as HTMLElement | null) ?? null;
+    const rootRect = root?.getBoundingClientRect();
+    const btnRect = anchor.getBoundingClientRect();
+    // StaticPosCanvas scales try-pos-root — convert viewport → local design px
+    const scaleX =
+      root && rootRect && root.offsetWidth > 0
+        ? rootRect.width / root.offsetWidth
+        : 1;
+    const scaleY =
+      root && rootRect && root.offsetHeight > 0
+        ? rootRect.height / root.offsetHeight
+        : 1;
+    const localBtnBottom = rootRect
+      ? (btnRect.bottom - rootRect.top) / scaleY
+      : btnRect.bottom;
+    const localBtnTop = rootRect
+      ? (btnRect.top - rootRect.top) / scaleY
+      : btnRect.top;
+    const left = rootRect
+      ? (btnRect.left - rootRect.left) / scaleX
+      : btnRect.left;
+    const width = Math.max(
+      rootRect ? btnRect.width / scaleX : btnRect.width,
+      160,
+    );
+    const hostH = root?.offsetHeight ?? window.innerHeight;
+    const menuH = 220;
+    const topBelow = localBtnBottom + 4;
+    const top =
+      topBelow + menuH > hostH - 8
+        ? Math.max(8, localBtnTop - menuH - 4)
+        : topBelow;
+    setLineDiscountMenu((cur) =>
+      cur?.id === lineId ? null : { id: lineId, top, left, width },
+    );
+  };
+
   const toggleExpand = (id: string) => {
     setExpandedId((cur) => (cur === id ? null : id));
+    closeLineDiscountMenu();
   };
 
   const openDiscountDropdown = () => {
@@ -3439,7 +3438,7 @@ function OrderPanel({
       aria-label={title}
       onClick={onClick}
       disabled={disabled}
-      className={`relative flex h-[42px] flex-1 items-center justify-center rounded-xl text-white shadow-[0_1px_2px_rgba(0,0,0,0.12)] transition-opacity disabled:opacity-60 ${
+      className={`relative flex h-[42px] flex-1 items-center justify-center rounded-xl !text-white shadow-[0_1px_2px_rgba(0,0,0,0.12)] transition-opacity disabled:opacity-60 ${
         disabled
           ? 'bg-[#9CA3AF]'
           : danger
@@ -3454,8 +3453,15 @@ function OrderPanel({
     </button>
   );
 
+  const noteLine = lineNoteEdit
+    ? cart.find((l) => l.id === lineNoteEdit.id) ?? null
+    : null;
+
   return (
-    <aside className={`flex h-full min-h-0 flex-col overflow-hidden ${className}`} id={panelId}>
+    <aside
+      className={`relative flex h-full min-h-0 flex-col overflow-hidden ${className}`}
+      id={panelId}
+    >
       {/* Order panel header — identical to POS OrderPanelHeader */}
       <div className="border-b border-[#f0f0f0] px-3.5 py-3 dark:border-white/10">
         {empty ? (
@@ -3788,7 +3794,7 @@ function OrderPanel({
                           </div>
                         </div>
 
-                        {/* Discount — POS OrderSummaryPanel expandedRow */}
+                        {/* Discount — POS OrderSummaryPanel expandedRow + Modal dropdown */}
                         <div className="flex items-center justify-between gap-2">
                           <span className="text-[11px] font-semibold text-text-secondary">Discount</span>
                           <div className="relative min-w-0 flex-1 max-w-[200px]">
@@ -3798,13 +3804,11 @@ function OrderPanel({
                               onClick={(e) => {
                                 e.stopPropagation();
                                 if (!canDiscount || !onUpdateLineDiscount) return;
-                                setLineDiscountMenuId((cur) =>
-                                  cur === line.id ? null : line.id,
-                                );
                                 setLineNoteEdit(null);
+                                openLineDiscountMenu(line.id, e.currentTarget);
                               }}
                               className={`flex w-full items-center justify-between gap-1.5 rounded-xl border px-2.5 py-2 text-start text-[11px] font-semibold disabled:opacity-60 ${
-                                lineDiscountMenuId === line.id
+                                lineDiscountMenu?.id === line.id
                                   ? 'border-mintcom-green bg-mintcom-green/10 text-mintcom-green'
                                   : 'border-gray-200 bg-[#e8e8e8] text-text-primary dark:border-white/10 dark:bg-white/10 dark:text-white'
                               }`}
@@ -3819,57 +3823,14 @@ function OrderPanel({
                               <ChevronDown
                                 size={14}
                                 className={`shrink-0 transition-transform ${
-                                  lineDiscountMenuId === line.id ? 'rotate-180' : ''
+                                  lineDiscountMenu?.id === line.id ? 'rotate-180' : ''
                                 }`}
                               />
                             </button>
-                            {lineDiscountMenuId === line.id && onUpdateLineDiscount && (
-                              <>
-                                <button
-                                  type="button"
-                                  className="fixed inset-0 z-[60] cursor-default"
-                                  aria-label="Close line discount"
-                                  onClick={() => setLineDiscountMenuId(null)}
-                                />
-                                <div className="absolute end-0 top-[calc(100%+4px)] z-[70] min-w-full overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl dark:border-white/10 dark:bg-mintcom-surface">
-                                  {DEMO_ITEM_DISCOUNTS.map((d) => {
-                                    const selected =
-                                      d.pct === 0
-                                        ? !(line.discountPct && line.discountPct > 0)
-                                        : line.discountPct === d.pct;
-                                    return (
-                                      <button
-                                        key={d.id}
-                                        type="button"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          onUpdateLineDiscount(
-                                            line.id,
-                                            d.pct,
-                                            d.pct > 0 ? d.name : undefined,
-                                          );
-                                          setLineDiscountMenuId(null);
-                                        }}
-                                        className={`flex w-full flex-col border-b border-gray-100 px-3 py-2.5 text-start last:border-0 dark:border-white/8 ${
-                                          selected
-                                            ? 'bg-mintcom-green/10 font-bold text-mintcom-green'
-                                            : 'text-text-primary hover:bg-cream-50 dark:text-white dark:hover:bg-white/5'
-                                        }`}
-                                      >
-                                        <span className="text-[12px]">{d.name}</span>
-                                        {d.pct > 0 && (
-                                          <span className="text-[10px] opacity-70">{d.pct}% off</span>
-                                        )}
-                                      </button>
-                                    );
-                                  })}
-                                </div>
-                              </>
-                            )}
                           </div>
                         </div>
 
-                        {/* Special Note — POS expanded row + note display */}
+                        {/* Special Note — opens item NoteModal (same chrome as order Note) */}
                         <div className="flex items-center justify-between gap-2">
                           <span className="text-[11px] font-semibold text-text-secondary">
                             Special Note
@@ -3880,10 +3841,11 @@ function OrderPanel({
                             onClick={(e) => {
                               e.stopPropagation();
                               if (!onUpdateLineNote) return;
-                              setLineDiscountMenuId(null);
+                              closeLineDiscountMenu();
+                              // Same as mintcom-pos OrderSummaryPanel → NoteModal
                               setLineNoteEdit({
                                 id: line.id,
-                                draft: line.note || '',
+                                draft: (line.note || '').slice(0, NOTE_LIMIT),
                               });
                             }}
                             className="inline-flex items-center gap-1.5 text-[12px] font-bold text-mintcom-green disabled:opacity-50"
@@ -3902,44 +3864,6 @@ function OrderPanel({
                             {line.note}
                           </div>
                         ) : null}
-
-                        {/* Inline note editor (demo of POS NoteModal for line) */}
-                        {lineNoteEdit?.id === line.id && onUpdateLineNote && (
-                          <div className="space-y-2 rounded-xl border border-gray-200 bg-white p-2 dark:border-white/10 dark:bg-mintcom-surface">
-                            <textarea
-                              value={lineNoteEdit.draft}
-                              onChange={(e) =>
-                                setLineNoteEdit({
-                                  id: line.id,
-                                  draft: e.target.value.slice(0, 120),
-                                })
-                              }
-                              rows={2}
-                              autoFocus
-                              placeholder="Add a special note…"
-                              className="w-full resize-none rounded-xl border border-gray-200 bg-cream-50 px-2.5 py-2 text-[12px] outline-none focus:border-mintcom-green dark:border-white/10 dark:bg-mintcom-dark dark:text-white"
-                            />
-                            <div className="flex gap-2">
-                              <button
-                                type="button"
-                                onClick={() => setLineNoteEdit(null)}
-                                className="flex-1 rounded-xl border border-gray-200 py-1.5 text-[11px] font-bold dark:border-white/10 dark:text-white"
-                              >
-                                Cancel
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  onUpdateLineNote(line.id, lineNoteEdit.draft.trim());
-                                  setLineNoteEdit(null);
-                                }}
-                                className="flex-1 rounded-xl bg-mintcom-green py-1.5 text-[11px] font-bold text-white"
-                              >
-                                Save
-                              </button>
-                            </div>
-                          </div>
-                        )}
 
                         <div className="flex items-center justify-between border-t border-gray-200/80 pt-2 dark:border-white/8">
                           <span className="text-xs font-black text-text-primary dark:text-white">
@@ -4094,6 +4018,105 @@ function OrderPanel({
           />
         </div>
       </div>
+
+      {/*
+        Item discount menu — mintcom-pos OrderSummaryPanel Modal dropdown.
+        Portaled so the card floats over the full POS (not clipped by cart overflow).
+      */}
+      {lineDiscountMenu && onUpdateLineDiscount
+        ? createPortal(
+            <div className="absolute inset-0 z-[85]" role="presentation">
+              <button
+                type="button"
+                className="absolute inset-0 cursor-default bg-black/[0.05]"
+                aria-label="Close discount menu"
+                onClick={closeLineDiscountMenu}
+              />
+              <div
+                className="absolute z-[86] max-h-[220px] overflow-y-auto overscroll-contain rounded-xl border border-gray-200 bg-[#e8e8e8] shadow-[0_8px_24px_rgba(0,0,0,0.14)] dark:border-white/10 dark:bg-mintcom-surface"
+                style={{
+                  top: lineDiscountMenu.top,
+                  left: lineDiscountMenu.left,
+                  width: lineDiscountMenu.width,
+                }}
+                role="listbox"
+                aria-label="Select item discount"
+              >
+                {DEMO_ITEM_DISCOUNTS.map((d) => {
+                  const line = cart.find((l) => l.id === lineDiscountMenu.id);
+                  const selected =
+                    d.pct === 0
+                      ? !(line?.discountPct && line.discountPct > 0)
+                      : line?.discountPct === d.pct;
+                  return (
+                    <button
+                      key={d.id}
+                      type="button"
+                      role="option"
+                      aria-selected={selected}
+                      onClick={() => {
+                        onUpdateLineDiscount(
+                          lineDiscountMenu.id,
+                          d.pct,
+                          d.pct > 0 ? d.name : undefined,
+                        );
+                        closeLineDiscountMenu();
+                      }}
+                      className={`flex w-full items-center justify-between gap-2 border-b border-gray-200/80 px-3 py-3 text-start last:border-0 dark:border-white/8 ${
+                        selected
+                          ? 'bg-mintcom-green/15'
+                          : 'hover:bg-white/70 dark:hover:bg-white/5'
+                      }`}
+                    >
+                      <span className="min-w-0">
+                        <span
+                          className={`block text-[13px] font-medium ${
+                            selected
+                              ? 'font-bold text-mintcom-green'
+                              : 'text-text-primary dark:text-white'
+                          }`}
+                        >
+                          {d.name}
+                        </span>
+                        {d.pct > 0 && (
+                          <span className="mt-0.5 block text-[11px] text-mintcom-green">
+                            {d.pct}% off
+                          </span>
+                        )}
+                      </span>
+                      {selected ? (
+                        <Check size={16} className="shrink-0 text-mintcom-green" strokeWidth={2.5} />
+                      ) : null}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>,
+            (document.querySelector('.try-pos-root') as HTMLElement | null) ??
+              document.body,
+          )
+        : null}
+
+      {/*
+        Item special note — same NoteModal as mintcom-pos OrderSummaryPanel:
+        title “Note for {name}”, no order-type chips, saves to this cart line only.
+        Portaled full-frame over Try POS (not clipped to the order pane).
+      */}
+      {lineNoteEdit && onUpdateLineNote ? (
+        <DemoNoteModal
+          open
+          title={`Note for ${noteLine?.name || 'item'}`}
+          value={lineNoteEdit.draft}
+          onChange={(next) =>
+            setLineNoteEdit({ id: lineNoteEdit.id, draft: next })
+          }
+          onCancel={() => setLineNoteEdit(null)}
+          onSave={() => {
+            onUpdateLineNote(lineNoteEdit.id, lineNoteEdit.draft.trim());
+            setLineNoteEdit(null);
+          }}
+        />
+      ) : null}
     </aside>
   );
 }
@@ -4939,7 +4962,7 @@ function IconBtn({
       title={label}
       aria-label={label}
       onClick={onClick}
-      className={`flex h-9 w-9 items-center justify-center rounded-xl text-white shadow-sm transition-transform active:scale-95 ${
+      className={`flex h-9 w-9 items-center justify-center rounded-xl !text-white shadow-sm transition-transform active:scale-95 ${
         danger
           ? 'bg-mintcom-red'
           : active
@@ -5071,6 +5094,162 @@ function orderTypeLabel(t: OrderType) {
 /** Free-text part of order note — type tags like [Takeaway] stay hidden in the cart UI. */
 function freeTextOrderNote(note: string): string {
   return note.replace(/^\[(dine in|takeaway|delivery)\]\s*/i, '').trim();
+}
+
+/**
+ * Mirrors mintcom-pos NoteModal.tsx exactly:
+ * - Full-frame dimmed overlay (portaled into `.try-pos-root`)
+ * - Centered card, X close, textarea + n/80 + Save
+ * - Order notes: optional Takeaway / Delivery quick chips
+ * - Item notes: title “Note for {name}”, no order-type chips
+ */
+function DemoNoteModal({
+  open,
+  title,
+  value,
+  onChange,
+  onSave,
+  onCancel,
+  showOrderTypeActions = false,
+  orderType = 'dine-in',
+  onOrderTypeChange,
+}: {
+  open: boolean;
+  title: string;
+  value: string;
+  onChange: (next: string) => void;
+  onSave: () => void;
+  onCancel: () => void;
+  showOrderTypeActions?: boolean;
+  orderType?: OrderType;
+  onOrderTypeChange?: (t: OrderType) => void;
+}) {
+  const [host, setHost] = useState<HTMLElement | null>(null);
+
+  useEffect(() => {
+    setHost(
+      (document.querySelector('.try-pos-root') as HTMLElement | null) ??
+        document.body,
+    );
+  }, []);
+
+  if (!open || !host) return null;
+
+  return createPortal(
+    <div
+      className="absolute inset-0 z-[90] flex items-center justify-center bg-black/40 p-3 sm:p-4"
+      onClick={onCancel}
+      role="presentation"
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.96, y: 8 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.15 }}
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        className="flex w-[min(94%,500px)] max-h-[80%] flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl dark:border-white/10 dark:bg-mintcom-surface"
+      >
+        <div className="flex min-h-[52px] shrink-0 items-center border-b border-gray-100 px-4 dark:border-white/8 sm:px-5">
+          <span className="w-9 shrink-0" />
+          <p className="min-w-0 flex-1 truncate text-center text-[15px] font-semibold text-text-secondary sm:text-base">
+            {title}
+          </p>
+          <button
+            type="button"
+            onClick={onCancel}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-text-secondary hover:bg-cream-100 dark:hover:bg-white/10"
+            aria-label="Close"
+          >
+            <X size={22} />
+          </button>
+        </div>
+
+        <div className="min-h-0 flex-1 overflow-y-auto p-5 sm:p-7">
+          {showOrderTypeActions && onOrderTypeChange && (
+            <div className="mb-4">
+              <p className="mb-2.5 text-[11px] font-bold uppercase tracking-wide text-text-secondary dark:text-mintcom-textSecondary">
+                Quick add to note
+              </p>
+              <div className="flex gap-2">
+                {(
+                  [
+                    { id: 'takeaway' as const, label: 'Takeaway', Icon: ShoppingBag },
+                    { id: 'delivery' as const, label: 'Delivery', Icon: Truck },
+                  ] as const
+                ).map((t) => {
+                  const tag = `[${t.label}]`;
+                  const on = orderType === t.id;
+                  const Icon = t.Icon;
+                  return (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => {
+                        const stripType = /^\[(dine in|takeaway|delivery)\]\s*/i;
+                        const body = value.replace(stripType, '');
+                        if (on) {
+                          onOrderTypeChange('dine-in');
+                          onChange(body.trimStart().slice(0, NOTE_LIMIT));
+                          return;
+                        }
+                        onOrderTypeChange(t.id);
+                        const next = body.trim()
+                          ? `${tag} ${body.trim()}`
+                          : `${tag} `;
+                        onChange(next.slice(0, NOTE_LIMIT));
+                      }}
+                      className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl border-[1.5px] py-2.5 text-[12px] font-bold transition-colors ${
+                        on
+                          ? 'border-mintcom-green bg-mintcom-green/12 text-mintcom-green'
+                          : 'border-gray-200 bg-white text-text-secondary hover:border-mintcom-green/30 dark:border-white/10 dark:bg-mintcom-dark dark:text-mintcom-textSecondary'
+                      }`}
+                    >
+                      <Icon size={15} />
+                      <span>{t.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          <textarea
+            value={value}
+            onChange={(e) => {
+              const v = e.target.value.slice(0, NOTE_LIMIT);
+              onChange(v);
+              if (showOrderTypeActions && onOrderTypeChange) {
+                const tag = v
+                  .match(/^\[(dine in|takeaway|delivery)\]/i)?.[1]
+                  ?.toLowerCase();
+                if (tag === 'takeaway') onOrderTypeChange('takeaway');
+                else if (tag === 'delivery') onOrderTypeChange('delivery');
+                else onOrderTypeChange('dine-in');
+              }
+            }}
+            placeholder="e.g., Customer will pick up at 7:00 PM"
+            rows={5}
+            autoFocus
+            maxLength={NOTE_LIMIT}
+            className="min-h-[140px] w-full resize-none rounded-xl border border-gray-200 bg-white px-4 py-3 text-[15px] font-medium text-text-primary outline-none focus:border-mintcom-green dark:border-white/10 dark:bg-mintcom-dark dark:text-white"
+          />
+          <p className="mb-5 mt-1 text-end text-xs text-text-tertiary">
+            {value.length}/{NOTE_LIMIT}
+          </p>
+          <button
+            type="button"
+            onClick={onSave}
+            className="w-full rounded-xl bg-mintcom-green py-3.5 text-[15px] font-bold text-white shadow-md shadow-mintcom-green/25"
+          >
+            Save
+          </button>
+        </div>
+      </motion.div>
+    </div>,
+    host,
+  );
 }
 
 function payMethodLabel(m: PayMethod | null) {

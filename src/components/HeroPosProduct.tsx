@@ -7,7 +7,7 @@ import { FeaturePosScreenshot } from './FeaturePosScreenshot';
 import heroImage from '../assets/mintcom-pos-hero.png';
 
 /**
- * Screen glass bounds as % of mintcom-pos-hero.png (2048×2048).
+ * Screen glass bounds as % of mintcom-pos-hero.png (1350×1165).
  * Tuned to the physical display opening (inside the black bezel).
  */
 const GLASS = {
@@ -32,8 +32,8 @@ export function HeroPosProduct() {
         src={heroImage}
         alt=""
         className="pointer-events-none relative z-0 h-auto w-full drop-shadow-2xl"
-        width={2048}
-        height={2048}
+        width={1350}
+        height={1165}
         decoding="async"
         fetchPriority="high"
         draggable={false}
