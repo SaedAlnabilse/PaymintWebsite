@@ -319,8 +319,8 @@
       "subtitle": "Log In to Your Account to Continue",
       "title": "Welcome Back",
       "welcomeBack": "Welcome back",
-      "wrongCredentialsTitle": "Hmm… those keys don’t fit",
-      "wrongCredentialsMessage": "We couldn’t open your account with that email and password. Double-check for a typo, or start fresh if you’re new here.",
+      "wrongCredentialsTitle": "We couldn’t sign you in",
+      "wrongCredentialsMessage": "The email or password you entered doesn’t match an existing account. Check your details and try again, or create a new account to get started.",
       "tryAgain": "Try Again",
       "createAccount": "Sign Up",
       "noSocialAccountTitle": "No Mintcom account yet",
@@ -3300,7 +3300,7 @@
       "address": "Address",
       "addressPlaceholder": "City, Area, Building",
       "addressTip": "Location address.",
-      "businessType": "Business Type",
+      "businessType": "Business type",
       "businessTypes": {
         "bakery": "Bakery",
         "cafe": "Cafe",
@@ -3338,7 +3338,7 @@
         "nameRequired": "Location name is required",
         "typeRequired": "Business type is required"
       },
-      "locationName": "Location Name",
+      "locationName": "Location name",
       "locationNamePlaceholder": "e.g. The Coffee House",
       "locationNameTip": "The name of your business.",
       "menu": "Products, categories and add-ons",

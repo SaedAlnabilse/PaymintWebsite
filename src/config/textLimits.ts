@@ -3,7 +3,8 @@ export const TEXT_INPUT_LIMITS = {
   ATTRIBUTE_NAME: 32,
   PRODUCT_NAME: 40,
   CATEGORY_NAME: 32,
-  BUSINESS_NAME: 50,
+  // Location / brand / store display names — keep generous for multi-word names.
+  BUSINESS_NAME: 100,
   PERSON_NAME: 50,
   USERNAME: 40,
   LOGIN_IDENTIFIER: 80,
