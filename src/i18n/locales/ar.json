@@ -4134,7 +4134,11 @@
       "viewDashboard": "عرض لوحة التحكم",
       "yearly": "سنوي",
       "yearlyCost": "التكلفة السنوية",
-      "yearlyPlan": "خطة سنوية"
+      "yearlyPlan": "خطة سنوية",
+      "then": "ثم",
+      "trial": "تجريبي",
+      "trialEnds": "تنتهي التجربة",
+      "trialEndsNotice": "مجاني الآن · ثم {{price}} دولار {{period}} بعد التجربة"
     },
     "brands": {
       "activeBrands": "العلامات التجارية النشطة",

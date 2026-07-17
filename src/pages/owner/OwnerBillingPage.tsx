@@ -749,13 +749,17 @@ export function OwnerBillingPage() {
                                                     maximumFractionDigits: 2,
                                                 });
                                                 if (isTrial) {
+                                                    const periodLabel = isYearly
+                                                        ? t('common.yearly', { defaultValue: 'yearly' })
+                                                        : t('common.monthly', { defaultValue: 'monthly' });
                                                     return (
                                                         <div
                                                             className="flex flex-col items-center gap-0.5 whitespace-nowrap"
-                                                            title={t('owner.billing.trial_ends_notice', {
-                                                                defaultValue: `Free now · then ${formattedPrice} USD/mo after trial`,
+                                                            title={t('owner.billing.trialEndsNotice', {
+                                                                defaultValue: `Free now · then {{price}} USD {{period}} after trial`,
+                                                                price: formattedPrice,
+                                                                period: periodLabel,
                                                                 date: formatBillingDate(est.nextBillDate || est.trialEndsAt) || '',
-                                                                price: `${formattedPrice} USD`,
                                                             })}
                                                         >
                                                             <span className="inline-flex items-baseline gap-1 text-sm font-bold tracking-tight text-mintcom-green">
@@ -765,13 +769,20 @@ export function OwnerBillingPage() {
                                                                 </span>
                                                             </span>
                                                             <span className="text-[10px] font-bold text-mintcom-green/80">
-                                                                {t('owner.locations.trial', { defaultValue: 'Free trial' })}
+                                                                {t('owner.billing.trial', { defaultValue: 'Trial' })}
+                                                            </span>
+                                                            {/* Post-trial rate — always show the real amount under "Then" */}
+                                                            <span className="inline-flex items-baseline gap-1 text-[11px] font-bold tracking-tight text-gray-700 dark:text-gray-200">
+                                                                <span className="text-[10px] font-semibold text-gray-400 dark:text-gray-500">
+                                                                    {t('owner.billing.then', { defaultValue: 'Then' })}
+                                                                </span>
+                                                                <span>{formattedPrice}</span>
+                                                                <span className="text-[9px] font-black uppercase text-gray-400 dark:text-gray-500">
+                                                                    USD
+                                                                </span>
                                                             </span>
                                                             <span className="text-[10px] font-medium text-gray-400 dark:text-gray-500">
-                                                                {t('owner.billing.then_price', {
-                                                                    defaultValue: `then ${formattedPrice}/mo`,
-                                                                    price: formattedPrice,
-                                                                })}
+                                                                {periodLabel}
                                                             </span>
                                                         </div>
                                                     );
