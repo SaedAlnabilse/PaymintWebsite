@@ -120,7 +120,7 @@ export function EstablishmentsPage() {
               <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-2 flex items-center gap-2 flex-wrap">
                         <span>{t('establishments.subtitle')}</span>
                         {currentEstablishment?.name && (
-                            <span className="px-2.5 py-0.5 rounded-lg bg-mintcom-green/10 text-mintcom-green label-strong font-outfit border border-mintcom-green/20">
+                            <span className="px-2.5 py-0.5 rounded-lg bg-mintcom-green/10 text-mintcom-green label-strong font-sans border border-mintcom-green/20">
                                 {currentEstablishment.name}
                             </span>
                         )}
@@ -211,13 +211,13 @@ export function EstablishmentsPage() {
 
                 {/* Details List */}
                 <div className="relative z-10 space-y-3 mb-8 px-1">
-                  <div className="flex items-center gap-3 text-gray-500 dark:text-gray-400 label-strong font-outfit">
+                  <div className="flex items-center gap-3 text-gray-500 dark:text-gray-400 label-strong font-sans">
                     <div className="w-8 h-8 rounded-lg bg-gray-50 dark:bg-white/5 flex items-center justify-center border border-gray-100 dark:border-white/10">
                       <DollarSign size={14} className="text-mintcom-green" />
                     </div>
                     <span>{t('establishments.details.currency')}: {est.currency?.toUpperCase()}</span>
                   </div>
-                  <div className="flex items-center gap-3 text-gray-500 dark:text-gray-400 label-strong font-outfit">
+                  <div className="flex items-center gap-3 text-gray-500 dark:text-gray-400 label-strong font-sans">
                     <div className="w-8 h-8 rounded-lg bg-gray-50 dark:bg-white/5 flex items-center justify-center border border-gray-100 dark:border-white/10">
                       <ShieldCheck size={14} className="text-blue-500" />
                     </div>
@@ -271,7 +271,7 @@ export function EstablishmentsPage() {
                 </div>
                 <div className="text-center">
                   <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{t('establishments.addLocation')}</h3>
-                  <p className="label-strong font-outfit max-w-[200px]">{t('establishments.details.create')}</p>
+                  <p className="label-strong font-sans max-w-[200px]">{t('establishments.details.create')}</p>
                 </div>
               </motion.button>
             )}

@@ -137,7 +137,7 @@ export const PaymentsView = React.memo(function PaymentsView({ salesData, effect
                 selectedDateRange: selectedDateRange
               }
             })}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-white/10 transition-all label-strong font-outfit border border-gray-200 dark:border-white/10 shrink-0"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-white/10 transition-all label-strong font-sans border border-gray-200 dark:border-white/10 shrink-0"
           >
             <span>{t('orders.reports.payments.viewAllOrders')}</span>
             <ChevronRight size={14} className={`text-mintcom-green transition-transform ${t('common.locale') === 'ar' ? 'rotate-180' : ''}`} />
@@ -237,13 +237,13 @@ export const PaymentsView = React.memo(function PaymentsView({ salesData, effect
               <table className="w-full relative">
                 <thead className="bg-gray-50 dark:bg-white/[0.02] sticky top-0 z-10">
                   <tr>
-                    <th className="px-5 py-3.5 text-start label-strong font-outfit whitespace-nowrap bg-gray-50 dark:bg-[#1E293B] border-b border-gray-100 dark:border-white/5">
+                    <th className="px-5 py-3.5 text-start label-strong font-sans whitespace-nowrap bg-gray-50 dark:bg-[#1E293B] border-b border-gray-100 dark:border-white/5">
                       {t('orders.reports.payments.method')}
                     </th>
-                    <th className="px-5 py-3.5 text-end label-strong font-outfit whitespace-nowrap bg-gray-50 dark:bg-[#1E293B] border-b border-gray-100 dark:border-white/5">
+                    <th className="px-5 py-3.5 text-end label-strong font-sans whitespace-nowrap bg-gray-50 dark:bg-[#1E293B] border-b border-gray-100 dark:border-white/5">
                       {t('orders.reports.payments.revenue')}
                     </th>
-                    <th className="px-5 py-3.5 text-end label-strong font-outfit whitespace-nowrap bg-gray-50 dark:bg-[#1E293B] border-b border-gray-100 dark:border-white/5">
+                    <th className="px-5 py-3.5 text-end label-strong font-sans whitespace-nowrap bg-gray-50 dark:bg-[#1E293B] border-b border-gray-100 dark:border-white/5">
                       {t('orders.reports.payments.share')}
                     </th>
                   </tr>

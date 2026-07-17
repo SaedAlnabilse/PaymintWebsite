@@ -1587,388 +1587,494 @@ export function OnboardingPage() {
             </motion.div>
           )}
 
-          {/* STEP 4: Trial & Payment */}
+          {/* STEP 4: Trial & Payment — two cards side by side (plan | payment) */}
           {step === 4 && (
             <motion.div
               key="step4"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="max-w-md w-full"
+              className="max-w-5xl w-full"
             >
-              <div className="bg-white dark:bg-white/5 rounded-[2.5rem] border border-gray-200 dark:border-white/10 p-8 lg:p-12 shadow-2xl shadow-gray-200/50 dark:shadow-none">
-                <div className="mb-8">
-                  <div className="flex justify-between items-center mb-6">
-                    <button onClick={() => goToStep(3)} className="flex items-center gap-2 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors text-xs font-sans font-bold">
-                      {!isRTL && <ArrowLeft size={14} />}
-                      {t('onboarding.back')}
-                      {isRTL && <ArrowLeft size={14} />}
-                    </button>
-                    {isAdditionalLocation && (
-                      <button type="button" onClick={() => navigate('/owner')} className="text-gray-400 hover:text-mintcom-green hover:underline transition-colors flex items-center text-xs font-sans font-bold">
-                        {t('common.dashboard', { defaultValue: 'Go to dashboard' })}
-                      </button>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center ${isTrialFlow ? 'bg-yellow-400/10' : 'bg-mintcom-green/10'}`}>
-                      <ShieldCheck className={isTrialFlow ? 'text-yellow-500' : 'text-mintcom-green'} size={24} />
-                    </div>
+              <div className="mb-4 flex justify-between items-center px-1">
+                <button
+                  type="button"
+                  onClick={() => goToStep(3)}
+                  className="flex items-center gap-2 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors text-xs font-sans font-bold"
+                >
+                  {!isRTL && <ArrowLeft size={14} />}
+                  {t('onboarding.back')}
+                  {isRTL && <ArrowLeft size={14} />}
+                </button>
+                {isAdditionalLocation && (
+                  <button
+                    type="button"
+                    onClick={() => navigate('/owner')}
+                    className="text-gray-400 hover:text-mintcom-green hover:underline transition-colors flex items-center text-xs font-sans font-bold"
+                  >
+                    {t('common.dashboard', { defaultValue: 'Go to dashboard' })}
+                  </button>
+                )}
+              </div>
+
+              <form
+                onSubmit={form4.handleSubmit(onStep4Submit)}
+                autoComplete="off"
+                dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}
+              >
+                <div className="grid grid-cols-1 lg:grid-cols-2 overflow-hidden rounded-[2rem] border border-gray-200 bg-white shadow-2xl shadow-gray-200/50 dark:border-white/10 dark:bg-white/5 dark:shadow-none lg:divide-x lg:divide-gray-100 dark:lg:divide-white/10">
+                  {/* ── LEFT: plan / trial summary ── */}
+                  <div className="flex flex-col gap-6 p-8 lg:p-10">
                     <div>
-                      <h2 className="font-magilio text-xl font-bold text-gray-900 dark:text-white">
-                        {isTrialFlow ? t('onboarding.step2.trialTitle') : t('onboarding.step2.activateTitle')}
-                      </h2>
-                      {isTrialFlow ? (
-                        <span className="bg-yellow-400 text-black text-xs font-sans font-bold px-2 py-0.5 rounded">{t('onboarding.step2.freeDays')}</span>
-                      ) : (
-                        <span className="bg-mintcom-green text-black text-xs font-sans font-bold px-2 py-0.5 rounded">
-                          {selectedPriceWithPeriod}
-                        </span>
+                      <div className="mb-4 flex items-center gap-3">
+                        <div
+                          className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${
+                            isTrialFlow ? 'bg-yellow-400/15' : 'bg-mintcom-green/10'
+                          }`}
+                        >
+                          <ShieldCheck
+                            className={isTrialFlow ? 'text-yellow-500' : 'text-mintcom-green'}
+                            size={24}
+                          />
+                        </div>
+                        <div className="min-w-0">
+                          <h2 className="font-magilio text-xl font-bold text-gray-900 dark:text-white sm:text-2xl">
+                            {isTrialFlow
+                              ? t('onboarding.step2.trialTitle')
+                              : t('onboarding.step2.activateTitle')}
+                          </h2>
+                          {isTrialFlow ? (
+                            <span className="mt-1 inline-flex items-center rounded-full bg-yellow-400 px-2.5 py-0.5 text-[11px] font-sans font-bold text-black">
+                              {t('onboarding.step2.freeDays')}
+                            </span>
+                          ) : (
+                            <span className="mt-1 inline-flex items-center rounded-full bg-mintcom-green px-2.5 py-0.5 text-[11px] font-sans font-bold text-black">
+                              {selectedPriceWithPeriod}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <p className="text-sm font-sans leading-relaxed text-gray-600 dark:text-gray-300">
+                        {isTrialFlow
+                          ? t('onboarding.step2.trialDesc')
+                          : t('onboarding.step2.activateDesc', { amount: selectedPriceWithPeriod })}
+                      </p>
+                      {isAdditionalLocation && !isTrialFlow && (
+                        <div className="mt-3 rounded-xl border border-blue-500/20 bg-blue-500/10 px-3 py-2 text-xs font-sans text-blue-500">
+                          {t('onboarding.step2.discountedAdditionalLocation', {
+                            defaultValue: 'Discounted rate for additional locations',
+                          })}
+                        </div>
                       )}
                     </div>
-                  </div>
-                  <p className="text-sm font-sans text-gray-600 dark:text-gray-300">
-                    {isTrialFlow
-                      ? t('onboarding.step2.trialDesc')
-                      : t('onboarding.step2.activateDesc', { amount: selectedPriceWithPeriod })
-                    }
-                  </p>
-                  {isAdditionalLocation && !isTrialFlow && (
-                    <div className="mt-3 px-3 py-2 bg-blue-500/10 text-blue-500 text-xs font-sans rounded-xl border border-blue-500/20">
-                      {t('onboarding.step2.discountedAdditionalLocation', {
-                        defaultValue: 'Discounted rate for additional locations',
-                      })}
-                    </div>
-                  )}
-                </div>
 
-                <form onSubmit={form4.handleSubmit(onStep4Submit)} autoComplete="off" className="space-y-6" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
-                  {/* Billing Cycle Toggle - shown for the trial too, so the owner
-                      picks what they'll be billed once the free trial ends. */}
-                  <div>
-                    {isTrialFlow && (
-                      <p className="mb-2 text-xs font-sans font-bold text-gray-500 dark:text-gray-400">
-                        {t('onboarding.step2.trialChooseCycleHint', {
-                          defaultValue: "Pick what you'll be billed after your free trial",
-                        })}
-                      </p>
-                    )}
-                    <div className="grid grid-cols-2 gap-1.5 bg-gray-100 dark:bg-black/30 border border-gray-200 dark:border-white/10 rounded-2xl p-1.5">
-                      <button
-                        type="button"
-                        onClick={() => setBillingCycle(BILLING_CYCLES.MONTHLY)}
-                        className={`py-3 rounded-xl text-sm font-sans font-bold transition-all duration-300 ${billingCycle === BILLING_CYCLES.MONTHLY
-                          ? 'bg-mintcom-green text-black shadow-lg shadow-mintcom-green/20'
-                          : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                    {/* Billing cycle toggle */}
+                    <div>
+                      {isTrialFlow && (
+                        <p className="mb-2 text-[11px] font-sans font-bold uppercase tracking-[0.12em] text-gray-400">
+                          {t('onboarding.step2.trialChooseCycleHint', {
+                            defaultValue: "Pick what you'll be billed after your free trial",
+                          })}
+                        </p>
+                      )}
+                      <div className="grid grid-cols-2 gap-1 rounded-full border border-gray-200 bg-gray-100 p-1 dark:border-white/10 dark:bg-black/30">
+                        <button
+                          type="button"
+                          onClick={() => setBillingCycle(BILLING_CYCLES.MONTHLY)}
+                          className={`rounded-full py-2.5 text-sm font-sans font-bold transition-all duration-300 ${
+                            billingCycle === BILLING_CYCLES.MONTHLY
+                              ? 'bg-mintcom-green text-black shadow-md shadow-mintcom-green/20'
+                              : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
                           }`}
-                      >
-                        {t('onboarding.step2.monthly')}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setBillingCycle(BILLING_CYCLES.YEARLY)}
-                        className={`py-3 rounded-xl text-sm font-sans font-bold transition-all duration-300 flex items-center justify-center gap-2 ${billingCycle === BILLING_CYCLES.YEARLY
-                          ? 'bg-mintcom-green text-black shadow-lg shadow-mintcom-green/20'
-                          : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                        >
+                          {t('onboarding.step2.monthly')}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setBillingCycle(BILLING_CYCLES.YEARLY)}
+                          className={`flex items-center justify-center gap-2 rounded-full py-2.5 text-sm font-sans font-bold transition-all duration-300 ${
+                            billingCycle === BILLING_CYCLES.YEARLY
+                              ? 'bg-mintcom-green text-black shadow-md shadow-mintcom-green/20'
+                              : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
                           }`}
-                      >
-                        {t('onboarding.step2.yearly')}
-                        <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-sans font-bold leading-none ${billingCycle === BILLING_CYCLES.YEARLY ? 'bg-black text-mintcom-green' : 'bg-mintcom-green/15 text-mintcom-green'
-                          }`}>
-                          {t('common.save', { defaultValue: 'Save' })}
-                        </span>
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="p-5 bg-gray-50 dark:bg-black/20 rounded-2xl border border-dashed border-gray-300 dark:border-white/10">
-                    <span className="block text-[11px] font-sans font-bold uppercase tracking-[0.12em] text-gray-400 mb-3">
-                      {t('onboarding.step2.totalDue')}
-                    </span>
-
-                    {isTrialFlow ? (
-                      <div className="flex items-end gap-2">
-                        <span className="font-barlow text-5xl font-extrabold leading-none text-gray-900 dark:text-white">
-                          {formatWholeNumber(0)}
-                        </span>
-                        <span className="pb-1 text-sm font-sans font-bold text-gray-500">{selectedUnitLabel}</span>
+                        >
+                          {t('onboarding.step2.yearly')}
+                          <span
+                            className={`rounded-full px-1.5 py-0.5 text-[9px] font-sans font-bold leading-none ${
+                              billingCycle === BILLING_CYCLES.YEARLY
+                                ? 'bg-black text-mintcom-green'
+                                : 'bg-mintcom-green/15 text-mintcom-green'
+                            }`}
+                          >
+                            {t('common.save', { defaultValue: 'Save' })}
+                          </span>
+                        </button>
                       </div>
-                    ) : (
-                      <div className="flex flex-col items-start">
-                        {/* Standard price, struck-through (only when a benefit applies) */}
-                        {hasLocationDiscount && (
-                          <>
-                            <span className="font-barlow text-lg font-bold text-gray-400 line-through decoration-2">
-                              {formatWholeNumber(primaryDisplayPrice)}{' '}
-                              <span className="text-xs font-sans no-underline">{selectedUnitLabel}</span>
-                            </span>
-                            <ChevronDown size={18} className="my-0.5 text-mintcom-green" />
-                          </>
-                        )}
-                        {/* Actual price, stacked below */}
+                    </div>
+
+                    {/* Total due */}
+                    <div className="rounded-2xl border border-dashed border-mintcom-green/30 bg-mintcom-green/5 p-5 dark:border-mintcom-green/20 dark:bg-mintcom-green/5">
+                      <span className="mb-3 block text-[11px] font-sans font-bold uppercase tracking-[0.12em] text-gray-400">
+                        {t('onboarding.step2.totalDue')}
+                      </span>
+
+                      {isTrialFlow ? (
                         <div className="flex items-end gap-2">
                           <span className="font-barlow text-5xl font-extrabold leading-none text-gray-900 dark:text-white">
-                            {formatWholeNumber(displayPrice)}
+                            {formatWholeNumber(0)}
                           </span>
-                          <span className="pb-1 text-sm font-sans font-bold text-gray-500">{selectedUnitLabel}</span>
+                          <span className="pb-1 text-sm font-sans font-bold text-gray-500">
+                            {selectedUnitLabel}
+                          </span>
                         </div>
-                      </div>
-                    )}
+                      ) : (
+                        <div className="flex flex-col items-start">
+                          {hasLocationDiscount && (
+                            <>
+                              <span className="font-barlow text-lg font-bold text-gray-400 line-through decoration-2">
+                                {formatWholeNumber(primaryDisplayPrice)}{' '}
+                                <span className="text-xs font-sans no-underline">{selectedUnitLabel}</span>
+                              </span>
+                              <ChevronDown size={18} className="my-0.5 text-mintcom-green" />
+                            </>
+                          )}
+                          <div className="flex items-end gap-2">
+                            <span className="font-barlow text-5xl font-extrabold leading-none text-gray-900 dark:text-white">
+                              {formatWholeNumber(displayPrice)}
+                            </span>
+                            <span className="pb-1 text-sm font-sans font-bold text-gray-500">
+                              {selectedUnitLabel}
+                            </span>
+                          </div>
+                        </div>
+                      )}
 
-                    {/* Billing cadence */}
-                    <div className="mt-3 flex items-center gap-2 text-mintcom-green">
-                      <RefreshCw size={14} />
-                      <span className="text-sm font-sans font-bold">
-                        {isTrialFlow
-                          ? t('onboarding.step2.trialThenPrice', {
-                              defaultValue: `Then ${selectedPriceWithPeriod}, billed after your 30-day trial`,
-                              price: selectedPriceWithPeriod,
-                            })
-                          : t('onboarding.step2.billedCycle', {
-                              defaultValue: `Billed ${selectedPlanLabel.toLowerCase()}`,
-                              cycle: selectedPlanLabel.toLowerCase(),
-                            })}
-                      </span>
+                      <div className="mt-3 flex items-center gap-2 text-mintcom-green">
+                        <RefreshCw size={14} className="shrink-0" />
+                        <span className="text-sm font-sans font-bold">
+                          {isTrialFlow
+                            ? t('onboarding.step2.trialThenPrice', {
+                                defaultValue: `Then ${selectedPriceWithPeriod}, billed after your 30-day trial`,
+                                price: selectedPriceWithPeriod,
+                              })
+                            : t('onboarding.step2.billedCycle', {
+                                defaultValue: `Billed ${selectedPlanLabel.toLowerCase()}`,
+                                cycle: selectedPlanLabel.toLowerCase(),
+                              })}
+                        </span>
+                      </div>
+
+                      {billingCycle === BILLING_CYCLES.YEARLY && (
+                        <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1">
+                          <Sparkles size={12} className="text-mintcom-green" />
+                          <span className="text-xs font-bold uppercase tracking-wider text-mintcom-green">
+                            {t('landing.pricing.save')} {formatWholeUsd(yearlySavings)}{' '}
+                            {t('landing.pricing.perYear')}
+                          </span>
+                          <span className="text-xs text-gray-400 line-through">
+                            {formatWholeUsd(currentMonthlyPrice * 12)} {t('landing.pricing.perYear')}
+                          </span>
+                        </div>
+                      )}
+
+                      {hasLocationDiscount && (
+                        <div className="mt-4 flex items-center gap-3 rounded-xl border border-mintcom-green/20 bg-mintcom-green/10 p-3">
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-mintcom-green/20">
+                            <Tags size={16} className="text-mintcom-green" />
+                          </div>
+                          <div className="leading-tight">
+                            <p className="text-sm font-sans font-bold text-gray-900 dark:text-white">
+                              {t('onboarding.step2.addedLocation', { defaultValue: 'Added location' })}
+                            </p>
+                            <p className="text-xs font-sans text-gray-500">
+                              {t('onboarding.step2.existingAccountBenefit', {
+                                defaultValue: 'Existing account benefit',
+                              })}
+                            </p>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
-                    {/* Yearly savings note */}
-                    {billingCycle === BILLING_CYCLES.YEARLY && (
-                      <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1">
-                        <Sparkles size={12} className="text-mintcom-green" />
-                        <span className="text-xs font-bold text-mintcom-green tracking-wider uppercase">
-                          {t('landing.pricing.save')} {formatWholeUsd(yearlySavings)} {t('landing.pricing.perYear')}
-                        </span>
-                        <span className="text-xs text-gray-400 line-through">{formatWholeUsd(currentMonthlyPrice * 12)} {t('landing.pricing.perYear')}</span>
-                      </div>
-                    )}
-
-                    {/* Existing-account benefit badge */}
-                    {hasLocationDiscount && (
-                      <div className="mt-4 flex items-center gap-3 rounded-xl border border-mintcom-green/20 bg-mintcom-green/10 p-3">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-mintcom-green/20">
-                          <Tags size={16} className="text-mintcom-green" />
+                    {/* Trial disclosure */}
+                    {isTrialFlow && (
+                      <div className="flex items-start gap-3 rounded-2xl border border-mintcom-green/20 bg-mintcom-green/5 p-4">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-mintcom-green/15">
+                          <CalendarClock size={18} className="text-mintcom-green" />
                         </div>
-                        <div className="leading-tight">
+                        <div className="leading-snug">
                           <p className="text-sm font-sans font-bold text-gray-900 dark:text-white">
-                            {t('onboarding.step2.addedLocation', { defaultValue: 'Added location' })}
+                            {t('onboarding.step2.trialDisclosureTitle', {
+                              defaultValue: `Free until ${trialEndDateLabel}`,
+                              date: trialEndDateLabel,
+                            })}
                           </p>
-                          <p className="text-xs font-sans text-gray-500">
-                            {t('onboarding.step2.existingAccountBenefit', { defaultValue: 'Existing account benefit' })}
+                          <p className="mt-1 text-xs font-sans text-gray-600 dark:text-gray-300">
+                            {t('onboarding.step2.trialDisclosureBody', {
+                              defaultValue: `After your 30-day free trial ends on ${trialEndDateLabel}, you'll start paying ${selectedPriceWithPeriod} for this location. Cancel anytime before then and you won't be charged.`,
+                              date: trialEndDateLabel,
+                              price: selectedPriceWithPeriod,
+                              days: TRIAL_DAYS,
+                            })}
                           </p>
                         </div>
                       </div>
                     )}
                   </div>
 
-                  {/* Trial billing disclosure (ChatGPT-style): exact charge date,
-                      the amount that starts after the trial, and cancel-anytime. */}
-                  {isTrialFlow && (
-                    <div className="flex items-start gap-3 rounded-2xl border border-mintcom-green/20 bg-mintcom-green/5 p-4">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-mintcom-green/15">
-                        <CalendarClock size={18} className="text-mintcom-green" />
-                      </div>
-                      <div className="leading-snug">
-                        <p className="text-sm font-sans font-bold text-gray-900 dark:text-white">
-                          {t('onboarding.step2.trialDisclosureTitle', {
-                            defaultValue: `Free until ${trialEndDateLabel}`,
-                            date: trialEndDateLabel,
-                          })}
-                        </p>
-                        <p className="mt-1 text-xs font-sans text-gray-600 dark:text-gray-300">
-                          {t('onboarding.step2.trialDisclosureBody', {
-                            defaultValue: `After your 30-day free trial ends on ${trialEndDateLabel}, you'll start paying ${selectedPriceWithPeriod} for this location. Cancel anytime before then and you won't be charged.`,
-                            date: trialEndDateLabel,
-                            price: selectedPriceWithPeriod,
-                            days: TRIAL_DAYS,
-                          })}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Saved Card Option */}
-                  {hasSavedCard && (
-                    <div className="space-y-4 mb-6">
-                      <div
-                        onClick={() => setUseSavedCard(true)}
-                        className={`p-4 rounded-2xl border-2 cursor-pointer transition-all ${useSavedCard
-                          ? 'border-mintcom-green bg-mintcom-green/5'
-                          : 'border-gray-200 dark:border-white/10 hover:border-gray-300'
-                          }`}
-                      >
-                        <div className="flex items-center gap-4">
-                          <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${useSavedCard ? 'bg-mintcom-green' : 'bg-gray-100 dark:bg-white/5'}`}>
-                            <CreditCard size={24} className={useSavedCard ? 'text-black' : 'text-gray-400'} />
-                          </div>
-                          <div className="flex-1">
-                            <p className="text-sm font-sans font-bold text-gray-900 dark:text-white">{t('onboarding.step2.useSaved')}</p>
-                            <p className="text-xs font-sans text-gray-500">**** **** **** {savedCardLast4}</p>
-                          </div>
-                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${useSavedCard ? 'border-mintcom-green bg-mintcom-green' : 'border-gray-300'
-                            }`}>
-                            {useSavedCard && <div className="w-2 h-2 rounded-full bg-white" />}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div
-                        onClick={() => setUseSavedCard(false)}
-                        className={`p-4 rounded-2xl border-2 cursor-pointer transition-all ${!useSavedCard
-                          ? 'border-mintcom-green bg-mintcom-green/5'
-                          : 'border-gray-200 dark:border-white/10 hover:border-gray-300'
-                          }`}
-                      >
-                        <div className="flex items-center gap-4">
-                          <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${!useSavedCard ? 'bg-mintcom-green' : 'bg-gray-100 dark:bg-white/5'}`}>
-                            <Plus size={24} className={!useSavedCard ? 'text-black' : 'text-gray-400'} />
-                          </div>
-                          <div className="flex-1">
-                            <p className="text-sm font-sans font-bold text-gray-900 dark:text-white">{t('onboarding.step2.addNew')}</p>
-                            <p className="text-xs font-sans text-gray-500">{t('onboarding.step2.differentMethod')}</p>
-                          </div>
-                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${!useSavedCard ? 'border-mintcom-green bg-mintcom-green' : 'border-gray-300'
-                            }`}>
-                            {!useSavedCard && <div className="w-2 h-2 rounded-full bg-white" />}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* New Card Form - Only show if no saved card OR user chose to add new */}
-                  {(!hasSavedCard || !useSavedCard) && (
-                    <div className="space-y-1 rounded-2xl border border-gray-200 bg-gray-50 p-5 dark:border-white/10 dark:bg-black/20">
-                      <div className="mb-3 flex items-center gap-2 text-xs font-sans font-bold text-gray-500 dark:text-gray-400">
-                        <Lock size={14} className="shrink-0 text-mintcom-green" />
-                        <span className="leading-none">
+                  {/* ── RIGHT: payment details ── */}
+                  <div className="flex flex-col gap-5 border-t border-gray-100 p-8 dark:border-white/10 lg:border-t-0 lg:p-10">
+                    <div>
+                      <div className="mb-3 flex items-center gap-2 text-[11px] font-sans font-bold uppercase tracking-[0.12em] text-mintcom-green">
+                        <Lock size={13} className="shrink-0" />
+                        <span>
                           {t('paymentMethods.modal.subtitle', {
-                            defaultValue: 'Secure - 256-bit encrypted',
+                            defaultValue: 'Secure · 256-bit encrypted',
                           })}
                         </span>
                       </div>
+                      <h3 className="font-magilio text-xl font-bold text-gray-900 dark:text-white sm:text-2xl">
+                        {t('onboarding.step2.paymentDetails', {
+                          defaultValue: 'Payment details',
+                        })}
+                      </h3>
+                    </div>
 
-                      <EmbeddedCardField
-                        label={t('paymentMethods.modal.cardNumber', { defaultValue: 'Card number' })}
-                        error={form4.formState.errors.cardNumber?.message as string | undefined}
-                      >
-                        <input
-                          type="text"
-                          autoComplete="cc-number"
-                          {...form4.register('cardNumber')}
-                          value={cardNumberValue}
-                          onChange={(e) => {
-                            form4.setValue('cardNumber', formatCardNumberInput(e.target.value), {
-                              shouldDirty: true,
-                              shouldTouch: true,
-                            });
-                            form4.clearErrors('cardNumber');
-                          }}
-                          maxLength={MAX_FORMATTED_CARD_NUMBER_LENGTH}
-                          inputMode="numeric"
-                          placeholder="0000 0000 0000 0000"
-                          className={CARD_INPUT_CLASS}
-                        />
-                        <CreditCard size={18} className="shrink-0 text-gray-400" aria-hidden />
-                      </EmbeddedCardField>
+                    {/* Saved card options */}
+                    {hasSavedCard && (
+                      <div className="space-y-3">
+                        <div
+                          onClick={() => setUseSavedCard(true)}
+                          className={`cursor-pointer rounded-2xl border-2 p-4 transition-all ${
+                            useSavedCard
+                              ? 'border-mintcom-green bg-mintcom-green/5'
+                              : 'border-gray-200 hover:border-gray-300 dark:border-white/10'
+                          }`}
+                        >
+                          <div className="flex items-center gap-4">
+                            <div
+                              className={`flex h-12 w-12 items-center justify-center rounded-xl ${
+                                useSavedCard ? 'bg-mintcom-green' : 'bg-gray-100 dark:bg-white/5'
+                              }`}
+                            >
+                              <CreditCard
+                                size={24}
+                                className={useSavedCard ? 'text-black' : 'text-gray-400'}
+                              />
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-sm font-sans font-bold text-gray-900 dark:text-white">
+                                {t('onboarding.step2.useSaved')}
+                              </p>
+                              <p className="text-xs font-sans text-gray-500">
+                                **** **** **** {savedCardLast4}
+                              </p>
+                            </div>
+                            <div
+                              className={`flex h-5 w-5 items-center justify-center rounded-full border-2 ${
+                                useSavedCard
+                                  ? 'border-mintcom-green bg-mintcom-green'
+                                  : 'border-gray-300'
+                              }`}
+                            >
+                              {useSavedCard && <div className="h-2 w-2 rounded-full bg-white" />}
+                            </div>
+                          </div>
+                        </div>
 
-                      <div className="grid grid-cols-1 gap-x-3 gap-y-1 sm:grid-cols-2 sm:items-start">
+                        <div
+                          onClick={() => setUseSavedCard(false)}
+                          className={`cursor-pointer rounded-2xl border-2 p-4 transition-all ${
+                            !useSavedCard
+                              ? 'border-mintcom-green bg-mintcom-green/5'
+                              : 'border-gray-200 hover:border-gray-300 dark:border-white/10'
+                          }`}
+                        >
+                          <div className="flex items-center gap-4">
+                            <div
+                              className={`flex h-12 w-12 items-center justify-center rounded-xl ${
+                                !useSavedCard ? 'bg-mintcom-green' : 'bg-gray-100 dark:bg-white/5'
+                              }`}
+                            >
+                              <Plus
+                                size={24}
+                                className={!useSavedCard ? 'text-black' : 'text-gray-400'}
+                              />
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-sm font-sans font-bold text-gray-900 dark:text-white">
+                                {t('onboarding.step2.addNew')}
+                              </p>
+                              <p className="text-xs font-sans text-gray-500">
+                                {t('onboarding.step2.differentMethod')}
+                              </p>
+                            </div>
+                            <div
+                              className={`flex h-5 w-5 items-center justify-center rounded-full border-2 ${
+                                !useSavedCard
+                                  ? 'border-mintcom-green bg-mintcom-green'
+                                  : 'border-gray-300'
+                              }`}
+                            >
+                              {!useSavedCard && <div className="h-2 w-2 rounded-full bg-white" />}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* New card form */}
+                    {(!hasSavedCard || !useSavedCard) && (
+                      <div className="space-y-1">
                         <EmbeddedCardField
-                          label={t('paymentMethods.modal.expiry', { defaultValue: 'Expiry date' })}
-                          error={form4.formState.errors.expiryDate?.message as string | undefined}
+                          label={t('paymentMethods.modal.cardNumber', {
+                            defaultValue: 'Card number',
+                          })}
+                          error={form4.formState.errors.cardNumber?.message as string | undefined}
                         >
                           <input
                             type="text"
-                            autoComplete="cc-exp"
-                            {...form4.register('expiryDate')}
-                            value={form4.watch('expiryDate') || ''}
+                            autoComplete="cc-number"
+                            {...form4.register('cardNumber')}
+                            value={cardNumberValue}
                             onChange={(e) => {
-                              form4.setValue('expiryDate', formatExpiryInput(e.target.value), {
+                              form4.setValue('cardNumber', formatCardNumberInput(e.target.value), {
                                 shouldDirty: true,
                                 shouldTouch: true,
                               });
-                              form4.clearErrors('expiryDate');
+                              form4.clearErrors('cardNumber');
                             }}
-                            maxLength={5}
+                            maxLength={MAX_FORMATTED_CARD_NUMBER_LENGTH}
                             inputMode="numeric"
-                            placeholder="MM/YY"
+                            placeholder="0000 0000 0000 0000"
                             className={CARD_INPUT_CLASS}
                           />
+                          <CreditCard size={18} className="shrink-0 text-gray-400" aria-hidden />
                         </EmbeddedCardField>
+
+                        <div className="grid grid-cols-1 gap-x-3 gap-y-1 sm:grid-cols-2 sm:items-start">
+                          <EmbeddedCardField
+                            label={t('paymentMethods.modal.expiry', {
+                              defaultValue: 'Expiry date',
+                            })}
+                            error={form4.formState.errors.expiryDate?.message as string | undefined}
+                          >
+                            <input
+                              type="text"
+                              autoComplete="cc-exp"
+                              {...form4.register('expiryDate')}
+                              value={form4.watch('expiryDate') || ''}
+                              onChange={(e) => {
+                                form4.setValue('expiryDate', formatExpiryInput(e.target.value), {
+                                  shouldDirty: true,
+                                  shouldTouch: true,
+                                });
+                                form4.clearErrors('expiryDate');
+                              }}
+                              maxLength={5}
+                              inputMode="numeric"
+                              placeholder="MM/YY"
+                              className={CARD_INPUT_CLASS}
+                            />
+                          </EmbeddedCardField>
+
+                          <EmbeddedCardField
+                            label={
+                              <>
+                                {t('paymentMethods.modal.cvv', { defaultValue: 'CVV' })}
+                                <Info size={12} className="shrink-0 text-gray-400" aria-hidden />
+                              </>
+                            }
+                            error={form4.formState.errors.cvv?.message as string | undefined}
+                          >
+                            <input
+                              type="password"
+                              autoComplete="cc-csc"
+                              {...form4.register('cvv')}
+                              value={form4.watch('cvv') || ''}
+                              onChange={(e) => {
+                                form4.setValue(
+                                  'cvv',
+                                  getCardDigits(e.target.value).slice(0, cvvLength),
+                                  {
+                                    shouldDirty: true,
+                                    shouldTouch: true,
+                                  },
+                                );
+                                form4.clearErrors('cvv');
+                              }}
+                              maxLength={4}
+                              inputMode="numeric"
+                              placeholder="•••"
+                              className={CARD_INPUT_CLASS}
+                            />
+                          </EmbeddedCardField>
+                        </div>
 
                         <EmbeddedCardField
-                          label={(
-                            <>
-                              {t('paymentMethods.modal.cvv', { defaultValue: 'CVV' })}
-                              <Info size={12} className="shrink-0 text-gray-400" aria-hidden />
-                            </>
-                          )}
-                          error={form4.formState.errors.cvv?.message as string | undefined}
+                          label={t('paymentMethods.modal.cardholder', {
+                            defaultValue: 'Cardholder name',
+                          })}
+                          error={form4.formState.errors.cardName?.message as string | undefined}
                         >
                           <input
-                            type="password"
-                            autoComplete="cc-csc"
-                            {...form4.register('cvv')}
-                            value={form4.watch('cvv') || ''}
+                            maxLength={255}
+                            type="text"
+                            autoComplete="cc-name"
+                            {...form4.register('cardName')}
+                            value={form4.watch('cardName') || ''}
                             onChange={(e) => {
-                              form4.setValue('cvv', getCardDigits(e.target.value).slice(0, cvvLength), {
+                              form4.setValue('cardName', e.target.value, {
                                 shouldDirty: true,
                                 shouldTouch: true,
                               });
-                              form4.clearErrors('cvv');
+                              form4.clearErrors('cardName');
                             }}
-                            maxLength={4}
-                            inputMode="numeric"
-                            placeholder="•••"
+                            placeholder={t('paymentMethods.modal.cardholderPlaceholder', {
+                              defaultValue: 'Name as it appears on card',
+                            })}
                             className={CARD_INPUT_CLASS}
                           />
                         </EmbeddedCardField>
-                      </div>
 
-                      <EmbeddedCardField
-                        label={t('paymentMethods.modal.cardholder', { defaultValue: 'Cardholder name' })}
-                        error={form4.formState.errors.cardName?.message as string | undefined}
+                        <div className="flex flex-wrap items-center gap-2.5 pt-1">
+                          <CardBrandMark brand="mastercard" />
+                          <CardBrandMark brand="visa" />
+                          <CardBrandMark brand="amex" />
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="mt-auto space-y-3 pt-2">
+                      <button
+                        type={hasSavedCard && useSavedCard ? 'button' : 'submit'}
+                        onClick={
+                          hasSavedCard && useSavedCard ? () => onStep4Submit({}) : undefined
+                        }
+                        disabled={isLoading}
+                        className="flex w-full items-center justify-center gap-3 rounded-2xl bg-mintcom-green py-4 text-base font-sans font-bold text-black shadow-xl shadow-mintcom-green/20 transition-all hover:bg-mintcom-green/90 active:scale-[0.98] disabled:opacity-50"
                       >
-                        <input
-                          maxLength={255}
-                          type="text"
-                          autoComplete="cc-name"
-                          {...form4.register('cardName')}
-                          value={form4.watch('cardName') || ''}
-                          onChange={(e) => {
-                            form4.setValue('cardName', e.target.value, {
-                              shouldDirty: true,
-                              shouldTouch: true,
-                            });
-                            form4.clearErrors('cardName');
-                          }}
-                          placeholder={t('paymentMethods.modal.cardholderPlaceholder', {
-                            defaultValue: 'Name as it appears on card',
+                        {isLoading ? <Loader2 className="animate-spin" size={24} /> : null}
+                        {t('onboarding.completeLaunch')}
+                        {!isLoading && (
+                          isRTL
+                            ? <ArrowLeft size={18} className="shrink-0" />
+                            : <ArrowRight size={18} className="shrink-0" />
+                        )}
+                      </button>
+                      {isTrialFlow && (
+                        <p className="text-center text-xs font-sans text-gray-500 dark:text-gray-400">
+                          {t('onboarding.step2.trialPayNote', {
+                            defaultValue:
+                              "You're covered by your 30-day trial — nothing is charged until it ends.",
+                            days: TRIAL_DAYS,
                           })}
-                          className={CARD_INPUT_CLASS}
-                        />
-                      </EmbeddedCardField>
-
-                      <div className="flex flex-wrap items-center justify-center gap-2.5 pt-2">
-                        <CardBrandMark brand="mastercard" />
-                        <CardBrandMark brand="visa" />
-                        <CardBrandMark brand="amex" />
-                      </div>
+                        </p>
+                      )}
                     </div>
-                  )}
-
-                  <div className="pt-2">
-                    <button
-                      type={hasSavedCard && useSavedCard ? 'button' : 'submit'}
-                      onClick={hasSavedCard && useSavedCard ? () => onStep4Submit({}) : undefined}
-                      disabled={isLoading}
-                      className="w-full py-5 bg-mintcom-green text-black text-base font-sans font-bold rounded-2xl hover:bg-mintcom-green/90 transition-all shadow-xl shadow-mintcom-green/20 disabled:opacity-50 flex items-center justify-center gap-3 active:scale-[0.98]"
-                    >
-                      {isLoading ? <Loader2 className="animate-spin" size={24} /> : null}
-                      {t('onboarding.completeLaunch')}
-                    </button>
                   </div>
-                </form>
-              </div>
+                </div>
+              </form>
             </motion.div>
           )}
 

@@ -108,19 +108,19 @@
   }
 
   h3 {
-    @apply font-outfit text-heading-3 text-text-primary dark:text-mintcom-text font-bold tracking-tight;
+    @apply font-sans text-heading-3 text-text-primary dark:text-mintcom-text font-bold tracking-tight;
   }
 
   h4 {
-    @apply font-outfit text-heading-4 text-text-primary dark:text-mintcom-text font-bold tracking-tight;
+    @apply font-sans text-heading-4 text-text-primary dark:text-mintcom-text font-bold tracking-tight;
   }
 
   h5 {
-    @apply font-outfit text-subheading text-text-primary dark:text-mintcom-text font-bold;
+    @apply font-sans text-subheading text-text-primary dark:text-mintcom-text font-bold;
   }
 
   h6 {
-    @apply font-outfit text-body-lg font-bold text-text-primary dark:text-mintcom-text;
+    @apply font-sans text-body-lg font-bold text-text-primary dark:text-mintcom-text;
   }
 
   /* Body text defaults */
@@ -128,8 +128,9 @@
     @apply text-body text-text-secondary dark:text-mintcom-textSecondary leading-body;
   }
 
-  /* Labels and small text */
+  /* Labels and small text — Inter only (size/weight/case come from local classes) */
   label {
+    font-family: 'Inter', 'Noto Sans Arabic', sans-serif;
     @apply text-label text-text-secondary dark:text-mintcom-textSecondary;
   }
 
@@ -202,8 +203,9 @@
     @apply font-magilio text-display-2 font-black text-gray-900 dark:text-white tracking-tighter;
   }
 
-  /* Standardized Label Strong - Replaces "text-xs font-black tracking-widest" */
+  /* Standardized Label Strong — Inter font only; keep size/weight/case from usage */
   .label-strong {
+    font-family: 'Inter', 'Noto Sans Arabic', sans-serif;
     font-size: var(--label-font-size);
     @apply font-sans text-sm text-gray-400 dark:text-gray-500 font-normal tracking-normal;
     letter-spacing: normal !important;

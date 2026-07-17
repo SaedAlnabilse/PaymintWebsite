@@ -1137,7 +1137,7 @@ export function OrdersPage() {
           <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-2 flex items-center gap-2 flex-wrap">
             <span>{t('orders.subtitle')}</span>
             {currentEstablishment?.name && (
-              <span className="px-2.5 py-0.5 rounded-lg bg-mintcom-green/10 text-mintcom-green label-strong font-outfit border border-mintcom-green/20">
+              <span className="px-2.5 py-0.5 rounded-lg bg-mintcom-green/10 text-mintcom-green label-strong font-sans border border-mintcom-green/20">
                 {currentEstablishment.name}
               </span>
             )}
@@ -1668,7 +1668,7 @@ export function OrdersPage() {
               <thead className="bg-gray-50 dark:bg-white/[0.02]">
                 <tr className="border-b border-gray-200 dark:border-white/5">
                   <th
-                    className={`px-6 py-4 text-start label-strong font-outfit whitespace-nowrap cursor-pointer select-none transition-colors group ${sortConfig?.key === 'date' ? 'text-mintcom-green' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
+                    className={`px-6 py-4 text-start label-strong font-sans whitespace-nowrap cursor-pointer select-none transition-colors group ${sortConfig?.key === 'date' ? 'text-mintcom-green' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
                     onClick={() => requestSort('date')}
                   >
                     <div className="flex items-center gap-2">
@@ -1677,7 +1677,7 @@ export function OrdersPage() {
                     </div>
                   </th>
                   <th
-                    className={`px-6 py-4 text-start label-strong font-outfit whitespace-nowrap cursor-pointer select-none transition-colors group ${sortConfig?.key === 'customer' ? 'text-mintcom-green' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
+                    className={`px-6 py-4 text-start label-strong font-sans whitespace-nowrap cursor-pointer select-none transition-colors group ${sortConfig?.key === 'customer' ? 'text-mintcom-green' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
                     onClick={() => requestSort('customer')}
                   >
                     <div className="flex items-center gap-2">
@@ -1686,7 +1686,7 @@ export function OrdersPage() {
                     </div>
                   </th>
                   <th
-                    className={`px-6 py-4 text-end label-strong font-outfit whitespace-nowrap cursor-pointer select-none transition-colors group ${sortConfig?.key === 'total' ? 'text-mintcom-green' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
+                    className={`px-6 py-4 text-end label-strong font-sans whitespace-nowrap cursor-pointer select-none transition-colors group ${sortConfig?.key === 'total' ? 'text-mintcom-green' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
                     onClick={() => requestSort('total')}
                   >
                     <div className="flex items-center justify-end gap-2">
@@ -1695,7 +1695,7 @@ export function OrdersPage() {
                     </div>
                   </th>
                   <th
-                    className={`px-6 py-4 text-end label-strong font-outfit whitespace-nowrap cursor-pointer select-none transition-colors group ${sortConfig?.key === 'status' ? 'text-mintcom-green' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
+                    className={`px-6 py-4 text-end label-strong font-sans whitespace-nowrap cursor-pointer select-none transition-colors group ${sortConfig?.key === 'status' ? 'text-mintcom-green' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
                     onClick={() => requestSort('status')}
                   >
                     <div className="flex items-center justify-end gap-2">

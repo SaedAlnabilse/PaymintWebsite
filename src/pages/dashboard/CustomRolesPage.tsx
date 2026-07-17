@@ -325,7 +325,7 @@ export function CustomRolesPage() {
           <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-2 flex items-center gap-2 flex-wrap">
                         <span>{t('dashboard.roles.subtitle')}</span>
                         {currentEstablishment?.name && (
-                            <span className="px-2.5 py-0.5 rounded-lg bg-mintcom-green/10 text-mintcom-green label-strong font-outfit border border-mintcom-green/20">
+                            <span className="px-2.5 py-0.5 rounded-lg bg-mintcom-green/10 text-mintcom-green label-strong font-sans border border-mintcom-green/20">
                                 {currentEstablishment.name}
                             </span>
                         )}
@@ -377,7 +377,7 @@ export function CustomRolesPage() {
         {isLoading ? (
           <div className="flex-1 flex flex-col items-center justify-center p-32">
             <div className="w-12 h-12 border-4 border-mintcom-green/30 border-t-mintcom-green rounded-full animate-spin mb-4" />
-            <p className="label-strong font-outfit">{t('dashboard.roles.loading')}</p>
+            <p className="label-strong font-sans">{t('dashboard.roles.loading')}</p>
           </div>
         ) : filteredRoles.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center p-32 text-center bg-gray-50/30 dark:bg-black/10">
@@ -431,7 +431,7 @@ export function CustomRolesPage() {
 
                   {/* Stats */}
                   <div className="bg-gray-50 dark:bg-white/5 p-3 rounded-xl mb-6 relative z-10">
-                    <span className="label-strong font-outfit block mb-2">{t('dashboard.roles.permissions')}</span>
+                    <span className="label-strong font-sans block mb-2">{t('dashboard.roles.permissions')}</span>
                     <div className="flex flex-col gap-1">
                       <div className="flex items-center gap-2">
                         <span className="w-1.5 h-1.5 rounded-full bg-mintcom-green"></span>
@@ -517,7 +517,7 @@ export function CustomRolesPage() {
                 <thead className="bg-gray-50 dark:bg-white/[0.02]">
                   <tr className="border-b border-gray-200 dark:border-white/5">
                     <th
-                      className="px-6 py-4 text-start label-strong font-outfit cursor-pointer hover:text-mintcom-green transition-colors whitespace-nowrap"
+                      className="px-6 py-4 text-start label-strong font-sans cursor-pointer hover:text-mintcom-green transition-colors whitespace-nowrap"
                       onClick={() => handleSort('name')}
                     >
                       <div className="flex items-center gap-1">
@@ -526,7 +526,7 @@ export function CustomRolesPage() {
                       </div>
                     </th>
                     <th
-                      className="px-6 py-4 text-center label-strong font-outfit cursor-pointer hover:text-mintcom-green transition-colors whitespace-nowrap"
+                      className="px-6 py-4 text-center label-strong font-sans cursor-pointer hover:text-mintcom-green transition-colors whitespace-nowrap"
                       onClick={() => handleSort('baseRole')}
                     >
                       <div className="flex items-center justify-center gap-1">
@@ -534,9 +534,9 @@ export function CustomRolesPage() {
                         {sortConfig?.key === 'baseRole' && <ArrowUpDown size={12} className={sortConfig.direction === 'asc' ? 'rotate-0' : 'rotate-180'} />}
                       </div>
                     </th>
-                    <th className="px-6 py-4 text-center label-strong font-outfit whitespace-nowrap">{t('dashboard.roles.access')}</th>
+                    <th className="px-6 py-4 text-center label-strong font-sans whitespace-nowrap">{t('dashboard.roles.access')}</th>
                     <th
-                      className="px-6 py-4 text-start label-strong font-outfit cursor-pointer hover:text-mintcom-green transition-colors whitespace-nowrap"
+                      className="px-6 py-4 text-start label-strong font-sans cursor-pointer hover:text-mintcom-green transition-colors whitespace-nowrap"
                       onClick={() => handleSort('createdAt')}
                     >
                       <div className="flex items-center gap-1">
@@ -544,7 +544,7 @@ export function CustomRolesPage() {
                         {sortConfig?.key === 'createdAt' && <ArrowUpDown size={12} className={sortConfig.direction === 'asc' ? 'rotate-0' : 'rotate-180'} />}
                       </div>
                     </th>
-                    <th className="px-6 py-4 text-end label-strong font-outfit whitespace-nowrap">{t('dashboard.roles.actions')}</th>
+                    <th className="px-6 py-4 text-end label-strong font-sans whitespace-nowrap">{t('dashboard.roles.actions')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-white/5">

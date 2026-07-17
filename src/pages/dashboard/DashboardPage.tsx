@@ -1038,7 +1038,7 @@ export const DashboardPage = () => {
                   {currentEstablishment?.name && (
                       <>
                           <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-white/20 hidden sm:block" />
-                          <span className="px-2.5 py-0.5 rounded-lg bg-mintcom-green/10 text-mintcom-green label-strong font-outfit border border-mintcom-green/20">
+                          <span className="px-2.5 py-0.5 rounded-lg bg-mintcom-green/10 text-mintcom-green label-strong font-sans border border-mintcom-green/20">
                               {currentEstablishment.name}
                           </span>
                       </>

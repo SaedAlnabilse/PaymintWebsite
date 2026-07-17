@@ -160,7 +160,7 @@ export function OwnerMergePage() {
                                                         <h4 className={`text-sm font-black tracking-tight ${isSelected ? 'text-gray-900 dark:text-white' : 'text-gray-500'}`}>
                                                             {est.name}
                                                         </h4>
-                                                        <p className="label-strong font-outfit">{est.type}</p>
+                                                        <p className="label-strong font-sans">{est.type}</p>
                                                     </div>
                                                     <div className={`
                                                         w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all
@@ -195,7 +195,7 @@ export function OwnerMergePage() {
                                         <div className="h-px bg-gray-200 dark:bg-white/10" />
 
                                         <div className="space-y-2">
-                                            <p className="label-strong font-outfit leading-none">{t('common.status.title')}</p>
+                                            <p className="label-strong font-sans leading-none">{t('common.status.title')}</p>
                                             <div className="flex items-center gap-2">
                                                 <div className={`w-2 h-2 rounded-full ${selectedEstablishments.length >= 2 ? 'bg-mintcom-green' : 'bg-mintcom-red'} animate-pulse`} />
                                                 <span className="text-xs font-black text-gray-900 dark:text-white">
@@ -230,7 +230,7 @@ export function OwnerMergePage() {
                         <div className="p-10 rounded-[3rem] bg-white dark:bg-[#1E293B] border border-gray-100 dark:border-white/5 shadow-2xl space-y-8">
                             <div>
                                 <h3 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight mb-2">{t('owner.merge.brandDetails')}</h3>
-                                <p className="label-strong font-outfit uppercase">{t('owner.merge.brandDetailsSubtitle')}</p>
+                                <p className="label-strong font-sans uppercase">{t('owner.merge.brandDetailsSubtitle')}</p>
                             </div>
 
                             <div className="space-y-2">
@@ -281,7 +281,7 @@ export function OwnerMergePage() {
 
                         {/* Selected List */}
                         <div className="px-10 space-y-4">
-                            <h4 className="label-strong font-outfit px-2">{t('owner.merge.selectedLocations')}</h4>
+                            <h4 className="label-strong font-sans px-2">{t('owner.merge.selectedLocations')}</h4>
                             <div className="flex flex-wrap gap-2">
                                 {selectedEstInfo.map((est) => (
                                     <div key={est.id} className="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#1E293B] border border-gray-100 dark:border-white/5 rounded-xl shadow-sm group">

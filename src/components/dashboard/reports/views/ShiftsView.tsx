@@ -105,13 +105,13 @@ export const ShiftsView = React.memo(function ShiftsView({ shifts }: ShiftsViewP
           <table className="w-full">
             <thead className="bg-gray-50 dark:bg-white/[0.02]">
               <tr className="border-b border-gray-200 dark:border-white/5">
-                <th className="px-5 py-5 text-start label-strong font-outfit whitespace-nowrap">{t('orders.reports.shifts.staff')}</th>
-                <th className="px-5 py-5 text-start label-strong font-outfit whitespace-nowrap">{t('orders.reports.shifts.time')}</th>
-                <th className="px-5 py-5 text-end label-strong font-outfit whitespace-nowrap">{t('orders.reports.shifts.opening')}</th>
-                <th className="px-5 py-5 text-end label-strong font-outfit whitespace-nowrap">{t('orders.stats.totalSales')}</th>
-                <th className="px-5 py-5 text-end label-strong font-outfit whitespace-nowrap">{t('orders.reports.shifts.closing')}</th>
-                <th className="px-5 py-5 text-end label-strong font-outfit whitespace-nowrap">{t('orders.reports.shifts.variance')}</th>
-                <th className="px-5 py-5 text-end label-strong font-outfit whitespace-nowrap">{t('orders.reports.shifts.status')}</th>
+                <th className="px-5 py-5 text-start label-strong font-sans whitespace-nowrap">{t('orders.reports.shifts.staff')}</th>
+                <th className="px-5 py-5 text-start label-strong font-sans whitespace-nowrap">{t('orders.reports.shifts.time')}</th>
+                <th className="px-5 py-5 text-end label-strong font-sans whitespace-nowrap">{t('orders.reports.shifts.opening')}</th>
+                <th className="px-5 py-5 text-end label-strong font-sans whitespace-nowrap">{t('orders.stats.totalSales')}</th>
+                <th className="px-5 py-5 text-end label-strong font-sans whitespace-nowrap">{t('orders.reports.shifts.closing')}</th>
+                <th className="px-5 py-5 text-end label-strong font-sans whitespace-nowrap">{t('orders.reports.shifts.variance')}</th>
+                <th className="px-5 py-5 text-end label-strong font-sans whitespace-nowrap">{t('orders.reports.shifts.status')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-white/5">
@@ -151,7 +151,7 @@ export const ShiftsView = React.memo(function ShiftsView({ shifts }: ShiftsViewP
                           ? <FormatCurrency value={shift.closingBalance} />
                           : <span className="text-gray-400">-</span>
                       ) : (
-                        <span className="label-strong font-outfit">{t('orders.reports.shifts.active')}</span>
+                        <span className="label-strong font-sans">{t('orders.reports.shifts.active')}</span>
                       )}
                     </td>
                     <td className="px-5 py-5 text-end">
@@ -175,12 +175,12 @@ export const ShiftsView = React.memo(function ShiftsView({ shifts }: ShiftsViewP
                           </span>
                         </div>
                       ) : (
-                        <span className="label-strong font-outfit text-gray-400">-</span>
+                        <span className="label-strong font-sans text-gray-400">-</span>
                       )}
                     </td>
                     <td className="px-5 py-5 text-end">
                       <div className="inline-flex flex-col items-end gap-1.5">
-                        <span className={`px-2.5 py-1 rounded-lg label-strong font-outfit border transition-all ${shift.status === 'OPEN'
+                        <span className={`px-2.5 py-1 rounded-lg label-strong font-sans border transition-all ${shift.status === 'OPEN'
                           ? 'bg-mintcom-green/10 text-mintcom-green border-mintcom-green/20'
                           : 'bg-gray-100 dark:bg-white/5 text-gray-500 border-gray-200 dark:border-white/10'
                           }`}>
@@ -191,11 +191,11 @@ export const ShiftsView = React.memo(function ShiftsView({ shifts }: ShiftsViewP
                             manual cash-out. */}
                         {shift.status === 'CLOSED' && (
                           shift.autoClose ? (
-                            <span className="px-2 py-0.5 rounded-md text-[10px] label-strong font-outfit border bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20">
+                            <span className="px-2 py-0.5 rounded-md text-[10px] label-strong font-sans border bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20">
                               {t('orders.reports.shifts.autoClosed')}
                             </span>
                           ) : (
-                            <span className="px-2 py-0.5 rounded-md text-[10px] label-strong font-outfit border bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20">
+                            <span className="px-2 py-0.5 rounded-md text-[10px] label-strong font-sans border bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20">
                               {t('orders.reports.shifts.manualClose')}
                             </span>
                           )

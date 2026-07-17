@@ -281,11 +281,11 @@ export function ReceiptsReport({ startDate, endDate, employeeId }: ReceiptsRepor
                             <table className="w-full">
                                 <thead className="bg-gray-50/50 dark:bg-white/[0.02] border-b border-gray-100 dark:border-white/5">
                                     <tr>
-                                        <th className="px-6 py-4 text-start label-strong font-outfit whitespace-nowrap">{t('orders.table.order')}</th>
-                                        <th className="px-6 py-4 text-start label-strong font-outfit whitespace-nowrap">{t('orders.table.customer')}</th>
-                                        <th className="px-6 py-4 text-end label-strong font-outfit whitespace-nowrap">{t('orders.table.amount')}</th>
-                                        <th className="px-6 py-4 text-end label-strong font-outfit whitespace-nowrap">{t('orders.table.status')}</th>
-                                        <th className="px-6 py-4 text-end label-strong font-outfit whitespace-nowrap">{t('orders.table.actions')}</th>
+                                        <th className="px-6 py-4 text-start label-strong font-sans whitespace-nowrap">{t('orders.table.order')}</th>
+                                        <th className="px-6 py-4 text-start label-strong font-sans whitespace-nowrap">{t('orders.table.customer')}</th>
+                                        <th className="px-6 py-4 text-end label-strong font-sans whitespace-nowrap">{t('orders.table.amount')}</th>
+                                        <th className="px-6 py-4 text-end label-strong font-sans whitespace-nowrap">{t('orders.table.status')}</th>
+                                        <th className="px-6 py-4 text-end label-strong font-sans whitespace-nowrap">{t('orders.table.actions')}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100 dark:divide-white/5">

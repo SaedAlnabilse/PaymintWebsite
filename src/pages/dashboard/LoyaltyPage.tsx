@@ -403,7 +403,7 @@ export function LoyaltyPage() {
                     <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-2 flex items-center gap-2 flex-wrap">
                         <span>{t('rewards.subtitle')}</span>
                         {currentEstablishment?.name && (
-                            <span className="px-2.5 py-0.5 rounded-lg bg-mintcom-green/10 text-mintcom-green label-strong font-outfit border border-mintcom-green/20">
+                            <span className="px-2.5 py-0.5 rounded-lg bg-mintcom-green/10 text-mintcom-green label-strong font-sans border border-mintcom-green/20">
                                 {currentEstablishment.name}
                             </span>
                         )}
@@ -504,7 +504,7 @@ export function LoyaltyPage() {
                                     <div className="w-1.5 h-6 bg-mintcom-green rounded-full" />
                                     <h4 className="text-sm font-bold text-gray-900 dark:text-white px-1">{t('dashboard.menu.loyalty')}</h4>
                                 </div>
-                                <button type="button" onClick={() => { setEditingReward(null); setShowRewardModal(true); }} className="flex items-center gap-2 px-4 py-2 bg-mintcom-green/10 text-mintcom-green rounded-xl font-outfit hover:bg-mintcom-green/20 transition-all border border-mintcom-green/20">
+                                <button type="button" onClick={() => { setEditingReward(null); setShowRewardModal(true); }} className="flex items-center gap-2 px-4 py-2 bg-mintcom-green/10 text-mintcom-green rounded-xl font-sans hover:bg-mintcom-green/20 transition-all border border-mintcom-green/20">
                                     <Plus size={14} /> <span className="label-strong inline-block">{t('rewards.addPattern')}</span>
                                 </button>
                             </div>
