@@ -348,7 +348,7 @@ export function DiscountsPage() {
           <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-2 flex items-center gap-2 flex-wrap">
                         <span>{t('discounts.subtitle')}</span>
                         {currentEstablishment?.name && (
-                            <span className="px-2.5 py-0.5 rounded-lg bg-mintcom-green/10 text-mintcom-green label-strong font-outfit border border-mintcom-green/20">
+                            <span className="px-2.5 py-0.5 rounded-lg bg-mintcom-green/10 text-mintcom-green label-strong font-sans border border-mintcom-green/20">
                                 {currentEstablishment.name}
                             </span>
                         )}
@@ -563,7 +563,7 @@ export function DiscountsPage() {
                   <thead className="bg-gray-50 dark:bg-white/[0.02] border-b border-gray-100 dark:border-white/5">
                     <tr>
                       <th
-                        className="px-6 py-4 text-start label-strong font-outfit cursor-pointer hover:text-mintcom-green transition-colors whitespace-nowrap"
+                        className="px-6 py-4 text-start label-strong font-sans cursor-pointer hover:text-mintcom-green transition-colors whitespace-nowrap"
                         onClick={() => handleSort('name')}
                       >
                         <div className="flex items-center gap-1">
@@ -572,7 +572,7 @@ export function DiscountsPage() {
                         </div>
                       </th>
                       <th
-                        className="px-6 py-4 text-end label-strong font-outfit cursor-pointer hover:text-mintcom-green transition-colors whitespace-nowrap"
+                        className="px-6 py-4 text-end label-strong font-sans cursor-pointer hover:text-mintcom-green transition-colors whitespace-nowrap"
                         onClick={() => handleSort('value')}
                       >
                         <div className="flex items-center justify-end gap-1">
@@ -581,7 +581,7 @@ export function DiscountsPage() {
                         </div>
                       </th>
                       <th
-                        className="px-6 py-4 text-center label-strong font-outfit cursor-pointer hover:text-mintcom-green transition-colors whitespace-nowrap"
+                        className="px-6 py-4 text-center label-strong font-sans cursor-pointer hover:text-mintcom-green transition-colors whitespace-nowrap"
                         onClick={() => handleSort('status')}
                       >
                         <div className="flex items-center justify-center gap-1">
@@ -590,7 +590,7 @@ export function DiscountsPage() {
                         </div>
                       </th>
                       <th
-                        className="px-6 py-4 text-center label-strong font-outfit cursor-pointer hover:text-mintcom-green transition-colors whitespace-nowrap"
+                        className="px-6 py-4 text-center label-strong font-sans cursor-pointer hover:text-mintcom-green transition-colors whitespace-nowrap"
                         onClick={() => handleSort('adminOnly')}
                       >
                         <div className="flex items-center justify-center gap-1">
@@ -598,7 +598,7 @@ export function DiscountsPage() {
                           {sortConfig?.key === 'adminOnly' && <ArrowUpDown size={12} className={sortConfig.direction === 'asc' ? 'rotate-0' : 'rotate-180'} />}
                         </div>
                       </th>
-                      <th className="px-6 py-4 text-end label-strong font-outfit whitespace-nowrap">{t('orders.table.actions')}</th>
+                      <th className="px-6 py-4 text-end label-strong font-sans whitespace-nowrap">{t('orders.table.actions')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 dark:divide-white/5">

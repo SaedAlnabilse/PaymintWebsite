@@ -261,7 +261,7 @@ export function SingleSelect({
     return (
         <div className={`relative ${className}`} ref={containerRef} dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
             {label && (
-                <label className="block label-strong font-outfit mb-2 px-1">
+                <label className="block label-strong font-sans mb-2 px-1">
                     {label}
                 </label>
             )}

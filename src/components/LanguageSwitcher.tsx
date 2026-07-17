@@ -106,7 +106,7 @@ export const LanguageSwitcher = ({
                 onClick={() => handleLanguageClick(lang)}
                 disabled={lang.comingSoon}
                 aria-disabled={lang.comingSoon}
-                className={`w-full flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl label-strong font-outfit transition-all ${
+                className={`w-full flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl label-strong font-sans transition-all ${
                   lang.comingSoon
                     ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-60'
                     : normalizedLanguage === lang.code

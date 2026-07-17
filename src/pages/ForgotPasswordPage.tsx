@@ -56,7 +56,7 @@ export function ForgotPasswordPage() {
             className="flex items-center gap-2 text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors mb-8 group"
           >
             <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
-            <span className="label-strong font-outfit">{t('auth.forgotPassword.backToLogin').toUpperCase()}</span>
+            <span className="label-strong font-sans">{t('auth.forgotPassword.backToLogin').toUpperCase()}</span>
           </button>
         )}
 
@@ -97,7 +97,7 @@ export function ForgotPasswordPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full py-5 bg-mintcom-green text-black label-strong font-outfit rounded-xl hover:bg-mintcom-green/90 transition-all shadow-md shadow-mintcom-green/20 disabled:opacity-50 disabled:cursor-mintcom-wait flex items-center justify-center gap-3"
+                  className="w-full py-5 bg-mintcom-green text-black label-strong font-sans rounded-xl hover:bg-mintcom-green/90 transition-all shadow-md shadow-mintcom-green/20 disabled:opacity-50 disabled:cursor-mintcom-wait flex items-center justify-center gap-3"
                 >
                   {isSubmitting ? <Loader2 className="animate-spin" size={24} /> : null}
                   {t('auth.forgotPassword.sendLink')}

@@ -740,7 +740,7 @@ export function SettingsPage() {
           <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-2 flex items-center gap-2 flex-wrap">
                         <span>{t('settings.subtitle')}</span>
                         {currentEstablishment?.name && (
-                            <span className="px-2.5 py-0.5 rounded-lg bg-mintcom-green/10 text-mintcom-green label-strong font-outfit border border-mintcom-green/20">
+                            <span className="px-2.5 py-0.5 rounded-lg bg-mintcom-green/10 text-mintcom-green label-strong font-sans border border-mintcom-green/20">
                                 {currentEstablishment.name}
                             </span>
                         )}
@@ -891,24 +891,24 @@ export function SettingsPage() {
               </div>
             </div>
             <div className="space-y-2">
-              <label className="label-strong font-outfit  block">{formatInputLabel(t('settings.profile.name'), t('common.locale'))}</label>
+              <label className="label-strong font-sans  block">{formatInputLabel(t('settings.profile.name'), t('common.locale'))}</label>
               <input type="text" {...restaurantNameField} maxLength={MAX_ESTABLISHMENT_NAME_LENGTH} className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-mintcom-green/20 focus:border-mintcom-green transition-all font-normal" />
             </div>
             <div className="space-y-2">
-              <label className="label-strong font-outfit  block">{formatInputLabel(t('settings.profile.about'), t('common.locale'))}</label>
+              <label className="label-strong font-sans  block">{formatInputLabel(t('settings.profile.about'), t('common.locale'))}</label>
               <textarea {...restaurantDescriptionField} rows={3} maxLength={MAX_ESTABLISHMENT_TAGLINE_LENGTH} className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-mintcom-green/20 focus:border-mintcom-green transition-all font-normal resize-none" />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-2">
-                <label className="label-strong font-outfit  block">{formatInputLabel(t('settings.profile.address'), t('common.locale'))}</label>
+                <label className="label-strong font-sans  block">{formatInputLabel(t('settings.profile.address'), t('common.locale'))}</label>
                 <input type="text" {...restaurantAddressField} maxLength={MAX_ESTABLISHMENT_ADDRESS_LENGTH} className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-mintcom-green/20 focus:border-mintcom-green transition-all font-normal" />
               </div>
               <div className="space-y-2">
-                <label className="label-strong font-outfit  block">{formatInputLabel(t('settings.profile.email'), t('common.locale'))}</label>
+                <label className="label-strong font-sans  block">{formatInputLabel(t('settings.profile.email'), t('common.locale'))}</label>
                 <input type="email" {...emailField} maxLength={MAX_ESTABLISHMENT_EMAIL_LENGTH} className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-mintcom-green/20 focus:border-mintcom-green transition-all font-normal" />
               </div>
               <div className="space-y-2">
-                <label className="label-strong font-outfit  block">{formatInputLabel(t('settings.profile.taxId'), t('common.locale'))}</label>
+                <label className="label-strong font-sans  block">{formatInputLabel(t('settings.profile.taxId'), t('common.locale'))}</label>
                 <input type="text" {...taxIdField} autoCapitalize="characters" maxLength={MAX_ESTABLISHMENT_TAX_ID_LENGTH} onInput={(e) => { const target = e.target as HTMLInputElement; target.value = sanitizeTaxId(target.value, MAX_ESTABLISHMENT_TAX_ID_LENGTH); }} className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-mintcom-green/20 focus:border-mintcom-green transition-all font-normal" />
                 <p className="text-xs text-gray-400 mt-1">{t('settings.profile.taxIdDisclaimer')}</p>
               </div>
@@ -936,7 +936,7 @@ export function SettingsPage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-5 items-stretch">
                 {/* Tax Rate — saved via main Save button */}
                 <div className="flex flex-col min-w-0">
-                  <label className="label-strong font-outfit block h-5 leading-5 mb-2 truncate">
+                  <label className="label-strong font-sans block h-5 leading-5 mb-2 truncate">
                     {formatInputLabel(t('settings.sales.taxRate'), t('common.locale'))}
                   </label>
                   <div className="relative group h-11 shrink-0">
@@ -972,7 +972,7 @@ export function SettingsPage() {
 
                 {/* Currency */}
                 <div className="flex flex-col min-w-0">
-                  <label className="label-strong font-outfit block h-5 leading-5 mb-2 truncate">
+                  <label className="label-strong font-sans block h-5 leading-5 mb-2 truncate">
                     {formatInputLabel(t('settings.sales.currency'), t('common.locale'))}
                   </label>
                   <div className="h-11 shrink-0">
@@ -1004,7 +1004,7 @@ export function SettingsPage() {
 
                 {/* Hold Order / Table Count */}
                 <div className="flex flex-col min-w-0">
-                  <label className="label-strong font-outfit block h-5 leading-5 mb-2 truncate">
+                  <label className="label-strong font-sans block h-5 leading-5 mb-2 truncate">
                     {formatInputLabel(t('settings.sales.holdOrderTableCountTitle'), t('common.locale'))}
                   </label>
                   <div className="h-11 shrink-0">
@@ -1314,7 +1314,7 @@ export function SettingsPage() {
                         <div className="w-20 h-20 bg-gray-50 dark:bg-white/5 rounded-xl overflow-hidden flex items-center justify-center border border-gray-200 dark:border-white/5">
                           {receiptLogoPreview ? <img src={receiptLogoPreview} alt="Receipt Logo" className="w-full h-full object-cover" loading="lazy" decoding="async" /> : <Store className="w-8 h-8 text-gray-300 dark:text-gray-600" />}
                         </div>
-                        <label className="px-5 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl hover:opacity-90 cursor-pointer label-strong font-outfit transition-all hover:scale-[1.02] active:scale-[0.98] shadow-md hover:shadow-lg">
+                        <label className="px-5 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl hover:opacity-90 cursor-pointer label-strong font-sans transition-all hover:scale-[1.02] active:scale-[0.98] shadow-md hover:shadow-lg">
                           {t('settings.receipts.uploadLogo')}
                           <input type="file" accept="image/*" onChange={handleReceiptLogoChange} className="hidden" disabled={!watch('showLogoOnReceipt')} />
                         </label>

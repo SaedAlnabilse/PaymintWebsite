@@ -207,7 +207,7 @@ export function AdminUsersPage() {
                             <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-2 flex items-center gap-2 flex-wrap">
                                 <span>{t('adminUsers.subtitle')}</span>
                                 {currentEstablishment?.name && (
-                                    <span className="px-2.5 py-0.5 rounded-lg bg-mintcom-green/10 text-mintcom-green label-strong font-outfit border border-mintcom-green/20">
+                                    <span className="px-2.5 py-0.5 rounded-lg bg-mintcom-green/10 text-mintcom-green label-strong font-sans border border-mintcom-green/20">
                                         {currentEstablishment.name}
                                     </span>
                                 )}
@@ -260,7 +260,7 @@ export function AdminUsersPage() {
                 {isLoading ? (
                     <div className="py-32 flex flex-col items-center">
                         <div className="w-16 h-16 border-4 border-mintcom-green/10 border-t-mintcom-green rounded-full animate-spin mb-4" />
-                        <p className="label-strong font-outfit">{t('adminUsers.loading')}</p>
+                        <p className="label-strong font-sans">{t('adminUsers.loading')}</p>
                     </div>
                 ) : filteredAdmins.length === 0 ? (
                     <div className="py-32 text-center flex flex-col items-center">
@@ -319,7 +319,7 @@ export function AdminUsersPage() {
                                         </div>
                                     </div>
 
-                                    <p className="label-strong font-outfit mb-2 uppercase">{t('adminUsers.accessLocations')}</p>
+                                    <p className="label-strong font-sans mb-2 uppercase">{t('adminUsers.accessLocations')}</p>
                                     <div className="flex flex-wrap gap-2">
                                         {admin.establishments.length > 0 ? (
                                             admin.establishments.map((est) => (
@@ -383,12 +383,12 @@ export function AdminUsersPage() {
                                     </div>
 
                                     <div className="relative z-10 mt-6 pt-4 border-t border-gray-100 dark:border-white/5">
-                                        <p className="label-strong font-outfit mb-2">{t('adminUsers.accessLocations')}</p>
+                                        <p className="label-strong font-sans mb-2">{t('adminUsers.accessLocations')}</p>
                                         <div className="flex flex-wrap gap-2">
                                             {admin.establishments.map((est) => (
                                                 <span
                                                     key={est.id}
-                                                    className="px-2.5 py-1 bg-mintcom-green/5 text-mintcom-green label-strong font-outfit rounded-lg border border-mintcom-green/10"
+                                                    className="px-2.5 py-1 bg-mintcom-green/5 text-mintcom-green label-strong font-sans rounded-lg border border-mintcom-green/10"
                                                 >
                                                     {est.name}
                                                 </span>
@@ -440,7 +440,7 @@ export function AdminUsersPage() {
                         <form onSubmit={handleSubmit} className="p-8 space-y-6 flex-1 overflow-y-auto custom-scrollbar">
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <label className="block label-strong font-outfit px-1">
+                                    <label className="block label-strong font-sans px-1">
                                         {t('adminUsers.form.firstName')} <span className="text-mintcom-red">*</span>
                                     </label>
                                     <input maxLength={255}
@@ -452,7 +452,7 @@ export function AdminUsersPage() {
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="block label-strong font-outfit px-1">
+                                    <label className="block label-strong font-sans px-1">
                                         {t('adminUsers.form.lastName')} <span className="text-mintcom-red">*</span>
                                     </label>
                                     <input maxLength={255}
@@ -466,7 +466,7 @@ export function AdminUsersPage() {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="block label-strong font-outfit px-1">
+                                <label className="block label-strong font-sans px-1">
                                     {t('adminUsers.form.email')} <span className="text-mintcom-red">*</span>
                                 </label>
                                 <input maxLength={255}
@@ -482,7 +482,7 @@ export function AdminUsersPage() {
 
                             {!editingAdmin && (
                                 <div className="space-y-2">
-                                    <label className="block label-strong font-outfit px-1">
+                                    <label className="block label-strong font-sans px-1">
                                         {t('adminUsers.form.password')} <span className="text-mintcom-red">*</span>
                                     </label>
                                     <div className="relative group">
@@ -509,7 +509,7 @@ export function AdminUsersPage() {
                             )}
 
                             <div className="space-y-3">
-                                <label className="block label-strong font-outfit px-1">
+                                <label className="block label-strong font-sans px-1">
                                     {formatInputLabel(t('adminUsers.form.locationAccess'), t('common.locale'))}
                                 </label>
                                 <div className="space-y-2 max-h-40 overflow-y-auto custom-scrollbar pr-1">

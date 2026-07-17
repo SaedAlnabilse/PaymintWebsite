@@ -505,7 +505,7 @@ export const ItemsView = React.memo(function ItemsView({
             <thead className="bg-gray-50 dark:bg-white/[0.02]">
               <tr className="border-b border-gray-200 dark:border-white/5">
                 <th
-                  className={`px-8 py-5 text-start label-strong font-outfit cursor-pointer select-none transition-colors group ${sortConfig?.key === 'name' ? 'text-mintcom-green' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
+                  className={`px-8 py-5 text-start label-strong font-sans cursor-pointer select-none transition-colors group ${sortConfig?.key === 'name' ? 'text-mintcom-green' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
                   onClick={() => requestSort('name')}
                 >
                   <div className="flex items-center gap-2">
@@ -514,7 +514,7 @@ export const ItemsView = React.memo(function ItemsView({
                   </div>
                 </th>
                 <th
-                  className={`px-8 py-5 text-end label-strong font-outfit cursor-pointer select-none transition-colors group ${sortConfig?.key === 'quantity' ? 'text-mintcom-green' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
+                  className={`px-8 py-5 text-end label-strong font-sans cursor-pointer select-none transition-colors group ${sortConfig?.key === 'quantity' ? 'text-mintcom-green' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
                   onClick={() => requestSort('quantity')}
                 >
                   <div className="flex items-center justify-end gap-2">
@@ -523,7 +523,7 @@ export const ItemsView = React.memo(function ItemsView({
                   </div>
                 </th>
                 <th
-                  className={`px-8 py-5 text-end label-strong font-outfit cursor-pointer select-none transition-colors group ${sortConfig?.key === 'revenue' ? 'text-mintcom-green' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
+                  className={`px-8 py-5 text-end label-strong font-sans cursor-pointer select-none transition-colors group ${sortConfig?.key === 'revenue' ? 'text-mintcom-green' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
                   onClick={() => requestSort('revenue')}
                 >
                   <div className="flex items-center justify-end gap-2">
@@ -937,9 +937,9 @@ export const ItemsView = React.memo(function ItemsView({
                   <table className="w-full">
                     <thead className="bg-gray-50/50 dark:bg-white/[0.01] sticky top-0 z-10 backdrop-blur-md">
                       <tr className="border-b border-gray-100 dark:border-white/5">
-                        <th className="px-8 py-4 text-start label-strong font-outfit">{t('orders.reports.items.productName')}</th>
-                        <th className="px-8 py-4 text-end label-strong font-outfit">{t('orders.reports.items.unitsSold')}</th>
-                        <th className="px-8 py-4 text-end label-strong font-outfit">{t('orders.reports.items.grossRevenue')}</th>
+                        <th className="px-8 py-4 text-start label-strong font-sans">{t('orders.reports.items.productName')}</th>
+                        <th className="px-8 py-4 text-end label-strong font-sans">{t('orders.reports.items.unitsSold')}</th>
+                        <th className="px-8 py-4 text-end label-strong font-sans">{t('orders.reports.items.grossRevenue')}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100 dark:divide-white/5">

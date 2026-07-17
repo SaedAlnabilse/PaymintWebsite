@@ -1214,14 +1214,14 @@ export function ProductFormModal({
                         return (
                           <>
                             <div className={`${bgClass} rounded-2xl p-4 border shadow-sm transition-colors`}>
-                              <p className={`label-strong font-outfit mb-1.5 leading-tight ${colorClass}`}>{t('products.stats.profit')}</p>
+                              <p className={`label-strong font-sans mb-1.5 leading-tight ${colorClass}`}>{t('products.stats.profit')}</p>
                               <div className="flex items-baseline gap-1">
                                 <p className={`${colorClass} font-bold text-lg`}>{profit.toLocaleString(t('common.locale'), { minimumFractionDigits: 3, maximumFractionDigits: 3 })}</p>
                                 <p className={`text-[8px] font-black ${colorClass} opacity-60`}>{currencySymbol}</p>
                               </div>
                             </div>
                             <div className={`${bgClass} rounded-2xl p-4 border shadow-sm transition-colors`}>
-                              <p className={`label-strong font-outfit mb-1.5 leading-tight ${colorClass}`}>{t('products.stats.margin')}</p>
+                              <p className={`label-strong font-sans mb-1.5 leading-tight ${colorClass}`}>{t('products.stats.margin')}</p>
                               <div className="flex items-baseline gap-1">
                                 <p className={`${colorClass} font-bold text-lg`}>{margin.toLocaleString(t('common.locale'), { style: 'percent', minimumFractionDigits: 1, maximumFractionDigits: 1 })}</p>
                               </div>
@@ -1240,7 +1240,7 @@ export function ProductFormModal({
                       {t('products.form.descriptionLabel')}
                       <QuickInfo text="Describe your product for customers and employees." />
                     </label>
-                    <span className={`label-strong font-outfit ${description.length >= TEXT_INPUT_LIMITS.ITEM_DESCRIPTION ? 'text-mintcom-red' : 'text-gray-400'}`}>
+                    <span className={`label-strong font-sans ${description.length >= TEXT_INPUT_LIMITS.ITEM_DESCRIPTION ? 'text-mintcom-red' : 'text-gray-400'}`}>
                       {description.length.toLocaleString(t('common.locale'))}/{TEXT_INPUT_LIMITS.ITEM_DESCRIPTION.toLocaleString(t('common.locale'))}
                     </span>
                   </div>
@@ -1409,7 +1409,7 @@ export function ProductFormModal({
                           <AlertCircle size={16} className="text-red-600 dark:text-red-500" strokeWidth={2.5} />
                         </div>
                         <div>
-                          <p className="label-strong font-outfit text-red-600 dark:text-red-500">{t('common.notice')}</p>
+                          <p className="label-strong font-sans text-red-600 dark:text-red-500">{t('common.notice')}</p>
                           <p className="text-[11px] font-bold text-red-500/90 dark:text-red-400/70 leading-snug">{t('products.messages.noAddons')} <span className="underline cursor-pointer hover:text-red-600" onClick={() => setShowAddonsWarning(true)}>{t('products.messages.createHere')}</span>.</p>
                         </div>
                       </div>

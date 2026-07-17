@@ -978,7 +978,7 @@ export function OwnerEmployeesPage() {
                                                                             setActiveMenu(null);
                                                                             openEditEmployee(emp);
                                                                         }}
-                                                                        className="w-full flex items-center gap-3 px-4 py-3 label-strong font-outfit text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors text-left"
+                                                                        className="w-full flex items-center gap-3 px-4 py-3 label-strong font-sans text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors text-left"
                                                                     >
                                                                         <Edit2 size={14} />
                                                                         <span>{t('common.edit')}</span>
@@ -989,7 +989,7 @@ export function OwnerEmployeesPage() {
                                                                             handleDeleteEmployee(emp.id);
                                                                         }}
                                                                         disabled={isOwnerEmployee(emp)}
-                                                                        className={`w-full flex items-center gap-3 px-4 py-3 label-strong font-outfit transition-colors text-left border-t border-gray-100 dark:border-white/5 ${isOwnerEmployee(emp) ? 'text-amber-600 dark:text-amber-400 cursor-not-allowed opacity-75' : 'text-mintcom-red hover:bg-red-50 dark:hover:bg-red-900/10'}`}
+                                                                        className={`w-full flex items-center gap-3 px-4 py-3 label-strong font-sans transition-colors text-left border-t border-gray-100 dark:border-white/5 ${isOwnerEmployee(emp) ? 'text-amber-600 dark:text-amber-400 cursor-not-allowed opacity-75' : 'text-mintcom-red hover:bg-red-50 dark:hover:bg-red-900/10'}`}
                                                                     >
                                                                         <Trash2 size={14} />
                                                                         <span>

@@ -31,7 +31,7 @@ export function CookiePolicyPage() {
           >
             <div className="flex items-center gap-3 text-mintcom-green mb-4">
               <Shield size={24} />
-              <span className="label-strong font-outfit uppercase">{t('legal.cookies.legalCenter')}</span>
+              <span className="label-strong font-sans uppercase">{t('legal.cookies.legalCenter')}</span>
             </div>
             <h1 className="font-magilio text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tight leading-tight">
               {t('legal.cookies.title')}
@@ -73,7 +73,7 @@ export function CookiePolicyPage() {
             <div className="pt-8">
               <button
                 onClick={() => navigate('/')}
-                className="w-full py-3 px-4 bg-gray-900 dark:bg-white text-white dark:text-black rounded-xl label-strong font-outfit shadow-lg hover:opacity-90 transition-all"
+                className="w-full py-3 px-4 bg-gray-900 dark:bg-white text-white dark:text-black rounded-xl label-strong font-sans shadow-lg hover:opacity-90 transition-all"
               >
                 {t('legal.cookies.backToHome')}
               </button>
@@ -168,7 +168,7 @@ export function CookiePolicyPage() {
                 onClick={() => {
                    window.dispatchEvent(new Event('open-cookie-preferences'));
                 }}
-                className="px-6 py-2.5 bg-mintcom-green text-black label-strong font-outfit rounded-lg hover:bg-[#5fa888] transition-colors shadow-sm"
+                className="px-6 py-2.5 bg-mintcom-green text-black label-strong font-sans rounded-lg hover:bg-[#5fa888] transition-colors shadow-sm"
               >
                 {t('legal.cookies.openSettings')}
               </button>

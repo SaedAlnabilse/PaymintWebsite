@@ -188,7 +188,7 @@ export function CustomSelect({
     return (
         <div className={`relative ${className}`} ref={containerRef}>
             {label && (
-                <label className="block label-strong font-outfit mb-3 px-1">
+                <label className="block label-strong font-sans mb-3 px-1">
                     {formatInputLabel(label, t('common.locale'))} {required && <span className="text-mintcom-red">*</span>}
                 </label>
             )}

@@ -3300,7 +3300,7 @@
       "address": "Address",
       "addressPlaceholder": "City, Area, Building",
       "addressTip": "Location address.",
-      "businessType": "Business type",
+      "businessType": "Business Type",
       "businessTypes": {
         "bakery": "Bakery",
         "cafe": "Cafe",
@@ -3338,7 +3338,7 @@
         "nameRequired": "Location name is required",
         "typeRequired": "Business type is required"
       },
-      "locationName": "Location name",
+      "locationName": "Location Name",
       "locationNamePlaceholder": "e.g. The Coffee House",
       "locationNameTip": "The name of your business.",
       "menu": "Products, categories and add-ons",
