@@ -20,8 +20,15 @@ interface AuthContextType {
   // Account auth methods
   register: (data: RegisterData) => Promise<AuthResult>;
   login: (email: string, password: string) => Promise<AuthResult>;
-  loginWithGoogle: (credential: string, subscribeToNews?: boolean) => Promise<AuthResult>;
-  loginWithApple: (data: AppleAuthData) => Promise<AuthResult>;
+  loginWithGoogle: (
+    credential: string,
+    subscribeToNews?: boolean,
+    intent?: 'login' | 'signup',
+  ) => Promise<AuthResult>;
+  loginWithApple: (
+    data: AppleAuthData,
+    intent?: 'login' | 'signup',
+  ) => Promise<AuthResult>;
   logout: () => Promise<void>;
 
   // Verification methods
@@ -283,13 +290,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const loginWithGoogle = async (credential: string, subscribeToNews?: boolean): Promise<AuthResult> => {
+  const loginWithGoogle = async (
+    credential: string,
+    subscribeToNews?: boolean,
+    intent: 'login' | 'signup' = 'signup',
+  ): Promise<AuthResult> => {
     setIsLoggingIn(true);
     setLoginSuccess(false);
 
     try {
-      // Send the Google ID token to our backend for verification
-      const response = await api.post('/api/accounts/google-auth', { credential, subscribeToNews, platform: 'web' });
+      // Send the Google ID token to our backend for verification.
+      // intent=login refuses to create a new account (login page); signup may create one.
+      const response = await api.post('/api/accounts/google-auth', {
+        credential,
+        subscribeToNews,
+        platform: 'web',
+        intent,
+      });
 
       if (response.data.account) {
         // Success state
@@ -340,14 +357,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const loginWithApple = async (data: AppleAuthData): Promise<AuthResult> => {
+  const loginWithApple = async (
+    data: AppleAuthData,
+    intent: 'login' | 'signup' = 'signup',
+  ): Promise<AuthResult> => {
     setIsLoggingIn(true);
     setLoginSuccess(false);
 
     try {
       // Send the Apple identity token (plus the raw nonce and first-auth name)
-      // to our backend. The backend hashes the nonce and verifies the token,
-      // then logs in an existing account or creates a new one — same as Google.
+      // to our backend. The backend hashes the nonce and verifies the token.
+      // intent=login refuses to create a new account; signup may create one.
       const response = await api.post('/api/accounts/apple-auth', {
         identityToken: data.identityToken,
         nonce: data.nonce,
@@ -355,6 +375,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         lastName: data.lastName,
         subscribeToNews: data.subscribeToNews,
         platform: 'web',
+        intent,
       });
 
       if (response.data.account) {

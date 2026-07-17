@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Menu, X, LogOut, User, Headset, ArrowRight } from 'lucide-react';
+import { Menu, X, LogOut, User, Headset, ArrowRight, Play, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Logo } from './Logo';
 import { ThemeToggle } from './ThemeToggle';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { useAuth } from '../context/AuthContext';
 import { useScrollLock } from '../hooks/useScrollLock';
+import { ONBOARDING_START_PATH } from '../utils/onboardingLaunch';
 
 /* -----------------------------------------------------------
    Navbar — Floating Capsule Design
@@ -22,7 +23,7 @@ import { useScrollLock } from '../hooks/useScrollLock';
 export const Navbar = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout, needsOnboarding } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [hoveredLink, setHoveredLink] = useState<string | null>(null);
@@ -182,15 +183,27 @@ export const Navbar = () => {
                     <Headset size={14} className="transition-transform duration-300 group-hover:scale-110" />
                     {t('nav.support')}
                   </Link>
-                  <Link
-                    to="/owner"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-mintcom-green to-emerald-400 px-5 py-2.5 text-[13px] font-bold text-white shadow-[0_4px_16px_-4px_rgba(124,195,159,0.5)] transition-all duration-300 hover:shadow-[0_6px_24px_-4px_rgba(124,195,159,0.7)] active:scale-[0.97] dark:from-mintcom-green dark:to-emerald-500"
-                  >
-                    <User size={14} />
-                    {t('nav.dashboard', 'Dashboard')}
-                  </Link>
+                  {needsOnboarding ? (
+                    <Link
+                      to={ONBOARDING_START_PATH}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-mintcom-green to-emerald-400 px-5 py-2.5 text-[13px] font-bold text-black shadow-[0_4px_16px_-4px_rgba(124,195,159,0.5)] transition-all duration-300 hover:shadow-[0_6px_24px_-4px_rgba(124,195,159,0.7)] active:scale-[0.97]"
+                    >
+                      <Sparkles size={14} />
+                      {t('nav.continueOnboarding', { defaultValue: 'Continue Onboarding' })}
+                    </Link>
+                  ) : (
+                    <Link
+                      to="/owner"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-mintcom-green to-emerald-400 px-5 py-2.5 text-[13px] font-bold text-white shadow-[0_4px_16px_-4px_rgba(124,195,159,0.5)] transition-all duration-300 hover:shadow-[0_6px_24px_-4px_rgba(124,195,159,0.7)] active:scale-[0.97] dark:from-mintcom-green dark:to-emerald-500"
+                    >
+                      <User size={14} />
+                      {t('nav.dashboard', 'Dashboard')}
+                    </Link>
+                  )}
                   <button
                     onClick={handleLogout}
                     className="inline-flex items-center gap-2 rounded-xl bg-rose-50 px-4 py-2 text-[13px] font-semibold text-rose-500 transition-all duration-300 hover:bg-rose-100 hover:shadow-sm active:scale-[0.97] dark:bg-rose-500/10 dark:hover:bg-rose-500/20"
@@ -323,9 +336,9 @@ export const Navbar = () => {
             aria-label={t('common.aria.mobileNav')}
             className="fixed inset-0 z-40 bg-white dark:bg-[#050505] lg:hidden"
           >
-            <div className="flex h-full flex-col items-center justify-center px-8">
+            <div className="flex min-h-full flex-col items-center justify-center overflow-y-auto px-5 pb-[max(24px,env(safe-area-inset-bottom))] pt-24 sm:px-8">
               {/* Nav links */}
-              <div className="flex flex-col items-center gap-8">
+              <div className="flex w-full max-w-sm flex-col items-stretch gap-2.5 sm:gap-4">
                 {!isAuthenticated && navLinks.map((link, index) => (
                   <motion.div
                     key={link.id}
@@ -353,9 +366,20 @@ export const Navbar = () => {
                           }
                         }
                       }}
-                      className="font-barlow text-4xl font-black tracking-tight text-gray-900 transition-colors hover:text-mintcom-green dark:text-white sm:text-5xl"
+                      className={`flex min-h-14 w-full items-center justify-between gap-3 rounded-xl px-4 py-3 font-barlow text-2xl font-black text-gray-900 transition-all active:scale-[0.98] dark:text-white sm:min-h-16 sm:text-3xl ${
+                        link.id === 'try-pos'
+                          ? 'bg-mintcom-green text-black shadow-xl shadow-mintcom-green/25 dark:text-black'
+                          : 'border border-gray-200 bg-gray-50 hover:border-mintcom-green/30 hover:text-mintcom-green dark:border-white/10 dark:bg-white/5'
+                      }`}
                     >
-                      {link.name}
+                      <span className="min-w-0 truncate">{link.name}</span>
+                      {link.id === 'try-pos' ? (
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-black text-white">
+                          <Play size={17} fill="currentColor" />
+                        </span>
+                      ) : (
+                        <ArrowRight size={18} className={isRtl ? 'rotate-180' : ''} />
+                      )}
                     </Link>
                   </motion.div>
                 ))}
@@ -367,7 +391,7 @@ export const Navbar = () => {
                   initial={{ scaleX: 0 }}
                   animate={{ scaleX: 1 }}
                   transition={{ delay: 0.35, duration: 0.4 }}
-                  className="my-10 h-px w-32 bg-gradient-to-r from-transparent via-gray-300 to-transparent dark:via-white/20"
+                  className="my-5 h-px w-32 bg-gray-200 dark:bg-white/15 sm:my-7"
                 />
               )}
 
@@ -388,16 +412,29 @@ export const Navbar = () => {
                       <Headset size={20} />
                       {t('nav.support')}
                     </Link>
-                    <Link
-                      to="/owner"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="flex w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-mintcom-green to-emerald-400 py-5 text-center text-lg font-black tracking-tight text-white shadow-xl shadow-mintcom-green/30 transition-transform hover:scale-[1.02] active:scale-95"
-                    >
-                      <User size={20} />
-                      {t('nav.dashboard', 'Dashboard')}
-                    </Link>
+                    {needsOnboarding ? (
+                      <Link
+                        to={ONBOARDING_START_PATH}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="flex w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-mintcom-green to-emerald-400 py-5 text-center text-lg font-black tracking-tight text-black shadow-xl shadow-mintcom-green/30 transition-transform hover:scale-[1.02] active:scale-95"
+                      >
+                        <Sparkles size={20} />
+                        {t('nav.continueOnboarding', { defaultValue: 'Continue Onboarding' })}
+                      </Link>
+                    ) : (
+                      <Link
+                        to="/owner"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="flex w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-mintcom-green to-emerald-400 py-5 text-center text-lg font-black tracking-tight text-white shadow-xl shadow-mintcom-green/30 transition-transform hover:scale-[1.02] active:scale-95"
+                      >
+                        <User size={20} />
+                        {t('nav.dashboard', 'Dashboard')}
+                      </Link>
+                    )}
                     <button
                       onClick={() => {
                         setIsMobileMenuOpen(false);

@@ -5,6 +5,7 @@ import { Play, X, ArrowRight, Zap } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { DEMO_VIDEO_POSTER_URL, HERO_VIDEO_URL, isNativeVideoUrl } from '../config/downloads';
 import heroImage from '../assets/mintcom-pos-hero.png';
+import { ONBOARDING_START_PATH } from '../utils/onboardingLaunch';
 
 const SplitText = ({ text, className = "" }: { text: string; className?: string }) => {
   return (
@@ -27,18 +28,22 @@ const SplitText = ({ text, className = "" }: { text: string; className?: string 
 export const Hero = ({ isVideoOpen, setIsVideoOpen }: { isVideoOpen: boolean; setIsVideoOpen: (open: boolean) => void }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, needsOnboarding } = useAuth();
 
   const handleCtaClick = () => {
+    if (isAuthenticated && needsOnboarding) {
+      window.open(ONBOARDING_START_PATH, '_blank', 'noopener,noreferrer');
+      return;
+    }
     if (isAuthenticated) {
       navigate('/owner');
-    } else {
-      window.open('/signup', '_blank');
+      return;
     }
+    window.open('/signup', '_blank');
   };
 
   return (
-    <section className="relative pt-24 pb-16 lg:pt-32 lg:pb-20 overflow-hidden bg-white dark:bg-[#0f0f0f]" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
+    <section className="relative overflow-hidden bg-white pb-12 pt-24 dark:bg-[#0f0f0f] sm:pb-16 sm:pt-28 lg:pb-20 lg:pt-32" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
@@ -77,7 +82,7 @@ export const Hero = ({ isVideoOpen, setIsVideoOpen }: { isVideoOpen: boolean; se
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2, duration: 0.6 }}
-              className="group relative mb-8 inline-flex max-w-full items-center gap-2.5 rounded-[12px] border border-mintcom-green/20 bg-mintcom-green/5 px-3 py-1.5 text-xs font-bold text-mintcom-green shadow-[0_0_15px_rgba(124,195,159,0.05)] backdrop-blur-md transition-all duration-300 hover:border-mintcom-green/40 dark:bg-mintcom-green/10 xs:px-3.5"
+              className="group relative mb-5 inline-flex max-w-full items-center gap-2.5 rounded-[12px] border border-mintcom-green/20 bg-mintcom-green/5 px-3 py-1.5 text-xs font-bold text-mintcom-green shadow-[0_0_15px_rgba(124,195,159,0.05)] backdrop-blur-md transition-all duration-300 hover:border-mintcom-green/40 dark:bg-mintcom-green/10 xs:px-3.5 sm:mb-8"
             >
               <div className="relative flex items-center justify-center w-5 h-5 rounded-full bg-mintcom-green/20 text-mintcom-green overflow-hidden">
                 <Zap size={11} fill="currentColor" className="relative z-10" />
@@ -92,21 +97,21 @@ export const Hero = ({ isVideoOpen, setIsVideoOpen }: { isVideoOpen: boolean; se
               </span>
             </motion.div>
 
-            <h1 className="mb-6 font-magilio text-3xl font-bold tracking-tight leading-tight sm:text-4xl lg:text-5xl xl:text-6xl">
+            <h1 className="mb-5 font-magilio text-3xl font-bold leading-tight tracking-tight sm:mb-6 sm:text-4xl lg:text-5xl xl:text-6xl">
               <span className="block leading-[1.15] rtl:leading-[1.25]"><SplitText text={t('landing.hero.title1')} /></span>
               <span className="block leading-[1.15] rtl:leading-[1.25]"><SplitText text={t('landing.hero.title2')} /></span>
               <span className="block leading-[1.15] rtl:leading-[1.25]"><SplitText text={t('landing.hero.title3')} /></span>
             </h1>
 
-            <p className="mb-8 max-w-md text-base font-light leading-relaxed text-gray-600 dark:text-gray-400 sm:text-lg md:text-xl lg:max-w-none">
+            <p className="mb-6 max-w-md text-base font-light leading-relaxed text-gray-600 dark:text-gray-400 sm:mb-8 sm:text-lg md:text-xl lg:max-w-none">
               {t('landing.hero.description')}
             </p>
 
-            <div className="flex w-full flex-row flex-nowrap items-stretch justify-start gap-2.5 sm:gap-3">
+            <div className="flex w-full flex-col items-stretch justify-start gap-2.5 sm:flex-row sm:flex-nowrap sm:gap-3">
               <motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={() => window.open('/try-pos', '_blank')}
-                className="group flex min-w-0 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border-2 border-mintcom-green/40 bg-mintcom-green/10 px-2.5 py-3 text-sm font-bold text-gray-900 transition-colors hover:border-mintcom-green hover:bg-mintcom-green/15 dark:text-white xs:gap-2 xs:px-3 xs:text-[15px] sm:px-4 sm:py-3.5 sm:text-base md:px-5 md:text-[17px]"
+                className="group flex min-h-12 min-w-0 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-xl border-2 border-mintcom-green/40 bg-mintcom-green/10 px-4 py-3 text-[15px] font-bold text-gray-900 transition-colors hover:border-mintcom-green hover:bg-mintcom-green/15 dark:text-white sm:px-4 sm:py-3.5 sm:text-base md:px-5 md:text-[17px]"
               >
                 <Play size={15} fill="currentColor" className="shrink-0 text-mintcom-green sm:h-[18px] sm:w-[18px]" />
                 <span>{t('landing.hero.tryDesktop')}</span>
@@ -115,9 +120,15 @@ export const Hero = ({ isVideoOpen, setIsVideoOpen }: { isVideoOpen: boolean; se
               <motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={handleCtaClick}
-                className="group flex min-w-0 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl bg-mintcom-green px-2.5 py-3 text-sm font-bold text-black transition-all xs:gap-2 xs:px-3 xs:text-[15px] sm:px-4 sm:py-3.5 sm:text-base md:px-5 md:text-[17px]"
+                className="group flex min-h-12 min-w-0 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-mintcom-green px-4 py-3 text-[15px] font-bold text-black transition-all sm:px-4 sm:py-3.5 sm:text-base md:px-5 md:text-[17px]"
               >
-                <span>{isAuthenticated ? t('nav.dashboard', 'Go to Dashboard') : t('landing.hero.cta')}</span>
+                <span>
+                  {isAuthenticated
+                    ? needsOnboarding
+                      ? t('nav.continueOnboarding', { defaultValue: 'Continue Onboarding' })
+                      : t('nav.dashboard', 'Go to Dashboard')
+                    : t('landing.hero.cta')}
+                </span>
                 <ArrowRight size={17} className={`shrink-0 transition-transform sm:h-5 sm:w-5 ${t('common.locale') === 'ar' ? 'rotate-180 group-hover:-translate-x-1' : 'group-hover:translate-x-1'}`} />
               </motion.button>
 
@@ -143,7 +154,7 @@ export const Hero = ({ isVideoOpen, setIsVideoOpen }: { isVideoOpen: boolean; se
             initial={{ opacity: 0, x: 40 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 1, delay: 0.2, ease: "easeOut" }}
-            className="relative mt-10 flex w-full min-w-0 flex-1 justify-center sm:mt-14 lg:mt-16 lg:justify-end"
+            className="relative mt-2 flex w-full min-w-0 flex-1 justify-center sm:mt-8 lg:mt-16 lg:justify-end"
           >
             <motion.div
               className="relative w-full max-w-[320px] sm:max-w-[380px] md:max-w-[440px] lg:max-w-[500px] xl:max-w-[540px]"
@@ -170,25 +181,12 @@ export const Hero = ({ isVideoOpen, setIsVideoOpen }: { isVideoOpen: boolean; se
                 </svg>
               </div>
 
-              {/* The photo has an open gap here; this prevents the backdrop reading as a sharp green wedge. */}
-              <div
-                aria-hidden
-                className="pointer-events-none absolute z-[1] bg-white dark:bg-[#0f0f0f]"
-                style={{
-                  left: '31%',
-                  top: '50%',
-                  width: '14%',
-                  height: '23%',
-                  clipPath: 'polygon(0 0, 100% 0, 100% 100%, 38% 100%, 0 46%)',
-                }}
-              />
-
               <img
                 src={heroImage}
                 alt={t('landing.hero.alt', 'Mintcom All-in-One POS System')}
                 className="relative z-10 h-auto w-full object-contain drop-shadow-2xl"
-                width={1053}
-                height={927}
+                width={1350}
+                height={1165}
                 decoding="async"
                 fetchPriority="high"
                 draggable={false}

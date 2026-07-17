@@ -33,7 +33,7 @@ export function EstablishmentUrlResolver({ children }: { children: React.ReactNo
         }
 
         if (needsOnboarding) {
-            navigate('/onboarding', { replace: true });
+            navigate('/onboarding/step/1', { replace: true });
             return;
         }
 

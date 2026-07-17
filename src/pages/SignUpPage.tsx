@@ -26,6 +26,7 @@ import { formatInputPlaceholder, formatInputLabel } from '../utils/textCase';
 import { getSignUpSchema, type SignUpFormData } from '../utils/validation';
 import { LanguageSwitcher } from '../components/LanguageSwitcher';
 import { ThemeToggle } from '../components/ThemeToggle';
+import { launchFirstTimeOnboarding } from '../utils/onboardingLaunch';
 
 export function SignUpPage() {
   const { t } = useTranslation();
@@ -85,10 +86,14 @@ export function SignUpPage() {
       return;
     }
     try {
-      const result = await loginWithGoogle(credential, subscribeToNews);
+      const result = await loginWithGoogle(credential, subscribeToNews, 'signup');
       if (result.success) {
         toast.success(result.message || t('auth.signup.success'));
-        navigate('/');
+        if (result.needsOnboarding) {
+          launchFirstTimeOnboarding(navigate);
+        } else {
+          navigate('/');
+        }
       } else {
         toast.error(result.error || t('auth.signup.failed'));
       }
@@ -116,10 +121,14 @@ export function SignUpPage() {
       return;
     }
     try {
-      const result = await loginWithApple({ ...credential, subscribeToNews });
+      const result = await loginWithApple({ ...credential, subscribeToNews }, 'signup');
       if (result.success) {
         toast.success(result.message || t('auth.signup.success'));
-        navigate('/');
+        if (result.needsOnboarding) {
+          launchFirstTimeOnboarding(navigate);
+        } else {
+          navigate('/');
+        }
       } else {
         toast.error(result.error || t('auth.signup.failed'));
       }
@@ -758,10 +767,14 @@ export function SignUpPage() {
                         setSubscribeToNews(modalSubscribeToNews);
                         setShowGoogleTermsModal(false);
                         try {
-                          const result = await loginWithGoogle(credential, modalSubscribeToNews);
+                          const result = await loginWithGoogle(credential, modalSubscribeToNews, 'signup');
                           if (result.success) {
                             toast.success(result.message || t('auth.signup.success'));
-                            navigate('/');
+                            if (result.needsOnboarding) {
+                              launchFirstTimeOnboarding(navigate);
+                            } else {
+                              navigate('/');
+                            }
                           } else {
                             toast.error(result.error || t('auth.signup.failed'));
                           }
@@ -781,10 +794,17 @@ export function SignUpPage() {
                         setSubscribeToNews(modalSubscribeToNews);
                         setShowGoogleTermsModal(false);
                         try {
-                          const result = await loginWithApple({ ...credential, subscribeToNews: modalSubscribeToNews });
+                          const result = await loginWithApple(
+                            { ...credential, subscribeToNews: modalSubscribeToNews },
+                            'signup',
+                          );
                           if (result.success) {
                             toast.success(result.message || t('auth.signup.success'));
-                            navigate('/');
+                            if (result.needsOnboarding) {
+                              launchFirstTimeOnboarding(navigate);
+                            } else {
+                              navigate('/');
+                            }
                           } else {
                             toast.error(result.error || t('auth.signup.failed'));
                           }
