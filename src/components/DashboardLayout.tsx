@@ -1,6 +1,7 @@
 import { MobileAppModal } from './MobileAppModal';
 import { ANDROID_DOWNLOAD_URL, IOS_DOWNLOAD_URL } from '../config/downloads';
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 
 import { NavLink, Outlet, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -499,7 +500,16 @@ export function DashboardLayout() {
   const prevSidebarOpen = useRef(sidebarOpen);
   const sidebarRef = useRef<HTMLElement>(null);
   const collapsedNavHideTimeoutRef = useRef<number | null>(null);
-  const [collapsedNavOverlay, setCollapsedNavOverlay] = useState<{ type: 'group' | 'item'; label: string; items?: MenuItem[]; top: number; offset: number } | null>(null);
+  const [collapsedNavOverlay, setCollapsedNavOverlay] = useState<{
+    type: 'group' | 'item';
+    label: string;
+    items?: MenuItem[];
+    /** Viewport-fixed coords so the flyout is never clipped by sidebar overflow */
+    top: number;
+    left?: number;
+    right?: number;
+    maxHeight: number;
+  } | null>(null);
 
   const clearCollapsedNavOverlayHide = useCallback(() => {
     if (collapsedNavHideTimeoutRef.current !== null) {
@@ -522,22 +532,33 @@ export function DashboardLayout() {
   }, [clearCollapsedNavOverlayHide]);
 
   const showCollapsedNavOverlay = useCallback((target: HTMLElement, overlay: { type: "group" | "item"; label: string; items?: MenuItem[] }) => {
-    if (sidebarOpen || !sidebarRef.current) {
+    if (sidebarOpen) {
       return;
     }
 
     clearCollapsedNavOverlayHide();
 
     const itemRect = target.getBoundingClientRect();
-    const sidebarRect = sidebarRef.current.getBoundingClientRect();
     const overlayGap = 10;
+    const edgePad = 12;
+    // Estimate group panel height so we can keep it fully on-screen.
+    // header ~36px + each item ~40px + padding
+    const itemCount = overlay.items?.length ?? 0;
+    const estimatedHeight =
+      overlay.type === 'group'
+        ? Math.min(window.innerHeight - edgePad * 2, 36 + itemCount * 40 + 16)
+        : 36;
+    const preferredTop = itemRect.top + itemRect.height / 2 - estimatedHeight / 2;
+    const maxTop = window.innerHeight - edgePad - estimatedHeight;
+    const clampedTop = Math.max(edgePad, Math.min(preferredTop, maxTop));
+    const maxHeight = Math.max(120, window.innerHeight - clampedTop - edgePad);
 
     setCollapsedNavOverlay({
       ...overlay,
-      top: itemRect.top - sidebarRect.top + (itemRect.height / 2),
-      offset: isRTL
-        ? (sidebarRect.right - itemRect.left) + overlayGap
-        : (itemRect.right - sidebarRect.left) + overlayGap,
+      top: clampedTop,
+      left: isRTL ? undefined : itemRect.right + overlayGap,
+      right: isRTL ? window.innerWidth - itemRect.left + overlayGap : undefined,
+      maxHeight,
     });
   }, [clearCollapsedNavOverlayHide, isRTL, sidebarOpen]);
 
@@ -885,57 +906,68 @@ export function DashboardLayout() {
           })}
         </nav>
 
-        {!sidebarOpen && collapsedNavOverlay && (
-          <div
-            className="absolute top-0 -translate-y-1/2 z-[100]"
-            style={{
-              top: collapsedNavOverlay.top,
-              left: isRTL ? undefined : collapsedNavOverlay.offset,
-              right: isRTL ? collapsedNavOverlay.offset : undefined,
-            }}
-          >
-            {collapsedNavOverlay.type === "group" ? (
-              <div
-                className="min-w-[200px] max-h-[calc(100vh-1rem)] overflow-y-auto bg-white dark:bg-[#0D0D0D] border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xl scrollbar-none"
-                onMouseEnter={clearCollapsedNavOverlayHide}
-                onMouseLeave={scheduleHideCollapsedNavOverlay}
-              >
-                <div className="px-4 py-2 border-b border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.02]">
-                  <p className="text-xs font-semibold text-mintcom-green tracking-normal">{collapsedNavOverlay.label}</p>
+        {!sidebarOpen &&
+          collapsedNavOverlay &&
+          createPortal(
+            <div
+              className="pointer-events-auto fixed z-[9999]"
+              style={{
+                top: collapsedNavOverlay.top,
+                left: collapsedNavOverlay.left,
+                right: collapsedNavOverlay.right,
+              }}
+              onMouseEnter={clearCollapsedNavOverlayHide}
+              onMouseLeave={scheduleHideCollapsedNavOverlay}
+            >
+              {collapsedNavOverlay.type === 'group' ? (
+                <div
+                  className="min-w-[220px] max-w-[min(280px,calc(100vw-1.5rem))] overflow-y-auto overscroll-contain bg-white dark:bg-[#0D0D0D] border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xl scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-white/10"
+                  style={{ maxHeight: collapsedNavOverlay.maxHeight }}
+                >
+                  <div className="sticky top-0 z-10 px-4 py-2.5 border-b border-gray-100 dark:border-white/5 bg-gray-50/95 dark:bg-[#0D0D0D]/95 backdrop-blur-sm">
+                    <p className="text-xs font-semibold text-mintcom-green tracking-normal">
+                      {collapsedNavOverlay.label}
+                    </p>
+                  </div>
+                  <div className="px-2 py-2 space-y-0.5">
+                    {collapsedNavOverlay.items?.map((subItem) => (
+                      <NavLink
+                        key={subItem.path}
+                        to={subItem.path}
+                        onClick={() => {
+                          setSidebarOpen(false);
+                          hideCollapsedNavOverlay();
+                        }}
+                        className={({ isActive }) =>
+                          `flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+                            isActive
+                              ? 'bg-mintcom-green text-black shadow-md shadow-mintcom-green/20 active-menu-item'
+                              : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5'
+                          }`
+                        }
+                      >
+                        {({ isActive }) => (
+                          <>
+                            <span
+                              className={`w-1.5 h-1.5 shrink-0 rounded-full transition-colors ${
+                                isActive ? 'bg-black' : 'bg-gray-300 dark:bg-gray-600'
+                              }`}
+                            />
+                            <span className="truncate">{subItem.label}</span>
+                          </>
+                        )}
+                      </NavLink>
+                    ))}
+                  </div>
                 </div>
-                <div className="px-2 py-2 space-y-1">
-                  {collapsedNavOverlay.items?.map((subItem) => (
-                    <NavLink
-                      key={subItem.path}
-                      to={subItem.path}
-                      onClick={() => {
-                        setSidebarOpen(false);
-                        hideCollapsedNavOverlay();
-                      }}
-                      className={({ isActive }) =>
-                        `flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${isActive
-                          ? 'bg-mintcom-green text-black shadow-md shadow-mintcom-green/20 active-menu-item'
-                          : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5'
-                        }`
-                      }
-                    >
-                      {({ isActive }) => (
-                        <>
-                          <span className={`w-1.5 h-1.5 rounded-full transition-colors ${isActive ? "bg-black" : "bg-gray-300 dark:bg-gray-600"}`} />
-                          <span>{subItem.label}</span>
-                        </>
-                      )}
-                    </NavLink>
-                  ))}
+              ) : (
+                <div className="pointer-events-none px-3 py-1.5 bg-gray-900/90 backdrop-blur-md text-white text-xs font-sans font-medium tracking-normal rounded-lg whitespace-nowrap border border-white/10 shadow-xl">
+                  {collapsedNavOverlay.label}
                 </div>
-              </div>
-            ) : (
-              <div className="pointer-events-none px-3 py-1.5 bg-gray-900/90 backdrop-blur-md text-white text-xs font-sans font-medium tracking-normal rounded-lg whitespace-nowrap border border-white/10 shadow-xl">
-                {collapsedNavOverlay.label}
-              </div>
-            )}
-          </div>
-        )}
+              )}
+            </div>,
+            document.body,
+          )}
 
         {/* Mobile App Download - With QR Code Popup */}
         {sidebarOpen && (
