@@ -5,6 +5,7 @@ import { Check, ArrowRight, Tag } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { BILLING_CYCLES, getMintcomPrice, MINTCOM_PRICING } from '../config/pricing';
+import { ONBOARDING_START_PATH } from '../utils/onboardingLaunch';
 
 const SplitPricingText = ({ text, highlightColor = "text-mintcom-green", baseColor = "text-gray-900 dark:text-white" }: { text: string; highlightColor?: string; baseColor?: string }) => {
   return (
@@ -32,7 +33,7 @@ const SplitPricingText = ({ text, highlightColor = "text-mintcom-green", baseCol
 export const PricingDownload = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, needsOnboarding } = useAuth();
     const [isYearly, setIsYearly] = useState(MINTCOM_PRICING.defaultBillingCycle === BILLING_CYCLES.YEARLY);
 
     const currentBillingCycle = isYearly ? BILLING_CYCLES.YEARLY : BILLING_CYCLES.MONTHLY;
@@ -234,15 +235,29 @@ export const PricingDownload = () => {
                                 {t('landing.pricing.alreadySignedIn', 'You are already signed in')}
                             </h3>
                             <p className="text-gray-600 dark:text-gray-400 mb-10 leading-relaxed font-medium">
-                                {t('landing.pricing.alreadySignedInDesc', 'You can continue to your Dashboard to manage your business.')}
+                                {needsOnboarding
+                                    ? t('landing.pricing.alreadySignedInOnboardingDesc', {
+                                        defaultValue:
+                                          'Finish setting up your first location, then your dashboard will be ready.',
+                                      })
+                                    : t('landing.pricing.alreadySignedInDesc', 'You can continue to your Dashboard to manage your business.')}
                             </p>
 
                             <div className="space-y-4">
                                 <button
-                                    onClick={() => navigate('/owner')}
+                                    onClick={() => {
+                                        if (needsOnboarding) {
+                                            window.open(ONBOARDING_START_PATH, '_blank', 'noopener,noreferrer');
+                                            setShowAlreadySignedIn(false);
+                                            return;
+                                        }
+                                        navigate('/owner');
+                                    }}
                                     className="w-full bg-mintcom-green text-black py-4 rounded-xl font-black text-lg transition-all hover:bg-mintcom-green/90 shadow-lg shadow-mintcom-green/20"
                                 >
-                                    {t('landing.pricing.goToDashboard', 'Go to Dashboard')}
+                                    {needsOnboarding
+                                        ? t('nav.continueOnboarding', { defaultValue: 'Continue Onboarding' })
+                                        : t('landing.pricing.goToDashboard', 'Go to Dashboard')}
                                 </button>
                                 <button
                                     onClick={() => setShowAlreadySignedIn(false)}

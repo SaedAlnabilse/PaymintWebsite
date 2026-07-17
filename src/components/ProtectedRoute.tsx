@@ -9,7 +9,7 @@ const LOCKED_SUBSCRIPTION_STATUSES = new Set([
 ]);
 
 export function ProtectedRoute() {
-  const { isAuthenticated, isLoading, needsOnboarding, account, establishments } = useAuth();
+  const { isAuthenticated, isLoading, account } = useAuth();
   const location = useLocation();
 
   if (isLoading) {
@@ -21,15 +21,8 @@ export function ProtectedRoute() {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
 
-  // If user needs onboarding (no establishments), redirect to onboarding
-  // But allow access to onboarding page itself
-  // NOTE: Only redirect if we've confirmed establishments are actually empty
-  // (not just still loading)
-  if (needsOnboarding && !location.pathname.startsWith('/onboarding') && establishments.length === 0) {
-    console.log('[ProtectedRoute] No establishments, redirecting to onboarding');
-    return <Navigate to="/onboarding" replace />;
-  }
-
+  // First-time owners (no establishments yet) may still browse the site, support,
+  // and account areas. Location dashboards use EstablishmentRequiredRoute instead.
   return <Outlet />;
 }
 
@@ -73,8 +66,9 @@ export function EstablishmentRequiredRoute() {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
 
+  // Location dashboards need a real establishment — send first-time owners to setup.
   if (needsOnboarding) {
-    return <Navigate to="/onboarding" replace />;
+    return <Navigate to="/onboarding/step/1" replace />;
   }
 
   // If no location slug, redirect to select-establishment

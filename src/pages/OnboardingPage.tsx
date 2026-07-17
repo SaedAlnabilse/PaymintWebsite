@@ -941,7 +941,13 @@ export function OnboardingPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-[#050505] flex flex-col transition-colors duration-300" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
       {/* Navbar - Shown on All Steps */}
       <div className="sticky top-0 z-50 p-6 flex justify-between items-center border-b border-gray-200 dark:border-white/5 bg-white dark:bg-[#050505] shadow-sm">
-        <Link to="/" className="flex items-center hover:opacity-80 transition-opacity">
+        {/* Logo returns to the marketing site — setup can be resumed anytime via Continue Onboarding */}
+        <Link
+          to="/"
+          title={t('onboarding.backToWebsite', { defaultValue: 'Back to Mintcom website' })}
+          aria-label={t('onboarding.backToWebsite', { defaultValue: 'Back to Mintcom website' })}
+          className="group flex items-center gap-2 rounded-xl pe-2 transition-opacity hover:opacity-90"
+        >
           <img
             src={MintcomLogoGreen}
             alt="Mintcom"
@@ -952,6 +958,9 @@ export function OnboardingPage() {
             alt="Mintcom"
             className="h-8 w-auto object-contain hidden dark:block"
           />
+          <span className="hidden sm:inline text-[11px] font-bold uppercase tracking-wider text-gray-400 transition-colors group-hover:text-mintcom-green">
+            {t('onboarding.backToWebsiteShort', { defaultValue: 'Website' })}
+          </span>
         </Link>
 
         {step <= totalSteps && (
