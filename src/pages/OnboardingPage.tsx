@@ -870,10 +870,33 @@ export function OnboardingPage() {
       await saveOwnerLoginCredentials();
       await finishOnboardingWithEstablishment(createdEstablishment);
     } catch (err: any) {
+      const status = err?.response?.status;
       const errorData = err.response?.data?.message;
-      const errorMessage = Array.isArray(errorData)
+      let errorMessage = Array.isArray(errorData)
         ? errorData.join('\n')
-        : errorData || t('onboarding.errors.failedToComplete');
+        : typeof errorData === 'string'
+          ? errorData
+          : t('onboarding.errors.failedToComplete');
+
+      // Surface actionable guidance for the common production failure modes.
+      if (status === 401 || status === 403) {
+        errorMessage =
+          'Your session expired or could not be verified. Please refresh, sign in again with Google, and retry.';
+      } else if (status === 409) {
+        errorMessage =
+          errorMessage ||
+          'This Location Login ID is already taken. Go back and choose another ID.';
+      } else if (status === 500 || status === 502) {
+        errorMessage =
+          errorMessage && errorMessage !== 'Internal server error'
+            ? errorMessage
+            : 'Server error while creating the location. Please wait a few seconds and try again. If it keeps failing, sign out and sign in again.';
+      }
+
+      console.error('[Onboarding] finish failed', {
+        status,
+        data: err?.response?.data,
+      });
 
       toast.error(errorMessage, {
         duration: errorMessage.length > 50 ? 6000 : 4000,
