@@ -255,11 +255,10 @@ export function OnboardingPage() {
       .min(8, t('auth.validation.passwordMin'))
       .regex(/[A-Z]/, t('auth.validation.passwordUppercase'))
       .regex(/[a-z]/, t('auth.validation.passwordLowercase'))
-      .regex(/[0-9]/, t('auth.validation.passwordNumber'))
-      .regex(/[^A-Za-z0-9]/, t('auth.validation.passwordSymbol')),
+      .regex(/[0-9]/, t('auth.validation.passwordNumber')),
   });
 
-  // Step 3: Admin Access
+  // Step 3: Admin Access (owner login credentials)
   const step3Schema = z.object({
     username: z.string()
       .trim()
@@ -268,8 +267,7 @@ export function OnboardingPage() {
       .min(8, t('auth.validation.passwordMin'))
       .regex(/[A-Z]/, t('auth.validation.passwordUppercase'))
       .regex(/[a-z]/, t('auth.validation.passwordLowercase'))
-      .regex(/[0-9]/, t('auth.validation.passwordNumber'))
-      .regex(/[^A-Za-z0-9]/, t('auth.validation.passwordSymbol')),
+      .regex(/[0-9]/, t('auth.validation.passwordNumber')),
     firstName: z.string().min(2, t('onboarding.step4.errors.firstNameMin')),
     lastName: z.string().min(2, t('onboarding.step4.errors.lastNameMin')),
   });

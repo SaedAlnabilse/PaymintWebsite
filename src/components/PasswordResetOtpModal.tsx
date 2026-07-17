@@ -168,11 +168,6 @@ export function PasswordResetOtpModal({
             return;
         }
 
-        if (!/[^A-Za-z0-9]/.test(newPassword)) {
-            setError(t('auth.validation.passwordSymbol'));
-            return;
-        }
-
         setIsLoading(true);
         setError('');
 
@@ -209,7 +204,6 @@ export function PasswordResetOtpModal({
         { label: t('auth.validation.passwordUppercase'), met: /[A-Z]/.test(newPassword) },
         { label: t('auth.validation.passwordLowercase'), met: /[a-z]/.test(newPassword) },
         { label: t('auth.validation.passwordNumber'), met: /[0-9]/.test(newPassword) },
-        { label: t('auth.validation.passwordSymbol'), met: /[^A-Za-z0-9]/.test(newPassword) },
     ];
 
     const handleClose = () => {
