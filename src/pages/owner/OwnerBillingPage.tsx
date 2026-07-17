@@ -390,6 +390,21 @@ export function OwnerBillingPage() {
         return index === 0 ? FIRST_LOCATION_PRICE : ADDITIONAL_LOCATION_PRICE;
     };
 
+    /** Split "Brand — Branch" so long QA names stay readable without ellipsis. */
+    const splitLocationName = (name: string) => {
+        const seps = [' — ', ' – ', ' - '];
+        for (const sep of seps) {
+            const idx = name.indexOf(sep);
+            if (idx > 0) {
+                return {
+                    primary: name.slice(0, idx).trim(),
+                    secondary: name.slice(idx + sep.length).trim(),
+                };
+            }
+        }
+        return { primary: name, secondary: null as string | null };
+    };
+
     const getBillTimestamp = (dateValue?: string) => {
         if (!dateValue) return null;
         const timestamp = new Date(dateValue).getTime();
@@ -641,8 +656,8 @@ export function OwnerBillingPage() {
 
                     <div className="bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/5 overflow-visible shadow-sm">
                         {/* Table Header */}
-                        <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-4 bg-gray-50 dark:bg-white/[0.02] border-b border-gray-200 dark:border-white/5 table-header-row items-center">
-                            <div className="col-span-3 flex items-center gap-3">
+                        <div className="hidden md:grid grid-cols-12 gap-3 px-6 py-4 bg-gray-50 dark:bg-white/[0.02] border-b border-gray-200 dark:border-white/5 table-header-row items-center">
+                            <div className="col-span-4 flex items-center gap-3">
                                 <div className="w-10" />
                                 <span>{toHeaderCase(t('owner.billing.location'))}</span>
                             </div>
@@ -659,7 +674,7 @@ export function OwnerBillingPage() {
                                     <ArrowUpDown size={12} />
                                 </button>
                             </div>
-                            <div className="col-span-2 text-center flex justify-center">{toHeaderCase(t('owner.billing.payment'))}</div>
+                            <div className="col-span-1 text-center flex justify-center">{toHeaderCase(t('owner.billing.payment'))}</div>
                             <div className="col-span-1 text-center flex justify-center">{toHeaderCase(t('common.actions'))}</div>
                         </div>
 
@@ -678,20 +693,41 @@ export function OwnerBillingPage() {
                                 {paginatedEstablishments.map((est) => (
                                     <div
                                         key={est.id}
-                                        className="grid grid-cols-1 md:grid-cols-12 gap-4 px-6 py-5 hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors items-center group relative"
+                                        className="grid grid-cols-1 md:grid-cols-12 gap-3 px-6 py-5 hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors items-center group relative"
                                     >
-                                        {/* Location */}
-                                        <div className="col-span-3 flex items-center gap-3 min-w-0">
+                                        {/* Location — full name, no ellipsis; split brand / branch when possible */}
+                                        <div className="col-span-4 flex items-center gap-3 min-w-0">
                                             <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-white/5 flex items-center justify-center text-sm font-bold text-gray-400 group-hover:text-mintcom-green transition-colors shrink-0">
                                                 {est.name.charAt(0)}
                                             </div>
                                             <div className="min-w-0 flex-1">
-                                                <h3 className="text-sm font-bold tracking-tight text-gray-900 dark:text-white truncate" title={est.name}>
-                                                    {est.name}
-                                                </h3>
-                                                <p className="dashboard-card-meta truncate">
-                                                    {est.billingCycle === 'yearly' ? t('owner.billing.yearlyPlan') : t('owner.billing.monthlyPlan')}
-                                                </p>
+                                                {(() => {
+                                                    const { primary, secondary } = splitLocationName(est.name);
+                                                    const planLabel = est.billingCycle === 'yearly'
+                                                        ? t('owner.billing.yearlyPlan')
+                                                        : t('owner.billing.monthlyPlan');
+                                                    return (
+                                                        <>
+                                                            <h3
+                                                                className="text-sm font-bold tracking-tight text-gray-900 dark:text-white leading-snug break-words"
+                                                                title={est.name}
+                                                            >
+                                                                {primary}
+                                                            </h3>
+                                                            <p className="dashboard-card-meta leading-snug break-words mt-0.5">
+                                                                {[secondary, planLabel].filter(Boolean).join(' · ')}
+                                                            </p>
+                                                            {est.establishmentLoginId ? (
+                                                                <p
+                                                                    className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 tracking-wide mt-0.5 break-all"
+                                                                    title={est.establishmentLoginId}
+                                                                >
+                                                                    {est.establishmentLoginId}
+                                                                </p>
+                                                            ) : null}
+                                                        </>
+                                                    );
+                                                })()}
                                             </div>
                                         </div>
 
@@ -700,17 +736,46 @@ export function OwnerBillingPage() {
                                             {getStatusBadge(est)}
                                         </div>
 
-                                        {/* Cost — plain price (not StatValue) so narrow table cells never ellipsis "20.00" → "2..." */}
+                                        {/* Cost — plain price; trials show free-now + post-trial rate */}
                                         <div className="col-span-2 text-center flex justify-center">
                                             {(() => {
                                                 // Find original index in full list for correct pricing
                                                 const fullIndex = billingData?.establishments.findIndex(e => e.id === est.id) ?? 0;
                                                 const price = getEstablishmentPrice(est, fullIndex);
                                                 const isYearly = est.billingCycle === 'yearly';
+                                                const isTrial = est.subscriptionStatus?.toUpperCase() === 'TRIAL';
                                                 const formattedPrice = Number(price).toLocaleString(t('common.locale'), {
                                                     minimumFractionDigits: 2,
                                                     maximumFractionDigits: 2,
                                                 });
+                                                if (isTrial) {
+                                                    return (
+                                                        <div
+                                                            className="flex flex-col items-center gap-0.5 whitespace-nowrap"
+                                                            title={t('owner.billing.trial_ends_notice', {
+                                                                defaultValue: `Free now · then ${formattedPrice} USD/mo after trial`,
+                                                                date: formatBillingDate(est.nextBillDate || est.trialEndsAt) || '',
+                                                                price: `${formattedPrice} USD`,
+                                                            })}
+                                                        >
+                                                            <span className="inline-flex items-baseline gap-1 text-sm font-bold tracking-tight text-mintcom-green">
+                                                                <span>0.00</span>
+                                                                <span className="text-[10px] font-black uppercase text-mintcom-green/70">
+                                                                    USD
+                                                                </span>
+                                                            </span>
+                                                            <span className="text-[10px] font-bold text-mintcom-green/80">
+                                                                {t('owner.locations.trial', { defaultValue: 'Free trial' })}
+                                                            </span>
+                                                            <span className="text-[10px] font-medium text-gray-400 dark:text-gray-500">
+                                                                {t('owner.billing.then_price', {
+                                                                    defaultValue: `then ${formattedPrice}/mo`,
+                                                                    price: formattedPrice,
+                                                                })}
+                                                            </span>
+                                                        </div>
+                                                    );
+                                                }
                                                 return (
                                                     <div className="flex flex-col items-center gap-0.5 whitespace-nowrap">
                                                         <span className="inline-flex items-baseline gap-1 text-sm font-bold tracking-tight text-gray-900 dark:text-white">
@@ -730,17 +795,24 @@ export function OwnerBillingPage() {
                                         {/* Next Bill */}
                                         <div className="col-span-2 text-center flex justify-center">
                                             {formatBillingDate(est.nextBillDate) ? (
-                                                <p className="dashboard-card-meta text-center">
-                                                    {formatBillingDate(est.nextBillDate)}
-                                                </p>
+                                                <div className="flex flex-col items-center gap-0.5">
+                                                    <p className="dashboard-card-meta text-center">
+                                                        {formatBillingDate(est.nextBillDate)}
+                                                    </p>
+                                                    {est.subscriptionStatus?.toUpperCase() === 'TRIAL' ? (
+                                                        <p className="text-[10px] font-bold text-mintcom-green/80">
+                                                            {t('owner.billing.trialEnds', { defaultValue: 'Trial ends' })}
+                                                        </p>
+                                                    ) : null}
+                                                </div>
                                             ) : (
                                                 <p className="text-xs font-bold text-gray-400 text-center">-</p>
                                             )}
                                         </div>
 
                                         {/* Payment */}
-                                        <div className="col-span-2 text-center flex justify-center items-center min-w-0">
-                                            <span className="dashboard-card-meta truncate text-center" title={est.paymentCard ? `${est.paymentCard.brand} •••• ${est.paymentCard.last4}` : undefined}>
+                                        <div className="col-span-1 text-center flex justify-center items-center min-w-0">
+                                            <span className="dashboard-card-meta text-center break-words leading-snug" title={est.paymentCard ? `${est.paymentCard.brand} •••• ${est.paymentCard.last4}` : undefined}>
                                                 {est.paymentCard ? `${est.paymentCard.brand} •••• ${est.paymentCard.last4}` : t('owner.billing.noCard')}
                                             </span>
                                         </div>

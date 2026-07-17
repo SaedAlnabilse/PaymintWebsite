@@ -80,7 +80,9 @@ describe('ProductFormModal image generation', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useRealTimers();
-    localStorage.clear();
+    // Use window.localStorage explicitly: newer Node versions define a global
+    // localStorage that shadows jsdom's and is undefined without a flag.
+    window.localStorage.clear();
     consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     (URL as any).createObjectURL = vi.fn(() => 'blob:mock-preview');

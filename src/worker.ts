@@ -44,7 +44,10 @@ const SECURITY_HEADERS: Record<string, string> = {
         "object-src 'none'",
         "frame-ancestors 'none'",
         "form-action 'self'",
-        "img-src 'self' data: blob: https://mintcompos.com https://www.mintcompos.com https://images.unsplash.com https://*.unsplash.com https://upload.wikimedia.org https://cdn-icons-png.flaticon.com https://accounts.google.com https://*.googleusercontent.com https://www.gstatic.com https://ssl.gstatic.com https://*.gstatic.com https://*.google.com",
+        // raw.githubusercontent.com hosts the seeded card-brand logos (see
+        // establishments.service.ts defaults) — without it Visa/Mastercard
+        // images are CSP-blocked while wikimedia-hosted ones still load.
+        "img-src 'self' data: blob: https://mintcompos.com https://www.mintcompos.com https://images.unsplash.com https://*.unsplash.com https://upload.wikimedia.org https://raw.githubusercontent.com https://cdn-icons-png.flaticon.com https://accounts.google.com https://*.googleusercontent.com https://www.gstatic.com https://ssl.gstatic.com https://*.gstatic.com https://*.google.com",
         "font-src 'self' data: https://fonts.gstatic.com https://fonts.cdnfonts.com",
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.cdnfonts.com https://accounts.google.com",
         // gsi/client + button iframe assets load from accounts.google.com and gstatic

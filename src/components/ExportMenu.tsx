@@ -37,16 +37,53 @@ export function ExportMenu({
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Position the portal menu under the button.
+  // Prefer right-edge alignment (opens toward the left) so top-right Export
+  // buttons never clip labels off the viewport edge.
   const updateCoords = () => {
     const rect = buttonRef.current?.getBoundingClientRect();
-    if (rect) {
-      setCoords({ top: rect.bottom + 8, left: rect.left, width: rect.width });
-    }
+    if (!rect) return;
+
+    const viewportPad = 8;
+    const minWidth = 220;
+    const menuWidth = Math.max(rect.width, minWidth);
+    // Anchor menu's right edge to the button's right edge (opens leftward).
+    let left = rect.right - menuWidth;
+
+    // Keep fully inside the viewport if possible.
+    const maxLeft = window.innerWidth - menuWidth - viewportPad;
+    left = Math.min(Math.max(left, viewportPad), Math.max(viewportPad, maxLeft));
+
+    setCoords({
+      top: rect.bottom + 8,
+      left,
+      width: menuWidth,
+    });
   };
 
   useEffect(() => {
     if (!open) return;
     updateCoords();
+
+    // After paint, expand width to fit real labels, then re-anchor to the right.
+    const raf = requestAnimationFrame(() => {
+      const menu = menuRef.current;
+      const rect = buttonRef.current?.getBoundingClientRect();
+      if (!menu || !rect) return;
+
+      const contentWidth = Math.ceil(menu.scrollWidth);
+      const menuWidth = Math.max(rect.width, contentWidth, 220);
+      const viewportPad = 8;
+      let left = rect.right - menuWidth;
+      const maxLeft = window.innerWidth - menuWidth - viewportPad;
+      left = Math.min(Math.max(left, viewportPad), Math.max(viewportPad, maxLeft));
+
+      setCoords({
+        top: rect.bottom + 8,
+        left,
+        width: menuWidth,
+      });
+    });
+
     const handlePointer = (e: MouseEvent) => {
       if (
         buttonRef.current?.contains(e.target as Node) ||
@@ -61,6 +98,7 @@ export function ExportMenu({
     window.addEventListener('resize', handleScrollOrResize);
     window.addEventListener('scroll', handleScrollOrResize, true);
     return () => {
+      cancelAnimationFrame(raf);
       document.removeEventListener('mousedown', handlePointer);
       window.removeEventListener('resize', handleScrollOrResize);
       window.removeEventListener('scroll', handleScrollOrResize, true);
@@ -103,7 +141,8 @@ export function ExportMenu({
                 position: 'fixed',
                 top: coords.top,
                 left: coords.left,
-                minWidth: Math.max(coords.width, 220),
+                width: coords.width,
+                minWidth: 220,
                 zIndex: 9999,
               }}
               className="bg-white dark:bg-[#1E293B] rounded-xl border border-gray-200 dark:border-white/10 shadow-2xl overflow-hidden py-1"
@@ -116,7 +155,7 @@ export function ExportMenu({
                     key={format}
                     type="button"
                     onClick={() => handleSelect(format)}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors text-start"
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors text-start whitespace-nowrap"
                   >
                     <Icon size={16} className="text-mintcom-green flex-shrink-0" />
                     <span>{t(meta.i18nKey)}</span>

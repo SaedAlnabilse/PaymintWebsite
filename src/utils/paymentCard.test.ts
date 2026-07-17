@@ -5,6 +5,7 @@ import {
   formatExpiryInput,
   getCardCvvLength,
   isValidCardNumber,
+  luhnCheck,
   parseExpiryDate,
 } from './paymentCard';
 
@@ -26,9 +27,17 @@ describe('paymentCard helpers', () => {
     expect(formatExpiryInput('1')).toBe('1');
   });
 
-  it('validates card numbers with luhn', () => {
+  it('validates card numbers by brand-aware length (no gateway tokenization yet)', () => {
     expect(isValidCardNumber('4242424242424242')).toBe(true);
-    expect(isValidCardNumber('4242424242424241')).toBe(false);
+    expect(isValidCardNumber('424242424242424')).toBe(false);
+    // Amex is 15 digits and must be accepted.
+    expect(isValidCardNumber('378282246310005')).toBe(true);
+    expect(isValidCardNumber('37828224631000')).toBe(false);
+  });
+
+  it('luhnCheck flags checksum-invalid numbers', () => {
+    expect(luhnCheck('4242424242424242')).toBe(true);
+    expect(luhnCheck('4242424242424241')).toBe(false);
   });
 
   it('returns the expected cvv length per brand', () => {
