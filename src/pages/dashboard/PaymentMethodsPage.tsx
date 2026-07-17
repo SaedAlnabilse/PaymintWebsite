@@ -482,10 +482,6 @@ export function PaymentMethodsPage() {
     cardTypeStatusFilter !== 'ALL'
       ? t('common.noFilteredResults')
       : t('common.noResults', 'No results');
-  const paymentMethodsEmptyLabel =
-    paymentMethodStatusFilter !== 'ALL'
-      ? t('common.noFilteredResults')
-      : t('common.noResults', 'No results');
 
   return (
     <div className="max-w-7xl mx-auto space-y-10 pb-16" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
@@ -684,16 +680,6 @@ export function PaymentMethodsPage() {
                     placeholder={t('common.allStatuses', 'All Statuses')}
                   />
                 </div>
-                {paymentMethods.length === 0 && !isLoading && (
-                  <button
-                    onClick={handleSeedDefaults}
-                    disabled={isSubmitting}
-                    className="px-4 py-2 bg-mintcom-green/10 text-mintcom-green text-[10px] font-black tracking-widest uppercase rounded-lg border border-mintcom-green/20 hover:bg-mintcom-green/20 transition-all flex items-center gap-2"
-                  >
-                    <Star size={12} fill="currentColor" />
-                    {t('paymentMethods.setupDefaults', 'Setup Defaults')}
-                  </button>
-                )}
               </div>
             </div>
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400 max-w-2xl">{t('paymentMethods.paymentTypesSubtitle')}</p>
@@ -708,11 +694,7 @@ export function PaymentMethodsPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 relative z-10">
-            {visiblePaymentMethods.length === 0 ? (
-              <div className="col-span-full py-20 text-center bg-gray-50/50 dark:bg-white/[0.01] rounded-[24px] border border-dashed border-gray-200 dark:border-white/5">
-                <p className="text-gray-400 font-black tracking-[0.2em] text-xs uppercase">{paymentMethodsEmptyLabel}</p>
-              </div>
-            ) : visiblePaymentMethods.map((method) => (
+            {visiblePaymentMethods.map((method) => (
               <motion.div
                 layout
                 key={method.id}
