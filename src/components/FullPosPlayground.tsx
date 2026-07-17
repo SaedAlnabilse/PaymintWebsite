@@ -1383,19 +1383,19 @@ export function FullPosPlayground() {
           Expanded (Menu): overlays content with labels + brand mark
           Kitchen intentionally omitted from the demo.
         */}
-        {/* Permanent width reserve so content never jumps when expanded */}
-        <div className="hidden h-full w-[72px] shrink-0 sm:block" aria-hidden />
+        {/* Permanent width reserve — static tablet chrome (scaled canvas, not viewport) */}
+        <div className="block h-full w-[72px] shrink-0" aria-hidden />
         {sidebarExpanded && (
           <button
             type="button"
             aria-label="Close menu"
-            className="absolute inset-0 z-40 hidden sm:block"
+            className="absolute inset-0 z-40 block"
             style={{ left: 72, background: 'transparent' }}
             onClick={() => setSidebarExpanded(false)}
           />
         )}
         <nav
-          className="absolute inset-y-0 start-0 z-50 hidden h-full flex-col items-center overflow-hidden sm:flex"
+          className="absolute inset-y-0 start-0 z-50 flex h-full flex-col items-center overflow-hidden"
           style={{
             backgroundColor: '#1F1D2B',
             width: sidebarExpanded ? 230 : 72,
@@ -1518,8 +1518,8 @@ export function FullPosPlayground() {
           </div>
         </nav>
 
-        {/* Mobile: hamburger opens full POS-style drawer (no Kitchen) */}
-        <div className="absolute inset-x-0 top-0 z-40 flex h-12 items-center gap-2 border-b border-white/5 px-3 sm:hidden" style={{ backgroundColor: '#1F1D2B' }}>
+        {/* Mobile top bar — hidden: try-pos always uses static tablet chrome */}
+        <div className="absolute inset-x-0 top-0 z-40 hidden h-12 items-center gap-2 border-b border-white/5 px-3" style={{ backgroundColor: '#1F1D2B' }}>
           <button
             type="button"
             onClick={() => setSidebarExpanded(true)}
@@ -1633,11 +1633,11 @@ export function FullPosPlayground() {
           )}
         </AnimatePresence>
 
-        {/* Main column */}
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden pt-12 sm:pt-0">
+        {/* Main column — static tablet (no mobile top padding) */}
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden pt-0">
 
-        {/* Content — always fills remaining height */}
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden lg:flex-row">
+        {/* Content — static landscape: menu + order side-by-side */}
+        <div className="flex min-h-0 min-w-0 flex-1 flex-row overflow-hidden">
           {screen === 'dashboard' && (
             <DemoDashboardScreen
               staff={staff}
@@ -1979,7 +1979,7 @@ export function FullPosPlayground() {
                       ))}
                     </div>
                   ) : (
-                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
+                    <div className="grid grid-cols-3 gap-3">
                       {visible.map((p) => {
                         const cartQty = cart
                           .filter((l) => l.productId === p.id)
@@ -2060,7 +2060,7 @@ export function FullPosPlayground() {
               <OrderPanel
                 panelId="tour-order-panel"
                 payActionsId="tour-pay-actions"
-                className="hidden h-full w-full max-w-[340px] flex-[1] overflow-hidden border-s border-gray-200 bg-white dark:border-mintcom-tertiary dark:bg-mintcom-surface xl:max-w-[360px] lg:flex"
+                className="flex h-full w-full max-w-[340px] flex-[1] overflow-hidden border-s border-gray-200 bg-white dark:border-mintcom-tertiary dark:bg-mintcom-surface"
                 orderNo={orderNo}
                 cart={cart}
                 orderType={orderType}
@@ -2619,7 +2619,7 @@ export function FullPosPlayground() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 z-50 bg-black/40 backdrop-blur-sm lg:hidden"
+              className="absolute inset-0 z-50 hidden bg-black/40 backdrop-blur-sm"
               onClick={() => setMobileCartOpen(false)}
             >
               <motion.div
@@ -7242,16 +7242,11 @@ function PosDemoStoreConnect({ onConnect }: StoreConnectProps) {
 
   return (
     <div className="relative flex h-full max-h-full overflow-hidden bg-white dark:bg-mintcom-dark">
-      {/* Left pane: Store Connection details */}
-      <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden lg:w-1/2">
-        {/* Spacer */}
+      {/* Left pane: Store Connection details — static tablet half */}
+      <div className="relative flex min-h-0 min-w-0 w-1/2 flex-1 flex-col overflow-hidden">
         <div className="h-6 sm:h-8" />
 
         <div className="flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto overscroll-contain px-5 py-6 sm:px-8">
-          {/* Mobile brand header */}
-          <div className="mb-5 lg:hidden">
-            <Logo size="md" className="mx-auto" theme="light" />
-          </div>
 
           <div className="w-full max-w-[340px]">
             {/* POS TenantSelectionScreen cleanTitleContainer + headerSubtitle */}
@@ -7346,8 +7341,8 @@ function PosDemoStoreConnect({ onConnect }: StoreConnectProps) {
         </div>
       </div>
 
-      {/* Right pane: Brand panel (desktop only) */}
-      <div className="relative hidden w-1/2 overflow-hidden bg-[#6baf8b] lg:flex lg:flex-col lg:items-center lg:justify-center">
+      {/* Right pane: Brand panel — always on in static tablet canvas */}
+      <div className="relative flex w-1/2 flex-col items-center justify-center overflow-hidden bg-[#6baf8b]">
         <div className="pointer-events-none absolute -bottom-16 -start-10 h-48 w-48 rounded-full bg-white/10 blur-2xl" />
         <div className="pointer-events-none absolute bottom-28 -end-8 h-40 w-40 rounded-full bg-white/10 blur-xl" />
         <div className="pointer-events-none absolute start-0 end-0 bottom-0 h-[30%] bg-gradient-to-t from-black/10 to-transparent" />

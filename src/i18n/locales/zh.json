@@ -1505,7 +1505,8 @@
       "system": "系统",
       "team": "团队",
       "teamManagement": "团队管理",
-      "viewCustomerOrders": "查看顾客订单"
+      "viewCustomerOrders": "查看顾客订单",
+      "reports": "报表"
     },
     "messages": {
       "noData": "没有可导出的数据",
@@ -1658,7 +1659,8 @@
       "previousShift": "上一班次",
       "showingLast24h": "显示近 24 小时的活动",
       "showingLastShift": "显示最近完成的班次",
-      "showingSince": "显示自 {{date}} 起"
+      "showingSince": "显示自 {{date}} 起",
+      "selectView": "视图模式"
     },
     "welcome": {
       "message": "欢迎来到 {{location}} 的新仪表盘！让我们把门店设置好，为营业做好准备。",
@@ -1980,7 +1982,19 @@
         "todaysRevenue": "今日营收",
         "updates": "更新",
         "welcomeBack": "欢迎回来，",
-        "wholeMilk": "全脂牛奶"
+        "wholeMilk": "全脂牛奶",
+        "overageNoor": "盈余 - Noor",
+        "overageNoorDesc": "预期 JOD 150.00 - 实际 JOD 153.00",
+        "overageNoorPill": "+JOD 3.00",
+        "lowStockEspresso": "库存不足",
+        "lowStockEspressoDesc": "意式咖啡豆仅剩 2 千克",
+        "lowStockEspressoPill": "剩 2 千克",
+        "lowStockChocolate": "库存不足",
+        "lowStockChocolateDesc": "巧克力糖浆仅剩 1 升",
+        "lowStockChocolatePill": "剩 1 升",
+        "time5h": "5 小时前",
+        "time6h": "6 小时前",
+        "time7h": "7 小时前"
       },
       "multiLocationManagement": "多门店管理",
       "realTime": "实时同步",
@@ -2149,7 +2163,7 @@
       "liveDemo": "在线演示",
       "readLess": "收起",
       "readMore": "了解更多",
-      "seamlessSync": "所有设备间无缝实时同步",
+      "seamlessSync": "在桌面端畅享完整的 Mintcom 体验。",
       "seeInAction": "观看 Mintcom 实际操作",
       "subtitle": "在 Mintcom，我们信奉简单：简单的入门、简单的安装、简单的设置、简单的定价",
       "title": "简单即",
@@ -2295,7 +2309,8 @@
       "title3": "干得更巧。",
       "today": "今天",
       "viewAll": "查看全部",
-      "watchVideo": "了解运作方式"
+      "watchVideo": "了解运作方式",
+      "tryDesktop": "立即在电脑上试用！"
     },
     "pricing": {
       "additionalDiscount": "新增门店可享受<1>折扣</1>，价格为 ",
@@ -3045,7 +3060,8 @@
     "logout": "退出登录",
     "owner": "业主后台",
     "pricing": "定价",
-    "support": "支持"
+    "support": "支持",
+    "tryDesktop": "电脑端试用"
   },
   "onboarding": {
     "back": "返回",
@@ -3821,8 +3837,7 @@
       "applyingCurrencyChanges": "正在将更改应用到所有门店...",
       "currencyUpdated": "全局货币已更新为 {{currency}}",
       "currencyUpdateFailed": "更新全局货币失败",
-      "videoGuideComingSoon": "视频指南即将推出",
-      "ownerAccount": "所有者账户"
+      "videoGuideComingSoon": "视频指南即将推出"
     },
     "account_employees": {
       "members_count_few": "{{count}} 名成员",
@@ -5924,5 +5939,8 @@
     "passwordsDoNotMatch": "两次输入的密码不一致",
     "passwordUppercase": "密码必须包含至少一个大写字母",
     "passwordSymbol": "密码必须包含至少一个符号"
+  },
+  "menu": {
+    "dashboard": "仪表盘"
   }
 }

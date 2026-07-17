@@ -2065,7 +2065,7 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
         {reportTab === 'general' && (
           <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-hidden">
             {/* SalesSummaryCards — compact so 3 order rows fit below without page scroll */}
-            <div className="grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 lg:gap-2.5">
+            <div className="grid shrink-0 grid-cols-4 gap-2.5">
               <StatCard
                 primary
                 label="Net Sales"
@@ -2132,7 +2132,7 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
               Orders list viewport sized for ~3 compact rows (header ~44 + 3×50 = ~194).
               Only this list scrolls — page chrome stays fixed.
             */}
-            <div className="grid min-h-0 flex-1 grid-cols-1 gap-2.5 overflow-hidden lg:grid-cols-[1.35fr_1fr] lg:gap-3">
+            <div className="grid min-h-0 flex-1 grid-cols-[1.35fr_1fr] gap-3 overflow-hidden">
               <Shell className="flex min-h-0 min-w-0 flex-col overflow-hidden">
                 <div className="flex h-11 shrink-0 items-center justify-between gap-2 border-b border-gray-200 px-3 dark:border-white/10 sm:px-4">
                   <p className="text-[15px] font-semibold text-text-primary dark:text-white">
@@ -2391,7 +2391,7 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
             </div>
 
             {/* 4 compact KPI cards — POS Item Report (icon wells 42×42 r12) */}
-            <div className="grid shrink-0 grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-2.5">
+            <div className="grid shrink-0 grid-cols-4 gap-2.5">
               <button
                 type="button"
                 onClick={() => setModal('totals')}
@@ -2447,7 +2447,7 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
             </div>
 
             {/* Related Orders (left) | Item Breakdown (right) — only lists scroll */}
-            <div className="grid min-h-0 flex-1 grid-cols-1 gap-2.5 overflow-hidden lg:grid-cols-[1.35fr_1fr] lg:gap-3">
+            <div className="grid min-h-0 flex-1 grid-cols-[1.35fr_1fr] gap-3 overflow-hidden">
               <Shell className="flex min-h-0 min-w-0 flex-col overflow-hidden">
                 <div className="flex h-11 shrink-0 items-center justify-between gap-2 border-b border-gray-200 px-3 dark:border-white/10 sm:px-4">
                   <div className="flex items-center gap-2">

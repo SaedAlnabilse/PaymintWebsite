@@ -1503,11 +1503,10 @@ export function DemoSettingsScreen({
         Settings
       </p>
 
-      {/* Two separate cards — sidebar + content (mirrors POS tablet layout) */}
-      <div className="flex min-h-0 flex-1 flex-col gap-3 lg:flex-row lg:gap-5">
-        {/* Left card — sidebar (icon + label only, green active pill) */}
-        <aside className="shrink-0 overflow-x-auto rounded-xl bg-gray-100 p-2 dark:bg-mintcom-dark lg:w-60 lg:overflow-y-auto no-scrollbar">
-          <div className="flex gap-1.5 lg:flex-col lg:gap-2.5 lg:py-1">
+      {/* Two cards — static tablet: nav rail + content (scaled canvas) */}
+      <div className="flex min-h-0 flex-1 flex-row gap-5 overflow-hidden">
+        <aside className="w-60 shrink-0 overflow-y-auto rounded-xl bg-gray-100 p-2 dark:bg-mintcom-dark no-scrollbar">
+          <div className="flex flex-col gap-2.5 py-1">
             {NAV.map((item) => {
               const on = active === item.id;
               const Icon = item.icon;
@@ -1516,14 +1515,14 @@ export function DemoSettingsScreen({
                   key={item.id}
                   type="button"
                   onClick={() => requestTab(item.id)}
-                  className={`flex shrink-0 items-center gap-3.5 rounded-xl px-3.5 py-3 text-start transition-all lg:w-full ${
+                  className={`flex w-full shrink-0 items-center gap-3.5 rounded-xl px-3.5 py-3 text-start transition-all ${
                     on
                       ? 'bg-mintcom-green text-white shadow-md shadow-mintcom-green/25'
                       : 'text-text-primary hover:bg-white dark:text-white dark:hover:bg-white/5'
                   }`}
                 >
                   <Icon size={20} className="shrink-0" />
-                  <span className="whitespace-nowrap text-[13px] font-semibold lg:whitespace-normal">
+                  <span className="text-[13px] font-semibold">
                     {item.label}
                   </span>
                 </button>
