@@ -1505,7 +1505,8 @@
       "system": "System",
       "team": "Team",
       "teamManagement": "Team Management",
-      "viewCustomerOrders": "View Customer Orders"
+      "viewCustomerOrders": "View Customer Orders",
+      "reports": "Reports"
     },
     "messages": {
       "noData": "No data to export",
@@ -1658,7 +1659,8 @@
       "previousShift": "Previous Shift",
       "showingLast24h": "Showing Activity From Last 24h",
       "showingLastShift": "Showing Last Completed Shift",
-      "showingSince": "Showing Since {{date}}"
+      "showingSince": "Showing Since {{date}}",
+      "selectView": "View Mode"
     },
     "welcome": {
       "message": "Welcome to your new dashboard for {{location}}! Let's get your location set up and ready for business.",
@@ -1987,7 +1989,19 @@
         "todaysRevenue": "Today's revenue",
         "updates": "Updates",
         "welcomeBack": "Welcome back,",
-        "wholeMilk": "Whole Milk"
+        "wholeMilk": "Whole Milk",
+        "overageNoor": "Overage - Noor",
+        "overageNoorDesc": "Expected JOD 150.00 - Counted JOD 153.00",
+        "overageNoorPill": "+JOD 3.00",
+        "lowStockEspresso": "Low stock",
+        "lowStockEspressoDesc": "Espresso beans have 2 kg remaining",
+        "lowStockEspressoPill": "2 kg left",
+        "lowStockChocolate": "Low stock",
+        "lowStockChocolateDesc": "Chocolate syrup has 1 L remaining",
+        "lowStockChocolatePill": "1 L left",
+        "time5h": "5h ago",
+        "time6h": "6h ago",
+        "time7h": "7h ago"
       },
       "multiLocationManagement": "Multi-Location Management",
       "realTime": "Real-time Sync",
@@ -2140,7 +2154,6 @@
           "description": "Mintcom is more than just a POS system. It brings together the features that other providers often lock behind complex plans and bundled packages into one simple tier that covers all your business needs. From staff management and inventory management to loyalty programs, advanced reporting, and much more, Mintcom gives you everything you need in a single, straightforward solution.",
           "title": "A Complete Solution with No Hidden Costs"
         },
-
         "multiBranch": {
           "description": "Run one or multiple stores and POS points effortlessly through our centralized brand management service. Connect all your locations and POS points within a single portal, giving you complete visibility and control. As your business grows, easily add new locations or POS points and benefit from special discounts on additional connections.",
           "title": "Multi-Branch Management"
@@ -2157,7 +2170,7 @@
       "liveDemo": "LIVE DEMO",
       "readLess": "Read less",
       "readMore": "Learn more",
-      "seamlessSync": "Seamless real-time synchronization across all devices",
+      "seamlessSync": "Enjoy the full Mintcom experience on your desktop.",
       "seeInAction": "See Mintcom in Action",
       "subtitle": "At Mintcom, we believe in keeping things simple: simple onboarding, simple installation, simple setup, and simple pricing",
       "title": "Simple Is",
@@ -2303,7 +2316,8 @@
       "title3": "Work Smarter.",
       "today": "today",
       "viewAll": "View All",
-      "watchVideo": "See how it works"
+      "watchVideo": "See how it works",
+      "tryDesktop": "Try on Desktop Now!"
     },
     "pricing": {
       "additionalDiscount": "Additional locations receive a <1>DISCOUNT</1> for ",
@@ -3207,7 +3221,8 @@
     "howItWorks": "How it works",
     "loyalty": "Loyalty",
     "whyMintcom": "Why Mintcom",
-    "multiLocation": "Multi-location"
+    "multiLocation": "Multi-location",
+    "tryDesktop": "Try on Desktop"
   },
   "onboarding": {
     "back": "Back",
@@ -6346,5 +6361,8 @@
         }
       }
     }
+  },
+  "menu": {
+    "dashboard": "Dashboard"
   }
 }

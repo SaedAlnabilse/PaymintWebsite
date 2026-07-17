@@ -1505,7 +1505,8 @@
       "system": "النظام",
       "team": "الفريق",
       "teamManagement": "إدارة الفريق",
-      "viewCustomerOrders": "عرض طلبات العملاء"
+      "viewCustomerOrders": "عرض طلبات العملاء",
+      "reports": "التقارير"
     },
     "messages": {
       "noData": "لا توجد بيانات للتصدير",
@@ -1658,7 +1659,8 @@
       "previousShift": "الوردية السابقة",
       "showingLast24h": "عرض النشاط خلال آخر 24 ساعة",
       "showingLastShift": "عرض آخر وردية مكتملة",
-      "showingSince": "عرض منذ {{date}}"
+      "showingSince": "عرض منذ {{date}}",
+      "selectView": "وضع العرض"
     },
     "welcome": {
       "message": "مرحباً بك في لوحة التحكم الجديدة لـ {{location}}! لنبدأ في إعداد موقعك وتجهيزه للعمل.",
@@ -1987,7 +1989,19 @@
         "todaysRevenue": "إيراد اليوم",
         "updates": "التحديثات",
         "welcomeBack": "مرحباً بعودتك،",
-        "wholeMilk": "حليب كامل الدسم"
+        "wholeMilk": "حليب كامل الدسم",
+        "overageNoor": "زيادة - نور",
+        "overageNoorDesc": "المتوقع 150.00 د.أ - المعدود 153.00 د.أ",
+        "overageNoorPill": "+3.00 د.أ",
+        "lowStockEspresso": "مخزون منخفض",
+        "lowStockEspressoDesc": "تبقّى 2 كغم من حبوب الإسبريسو",
+        "lowStockEspressoPill": "تبقّى 2 كغم",
+        "lowStockChocolate": "مخزون منخفض",
+        "lowStockChocolateDesc": "تبقّى 1 لتر من شراب الشوكولاتة",
+        "lowStockChocolatePill": "تبقّى 1 لتر",
+        "time5h": "قبل 5 ساعات",
+        "time6h": "قبل 6 ساعات",
+        "time7h": "قبل 7 ساعات"
       },
       "multiLocationManagement": "إدارة مواقع متعددة",
       "realTime": "مزامنة فورية",
@@ -2156,7 +2170,7 @@
       "liveDemo": "عرض مباشر",
       "readLess": "اقرأ أقل",
       "readMore": "اعرف المزيد",
-      "seamlessSync": "مزامنة سلسة في الوقت الحقيقي عبر جميع الأجهزة",
+      "seamlessSync": "استمتع بتجربة مينتكوم الكاملة على سطح المكتب.",
       "seeInAction": "شاهد مينتكوم في العمل",
       "subtitle": "في مينتكوم، نؤمن بإبقاء الأمور بسيطة: تسجيل بسيط، تثبيت بسيط، إعداد بسيط، وتسعير بسيط.",
       "title": "البساطة",
@@ -2302,7 +2316,8 @@
       "title3": "اعمل بذكاء.",
       "today": "اليوم",
       "viewAll": "عرض الكل",
-      "watchVideo": "شاهد كيف يعمل"
+      "watchVideo": "شاهد كيف يعمل",
+      "tryDesktop": "جرّب على سطح المكتب الآن!"
     },
     "pricing": {
       "additionalDiscount": "المواقع الإضافية تحصل على <1>خصم</1> لتصبح بـ ",
@@ -3206,7 +3221,8 @@
     "howItWorks": "كيف يعمل",
     "loyalty": "الولاء",
     "whyMintcom": "لماذا Mintcom",
-    "multiLocation": "مواقع متعددة"
+    "multiLocation": "مواقع متعددة",
+    "tryDesktop": "جرّب على سطح المكتب"
   },
   "onboarding": {
     "back": "رجوع",
@@ -6345,5 +6361,8 @@
         }
       }
     }
+  },
+  "menu": {
+    "dashboard": "لوحة التحكم"
   }
 }

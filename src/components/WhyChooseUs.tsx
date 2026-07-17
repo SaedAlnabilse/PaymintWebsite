@@ -39,6 +39,12 @@ import {
 import { Logo } from './Logo';
 import { FeaturePosScreenshot } from './FeaturePosScreenshot';
 import { FeatureScreenshot } from './FeatureScreenshots';
+import {
+  DEMO_VIDEO_POSTER_URL,
+  DEMO_VIDEO_URL,
+  HERO_VIDEO_URL,
+  isNativeVideoUrl,
+} from '../config/downloads';
 
 /**
  * Shared outer frame for ALL 4 Why cards.
@@ -902,6 +908,10 @@ export const WhyChooseUs = () => {
   const [direction, setDirection] = useState(1);
   const videoRef = useRef<HTMLDivElement>(null);
 
+  // Prefer the same hero/env video when set; otherwise the bundled demo MP4.
+  const demoSrc = HERO_VIDEO_URL || DEMO_VIDEO_URL;
+  const demoIsNative = isNativeVideoUrl(demoSrc);
+
   // Plain highlight strings — avoid t('…h1') missing-key → "H1"
   const features: Feature[] = [
     {
@@ -1090,7 +1100,7 @@ export const WhyChooseUs = () => {
             ))}
           </div>
 
-          {/* Video Section */}
+          {/* Video Section — ambient demo loop + Try POS CTA (no modal) */}
           <motion.div
             ref={videoRef}
             initial={{ opacity: 0, y: 30 }}
@@ -1099,48 +1109,68 @@ export const WhyChooseUs = () => {
             transition={{ duration: 0.7 }}
             className="mx-auto w-full max-w-7xl"
           >
-            <div className="group relative aspect-video overflow-hidden rounded-xl border border-gray-200 bg-gray-900 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] dark:border-white/10">
-              {isVideoVisible ? (
+            <div className="group relative aspect-video w-full overflow-hidden rounded-2xl border border-gray-200 bg-gray-900 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] dark:border-white/10">
+              {isVideoVisible && demoIsNative ? (
+                <video
+                  src={demoSrc}
+                  poster={DEMO_VIDEO_POSTER_URL}
+                  className="h-full w-full scale-[1.01] object-cover transition-transform duration-[1.6s] ease-out group-hover:scale-105"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  preload="metadata"
+                  aria-label={t('landing.features.videoTitle')}
+                />
+              ) : isVideoVisible && !demoIsNative ? (
                 <iframe
-                  src=""
-                  className="h-full w-full scale-[1.02] transition-transform duration-1000 group-hover:scale-100"
+                  src={demoSrc}
+                  className="pointer-events-none h-full w-full scale-[1.01] object-cover"
                   allow="autoplay; fullscreen; picture-in-picture"
                   allowFullScreen
-                  style={{ pointerEvents: 'none' }}
                   loading="lazy"
                   title={t('landing.features.videoTitle')}
                 />
               ) : (
-                <div className="flex h-full w-full items-center justify-center bg-gray-900">
-                  <div className="text-center">
-                    <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-mintcom-green/20">
-                      <Play className="h-10 w-10 text-mintcom-green" fill="currentColor" />
-                    </div>
-                    <p className="text-sm font-bold uppercase tracking-widest text-white/60">
-                      {t('common.loadingVideo')}
-                    </p>
-                  </div>
-                </div>
+                <img
+                  src={DEMO_VIDEO_POSTER_URL}
+                  alt=""
+                  className="h-full w-full object-cover"
+                  loading="lazy"
+                />
               )}
 
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+              {/* Cinematic bottom fade — keeps UI readable without covering the product */}
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/50 to-transparent" />
 
-              <div className="pointer-events-none absolute bottom-8 start-8 end-8 z-10 text-white md:bottom-12 md:start-12">
-                <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/40 px-4 py-1.5 shadow-lg backdrop-blur-md">
-                  <span className="relative flex h-2.5 w-2.5">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-mintcom-green opacity-75" />
-                    <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-mintcom-green" />
-                  </span>
-                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/90">
-                    {t('landing.features.liveDemo')}
-                  </span>
+              {/* Caption + Try POS — no play overlay, no live-demo badge, no fullscreen */}
+              <div className="absolute inset-x-0 bottom-0 z-10 p-5 sm:p-8 md:p-10 lg:p-12">
+                <div className="flex max-w-3xl flex-col items-start gap-4 sm:gap-5">
+                  <div>
+                    <h4 className="mb-2 font-sans text-3xl font-bold tracking-tight text-white xs:text-4xl md:text-5xl lg:text-6xl">
+                      {t('landing.features.seeInAction')}
+                    </h4>
+                    <p className="max-w-2xl text-base font-medium text-white/70 sm:text-lg md:text-xl lg:text-2xl">
+                      {t('landing.features.seamlessSync')}
+                    </p>
+                  </div>
+
+                  <motion.button
+                    type="button"
+                    whileTap={{ scale: 0.97 }}
+                    whileHover={{ scale: 1.02 }}
+                    onClick={() => window.open('/try-pos', '_blank', 'noopener,noreferrer')}
+                    className="group/cta inline-flex items-center gap-3 rounded-2xl bg-mintcom-green px-6 py-3.5 text-base font-bold text-black shadow-[0_12px_40px_-10px_rgba(124,195,159,0.65)] transition-shadow hover:shadow-[0_16px_48px_-8px_rgba(124,195,159,0.8)] sm:px-8 sm:py-4 sm:text-lg md:text-xl"
+                  >
+                    <Play size={18} fill="currentColor" className="shrink-0 sm:h-5 sm:w-5" />
+                    <span>{t('landing.hero.tryDesktop')}</span>
+                    <ArrowRight
+                      size={20}
+                      className={`shrink-0 transition-transform sm:h-6 sm:w-6 ${isRtl ? 'rotate-180 group-hover/cta:-translate-x-0.5' : 'group-hover/cta:translate-x-0.5'}`}
+                    />
+                  </motion.button>
                 </div>
-                <h4 className="mb-2 font-sans text-2xl font-bold tracking-tighter text-white xs:text-3xl md:text-5xl">
-                  {t('landing.features.seeInAction')}
-                </h4>
-                <p className="text-base font-medium text-white/70 md:text-lg">
-                  {t('landing.features.seamlessSync')}
-                </p>
               </div>
             </div>
           </motion.div>

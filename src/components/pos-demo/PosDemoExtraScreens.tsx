@@ -882,11 +882,11 @@ export function DemoDashboardScreen({
           </button>
         </Card>
       ) : (
-        <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden lg:flex-row lg:gap-4">
-          {/* LEFT 1/3 — Net / Cash / Card stretch equally */}
-          <div className="flex min-h-0 flex-[1] flex-col gap-3 lg:gap-4">
-            {/* Primary Net Sales — POS: icon+label top, amount centered */}
-            <div className="flex min-h-0 flex-1 flex-col justify-between rounded-xl bg-mintcom-green p-3.5 text-white sm:p-5">
+        /* Static landscape dashboard — same card layout always; outer canvas scales/scrolls */
+        <div className="flex min-h-0 min-w-0 flex-1 flex-row gap-4 overflow-hidden">
+          {/* LEFT ~1/3 — Net / Cash / Card */}
+          <div className="flex w-[32%] min-w-0 shrink-0 flex-col gap-3">
+            <div className="flex min-h-0 flex-1 flex-col justify-between rounded-xl bg-mintcom-green p-4 text-white">
               <div className="flex items-center gap-3">
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white text-mintcom-green">
                   <TrendingUp size={22} strokeWidth={2.25} />
@@ -898,7 +898,7 @@ export function DemoDashboardScreen({
                   </p>
                 </div>
               </div>
-              <p className="mt-3 text-center text-[28px] font-extrabold tabular-nums tracking-tight sm:text-[30px]">
+              <p className="mt-3 text-center text-[28px] font-extrabold tabular-nums tracking-tight">
                 {money(displayNetSales)}
               </p>
             </div>
@@ -915,9 +915,9 @@ export function DemoDashboardScreen({
             />
           </div>
 
-          {/* RIGHT 2/3 */}
-          <div className="flex min-h-0 flex-[2] flex-col gap-3 lg:gap-4">
-            <div className="grid shrink-0 grid-cols-2 gap-3 lg:gap-4">
+          {/* RIGHT ~2/3 */}
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3">
+            <div className="grid shrink-0 grid-cols-2 gap-3">
               <SmallMetric
                 icon={<Receipt size={20} className="text-white" />}
                 label="Number of Orders"
@@ -929,7 +929,7 @@ export function DemoDashboardScreen({
                 payOut={money(displayPayOut)}
               />
             </div>
-            <div className="grid shrink-0 grid-cols-2 gap-3 lg:gap-4">
+            <div className="grid shrink-0 grid-cols-2 gap-3">
               <SmallMetric
                 icon={<PosOtherReceiptIcon size={22} className="text-white" />}
                 label="Other Payment Methods"
@@ -1189,21 +1189,21 @@ function MetricSalesCard({
   label: string;
   value: string;
 }) {
-  // POS SalesCard: icon+label top, amount centered below
+  // Static POS SalesCard — equal height via parent flex, fixed padding/type
   return (
-    <div className="flex min-h-0 flex-1 flex-col justify-between rounded-xl border border-[#D3D6DE] bg-[#E8E8E8] p-3.5 dark:border-white/10 dark:bg-mintcom-dark sm:p-5">
+    <div className="flex min-h-0 flex-1 flex-col justify-between rounded-xl border border-[#D3D6DE] bg-[#E8E8E8] p-4 dark:border-white/10 dark:bg-mintcom-dark">
       <div className="flex items-center gap-3">
         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-mintcom-green text-white">
           {icon}
         </span>
         <div className="min-w-0 text-start">
-          <p className="text-[13px] font-medium text-[#737182]">{label}</p>
-          <p className="mt-0.5 text-[11px] font-normal text-[#828287]">
+          <p className="text-[13px] font-medium text-[#737182] dark:text-white/70">{label}</p>
+          <p className="mt-0.5 text-[11px] font-normal text-[#828287] dark:text-white/45">
             Excludes tax and other charges
           </p>
         </div>
       </div>
-      <p className="mt-2 text-center text-[26px] font-bold tabular-nums tracking-normal text-[#1F1D2B] dark:text-white sm:text-[28px]">
+      <p className="mt-2 text-center text-[26px] font-bold tabular-nums tracking-normal text-[#1F1D2B] dark:text-white">
         {value}
       </p>
     </div>
@@ -1794,10 +1794,10 @@ export function DemoNotificationsScreen({
         </div>
       </div>
 
-      {/* Split layout — Held Orders | Alerts & History */}
-      <div className="flex min-h-0 flex-1 flex-col gap-4 lg:flex-row lg:gap-8">
+      {/* Split layout — static side-by-side (scaled canvas) */}
+      <div className="flex min-h-0 flex-1 flex-row gap-6 overflow-hidden">
         {heldColumn}
-        <div className="hidden w-px shrink-0 bg-gray-200 dark:bg-white/8 lg:block" />
+        <div className="w-px shrink-0 self-stretch bg-gray-200 dark:bg-white/8" aria-hidden />
         {alertsHistoryColumn}
       </div>
     </Fill>

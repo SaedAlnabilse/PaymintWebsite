@@ -137,9 +137,8 @@ export function PosDemoLogin({
 
   return (
     <div className="flex h-full max-h-full overflow-hidden bg-white dark:bg-mintcom-dark">
-      {/* ── Left: form ── */}
-      <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden lg:w-1/2">
-        {/* Location card — top start, like POS */}
+      {/* ── Left: form — static tablet half ── */}
+      <div className="relative flex min-h-0 min-w-0 w-1/2 flex-1 flex-col overflow-hidden">
         <div className="flex shrink-0 items-start justify-between gap-2 px-4 pb-1 pt-4 sm:px-6 sm:pt-5">
           <button
             type="button"
@@ -165,10 +164,6 @@ export function PosDemoLogin({
         </div>
 
         <div className="flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto overscroll-contain px-5 py-6 sm:px-8">
-          {/* Mobile logo */}
-          <div className="mb-5 lg:hidden">
-            <Logo size="md" className="mx-auto" theme="light" />
-          </div>
 
           <motion.div
             animate={shake ? { x: [-7, 7, -5, 5, 0] } : { x: 0 }}
@@ -290,9 +285,8 @@ export function PosDemoLogin({
         </div>
       </div>
 
-      {/* ── Right: brand panel (desktop) — POS green half ── */}
-      <div className="relative hidden w-1/2 overflow-hidden bg-[#6baf8b] lg:flex lg:flex-col lg:items-center lg:justify-center">
-        {/* Soft decorative blobs */}
+      {/* ── Right: brand panel — always on static tablet canvas ── */}
+      <div className="relative flex w-1/2 flex-col items-center justify-center overflow-hidden bg-[#6baf8b]">
         <div className="pointer-events-none absolute -bottom-16 -start-10 h-48 w-48 rounded-full bg-white/10 blur-2xl" />
         <div className="pointer-events-none absolute bottom-28 -end-8 h-40 w-40 rounded-full bg-white/10 blur-xl" />
         <div className="pointer-events-none absolute start-0 end-0 bottom-0 h-[30%] bg-gradient-to-t from-black/10 to-transparent" />

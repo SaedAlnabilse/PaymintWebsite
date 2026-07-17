@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Play, X, ArrowRight, Zap } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { HERO_VIDEO_URL } from '../config/downloads';
+import { DEMO_VIDEO_POSTER_URL, HERO_VIDEO_URL, isNativeVideoUrl } from '../config/downloads';
 import heroImage from '../assets/mintcom-pos-hero.png';
 
 const SplitText = ({ text, className = "" }: { text: string; className?: string }) => {
@@ -102,25 +102,26 @@ export const Hero = ({ isVideoOpen, setIsVideoOpen }: { isVideoOpen: boolean; se
               {t('landing.hero.description')}
             </p>
 
-            <div className="flex w-full flex-col justify-start gap-3 sm:w-auto sm:flex-row sm:flex-wrap">
+            <div className="flex w-full flex-row flex-nowrap items-stretch justify-start gap-2.5 sm:gap-3">
               <motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={() => window.open('/try-pos', '_blank')}
-                className="group flex w-full items-center justify-center gap-2 rounded-xl border-2 border-mintcom-green/40 bg-mintcom-green/10 px-6 py-3.5 text-base font-bold text-gray-900 transition-colors hover:border-mintcom-green hover:bg-mintcom-green/15 dark:text-white sm:px-8 sm:py-4 sm:text-lg sm:w-72 whitespace-nowrap"
+                className="group flex min-w-0 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border-2 border-mintcom-green/40 bg-mintcom-green/10 px-2.5 py-3 text-xs font-bold text-gray-900 transition-colors hover:border-mintcom-green hover:bg-mintcom-green/15 dark:text-white xs:gap-2 xs:px-3 xs:text-[13px] sm:px-4 sm:py-3.5 sm:text-sm md:px-5 md:text-[15px]"
               >
-                <Play size={18} fill="currentColor" className="text-mintcom-green" />
-                Try on Desktop Now!
+                <Play size={14} fill="currentColor" className="shrink-0 text-mintcom-green sm:h-4 sm:w-4" />
+                <span>{t('landing.hero.tryDesktop')}</span>
               </motion.button>
 
               <motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={handleCtaClick}
-                className="group flex w-full items-center justify-center gap-2 rounded-xl bg-mintcom-green px-6 py-3.5 text-base font-bold text-black transition-all sm:px-8 sm:py-4 sm:text-lg sm:w-72 whitespace-nowrap"
+                className="group flex min-w-0 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl bg-mintcom-green px-2.5 py-3 text-xs font-bold text-black transition-all xs:gap-2 xs:px-3 xs:text-[13px] sm:px-4 sm:py-3.5 sm:text-sm md:px-5 md:text-[15px]"
               >
-                {isAuthenticated ? t('nav.dashboard', 'Go to Dashboard') : t('landing.hero.cta')}
-                <ArrowRight size={20} className={`transition-transform ${t('common.locale') === 'ar' ? 'rotate-180 group-hover:-translate-x-1' : 'group-hover:translate-x-1'}`} />
+                <span>{isAuthenticated ? t('nav.dashboard', 'Go to Dashboard') : t('landing.hero.cta')}</span>
+                <ArrowRight size={16} className={`shrink-0 transition-transform sm:h-[18px] sm:w-[18px] ${t('common.locale') === 'ar' ? 'rotate-180 group-hover:-translate-x-1' : 'group-hover:translate-x-1'}`} />
               </motion.button>
 
+              {/* Temporarily hidden — re-enable when a dedicated hero video CTA is needed
               {HERO_VIDEO_URL && (
                 <motion.button
                   whileTap={{ scale: 0.95 }}
@@ -131,27 +132,51 @@ export const Hero = ({ isVideoOpen, setIsVideoOpen }: { isVideoOpen: boolean; se
                   {t('landing.hero.watchVideo')}
                 </motion.button>
               )}
+              */}
             </div>
 
 
           </motion.div>
 
-          {/* Visual — product photo, constrained so POS + tablet don't dominate the hero */}
+          {/* Visual — product photo */}
           <motion.div
             initial={{ opacity: 0, x: 40 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 1, delay: 0.2, ease: "easeOut" }}
-            className="relative mt-4 flex w-full min-w-0 flex-1 justify-center sm:mt-8 lg:mt-0 lg:justify-end"
+            className="relative mt-10 flex w-full min-w-0 flex-1 justify-center sm:mt-14 lg:mt-16 lg:justify-end"
           >
             <motion.div
               className="relative w-full max-w-[320px] sm:max-w-[380px] md:max-w-[440px] lg:max-w-[500px] xl:max-w-[540px]"
               animate={{ y: [0, -6, 0] }}
               transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
             >
+              {/* Solid green disc behind the device with a thin offset outline ring */}
+              <div
+                aria-hidden
+                className="pointer-events-none absolute z-0 -translate-x-1/2 -translate-y-1/2"
+                style={{ width: '90%', height: '90%', left: '64%', top: '38%' }}
+              >
+                <svg viewBox="0 0 400 400" className="h-full w-full overflow-visible">
+                  <defs>
+                    {/* Gentle wobble so the shapes read as hand-painted rather than geometric */}
+                    <filter id="heroBrush" x="-15%" y="-15%" width="130%" height="130%">
+                      <feTurbulence type="fractalNoise" baseFrequency="0.012" numOctaves="2" seed="7" result="noise" />
+                      <feDisplacementMap in="SourceGraphic" in2="noise" scale="7" xChannelSelector="R" yChannelSelector="G" />
+                    </filter>
+                  </defs>
+                  <g filter="url(#heroBrush)">
+                    {/* Filled disc */}
+                    <circle cx="200" cy="200" r="172" fill="#7cc39f" opacity="0.9" />
+                    {/* Thin outline ring, offset so it peeks past the disc like the reference */}
+                    <circle cx="212" cy="192" r="188" fill="none" stroke="#7cc39f" strokeWidth="2.5" strokeLinecap="round" opacity="0.8" />
+                  </g>
+                </svg>
+              </div>
+
               <img
                 src={heroImage}
                 alt={t('landing.hero.alt', 'Mintcom All-in-One POS System')}
-                className="h-auto w-full object-contain drop-shadow-2xl"
+                className="relative z-10 h-auto w-full object-contain drop-shadow-2xl"
                 width={1053}
                 height={927}
                 decoding="async"
@@ -187,13 +212,26 @@ export const Hero = ({ isVideoOpen, setIsVideoOpen }: { isVideoOpen: boolean; se
               className="w-full max-w-6xl aspect-video bg-black rounded-xl overflow-hidden shadow-2xl border border-white/10"
               onClick={(e) => e.stopPropagation()}
             >
-              <iframe
-                src={HERO_VIDEO_URL}
-                title={t('landing.hero.watchVideo')}
-                className="w-full h-full"
-                allow="autoplay; fullscreen; picture-in-picture"
-                allowFullScreen
-              />
+              {isNativeVideoUrl(HERO_VIDEO_URL) ? (
+                <video
+                  src={HERO_VIDEO_URL}
+                  poster={DEMO_VIDEO_POSTER_URL}
+                  className="h-full w-full bg-black object-contain"
+                  controls
+                  autoPlay
+                  playsInline
+                  preload="metadata"
+                  title={t('landing.hero.watchVideo')}
+                />
+              ) : (
+                <iframe
+                  src={HERO_VIDEO_URL}
+                  title={t('landing.hero.watchVideo')}
+                  className="h-full w-full"
+                  allow="autoplay; fullscreen; picture-in-picture"
+                  allowFullScreen
+                />
+              )}
             </motion.div>
           </motion.div>
         )}
