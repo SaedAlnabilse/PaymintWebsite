@@ -72,7 +72,7 @@ import MintcomLogoGreen from '../assets/green-full-logo.svg';
 import MintcomLogoWhite from '../assets/white-green-full-logo.svg';
 import AppStoreBadge from '../assets/app-store-badge.svg';
 import GooglePlayBadge from '../assets/google-play-badge.svg';
-import { formatInputPlaceholder, formatInputLabel } from '../utils/textCase';
+import { formatInputPlaceholder } from '../utils/textCase';
 import {
   getBestTimeZoneForCountry,
   getCountryOptions,
@@ -92,6 +92,7 @@ import {
   PAYMENT_CARD_API_BRAND,
   MAX_FORMATTED_CARD_NUMBER_LENGTH,
 } from '../utils/paymentCard';
+import { TEXT_INPUT_LIMITS } from '../config/textLimits';
 
 const ONBOARDING_LAUNCH_STORAGE_KEY = 'mintcom.onboarding.launch.v1';
 
@@ -229,7 +230,16 @@ export function OnboardingPage() {
 
   // Step 1: Location Details
   const step1Schema = z.object({
-    name: z.string().min(1, t('onboarding.step1.errors.nameRequired')),
+    name: z
+      .string()
+      .min(1, t('onboarding.step1.errors.nameRequired'))
+      .max(
+        TEXT_INPUT_LIMITS.BUSINESS_NAME,
+        t('onboarding.step1.errors.nameMax', {
+          defaultValue: `Location name must be at most ${TEXT_INPUT_LIMITS.BUSINESS_NAME} characters`,
+          count: TEXT_INPUT_LIMITS.BUSINESS_NAME,
+        }),
+      ),
     type: z.string().min(1, t('onboarding.step1.errors.typeRequired')),
     country: z.string().min(1, t('onboarding.step1.errors.countryRequired', { defaultValue: 'Country is required' })),
     address: z.string().min(1, t('onboarding.step1.errors.addressRequired')),
@@ -946,7 +956,7 @@ export function OnboardingPage() {
           to="/"
           title={t('onboarding.backToWebsite', { defaultValue: 'Back to Mintcom website' })}
           aria-label={t('onboarding.backToWebsite', { defaultValue: 'Back to Mintcom website' })}
-          className="group flex items-center gap-2 rounded-xl pe-2 transition-opacity hover:opacity-90"
+          className="flex items-center rounded-xl transition-opacity hover:opacity-80"
         >
           <img
             src={MintcomLogoGreen}
@@ -958,9 +968,6 @@ export function OnboardingPage() {
             alt="Mintcom"
             className="h-8 w-auto object-contain hidden dark:block"
           />
-          <span className="hidden sm:inline text-[11px] font-bold uppercase tracking-wider text-gray-400 transition-colors group-hover:text-mintcom-green">
-            {t('onboarding.backToWebsiteShort', { defaultValue: 'Website' })}
-          </span>
         </Link>
 
         {step <= totalSteps && (
@@ -1008,12 +1015,13 @@ export function OnboardingPage() {
                 <form onSubmit={form1.handleSubmit(onStep1Submit)} autoComplete="off" className="space-y-8" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
                   <div className="space-y-6">
                     <div className="space-y-2">
-                      <label className="text-xs font-sans text-gray-400 mx-1 flex items-center">
+                      <label className="text-sm font-sans font-medium text-gray-600 dark:text-gray-300 mx-1 flex items-center">
                         {t('onboarding.step1.locationName')} <span className="text-mintcom-red mx-1">*</span>
                       </label>
                       <div className="relative group">
                         <Store className={`absolute ${isRTL ? 'right-4' : 'left-4'} top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-mintcom-green transition-colors`} size={20} />
-                        <input maxLength={255}
+                        <input
+                          maxLength={TEXT_INPUT_LIMITS.BUSINESS_NAME}
                           type="text"
                           {...form1.register('name')}
                           className={`w-full bg-gray-50 dark:bg-black/20 border ${form1.formState.errors.name ? 'border-mintcom-red ring-2 ring-mintcom-red/20' : 'border-gray-200 dark:border-white/10'} rounded-2xl py-4 ${isRTL ? 'pr-12 pl-4' : 'pl-12 pr-4'} text-sm font-sans font-normal text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-mintcom-green/50 transition-all`}
@@ -1024,8 +1032,8 @@ export function OnboardingPage() {
                     </div>
 
                     <div className="space-y-3">
-                      <label className="text-xs font-sans text-gray-400 mx-1 flex items-center">
-                        {formatInputLabel(t('onboarding.step1.businessType'), t('common.locale'))}
+                      <label className="text-sm font-sans font-medium text-gray-600 dark:text-gray-300 mx-1 flex items-center">
+                        {t('onboarding.step1.businessType')}
                       </label>
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                         {businessTypes.map((type) => (
@@ -1037,7 +1045,7 @@ export function OnboardingPage() {
                               }`}
                           >
                             <type.icon size={24} />
-                            <span className="text-xs font-sans">{type.label}</span>
+                            <span className="text-xs font-sans font-medium">{type.label}</span>
                           </button>
                         ))}
                       </div>
@@ -1045,7 +1053,7 @@ export function OnboardingPage() {
 
                     {/* Country first — currency is linked to the selected country/region */}
                     <div className="space-y-2">
-                      <label className="text-xs font-sans text-gray-400 mx-1 flex items-center">
+                      <label className="text-sm font-sans font-medium text-gray-600 dark:text-gray-300 mx-1 flex items-center">
                         {t('onboarding.step1.country', { defaultValue: 'Country' })} <span className="text-mintcom-red mx-1">*</span>
                       </label>
                       <div className="relative">
@@ -1067,7 +1075,7 @@ export function OnboardingPage() {
 
                     {/* Base Currency Row: auto-filled from country, always free to change on first location */}
                     <div className="space-y-2">
-                      <label className="text-xs font-sans text-gray-400 mx-1 flex items-center">
+                      <label className="text-sm font-sans font-medium text-gray-600 dark:text-gray-300 mx-1 flex items-center">
                         {t('onboarding.step1.currency')} <span className="text-mintcom-red mx-1">*</span>
                       </label>
                       <div className="relative">
@@ -1108,7 +1116,7 @@ export function OnboardingPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-xs font-sans text-gray-400 mx-1 flex items-center">
+                      <label className="text-sm font-sans font-medium text-gray-600 dark:text-gray-300 mx-1 flex items-center">
                         {t('onboarding.step1.address')} <span className="text-mintcom-red mx-1">*</span>
                       </label>
                       <div className="relative">
