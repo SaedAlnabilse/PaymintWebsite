@@ -18,8 +18,7 @@ export function ResetPasswordPage() {
       .min(8, t('validation.passwordMin'))
       .regex(/[A-Z]/, t('validation.passwordUppercase'))
       .regex(/[a-z]/, t('validation.passwordLowercase'))
-      .regex(/[0-9]/, t('validation.passwordNumber'))
-      .regex(/[^A-Za-z0-9]/, t('validation.passwordSymbol')),
+      .regex(/[0-9]/, t('validation.passwordNumber')),
     confirmPassword: z.string(),
   }).refine((data) => data.password === data.confirmPassword, {
     message: t('validation.passwordsDoNotMatch'),
@@ -51,7 +50,6 @@ export function ResetPasswordPage() {
     { label: t('validation.passwordUppercase'), met: /[A-Z]/.test(password) },
     { label: t('validation.passwordLowercase'), met: /[a-z]/.test(password) },
     { label: t('validation.passwordNumber'), met: /[0-9]/.test(password) },
-    { label: t('validation.passwordSymbol'), met: /[^A-Za-z0-9]/.test(password) },
   ];
 
   const onSubmit = async (data: ResetPasswordFormData) => {

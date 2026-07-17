@@ -54,8 +54,8 @@ describe('Validation Schemas', () => {
       }
     });
 
-    it('should reject password without a symbol', () => {
-      const invalidData = {
+    it('should accept password without a symbol (symbol not required for owner accounts)', () => {
+      const validData = {
         firstName: 'John',
         lastName: 'Doe',
         email: 'john.doe@example.com',
@@ -63,10 +63,23 @@ describe('Validation Schemas', () => {
         confirmPassword: 'Password123',
         agreeToTerms: true,
       };
+      const result = signUpSchema.safeParse(validData);
+      expect(result.success).toBe(true);
+    });
+
+    it('should reject password without a number', () => {
+      const invalidData = {
+        firstName: 'John',
+        lastName: 'Doe',
+        email: 'john.doe@example.com',
+        password: 'Password',
+        confirmPassword: 'Password',
+        agreeToTerms: true,
+      };
       const result = signUpSchema.safeParse(invalidData);
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error.issues.find(i => i.path.includes('password'))?.message).toBe('auth.validation.passwordSymbol');
+        expect(result.error.issues.find(i => i.path.includes('password'))?.message).toBe('auth.validation.passwordNumber');
       }
     });
   });
