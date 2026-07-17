@@ -85,6 +85,9 @@ export function PaymentMethodsPage() {
   const [cardImagePreview, setCardImagePreview] = useState<string | null>(null);
   const [editingCard, setEditingCard] = useState<CardType | null>(null);
   const [cardErrors, setCardErrors] = useState<Record<string, string>>({}); // For manual forms
+  // Card ids whose stored imageUrl failed to load (dead hotlink) — retry with
+  // the brand fallback logo instead of leaving a broken image.
+  const [failedCardImages, setFailedCardImages] = useState<Record<string, boolean>>({});
   const [confirmConfig, setConfirmConfig] = useState<{
     isOpen: boolean;
     title: string;
@@ -136,20 +139,23 @@ export function PaymentMethodsPage() {
     setShowCardModal(true);
   };
 
+  // Card-brand fallback art. Uses the same maintained icon set the API seeds
+  // from (aaronfagan/svg-credit-card-payment-icons) — the old Wikimedia links
+  // for Visa/Mada/Discover/Samsung Pay/Uber Eats/Talabat are dead (files get
+  // renamed on Commons). Brands with no reliable hosted logo return null so
+  // the UI shows the neutral card icon instead of a broken image.
+  const CARD_ICON_SET = 'https://raw.githubusercontent.com/aaronfagan/svg-credit-card-payment-icons/main/flat';
   const getFallbackLogo = (name: string) => {
     const lower = name.toLowerCase();
-    if (lower.includes('visa')) return 'https://upload.wikimedia.org/wikipedia/commons/d/d6/Visa_2021.svg';
-    if (lower.includes('mastercard')) return 'https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg';
-    if (lower.includes('american express') || lower.includes('amex')) return 'https://upload.wikimedia.org/wikipedia/commons/f/fa/American_Express_logo_%282018%29.svg';
-    if (lower.includes('mada')) return 'https://upload.wikimedia.org/wikipedia/commons/8/84/Mada_Logo.svg';
-    if (lower.includes('discover')) return 'https://upload.wikimedia.org/wikipedia/commons/8/81/Discover_Card_logo.svg';
-    if (lower.includes('jcb')) return 'https://upload.wikimedia.org/wikipedia/commons/4/40/JCB_logo.svg';
+    if (lower.includes('visa')) return `${CARD_ICON_SET}/visa.svg`;
+    if (lower.includes('mastercard')) return `${CARD_ICON_SET}/mastercard.svg`;
+    if (lower.includes('american express') || lower.includes('amex')) return `${CARD_ICON_SET}/amex.svg`;
+    if (lower.includes('discover')) return `${CARD_ICON_SET}/discover.svg`;
+    if (lower.includes('jcb')) return `${CARD_ICON_SET}/jcb.svg`;
+    if (lower.includes('unionpay') || lower.includes('union pay')) return `${CARD_ICON_SET}/unionpay.svg`;
     if (lower.includes('apple pay')) return 'https://upload.wikimedia.org/wikipedia/commons/b/b0/Apple_Pay_logo.svg';
     if (lower.includes('google pay')) return 'https://upload.wikimedia.org/wikipedia/commons/f/f2/Google_Pay_Logo.svg';
-    if (lower.includes('samsung pay')) return 'https://upload.wikimedia.org/wikipedia/commons/e/e1/Samsung_Pay_icon.svg';
     if (lower.includes('paypal')) return 'https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg';
-    if (lower.includes('uber')) return 'https://upload.wikimedia.org/wikipedia/commons/b/b3/Uber_Eats_2018_logo.svg';
-    if (lower.includes('talabat')) return 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Talabat_logo.png/512px-Talabat_logo.png';
     if (lower.includes('cash')) return 'https://cdn-icons-png.flaticon.com/512/2331/2331714.png';
     return null;
   };
@@ -562,16 +568,29 @@ export function PaymentMethodsPage() {
                 {/* Image/Icon Container */}
                 <div className="aspect-[4/3] flex items-center justify-center p-8 bg-gray-50/50 dark:bg-black/20 relative group-hover:bg-white dark:group-hover:bg-black/40 transition-colors duration-500">
                   <div className="w-20 h-20 flex items-center justify-center transition-transform duration-500 group-hover:scale-110">
-                    {getImageUrl(card.imageUrl || card.logo) || getFallbackLogo(card.name) ? (
-                      <OptimizedImage
-                        src={getImageUrl(card.imageUrl || card.logo) || getFallbackLogo(card.name)!}
-                        alt={card.name}
-                        className="w-full h-full drop-shadow-sm"
-                        objectFit="contain"
-                      />
-                    ) : (
-                      <CreditCard size={40} className="text-gray-300 dark:text-gray-600" />
-                    )}
+                    {(() => {
+                      const storedUrl = getImageUrl(card.imageUrl || card.logo);
+                      const fallbackUrl = getFallbackLogo(card.name);
+                      // If the stored hotlink failed once, retry with the brand fallback.
+                      const displayUrl = failedCardImages[card.id]
+                        ? (fallbackUrl && fallbackUrl !== storedUrl ? fallbackUrl : null)
+                        : storedUrl || fallbackUrl;
+                      return displayUrl ? (
+                        <OptimizedImage
+                          src={displayUrl}
+                          alt={card.name}
+                          className="w-full h-full drop-shadow-sm"
+                          objectFit="contain"
+                          onError={() =>
+                            setFailedCardImages(prev =>
+                              prev[card.id] ? prev : { ...prev, [card.id]: true },
+                            )
+                          }
+                        />
+                      ) : (
+                        <CreditCard size={40} className="text-gray-300 dark:text-gray-600" />
+                      );
+                    })()}
                   </div>
                 </div>
 

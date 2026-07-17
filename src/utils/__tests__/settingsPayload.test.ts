@@ -112,7 +112,8 @@ describe('settings update payload', () => {
     expect(payload.showRestaurantName).toBe(false);
     expect(payload.showDescription).toBe(false);
     expect(payload.showTaxId).toBe(false);
-    expect(payload.taxIdNumber).toBe('123');
+    // Tax IDs keep letters, dashes and slashes (e.g. EU VAT formats).
+    expect(payload.taxIdNumber).toBe('VAT-123-ABC');
   });
 
   it('can build a sales-only dirty payload without unrelated profile fields', () => {

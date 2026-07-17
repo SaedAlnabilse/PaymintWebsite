@@ -639,18 +639,15 @@ export function ProductFormModal({
 
       // Handle image preview
       if (initialData.image) {
-        // Use relative path by default to leverage Vite proxy
-        // Only use absolute URL if strictly necessary
-        const baseUrl = '';
+        // Prefer same-origin relative paths (CSP-safe). Drop cache-bust query
+        // for display; browser will revalidate after a real path change.
+        const raw = String(initialData.image).split('?')[0];
+        const cleanPath = raw.replace('/public', '').replace('public/', '');
 
-        // Fix: Remove /public prefix to match POS behavior and correct serving path
-        const cleanPath = initialData.image.replace('/public', '').replace('public/', '');
+        const imgUrl = raw.startsWith('http')
+          ? raw
+          : `${cleanPath.startsWith('/') ? '' : '/'}${cleanPath}`;
 
-        const imgUrl = initialData.image.startsWith('http')
-          ? initialData.image
-          : `${baseUrl}${cleanPath.startsWith('/') ? '' : '/'}${cleanPath}`;
-
-        console.log('[ProductFormModal] Image URL:', imgUrl);
         setPreviewUrl(imgUrl);
         setImageSource('existing');
       } else {
@@ -1004,12 +1001,21 @@ export function ProductFormModal({
 
                             if (target.src.startsWith('data:') || target.dataset.failed) return;
 
-                            // Fallback: retry with same-origin relative path to go through the proxy.
-                            // This avoids cross-origin requests that fail in Incognito mode.
-                            if (target.src.includes('/uploads/images/')) {
-                              target.dataset.failed = 'true';
-                              const path = target.src.split('/uploads/')[1];
-                              target.src = `/uploads/${path}`;
+                            // Fallback: force same-origin relative path (Vite/CF proxy).
+                            // Handles absolute API hosts, cache-bust query strings, and
+                            // both /uploads and /qa-products product image roots.
+                            try {
+                              const url = new URL(target.src, window.location.origin);
+                              const path = url.pathname;
+                              if (
+                                path.startsWith('/uploads/') ||
+                                path.startsWith('/qa-products/')
+                              ) {
+                                target.dataset.failed = 'true';
+                                target.src = path;
+                              }
+                            } catch {
+                              // ignore parse errors
                             }
                           }}
                         />

@@ -483,7 +483,10 @@ export function ProductsPage() {
     // issues in Incognito/privacy mode where cross-origin requests are blocked.
     const getProductImageUrl = (imagePath?: string) => {
         if (!imagePath) return null;
-        if (imagePath.startsWith('http')) return imagePath;
+        // Absolute remote URLs (Unsplash, etc.) — keep query string for cache bust.
+        if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+            return imagePath;
+        }
         // Fix: Remove /public prefix to match POS behavior and correct serving path
         const cleanPath = imagePath.replace('/public', '').replace('public/', '');
         return `${cleanPath.startsWith('/') ? '' : '/'}${cleanPath}`;
@@ -497,14 +500,48 @@ export function ProductsPage() {
         };
 
         if (editingProduct) {
-            await api.patch(`/api/items/${editingProduct.id}`, formData, config);
+            const { data: updated } = await api.patch(
+                `/api/items/${editingProduct.id}`,
+                formData,
+                config,
+            );
+            // Optimistic list update so the card image appears immediately
+            // after generate+save (no full page refresh required).
+            if (updated?.id) {
+                setProducts((current) =>
+                    current.map((product) =>
+                        product.id === updated.id
+                            ? {
+                                  ...product,
+                                  ...updated,
+                                  // Bust browser cache if the path is reused.
+                                  image: updated.image
+                                      ? `${String(updated.image).split('?')[0]}?v=${Date.now()}`
+                                      : updated.image,
+                              }
+                            : product,
+                    ),
+                );
+            }
             toast.success(t('products.messages.updated'));
         } else {
-            await api.post('/api/items', formData, config);
+            const { data: created } = await api.post('/api/items', formData, config);
+            if (created?.id) {
+                setProducts((current) => [
+                    {
+                        ...created,
+                        image: created.image
+                            ? `${String(created.image).split('?')[0]}?v=${Date.now()}`
+                            : created.image,
+                    },
+                    ...current,
+                ]);
+            }
             toast.success(t('products.messages.created'));
             moveCreateViewToActive();
         }
         setShowModal(false);
+        // Background reconcile with server (keeps stock, willHardDelete, etc. accurate)
         fetchData(true);
     };
 
@@ -1415,6 +1452,7 @@ export function ProductsPage() {
                                     >
                                         <div className="aspect-[4/3] bg-gray-50 dark:bg-black/20 relative overflow-hidden shrink-0">
                                             <OptimizedImage
+                                                key={`${p.id}-${p.image || 'none'}`}
                                                 src={p.image ? getProductImageUrl(p.image)! : '/default_product.png'}
                                                 alt={p.name || 'Default Product'}
                                                 className="w-full h-full group-hover:scale-110 transition-transform duration-500"
@@ -1548,6 +1586,7 @@ export function ProductsPage() {
                                                     <div className="flex justify-center">
                                                         <div className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 overflow-hidden">
                                                             <ThumbnailImage
+                                                                key={`${p.id}-${p.image || 'none'}`}
                                                                 src={p.image ? getProductImageUrl(p.image)! : '/default_product.png'}
                                                                 alt={p.name || 'Default Product'}
                                                                 size={40}

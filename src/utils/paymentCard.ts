@@ -63,6 +63,7 @@ export function formatPaymentBrandName(name: string | null | undefined): string 
 }
 
 export const MAX_CARD_NUMBER_DIGITS = 16;
+export const AMEX_CARD_NUMBER_DIGITS = 15;
 export const MAX_FORMATTED_CARD_NUMBER_LENGTH = 19; // 16 digits + 3 spaces
 
 export const getCardDigits = (value: string) => value.replace(/\D/g, '');
@@ -79,13 +80,15 @@ export function formatCardNumberInput(
   value: string,
   maxDigits = MAX_CARD_NUMBER_DIGITS,
 ) {
-  const digits = getCardDigits(value).slice(0, maxDigits);
+  let digits = getCardDigits(value).slice(0, maxDigits);
   const brand = detectCardBrand(digits);
+  // Amex numbers are 15 digits grouped 4-6-5 regardless of the caller's cap.
+  if (brand === 'amex') digits = digits.slice(0, AMEX_CARD_NUMBER_DIGITS);
   const groupSizes =
-    maxDigits === MAX_CARD_NUMBER_DIGITS
-      ? [4, 4, 4, 4]
-      : brand === 'amex'
+    brand === 'amex'
       ? [4, 6, 5]
+      : maxDigits === MAX_CARD_NUMBER_DIGITS
+      ? [4, 4, 4, 4]
       : [4, 4, 4, 4, 3];
   const parts: string[] = [];
   let cursor = 0;
@@ -124,10 +127,14 @@ export function luhnCheck(digits: string) {
 
 export function isValidCardNumber(digits: string) {
   // Local saved cards are not tokenized with a live gateway yet, so do not run
-  // card-network/Luhn validation here. The UI only needs a complete 16-digit
-  // display number so the API can save card metadata safely. (Matches the admin
-  // portal's paymentCard util.)
-  return digits.length === MAX_CARD_NUMBER_DIGITS;
+  // card-network/Luhn validation here. The UI only needs a complete display
+  // number so the API can save card metadata safely. (Matches the admin
+  // portal's paymentCard util.) Amex numbers are 15 digits, all others 16.
+  const expectedLength =
+    detectCardBrand(digits) === 'amex'
+      ? AMEX_CARD_NUMBER_DIGITS
+      : MAX_CARD_NUMBER_DIGITS;
+  return digits.length === expectedLength;
 }
 
 export function getCardCvvLength(brand: DetectedCardBrand) {

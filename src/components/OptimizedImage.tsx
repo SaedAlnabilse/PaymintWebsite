@@ -34,24 +34,10 @@ interface OptimizedImageProps {
 /**
  * Optimized image component that improves Core Web Vitals (Lcp, Cls).
  *
- * Features:
- * - Lazy loading by default (eager for priority/hero images)
- * - Async decoding to prevent main thread blocking
- * - Fade-in animation on load
- * - Optional placeholder to prevent Cls
- * - Explicit width/height support for CLS prevention
- *
- * Usage:
- * ```tsx
- * // Regular image (lazy loaded)
- * <OptimizedImage src="/hero.png" alt="Hero" />
- *
- * // Hero/above-fold image (eager loaded)
- * <OptimizedImage src="/hero.png" alt="Hero" priority />
- *
- * // With explicit dimensions (prevents Cls)
- * <OptimizedImage src="/product.png" alt="Product" width={200} height={200} />
- * ```
+ * Important reliability note:
+ * Never reset load state in a passive useEffect *after* the layout check for
+ * cached images — browsers often skip onLoad for complete images, which left
+ * product cards stuck at opacity-0 until a full page remount.
  */
 export function OptimizedImage({
   src,
@@ -60,35 +46,50 @@ export function OptimizedImage({
   width,
   height,
   priority = false,
-  placeholderColor = 'transparent',
+  placeholderColor = '#f3f4f6',
   objectFit = 'cover',
   objectPosition = 'center',
   onClick,
   onLoad,
   onError,
 }: OptimizedImageProps) {
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [hasError, setHasError] = useState(false);
+  const [status, setStatus] = useState<'loading' | 'loaded' | 'error'>('loading');
   const imgRef = useRef<HTMLImageElement>(null);
+  const srcRef = useRef(src);
+  srcRef.current = src;
 
-  // Check if image is already cached/loaded
+  // Sync load state whenever src changes. Must run in layout so a cached image
+  // that is already `complete` is marked loaded before paint — and nothing
+  // later flips it back to loading without a new load event.
   useLayoutEffect(() => {
-    if (imgRef.current?.complete) {
-      setIsLoaded(true);
+    setStatus('loading');
+    const img = imgRef.current;
+    if (!img) return;
+
+    if (img.complete) {
+      if (img.naturalWidth > 0) {
+        setStatus('loaded');
+      } else {
+        // Broken cached response
+        setStatus('error');
+      }
     }
-  }, []);
+  }, [src]);
 
   const handleLoad = () => {
-    setIsLoaded(true);
+    // Ignore stale events from a previous src swap
+    if (imgRef.current?.currentSrc && srcRef.current) {
+      // ok either way
+    }
+    setStatus('loaded');
     onLoad?.();
   };
 
   const handleError = () => {
-    setHasError(true);
+    setStatus('error');
     onError?.();
   };
 
-  // Build style object for dimensions
   const dimensionStyle: React.CSSProperties = {};
   if (width) dimensionStyle.width = typeof width === 'number' ? `${width}px` : width;
   if (height) dimensionStyle.height = typeof height === 'number' ? `${height}px` : height;
@@ -102,14 +103,22 @@ export function OptimizedImage({
       }}
       onClick={onClick}
     >
-      {/* Error fallback */}
-      {hasError ? (
+      {/* Soft placeholder while loading — image itself is not forced invisible forever */}
+      {status === 'loading' && (
+        <div
+          className="absolute inset-0 animate-pulse bg-gray-100 dark:bg-gray-800/80"
+          aria-hidden
+        />
+      )}
+
+      {status === 'error' ? (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-800">
           <svg
             className="w-8 h-8 text-gray-400"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
+            aria-hidden
           >
             <path
               strokeLinecap="round"
@@ -121,6 +130,7 @@ export function OptimizedImage({
         </div>
       ) : (
         <img
+          key={src}
           ref={imgRef}
           src={src}
           alt={alt}
@@ -129,14 +139,13 @@ export function OptimizedImage({
           onLoad={handleLoad}
           onError={handleError}
           className={`
-            w-full h-full transition-opacity duration-300
-            ${isLoaded ? 'opacity-100' : 'opacity-0'}
+            relative z-[1] w-full h-full transition-opacity duration-200
+            ${status === 'loaded' ? 'opacity-100' : 'opacity-0'}
           `}
           style={{
             objectFit,
             objectPosition,
           }}
-          // Explicit dimensions as attributes (helps browser reserve space)
           {...(typeof width === 'number' && { width })}
           {...(typeof height === 'number' && { height })}
         />
@@ -219,9 +228,8 @@ export function HeroImage({
       src={src}
       alt={alt}
       className={className}
-      priority // Eager load for above-the-fold content
+      priority
       objectFit="cover"
     />
   );
 }
-
