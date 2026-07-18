@@ -324,7 +324,7 @@
       "tryAgain": "Try Again",
       "createAccount": "Sign Up",
       "noSocialAccountTitle": "No Mintcom account yet",
-      "noSocialAccountMessage": "We recognized your {{provider}} login, but there’s no Mintcom account linked to it. Create one in under a minute — your business dashboard is waiting.",
+      "noSocialAccountMessage": "We recognized your {{provider}} login, but there’s no Mintcom account linked to it. Create one in under a minute. Your business dashboard is waiting.",
       "noSocialAccountGoogle": "Google",
       "noSocialAccountApple": "Apple"
     },
