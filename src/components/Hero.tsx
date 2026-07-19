@@ -161,32 +161,12 @@ export const Hero = ({ isVideoOpen, setIsVideoOpen }: { isVideoOpen: boolean; se
               animate={{ y: [0, -6, 0] }}
               transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
             >
-              {/* Layered accent kept around the tablet, clear of the hardware gaps below. */}
-              <div
-                aria-hidden
-                className="pointer-events-none absolute z-0 -translate-x-1/2 -translate-y-1/2"
-                style={{ width: '86%', height: '78%', left: '64%', top: '34%' }}
-              >
-                <svg viewBox="0 0 400 400" className="h-full w-full overflow-visible">
-                  <circle cx="200" cy="200" r="168" fill="#7cc39f" opacity="0.92" />
-                  <circle cx="214" cy="188" r="188" fill="none" stroke="#7cc39f" strokeWidth="3" opacity="0.78" />
-                  <path
-                    d="M79 111C117 62 179 34 241 38"
-                    fill="none"
-                    stroke="#b8e1cd"
-                    strokeWidth="7"
-                    strokeLinecap="round"
-                    opacity="0.9"
-                  />
-                </svg>
-              </div>
-
               <img
                 src={heroImage}
                 alt={t('landing.hero.alt', 'Mintcom All-in-One POS System')}
                 className="relative z-10 h-auto w-full object-contain drop-shadow-2xl"
                 width={1350}
-                height={1165}
+                height={1250}
                 decoding="async"
                 fetchPriority="high"
                 draggable={false}
