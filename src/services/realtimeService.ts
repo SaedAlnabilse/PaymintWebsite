@@ -258,12 +258,10 @@ class RealtimeService {
       console.log('[Realtime] Server confirmed connection:', data);
     });
 
-    // Data change events
+    // Data change events. The server emits the canonical 'data:change' only
+    // (TC-101) — do NOT also listen to the legacy 'data:changed' alias: with
+    // an older dual-emitting server that processed every event twice.
     this.socket.on('data:change', (event: DataChangeEvent<any>) => {
-      this.handleDataChangeEvent(event);
-    });
-    // Backward-compatible alias emitted by some backend paths
-    this.socket.on('data:changed', (event: DataChangeEvent<any>) => {
       this.handleDataChangeEvent(event);
     });
 
