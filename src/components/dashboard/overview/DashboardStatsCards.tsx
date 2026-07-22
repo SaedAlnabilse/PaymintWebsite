@@ -115,13 +115,14 @@ export const DashboardStatsCards = React.memo(function DashboardStatsCards({ sta
     {
       label: t('dashboard.stats.onHold'),
       value: stats?.pendingOrders ?? 0,
-      sub: `${t('dashboard.stats.pendingOrders')} (${t('dashboard.stats.last24h')})`,
+      // Open held tickets (HeldOrder), not last-24h sales — matches Orders page.
+      sub: t('dashboard.stats.pendingOrders'),
       icon: ShoppingBag,
       color: 'text-mintcom-green',
       bg: 'bg-mintcom-green/10',
       isCurrency: false,
       onClick: () => {
-        const state: any = { statusFilter: 'HELD', selectedDateRange: 'last_24_hours' };
+        const state: any = { statusFilter: 'HELD' };
         navigate(`/dashboard/${locationSlug}/orders`, { state });
       }
     }
