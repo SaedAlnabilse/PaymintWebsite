@@ -687,16 +687,15 @@ export const DashboardPage = () => {
 
       // Track if any API call failed
       let hasError = false;
-      const nowForPendingOrders = new Date();
-      const pendingOrdersStart = subHours(nowForPendingOrders, 24).toISOString();
-      const pendingOrdersEnd = nowForPendingOrders.toISOString();
 
-      const [summaryRes, topItemsRes, peakRes, categoryRes, pendingOrdersRes] = await Promise.all([
+      // On Hold KPI must use HeldOrder count (same source as Orders page), not
+      // historical-summary.pendingOrders — that field is never populated by the API.
+      const [summaryRes, topItemsRes, peakRes, categoryRes, heldOrdersCountRes] = await Promise.all([
         api.get('/reports/historical-summary', { params: { startDate: start, endDate: end, timezone: browserTimeZone } }).catch((err) => { hasError = true; console.error('Summary API error:', err); return { data: null }; }),
         api.get('/reports/top-selling-items', { params: { startDate: start, endDate: end, limit: 5 } }).catch((err) => { hasError = true; console.error('Top items API error:', err); return { data: [] }; }),
         api.get('/reports/peak-hours', { params: { startDate: start, endDate: end, timezone: browserTimeZone } }).catch((err) => { hasError = true; console.error('Peak hours API error:', err); return { data: [] }; }),
         api.get('/reports/category-report', { params: { startDate: start, endDate: end } }).catch((err) => { hasError = true; console.error('Category API error:', err); return { data: { breakdown: [] } }; }),
-        api.get('/reports/historical-summary', { params: { startDate: pendingOrdersStart, endDate: pendingOrdersEnd } }).catch((err) => { hasError = true; console.error('Pending orders API error:', err); return { data: null }; })
+        api.get('/api/held-orders/count').catch((err) => { hasError = true; console.error('Held orders count API error:', err); return { data: { count: 0 } }; })
       ]);
 
       // Show warning if any API failed
@@ -706,8 +705,7 @@ export const DashboardPage = () => {
 
       // Process stats. Successful empty/null payloads are normalized to zero-state data.
       const summaryData = normalizeDashboardStats(summaryRes.data);
-      const pendingOrdersData = normalizeDashboardStats(pendingOrdersRes.data);
-      const pendingOrdersLast24Hours = Number(pendingOrdersData.pendingOrders) || 0;
+      const heldOrdersCount = Number(heldOrdersCountRes.data?.count) || 0;
       const categoryData = Array.isArray(categoryRes.data?.breakdown) ? categoryRes.data.breakdown : [];
       
       // Process categories specifically from the robust report endpoint
@@ -721,7 +719,7 @@ export const DashboardPage = () => {
         totalRevenue: summaryData.totalRevenue,
         totalOrders: summaryData.totalOrders,
         averageOrderValue: summaryData.averageOrderValue,
-        pendingOrders: pendingOrdersLast24Hours,
+        pendingOrders: heldOrdersCount,
         completedOrders: summaryData.completedOrders || summaryData.totalOrders,
         activeEmployees: summaryData.activeEmployees,
         taxCollected: summaryData.taxCollected,
