@@ -12,7 +12,6 @@ import { ConfirmModal } from '../ConfirmModal';
 import {
   buildProductImagePrompt,
   buildProductImageSignature,
-  createProductFallbackDataUrl,
   createProductFallbackImageAsset,
   dataUrlToFile,
   extractProductImageSource,
@@ -345,14 +344,6 @@ export function ProductFormModal({
     () => buildProductImageSignature(currentImageContext),
     [currentImageContext]
   );
-
-  const draftImagePreview = useMemo(() => {
-    if (imagePreview || !name.trim()) {
-      return null;
-    }
-
-    return createProductFallbackDataUrl(currentImageContext);
-  }, [currentImageContext, imagePreview, name]);
 
   const generatedImageNeedsRefresh = Boolean(
     imagePreview &&
@@ -851,8 +842,7 @@ export function ProductFormModal({
   const netPrice = totalRetailPrice / (1 + effectiveTaxRate);
   const taxAmount = totalRetailPrice - netPrice;
   const popupLabelBaseClass = 'text-xs font-semibold text-gray-400 dark:text-gray-500 tracking-widest uppercase block mb-2';
-  const previewImage = imagePreview || draftImagePreview;
-  const hasDraftPreview = !imagePreview && Boolean(draftImagePreview);
+  const previewImage = imagePreview;
   const generationElapsedLabel = `${(generationElapsedMs / 1000).toFixed(2)}s`;
   const imageQuotaResetDate = imageQuota
     ? new Date(imageQuota.resetAt).toLocaleDateString(
@@ -883,9 +873,7 @@ export function ProductFormModal({
         ? t('products.image.uploaded', { defaultValue: 'Uploaded' })
         : imageSource === 'existing'
           ? t('products.image.saved', { defaultValue: 'Saved' })
-          : hasDraftPreview
-            ? t('products.image.preview', { defaultValue: 'Preview' })
-            : null;
+          : null;
   const imageHelperMessage = !name.trim()
     ? t('products.image.nameRequired', { defaultValue: 'Enter a product name before generating an image. It may take from 1 to 200 seconds and you will not be able to leave this screen until the generation is complete.' })
     : generatedImageNeedsRefresh
@@ -992,7 +980,7 @@ export function ProductFormModal({
                         <img
                           src={previewImage}
                           alt={t('products.form.imagePreview')}
-                          className={`w-full h-full ${hasDraftPreview ? 'object-contain p-4' : 'object-cover'}`}
+                          className="w-full h-full object-cover"
                           loading="lazy"
                           decoding="async"
                           onError={(e) => {
