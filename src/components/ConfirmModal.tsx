@@ -41,6 +41,7 @@ export function ConfirmModal({
         return {
           icon: AlertTriangle,
           color: 'text-accent',
+          accentBar: 'bg-accent',
           bgColor: 'bg-accent/10',
           borderColor: 'border-accent/30',
           buttonBg: 'bg-accent text-white',
@@ -48,20 +49,22 @@ export function ConfirmModal({
           iconRing: 'ring-accent/20'
         };
       case 'warning':
-        // Soft rose — caution without yellow/amber, and distinct from danger red.
+        // Soft violet — caution without yellow or red (danger stays red).
         return {
           icon: AlertCircle,
-          color: 'text-rose-500',
-          bgColor: 'bg-rose-500/10',
-          borderColor: 'border-rose-500/30',
-          buttonBg: 'bg-rose-500 text-white',
+          color: 'text-violet-600 dark:text-violet-400',
+          accentBar: 'bg-violet-600',
+          bgColor: 'bg-violet-500/10',
+          borderColor: 'border-violet-500/25',
+          buttonBg: 'bg-violet-600 text-white hover:bg-violet-700',
           glow: '',
-          iconRing: 'ring-rose-500/20'
+          iconRing: 'ring-violet-500/20'
         };
       case 'info':
         return {
           icon: Info,
           color: 'text-blue-500',
+          accentBar: 'bg-blue-500',
           bgColor: 'bg-blue-500/10',
           borderColor: 'border-blue-500/30',
           buttonBg: 'bg-blue-500 text-white',
@@ -73,6 +76,7 @@ export function ConfirmModal({
         return {
           icon: CheckCircle2,
           color: 'text-mintcom-green',
+          accentBar: 'bg-mintcom-green',
           bgColor: 'bg-mintcom-green/10',
           borderColor: 'border-mintcom-green/30',
           buttonBg: 'bg-mintcom-green text-black',
@@ -111,7 +115,7 @@ export function ConfirmModal({
           >
 
             {/* Top Accent Bar */}
-            <div className={`absolute top-0 inset-x-0 h-1.5 ${theme.color.replace('text-', 'bg-')}`} />
+            <div className={`absolute top-0 inset-x-0 h-1.5 ${theme.accentBar}`} />
 
             {/* Mobile drag handle */}
             <div className="sm:hidden flex justify-center pt-3">
