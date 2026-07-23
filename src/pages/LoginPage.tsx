@@ -30,12 +30,22 @@ const isWrongCredentialsError = (error?: string, code?: string) => {
   // Empty / generic failure after a form submit almost always means bad credentials.
   if (!error) return true;
   const normalized = error.toLowerCase();
+  // Never surface password-strength rules on login — show the sign-in modal instead.
+  if (
+    normalized.includes('password must') ||
+    normalized.includes('uppercase') ||
+    normalized.includes('lowercase letter') ||
+    normalized.includes('at least 8 characters')
+  ) {
+    return true;
+  }
   return (
     normalized.includes('invalid email or password') ||
     normalized.includes('invalid credentials') ||
     normalized.includes('login failed') ||
     normalized.includes('check your credentials') ||
-    normalized.includes('incorrect password')
+    normalized.includes('incorrect password') ||
+    normalized.includes('unauthorized')
   );
 };
 
