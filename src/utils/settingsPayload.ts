@@ -10,6 +10,11 @@ export const MAX_HOLD_ORDER_TABLE_COUNT = 99;
 export const MAX_HOLD_ORDER_TABLE_DIGITS = 2;
 export const MAX_SERVICE_CHARGE_NAME_LENGTH = 28;
 export const MAX_SERVICE_CHARGE_VALUE = 1000000;
+/** Percentage service charge is capped the same way as tax rate. */
+export const MAX_SERVICE_CHARGE_PERCENT = 100;
+export const MAX_SERVICE_CHARGE_PERCENT_DIGITS = 5;
+/** Fixed amount ATM entry: up to 999,999.99 (8 digits including cents). */
+export const MAX_SERVICE_CHARGE_FIXED_DIGITS = 8;
 
 const URL_LIMIT = 200;
 
@@ -158,8 +163,32 @@ const normalizeNonNegativeNumber = (value: unknown) => {
   return Math.max(0, parsed);
 };
 
-const normalizeServiceChargeValue = (value: unknown) =>
-  Math.min(MAX_SERVICE_CHARGE_VALUE, normalizeNonNegativeNumber(value));
+export const normalizeServiceChargeValue = (
+  value: unknown,
+  type: ServiceChargeType | unknown = 'PERCENTAGE',
+) => {
+  const numeric = normalizeNonNegativeNumber(value);
+  if (type === 'PERCENTAGE') {
+    return Math.min(MAX_SERVICE_CHARGE_PERCENT, Math.round(numeric * 100) / 100);
+  }
+  return Math.min(MAX_SERVICE_CHARGE_VALUE, Math.round(numeric * 100) / 100);
+};
+
+/** ATM-style entry for percentage (0.00–100.00). */
+export const formatServiceChargePercentATM = (raw: string): number | null => {
+  const digits = raw.replace(/\D/g, '').slice(0, MAX_SERVICE_CHARGE_PERCENT_DIGITS);
+  const cents = Number.parseInt(digits || '0', 10);
+  if (cents > MAX_SERVICE_CHARGE_PERCENT * 100) return null;
+  return cents / 100;
+};
+
+/** ATM-style entry for fixed currency amount. */
+export const formatServiceChargeFixedATM = (raw: string): number | null => {
+  const digits = raw.replace(/\D/g, '').slice(0, MAX_SERVICE_CHARGE_FIXED_DIGITS);
+  const cents = Number.parseInt(digits || '0', 10);
+  if (cents > MAX_SERVICE_CHARGE_VALUE * 100) return null;
+  return cents / 100;
+};
 
 const normalizeComparableSettingValue = (value: unknown) => {
   if (value === undefined || value === null) return '';
@@ -258,7 +287,12 @@ export const buildAppSettingsUpdatePayload = (
   }
 
   if (shouldInclude('serviceChargeValue')) {
-    payload.serviceChargeValue = normalizeServiceChargeValue(read(data, 'serviceChargeValue'));
+    const chargeType =
+      read(data, 'serviceChargeType') === 'FIXED' ? 'FIXED' : 'PERCENTAGE';
+    payload.serviceChargeValue = normalizeServiceChargeValue(
+      read(data, 'serviceChargeValue'),
+      chargeType,
+    );
   }
 
   if (shouldInclude('serviceChargeTaxable')) {

@@ -1687,6 +1687,7 @@
     "editDiscount": "Edit Discount",
     "errors": {
       "nameRequired": "Required",
+      "nameMax": "Name must be at most {{count}} characters",
       "percentageMax": "Cannot Exceed 100%",
       "percentageNegative": "Cannot Be Negative",
       "percentageRequired": "Required"
@@ -5297,9 +5298,11 @@
       "fixedAmount": "Fixed amount",
       "holdOrderTableCountDesc": "How many table options (Table 1, Table 2...) to show in the hold order menu.",
       "holdOrderTableCountErrorRange": "Table shortcut count must be between 0 and 99.",
+      "holdOrderTableCountMaxHint": "Maximum is {{max}} tables.",
       "holdOrderTableCountLabel": "TABLE SHORTCUTS",
       "holdOrderTableCountPlaceholder": "20",
       "holdOrderTableCountTitle": "Number of Table Shortcuts",
+      "serviceChargePercentHint": "Max {{max}}% · ATM style entry",
       "invalidInput": "Invalid Input",
       "invalidTaxMessage": "Tax rate must be between 0 and 100%",
       "invalidTaxTitle": "Invalid Tax Rate",

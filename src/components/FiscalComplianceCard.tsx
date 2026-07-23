@@ -305,7 +305,7 @@ export function FiscalComplianceCard({ initial, disabled, onSaved }: FiscalCompl
               onChange={e => handleToggleEnabled(e.target.checked)}
               className="sr-only peer"
             />
-            <div className="w-11 h-6 bg-gray-200 dark:bg-white/10 rounded-full peer peer-checked:bg-mintcom-green after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5 shadow-sm" />
+            <div className="h-7 w-12 rounded-full border-2 border-gray-300 bg-gray-100 shadow-inner transition-all duration-200 peer-focus-visible:ring-2 peer-focus-visible:ring-mintcom-green/40 peer-focus-visible:ring-offset-2 dark:border-white/25 dark:bg-white/10 peer-checked:border-mintcom-green peer-checked:bg-mintcom-green peer-checked:shadow-[0_0_0_3px_rgba(125,198,162,0.25)] after:absolute after:left-[3px] after:top-[3px] after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow-md after:transition-all after:content-[''] peer-checked:after:translate-x-5" />
           </label>
         </div>
       </div>
