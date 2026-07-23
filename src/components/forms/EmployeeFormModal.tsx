@@ -1780,6 +1780,12 @@ export function EmployeeFormModal({
                     defaultValue: 'At least 6 characters (any characters).',
                   })}
                 </p>
+                <p className="mt-1 text-xs font-bold text-gray-500 dark:text-gray-400">
+                  {t('staff.form.passwordAdminHint', {
+                    defaultValue:
+                      'Staff cannot reset their own POS password. Leave blank to keep the current one — passwords are never shown for security. Only enter a value if you want a new password to share with them.',
+                  })}
+                </p>
                 {errors.password && <p className="mt-1 text-xs font-bold text-mintcom-red">{errors.password}</p>}
               </div>
 
