@@ -1262,102 +1262,7 @@ const IPhoneFrame = ({
   </div>
 );
 
-/**
- * Premium Android chassis
- */
-const AndroidFrame = ({
-  children,
-  className = '',
-  style,
-}: {
-  children: React.ReactNode;
-  className?: string;
-  style?: React.CSSProperties;
-}) => (
-  <div className={className} style={style}>
-    <div
-      className="relative w-full h-full rounded-[36px] p-[2.5px]"
-      style={{
-        background:
-          'linear-gradient(160deg, #5c5c62 0%, #232326 22%, #707078 42%, #141416 60%, #3e3e44 82%, #1a1a1c 100%)',
-        boxShadow:
-          '0 36px 70px -14px rgba(0,0,0,0.7), 0 14px 28px -10px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.18)',
-      }}
-    >
-      <div
-        className="relative w-full h-full rounded-[34px] p-[9px] overflow-hidden"
-        style={{
-          background: 'linear-gradient(180deg, #121214 0%, #070708 100%)',
-          boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.05)',
-        }}
-      >
-        <div
-          className="absolute -left-[3.5px] top-[22%] w-[3.5px] h-[42px] rounded-l-[2px] z-40"
-          style={{ background: 'linear-gradient(90deg, #55555a, #2a2a2c)' }}
-        />
-        <div
-          className="absolute -right-[3.5px] top-[24%] w-[3.5px] h-[28px] rounded-r-[2px] z-40"
-          style={{ background: 'linear-gradient(270deg, #55555a, #2a2a2c)' }}
-        />
-        <div
-          className="absolute -right-[4px] top-[36%] w-[4px] h-[48px] rounded-r-[3px] z-40"
-          style={{ background: 'linear-gradient(270deg, #6a6a70, #2e2e32 40%, #4a4a4e)' }}
-        />
 
-        <div className="relative h-full w-full overflow-hidden rounded-[26px] bg-white dark:bg-[#1f1d2b]">
-          <div className="absolute inset-0 flex flex-col overflow-hidden">
-            <div className="absolute top-0 inset-x-0 h-[24px] z-30 pointer-events-none flex items-center justify-between px-4">
-              <span className="text-[10px] font-medium text-white">9:41</span>
-              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-40">
-                <div
-                  className="w-[13px] h-[13px] rounded-full flex items-center justify-center"
-                  style={{ background: '#000' }}
-                >
-                  <div
-                    className="w-[7px] h-[7px] rounded-full relative"
-                    style={{
-                      background: 'radial-gradient(circle at 32% 32%, #1e3a5f 0%, #0b1220 50%, #000 100%)',
-                    }}
-                  >
-                    <div className="absolute top-[1px] left-[1px] w-[2px] h-[2px] rounded-full bg-sky-300/35" />
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <svg width="12" height="10" viewBox="0 0 12 10">
-                  <rect x="0" y="6" width="2" height="4" rx="0.4" fill="white" />
-                  <rect x="3.2" y="4" width="2" height="6" rx="0.4" fill="white" />
-                  <rect x="6.4" y="2" width="2" height="8" rx="0.4" fill="white" />
-                  <rect x="9.6" y="0" width="2" height="10" rx="0.4" fill="white" opacity="0.45" />
-                </svg>
-                <svg width="14" height="10" viewBox="0 0 14 10">
-                  <path
-                    d="M7 2.2c1.6 0 3 .6 4.1 1.6l1.1-1.2C10.7.9 9 .2 7 .2S3.3.9 1.8 2.6L2.9 3.8C4 2.8 5.4 2.2 7 2.2z"
-                    fill="white"
-                  />
-                  <path
-                    d="M7 5c.9 0 1.7.3 2.3.9l1.1-1.2A4.8 4.8 0 007 3.4c-1.3 0-2.5.5-3.4 1.3L4.7 5.9A3.3 3.3 0 017 5z"
-                    fill="white"
-                  />
-                  <circle cx="7" cy="8.2" r="1.2" fill="white" />
-                </svg>
-                <div className="w-[18px] h-[9px] rounded-[2px] border border-white relative overflow-hidden">
-                  <div
-                    className="absolute inset-[1.5px] rounded-[1px]"
-                    style={{ width: '70%', background: 'linear-gradient(90deg, #fff, #e8e8e8)' }}
-                  />
-                  <div className="absolute -right-[2px] top-1/2 -translate-y-1/2 w-[1.5px] h-[3.5px] bg-white/70 rounded-r-sm" />
-                </div>
-              </div>
-            </div>
-
-            <div className="flex-1 min-h-0 overflow-hidden">{children}</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-);
 
 /* ─── Screen showcase config ─── */
 
@@ -1370,43 +1275,8 @@ const SCREENS: { id: ScreenId; labelKey: string; labelFallback: string }[] = [
   { id: 'notifications', labelKey: 'landing.admin.mockup.screenAlerts', labelFallback: 'Alerts' },
 ];
 
-/** Creative transition styles that cycle each advance */
-type TransitionStyle = 'flip' | 'rise' | 'cube' | 'zoom';
-
-const PHONE_TRANSITIONS: Record<
-  TransitionStyle,
-  {
-    initial: Record<string, number | string>;
-    animate: Record<string, number | string>;
-    exit: Record<string, number | string>;
-  }
-> = {
-  flip: {
-    initial: { opacity: 0, rotateY: 72, scale: 0.88, x: 40 },
-    animate: { opacity: 1, rotateY: 0, scale: 1, x: 0 },
-    exit: { opacity: 0, rotateY: -72, scale: 0.88, x: -40 },
-  },
-  rise: {
-    initial: { opacity: 0, y: 80, scale: 0.9, rotateX: 18 },
-    animate: { opacity: 1, y: 0, scale: 1, rotateX: 0 },
-    exit: { opacity: 0, y: -60, scale: 0.92, rotateX: -12 },
-  },
-  cube: {
-    initial: { opacity: 0, rotateY: -90, x: 60, scale: 0.85 },
-    animate: { opacity: 1, rotateY: 0, x: 0, scale: 1 },
-    exit: { opacity: 0, rotateY: 90, x: -60, scale: 0.85 },
-  },
-  zoom: {
-    initial: { opacity: 0, scale: 1.22, y: 24 },
-    animate: { opacity: 1, scale: 1, y: 0 },
-    exit: { opacity: 0, scale: 0.78, y: -28 },
-  },
-};
-
-const TRANSITION_ORDER: TransitionStyle[] = ['flip', 'rise', 'cube', 'zoom'];
-
-function renderOwnerScreen(id: ScreenId, device: 'iphone' | 'android') {
-  const statusPad = device === 'iphone' ? 28 : 22;
+function renderOwnerScreen(id: ScreenId) {
+  const statusPad = 28;
   switch (id) {
     case 'overview':
       return <OverviewScreenMock statusPad={statusPad} />;
@@ -1418,7 +1288,7 @@ function renderOwnerScreen(id: ScreenId, device: 'iphone' | 'android') {
     default:
       return (
         <NotificationsScreenMock
-          activeTab={device === 'android' ? 'stock' : 'all'}
+          activeTab="all"
           statusPad={statusPad}
         />
       );
@@ -1432,43 +1302,22 @@ export const AdminControl = () => {
 
   const [hasStarted, setHasStarted] = useState(false);
   const [screenIndex, setScreenIndex] = useState(0);
-  const [device, setDevice] = useState<'iphone' | 'android'>('iphone');
-  const [transitionStyle, setTransitionStyle] = useState<TransitionStyle>('flip');
-  const [animKey, setAnimKey] = useState(0);
   const startedRef = useRef(false);
   const userPausedRef = useRef(false);
 
   const advance = useCallback(() => {
     if (userPausedRef.current) return;
     setScreenIndex((i) => (i + 1) % SCREENS.length);
-    setDevice((d) => (d === 'iphone' ? 'android' : 'iphone'));
-    setTransitionStyle((curr) => {
-      const idx = TRANSITION_ORDER.indexOf(curr);
-      return TRANSITION_ORDER[(idx + 1) % TRANSITION_ORDER.length];
-    });
-    setAnimKey((k) => k + 1);
   }, []);
 
   // Autoplay is independent of scroll direction — starts once when section is first seen
   useEffect(() => {
     if (!hasStarted) return;
-    const interval = setInterval(advance, 3800);
+    const interval = setInterval(advance, 6000);
     return () => clearInterval(interval);
   }, [hasStarted, advance]);
 
-  const goToScreen = (index: number) => {
-    if (index === screenIndex) return;
-    setScreenIndex(index);
-    setDevice((d) => (d === 'iphone' ? 'android' : 'iphone'));
-    setTransitionStyle((curr) => {
-      const idx = TRANSITION_ORDER.indexOf(curr);
-      return TRANSITION_ORDER[(idx + 1) % TRANSITION_ORDER.length];
-    });
-    setAnimKey((k) => k + 1);
-  };
-
   const currentScreen = SCREENS[screenIndex];
-  const variants = PHONE_TRANSITIONS[transitionStyle];
 
   const phoneShellClass =
     'w-[230px] h-[470px] sm:w-[290px] sm:h-[590px] lg:w-[310px] lg:h-[640px]';
@@ -1505,7 +1354,7 @@ export const AdminControl = () => {
               viewport={{ once: true, amount: 0.25 }}
             />
 
-            {/* Phone stage — fixed height so controls sit cleanly underneath */}
+            {/* Phone stage — fixed height */}
             <div className="relative w-full flex justify-center items-start h-[440px] sm:h-[560px] lg:h-[620px]">
               {/* Soft orbital ring */}
               <motion.div
@@ -1519,117 +1368,32 @@ export const AdminControl = () => {
                 transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
               />
 
-              {/* Single phone — creative transition per screen */}
+              {/* Single phone */}
               <div
                 className={`relative z-20 ${phoneShellClass}`}
                 style={{ perspective: 1400 }}
               >
                 <AnimatePresence mode="wait" initial={false}>
                   <motion.div
-                    key={`${animKey}-${currentScreen.id}-${device}`}
+                    key={currentScreen.id}
                     className="absolute inset-0"
-                    style={{ transformStyle: 'preserve-3d' }}
-                    initial={variants.initial}
-                    animate={variants.animate}
-                    exit={variants.exit}
+                    initial={{ opacity: 0, x: t('common.locale') === 'ar' ? 30 : -30 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: t('common.locale') === 'ar' ? -30 : 30 }}
                     transition={{
-                      type: 'spring',
-                      stiffness: 180,
-                      damping: 22,
-                      mass: 0.9,
+                      duration: 0.5,
+                      ease: 'easeInOut',
                     }}
                   >
-                    {/* Glow pulse on each change */}
-                    <motion.div
-                      className="absolute -inset-6 rounded-[56px] -z-10"
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: [0, 0.55, 0], scale: [0.92, 1.05, 1.1] }}
-                      transition={{ duration: 0.9, ease: 'easeOut' }}
-                      style={{
-                        background:
-                          'radial-gradient(circle, rgba(125,198,162,0.45) 0%, transparent 70%)',
-                      }}
-                    />
-                    {device === 'iphone' ? (
-                      <IPhoneFrame className="w-full h-full">
-                        {renderOwnerScreen(currentScreen.id, 'iphone')}
-                      </IPhoneFrame>
-                    ) : (
-                      <AndroidFrame className="w-full h-full">
-                        {renderOwnerScreen(currentScreen.id, 'android')}
-                      </AndroidFrame>
-                    )}
+                    <IPhoneFrame className="w-full h-full">
+                      {renderOwnerScreen(currentScreen.id)}
+                    </IPhoneFrame>
                   </motion.div>
                 </AnimatePresence>
               </div>
             </div>
 
-            {/*
-              Controls sit fully UNDER the phone (not overlaid on the bezel):
-              1) progress dots + platform/screen label
-              2) screen pills (Overview / Locations / Brands / Alerts)
-            */}
-            <div className="relative z-30 mt-3 sm:mt-4 flex w-full max-w-[340px] flex-col items-center gap-3 px-2">
-              {/* Dots + clear platform label */}
-              <div className="flex flex-col items-center gap-2">
-                <div className="flex items-center gap-1.5" role="tablist" aria-label="Owner app screens">
-                  {SCREENS.map((screen, i) => (
-                    <button
-                      key={`dot-${screen.id}`}
-                      type="button"
-                      role="tab"
-                      aria-selected={i === screenIndex}
-                      aria-label={t(screen.labelKey, screen.labelFallback)}
-                      onClick={() => goToScreen(i)}
-                      className={`h-1.5 rounded-full transition-all duration-300 ${
-                        i === screenIndex
-                          ? 'w-5 bg-mintcom-green'
-                          : 'w-1.5 bg-gray-300 hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500'
-                      }`}
-                    />
-                  ))}
-                </div>
-                <p className="text-center text-[12px] sm:text-[13px] font-bold tracking-wide text-gray-700 dark:text-gray-200">
-                  <span className="text-mintcom-green">
-                    {device === 'iphone' ? 'iOS' : 'Android'}
-                  </span>
-                  <span className="mx-1.5 text-gray-400 dark:text-gray-500" aria-hidden>
-                    ·
-                  </span>
-                  <span>{t(currentScreen.labelKey, currentScreen.labelFallback)}</span>
-                </p>
-              </div>
 
-              {/* Screen pills — below the dots / label */}
-              <div className="flex w-full items-center justify-center gap-1 rounded-full border border-gray-200 bg-white px-1.5 py-1.5 shadow-md shadow-black/8 dark:border-white/15 dark:bg-[#1a1a1a] dark:shadow-black/40">
-                {SCREENS.map((screen, i) => {
-                  const active = i === screenIndex;
-                  return (
-                    <button
-                      key={screen.id}
-                      type="button"
-                      onClick={() => goToScreen(i)}
-                      className={`relative min-w-0 flex-1 px-2 sm:px-3 py-1.5 rounded-full text-[10px] sm:text-[11px] font-bold transition-colors duration-300 ${
-                        active
-                          ? 'text-white'
-                          : 'text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white'
-                      }`}
-                    >
-                      {active && (
-                        <motion.span
-                          layoutId="owner-screen-pill"
-                          className="absolute inset-0 rounded-full bg-mintcom-green"
-                          transition={{ type: 'spring', stiffness: 380, damping: 28 }}
-                        />
-                      )}
-                      <span className="relative z-10 truncate">
-                        {t(screen.labelKey, screen.labelFallback)}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
           </div>
 
           {/* Right Side: Content */}

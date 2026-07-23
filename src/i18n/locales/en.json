@@ -2195,7 +2195,7 @@
       "cardLabel": "Pillar",
       "cards": {
         "complete": {
-          "cardTitle": "No Hidden Costs",
+          "cardTitle": "Full with No Hidden Cost",
           "description": "Mintcom is more than just a POS system. It brings together the features that other providers often lock behind complex plans and bundled packages into one simple tier that covers all your business needs. From staff management and inventory management to loyalty programs, advanced reporting, and much more, Mintcom gives you everything you need in a single, straightforward solution.",
           "title": "A Complete Solution with No Hidden Costs"
         },
@@ -5384,8 +5384,8 @@
     "errors": {
       "emailRequired": "Required",
       "nameRequired": "Required",
-      "passwordMin": "Password must be at least 8 characters",
-      "passwordPolicy": "Password must contain uppercase, lowercase, and a number",
+      "passwordMin": "Password must be at least 6 characters",
+      "passwordPolicy": "Password must be at least 6 characters",
       "passwordRequired": "Required",
       "passwordsNotMatch": "Passwords do not match",
       "roleNotAllowed": "You cannot assign this role.",
@@ -5429,8 +5429,8 @@
       "newPasswordOptional": "New Password (Optional)",
       "noRoles": "No Roles",
       "passwordLabel": "Password",
-      "passwordPlaceholder": "Min 8 characters",
-      "passwordRequirements": "At least 8 characters with uppercase, lowercase, and a number.",
+      "passwordPlaceholder": "Min 6 characters",
+      "passwordRequirements": "At least 6 characters (any characters).",
       "permissionsCount": "{{count}} Permission",
       "permissionsCount_few": "{{count}} Permissions",
       "permissionsCount_many": "{{count}} Permissions",

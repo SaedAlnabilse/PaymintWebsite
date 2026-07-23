@@ -2,12 +2,14 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { Helmet } from 'react-helmet-async';
-import { Heart, Gift, Percent, Users, Sparkles, ArrowRight, type LucideIcon } from 'lucide-react';
+import { Heart, Gift, Percent, Users, ArrowRight, type LucideIcon } from 'lucide-react';
+import MintcomLeafIcon from '../assets/small-logo.svg';
+const MintcomLeaf = () => <img src={MintcomLeafIcon} alt="" className="h-full w-full scale-x-[-1] object-contain" />;
 import { Navbar } from '../components/Navbar';
 import { Footer } from '../components/Footer';
 
 const CARDS: { icon: LucideIcon; titleKey: string; descKey: string }[] = [
-  { icon: Sparkles, titleKey: 'pages.loyalty.cards.earn.title', descKey: 'pages.loyalty.cards.earn.description' },
+  { icon: MintcomLeaf as unknown as LucideIcon, titleKey: 'pages.loyalty.cards.earn.title', descKey: 'pages.loyalty.cards.earn.description' },
   { icon: Percent, titleKey: 'pages.loyalty.cards.discounts.title', descKey: 'pages.loyalty.cards.discounts.description' },
   { icon: Gift, titleKey: 'pages.loyalty.cards.gifts.title', descKey: 'pages.loyalty.cards.gifts.description' },
   { icon: Users, titleKey: 'pages.loyalty.cards.customers.title', descKey: 'pages.loyalty.cards.customers.description' },

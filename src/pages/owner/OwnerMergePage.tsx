@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, GitMerge, Store, Check, X, Loader2, Sparkles, Building2, Zap, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, GitMerge, Store, Check, X, Loader2, Building2, Zap, ShieldCheck } from 'lucide-react';
+import MintcomLeafIcon from '../../assets/small-logo.svg';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../config/api';
 import toast from 'react-hot-toast';
@@ -273,7 +274,7 @@ export function OwnerMergePage() {
                                     disabled={isSubmitting || !brandName.trim()}
                                     className="flex-[2] py-5 bg-black dark:bg-white text-white dark:text-black rounded-2xl font-black text-xs tracking-[0.2em] shadow-2xl active:scale-95 transition-all flex items-center justify-center gap-3"
                                 >
-                                    {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />}
+                                    {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : <img src={MintcomLeafIcon} alt="" style={{ width: 18, height: 18 }} className="scale-x-[-1] object-contain" />}
                                     {t('owner.merge.createBrand')}
                                 </button>
                             </div>

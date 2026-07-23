@@ -2188,7 +2188,7 @@
       "cardLabel": "支柱",
       "cards": {
         "complete": {
-          "cardTitle": "无隐藏费用",
+          "cardTitle": "全功能无隐藏费用",
           "description": "Mintcom 不只是一个收银系统。您还将获得带高级筛选的强大报表引擎、员工与角色管理、顾客档案与会员计划、折扣、原料与库存追踪等诸多功能，全部包含在一个固定月费套餐中。",
           "title": "完整方案，无隐藏费用"
         },
@@ -5223,8 +5223,8 @@
     "errors": {
       "emailRequired": "必填",
       "nameRequired": "必填",
-      "passwordMin": "密码至少需要 8 个字符",
-      "passwordPolicy": "密码必须包含大写字母、小写字母和数字",
+      "passwordMin": "密码至少需要 6 个字符",
+      "passwordPolicy": "密码至少需要 6 个字符",
       "passwordRequired": "必填",
       "passwordsNotMatch": "两次输入的密码不一致",
       "roleNotAllowed": "您无法分配此角色。",
@@ -5268,8 +5268,8 @@
       "newPasswordOptional": "新密码（选填）",
       "noRoles": "暂无角色",
       "passwordLabel": "密码",
-      "passwordPlaceholder": "至少 8 个字符",
-      "passwordRequirements": "至少 8 个字符，包含大写字母、小写字母和数字。",
+      "passwordPlaceholder": "至少 6 个字符",
+      "passwordRequirements": "至少 6 个字符（任意字符）。",
       "permissionsCount": "{{count}} 项权限",
       "permissionsCount_few": "{{count}} 项权限",
       "permissionsCount_many": "{{count}} 项权限",

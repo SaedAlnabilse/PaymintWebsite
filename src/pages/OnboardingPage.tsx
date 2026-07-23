@@ -37,7 +37,6 @@ import {
   Settings,
   PlayCircle,
   ExternalLink,
-  Sparkles,
   HelpCircle,
   Shield,
   Scale,
@@ -46,6 +45,7 @@ import {
   RefreshCw,
   CalendarClock
 } from 'lucide-react';
+import MintcomLeafIcon from '../assets/small-logo.svg';
 import api from '../config/api';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
@@ -1764,7 +1764,7 @@ export function OnboardingPage() {
 
                       {billingCycle === BILLING_CYCLES.YEARLY && (
                         <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1">
-                          <Sparkles size={12} className="text-mintcom-green" />
+                          <img src={MintcomLeafIcon} alt="" style={{ width: 12, height: 12 }} className="scale-x-[-1] object-contain text-mintcom-green" />
                           <span className="text-xs font-bold uppercase tracking-wider text-mintcom-green">
                             {t('landing.pricing.save')} {formatWholeUsd(yearlySavings)}{' '}
                             {t('landing.pricing.perYear')}
@@ -2082,7 +2082,7 @@ export function OnboardingPage() {
               key="step5"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="w-full max-w-7xl px-4"
+              className="w-full max-w-5xl px-4"
             >
               {/* Top Hero Bar */}
               <div className="relative mb-6">
@@ -2098,7 +2098,7 @@ export function OnboardingPage() {
                           transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
                           className="w-16 h-16 lg:w-20 lg:h-20 bg-gradient-to-br from-mintcom-green to-emerald-400 rounded-3xl flex items-center justify-center shadow-2xl shadow-mintcom-green/40"
                         >
-                          <Sparkles size={32} className="text-black" />
+                          <img src={MintcomLeafIcon} alt="" style={{ width: 32, height: 32 }} className="scale-x-[-1] object-contain" />
                         </motion.div>
                         <div>
                           <motion.h2
@@ -2194,7 +2194,7 @@ export function OnboardingPage() {
                           transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
                           className="w-16 h-16 lg:w-20 lg:h-20 bg-gradient-to-br from-mintcom-green to-emerald-400 rounded-3xl flex items-center justify-center shadow-2xl shadow-mintcom-green/40"
                         >
-                          <Sparkles size={32} className="text-black" />
+                          <img src={MintcomLeafIcon} alt="" style={{ width: 32, height: 32 }} className="scale-x-[-1] object-contain" />
                         </motion.div>
                         <div>
                           <motion.h2
@@ -2415,7 +2415,7 @@ export function OnboardingPage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.6 }}
-                    className="bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-white/10 rounded-2xl p-5 h-full"
+                    className="bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-white/10 rounded-2xl p-5 pr-3 h-full"
                   >
                     <div className="flex items-center gap-3 mb-5">
                       <div className="w-10 h-10 bg-mintcom-green/10 rounded-lg flex items-center justify-center">
@@ -2424,7 +2424,7 @@ export function OnboardingPage() {
                       <h3 className="font-barlow text-lg font-bold text-gray-900 dark:text-white">{t('onboarding.step5.resourcesAndHelp')}</h3>
                     </div>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pr-2">
                       {/* User Manual */}
                       <a
                         href={userManualDoc.path}

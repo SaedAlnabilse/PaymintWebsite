@@ -657,10 +657,11 @@ export function DemoSettingsScreen({
   const [tableCount, setTableCount] = useState(10);
   const [holdTableMaxError, setHoldTableMaxError] = useState(false);
   const [employees, setEmployees] = useState<Employee[]>([
+    // `pin` field is demo-only storage for staff password (min 6 anything)
     { id: 'owner', name: 'Cafe Delight', username: 'owner', role: 'Owner', pin: '', emoji: '', owner: true },
-    { id: '1', name: 'Sara Hassan', username: 'sara', role: 'Cashier', pin: '1234', emoji: '' },
-    { id: '2', name: 'Omar Ali', username: 'omar', role: 'USER', pin: '0000', emoji: '' },
-    { id: '3', name: 'Maya Nour', username: 'maya', role: 'ADMIN', pin: '9999', emoji: '' },
+    { id: '1', name: 'Sara Hassan', username: 'sara', role: 'Cashier', pin: '123456', emoji: '' },
+    { id: '2', name: 'Omar Ali', username: 'omar', role: 'USER', pin: '000000', emoji: '' },
+    { id: '3', name: 'Maya Nour', username: 'maya', role: 'ADMIN', pin: '999999', emoji: '' },
   ]);
   const [receiptSettingsOpen, setReceiptSettingsOpen] = useState(false);
   const [receiptHeader, setReceiptHeader] = useState(businessName);
@@ -959,7 +960,7 @@ export function DemoSettingsScreen({
 
   const activeMeta = NAV.find((n) => n.id === active) ?? NAV[0];
 
-  // Open modal helpers — mirrors EditEmployeeModal (add resets + auto PIN)
+  // Open modal helpers — mirrors EditEmployeeModal (add resets + auto password)
   const openEmployee = (emp?: Employee) => {
     setEmpFieldErrors({});
     setDraftRolesOpen(false);
@@ -977,8 +978,8 @@ export function DemoSettingsScreen({
       setDraftBaseRole('USER');
       setDraftCustomRoleId('');
       setDraftRole('USER');
-      const randomPin = String(Math.floor(1000 + Math.random() * 9000));
-      setDraftPin(randomPin);
+      // Demo only: optional prefilled 6-digit password label (still called password)
+      setDraftPin(String(Math.floor(100000 + Math.random() * 900000)));
       setDraftPass('');
       setDraftPosAccess(true);
       setDraftBackofficeAccess(false);
@@ -1070,15 +1071,13 @@ export function DemoSettingsScreen({
 
     if (isAdd) {
       if (!draftPass.trim()) errors.password = 'Password is required';
-      else if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}/.test(draftPass))
-        errors.password =
-          'Password must be at least 8 characters and contain at least one uppercase letter, one lowercase letter, and one number';
+      else if (draftPass.length < 6)
+        errors.password = 'Password must be at least 6 characters (any characters)';
       if (draftPass !== draftConfirmPass)
         errors.confirmPassword = 'Passwords do not match';
     } else if (draftPass || draftConfirmPass) {
-      if (draftPass && !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}/.test(draftPass))
-        errors.password =
-          'Password must be at least 8 characters and contain at least one uppercase letter, one lowercase letter, and one number';
+      if (draftPass && draftPass.length < 6)
+        errors.password = 'Password must be at least 6 characters (any characters)';
       if (draftPass !== draftConfirmPass)
         errors.confirmPassword = 'Passwords do not match';
     }
@@ -1309,7 +1308,7 @@ export function DemoSettingsScreen({
                   name: displayName,
                   username: uname,
                   role: e.owner ? 'Owner' : roleLabel,
-                  pin: draftPin.slice(0, 4) || e.pin,
+                  pin: String(draftPin).slice(0, 32) || e.pin,
                 }
               : e,
           ),
@@ -1337,7 +1336,7 @@ export function DemoSettingsScreen({
             name: displayName,
             username: uname,
             role: roleLabel,
-            pin: draftPin.slice(0, 4) || '1111',
+            pin: String(draftPin).slice(0, 32) || '111111',
             emoji: '',
           },
           ...list,
@@ -1346,7 +1345,7 @@ export function DemoSettingsScreen({
         ping('Employee added');
         setInfoBanner({
           title: 'Employee added',
-          message: `${displayName} can clock in with username “${uname}” and auto-generated PIN ${draftPin}.`,
+          message: `${displayName} can clock in with username “${uname}” and auto-generated password ${draftPin}.`,
           type: 'success',
         });
       }
@@ -4181,7 +4180,7 @@ export function DemoSettingsScreen({
 
                   {isAdd && draftPin && (
                     <p className="mt-2 text-center text-[10px] text-text-tertiary">
-                      PIN {draftPin} auto-generated for clock-in (same as real POS).
+                      Password {draftPin} auto-generated for login (same as real POS).
                     </p>
                   )}
                 </div>

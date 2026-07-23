@@ -5,7 +5,8 @@ import { FAQModal } from './Chat/FAQModal';
 import { SmartChatbot } from './Chat/SmartChatbot';
 import { TasksModal } from './Chat/TasksModal';
 import { motion, AnimatePresence } from 'framer-motion';
-import { PartyPopper, X, CheckCircle2, Smartphone, Sparkles } from 'lucide-react';
+import { PartyPopper, X, CheckCircle2, Smartphone } from 'lucide-react';
+import MintcomLeafIcon from '../assets/small-logo.svg';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import {
@@ -238,7 +239,7 @@ export const ChatWidgetEnhancer = () => {
                                         transition={{ delay: 0.35 }}
                                         className="absolute -top-1 -start-2 text-[#7dc6a2]"
                                     >
-                                        <Sparkles size={16} />
+                                        <img src={MintcomLeafIcon} alt="" style={{ width: 16, height: 16 }} className="scale-x-[-1] object-contain" />
                                     </motion.div>
                                 </div>
 

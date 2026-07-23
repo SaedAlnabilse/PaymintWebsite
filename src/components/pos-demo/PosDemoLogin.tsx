@@ -1,10 +1,10 @@
 /**
  * Demo login — mirrors mintcom-pos LoginScreen:
  * - Split layout: form (left) + green brand panel (right, desktop)
- * - Location card with back + pin + establishment name
- * - Welcome back, username, password/PIN, forgot password, Log in
+ * - Location card with back + establishment name
+ * - Welcome back, username, password, forgot password, Log in
  * - Footer help / legal
- * Sandbox: demo staff login via username + PIN (or quick-fill chips).
+ * Sandbox: demo staff login via username + password (demo field may still be named `pin` on staff data).
  */
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -42,7 +42,8 @@ export function PosDemoLogin({
   onSuccess,
 }: Props) {
   const username = 'Sara';
-  const password = '1234';
+  /** Demo password (6+ chars). Digits-only is a valid password. */
+  const password = '123456';
   const [usernameError, setUsernameError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -69,7 +70,7 @@ export function PosDemoLogin({
     const p = pass.trim();
     if (!p) return null;
 
-    // Match by name or id + pin
+    // Match by name/id + password (demo staff.password or legacy staff.pin)
     if (u) {
       const byUser = staffList.find(
         (s) =>
@@ -77,14 +78,16 @@ export function PosDemoLogin({
           s.id.toLowerCase() === u ||
           s.role.toLowerCase() === u,
       );
-      if (byUser && byUser.pin === p) return byUser;
-      // Wrong pin for known user
+      const staffPassword = (byUser as any)?.password ?? byUser?.pin;
+      if (byUser && staffPassword === p) return byUser;
       if (byUser) return null;
     }
 
-    // PIN-only: unique pin match (sandbox convenience, like clock-in PIN)
-    const byPin = staffList.filter((s) => s.pin === p);
-    if (byPin.length === 1) return byPin[0];
+    // Password-only unique match (sandbox convenience)
+    const byPassword = staffList.filter(
+      (s) => ((s as any).password ?? s.pin) === p,
+    );
+    if (byPassword.length === 1) return byPassword[0];
     return null;
   };
 
@@ -94,12 +97,12 @@ export function PosDemoLogin({
 
     if (!username.trim() && !password.trim()) {
       setUsernameError('Username is required');
-      setPasswordError('Password or PIN is required');
+      setPasswordError('Password is required');
       triggerShake();
       return;
     }
     if (!password.trim()) {
-      setPasswordError('Password or PIN is required');
+      setPasswordError('Password is required');
       triggerShake();
       return;
     }
@@ -111,11 +114,7 @@ export function PosDemoLogin({
     const match = resolveStaff(username, password);
     if (!match) {
       setSubmitting(false);
-      if (username.trim()) {
-        setPasswordError('Invalid credentials — try a demo account below');
-      } else {
-        setPasswordError('Wrong PIN — try 1234, 0000, or 9999');
-      }
+      setPasswordError('Invalid credentials — try a demo account below');
       triggerShake();
       return;
     }
@@ -199,10 +198,10 @@ export function PosDemoLogin({
               )}
             </div>
 
-            {/* Password / PIN */}
+            {/* Password */}
             <div className="mb-1">
               <label className="block text-[11px] font-black uppercase tracking-wider text-text-secondary dark:text-mintcom-textSecondary mb-2">
-                Password or PIN
+                Password
               </label>
               <div className="flex h-14 items-center rounded-xl border border-[#d1d5db] bg-white px-4 dark:border-white/15 dark:bg-mintcom-surface">
                 <Lock size={20} className="me-3 shrink-0 text-[#999]" />
@@ -210,7 +209,7 @@ export function PosDemoLogin({
                   ref={passwordRef}
                   type="password"
                   readOnly
-                  placeholder="Password or PIN"
+                  placeholder="Password"
                   value={password}
                   onKeyDown={onKeyDown}
                   className="h-full min-w-0 flex-1 bg-transparent text-[15px] text-[#555] dark:text-[#ccc] outline-none cursor-not-allowed select-none"
