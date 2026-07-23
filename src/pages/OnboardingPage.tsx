@@ -196,7 +196,7 @@ function EmbeddedCardField({
 }) {
   return (
     <label className="block w-full min-w-0">
-      <span className="mb-1.5 flex min-h-[1.125rem] items-center gap-1 text-xs font-sans font-bold text-gray-500 dark:text-gray-400">
+      <span className="mb-1.5 flex min-h-[1.125rem] items-center gap-1 text-sm font-sans leading-relaxed text-gray-600 dark:text-gray-300">
         {label}
       </span>
       <span
@@ -1936,7 +1936,7 @@ export function OnboardingPage() {
                     {/* Billing cycle toggle */}
                     <div>
                       {isTrialFlow && (
-                        <p className="mb-2 text-[11px] font-sans font-bold uppercase tracking-[0.12em] text-gray-400">
+                        <p className="mb-2 text-sm font-sans leading-relaxed text-gray-600 dark:text-gray-300">
                           {t('onboarding.step2.trialChooseCycleHint', {
                             defaultValue: "Pick what you'll be billed after your free trial",
                           })}
@@ -1979,7 +1979,7 @@ export function OnboardingPage() {
 
                     {/* Total due */}
                     <div className="rounded-2xl border border-dashed border-mintcom-green/30 bg-mintcom-green/5 p-5 dark:border-mintcom-green/20 dark:bg-mintcom-green/5">
-                      <span className="mb-3 block text-[11px] font-sans font-bold uppercase tracking-[0.12em] text-gray-400">
+                      <span className="mb-3 block text-sm font-sans leading-relaxed text-gray-600 dark:text-gray-300">
                         {t('onboarding.step2.totalDue')}
                       </span>
 
