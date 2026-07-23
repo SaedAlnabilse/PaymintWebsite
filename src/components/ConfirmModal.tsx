@@ -48,14 +48,15 @@ export function ConfirmModal({
           iconRing: 'ring-accent/20'
         };
       case 'warning':
+        // Soft rose — caution without yellow/amber, and distinct from danger red.
         return {
           icon: AlertCircle,
-          color: 'text-amber-500',
-          bgColor: 'bg-amber-500/10',
-          borderColor: 'border-amber-500/30',
-          buttonBg: 'bg-amber-500 text-white',
+          color: 'text-rose-500',
+          bgColor: 'bg-rose-500/10',
+          borderColor: 'border-rose-500/30',
+          buttonBg: 'bg-rose-500 text-white',
           glow: '',
-          iconRing: 'ring-amber-500/20'
+          iconRing: 'ring-rose-500/20'
         };
       case 'info':
         return {

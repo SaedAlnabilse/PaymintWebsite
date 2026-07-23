@@ -6,6 +6,7 @@ import { X, Trash2, RotateCcw } from 'lucide-react';
 import { QuickInfo } from '../QuickInfo';
 import { useScrollLock } from '../../hooks/useScrollLock';
 import { formatInputPlaceholder } from '../../utils/textCase';
+import { TEXT_INPUT_LIMITS } from '../../config/textLimits';
 
 interface Discount {
   id: string;
@@ -61,10 +62,12 @@ export function DiscountFormModal({
   const scrollRef = useRef<HTMLDivElement>(null);
   const errorBannerRef = useRef<HTMLDivElement>(null);
 
+  // ATM-style percentage entry, hard-capped at 100.00
   const formatATM = (val: string) => {
     const digits = val.replace(/\D/g, '');
-    if (digits.length > 19) return null;
+    if (digits.length > 5) return null;
     const cents = parseInt(digits || '0', 10);
+    if (cents > 10000) return null;
     if (cents === 0) return '';
     return (cents / 100).toFixed(2);
   };
@@ -77,15 +80,23 @@ export function DiscountFormModal({
     }
 
     const newErrors: Record<string, string> = {};
-    if (!name.trim()) newErrors.name = t('discounts.errors.nameRequired');
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      newErrors.name = t('discounts.errors.nameRequired');
+    } else if (trimmedName.length > TEXT_INPUT_LIMITS.DISCOUNT_NAME) {
+      newErrors.name = t('discounts.errors.nameMax', {
+        defaultValue: `Name must be at most ${TEXT_INPUT_LIMITS.DISCOUNT_NAME} characters`,
+        count: TEXT_INPUT_LIMITS.DISCOUNT_NAME,
+      });
+    }
 
     const numVal = parseFloat(percentage);
     if (!percentage || isNaN(numVal)) {
       newErrors.percentage = t('discounts.errors.percentageRequired');
     } else if (numVal > 100) {
       newErrors.percentage = t('discounts.errors.percentageMax');
-    } else if (numVal < 0) {
-      newErrors.percentage = t('discounts.errors.percentageNegative');
+    } else if (numVal <= 0) {
+      newErrors.percentage = t('discounts.errors.percentageRequired');
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -154,10 +165,14 @@ export function DiscountFormModal({
                   {t('discounts.form.nameLabel')} <span className="text-mintcom-red">*</span>
                   <QuickInfo text={t('discounts.form.nameTip')} />
                 </label>
-                <input maxLength={255}
+                <input
+                  maxLength={TEXT_INPUT_LIMITS.DISCOUNT_NAME}
                   type="text"
                   value={name}
-                  onChange={(e) => { setName(e.target.value); if (errors.name) setErrors({ ...errors, name: '' }); }}
+                  onChange={(e) => {
+                    setName(e.target.value.slice(0, TEXT_INPUT_LIMITS.DISCOUNT_NAME));
+                    if (errors.name) setErrors({ ...errors, name: '' });
+                  }}
                   placeholder={formatInputPlaceholder(t('discounts.form.namePlaceholder'), t('common.locale'))}
                   className={`w-full bg-gray-50 dark:bg-black/20 border ${errors.name ? 'border-mintcom-red ring-2 ring-mintcom-red/20' : 'border-gray-200 dark:border-white/10'} rounded-2xl px-5 py-4 text-sm font-bold text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-mintcom-green/20 focus:border-mintcom-green transition-all shadow-sm`}
                 />
@@ -171,7 +186,8 @@ export function DiscountFormModal({
                   <QuickInfo text={t('discounts.form.percentageTip')} />
                 </label>
                 <div className="relative group">
-                  <input maxLength={255}
+                  <input
+                    maxLength={6}
                     type="text"
                     inputMode="decimal"
                     value={percentage}

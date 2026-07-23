@@ -33,6 +33,10 @@ import {
   MAX_HOLD_ORDER_TABLE_DIGITS,
   MAX_SERVICE_CHARGE_NAME_LENGTH,
   MAX_SERVICE_CHARGE_VALUE,
+  MAX_SERVICE_CHARGE_PERCENT,
+  formatServiceChargePercentATM,
+  formatServiceChargeFixedATM,
+  normalizeServiceChargeValue,
   buildAppSettingsUpdatePayload,
   clampTaxRatePercent,
   getChangedAppSettingsKeys,
@@ -101,7 +105,24 @@ interface AppSettings {
 
 
 
-type SettingsTab = 'profile' | 'sales' | 'receipt' | 'tax' | 'loyalty' | 'danger';
+type SettingsTab = 'profile' | 'sales' | 'receipt' | 'einvoicing' | 'loyalty' | 'danger';
+
+/** Older links used ?tab=tax — map them to the E-Invoicing tab. */
+const normalizeSettingsTab = (tab: string | null | undefined): SettingsTab | null => {
+  if (!tab) return null;
+  if (tab === 'tax') return 'einvoicing';
+  if (
+    tab === 'profile' ||
+    tab === 'sales' ||
+    tab === 'receipt' ||
+    tab === 'einvoicing' ||
+    tab === 'loyalty' ||
+    tab === 'danger'
+  ) {
+    return tab;
+  }
+  return null;
+};
 
 interface DeletionStatus {
   id: string;
@@ -140,7 +161,7 @@ export function SettingsPage() {
     'manage_receipt_settings',
     'delete_establishment',
   ]);
-  const { refreshCurrency } = useCurrency();
+  const { refreshCurrency, currencySymbol } = useCurrency();
   const { onRefresh } = useRealtime({
     establishmentId: currentEstablishment?.id || null,
     enabled: !!currentEstablishment?.id,
@@ -151,7 +172,7 @@ export function SettingsPage() {
       { id: 'profile', label: t('settings.tabs.profile'), icon: Store, permission: 'manage_establishment_profile' },
       { id: 'sales', label: t('settings.tabs.sales'), icon: CreditCard, permission: 'manage_tax_currency' },
       { id: 'receipt', label: t('settings.tabs.receipts'), icon: Receipt, permission: 'manage_receipt_settings' },
-      { id: 'tax', label: t('settings.tabs.tax', 'E-Invoicing'), icon: ShieldCheck, permission: 'manage_settings' },
+      { id: 'einvoicing', label: t('settings.tabs.tax', 'E-Invoicing'), icon: ShieldCheck, permission: 'manage_settings' },
       { id: 'danger', label: t('settings.tabs.danger'), icon: Trash2, isDanger: true, permission: 'delete_establishment' },
     ];
 
@@ -182,9 +203,9 @@ export function SettingsPage() {
 
   // Support deep-linking directly to a settings tab from widget tasks.
   useEffect(() => {
-    const state = location.state as { openSettingsTab?: SettingsTab } | null;
-    const queryTab = new URLSearchParams(location.search).get('tab') as SettingsTab | null;
-    const requestedTab = state?.openSettingsTab || queryTab;
+    const state = location.state as { openSettingsTab?: SettingsTab | 'tax' } | null;
+    const queryTab = normalizeSettingsTab(new URLSearchParams(location.search).get('tab'));
+    const requestedTab = normalizeSettingsTab(state?.openSettingsTab) || queryTab;
     if (!requestedTab) return;
 
     if (tabs.some((tab: any) => tab.id === requestedTab)) {
@@ -229,6 +250,8 @@ export function SettingsPage() {
   const serviceChargeSectionRef = useRef<HTMLDivElement | null>(null);
   const serviceChargePanelRef = useRef<HTMLDivElement | null>(null);
   const serviceChargeEnabled = !!watch('serviceChargeEnabled');
+  const serviceChargeType = (watch('serviceChargeType') || 'PERCENTAGE') as 'PERCENTAGE' | 'FIXED';
+  const serviceChargeValue = Number(watch('serviceChargeValue') || 0);
 
   const restaurantNameField = register('restaurantName', {
     maxLength: { value: MAX_ESTABLISHMENT_NAME_LENGTH, message: t('common.maxLength', { count: MAX_ESTABLISHMENT_NAME_LENGTH }) },
@@ -747,7 +770,7 @@ export function SettingsPage() {
                     </p>
         </div>
 
-        {activeTab !== 'tax' && (
+        {activeTab !== 'einvoicing' && (
           <button
             type="button"
             onClick={handleSubmit(onSubmit, showFormValidationError)}
@@ -1047,9 +1070,17 @@ export function SettingsPage() {
                         {errors.holdOrderTableCount.message as string || t('settings.sales.holdOrderTableCountErrorRange')}
                       </p>
                     ) : (
-                      <p className="text-[11px] font-medium text-gray-400 leading-snug">
-                        {t('settings.sales.holdOrderTableCountDesc')}
-                      </p>
+                      <div className="space-y-1">
+                        <p className="text-[11px] font-medium text-gray-400 leading-snug">
+                          {t('settings.sales.holdOrderTableCountDesc')}
+                        </p>
+                        <p className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 leading-snug">
+                          {t('settings.sales.holdOrderTableCountMaxHint', {
+                            defaultValue: `Maximum is ${MAX_HOLD_ORDER_TABLE_COUNT} tables.`,
+                            max: MAX_HOLD_ORDER_TABLE_COUNT,
+                          })}
+                        </p>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -1071,7 +1102,7 @@ export function SettingsPage() {
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer shrink-0">
                     <input type="checkbox" {...register('serviceChargeEnabled')} className="sr-only peer" />
-                    <div className="w-10 h-6 bg-gray-200 dark:bg-white/10 rounded-full peer peer-checked:bg-mintcom-green after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-4 shadow-sm"></div>
+                    <div className="h-7 w-12 rounded-full border-2 border-gray-300 bg-gray-100 shadow-inner transition-all duration-200 peer-focus-visible:ring-2 peer-focus-visible:ring-mintcom-green/40 peer-focus-visible:ring-offset-2 dark:border-white/25 dark:bg-white/10 peer-checked:border-mintcom-green peer-checked:bg-mintcom-green peer-checked:shadow-[0_0_0_3px_rgba(125,198,162,0.25)] after:absolute after:left-[3px] after:top-[3px] after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow-md after:transition-all after:content-[''] peer-checked:after:translate-x-5" />
                   </label>
                 </div>
 
@@ -1122,7 +1153,14 @@ export function SettingsPage() {
                         value={watch('serviceChargeType') || 'PERCENTAGE'}
                         onChange={(val) => {
                           if (!serviceChargeEnabled) return;
-                          setValue('serviceChargeType', String(val) as 'PERCENTAGE' | 'FIXED', { shouldDirty: true });
+                          const nextType = String(val) as 'PERCENTAGE' | 'FIXED';
+                          setValue('serviceChargeType', nextType, { shouldDirty: true });
+                          // Re-clamp current value to the new type's max (e.g. 100% when switching to percentage).
+                          setValue(
+                            'serviceChargeValue',
+                            normalizeServiceChargeValue(serviceChargeValue, nextType),
+                            { shouldDirty: true, shouldValidate: true },
+                          );
                         }}
                         disabled={!serviceChargeEnabled}
                         options={[
@@ -1137,43 +1175,95 @@ export function SettingsPage() {
                       <label className="text-xs font-bold text-gray-500 dark:text-gray-400 block">
                         {t('settings.sales.serviceChargeValue', { defaultValue: 'Charge value' })}
                       </label>
-                      <input
-                        type="number"
-                        disabled={!serviceChargeEnabled}
-                        min="0"
-                        max={MAX_SERVICE_CHARGE_VALUE}
-                        step="0.01"
-                        onKeyDown={(e) => {
-                          if (e.key === '-' || e.key === 'e' || e.key === 'E') {
-                            e.preventDefault();
+                      <div className="relative group">
+                        <input type="hidden" {...register('serviceChargeValue', {
+                          setValueAs: (value) =>
+                            normalizeServiceChargeValue(value, serviceChargeType),
+                          validate: (value) => {
+                            if (!serviceChargeEnabled) return true;
+                            const max =
+                              serviceChargeType === 'PERCENTAGE'
+                                ? MAX_SERVICE_CHARGE_PERCENT
+                                : MAX_SERVICE_CHARGE_VALUE;
+                            const n = Number(value);
+                            if (!Number.isFinite(n) || n < 0 || n > max) {
+                              return t('settings.sales.serviceChargeValueErrorRange', {
+                                max,
+                                defaultValue:
+                                  serviceChargeType === 'PERCENTAGE'
+                                    ? `Charge value must be between 0 and ${max}%.`
+                                    : `Charge value must be between 0 and ${max}.`,
+                              });
+                            }
+                            return true;
+                          },
+                        })} />
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          disabled={!serviceChargeEnabled}
+                          value={
+                            !serviceChargeValue
+                              ? ''
+                              : serviceChargeValue.toFixed(2)
                           }
-                        }}
-                        {...register('serviceChargeValue', {
-                          valueAsNumber: true,
-                          min: {
-                            value: 0,
-                            message: t('settings.sales.serviceChargeValueErrorRange', {
-                              max: MAX_SERVICE_CHARGE_VALUE,
-                              defaultValue: `Charge value must be between 0 and ${MAX_SERVICE_CHARGE_VALUE}.`,
-                            }),
-                          },
-                          max: {
-                            value: MAX_SERVICE_CHARGE_VALUE,
-                            message: t('settings.sales.serviceChargeValueErrorRange', {
-                              max: MAX_SERVICE_CHARGE_VALUE,
-                              defaultValue: `Charge value must be between 0 and ${MAX_SERVICE_CHARGE_VALUE}.`,
-                            }),
-                          },
-                        })}
-                        placeholder={formatInputPlaceholder(t('settings.sales.serviceChargeValue', { defaultValue: '0.00' }), t('common.locale'))}
-                        className={`w-full h-11 px-3 box-border bg-white dark:bg-white/5 border ${errors.serviceChargeValue ? 'border-red-500 bg-red-500/5 focus:ring-red-500/20' : 'border-gray-200 dark:border-white/10 focus:ring-mintcom-green/20 focus:border-mintcom-green'} rounded-xl text-sm font-semibold text-gray-900 dark:text-white focus:outline-none focus:ring-2 transition-all disabled:cursor-not-allowed disabled:bg-gray-100 dark:disabled:bg-white/[0.03] disabled:text-gray-400`}
-                      />
-                      {errors.serviceChargeValue && serviceChargeEnabled && (
+                          onChange={(e) => {
+                            if (!serviceChargeEnabled) return;
+                            const next =
+                              serviceChargeType === 'PERCENTAGE'
+                                ? formatServiceChargePercentATM(e.target.value)
+                                : formatServiceChargeFixedATM(e.target.value);
+                            if (next === null) return;
+                            setValue(
+                              'serviceChargeValue',
+                              normalizeServiceChargeValue(next, serviceChargeType),
+                              { shouldDirty: true, shouldValidate: true },
+                            );
+                            if (errors.serviceChargeValue) clearErrors('serviceChargeValue');
+                          }}
+                          placeholder={formatInputPlaceholder(
+                            serviceChargeType === 'PERCENTAGE'
+                              ? t('common.zeroDecimal', { defaultValue: '0.00' })
+                              : t('common.zeroDecimal', { defaultValue: '0.00' }),
+                            t('common.locale'),
+                          )}
+                          className={`w-full h-11 px-3 box-border bg-white dark:bg-white/5 border ${
+                            errors.serviceChargeValue
+                              ? 'border-red-500 bg-red-500/5 focus:ring-red-500/20'
+                              : 'border-gray-200 dark:border-white/10 focus:ring-mintcom-green/20 focus:border-mintcom-green'
+                          } rounded-xl text-sm font-semibold text-gray-900 dark:text-white focus:outline-none focus:ring-2 transition-all disabled:cursor-not-allowed disabled:bg-gray-100 dark:disabled:bg-white/[0.03] disabled:text-gray-400 ${
+                            isRTL ? 'pl-12' : 'pr-12'
+                          }`}
+                        />
+                        <div
+                          className={`absolute ${isRTL ? 'left-2' : 'right-2'} top-1/2 -translate-y-1/2 px-2 py-1 rounded-lg text-xs font-black pointer-events-none ${
+                            serviceChargeEnabled
+                              ? 'bg-mintcom-green/10 border border-mintcom-green/20 text-mintcom-green'
+                              : 'bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-400'
+                          }`}
+                        >
+                          {serviceChargeType === 'PERCENTAGE'
+                            ? t('common.percent', { defaultValue: '%' })
+                            : currencySymbol || t('common.currency', { defaultValue: '' })}
+                        </div>
+                      </div>
+                      {errors.serviceChargeValue && serviceChargeEnabled ? (
                         <p className="text-[11px] font-medium text-red-500 leading-relaxed flex items-start gap-1.5">
                           <AlertTriangle size={12} className="mt-0.5 shrink-0" />
                           {errors.serviceChargeValue.message as string}
                         </p>
-                      )}
+                      ) : serviceChargeEnabled ? (
+                        <p className="text-[10px] font-bold text-mintcom-green tracking-widest">
+                          {serviceChargeType === 'PERCENTAGE'
+                            ? t('settings.sales.serviceChargePercentHint', {
+                                defaultValue: `Max ${MAX_SERVICE_CHARGE_PERCENT}% · ATM style entry`,
+                                max: MAX_SERVICE_CHARGE_PERCENT,
+                              })
+                            : t('attributes.form.atmStyle', {
+                                defaultValue: 'Digits shift right to left (ATM style)',
+                              })}
+                        </p>
+                      ) : null}
                     </div>
                   </div>
 
@@ -1403,7 +1493,7 @@ export function SettingsPage() {
 
 
 
-        {activeTab === 'tax' && (
+        {activeTab === 'einvoicing' && (
           <FiscalComplianceCard
             initial={fiscalInitial}
             onSaved={() => fetchSettings(false)}
