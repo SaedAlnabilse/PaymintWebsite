@@ -51,6 +51,7 @@ interface Employee {
     lastName: string;
     username: string;
     email: string | null;
+    emailVerified?: boolean;
     phone?: string | null;
     role: string;
     isActive: boolean;
@@ -132,16 +133,23 @@ export function OwnerEmployeesPage() {
 
 
 
-    const fetchEmployees = useCallback(async () => {
+    const fetchEmployees = useCallback(async (silent = false) => {
         try {
-            setIsLoading(true);
+            if (!silent) setIsLoading(true);
             const response = await api.get('/api/accounts/all-employees');
-            setEmployees(response.data);
+            const nextEmployees: Employee[] = response.data || [];
+            setEmployees(nextEmployees);
+            // Keep open edit form in sync after verification / resend refresh.
+            setEditingEmployee((current) => {
+                if (!current?.id) return current;
+                const refreshed = nextEmployees.find((emp) => emp.id === current.id);
+                return refreshed || current;
+            });
         } catch (error) {
             console.error('Failed to fetch employees:', error);
             toast.error(t('owner.staff.syncError'));
         } finally {
-            setIsLoading(false);
+            if (!silent) setIsLoading(false);
         }
     }, [t]);
 
@@ -1039,6 +1047,7 @@ export function OwnerEmployeesPage() {
                     username: editingEmployee.username,
                     role: editingEmployee.role,
                     email: editingEmployee.email ?? undefined,
+                    emailVerified: editingEmployee.emailVerified,
                     phone: editingEmployee.phone ?? undefined,
                     permissions: primaryEditingAssignment?.permissions || [],
                     customRoleId: primaryEditingAssignment?.customRoleId,

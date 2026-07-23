@@ -182,7 +182,14 @@ export function StaffPage() {
     try {
       if (!silent) setIsLoading(true);
       const response = await api.get('/api/users');
-      setStaff(response.data || []);
+      const nextStaff: Staff[] = response.data || [];
+      setStaff(nextStaff);
+      // Keep an open edit form in sync (e.g. employee just verified their email).
+      setEditingStaff((current) => {
+        if (!current?.id) return current;
+        const refreshed = nextStaff.find((member) => member.id === current.id);
+        return refreshed || current;
+      });
     } catch {
       toast.error(t('staff.messages.loadFailed'));
     } finally {

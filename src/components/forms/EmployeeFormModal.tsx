@@ -870,6 +870,11 @@ export function EmployeeFormModal({
   const [usernameAvailabilityError, setUsernameAvailabilityError] = useState('');
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
   const [resendState, setResendState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+  // Local verified flag so the form can flip to "Email verified" without a full remount
+  // (parent list refresh updates initialData.emailVerified via props).
+  const [localEmailVerified, setLocalEmailVerified] = useState(
+    Boolean(initialData?.emailVerified),
+  );
 
   // Whether the email in the field still matches the saved, verifiable address.
   // A freshly typed address only becomes verifiable after the form is saved.
@@ -894,8 +899,63 @@ export function EmployeeFormModal({
       setUsernameAvailabilityError('');
       setIsCheckingUsername(false);
       setResendState('idle');
+      setLocalEmailVerified(Boolean(initialData?.emailVerified));
     }
-  }, [isOpen]);
+  }, [isOpen, initialData?.id, initialData?.emailVerified]);
+
+  // Parent may refresh staff after the employee clicks the email link — reflect it live.
+  useEffect(() => {
+    if (initialData?.emailVerified) {
+      setLocalEmailVerified(true);
+    }
+  }, [initialData?.emailVerified]);
+
+  // While pending, quietly re-check verification so the badge flips to green
+  // as soon as the employee confirms the link (no need to close the form).
+  useEffect(() => {
+    if (!isOpen || !initialData?.id || localEmailVerified || !emailMatchesSaved) {
+      return;
+    }
+    if (!(email || '').trim()) return;
+
+    let cancelled = false;
+    const poll = async () => {
+      try {
+        // Prefer location staff endpoint; fall back to owner all-employees.
+        let verified = false;
+        try {
+          const res = await api.get(`/api/users/${initialData.id}`);
+          verified = Boolean(res.data?.emailVerified);
+        } catch {
+          const res = await api.get('/api/accounts/all-employees');
+          const match = (res.data || []).find(
+            (emp: { id?: string; emailVerified?: boolean }) => emp.id === initialData.id,
+          );
+          verified = Boolean(match?.emailVerified);
+        }
+        if (!cancelled && verified) {
+          setLocalEmailVerified(true);
+        }
+      } catch {
+        // ignore poll errors
+      }
+    };
+
+    const intervalId = window.setInterval(poll, 8000);
+    // First check shortly after open so a just-verified link shows quickly.
+    const timeoutId = window.setTimeout(poll, 1500);
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+      window.clearTimeout(timeoutId);
+    };
+  }, [
+    isOpen,
+    initialData?.id,
+    localEmailVerified,
+    emailMatchesSaved,
+    email,
+  ]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -1608,7 +1668,7 @@ export function EmployeeFormModal({
                   {/* Verification status. Only meaningful for a saved address —
                       a freshly typed/changed email is verified after saving. */}
                   {initialData?.id && emailMatchesSaved && email.trim() ? (
-                    initialData.emailVerified ? (
+                    localEmailVerified ? (
                       <p className="mt-1 flex items-center gap-1.5 text-xs font-bold text-mintcom-green">
                         <Check size={13} strokeWidth={3} />
                         {t('staff.form.emailVerified', { defaultValue: 'Email verified' })}
@@ -1617,7 +1677,7 @@ export function EmployeeFormModal({
                       <div className="mt-1 flex flex-wrap items-center gap-2">
                         <span className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-600 dark:text-amber-400">
                           <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                          {t('staff.form.emailPending', { defaultValue: 'Awaiting confirmation — the employee must click the link we emailed.' })}
+                          {t('staff.form.emailPending', { defaultValue: 'Email pending' })}
                         </span>
                         {resendState === 'sent' ? (
                           <span className="text-xs font-bold text-mintcom-green">
@@ -1632,13 +1692,10 @@ export function EmployeeFormModal({
                           >
                             {resendState === 'sending'
                               ? t('common.sending', { defaultValue: 'Sending…' })
-                              : t('staff.form.resendVerification', { defaultValue: 'Resend link' })}
+                              : resendState === 'error'
+                                ? t('common.tryAgain', { defaultValue: 'Try again' })
+                                : t('staff.form.resendVerification', { defaultValue: 'Resend verification' })}
                           </button>
-                        )}
-                        {resendState === 'error' && (
-                          <span className="text-xs font-bold text-mintcom-red">
-                            {t('common.tryAgain', { defaultValue: 'Failed — try again' })}
-                          </span>
                         )}
                       </div>
                     )
