@@ -68,7 +68,7 @@ export function EstablishmentRequiredRoute() {
 
   // Location dashboards need a real establishment — send first-time owners to setup.
   if (needsOnboarding) {
-    return <Navigate to="/onboarding/step/1" replace />;
+    return <Navigate to="/onboarding" replace />;
   }
 
   // If no location slug, redirect to select-establishment

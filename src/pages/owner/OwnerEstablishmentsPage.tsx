@@ -139,7 +139,7 @@ export function OwnerEstablishmentsPage() {
     };
 
     const handleAddEstablishment = () => {
-        navigate('/onboarding');
+        navigate('/onboarding?new=1');
     };
 
     const getStatusColor = (status: string) => {

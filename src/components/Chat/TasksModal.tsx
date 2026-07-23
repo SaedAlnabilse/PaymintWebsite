@@ -86,7 +86,7 @@ export function TasksModal({ isOpen, onClose }: TasksModalProps) {
       description: t('chat.tasks.profile.description'),
       actionLabel: t('chat.tasks.profile.action'),
       navigation: {
-        path: dashboardRoute('/settings', '/onboarding/step/1'),
+        path: dashboardRoute('/settings', '/onboarding'),
         state: { openSettingsTab: 'profile' }
       },
       estimateMinutes: 1
@@ -97,7 +97,7 @@ export function TasksModal({ isOpen, onClose }: TasksModalProps) {
       description: t('chat.tasks.receipt.description'),
       actionLabel: t('chat.tasks.receipt.action'),
       navigation: {
-        path: dashboardRoute('/settings', '/onboarding/step/1'),
+        path: dashboardRoute('/settings', '/onboarding'),
         state: { openSettingsTab: 'receipt' }
       },
       estimateMinutes: 1
@@ -108,7 +108,7 @@ export function TasksModal({ isOpen, onClose }: TasksModalProps) {
       description: t('chat.tasks.taxes.description'),
       actionLabel: t('chat.tasks.taxes.action'),
       navigation: {
-        path: dashboardRoute('/settings', '/onboarding/step/2'),
+        path: dashboardRoute('/settings', '/onboarding'),
         state: { openSettingsTab: 'sales' }
       },
       estimateMinutes: 1
@@ -119,7 +119,7 @@ export function TasksModal({ isOpen, onClose }: TasksModalProps) {
       description: t('chat.tasks.payments.description'),
       actionLabel: t('chat.tasks.payments.action'),
       navigation: {
-        path: dashboardRoute('/payment-methods', '/onboarding/step/2'),
+        path: dashboardRoute('/payment-methods', '/onboarding'),
         state: { openCreateModal: true }
       },
       estimateMinutes: 1
@@ -130,7 +130,7 @@ export function TasksModal({ isOpen, onClose }: TasksModalProps) {
       description: t('chat.tasks.categories.description'),
       actionLabel: t('chat.tasks.categories.action'),
       navigation: {
-        path: dashboardRoute('/categories', '/onboarding/step/1'),
+        path: dashboardRoute('/categories', '/onboarding'),
         state: { openCreateModal: true }
       },
       estimateMinutes: 1
@@ -141,7 +141,7 @@ export function TasksModal({ isOpen, onClose }: TasksModalProps) {
       description: t('chat.tasks.products.description'),
       actionLabel: t('chat.tasks.products.action'),
       navigation: {
-        path: dashboardRoute('/products', '/onboarding/step/1'),
+        path: dashboardRoute('/products', '/onboarding'),
         state: { openCreateModal: true }
       },
       estimateMinutes: 4
@@ -152,7 +152,7 @@ export function TasksModal({ isOpen, onClose }: TasksModalProps) {
       description: t('chat.tasks.addons.description'),
       actionLabel: t('chat.tasks.addons.action'),
       navigation: {
-        path: dashboardRoute('/addons', '/onboarding/step/1'),
+        path: dashboardRoute('/addons', '/onboarding'),
         state: { openCreateModal: true }
       },
       estimateMinutes: 2
@@ -163,7 +163,7 @@ export function TasksModal({ isOpen, onClose }: TasksModalProps) {
       description: t('chat.tasks.discounts.description'),
       actionLabel: t('chat.tasks.discounts.action'),
       navigation: {
-        path: dashboardRoute('/discounts', '/onboarding/step/1'),
+        path: dashboardRoute('/discounts', '/onboarding'),
         state: { openCreateModal: true }
       },
       estimateMinutes: 2
@@ -174,7 +174,7 @@ export function TasksModal({ isOpen, onClose }: TasksModalProps) {
       description: t('chat.tasks.loyalty.description'),
       actionLabel: t('chat.tasks.loyalty.action'),
       navigation: {
-        path: dashboardRoute('/loyalty', '/onboarding/step/1')
+        path: dashboardRoute('/loyalty', '/onboarding')
       },
       estimateMinutes: 2
     },
@@ -184,7 +184,7 @@ export function TasksModal({ isOpen, onClose }: TasksModalProps) {
       description: t('chat.tasks.roles.description'),
       actionLabel: t('chat.tasks.roles.action'),
       navigation: {
-        path: dashboardRoute('/roles', '/onboarding/step/4')
+        path: dashboardRoute('/roles', '/onboarding')
       },
       estimateMinutes: 2
     },
@@ -194,7 +194,7 @@ export function TasksModal({ isOpen, onClose }: TasksModalProps) {
       description: t('chat.tasks.staff.description'),
       actionLabel: t('chat.tasks.staff.action'),
       navigation: {
-        path: dashboardRoute('/staff', '/onboarding/step/4'),
+        path: dashboardRoute('/staff', '/onboarding'),
         state: { openCreateModal: true }
       },
       estimateMinutes: 2

@@ -522,9 +522,22 @@ const router = createBrowserRouter([
           },
           {
             path: "/onboarding",
-            element: <Navigate to="/onboarding/step/1" replace />,
+            element: (
+              <PageSuspense>
+                <OnboardingPage />
+              </PageSuspense>
+            ),
           },
           {
+            path: "/onboarding/:phase",
+            element: (
+              <PageSuspense>
+                <OnboardingPage />
+              </PageSuspense>
+            ),
+          },
+          {
+            // Legacy numeric URLs — page maps step → phase and re-clamps to server.
             path: "/onboarding/step/:step",
             element: (
               <PageSuspense>

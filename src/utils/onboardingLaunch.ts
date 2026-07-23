@@ -1,7 +1,7 @@
 import type { NavigateFunction } from 'react-router-dom';
 
-/** Canonical first step of the location setup wizard. */
-export const ONBOARDING_START_PATH = '/onboarding/step/1';
+/** Canonical entry of the location setup wizard (server resumes correct phase). */
+export const ONBOARDING_START_PATH = '/onboarding';
 
 /**
  * Open the first-location onboarding wizard in a new browser tab.
