@@ -44,7 +44,6 @@ import {
   ShoppingBag,
   ShoppingCart,
   SlidersHorizontal,
-  Sparkles,
   Star,
   Trash2,
   Truck,

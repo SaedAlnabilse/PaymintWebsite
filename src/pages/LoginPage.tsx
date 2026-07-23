@@ -6,8 +6,9 @@ import { z } from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Eye, EyeOff, ArrowLeft, Mail, Lock, X,
-  AlertTriangle, Send, ArrowRight, KeyRound, UserPlus, Sparkles,
+  AlertTriangle, Send, ArrowRight, KeyRound, UserPlus,
 } from 'lucide-react';
+import MintcomLeafIcon from '../assets/small-logo.svg';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { GoogleAuthButton, AuthDivider, GOOGLE_CLIENT_ID } from '../components/GoogleAuthButton';
@@ -570,7 +571,7 @@ export function LoginPage() {
 
               <div className="relative mb-6 text-center">
                 <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-mintcom-green/15 dark:bg-mintcom-green/20">
-                  <Sparkles size={28} className="text-mintcom-green" />
+                  <img src={MintcomLeafIcon} alt="" style={{ width: 28, height: 28 }} className="scale-x-[-1] object-contain" />
                 </div>
                 <h3
                   id="no-social-account-title"

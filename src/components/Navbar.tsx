@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Menu, X, LogOut, User, Headset, ArrowRight, Play, Sparkles } from 'lucide-react';
+import { Menu, X, LogOut, User, Headset, ArrowRight, Play } from 'lucide-react';
+import MintcomLeafIcon from '../assets/small-logo.svg';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Logo } from './Logo';
 import { ThemeToggle } from './ThemeToggle';
@@ -190,7 +191,7 @@ export const Navbar = () => {
                       rel="noopener noreferrer"
                       className="group inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-mintcom-green to-emerald-400 px-5 py-2.5 text-[13px] font-bold text-black shadow-[0_4px_16px_-4px_rgba(124,195,159,0.5)] transition-all duration-300 hover:shadow-[0_6px_24px_-4px_rgba(124,195,159,0.7)] active:scale-[0.97]"
                     >
-                      <Sparkles size={14} />
+                      <img src={MintcomLeafIcon} alt="" style={{ width: 14, height: 14 }} className="scale-x-[-1] object-contain" />
                       {t('nav.continueOnboarding', { defaultValue: 'Continue Onboarding' })}
                     </Link>
                   ) : (
@@ -420,7 +421,7 @@ export const Navbar = () => {
                         onClick={() => setIsMobileMenuOpen(false)}
                         className="flex w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-mintcom-green to-emerald-400 py-5 text-center text-lg font-black tracking-tight text-black shadow-xl shadow-mintcom-green/30 transition-transform hover:scale-[1.02] active:scale-95"
                       >
-                        <Sparkles size={20} />
+                        <img src={MintcomLeafIcon} alt="" style={{ width: 20, height: 20 }} className="scale-x-[-1] object-contain" />
                         {t('nav.continueOnboarding', { defaultValue: 'Continue Onboarding' })}
                       </Link>
                     ) : (

@@ -122,7 +122,7 @@ Once verified, you'll go through our onboarding wizard to set up your first esta
 
 **Option 2: POS App (for staff)**
 1. Select your profile from the staff list
-2. Enter your 4-digit PIN
+2. Enter your password
 3. You're in!
 
 Forgot your password? No worries - just click "Forgot Password" and we'll send you a reset link!`,
@@ -135,7 +135,7 @@ Forgot your password? No worries - just click "Forgot Password" and we'll send y
 
 **الطريقة 2: تطبيق نقاط البيع (للموظفين)**
 1. اختر ملفك من قائمة الموظفين
-2. أدخل رقم PIN المكون من 4 أرقام
+2. أدخل كلمة المرور
 
 نسيت كلمة المرور؟ اضغط "نسيت كلمة المرور" وسنرسل لك رابط إعادة التعيين!`,
     category: 'account',
@@ -636,7 +636,7 @@ Points are automatically earned on each purchase!`,
 
 1. Go to **Dashboard > Staff**
 2. Click **"Add Employee"**
-3. Fill in: Name, Email, 4-digit PIN, Role (Admin/User)
+3. Fill in: Name, Email, Password (at least 6 characters), Role (Admin/User)
 4. Set **permissions** (for User role)
 5. Save!
 
@@ -645,7 +645,7 @@ The employee will receive an email invitation.`,
 
 1. اذهب إلى **لوحة التحكم > الموظفين**
 2. اضغط **"إضافة موظف"**
-3. أكمل: الاسم، البريد، رقم PIN من 4 أرقام، الدور (مسؤول/مستخدم)
+3. أكمل: الاسم، البريد، كلمة المرور (6 أحرف على الأقل)، الدور (مسؤول/مستخدم)
 4. حدد **الصلاحيات** (لدور المستخدم)
 5. احفظ!
 
@@ -1033,8 +1033,8 @@ Supports: Epson TM series, Star TSP series, Bluetooth thermal printers.`,
     keywords: ['security', 'pin', 'password security', 'safe', 'protect', 'أمان', 'رقم سري', 'حماية', 'أمن الحساب'],
     question: 'What are the security best practices?',
     questionAr: 'ما أفضل ممارسات الأمان؟',
-    answer: `Never share your PIN. Log out when leaving POS unattended. Report suspicious activity. Change password if compromised. Close shifts before leaving. Admins: review the activity log regularly.`,
-    answerAr: `لا تشارك رقم PIN الخاص بك. سجل الخروج عند ترك نقاط البيع. أبلغ عن أي نشاط مشبوه. غيّر كلمة المرور إذا تم اختراقها. أغلق الوردية قبل المغادرة. المسؤولون: راجعوا سجل النشاط بانتظام.`,
+    answer: `Never share your password. Log out when leaving POS unattended. Report suspicious activity. Change password if compromised. Close shifts before leaving. Admins: review the activity log regularly.`,
+    answerAr: `لا تشارك كلمة المرور. سجل الخروج عند ترك نقاط البيع. أبلغ عن أي نشاط مشبوه. غيّر كلمة المرور إذا تم اختراقها. أغلق الوردية قبل المغادرة. المسؤولون: راجعوا سجل النشاط بانتظام.`,
     category: 'account'
   }
 ];

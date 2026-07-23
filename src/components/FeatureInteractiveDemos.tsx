@@ -5,7 +5,6 @@ import {
   Check,
   RotateCcw,
   ShoppingBag,
-  Sparkles,
   Zap,
   Lock,
   Bell,
@@ -16,6 +15,7 @@ import {
   AlertOctagon,
   Package,
 } from 'lucide-react';
+import MintcomLeafIcon from '../assets/small-logo.svg';
 import {
   FeatureScreenshot,
   isStaticFeatureScreenshot,
@@ -1533,7 +1533,7 @@ export const InteractiveAiDemo = ({ t, side }: DemoProps) => {
       </div>
       <div className="min-h-[110px] rounded-xl border border-mintcom-green/20 bg-gradient-to-br from-mintcom-green/10 to-transparent p-3.5 dark:from-mintcom-green/15">
         <div className="mb-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-mintcom-green">
-          <Sparkles size={12} />
+          <img src={MintcomLeafIcon} alt="" style={{ width: 12, height: 12 }} className="scale-x-[-1] object-contain" />
           Mintcom AI
         </div>
         {thinking ? (

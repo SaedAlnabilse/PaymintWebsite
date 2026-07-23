@@ -7,10 +7,11 @@ import {
   Layers,
   Clock3,
   ShieldCheck,
-  Sparkles,
   ArrowRight,
   type LucideIcon,
 } from 'lucide-react';
+import MintcomLeafIcon from '../assets/small-logo.svg';
+const MintcomLeaf = () => <img src={MintcomLeafIcon} alt="" className="h-full w-full scale-x-[-1] object-contain" />;
 import { Navbar } from '../components/Navbar';
 import { Footer } from '../components/Footer';
 
@@ -19,7 +20,7 @@ const REASONS: { icon: LucideIcon; titleKey: string; descKey: string }[] = [
   { icon: Layers, titleKey: 'pages.why.reasons.r2.title', descKey: 'pages.why.reasons.r2.description' },
   { icon: Clock3, titleKey: 'pages.why.reasons.r3.title', descKey: 'pages.why.reasons.r3.description' },
   { icon: ShieldCheck, titleKey: 'pages.why.reasons.r4.title', descKey: 'pages.why.reasons.r4.description' },
-  { icon: Sparkles, titleKey: 'pages.why.reasons.r5.title', descKey: 'pages.why.reasons.r5.description' },
+  { icon: MintcomLeaf as unknown as LucideIcon, titleKey: 'pages.why.reasons.r5.title', descKey: 'pages.why.reasons.r5.description' },
 ];
 
 export const WhyMintcomPage = () => {

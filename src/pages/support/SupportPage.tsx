@@ -5,8 +5,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, Ticket, BookOpen, HelpCircle, CreditCard,
   Settings, Zap, ChevronRight, ArrowRight, Clock,
-  Eye, FileText, Download, X, Sparkles, MessageSquare,
+  Eye, FileText, Download, X, MessageSquare,
 } from 'lucide-react';
+import MintcomLeafIcon from '../../assets/small-logo.svg';
 import { Navbar } from '../../components/Navbar';
 import { Footer } from '../../components/Footer';
 import { LoginRequiredModal } from '../../components/LoginRequiredModal';
@@ -204,7 +205,7 @@ export const SupportPage = () => {
             >
               {/* eyebrow */}
               <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-mintcom-green/30 bg-mintcom-green/8 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-mintcom-green dark:bg-mintcom-green/10">
-                <Sparkles size={11} />
+                <img src={MintcomLeafIcon} alt="" style={{ width: 11, height: 11 }} className="scale-x-[-1] object-contain" />
                 {t('support.hero.badge')}
               </div>
 

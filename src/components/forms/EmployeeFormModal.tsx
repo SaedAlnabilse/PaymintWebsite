@@ -22,6 +22,7 @@ interface StaffMember {
   username: string;
   role: string;
   email?: string;
+  emailVerified?: boolean;
   phone?: string;
   employeeId?: string;
   permissions?: string[];
@@ -79,7 +80,7 @@ interface Discount {
 interface EmployeeFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: Partial<StaffMember> & { password?: string; pinCode?: string }) => Promise<void>;
+  onSubmit: (data: Partial<StaffMember> & { password?: string }) => Promise<void>;
   onDelete?: (id: string) => void;
   initialData?: StaffMember | null;
   availableDiscounts?: Discount[];
@@ -118,7 +119,8 @@ const ALLOWED_BACKOFFICE_PERMISSION_IDS: Set<string> = new Set([
   ...CANONICAL_BACKOFFICE_PERMISSIONS.map(({ id }) => id),
   ...BACKOFFICE_DEFAULT_PERMISSION_IDS,
 ]);
-const EMPLOYEE_PASSWORD_POLICY_PATTERN = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+/** Staff password: at least 6 characters of anything (no complexity). */
+const EMPLOYEE_PASSWORD_MIN_LENGTH = 6;
 
 const normalizeAndFilterPermissions = (
   values: unknown,
@@ -867,12 +869,31 @@ export function EmployeeFormModal({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [usernameAvailabilityError, setUsernameAvailabilityError] = useState('');
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
+  const [resendState, setResendState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+
+  // Whether the email in the field still matches the saved, verifiable address.
+  // A freshly typed address only becomes verifiable after the form is saved.
+  const emailMatchesSaved =
+    (email || '').trim().toLowerCase() ===
+    (initialData?.email || '').trim().toLowerCase();
+
+  const handleResendVerification = async () => {
+    if (!initialData?.id) return;
+    setResendState('sending');
+    try {
+      await api.post(`/api/accounts/employees/${initialData.id}/resend-verification`);
+      setResendState('sent');
+    } catch {
+      setResendState('error');
+    }
+  };
 
   useEffect(() => {
     if (isOpen) {
       setTimeout(() => setErrors({}), 0);
       setUsernameAvailabilityError('');
       setIsCheckingUsername(false);
+      setResendState('idle');
     }
   }, [isOpen]);
 
@@ -963,13 +984,9 @@ export function EmployeeFormModal({
 
     if (!initialData && !password) {
       newErrors.password = t('staff.errors.passwordRequired');
-    } else if (password && password.length < 8) {
+    } else if (password && password.length < EMPLOYEE_PASSWORD_MIN_LENGTH) {
       newErrors.password = t('staff.errors.passwordMin', {
-        defaultValue: 'Password must be at least 8 characters',
-      });
-    } else if (password && !EMPLOYEE_PASSWORD_POLICY_PATTERN.test(password)) {
-      newErrors.password = t('staff.errors.passwordPolicy', {
-        defaultValue: 'Password must contain uppercase, lowercase, and a number',
+        defaultValue: 'Password must be at least 6 characters',
       });
     }
     if (password !== confirmPassword) {
@@ -1061,7 +1078,7 @@ export function EmployeeFormModal({
       };
     };
 
-    const payload: Partial<StaffMember> & { password?: string; pinCode?: string } = {
+    const payload: Partial<StaffMember> & { password?: string } = {
       firstName,
       lastName,
       username,
@@ -1092,11 +1109,6 @@ export function EmployeeFormModal({
 
     if (password) {
       payload.password = password;
-    }
-
-    if (!initialData) {
-      // Generate mock pin for compatibility
-      payload.pinCode = Math.floor(1000 + Math.random() * 9000).toString();
     }
 
     await onSubmit(payload);
@@ -1577,23 +1589,63 @@ export function EmployeeFormModal({
                 )}
               </div>
 
-              {/* Email - required when the selected role has website/backoffice access */}
-              {!isOwnerMode && (
+              {/* Email - only shown for roles with website/Back Office access.
+                  POS-only staff sign in by username, so the field is hidden
+                  entirely rather than shown as optional (less confusing). When
+                  visible it is always required. */}
+              {!isOwnerMode && requiresEmail && (
                 <div className="space-y-2">
                   <label className="block text-sm font-normal text-gray-900 dark:text-white flex items-center gap-1 tracking-tight">
-                    {t('staff.form.emailLabel')} {requiresEmail ? <span className="text-mintcom-red">*</span> : t('staff.form.emailOptional')}
+                    {t('staff.form.emailLabel')} <span className="text-mintcom-red">*</span>
                   </label>
                   <input maxLength={255}
                     type="email"
                     value={email}
-                    onChange={(e) => { setEmail(e.target.value); if (errors.email) setErrors({ ...errors, email: '' }); }}
+                    onChange={(e) => { setEmail(e.target.value); setResendState('idle'); if (errors.email) setErrors({ ...errors, email: '' }); }}
                     placeholder={formatInputPlaceholder(t('staff.form.emailPlaceholder'), t('common.locale'))}
                     className={`w-full bg-gray-50 dark:bg-white/5 border ${errors.email ? 'border-mintcom-red ring-2 ring-mintcom-red/20' : 'border-gray-200 dark:border-white/10'} rounded-xl px-4 py-3 text-sm font-bold text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:border-mintcom-green focus:ring-1 focus:ring-mintcom-green transition-colors`}
                   />
-                  {requiresEmail && (
+                  {/* Verification status. Only meaningful for a saved address —
+                      a freshly typed/changed email is verified after saving. */}
+                  {initialData?.id && emailMatchesSaved && email.trim() ? (
+                    initialData.emailVerified ? (
+                      <p className="mt-1 flex items-center gap-1.5 text-xs font-bold text-mintcom-green">
+                        <Check size={13} strokeWidth={3} />
+                        {t('staff.form.emailVerified', { defaultValue: 'Email verified' })}
+                      </p>
+                    ) : (
+                      <div className="mt-1 flex flex-wrap items-center gap-2">
+                        <span className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-600 dark:text-amber-400">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                          {t('staff.form.emailPending', { defaultValue: 'Awaiting confirmation — the employee must click the link we emailed.' })}
+                        </span>
+                        {resendState === 'sent' ? (
+                          <span className="text-xs font-bold text-mintcom-green">
+                            {t('staff.form.emailResent', { defaultValue: 'Link sent ✓' })}
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={handleResendVerification}
+                            disabled={resendState === 'sending'}
+                            className="text-xs font-bold text-mintcom-green hover:underline disabled:opacity-50"
+                          >
+                            {resendState === 'sending'
+                              ? t('common.sending', { defaultValue: 'Sending…' })
+                              : t('staff.form.resendVerification', { defaultValue: 'Resend link' })}
+                          </button>
+                        )}
+                        {resendState === 'error' && (
+                          <span className="text-xs font-bold text-mintcom-red">
+                            {t('common.tryAgain', { defaultValue: 'Failed — try again' })}
+                          </span>
+                        )}
+                      </div>
+                    )
+                  ) : (
                     <p className="mt-1 text-xs font-bold text-gray-500 dark:text-gray-400">
-                      {t('staff.form.emailRequiredHint', {
-                        defaultValue: 'This role can access the website and Back Office app, so an email is required to sign in.',
+                      {t('staff.form.emailVerifyHint', {
+                        defaultValue: 'We’ll email a confirmation link to verify this address so password recovery works.',
                       })}
                     </p>
                   )}
@@ -1668,7 +1720,7 @@ export function EmployeeFormModal({
                 </div>
                 <p className="mt-1 text-xs font-bold text-gray-500 dark:text-gray-400">
                   {t('staff.form.passwordRequirements', {
-                    defaultValue: 'At least 8 characters with uppercase, lowercase, and a number.',
+                    defaultValue: 'At least 6 characters (any characters).',
                   })}
                 </p>
                 {errors.password && <p className="mt-1 text-xs font-bold text-mintcom-red">{errors.password}</p>}

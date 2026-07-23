@@ -6,6 +6,22 @@ const ESTABLISHMENT_HEADER = 'X-Establishment-Id';
 const SKIP_ESTABLISHMENT_HEADER = 'X-Skip-Establishment-Header';
 const SKIP_AUTH_REDIRECT_HEADER = 'X-Skip-Auth-Redirect';
 const MISSING_ESTABLISHMENT_HEADER_MESSAGE = 'X-Establishment-Id header is required for this endpoint';
+const UNSAFE_METHODS = new Set(['post', 'put', 'patch', 'delete']);
+
+const readCookie = (name: string): string | null => {
+  const prefix = `${encodeURIComponent(name)}=`;
+  for (const part of document.cookie.split(';')) {
+    const value = part.trim();
+    if (value.startsWith(prefix)) {
+      try {
+        return decodeURIComponent(value.slice(prefix.length));
+      } catch {
+        return null;
+      }
+    }
+  }
+  return null;
+};
 
 // Use relative URLs in both development and production so the browser talks to the
 // current origin. In production, Cloudflare proxies /api requests to Railway,
@@ -104,6 +120,17 @@ api.interceptors.request.use(
     updateLoadingState();
     if (shouldSanitizeTextPayload(config.url)) {
       config.data = sanitizeTextPayload(config.data);
+    }
+
+    // SEC-12: echo the readable double-submit token on every unsafe browser
+    // request. Login requests legitimately have no token yet; the API only
+    // requires it when an Authentication cookie is already present.
+    const method = (config.method || 'get').toLowerCase();
+    if (UNSAFE_METHODS.has(method)) {
+      const csrfToken = readCookie('XSRF-TOKEN');
+      if (csrfToken) {
+        config.headers.set('X-CSRF-Token', csrfToken);
+      }
     }
 
     // Ensure all API calls have the /api prefix (except for static files like /uploads, /files)

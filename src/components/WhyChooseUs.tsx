@@ -7,7 +7,6 @@ import {
   Settings,
   Store,
   Play,
-  Sparkles,
   ChevronLeft,
   ChevronRight,
   X,
@@ -38,6 +37,7 @@ import {
   Briefcase,
 } from 'lucide-react';
 import { Logo } from './Logo';
+import MintcomLeafIcon from '../assets/small-logo.svg';
 import { FeaturePosScreenshot } from './FeaturePosScreenshot';
 import { FeatureScreenshot } from './FeatureScreenshots';
 import {
@@ -120,14 +120,14 @@ const FeatureCard = ({
       className="group relative flex h-full min-h-[248px] cursor-pointer flex-col overflow-hidden rounded-2xl border border-transparent bg-white p-6 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.08)] transition-all duration-500 hover:border-mintcom-green/25 hover:shadow-[0_16px_40px_-14px_rgba(124,195,159,0.28)] focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:border-mintcom-green/30 active:outline-none active:ring-0 dark:border-transparent dark:bg-[#121212] dark:shadow-[0_8px_30px_-12px_rgba(0,0,0,0.45)] dark:hover:border-mintcom-green/20"
     >
       {/* Icon + title row; body/CTA sit full-width so Learn more aligns with description text */}
-      <div className="relative z-10 mb-4 flex min-h-[56px] items-start gap-4">
+      <div className="relative z-10 mb-4 flex min-h-[56px] items-center gap-4">
         <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-mintcom-green/10 shadow-inner transition-all duration-500 group-hover:rotate-3 group-hover:scale-110 group-hover:bg-mintcom-green dark:bg-mintcom-green/15">
           <Icon
             size={22}
             className="text-mintcom-green transition-colors duration-500 group-hover:text-white"
           />
         </div>
-        <h3 className="mt-1 line-clamp-2 min-h-[2.5rem] font-sans text-base font-bold leading-tight tracking-tight text-gray-900 transition-colors group-hover:text-mintcom-green dark:text-white">
+        <h3 className="line-clamp-2 flex min-h-[2.5rem] items-center font-sans text-base font-bold leading-tight tracking-tight text-gray-900 transition-colors group-hover:text-mintcom-green dark:text-white">
           {feature.cardTitle}
         </h3>
       </div>
@@ -936,7 +936,7 @@ export const WhyChooseUs = () => {
     {
       id: 'complete',
       icon: Store,
-      cardTitle: t('landing.features.cards.complete.cardTitle', 'No Hidden Costs'),
+      cardTitle: t('landing.features.cards.complete.cardTitle', 'Full with No Hidden Cost'),
       title: t('landing.features.cards.complete.title'),
       description: t('landing.features.cards.complete.description'),
       teaser: isRtl ? 'حل كامل' : 'Complete',
@@ -1093,8 +1093,12 @@ export const WhyChooseUs = () => {
           className="mb-12 text-center lg:mb-16"
         >
           <div className="group relative mx-auto mb-8 inline-flex items-center gap-2.5 rounded-[12px] border border-mintcom-green/20 bg-mintcom-green/5 px-3.5 py-1.5 text-xs font-bold text-mintcom-green backdrop-blur-md dark:bg-mintcom-green/10">
-            <div className="relative flex h-5 w-5 items-center justify-center overflow-hidden rounded-[6px] bg-mintcom-green/20 text-mintcom-green">
-              <Sparkles size={11} className="relative z-10" />
+            <div className="relative flex h-5 w-5 items-center justify-center overflow-hidden rounded-[6px] bg-mintcom-green/20">
+              <img
+                src={MintcomLeafIcon}
+                alt=""
+                className="h-3.5 w-3.5 scale-x-[-1] object-contain"
+              />
             </div>
             <span className="text-[10px] uppercase leading-none tracking-widest md:text-[11px]">
               {t('landing.features.badge')}

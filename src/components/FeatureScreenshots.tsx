@@ -33,7 +33,6 @@ import {
   Package,
   Factory,
   BookOpen,
-  Sparkles,
   Building2,
   MapPin,
   Lock,

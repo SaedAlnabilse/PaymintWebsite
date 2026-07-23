@@ -7,7 +7,6 @@ import {
   Users,
   BarChart3,
   ChefHat,
-  Sparkles,
   Building2,
   LayoutDashboard,
   Zap,
@@ -20,7 +19,10 @@ import {
   X,
   type LucideIcon,
 } from 'lucide-react';
+import MintcomLeafIcon from '../assets/small-logo.svg';
 import { FeatureInteractiveDemo, hasInteractiveDemo } from './FeatureInteractiveDemos';
+
+const MintcomLeaf = () => <img src={MintcomLeafIcon} alt="" className="h-full w-full scale-x-[-1] object-contain" />;
 
 type WorkflowFeature = {
   title: string;
@@ -61,11 +63,11 @@ const WorkflowFeatureCard = ({
       className="group relative flex h-full min-h-[260px] cursor-pointer flex-col overflow-hidden rounded-2xl border border-transparent bg-white p-6 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.08)] transition-all duration-500 hover:border-mintcom-green/25 hover:shadow-[0_16px_40px_-14px_rgba(124,195,159,0.28)] focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:border-mintcom-green/30 active:outline-none active:ring-0 dark:border-transparent dark:bg-[#121212] dark:shadow-[0_8px_30px_-12px_rgba(0,0,0,0.45)] dark:hover:border-mintcom-green/20"
     >
       {/* Fixed header band so titles wrap like “Recipe & Cost Management” without changing card height */}
-      <div className="relative z-10 mb-4 flex min-h-[56px] items-start gap-4">
+      <div className="relative z-10 mb-4 flex min-h-[56px] items-center gap-4">
         <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-mintcom-green/10 shadow-inner transition-all duration-500 group-hover:rotate-3 group-hover:scale-110 group-hover:bg-mintcom-green dark:bg-mintcom-green/15">
           <feature.icon size={22} className="text-mintcom-green transition-colors duration-500 group-hover:text-white" />
         </div>
-        <h3 className="mt-1 line-clamp-2 min-h-[2.5rem] font-sans text-base font-bold leading-tight tracking-tight text-gray-900 transition-colors group-hover:text-mintcom-green dark:text-white">
+        <h3 className="line-clamp-2 flex min-h-[2.5rem] items-center font-sans text-base font-bold leading-tight tracking-tight text-gray-900 transition-colors group-hover:text-mintcom-green dark:text-white">
           {feature.title}
         </h3>
       </div>
@@ -399,7 +401,7 @@ export const Features = () => {
       id: 'aiSystem',
       title: t('landing.workflow.aiSystem.title'),
       description: t('landing.workflow.aiSystem.description'),
-      icon: Sparkles,
+      icon: MintcomLeaf as unknown as LucideIcon,
     },
     {
       id: 'multiBranch',
@@ -506,13 +508,8 @@ export const Features = () => {
             transition={{ duration: 0.5 }}
             className="group relative inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-[12px] bg-mintcom-green/5 dark:bg-mintcom-green/10 text-mintcom-green font-bold text-xs mb-8 border border-mintcom-green/20 backdrop-blur-md shadow-[0_0_15px_rgba(124,195,159,0.05)] hover:border-mintcom-green/40 transition-all duration-300 mx-auto"
           >
-            <div className="relative flex items-center justify-center w-5 h-5 rounded-[6px] bg-mintcom-green/20 text-mintcom-green overflow-hidden">
-              <Sparkles size={11} className="relative z-10" />
-              <motion.div
-                animate={{ opacity: [0.3, 0.6, 0.3], scale: [1, 1.2, 1] }}
-                transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-                className="absolute inset-0 bg-mintcom-green/30"
-              />
+            <div className="relative flex items-center justify-center w-5 h-5 rounded-[6px] bg-mintcom-green/20 overflow-hidden">
+              <img src={MintcomLeafIcon} alt="" style={{ width: 11, height: 11 }} className="scale-x-[-1] object-contain relative z-10" />
             </div>
             <span className="tracking-widest uppercase text-[10px] md:text-[11px] leading-none">
               {t('landing.workflow.badge')}
