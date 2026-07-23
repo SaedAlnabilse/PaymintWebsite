@@ -1942,11 +1942,11 @@ export function OnboardingPage() {
                           })}
                         </p>
                       )}
-                      <div className="grid grid-cols-2 gap-1 rounded-full border border-gray-200 bg-gray-100 p-1 dark:border-white/10 dark:bg-black/30">
+                      <div className="grid grid-cols-2 gap-1 rounded-[12px] border border-gray-200 bg-gray-100 p-1 dark:border-white/10 dark:bg-black/30">
                         <button
                           type="button"
                           onClick={() => setBillingCycle(BILLING_CYCLES.MONTHLY)}
-                          className={`rounded-full py-2.5 text-sm font-sans font-bold transition-all duration-300 ${
+                          className={`rounded-[12px] py-2.5 text-sm font-sans font-bold transition-all duration-300 ${
                             billingCycle === BILLING_CYCLES.MONTHLY
                               ? 'bg-mintcom-green text-black shadow-md shadow-mintcom-green/20'
                               : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
@@ -1957,7 +1957,7 @@ export function OnboardingPage() {
                         <button
                           type="button"
                           onClick={() => setBillingCycle(BILLING_CYCLES.YEARLY)}
-                          className={`flex items-center justify-center gap-2 rounded-full py-2.5 text-sm font-sans font-bold transition-all duration-300 ${
+                          className={`flex items-center justify-center gap-2 rounded-[12px] py-2.5 text-sm font-sans font-bold transition-all duration-300 ${
                             billingCycle === BILLING_CYCLES.YEARLY
                               ? 'bg-mintcom-green text-black shadow-md shadow-mintcom-green/20'
                               : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
@@ -1965,7 +1965,7 @@ export function OnboardingPage() {
                         >
                           {t('onboarding.step2.yearly')}
                           <span
-                            className={`rounded-full px-1.5 py-0.5 text-[9px] font-sans font-bold leading-none ${
+                            className={`rounded-[12px] px-1.5 py-0.5 text-[9px] font-sans font-bold leading-none ${
                               billingCycle === BILLING_CYCLES.YEARLY
                                 ? 'bg-black text-mintcom-green'
                                 : 'bg-mintcom-green/15 text-mintcom-green'
@@ -2100,7 +2100,7 @@ export function OnboardingPage() {
                       </div>
                       <h3 className="font-magilio text-xl font-bold text-gray-900 dark:text-white sm:text-2xl">
                         {t('onboarding.step2.paymentDetails', {
-                          defaultValue: 'Payment details',
+                          defaultValue: 'Payment Details',
                         })}
                       </h3>
                     </div>

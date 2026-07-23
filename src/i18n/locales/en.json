@@ -323,7 +323,7 @@
       "wrongCredentialsMessage": "The email or password you entered doesn’t match an existing account. Check your details and try again, or create a new account to get started.",
       "tryAgain": "Try Again",
       "createAccount": "Sign Up",
-      "noSocialAccountTitle": "No Mintcom account yet",
+      "noSocialAccountTitle": "No Mintcom Account Yet",
       "noSocialAccountMessage": "We recognized your {{provider}} login, but there’s no Mintcom account linked to it. Create one in under a minute. Your business dashboard is waiting.",
       "noSocialAccountGoogle": "Google",
       "noSocialAccountApple": "Apple"
@@ -3376,6 +3376,7 @@
       "expiry": "Expiry",
       "freeDays": "30 DAYS FREE",
       "monthly": "Monthly",
+      "paymentDetails": "Payment Details",
       "priceMonth": "20 USD/MONTH",
       "startTrialButton": "Start Free Trial",
       "totalDue": "Total Due Today",
