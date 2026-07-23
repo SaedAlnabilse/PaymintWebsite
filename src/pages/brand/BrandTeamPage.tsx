@@ -40,6 +40,7 @@ interface Employee {
     firstName: string;
     lastName: string;
     email: string | null;
+    emailVerified?: boolean;
     phone?: string;
     isActive: boolean;
     createdAt?: string;
@@ -106,16 +107,22 @@ export default function BrandTeamPage() {
         }
     }, [brandId, t]);
 
-    const fetchEmployees = useCallback(async () => {
+    const fetchEmployees = useCallback(async (silent = false) => {
         try {
-            setIsLoading(true);
+            if (!silent) setIsLoading(true);
             const response = await api.get(`/api/brands/${brandId}/employees`);
-            setEmployees(response.data || []);
+            const nextEmployees: Employee[] = response.data || [];
+            setEmployees(nextEmployees);
+            setEditingEmployee((current) => {
+                if (!current?.id) return current;
+                const refreshed = nextEmployees.find((emp) => emp.id === current.id);
+                return refreshed || current;
+            });
         } catch (err) {
             console.error('Failed to fetch employees:', err);
             toast.error(t('owner.staff.syncError'));
         } finally {
-            setIsLoading(false);
+            if (!silent) setIsLoading(false);
         }
     }, [brandId, t]);
 
@@ -841,6 +848,7 @@ export default function BrandTeamPage() {
                     username: editingEmployee.username,
                     role: editingEmployee.establishments?.[0]?.role || 'USER',
                     email: editingEmployee.email ?? undefined,
+                    emailVerified: editingEmployee.emailVerified,
                     permissions: (editingEmployee as any).permissions || [],
                     allowedDiscounts: (editingEmployee as any).allowedDiscounts || [],
                     customRoleId: (editingEmployee as any).customRoleId,
