@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, type ReactNode } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef, type ReactNode } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -93,8 +93,49 @@ import {
   MAX_FORMATTED_CARD_NUMBER_LENGTH,
 } from '../utils/paymentCard';
 import { TEXT_INPUT_LIMITS } from '../config/textLimits';
+import { onboardingApi } from '../services/onboardingApi';
+import { useBlockHistoryBack } from '../hooks/useBlockHistoryBack';
+import {
+  clampPhase,
+  isLaunchLocked,
+  isOnboardingPhaseSlug,
+  mapApiPhase,
+  phaseToStepNumber,
+  stepNumberToPhase,
+  type OnboardingPhaseSlug,
+} from '../utils/onboardingPhases';
 
 const ONBOARDING_LAUNCH_STORAGE_KEY = 'mintcom.onboarding.launch.v1';
+
+/** Never persist secrets (passwords / card fields) in sessionStorage. */
+const SAFE_DRAFT_KEYS = [
+  'name',
+  'type',
+  'country',
+  'currency',
+  'address',
+  'timezone',
+  'establishmentLoginId',
+  'firstName',
+  'lastName',
+  'username',
+  'lockedOwner',
+  'duplicateFromId',
+  'duplicateInventory',
+  'duplicateDiscounts',
+  'duplicatePaymentMethods',
+  'establishmentId',
+] as const;
+
+const sanitizeDraftForStorage = (value: Record<string, unknown>) => {
+  const safe: Record<string, unknown> = {};
+  for (const key of SAFE_DRAFT_KEYS) {
+    if (value[key] !== undefined) {
+      safe[key] = value[key];
+    }
+  }
+  return safe;
+};
 
 const readStoredLaunchData = () => {
   if (typeof window === 'undefined') {
@@ -120,7 +161,10 @@ const persistStoredLaunchData = (value: Record<string, unknown>) => {
   }
 
   try {
-    sessionStorage.setItem(ONBOARDING_LAUNCH_STORAGE_KEY, JSON.stringify(value));
+    sessionStorage.setItem(
+      ONBOARDING_LAUNCH_STORAGE_KEY,
+      JSON.stringify(sanitizeDraftForStorage(value)),
+    );
   } catch (error) {
     console.warn('[Onboarding] Failed to persist launch data:', error);
   }
@@ -226,7 +270,9 @@ export function OnboardingPage() {
     maximumFractionDigits: 0,
   });
   const navigate = useNavigate();
-  const { step: stepParam } = useParams<{ step?: string }>();
+  const params = useParams<{ step?: string; phase?: string }>();
+  const stepParam = params.step;
+  const phaseParam = params.phase;
 
   // Step 1: Location Details
   const step1Schema = z.object({
@@ -328,8 +374,13 @@ export function OnboardingPage() {
   const { refreshEstablishments, account, needsOnboarding, setCurrentEstablishment, establishments, updateAccount } = useAuth();
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [sessionReady, setSessionReady] = useState(false);
+  const [serverPhase, setServerPhase] = useState<OnboardingPhaseSlug>('profile');
+  const [apiPhase, setApiPhase] = useState<string>('PROFILE');
+  const sessionBootRef = useRef(false);
 
   const [formData, setFormData] = useState<any>(() => readStoredLaunchData());
+  const launchLocked = isLaunchLocked(serverPhase, apiPhase);
 
   const [useSavedCard, setUseSavedCard] = useState(true); // Default to using saved card if available
   const [billingCycle, setBillingCycle] = useState<BillingCycle>(MINTCOM_PRICING.defaultBillingCycle);
@@ -398,48 +449,174 @@ export function OnboardingPage() {
   // Tour Guide State for Step 5
   const [isTourOpen, setIsTourOpen] = useState(false);
 
+  const applyServerSession = useCallback((session: {
+    phase: string;
+    draft?: Record<string, unknown>;
+    establishmentId?: string;
+  }) => {
+    const mapped = mapApiPhase(session.phase);
+    setApiPhase(session.phase);
+    setServerPhase(mapped);
+    if (session.draft && typeof session.draft === 'object') {
+      setFormData((prev: any) => {
+        const merged = {
+          ...prev,
+          ...sanitizeDraftForStorage(session.draft as Record<string, unknown>),
+          ...(session.establishmentId ? { establishmentId: session.establishmentId } : {}),
+        };
+        persistStoredLaunchData(merged);
+        return merged;
+      });
+    } else if (session.establishmentId) {
+      setFormData((prev: any) => {
+        const merged = { ...prev, establishmentId: session.establishmentId };
+        persistStoredLaunchData(merged);
+        return merged;
+      });
+    }
+    return mapped;
+  }, []);
+
+  const resolveRequestedPhase = useCallback((): OnboardingPhaseSlug | undefined => {
+    if (isOnboardingPhaseSlug(phaseParam)) {
+      return phaseParam;
+    }
+    const legacyStep = Number(stepParam);
+    if (Number.isInteger(legacyStep) && stepNumberToPhase[legacyStep]) {
+      return stepNumberToPhase[legacyStep];
+    }
+    return undefined;
+  }, [phaseParam, stepParam]);
+
+  const goToPhase = useCallback(
+    (
+      nextPhase: OnboardingPhaseSlug,
+      options?: {
+        force?: boolean;
+        serverPhaseOverride?: OnboardingPhaseSlug;
+        apiPhaseOverride?: string;
+      },
+    ) => {
+      const activeServer = options?.serverPhaseOverride ?? serverPhase;
+      const activeApi = options?.apiPhaseOverride ?? apiPhase;
+      if (options?.serverPhaseOverride) {
+        setServerPhase(options.serverPhaseOverride);
+      }
+      if (options?.apiPhaseOverride) {
+        setApiPhase(options.apiPhaseOverride);
+      }
+
+      const locked = options?.force
+        ? false
+        : isLaunchLocked(activeServer, activeApi);
+      const effective = options?.force
+        ? nextPhase
+        : clampPhase(nextPhase, activeServer, locked);
+      const finalPhase =
+        isLaunchLocked(activeServer, activeApi) && !options?.force
+          ? 'launch'
+          : effective;
+      setStep(phaseToStepNumber[finalPhase]);
+      navigate(`/onboarding/${finalPhase}`, { replace: true });
+    },
+    [apiPhase, navigate, serverPhase],
+  );
+
+  /** Back-compat wrapper used by existing step buttons. */
   const goToStep = (nextStep: number) => {
-    const clampedStep = Math.min(5, Math.max(1, nextStep));
-    setStep(clampedStep);
-    navigate(`/onboarding/step/${clampedStep}`);
+    if (launchLocked) {
+      goToPhase('launch');
+      return;
+    }
+    const phase = stepNumberToPhase[Math.min(5, Math.max(1, nextStep))] || 'profile';
+    goToPhase(phase);
   };
 
   const updateFormData = (updater: any) => {
     setFormData((previousValue: any) => {
       const nextValue = typeof updater === 'function' ? updater(previousValue) : updater;
-      if (nextValue?.establishmentId) {
-        persistStoredLaunchData(nextValue);
-      }
+      persistStoredLaunchData(nextValue || {});
       return nextValue;
     });
   };
 
+  // Boot: load server session and clamp URL to allowed phase.
   useEffect(() => {
-    const parsedStep = Number(stepParam);
-    const normalizedStep = Number.isInteger(parsedStep) && parsedStep >= 1 && parsedStep <= 5 ? parsedStep : 1;
-    setStep(normalizedStep);
+    let cancelled = false;
+    (async () => {
+      try {
+        const session = await onboardingApi.getSession();
+        if (cancelled) return;
 
-    if (normalizedStep === 1 && formData.establishmentId) {
-      clearStoredLaunchData();
-      setFormData({});
-      return;
-    }
+        const wantsNewLocation =
+          typeof window !== 'undefined' &&
+          new URLSearchParams(window.location.search).get('new') === '1';
 
-    // Redirect to step 1 if data is missing on later steps (2, 3, 4)
-    if (normalizedStep > 1 && normalizedStep < 5 && !formData.name) {
-      navigate('/onboarding/step/1', { replace: true });
-      return;
-    }
+        let active = session;
+        // Add Location entry: ?new=1 forces a fresh wizard.
+        // Do NOT auto-restart plain LAUNCH — that is the post-pay done screen
+        // (refresh after first payment must keep the user on launch).
+        if (
+          !sessionBootRef.current &&
+          establishments.length > 0 &&
+          (wantsNewLocation || session.phase === 'COMPLETED')
+        ) {
+          active = await onboardingApi.restart();
+        }
 
-    if (normalizedStep === 5 && !formData.establishmentLoginId) {
-      navigate('/onboarding/step/1', { replace: true });
-      return;
-    }
+        const mapped = applyServerSession(active);
+        const locked = isLaunchLocked(mapped, active.phase);
+        const requested = resolveRequestedPhase();
+        const effective = clampPhase(requested, mapped, locked);
+        setStep(phaseToStepNumber[effective]);
+        if (phaseParam !== effective || stepParam || wantsNewLocation) {
+          navigate(`/onboarding/${effective}`, { replace: true });
+        }
+        sessionBootRef.current = true;
+      } catch (err) {
+        console.error('[Onboarding] Failed to load session', err);
+        const requested = resolveRequestedPhase();
+        const fallback = clampPhase(requested, 'profile', false);
+        setServerPhase('profile');
+        setStep(phaseToStepNumber[fallback]);
+        navigate(`/onboarding/${fallback}`, { replace: true });
+      } finally {
+        if (!cancelled) setSessionReady(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- boot once per mount / auth account
+  }, [account?.id]);
 
-    if (stepParam !== String(normalizedStep)) {
-      navigate(`/onboarding/step/${normalizedStep}`, { replace: true });
+  // Re-clamp when URL changes after boot (tamper / manual navigation).
+  useEffect(() => {
+    if (!sessionReady) return;
+    const requested = resolveRequestedPhase();
+    const effective = clampPhase(requested, serverPhase, launchLocked);
+    setStep(phaseToStepNumber[effective]);
+    if (phaseParam !== effective || stepParam) {
+      navigate(`/onboarding/${effective}`, { replace: true });
     }
-  }, [navigate, stepParam, formData.establishmentId, formData.establishmentLoginId, formData.name]);
+  }, [
+    sessionReady,
+    phaseParam,
+    stepParam,
+    serverPhase,
+    launchLocked,
+    resolveRequestedPhase,
+    navigate,
+  ]);
+
+  useBlockHistoryBack(launchLocked && sessionReady, () => {
+    toast(
+      t('onboarding.security.cannotGoBack', {
+        defaultValue: 'Setup is finished. You cannot return to payment.',
+      }),
+      { icon: '🔒' },
+    );
+  });
 
   const launchCenterTourSteps: TourStep[] = [
     {
@@ -608,79 +785,147 @@ export function OnboardingPage() {
     }
   }, [form4, hasSavedCard, useSavedCard]);
 
-  const onStep1Submit = (data: any) => {
-    // If currency is disabled, it might be missing from data
+  const onStep1Submit = async (data: any) => {
+    if (launchLocked) {
+      goToPhase('launch');
+      return;
+    }
+    setIsLoading(true);
     const finalData = {
       ...data,
-      currency: establishments.length > 0 ? establishments[0].currency : data.currency
-    };
-
-    // Save duplication preferences
-    updateFormData((prev: any) => ({
-      ...prev,
-      ...finalData,
-      duplicateFromId,
+      currency: establishments.length > 0 ? establishments[0].currency : data.currency,
+      timezone: getBestTimeZoneForCountry(data.country || formData.country, getDeviceTimeZone()),
+      duplicateFromId: duplicateFromId || undefined,
       duplicateInventory: duplicateFromId ? duplicateInventory : false,
       duplicateDiscounts: duplicateFromId ? duplicateDiscounts : false,
       duplicatePaymentMethods: duplicateFromId ? duplicatePaymentMethods : false,
-    }));
+    };
 
-    goToStep(2);
+    try {
+      const session = await onboardingApi.saveProfile(finalData);
+      const mapped = applyServerSession(session);
+      updateFormData((prev: any) => ({ ...prev, ...finalData }));
+      goToPhase(mapped, {
+        force: true,
+        serverPhaseOverride: mapped,
+        apiPhaseOverride: session.phase,
+      });
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.message ||
+        t('onboarding.errors.failedToComplete', { defaultValue: 'Could not save this step. Please try again.' });
+      toast.error(typeof msg === 'string' ? msg : 'Could not save this step.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const onStep2Submit = async (data: any) => {
+    if (launchLocked) {
+      goToPhase('launch');
+      return;
+    }
     setIsLoading(true);
     const rawLoginId = (data.establishmentLoginId || '').trim();
 
     try {
-        const response = await api.get('/api/brands/availability/establishment-login-id', {
-            params: { establishmentLoginId: rawLoginId },
-            // Onboarding has no location yet — never attach a stale establishment header.
-            headers: { 'X-Skip-Establishment-Header': 'true' },
-        });
+      // Keep pre-check for friendlier field errors, then hard-gate via checkpoint.
+      const response = await api.get('/api/brands/availability/establishment-login-id', {
+        params: { establishmentLoginId: rawLoginId },
+        headers: { 'X-Skip-Establishment-Header': 'true' },
+      });
 
-        if (!response.data?.available) {
-            form2.setError('establishmentLoginId', { 
-                type: 'server', 
-                message: response.data?.message || t('owner.brands.validation.loginIdTakenHint', { defaultValue: 'It must be unique across all locations and brands.' }) 
-            });
-            setIsLoading(false);
-            return;
-        }
-    } catch (err: any) {
-        const rawMessage = err?.response?.data?.message;
-        const serverMessage = Array.isArray(rawMessage)
-          ? rawMessage.filter(Boolean).join(' ')
-          : typeof rawMessage === 'string'
-            ? rawMessage
-            : '';
-        // Prefer a clear auth hint over the generic verify failure when session expired.
-        const status = err?.response?.status;
-        const fallback =
-          status === 401 || status === 403
-            ? t('owner.brands.validation.loginIdAuthFailed', {
-                defaultValue:
-                  'Your session could not be verified. Please refresh the page and log in again as the account owner.',
-              })
-            : t('owner.brands.validation.loginIdCheckFailed', {
-                defaultValue: 'Could not verify this Login ID right now. Please try again.',
-              });
+      if (!response.data?.available) {
         form2.setError('establishmentLoginId', {
-            type: 'server',
-            message: serverMessage || fallback,
+          type: 'server',
+          message:
+            response.data?.message ||
+            t('owner.brands.validation.loginIdTakenHint', {
+              defaultValue: 'It must be unique across all locations and brands.',
+            }),
         });
         setIsLoading(false);
         return;
-    }
+      }
 
-    setIsLoading(false);
-    updateFormData((prev: any) => ({ ...prev, ...data }));
-    goToStep(3);
+      const session = await onboardingApi.saveLocationLogin({
+        establishmentLoginId: rawLoginId,
+      });
+      const mapped = applyServerSession(session);
+      updateFormData((prev: any) => ({
+        ...prev,
+        ...data,
+        establishmentLoginId: rawLoginId.toLowerCase(),
+        // Keep password only in memory (not sessionStorage — stripped by sanitize).
+        establishmentPassword: data.establishmentPassword,
+      }));
+      goToPhase(mapped, {
+        force: true,
+        serverPhaseOverride: mapped,
+        apiPhaseOverride: session.phase,
+      });
+    } catch (err: any) {
+      const rawMessage = err?.response?.data?.message;
+      const serverMessage = Array.isArray(rawMessage)
+        ? rawMessage.filter(Boolean).join(' ')
+        : typeof rawMessage === 'string'
+          ? rawMessage
+          : '';
+      const status = err?.response?.status;
+      const fallback =
+        status === 401 || status === 403
+          ? t('owner.brands.validation.loginIdAuthFailed', {
+              defaultValue:
+                'Your session could not be verified. Please refresh the page and log in again as the account owner.',
+            })
+          : t('owner.brands.validation.loginIdCheckFailed', {
+              defaultValue: 'Could not verify this Login ID right now. Please try again.',
+            });
+      form2.setError('establishmentLoginId', {
+        type: 'server',
+        message: serverMessage || fallback,
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const onStep3Submit = (data: any) => {
-    updateFormData((prev: any) => ({ ...prev, ...data }));
-    goToStep(4);
+  const onStep3Submit = async (data: any) => {
+    if (launchLocked) {
+      goToPhase('launch');
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const payload = isAdditionalLocation
+        ? { lockedOwner: true }
+        : {
+            lockedOwner: false,
+            firstName: data.firstName,
+            lastName: data.lastName,
+            username: data.username,
+          };
+      const session = await onboardingApi.saveOwnerLogin(payload);
+      const mapped = applyServerSession(session);
+      updateFormData((prev: any) => ({
+        ...prev,
+        ...data,
+        // password memory-only
+        password: data.password,
+      }));
+      goToPhase(mapped, {
+        force: true,
+        serverPhaseOverride: mapped,
+        apiPhaseOverride: session.phase,
+      });
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.message ||
+        t('onboarding.errors.failedToComplete', { defaultValue: 'Could not save this step.' });
+      toast.error(typeof msg === 'string' ? msg : 'Could not save this step.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const findOwnedEstablishmentByLoginId = async (loginId: string) => {
@@ -688,20 +933,11 @@ export function OnboardingPage() {
     if (!normalizedLoginId) return null;
 
     const latestEstablishments = await refreshEstablishments();
-    return latestEstablishments.find(
-      (est) => est.establishmentLoginId?.toLowerCase() === normalizedLoginId
-    ) || null;
-  };
-
-  const saveOwnerLoginCredentials = async () => {
-    if (isAdditionalLocation) return;
-
-    await api.put('/api/accounts/owner-employee', {
-      username: formData.username,
-      password: formData.password,
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-    });
+    return (
+      latestEstablishments.find(
+        (est) => est.establishmentLoginId?.toLowerCase() === normalizedLoginId,
+      ) || null
+    );
   };
 
   const finishOnboardingWithEstablishment = async (establishment: any) => {
@@ -724,24 +960,40 @@ export function OnboardingPage() {
     localStorage.setItem('selectedEstablishmentId', estId);
 
     try {
-      const welcomeTargets = new Set<string>([
-        estId,
-        nextEstablishment.establishmentLoginId,
-        formData.establishmentLoginId,
-      ].filter(Boolean) as string[]);
+      const welcomeTargets = new Set<string>(
+        [estId, nextEstablishment.establishmentLoginId, formData.establishmentLoginId].filter(
+          Boolean,
+        ) as string[],
+      );
 
       welcomeTargets.forEach((target) => {
         localStorage.removeItem(`mintcom.dashboard.setup.dismissed.${target}`);
-        localStorage.removeItem(`mintcom.dashboard.setup.dismissed.v3.${account?.id || 'anonymous'}.${target}`);
+        localStorage.removeItem(
+          `mintcom.dashboard.setup.dismissed.v3.${account?.id || 'anonymous'}.${target}`,
+        );
         localStorage.removeItem(`mintcom.dashboard.setup.dismissed.v3.anonymous.${target}`);
-        localStorage.removeItem(`mintcom.dashboard.setup.dismissed.v6.${account?.id || 'anonymous'}.${target}`);
+        localStorage.removeItem(
+          `mintcom.dashboard.setup.dismissed.v6.${account?.id || 'anonymous'}.${target}`,
+        );
         localStorage.removeItem(`mintcom.dashboard.setup.dismissed.v6.anonymous.${target}`);
-        sessionStorage.removeItem(`mintcom.dashboard.setup.session.dismissed.v4.${account?.id || 'anonymous'}.${target}`);
-        sessionStorage.removeItem(`mintcom.dashboard.setup.session.dismissed.v4.anonymous.${target}`);
-        sessionStorage.removeItem(`mintcom.dashboard.setup.session.dismissed.v5.${account?.id || 'anonymous'}.${target}`);
-        sessionStorage.removeItem(`mintcom.dashboard.setup.session.dismissed.v5.anonymous.${target}`);
-        sessionStorage.removeItem(`mintcom.dashboard.setup.session.dismissed.v6.${account?.id || 'anonymous'}.${target}`);
-        sessionStorage.removeItem(`mintcom.dashboard.setup.session.dismissed.v6.anonymous.${target}`);
+        sessionStorage.removeItem(
+          `mintcom.dashboard.setup.session.dismissed.v4.${account?.id || 'anonymous'}.${target}`,
+        );
+        sessionStorage.removeItem(
+          `mintcom.dashboard.setup.session.dismissed.v4.anonymous.${target}`,
+        );
+        sessionStorage.removeItem(
+          `mintcom.dashboard.setup.session.dismissed.v5.${account?.id || 'anonymous'}.${target}`,
+        );
+        sessionStorage.removeItem(
+          `mintcom.dashboard.setup.session.dismissed.v5.anonymous.${target}`,
+        );
+        sessionStorage.removeItem(
+          `mintcom.dashboard.setup.session.dismissed.v6.${account?.id || 'anonymous'}.${target}`,
+        );
+        sessionStorage.removeItem(
+          `mintcom.dashboard.setup.session.dismissed.v6.anonymous.${target}`,
+        );
         localStorage.removeItem(`mintcom.dashboard.visited.${target}`);
         localStorage.setItem(`mintcom.dashboard.welcome.pending.${target}`, 'true');
       });
@@ -750,38 +1002,42 @@ export function OnboardingPage() {
     }
 
     updateFormData((prev: any) => ({ ...prev, establishmentId: estId }));
-    goToStep(5);
+    goToPhase('launch', {
+      force: true,
+      serverPhaseOverride: 'launch',
+      apiPhaseOverride: 'LAUNCH',
+    });
     toast.success(t('onboarding.messages.complete'));
     await refreshEstablishments();
   };
 
-
   const onStep4Submit = async (data: any) => {
-    setIsLoading(true);
-
-    // Final check for ID availability to avoid failures after card entry
-    try {
-      const response = await api.get('/api/brands/availability/establishment-login-id', {
-          params: { establishmentLoginId: formData.establishmentLoginId },
-          headers: { 'X-Skip-Establishment-Header': 'true' },
-      });
-
-      if (!response.data?.available) {
-          const existingOwnedEstablishment = await findOwnedEstablishmentByLoginId(formData.establishmentLoginId);
-          if (existingOwnedEstablishment) {
-            await saveOwnerLoginCredentials();
-            await finishOnboardingWithEstablishment(existingOwnedEstablishment);
-            return;
-          }
-
-          toast.error(response.data?.message || t('owner.brands.validation.loginIdTakenHint', { defaultValue: 'This Establishment ID is already in use. Please choose a different one.' }));
-          setIsLoading(false);
-          goToStep(2);
-          return;
-      }
-    } catch {
-      // Continue if check fails
+    if (launchLocked) {
+      goToPhase('launch');
+      return;
     }
+
+    // Passwords are memory-only (never sessionStorage). Refresh on billing requires re-entry.
+    if (!formData.establishmentPassword) {
+      toast.error(
+        t('onboarding.security.reenterLocationPassword', {
+          defaultValue: 'Please re-enter your location password to finish setup.',
+        }),
+      );
+      goToPhase('location-login');
+      return;
+    }
+    if (!isAdditionalLocation && !formData.password && !formData.lockedOwner) {
+      toast.error(
+        t('onboarding.security.reenterOwnerPassword', {
+          defaultValue: 'Please re-enter your owner password to finish setup.',
+        }),
+      );
+      goToPhase('owner-login');
+      return;
+    }
+
+    setIsLoading(true);
 
     // Handle payment method
     let paymentMethodToken = '';
@@ -791,22 +1047,21 @@ export function OnboardingPage() {
       paymentMethodToken = 'use_saved_card';
       savedCardId = account?.defaultCardId || '';
     } else {
-      // A card is required to start, even for the free trial (first establishment),
-      // matching the admin portal where billing card capture is always required.
-      // Save only safe card metadata. A gateway token/id will replace this flow later.
       const parsedExpiry = parseExpiryDate(data.expiryDate || '');
-      const cardDigits = getCardDigits(data.cardNumber || '');
+      const cardDigitsLocal = getCardDigits(data.cardNumber || '');
 
-      if (!parsedExpiry || !isValidCardNumber(cardDigits)) {
-        toast.error(t('paymentMethods.messages.failedToAdd', { defaultValue: 'Failed to add card' }));
+      if (!parsedExpiry || !isValidCardNumber(cardDigitsLocal)) {
+        toast.error(
+          t('paymentMethods.messages.failedToAdd', { defaultValue: 'Failed to add card' }),
+        );
         setIsLoading(false);
         return;
       }
 
       try {
         const response = await api.post('/api/accounts/cards', {
-          last4: cardDigits.slice(-4),
-          brand: PAYMENT_CARD_API_BRAND[detectCardBrand(cardDigits)],
+          last4: cardDigitsLocal.slice(-4),
+          brand: PAYMENT_CARD_API_BRAND[detectCardBrand(cardDigitsLocal)],
           expMonth: parsedExpiry.month,
           expYear: parsedExpiry.year,
           cardholderName: data.cardName.trim(),
@@ -816,7 +1071,8 @@ export function OnboardingPage() {
 
         savedCardId = response.data.card?.id;
         paymentMethodToken = 'use_saved_card';
-        const newDefaultPaymentMethod = response.data.card?.last4 || cardDigits.slice(-4);
+        const newDefaultPaymentMethod =
+          response.data.card?.last4 || cardDigitsLocal.slice(-4);
 
         if (savedCardId) {
           updateAccount({
@@ -828,55 +1084,43 @@ export function OnboardingPage() {
         console.error('Failed to save payment method:', err);
         toast.error('Failed to save card. Please try again.');
         setIsLoading(false);
-        return; // Stop execution if card save fails
+        return;
       }
     }
 
     try {
-      // 1. Create Establishment with user-provided Establishment Login ID
-      const establishmentPayload = {
-        name: formData.name,
-        type: formData.type,
-        address: formData.address,
-        currency: formData.currency,
-        country: formData.country,
-        timezone: getBestTimeZoneForCountry(formData.country, getDeviceTimeZone()),
-        establishmentLoginId: formData.establishmentLoginId, // User-provided unique ID for this establishment
-        establishmentPassword: formData.establishmentPassword, // User-provided password
-        paymentMethodToken: paymentMethodToken,
-        savedCardId: savedCardId,
+      const completeBody = {
+        establishmentLoginId: formData.establishmentLoginId,
+        establishmentPassword: formData.establishmentPassword,
+        username: formData.username,
+        password: formData.password,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        paymentMethodToken,
+        savedCardId,
         billingCycle: billingCycle || MINTCOM_PRICING.defaultBillingCycle,
         monthlyPrice: currentMonthlyPrice,
         yearlyPrice: currentYearlyPrice,
-        // Duplication params
-        duplicateFromId: formData.duplicateFromId,
-        duplicateInventory: formData.duplicateInventory,
-        duplicateDiscounts: formData.duplicateDiscounts,
-        duplicatePaymentMethods: formData.duplicatePaymentMethods,
       };
 
-      let createdEstablishment: any;
-      try {
-        const estRes = await api.post('/api/establishments', establishmentPayload, {
-          headers: {
-            'X-Skip-Establishment-Header': 'true'
-          }
+      const result = await onboardingApi.complete(completeBody);
+      const mapped = applyServerSession(result);
+
+      const createdEstablishment = result.establishment;
+      if (createdEstablishment?.id || result.establishmentId) {
+        await finishOnboardingWithEstablishment({
+          ...(createdEstablishment || {}),
+          id: createdEstablishment?.id || result.establishmentId,
         });
-        createdEstablishment = estRes.data.establishment || estRes.data;
-      } catch (err: any) {
-        const status = err.response?.status;
-        const message = String(err.response?.data?.message || '');
-        if (status === 409 || message.toLowerCase().includes('establishment id')) {
-          createdEstablishment = await findOwnedEstablishmentByLoginId(formData.establishmentLoginId);
-        }
-
-        if (!createdEstablishment) {
-          throw err;
-        }
+      } else {
+        goToPhase('launch', {
+          force: true,
+          serverPhaseOverride: mapped || 'launch',
+          apiPhaseOverride: result.phase || 'LAUNCH',
+        });
+        toast.success(t('onboarding.messages.complete'));
+        await refreshEstablishments();
       }
-
-      await saveOwnerLoginCredentials();
-      await finishOnboardingWithEstablishment(createdEstablishment);
     } catch (err: any) {
       const status = err?.response?.status;
       const errorData = err.response?.data?.message;
@@ -886,14 +1130,29 @@ export function OnboardingPage() {
           ? errorData
           : t('onboarding.errors.failedToComplete');
 
-      // Surface actionable guidance for the common production failure modes.
       if (status === 401 || status === 403) {
         errorMessage =
           'Your session expired or could not be verified. Please refresh, sign in again with Google, and retry.';
       } else if (status === 409) {
+        const code = err?.response?.data?.code || err?.response?.data?.message?.code;
+        if (code === 'ONBOARDING_ALREADY_COMPLETE' || code === 'ONBOARDING_PHASE_INVALID') {
+          try {
+            const session = await onboardingApi.getSession();
+            applyServerSession(session);
+            if (session.phase === 'LAUNCH' || session.phase === 'COMPLETED') {
+              setServerPhase('launch');
+              setApiPhase(session.phase);
+              goToPhase('launch', { force: true });
+              return;
+            }
+          } catch {
+            // fall through
+          }
+        }
         errorMessage =
-          errorMessage ||
-          'This Location Login ID is already taken. Go back and choose another ID.';
+          typeof errorMessage === 'string'
+            ? errorMessage
+            : 'This Location Login ID is already taken. Go back and choose another ID.';
       } else if (status === 500 || status === 502) {
         errorMessage =
           errorMessage && errorMessage !== 'Internal server error'
@@ -907,17 +1166,16 @@ export function OnboardingPage() {
       });
 
       toast.error(errorMessage, {
-        duration: errorMessage.length > 50 ? 6000 : 4000,
+        duration: String(errorMessage).length > 50 ? 6000 : 4000,
         style: {
           maxWidth: '400px',
-          whiteSpace: 'pre-line'
-        }
+          whiteSpace: 'pre-line',
+        },
       });
     } finally {
       setIsLoading(false);
     }
   };
-
 
   const businessTypes = [
     { id: 'restaurant', label: t('onboarding.step1.businessTypes.restaurant'), icon: UtensilsCrossed },
@@ -944,6 +1202,14 @@ export function OnboardingPage() {
   };
 
   const totalSteps = 4;
+
+  if (!sessionReady) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-[#050505] flex items-center justify-center">
+        <Loader2 className="animate-spin text-mintcom-green" size={36} />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#050505] flex flex-col transition-colors duration-300" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
@@ -1473,10 +1739,11 @@ export function OnboardingPage() {
                     <div className="pt-4">
                       <button
                         type="button"
-                        onClick={() => goToStep(4)}
-                        disabled={isOwnerLoginLoading}
+                        onClick={() => onStep3Submit({ lockedOwner: true })}
+                        disabled={isOwnerLoginLoading || isLoading}
                         className="w-full py-5 bg-mintcom-green text-black text-base font-sans font-bold rounded-2xl hover:bg-mintcom-green/90 transition-all shadow-xl shadow-mintcom-green/20 disabled:opacity-50 flex items-center justify-center gap-3 active:scale-[0.98]"
                       >
+                        {isLoading ? <Loader2 className="animate-spin" size={24} /> : null}
                         {isRTL && <ArrowRight size={24} />}
                         {t('onboarding.nextStep')}
                         {!isRTL && <ArrowRight size={24} />}

@@ -673,7 +673,7 @@ const PAGE_CONTEXTS: ChatbotPageContextDefinition[] = [
   },
   {
     id: 'onboarding',
-    match: ['/onboarding', '/onboarding/step/:step'],
+    match: ['/onboarding', '/onboarding/:phase', '/onboarding/step/:step'],
     title: text('Onboarding', 'الإعداد'),
     launcherPrompt: text('Need help finishing setup?', 'هل تحتاج مساعدة في إكمال الإعداد؟'),
     welcomeMessage: text(

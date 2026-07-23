@@ -470,7 +470,7 @@ export function OwnerOverviewPage() {
                             <p className="text-xs font-normal text-gray-500 mb-3 leading-relaxed">{t('owner.overview.growBusinessDesc')}</p>
                             <div className="space-y-2">
                                 <button
-                                    onClick={() => navigate('/onboarding')}
+                                    onClick={() => navigate('/onboarding?new=1')}
                                     className="w-full py-2.5 bg-mintcom-green text-black font-bold rounded-xl text-sm hover:bg-[#5fa888] transition-all shadow-sm"
                                 >
                                     {t('owner.overview.addLocation')}
