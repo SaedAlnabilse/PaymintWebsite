@@ -374,8 +374,8 @@ export function SmartChatbot({ isOpen, onClose }: SmartChatbotProps) {
 
             <div className="relative flex items-center gap-3">
               <div className="relative">
-                <div className="flex h-12 w-12 items-center justify-center">
-                  <img src={MintcomLeafIcon} alt="" className="h-10 w-10 scale-x-[-1] object-contain drop-shadow-md" />
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 ring-1 ring-white/30 backdrop-blur-[2px]">
+                  <img src={MintcomLeafIcon} alt="" className="h-8 w-8 scale-x-[-1] object-contain brightness-0 invert drop-shadow-md" />
                 </div>
               </div>
               <div>

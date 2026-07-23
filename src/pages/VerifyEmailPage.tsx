@@ -63,9 +63,13 @@ export function VerifyEmailPage() {
             <p className="text-sm font-bold text-gray-600 dark:text-gray-300">{message}</p>
             <Link
               to="/login"
-              className="inline-flex items-center justify-center w-full bg-mintcom-green text-black label-strong font-sans py-4 px-6 rounded-2xl hover:bg-mintcom-green/90 transition-all active:scale-95 shadow-lg shadow-mintcom-green/20"
+              className="group relative inline-flex h-14 w-full items-center justify-center gap-2 overflow-hidden rounded-2xl bg-mintcom-green px-6 font-bold text-black shadow-[0_8px_24px_-8px_rgba(124,195,159,0.6)] transition-all hover:bg-mintcom-green/90 active:scale-[0.97]"
             >
-              {t('auth.verifyEmail.continueLogin').toUpperCase()}
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-700 group-hover:translate-x-full"
+              />
+              <span className="relative">{t('auth.verifyEmail.continueLogin')}</span>
             </Link>
           </div>
         )}
@@ -82,7 +86,7 @@ export function VerifyEmailPage() {
             <div className="flex flex-col gap-3">
               <Link
                 to="/login"
-                className="inline-flex items-center justify-center w-full bg-gray-900 dark:bg-white text-white dark:text-black label-strong font-sans py-4 px-6 rounded-2xl hover:scale-105 transition-all active:scale-95 shadow-lg"
+                className="inline-flex h-14 w-full items-center justify-center rounded-2xl bg-gray-900 px-6 font-bold text-white shadow-lg transition-all hover:scale-[1.02] active:scale-[0.97] dark:bg-white dark:text-black"
               >
                 {t('auth.verifyEmail.goToLogin')}
               </Link>

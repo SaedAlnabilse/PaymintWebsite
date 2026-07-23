@@ -2096,9 +2096,14 @@ export function OnboardingPage() {
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
                           transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
-                          className="w-16 h-16 lg:w-20 lg:h-20 bg-gradient-to-br from-mintcom-green to-emerald-400 rounded-3xl flex items-center justify-center shadow-2xl shadow-mintcom-green/40"
+                          className="relative w-16 h-16 lg:w-20 lg:h-20 bg-gradient-to-br from-mintcom-green to-emerald-400 rounded-3xl flex items-center justify-center shadow-2xl shadow-mintcom-green/40 ring-1 ring-white/25"
                         >
-                          <img src={MintcomLeafIcon} alt="" style={{ width: 32, height: 32 }} className="scale-x-[-1] object-contain" />
+                          <span className="absolute inset-2 rounded-2xl bg-white/20 backdrop-blur-[2px]" aria-hidden />
+                          <img
+                            src={MintcomLeafIcon}
+                            alt=""
+                            className="relative h-9 w-9 scale-x-[-1] object-contain brightness-0 invert drop-shadow-[0_2px_6px_rgba(0,0,0,0.18)] lg:h-11 lg:w-11"
+                          />
                         </motion.div>
                         <div>
                           <motion.h2
@@ -2192,9 +2197,14 @@ export function OnboardingPage() {
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
                           transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
-                          className="w-16 h-16 lg:w-20 lg:h-20 bg-gradient-to-br from-mintcom-green to-emerald-400 rounded-3xl flex items-center justify-center shadow-2xl shadow-mintcom-green/40"
+                          className="relative w-16 h-16 lg:w-20 lg:h-20 bg-gradient-to-br from-mintcom-green to-emerald-400 rounded-3xl flex items-center justify-center shadow-2xl shadow-mintcom-green/40 ring-1 ring-white/25"
                         >
-                          <img src={MintcomLeafIcon} alt="" style={{ width: 32, height: 32 }} className="scale-x-[-1] object-contain" />
+                          <span className="absolute inset-2 rounded-2xl bg-white/20 backdrop-blur-[2px]" aria-hidden />
+                          <img
+                            src={MintcomLeafIcon}
+                            alt=""
+                            className="relative h-9 w-9 scale-x-[-1] object-contain brightness-0 invert drop-shadow-[0_2px_6px_rgba(0,0,0,0.18)] lg:h-11 lg:w-11"
+                          />
                         </motion.div>
                         <div>
                           <motion.h2
