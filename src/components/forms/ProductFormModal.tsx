@@ -420,11 +420,18 @@ export function ProductFormModal({
     }
   };
 
+  const imageVariationRef = useRef(0);
+
   const generateBackendProductImage = async (signal: AbortSignal) => {
     const prompt = buildProductImagePrompt(currentImageContext);
+    // Each click bumps variation so the API uses a new seed / style instead of
+    // returning the same cached image for the same product name.
+    const variation = imageVariationRef.current;
+    imageVariationRef.current += 1;
     const response = await api.post('/api/items/generate-image', {
       prompt,
       context: currentImageContext,
+      variation,
     }, { signal });
     const imageSource = extractProductImageSource(response.data);
 
@@ -648,6 +655,7 @@ export function ProductFormModal({
       setSelectedImage(null);
       setGeneratedImageSignature(null);
       setIsImageDeleted(false);
+      imageVariationRef.current = 0;
 
       // Fetch item attributes if editing
       const fetchItemAttrs = async () => {
@@ -682,6 +690,7 @@ export function ProductFormModal({
       setGeneratedImageSignature(null);
       setSelectedAttributeIds([]);
       setIsImageDeleted(false);
+      imageVariationRef.current = 0;
     }
     setCategorySearchQuery('');
     setAddonsSearchQuery('');
