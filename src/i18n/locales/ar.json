@@ -1029,7 +1029,7 @@
     "zeroDecimal": "٠.٠٠"
   },
   "community": {
-    "auth_required": "يرجى تسجيل الدخول من أجل {{action}}",
+    "auth_required": "يرجى تسجيل الدخول لـ{{action}}.",
     "badges": {
       "champion": "بطل",
       "pro_user": "مستخدم محترف"
@@ -1062,7 +1062,8 @@
       "tips_tricks": "نصائح وحيل",
       "tipsDesc": "شارك حيل سير العمل وأفضل الممارسات.",
       "ui_ux": "واجهة المستخدم/تجربة المستخدم",
-      "uiUxDesc": "تحسينات التصميم والتخطيط وتجربة المستخدم."
+      "uiUxDesc": "تحسينات التصميم والتخطيط وتجربة المستخدم.",
+      "label": "الفئات"
     },
     "cta": {
       "joinHero": "انضم إلى هذا النقاش",
@@ -1169,7 +1170,10 @@
         "title_part3": "معاً"
       },
       "search_placeholder": "البحث في المناقشات والأفكار والأدلة...",
-      "title": "مركز المجتمع"
+      "title": "المجتمع",
+      "subtitle": "نصائح وأسئلة وأفكار من تجار مثلك.",
+      "comingSoon": "قريباً.",
+      "phaseInDevelopment": "هذا القسم قيد التطوير النشط."
     },
     "ideas": {
       "all": "جميع الأفكار",
@@ -1266,13 +1270,17 @@
       "popular": "الأكثر شهرة",
       "recent": "الأحدث",
       "top_voted": "الأكثر تصويتاً",
-      "trending": "الرائجة"
+      "trending": "الرائج",
+      "top": "الأعلى تصويتاً",
+      "relevance": "الصلة",
+      "newest": "الأحدث"
     },
     "stats": {
       "discussions": "مناقشات",
       "guides": "أدلة",
       "ideas": "أفكار مقدمة",
-      "members": "أعضاء"
+      "members": "أعضاء",
+      "topics": "مواضيع"
     },
     "status": {
       "all": "جميع الحالات",
@@ -1292,6 +1300,184 @@
       "article": "مقالة",
       "tutorial": "درس تعليمي",
       "video": "فيديو"
+    },
+    "errors": {
+      "loadFailed": "فشل تحميل محتوى المجتمع.",
+      "rateLimited": "إجراءات كثيرة. يرجى الإبطاء.",
+      "actionFailed": "فشل الإجراء.",
+      "forbidden": "ليس لديك إذن للقيام بهذا.",
+      "notFound": "المحتوى غير موجود."
+    },
+    "pagination": {
+      "prev": "السابق",
+      "next": "التالي"
+    },
+    "reactions": {
+      "votes": "أصوات",
+      "upvote": "تصويت"
+    },
+    "topic": {
+      "pinned": "مثبت",
+      "announcement": "إعلان",
+      "solved": "تم الحل",
+      "locked": "مغلق",
+      "replies": "ردود",
+      "views": "مشاهدات"
+    },
+    "reply": {
+      "replies": "الردود",
+      "solution": "الحل المقبول",
+      "edited": "تم التعديل",
+      "loginToReply": "سجّل الدخول للرد",
+      "writeReply": "اكتب رداً",
+      "replyToComment": "الرد على تعليق",
+      "placeholder": "اكتب ردك...",
+      "post": "نشر الرد",
+      "posting": "جاري النشر...",
+      "posted": "تم نشر الرد!"
+    },
+    "home": {
+      "allTopics": "كل المواضيع",
+      "trending": "الرائج",
+      "unanswered": "بدون رد",
+      "recentTopics": "المواضيع الأخيرة"
+    },
+    "empty": {
+      "noResults": "لا يوجد شيء هنا بعد.",
+      "noTopics": "لا توجد مواضيع بعد. كن أول من يبدأ نقاشاً!",
+      "noReplies": "لا توجد ردود بعد.",
+      "noSearchResults": "لم يتم العثور على نتائج. جرب كلمات مختلفة.",
+      "categoryNotFound": "الفئة غير موجودة.",
+      "topicNotFound": "الموضوع غير موجود.",
+      "profileNotFound": "الملف الشخصي غير موجود.",
+      "tagNotFound": "الوسم غير موجود.",
+      "noFeatureRequests": "لا توجد طلبات ميزات بعد.",
+      "noTopicsTag": "لا توجد مواضيع بهذا الوسم بعد."
+    },
+    "search": {
+      "title": "بحث",
+      "placeholder": "ابحث في المواضيع...",
+      "button": "بحث",
+      "resultsFound": "نتيجة",
+      "startTyping": "ابدأ الكتابة للبحث في المجتمع."
+    },
+    "profile": {
+      "posts": "منشورات",
+      "solutions": "حلول",
+      "reputation": "السمعة",
+      "joined": "انضم في",
+      "recentActivity": "النشاط الأخير",
+      "noActivity": "لا يوجد نشاط أخير.",
+      "rank": "الترتيب"
+    },
+    "tags": {
+      "label": "الوسوم"
+    },
+    "featureRequests": {
+      "label": "طلبات الميزات",
+      "title": "طلبات الميزات",
+      "description": "اقترح ميزات جديدة وصوّت على ما يهمك أكثر.",
+      "all": "الكل",
+      "status": {
+        "OPEN": "مفتوح",
+        "UNDER_REVIEW": "قيد المراجعة",
+        "PLANNED": "مخطط",
+        "IN_PROGRESS": "قيد التنفيذ",
+        "SHIPPED": "تم الإطلاق",
+        "DECLINED": "مرفوض"
+      }
+    },
+    "editor": {
+      "uploadImage": "رفع صورة",
+      "edit": "تحرير",
+      "preview": "معاينة"
+    },
+    "compose": {
+      "title": "موضوع جديد",
+      "category": "الفئة",
+      "titleLabel": "العنوان",
+      "titlePlaceholder": "ما هو موضوعك؟",
+      "bodyLabel": "المحتوى",
+      "bodyPlaceholder": "صف موضوعك بالتفصيل...",
+      "tagsLabel": "الوسوم",
+      "tagPlaceholder": "أضف وسوماً (Enter للإضافة)",
+      "post": "نشر الموضوع",
+      "posting": "جاري النشر...",
+      "posted": "تم إنشاء الموضوع!"
+    },
+    "follow": {
+      "follow": "متابعة",
+      "following": "متابع"
+    },
+    "bookmark": {
+      "title": "حفظ لاحقاً"
+    },
+    "notifications": {
+      "title": "الإشعارات",
+      "markAll": "تحديد الكل كمقروء",
+      "markedAll": "تم تحديد الكل كمقروء",
+      "empty": "لا توجد إشعارات بعد.",
+      "view": "عرض"
+    },
+    "settings": {
+      "title": "إعدادات المجتمع",
+      "emailDigest": "ملخص البريد",
+      "digestOff": "إيقاف",
+      "digestDaily": "يومي",
+      "digestWeekly": "أسبوعي",
+      "push": "إشعارات الدفع",
+      "replies": "الردود على مواضيعك",
+      "mentions": "الإشارات",
+      "solutions": "قبول الحل",
+      "status": "تغييرات حالة الميزة",
+      "saved": "تم حفظ التفضيلات"
+    },
+    "moderation": {
+      "report": "إبلاغ",
+      "reportTitle": "الإبلاغ عن محتوى",
+      "reason": "السبب",
+      "details": "تفاصيل (اختياري)",
+      "submitReport": "إرسال البلاغ",
+      "submitting": "جاري الإرسال...",
+      "reportSent": "تم إرسال البلاغ. شكراً.",
+      "reportNoop": "تمت المعالجة مسبقاً.",
+      "mod": "إشراف",
+      "actionDone": "تم تنفيذ الإجراء",
+      "queueTitle": "قائمة الإشراف",
+      "queueHint": "البلاغات المفتوحة. التحليلات الكاملة في بوابة الإدارة.",
+      "queueEmpty": "القائمة فارغة.",
+      "reportedBy": "أبلغ بواسطة",
+      "dismiss": "تجاهل",
+      "reasons": {
+        "SPAM": "رسائل مزعجة",
+        "ABUSE": "إساءة",
+        "OFF_TOPIC": "خارج الموضوع",
+        "HARASSMENT": "تحرش",
+        "ILLEGAL": "غير قانوني",
+        "OTHER": "أخرى"
+      },
+      "actions": {
+        "HIDE": "إخفاء",
+        "UNHIDE": "إظهار",
+        "LOCK": "قفل",
+        "UNLOCK": "فتح",
+        "PIN": "تثبيت",
+        "UNPIN": "إلغاء التثبيت",
+        "DELETE": "حذف",
+        "WARN": "تحذير",
+        "SUSPEND": "تعليق",
+        "BAN": "حظر",
+        "UNBAN": "رفع الحظر",
+        "SHADOWBAN": "حظر خفي"
+      }
+    },
+    "leaderboard": {
+      "title": "أبرز المساهمين"
+    },
+    "login_cta": {
+      "title": "سجّل الدخول للمشاركة",
+      "body": "انشر المواضيع والردود بعد تسجيل الدخول.",
+      "button": "تسجيل الدخول"
     }
   },
   "contact": {

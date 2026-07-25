@@ -113,6 +113,7 @@ export const REQUIRED_PERMISSIONS: Record<string, string[]> = {
   ],
   'billing': ['manage_billing'], // owner-level only; dashboard billing route was removed
   'establishments': ['manage_settings'],
+  'community': ['community_participate'],
 };
 
 export const POS_PERMISSIONS = [

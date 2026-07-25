@@ -311,6 +311,23 @@ export default {
                 }
             }
 
+            // Bot SSR for community public pages (SEO)
+            if (
+                isHtmlNavigation(request) &&
+                isSearchBot(request.headers.get('User-Agent')) &&
+                url.pathname.startsWith('/community')
+            ) {
+                try {
+                    const prerendered = await prerenderCommunityPage(request, url, targetBase);
+                    if (prerendered) {
+                        return withSecurityHeaders(prerendered, false);
+                    }
+                } catch (err) {
+                    console.error('Community bot prerender failed', err);
+                    // Fall through to SPA
+                }
+            }
+
             // 3. Try to fetch the asset
             const response = await env.ASSETS.fetch(request);
 
@@ -340,3 +357,152 @@ export default {
         }
     }
 };
+
+// ── Community bot SSR helpers ──────────────────────────────────────
+
+const BOT_UA =
+    /googlebot|bingbot|slurp|duckduckbot|baiduspider|yandexbot|facebookexternalhit|twitterbot|linkedinbot|embedly|quora link preview|showyoubot|outbrain|pinterest|applebot|semrushbot|ahrefsbot|rogerbot|screaming frog|whatsapp|telegram/i;
+
+function isSearchBot(ua: string | null): boolean {
+    return !!ua && BOT_UA.test(ua);
+}
+
+function escapeHtml(s: string): string {
+    return s
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+/**
+ * For crawlers hitting /community/* — fetch public API data and return
+ * a minimal HTML document with correct title/meta/JSON-LD so bots can
+ * index without waiting for SPA hydration. Progressive; SPA remains
+ * the human experience.
+ */
+async function prerenderCommunityPage(
+    request: Request,
+    url: URL,
+    apiBase: string,
+): Promise<Response | null> {
+    const path = url.pathname;
+
+    // Topic detail: /community/c/:categorySlug/:topicSlug-:topicId
+    // topicId is the last cuid-like segment after the final dash group
+    const topicMatch = path.match(
+        /^\/community\/c\/[^/]+\/.+-([a-z0-9]{20,})$/i,
+    );
+    // Category: /community/c/:slug
+    const categoryMatch = path.match(/^\/community\/c\/([^/]+)\/?$/);
+    // Home
+    const isHome = path === '/community' || path === '/community/';
+
+    let title = 'Community | Mintcom POS';
+    let description =
+        'Ask questions, share tips, and connect with other Mintcom merchants.';
+    let jsonLd: Record<string, unknown> | null = null;
+    let bodyHtml = '';
+
+    try {
+        if (topicMatch) {
+            const topicId = topicMatch[1];
+            const res = await fetch(`${apiBase}/api/community/topics/${topicId}`, {
+                headers: { Accept: 'application/json' },
+                // Don't follow redirects forever
+                redirect: 'follow',
+            });
+            if (!res.ok) return null;
+            const topic = (await res.json()) as {
+                title?: string;
+                body?: string;
+                bodyHtml?: string;
+                bestReplyId?: string | null;
+                replyCount?: number;
+                author?: { displayName?: string };
+                slug?: string;
+                category?: { slug?: string };
+            };
+            if (!topic?.title) return null;
+
+            title = `${topic.title} | Community | Mintcom POS`;
+            description = (topic.body || '').slice(0, 160);
+            bodyHtml = topic.bodyHtml || escapeHtml(topic.body || '');
+
+            jsonLd = topic.bestReplyId
+                ? {
+                      '@context': 'https://schema.org',
+                      '@type': 'QAPage',
+                      mainEntity: {
+                          '@type': 'Question',
+                          name: topic.title,
+                          text: topic.body,
+                          answerCount: topic.replyCount || 0,
+                      },
+                  }
+                : {
+                      '@context': 'https://schema.org',
+                      '@type': 'DiscussionForumPosting',
+                      headline: topic.title,
+                      text: topic.body,
+                      author: {
+                          '@type': 'Person',
+                          name: topic.author?.displayName || 'Member',
+                      },
+                  };
+        } else if (categoryMatch) {
+            const slug = categoryMatch[1];
+            const res = await fetch(`${apiBase}/api/community/categories/${slug}`, {
+                headers: { Accept: 'application/json' },
+            });
+            if (res.ok) {
+                const cat = (await res.json()) as {
+                    name?: string;
+                    description?: string;
+                };
+                if (cat?.name) {
+                    title = `${cat.name} | Community | Mintcom POS`;
+                    description = cat.description || description;
+                }
+            }
+        } else if (!isHome) {
+            // Other community routes — let SPA handle
+            return null;
+        }
+    } catch {
+        return null;
+    }
+
+    const canonical = `https://mintcompos.com${path}`;
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>${escapeHtml(title)}</title>
+  <meta name="description" content="${escapeHtml(description)}" />
+  <link rel="canonical" href="${canonical}" />
+  <meta property="og:title" content="${escapeHtml(title)}" />
+  <meta property="og:description" content="${escapeHtml(description)}" />
+  <meta property="og:url" content="${canonical}" />
+  <meta property="og:type" content="article" />
+  ${jsonLd ? `<script type="application/ld+json">${JSON.stringify(jsonLd)}</script>` : ''}
+  <meta http-equiv="refresh" content="0;url=${path}" />
+</head>
+<body>
+  <article>
+    <h1>${escapeHtml(title.split(' | ')[0])}</h1>
+    ${bodyHtml ? `<div>${bodyHtml}</div>` : `<p>${escapeHtml(description)}</p>`}
+  </article>
+  <p><a href="${path}">View on Mintcom Community</a></p>
+</body>
+</html>`;
+
+    return new Response(html, {
+        status: 200,
+        headers: {
+            'Content-Type': 'text/html; charset=utf-8',
+            'Cache-Control': 'public, max-age=300, s-maxage=600',
+        },
+    });
+}

@@ -1029,7 +1029,7 @@
     "zeroDecimal": "0.00"
   },
   "community": {
-    "auth_required": "请登录后再{{action}}",
+    "auth_required": "请登录后再{{action}}。",
     "badges": {
       "champion": "社区达人",
       "pro_user": "专业用户"
@@ -1062,7 +1062,8 @@
       "tips_tricks": "技巧与窍门",
       "tipsDesc": "分享您的工作流妙招和最佳实践。",
       "ui_ux": "界面/体验",
-      "uiUxDesc": "设计、布局和用户体验改进。"
+      "uiUxDesc": "设计、布局和用户体验改进。",
+      "label": "分类"
     },
     "cta": {
       "joinHero": "加入讨论",
@@ -1169,7 +1170,10 @@
         "title_part3": "一起"
       },
       "search_placeholder": "搜索讨论、想法或指南…",
-      "title": "社区中心"
+      "title": "社区",
+      "subtitle": "来自像你一样的商家的技巧、问题与想法。",
+      "comingSoon": "即将推出。",
+      "phaseInDevelopment": "此部分正在开发中。"
     },
     "ideas": {
       "all": "全部想法",
@@ -1266,13 +1270,17 @@
       "popular": "最受欢迎",
       "recent": "近期",
       "top_voted": "得票最高",
-      "trending": "热门"
+      "trending": "趋势",
+      "top": "热门",
+      "relevance": "相关度",
+      "newest": "最新"
     },
     "stats": {
       "discussions": "讨论",
       "guides": "指南",
       "ideas": "已提交想法",
-      "members": "成员"
+      "members": "成员",
+      "topics": "主题"
     },
     "status": {
       "all": "全部状态",
@@ -1292,6 +1300,184 @@
       "article": "文章",
       "tutorial": "教程",
       "video": "视频"
+    },
+    "errors": {
+      "loadFailed": "加载社区内容失败。",
+      "rateLimited": "操作太频繁。请稍慢。",
+      "actionFailed": "操作失败。",
+      "forbidden": "您没有权限执行此操作。",
+      "notFound": "内容未找到。"
+    },
+    "pagination": {
+      "prev": "上一页",
+      "next": "下一页"
+    },
+    "reactions": {
+      "votes": "票",
+      "upvote": "投票"
+    },
+    "topic": {
+      "pinned": "置顶",
+      "announcement": "公告",
+      "solved": "已解决",
+      "locked": "已锁定",
+      "replies": "回复",
+      "views": "浏览"
+    },
+    "reply": {
+      "replies": "回复",
+      "solution": "已接受答案",
+      "edited": "已编辑",
+      "loginToReply": "登录后回复",
+      "writeReply": "写回复",
+      "replyToComment": "回复评论",
+      "placeholder": "写下你的回复...",
+      "post": "发布回复",
+      "posting": "发布中...",
+      "posted": "回复已发布！"
+    },
+    "home": {
+      "allTopics": "所有主题",
+      "trending": "热门",
+      "unanswered": "未回答",
+      "recentTopics": "最近主题"
+    },
+    "empty": {
+      "noResults": "暂无内容。",
+      "noTopics": "还没有主题。成为第一个开始讨论的人！",
+      "noReplies": "还没有回复。",
+      "noSearchResults": "未找到结果。试试不同的关键词。",
+      "categoryNotFound": "分类未找到。",
+      "topicNotFound": "主题未找到。",
+      "profileNotFound": "个人资料未找到。",
+      "tagNotFound": "标签未找到。",
+      "noFeatureRequests": "还没有功能请求。",
+      "noTopicsTag": "还没有带此标签的主题。"
+    },
+    "search": {
+      "title": "搜索",
+      "placeholder": "搜索主题...",
+      "button": "搜索",
+      "resultsFound": "条结果",
+      "startTyping": "开始输入以搜索社区。"
+    },
+    "profile": {
+      "posts": "帖子",
+      "solutions": "解决方案",
+      "reputation": "声望",
+      "joined": "加入于",
+      "recentActivity": "最近活动",
+      "noActivity": "没有最近活动。",
+      "rank": "排名"
+    },
+    "tags": {
+      "label": "标签"
+    },
+    "featureRequests": {
+      "label": "功能请求",
+      "title": "功能请求",
+      "description": "建议新功能，并投票给您认为最重要的。",
+      "all": "全部",
+      "status": {
+        "OPEN": "开放",
+        "UNDER_REVIEW": "审核中",
+        "PLANNED": "已计划",
+        "IN_PROGRESS": "进行中",
+        "SHIPPED": "已发布",
+        "DECLINED": "已拒绝"
+      }
+    },
+    "editor": {
+      "uploadImage": "上传图片",
+      "edit": "编辑",
+      "preview": "预览"
+    },
+    "compose": {
+      "title": "新主题",
+      "category": "分类",
+      "titleLabel": "标题",
+      "titlePlaceholder": "你的主题是关于什么？",
+      "bodyLabel": "内容",
+      "bodyPlaceholder": "详细描述你的主题...",
+      "tagsLabel": "标签",
+      "tagPlaceholder": "添加标签（按 Enter 添加）",
+      "post": "发布主题",
+      "posting": "发布中...",
+      "posted": "主题已创建！"
+    },
+    "follow": {
+      "follow": "关注",
+      "following": "已关注"
+    },
+    "bookmark": {
+      "title": "稍后保存"
+    },
+    "notifications": {
+      "title": "通知",
+      "markAll": "全部标为已读",
+      "markedAll": "已全部标为已读",
+      "empty": "暂无通知。",
+      "view": "查看"
+    },
+    "settings": {
+      "title": "社区设置",
+      "emailDigest": "邮件摘要",
+      "digestOff": "关闭",
+      "digestDaily": "每日",
+      "digestWeekly": "每周",
+      "push": "推送通知",
+      "replies": "对你主题的回复",
+      "mentions": "提及",
+      "solutions": "答案被采纳",
+      "status": "功能状态变更",
+      "saved": "偏好已保存"
+    },
+    "moderation": {
+      "report": "举报",
+      "reportTitle": "举报内容",
+      "reason": "原因",
+      "details": "详情（可选）",
+      "submitReport": "提交举报",
+      "submitting": "提交中...",
+      "reportSent": "举报已提交。谢谢。",
+      "reportNoop": "已处理。",
+      "mod": "管理",
+      "actionDone": "操作已应用",
+      "queueTitle": "审核队列",
+      "queueHint": "未处理举报。完整分析在管理后台。",
+      "queueEmpty": "队列为空。",
+      "reportedBy": "举报人",
+      "dismiss": "忽略",
+      "reasons": {
+        "SPAM": "垃圾信息",
+        "ABUSE": "滥用",
+        "OFF_TOPIC": "跑题",
+        "HARASSMENT": "骚扰",
+        "ILLEGAL": "违法",
+        "OTHER": "其他"
+      },
+      "actions": {
+        "HIDE": "隐藏",
+        "UNHIDE": "取消隐藏",
+        "LOCK": "锁定",
+        "UNLOCK": "解锁",
+        "PIN": "置顶",
+        "UNPIN": "取消置顶",
+        "DELETE": "删除",
+        "WARN": "警告",
+        "SUSPEND": "暂停",
+        "BAN": "封禁",
+        "UNBAN": "解封",
+        "SHADOWBAN": "影子封禁"
+      }
+    },
+    "leaderboard": {
+      "title": "顶级贡献者"
+    },
+    "login_cta": {
+      "title": "登录后参与讨论",
+      "body": "登录后即可发帖、回复和投票。",
+      "button": "登录"
     }
   },
   "contact": {
