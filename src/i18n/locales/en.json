@@ -3514,7 +3514,7 @@
         "USD": "USD - US Dollar"
       },
       "currency": "Currency",
-      "currencyLockedNote": "You can change the currency from Account Management. Note that this will apply to all locations in the account. To use a different currency, please create a separate account.",
+      "currencyLockedNote": "All locations in an account share one currency, so your reports stay in a single currency. You can change it from Account Management — it applies to every location. To use a different currency, create a separate account.",
       "currencyTip": "Primary currency for sales.",
       "discounts": "Copy discounts options",
       "discountsDesc": "Copy all promo codes and discount rules",
