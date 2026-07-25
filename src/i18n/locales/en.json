@@ -514,7 +514,8 @@
       "updatedNow": "Updated just now",
       "viewAll": "View All",
       "viewAllLocations": "View All Locations",
-      "viewDashboard": "View Dashboard"
+      "viewDashboard": "View Dashboard",
+      "noCategoryData": "No category sales yet"
     },
     "description": "The ultimate 360° point-of-sale solution designed for modern growing businesses.",
     "locations": {
@@ -1026,7 +1027,9 @@
     "welcomeBack": "Welcome Back",
     "yearly": "Yearly",
     "zero": "0",
-    "zeroDecimal": "0.00"
+    "zeroDecimal": "0.00",
+    "optional": "Optional",
+    "tryAgain": "Try again"
   },
   "community": {
     "auth_required": "Please log in to {{action}}.",
@@ -2307,7 +2310,12 @@
           "settings": "Settings",
           "team": "Team",
           "today": "Today",
-          "totalRevenue": "Total revenue"
+          "totalRevenue": "Total revenue",
+          "acrossPortfolio": "Across portfolio",
+          "activeBrands": "Active brands",
+          "allLocations": "All locations",
+          "portfolio": "Portfolio performance",
+          "thisWeek": "This week"
         }
       },
       "subtitle": "Mintcom provides powerful cloud-based dashboards that allow you to manage your entire business ecosystem directly from your browser. Anytime, anywhere.",
@@ -2375,7 +2383,8 @@
       "totalSales": "Total Sales",
       "universal": "Universal tablet and mobile device support",
       "updateLinkAlert": "The download link will be available soon. Please check back shortly!",
-      "version": "Version 2.0"
+      "version": "Version 2.0",
+      "scanToDownload": "Scan To Download"
     },
     "features": {
       "badge": "Why Mintcom",
@@ -3026,7 +3035,8 @@
       "other": "Other",
       "receiptOrder": "Order 41, Items:",
       "readyForPayment": "Ready for payment",
-      "tapOrInsert": "Tap or insert card"
+      "tapOrInsert": "Tap or insert card",
+      "searchInCat": "Search in {{cat}}…"
     }
   },
   "legal": {
@@ -3523,7 +3533,8 @@
         "countryRequired": "Country is required",
         "currencyRequired": "Currency is required",
         "nameRequired": "Location name is required",
-        "typeRequired": "Business type is required"
+        "typeRequired": "Business type is required",
+        "nameMax": "Location name must be at most {{count}} characters"
       },
       "locationName": "Location Name",
       "locationNamePlaceholder": "e.g. The Coffee House",
@@ -3570,7 +3581,11 @@
       "trialDesc": "You won't be charged today. Cancel anytime before your trial ends.",
       "trialTitle": "Start Free Trial",
       "useSaved": "Use Saved Card",
-      "yearly": "Yearly"
+      "yearly": "Yearly",
+      "addedLocation": "Added location",
+      "billedCycle": "Billed {{cycle}}",
+      "existingAccountBenefit": "Existing account benefit",
+      "trialPayNote": "You're covered by your 30-day trial — nothing is charged until it ends."
     },
     "step3": {
       "errors": {
@@ -3671,6 +3686,11 @@
     },
     "validation": {
       "locationPasswordMin": "Location password must be at least 8 characters"
+    },
+    "security": {
+      "cannotGoBack": "Setup is finished. You cannot return to payment.",
+      "reenterLocationPassword": "Please re-enter your location password to finish setup.",
+      "reenterOwnerPassword": "Please re-enter your owner password to finish setup."
     }
   },
   "orders": {
@@ -3714,7 +3734,8 @@
       "tax": "Tax",
       "taxWithRate": "Tax ({{rate}}%)",
       "title": "Order Details",
-      "total": "Total"
+      "total": "Total",
+      "refundReason": "Refund Reason"
     },
     "export": "Export",
     "exportFields": {
@@ -4326,7 +4347,13 @@
       "viewDashboard": "View Dashboard",
       "yearly": "Yearly",
       "yearlyCost": "Yearly Cost",
-      "yearlyPlan": "Yearly Plan"
+      "yearlyPlan": "Yearly Plan",
+      "add_card_for_location": "New card will be used for {{name}}",
+      "add_new_card": "Add new card",
+      "card_added_and_assigned": "Card added and assigned to this location",
+      "cardholder": "Cardholder",
+      "change_card": "Change card",
+      "saved_card": "Saved"
     },
     "brands": {
       "activeBrands": "Active brands",
@@ -4381,7 +4408,8 @@
         "loginIdRegex": "Login ID can only contain letters, numbers, underscores, and hyphens",
         "loginIdTakenHint": "It must be unique across all locations and brands.",
         "nameMin": "Brand name must be at least 2 characters",
-        "passwordMin": "Password must be at least 8 characters"
+        "passwordMin": "Password must be at least 8 characters",
+        "loginIdAuthFailed": "Your session could not be verified. Please refresh the page and log in again as the account owner."
       },
       "viewDashboard": "View Dashboard",
       "wizard": {
@@ -5640,7 +5668,13 @@
       "selectRole": "Select role...",
       "standardUsers": "Standard user",
       "usernameLabel": "Username",
-      "usernamePlaceholder": "E.g. johndoe"
+      "usernamePlaceholder": "E.g. johndoe",
+      "emailPending": "Email pending",
+      "emailResent": "Link sent ✓",
+      "emailVerified": "Email verified",
+      "emailVerifyHint": "We’ll email a confirmation link to verify this address so password recovery works.",
+      "passwordAdminHint": "Staff cannot reset their own POS password. Leave blank to keep the current one — passwords are never shown for security. Only enter a value if you want a new password to share with them.",
+      "resendVerification": "Resend verification"
     },
     "messages": {
       "created": "Employee created successfully",

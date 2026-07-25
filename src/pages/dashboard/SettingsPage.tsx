@@ -1244,7 +1244,7 @@ export function SettingsPage() {
                         >
                           {serviceChargeType === 'PERCENTAGE'
                             ? t('common.percent', { defaultValue: '%' })
-                            : currencySymbol || t('common.currency', { defaultValue: '' })}
+                            : currencySymbol || ''}
                         </div>
                       </div>
                       {errors.serviceChargeValue && serviceChargeEnabled ? (
