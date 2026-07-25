@@ -514,7 +514,8 @@
       "updatedNow": "刚刚更新",
       "viewAll": "查看全部",
       "viewAllLocations": "查看所有门店",
-      "viewDashboard": "查看仪表盘"
+      "viewDashboard": "查看仪表盘",
+      "noCategoryData": "暂无分类销售数据"
     },
     "description": "为现代成长型企业打造的全方位 360° 销售点解决方案。",
     "locations": {
@@ -1026,7 +1027,9 @@
     "welcomeBack": "欢迎回来",
     "yearly": "按年",
     "zero": "0",
-    "zeroDecimal": "0.00"
+    "zeroDecimal": "0.00",
+    "optional": "选填",
+    "tryAgain": "重试"
   },
   "community": {
     "auth_required": "请登录后再{{action}}。",
@@ -1875,7 +1878,8 @@
       "nameRequired": "必填",
       "percentageMax": "不能超过 100%",
       "percentageNegative": "不能为负数",
-      "percentageRequired": "必填"
+      "percentageRequired": "必填",
+      "nameMax": "名称最多 {{count}} 个字符"
     },
     "form": {
       "managerOnly": "仅限经理",
@@ -2299,7 +2303,12 @@
           "settings": "设置",
           "team": "团队",
           "today": "今天",
-          "totalRevenue": "总营收"
+          "totalRevenue": "总营收",
+          "acrossPortfolio": "全部业务",
+          "activeBrands": "活跃品牌",
+          "allLocations": "所有门店",
+          "portfolio": "整体业绩",
+          "thisWeek": "本周"
         }
       },
       "subtitle": "Mintcom 提供强大的云端仪表盘，让您直接在浏览器中管理整个业务生态。随时随地。",
@@ -2367,7 +2376,8 @@
       "totalSales": "总销售额",
       "universal": "全面支持平板和移动设备",
       "updateLinkAlert": "下载链接即将开放。请稍后再来查看！",
-      "version": "版本 2.0"
+      "version": "版本 2.0",
+      "scanToDownload": "扫码下载"
     },
     "features": {
       "badge": "为什么选择 Mintcom",
@@ -2898,7 +2908,8 @@
       "other": "其他",
       "receiptOrder": "订单 41，商品：",
       "readyForPayment": "准备付款",
-      "tapOrInsert": "拍卡或插卡"
+      "tapOrInsert": "拍卡或插卡",
+      "searchInCat": "在 {{cat}} 中搜索…"
     }
   },
   "legal": {
@@ -3361,7 +3372,8 @@
         "countryRequired": "请选择国家/地区",
         "currencyRequired": "请选择货币",
         "nameRequired": "请填写门店名称",
-        "typeRequired": "请选择业务类型"
+        "typeRequired": "请选择业务类型",
+        "nameMax": "门店名称最多 {{count}} 个字符"
       },
       "locationName": "门店名称",
       "locationNamePlaceholder": "例如：The Coffee House",
@@ -3407,7 +3419,12 @@
       "trialDesc": "今天不会扣款。试用结束前可随时取消。",
       "trialTitle": "开始免费试用",
       "useSaved": "使用已保存的卡",
-      "yearly": "按年"
+      "yearly": "按年",
+      "addedLocation": "已添加门店",
+      "billedCycle": "按{{cycle}}计费",
+      "existingAccountBenefit": "现有账户权益",
+      "paymentDetails": "付款信息",
+      "trialPayNote": "您正在 30 天试用期内，试用结束前不会产生任何费用。"
     },
     "step3": {
       "errors": {
@@ -3508,6 +3525,11 @@
     },
     "validation": {
       "locationPasswordMin": "门店密码至少需要 8 个字符"
+    },
+    "security": {
+      "cannotGoBack": "设置已完成，无法返回付款步骤。",
+      "reenterLocationPassword": "请重新输入门店密码以完成设置。",
+      "reenterOwnerPassword": "请重新输入所有者密码以完成设置。"
     }
   },
   "orders": {
@@ -3551,7 +3573,8 @@
       "tax": "税费",
       "taxWithRate": "税 ({{rate}}%)",
       "title": "订单详情",
-      "total": "合计"
+      "total": "合计",
+      "refundReason": "退款原因"
     },
     "export": "导出",
     "exportFields": {
@@ -4163,7 +4186,13 @@
       "then": "之后",
       "trial": "试用",
       "trialEnds": "试用结束",
-      "trialEndsNotice": "当前免费 · 试用后 {{price}} 美元 {{period}}"
+      "trialEndsNotice": "当前免费 · 试用后 {{price}} 美元 {{period}}",
+      "add_card_for_location": "新卡将用于 {{name}}",
+      "add_new_card": "添加新卡",
+      "card_added_and_assigned": "已添加银行卡并分配给该门店",
+      "cardholder": "持卡人",
+      "change_card": "更换银行卡",
+      "saved_card": "已保存"
     },
     "brands": {
       "activeBrands": "启用中的品牌",
@@ -4218,7 +4247,8 @@
         "loginIdRegex": "登录 ID 只能包含字母、数字、下划线和连字符",
         "loginIdTakenHint": "它必须在所有门店和品牌中唯一。",
         "nameMin": "品牌名称至少需要 2 个字符",
-        "passwordMin": "密码至少需要 8 个字符"
+        "passwordMin": "密码至少需要 8 个字符",
+        "loginIdAuthFailed": "无法验证您的会话。请刷新页面并以账户所有者身份重新登录。"
       },
       "viewDashboard": "查看仪表盘",
       "wizard": {
@@ -5348,7 +5378,9 @@
       "taxRate": "税率 (%)",
       "taxWarning": "修改此项将影响未来交易和净收入计算。",
       "title": "销售设置",
-      "update": "更新"
+      "update": "更新",
+      "holdOrderTableCountMaxHint": "最多 {{max}} 张餐桌。",
+      "serviceChargePercentHint": "最高 {{max}}% · ATM 式输入"
     },
     "salesManagement": {
       "quickInfo": {
@@ -5475,7 +5507,13 @@
       "selectRole": "选择角色…",
       "standardUsers": "普通用户",
       "usernameLabel": "用户名",
-      "usernamePlaceholder": "例如：johndoe"
+      "usernamePlaceholder": "例如：johndoe",
+      "emailPending": "邮箱待验证",
+      "emailResent": "链接已发送 ✓",
+      "emailVerified": "邮箱已验证",
+      "emailVerifyHint": "我们会发送确认链接以验证该邮箱，确保密码找回功能可用。",
+      "passwordAdminHint": "员工无法自行重置 POS 密码。留空则保留当前密码——出于安全考虑，密码不会显示。仅在需要设置新密码并告知员工时才填写。",
+      "resendVerification": "重新发送验证"
     },
     "messages": {
       "created": "员工创建成功",
