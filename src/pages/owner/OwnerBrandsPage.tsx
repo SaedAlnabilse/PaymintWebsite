@@ -38,6 +38,7 @@ import { Pagination } from '../../components/ui';
 import { SectionLoader } from '../../components/LoadingState';
 import { StatValue } from '../../components/ui/StatValue';
 import { formatInputPlaceholder, formatInputLabel } from '../../utils/textCase';
+import { getPasswordSchema } from '../../utils/validation';
 
 interface Brand {
     id: string;
@@ -126,11 +127,7 @@ export function OwnerBrandsPage() {
         establishmentLoginId: z.string()
             .min(4, t('owner.brands.validation.loginIdMin'))
             .regex(/^[a-zA-Z0-9_-]+$/, t('owner.brands.validation.loginIdRegex')),
-        establishmentPassword: z.string()
-            .min(8, t('auth.validation.passwordMin'))
-            .regex(/[A-Z]/, t('auth.validation.passwordUppercase'))
-            .regex(/[a-z]/, t('auth.validation.passwordLowercase'))
-            .regex(/[0-9]/, t('auth.validation.passwordNumber')),
+        establishmentPassword: getPasswordSchema(t),
     }), [t]);
 
     const {

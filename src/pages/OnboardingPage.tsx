@@ -81,6 +81,7 @@ import {
   getDeviceTimeZone,
 } from '../data/globalLocaleOptions';
 import { getLocalizedManual } from '../utils/localizedDocs';
+import { getPasswordSchema } from '../utils/validation';
 import {
   detectCardBrand,
   formatCardNumberInput,
@@ -297,11 +298,7 @@ export function OnboardingPage() {
     establishmentLoginId: z.string()
       .min(4, t('onboarding.step3.errors.idMin'))
       .regex(/^[a-zA-Z0-9_-]+$/, t('onboarding.step3.errors.idRegex')),
-    establishmentPassword: z.string()
-      .min(8, t('auth.validation.passwordMin'))
-      .regex(/[A-Z]/, t('auth.validation.passwordUppercase'))
-      .regex(/[a-z]/, t('auth.validation.passwordLowercase'))
-      .regex(/[0-9]/, t('auth.validation.passwordNumber')),
+    establishmentPassword: getPasswordSchema(t),
   });
 
   // Step 3: Admin Access (owner login credentials)
@@ -309,11 +306,7 @@ export function OnboardingPage() {
     username: z.string()
       .trim()
       .min(1, t('onboarding.step4.errors.usernameMin')),
-    password: z.string()
-      .min(8, t('auth.validation.passwordMin'))
-      .regex(/[A-Z]/, t('auth.validation.passwordUppercase'))
-      .regex(/[a-z]/, t('auth.validation.passwordLowercase'))
-      .regex(/[0-9]/, t('auth.validation.passwordNumber')),
+    password: getPasswordSchema(t),
     firstName: z.string().min(2, t('onboarding.step4.errors.firstNameMin')),
     lastName: z.string().min(2, t('onboarding.step4.errors.lastNameMin')),
   });

@@ -9,16 +9,13 @@ import api from '../config/api';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { formatInputPlaceholder, formatInputLabel } from '../utils/textCase';
+import { getPasswordSchema } from '../utils/validation';
 
 export function ResetPasswordPage() {
   const { t } = useTranslation();
 
   const resetPasswordSchema = z.object({
-    password: z.string()
-      .min(8, t('validation.passwordMin'))
-      .regex(/[A-Z]/, t('validation.passwordUppercase'))
-      .regex(/[a-z]/, t('validation.passwordLowercase'))
-      .regex(/[0-9]/, t('validation.passwordNumber')),
+    password: getPasswordSchema(t, 'validation'),
     confirmPassword: z.string(),
   }).refine((data) => data.password === data.confirmPassword, {
     message: t('validation.passwordsDoNotMatch'),
@@ -50,6 +47,7 @@ export function ResetPasswordPage() {
     { label: t('validation.passwordUppercase'), met: /[A-Z]/.test(password) },
     { label: t('validation.passwordLowercase'), met: /[a-z]/.test(password) },
     { label: t('validation.passwordNumber'), met: /[0-9]/.test(password) },
+    { label: t('validation.passwordSymbol'), met: /[^A-Za-z0-9]/.test(password) },
   ];
 
   const onSubmit = async (data: ResetPasswordFormData) => {
