@@ -1029,7 +1029,7 @@
     "zeroDecimal": "0.00"
   },
   "community": {
-    "auth_required": "Please log in to {{action}}",
+    "auth_required": "Please log in to {{action}}.",
     "badges": {
       "champion": "Champion",
       "pro_user": "Pro User"
@@ -1062,7 +1062,8 @@
       "tips_tricks": "Tips & Tricks",
       "tipsDesc": "Share your workflow hacks and best practices.",
       "ui_ux": "UI/UX",
-      "uiUxDesc": "Design, layout, and user experience improvements."
+      "uiUxDesc": "Design, layout, and user experience improvements.",
+      "label": "Categories"
     },
     "cta": {
       "joinHero": "Join This Conversation",
@@ -1169,7 +1170,10 @@
         "title_part3": "Together"
       },
       "search_placeholder": "Search discussions, ideas, or guides...",
-      "title": "Community Hub"
+      "title": "Community",
+      "subtitle": "Tips, questions, and ideas from merchants like you.",
+      "comingSoon": "Coming soon.",
+      "phaseInDevelopment": "This section is under active development."
     },
     "ideas": {
       "all": "All Ideas",
@@ -1266,13 +1270,17 @@
       "popular": "Most Popular",
       "recent": "Recent",
       "top_voted": "Top Voted",
-      "trending": "Trending"
+      "trending": "Trending",
+      "top": "Top",
+      "relevance": "Relevance",
+      "newest": "Newest"
     },
     "stats": {
       "discussions": "Discussions",
       "guides": "Guides",
       "ideas": "Ideas Submitted",
-      "members": "Members"
+      "members": "Members",
+      "topics": "topics"
     },
     "status": {
       "all": "All Status",
@@ -1292,6 +1300,184 @@
       "article": "Article",
       "tutorial": "Tutorial",
       "video": "Video"
+    },
+    "errors": {
+      "loadFailed": "Failed to load community content.",
+      "rateLimited": "Too many actions. Please slow down.",
+      "actionFailed": "Action failed.",
+      "forbidden": "You do not have permission to do this.",
+      "notFound": "Content not found."
+    },
+    "pagination": {
+      "prev": "Prev",
+      "next": "Next"
+    },
+    "reactions": {
+      "votes": "Votes",
+      "upvote": "Upvote"
+    },
+    "topic": {
+      "pinned": "Pinned",
+      "announcement": "Announcement",
+      "solved": "Solved",
+      "locked": "Locked",
+      "replies": "replies",
+      "views": "views"
+    },
+    "reply": {
+      "replies": "Replies",
+      "solution": "Accepted Solution",
+      "edited": "edited",
+      "loginToReply": "Log in to reply",
+      "writeReply": "Write a reply",
+      "replyToComment": "Reply to comment",
+      "placeholder": "Write your reply...",
+      "post": "Post Reply",
+      "posting": "Posting...",
+      "posted": "Reply posted!"
+    },
+    "home": {
+      "allTopics": "All Topics",
+      "trending": "Trending",
+      "unanswered": "Unanswered",
+      "recentTopics": "Recent Topics"
+    },
+    "empty": {
+      "noResults": "Nothing here yet.",
+      "noTopics": "No topics yet. Be the first to start a discussion!",
+      "noReplies": "No replies yet.",
+      "noSearchResults": "No results found. Try different keywords.",
+      "categoryNotFound": "Category not found.",
+      "topicNotFound": "Topic not found.",
+      "profileNotFound": "Profile not found.",
+      "tagNotFound": "Tag not found.",
+      "noFeatureRequests": "No feature requests yet.",
+      "noTopicsTag": "No topics with this tag yet."
+    },
+    "search": {
+      "title": "Search",
+      "placeholder": "Search topics...",
+      "button": "Search",
+      "resultsFound": "results found",
+      "startTyping": "Start typing to search the community."
+    },
+    "profile": {
+      "posts": "posts",
+      "solutions": "solutions",
+      "reputation": "reputation",
+      "joined": "Joined",
+      "recentActivity": "Recent Activity",
+      "noActivity": "No recent activity.",
+      "rank": "Rank"
+    },
+    "tags": {
+      "label": "Tags"
+    },
+    "featureRequests": {
+      "label": "Feature Requests",
+      "title": "Feature Requests",
+      "description": "Suggest new features and vote on what matters most.",
+      "all": "All",
+      "status": {
+        "OPEN": "open",
+        "UNDER_REVIEW": "under review",
+        "PLANNED": "planned",
+        "IN_PROGRESS": "in progress",
+        "SHIPPED": "shipped",
+        "DECLINED": "declined"
+      }
+    },
+    "editor": {
+      "uploadImage": "Upload image",
+      "edit": "Edit",
+      "preview": "Preview"
+    },
+    "compose": {
+      "title": "New Topic",
+      "category": "Category",
+      "titleLabel": "Title",
+      "titlePlaceholder": "What is your topic about?",
+      "bodyLabel": "Body",
+      "bodyPlaceholder": "Describe your topic in detail...",
+      "tagsLabel": "Tags",
+      "tagPlaceholder": "Add tags (Enter to add)",
+      "post": "Post Topic",
+      "posting": "Posting...",
+      "posted": "Topic created!"
+    },
+    "follow": {
+      "follow": "Follow",
+      "following": "Following"
+    },
+    "bookmark": {
+      "title": "Save for later"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "markAll": "Mark all read",
+      "markedAll": "All marked read",
+      "empty": "No notifications yet.",
+      "view": "View"
+    },
+    "settings": {
+      "title": "Community Settings",
+      "emailDigest": "Email digest",
+      "digestOff": "Off",
+      "digestDaily": "Daily",
+      "digestWeekly": "Weekly",
+      "push": "Push notifications",
+      "replies": "Replies to your topics",
+      "mentions": "Mentions",
+      "solutions": "Solution accepted",
+      "status": "Feature status changes",
+      "saved": "Preferences saved"
+    },
+    "moderation": {
+      "report": "Report",
+      "reportTitle": "Report content",
+      "reason": "Reason",
+      "details": "Details (optional)",
+      "submitReport": "Submit report",
+      "submitting": "Submitting...",
+      "reportSent": "Report submitted. Thank you.",
+      "reportNoop": "Already handled.",
+      "mod": "Mod",
+      "actionDone": "Action applied",
+      "queueTitle": "Moderation Queue",
+      "queueHint": "Open reports. Full moderation analytics live in the admin portal.",
+      "queueEmpty": "Queue is empty.",
+      "reportedBy": "Reported by",
+      "dismiss": "Dismiss",
+      "reasons": {
+        "SPAM": "Spam",
+        "ABUSE": "Abuse",
+        "OFF_TOPIC": "Off topic",
+        "HARASSMENT": "Harassment",
+        "ILLEGAL": "Illegal",
+        "OTHER": "Other"
+      },
+      "actions": {
+        "HIDE": "Hide",
+        "UNHIDE": "Unhide",
+        "LOCK": "Lock",
+        "UNLOCK": "Unlock",
+        "PIN": "Pin",
+        "UNPIN": "Unpin",
+        "DELETE": "Delete",
+        "WARN": "Warn",
+        "SUSPEND": "Suspend",
+        "BAN": "Ban",
+        "UNBAN": "Unban",
+        "SHADOWBAN": "Shadow-ban"
+      }
+    },
+    "leaderboard": {
+      "title": "Top contributors"
+    },
+    "login_cta": {
+      "title": "Sign in to join the conversation",
+      "body": "Post topics, reply, and vote after you log in.",
+      "button": "Log in"
     }
   },
   "contact": {

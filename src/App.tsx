@@ -116,6 +116,23 @@ const AdminUsersPage = lazy(() => import('./pages/dashboard/AdminUsersPage').the
 const CustomRolesPage = lazy(() => import('./pages/dashboard/CustomRolesPage').then(m => ({ default: m.CustomRolesPage })));
 
 // ============================================================================
+// Lazy Imports - Community
+// ============================================================================
+const CommunityLayout = lazy(() => import('./components/community/CommunityLayout').then(m => ({ default: m.CommunityLayout })));
+const CommunityHomePage = lazy(() => import('./pages/community/CommunityHomePage').then(m => ({ default: m.CommunityHomePage })));
+const CommunityComingSoonPage = lazy(() => import('./pages/community/CommunityComingSoonPage').then(m => ({ default: m.CommunityComingSoonPage })));
+const CategoryPage = lazy(() => import('./pages/community/CategoryPage').then(m => ({ default: m.CategoryPage })));
+const TopicPage = lazy(() => import('./pages/community/TopicPage').then(m => ({ default: m.TopicPage })));
+const CommunitySearchPage = lazy(() => import('./pages/community/CommunitySearchPage').then(m => ({ default: m.CommunitySearchPage })));
+const ProfilePage = lazy(() => import('./pages/community/ProfilePage').then(m => ({ default: m.ProfilePage })));
+const TagPage = lazy(() => import('./pages/community/TagPage').then(m => ({ default: m.TagPage })));
+const FeatureRequestsPage = lazy(() => import('./pages/community/FeatureRequestsPage').then(m => ({ default: m.FeatureRequestsPage })));
+const ComposeTopicPage = lazy(() => import('./pages/community/ComposeTopicPage').then(m => ({ default: m.ComposeTopicPage })));
+const CommunityNotificationsPage = lazy(() => import('./pages/community/CommunityNotificationsPage').then(m => ({ default: m.CommunityNotificationsPage })));
+const CommunitySettingsPage = lazy(() => import('./pages/community/CommunitySettingsPage').then(m => ({ default: m.CommunitySettingsPage })));
+const ModerationQueuePage = lazy(() => import('./pages/community/ModerationQueuePage').then(m => ({ default: m.ModerationQueuePage })));
+
+// ============================================================================
 // Suspense Wrapper Components
 // ============================================================================
 // These wrap lazy components with appropriate loading states
@@ -477,14 +494,36 @@ const router = createBrowserRouter([
         ),
       },
 
-      // ========== Community Routes (Temporarily Disabled) ==========
+      // ========== Community Routes (Public read, feature-flagged) ==========
       {
-        path: "/community-hub",
-        element: <Navigate to="/" replace />,
-      },
-      {
-        path: "/community/*",
-        element: <Navigate to="/" replace />,
+        path: "/community",
+        element: (
+          <PageSuspense>
+            <CommunityLayout />
+          </PageSuspense>
+        ),
+        children: [
+          {
+            index: true,
+            element: (
+              <PageSuspense>
+                <CommunityHomePage />
+              </PageSuspense>
+            ),
+          },
+          // Phase 1 pages:
+          { path: "c/:categorySlug", element: <PageSuspense><CategoryPage /></PageSuspense> },
+          { path: "c/:categorySlug/:topicSlug-:topicId", element: <PageSuspense><TopicPage /></PageSuspense> },
+          { path: "new", element: <PageSuspense><ComposeTopicPage /></PageSuspense> },
+          { path: "search", element: <PageSuspense><CommunitySearchPage /></PageSuspense> },
+          { path: "tags/:tag", element: <PageSuspense><TagPage /></PageSuspense> },
+          { path: "feature-requests", element: <PageSuspense><FeatureRequestsPage /></PageSuspense> },
+          { path: "u/:username", element: <PageSuspense><ProfilePage /></PageSuspense> },
+          { path: "notifications", element: <PageSuspense><CommunityNotificationsPage /></PageSuspense> },
+          { path: "settings", element: <PageSuspense><CommunitySettingsPage /></PageSuspense> },
+          { path: "moderation", element: <PageSuspense><ModerationQueuePage /></PageSuspense> },
+          { path: "*", element: <Navigate to="/community" replace /> },
+        ],
       },
 
       // ========== Portal Routes (Protected) ==========

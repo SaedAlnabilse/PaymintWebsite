@@ -157,23 +157,23 @@ class RealtimeService {
       return;
     }
 
-    if (!this.establishmentId) {
-      console.warn('[Realtime] Cannot connect: Missing establishmentId');
-      return;
-    }
+    // Community can connect without an establishment (tenant-global).
+    // Establishment-scoped features still pass establishmentId when available.
 
     this.setConnectionStatus('connecting');
 
     const wsUrl = BACKEND_WS_URL;
 
     console.log(`[Realtime] 🔌 Connecting to ${wsUrl}/realtime...`);
-    console.log(`[Realtime] 🏢 Establishment ID: ${this.establishmentId}`);
+    if (this.establishmentId) {
+      console.log(`[Realtime] 🏢 Establishment ID: ${this.establishmentId}`);
+    }
 
     // Build connection options
     const connectionOptions: any = {
       withCredentials: true, // Send cookies for authentication
       query: {
-        establishmentId: this.establishmentId,
+        ...(this.establishmentId ? { establishmentId: this.establishmentId } : {}),
         clientType: 'website',
       },
       transports: ['polling', 'websocket'], // Start with polling, then upgrade to websocket
@@ -600,6 +600,65 @@ class RealtimeService {
    */
   private formatCurrency(amount: number): string {
     return formatCurrencyCode(amount, 'USD', 'en-US');
+  }
+
+  /**
+   * Initialize for community pages (no establishment required).
+   * Reuses the singleton socket; cookies authenticate website sessions.
+   */
+  initializeCommunity(authToken?: string): void {
+    if (this.socket?.connected) {
+      // Already connected — community rooms can still be joined.
+      this.authToken = authToken || this.authToken;
+      return;
+    }
+    // Use a sentinel so connect() proceeds without a real establishment.
+    this.establishmentId = this.establishmentId || 'community';
+    this.authToken = authToken || null;
+    this.connect();
+  }
+
+  /**
+   * Join a community room (global / topic / user).
+   */
+  subscribeCommunityRoom(
+    room: 'global' | 'topic' | 'user',
+    opts?: { topicId?: string; profileId?: string },
+  ): void {
+    if (!this.socket?.connected) {
+      // Queue until connect — emit after short delay if not yet connected
+      const tryJoin = () => {
+        if (this.socket?.connected) {
+          this.socket.emit('subscribe:community', { room, ...opts });
+        }
+      };
+      this.socket?.once('connect', tryJoin);
+      // Also try immediately in case we race the connect handler
+      setTimeout(tryJoin, 500);
+      return;
+    }
+    this.socket.emit('subscribe:community', { room, ...opts });
+  }
+
+  unsubscribeCommunityRoom(
+    room: 'global' | 'topic' | 'user',
+    opts?: { topicId?: string; profileId?: string },
+  ): void {
+    this.socket?.emit('unsubscribe:community', { room, ...opts });
+  }
+
+  /**
+   * Listen for raw community events (not data:change envelope).
+   */
+  onCommunityEvent(eventName: string, callback: (payload: any) => void): () => void {
+    this.bindRawEvent(eventName);
+    if (!this.rawEventCallbacks.has(eventName)) {
+      this.rawEventCallbacks.set(eventName, new Set());
+    }
+    this.rawEventCallbacks.get(eventName)!.add(callback);
+    return () => {
+      this.rawEventCallbacks.get(eventName)?.delete(callback);
+    };
   }
 
   /**
