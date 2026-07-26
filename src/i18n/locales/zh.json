@@ -261,7 +261,8 @@
       "googleLoadFailed": "加载 Google 登录失败",
       "googleNoSession": "未找到有效的 Google 会话",
       "googlePromptFailed": "Google 登录提示失败",
-      "googleUnavailable": "Google 登录当前不可用"
+      "googleUnavailable": "Google 登录当前不可用",
+      "sessionIssue": "检测到会话异常，部分功能可能无法使用。请退出登录后重新登录。"
     },
     "forgotPassword": {
       "backToLogin": "返回登录",
@@ -324,7 +325,7 @@
       "tryAgain": "再试一次",
       "createAccount": "注册账户",
       "noSocialAccountTitle": "还没有 Mintcom 账户",
-      "noSocialAccountMessage": "我们识别了您的 {{provider}} 登录，但尚未关联 Mintcom 账户。一分钟即可创建——您的业务后台在等您。",
+      "noSocialAccountMessage": "我们识别了您的 {{provider}} 登录，但尚未关联 Mintcom 账户。一分钟即可创建，您的业务后台在等您。",
       "noSocialAccountGoogle": "Google",
       "noSocialAccountApple": "Apple"
     },
@@ -688,75 +689,75 @@
       "aboutMinutes": "约 {{minutes}} 分钟",
       "addons": {
         "action": "创建加料",
-        "description": "创建规格、配料等结账时可附加的选项——与基础商品分开，菜单更灵活。",
+        "description": "设置收银员在结账时可附加的规格、配料和加料选项。与商品分开管理，一件商品即可覆盖全部变体，不必创建大量相似商品。",
         "title": "添加修饰项与加料"
       },
       "allDoneSubtitle": "您的门店已全部设置完成，随时可以营业",
       "allDoneTitle": "全部完成！",
       "categories": {
         "action": "新建分类",
-        "description": "先整理菜单分类（饮品、食品、服务），方便收银时快速找到商品。",
+        "description": "先创建商品所属的分类，例如饮品、食品或服务。分类建好后，之后添加的每件商品都有归属，在 POS 上也更好找。",
         "title": "创建菜单分类"
       },
       "completed": "已完成",
       "congratsContinue": "继续使用仪表盘",
       "congratsGetApp": "安装 POS 应用",
-      "congratsMessage": "您已完成全部设置步骤。门店已可正式营业——安装 POS 应用并完成首笔测试订单。",
+      "congratsMessage": "全部设置步骤已完成，门店可以正式开始销售了。在设备上安装 POS 应用即可开始接单，也可以随时通过“任务”按钮重新打开本指南。",
       "congratsProgress": "全部 {{total}} 个设置步骤已完成",
       "congratsTitle": "恭喜！🎉",
       "discounts": {
         "action": "创建优惠",
-        "description": "创建迎新、欢乐时光或员工折扣，让促销在结账时即可使用。",
+        "description": "创建你计划推出的优惠，例如迎新优惠、欢乐时光或员工折扣。保存后，收银员结账时一键即可使用，无需手动改价。",
         "title": "创建折扣优惠"
       },
       "goLive": {
         "action": "获取移动应用",
-        "description": "在 iOS 或 Android 上下载 Mintcom POS 应用，登录并完成一笔测试销售，然后查看销售报表确认总额正确。",
+        "description": "在 iOS 或 Android 上下载 Mintcom POS 应用，登录后完成一笔测试销售。随后打开销售报表，确认总额、税额和支付方式都记录正确。",
         "title": "安装 POS 并完成测试销售"
       },
       "loyalty": {
         "action": "打开会员",
-        "description": "开启积分并添加一个奖励，让常客在每次消费后自动累计。",
+        "description": "开启积分并至少添加一项可兑换的奖励。之后老顾客每次消费都会自动累计，收银员无需额外操作。",
         "title": "开启会员奖励"
       },
       "markAsCompleted": "标记为已完成",
       "payments": {
         "action": "支付方式",
-        "description": "启用收银员将接受的现金、银行卡和钱包支付方式。",
+        "description": "启用收银员可以接受的支付方式，例如现金、银行卡和钱包。这里未启用的方式不会出现在 POS 收款页面。",
         "title": "设置支付方式"
       },
       "products": {
         "action": "构建菜单",
-        "description": "添加开业菜单（价格与分类），并上传图片，让第一天 POS 清晰好用——优先热销与招牌单品。",
+        "description": "录入商品的价格和分类，并上传图片，让 POS 商品页一目了然。可以先添加热销和招牌商品，其余随时补充。",
         "title": "构建完整菜单"
       },
       "profile": {
         "action": "打开资料",
-        "description": "设置店铺名称、地址和联系方式，用于仪表盘与报表展示。",
+        "description": "填写门店名称、地址和联系方式。这些信息会出现在收据、报表以及顾客能看到的地方，建议在首次销售前就填写准确。",
         "title": "完善门店资料"
       },
       "progressText": "已完成 {{done}}/{{total}} 项",
       "receipt": {
         "action": "收据设置",
-        "description": "设置标志、页眉、税号和页脚，让打印收据符合品牌形象。",
+        "description": "设置标志、页眉文字、税号和页脚。每一张打印或发送的收据都使用这套版式，顾客每次消费都会看到。",
         "title": "配置收据版式"
       },
       "roles": {
         "action": "打开角色",
-        "description": "查看现有角色（收银员、经理或自定义），或创建具有所需权限的新角色——在邀请员工之前完成。",
+        "description": "查看内置的收银员和经理角色各自拥有哪些权限，如需更严格的限制可自行创建角色。在邀请员工之前完成，能确保每位新成员从第一天起就拥有正确权限。",
         "title": "查看或创建角色"
       },
-      "setupGuideSubtitle": "一条清晰路径：品牌、收款规则、菜单、优惠、团队——然后完成首笔测试销售",
+      "setupGuideSubtitle": "按顺序完成：门店资料、税率与支付、菜单、优惠、团队，最后是首笔测试销售",
       "setupGuideTitle": "设置指南",
       "staff": {
         "action": "添加员工",
-        "description": "邀请收银员或经理，并分配你已查看的角色之一——请勿共用登录。",
+        "description": "为每位收银员和经理创建独立账号并分配角色。只有独立账号才能让交接班报表和操作日志真正有意义，请避免共用账号。",
         "title": "添加团队成员"
       },
       "stepsCount": "{{count}} 个步骤",
       "taxes": {
         "action": "税务设置",
-        "description": "设置税率，确保订单总额与结算准确。",
+        "description": "填写门店适用的税率。保存后会应用于此后的每一笔订单，因此在首次销售前设置好，才能保证总额、退款和报表准确。",
         "title": "设置税率"
       },
       "title": "任务"
@@ -1029,7 +1030,15 @@
     "zero": "0",
     "zeroDecimal": "0.00",
     "optional": "选填",
-    "tryAgain": "重试"
+    "tryAgain": "重试",
+    "moreActions": "更多操作",
+    "orderActions": "订单操作",
+    "downloadOnAppStore": "从 App Store 下载",
+    "getItOnGooglePlay": "在 Google Play 获取",
+    "androidDownloadComingSoon": "Android 应用下载即将推出",
+    "iosDownloadComingSoon": "iOS 应用下载即将推出",
+    "ownerAndroidDownloadComingSoon": "店主版 Android 应用下载即将推出",
+    "ownerIosDownloadComingSoon": "店主版 iOS 应用下载即将推出"
   },
   "community": {
     "auth_required": "请登录后再{{action}}。",
@@ -1115,7 +1124,7 @@
       },
       "item_4": {
         "excerpt": "我想在收据上添加我们的标志并自定义页脚。当前版本可以做到吗？",
-        "title": "自定义收据模板——可行吗？"
+        "title": "自定义收据模板可行吗？"
       },
       "item_5": {
         "excerpt": "想请教咖啡店会员计划的最佳设置方式。应该用积分还是集章？",
@@ -1200,7 +1209,7 @@
         "title": "POS 平板应用的深色模式"
       },
       "item_2": {
-        "description": "允许一台平板连接多台打印机——一台打印顾客收据，一台打印厨房订单。",
+        "description": "允许一台平板连接多台打印机，一台打印顾客收据，一台打印厨房订单。",
         "title": "每个工位支持多台收据打印机"
       },
       "item_3": {
@@ -1208,7 +1217,7 @@
         "title": "顾客显示屏支持"
       },
       "item_4": {
-        "description": "更好的离线功能——网络恢复后自动同步订单。",
+        "description": "更好的离线功能，网络恢复后自动同步订单。",
         "title": "离线模式改进"
       },
       "item_5": {
@@ -1659,7 +1668,8 @@
       "ownerConflictTitle": "有人正在使用",
       "ownerDeviceConflictTitle": "另一台设备正在使用",
       "securingMessage": "正在检查该门店，随后打开。",
-      "securingTitle": "正在保护仪表盘"
+      "securingTitle": "正在保护仪表盘",
+      "controlGranted": "您现在已取得该门店仪表盘的控制权。"
     },
     "menu": {
       "activeLocation": "当前门店",
@@ -1841,12 +1851,12 @@
     "title": "仪表盘",
     "tour": {
       "taskItem": {
-        "desc": "点击任务展开，然后按照链接完成该设置步骤。",
-        "title": "第一个任务"
+        "desc": "展开任一步骤，可以看到它包含的内容和所需时间，点击其中的按钮会直接跳转到对应页面。返回后把该步骤标记为完成即可。进度会自动保存，之后可以继续完成剩余步骤。",
+        "title": "从这里开始"
       },
       "tasks": {
-        "desc": "在这里可以跟踪门店的设置进度。完成这些任务，为营业做好准备！",
-        "title": "设置任务"
+        "desc": "门店首次正式营业前需要完成的步骤都在这里，并按推荐顺序排列。计数会显示还剩多少项，你随时可以通过“任务”按钮重新打开这份列表。",
+        "title": "设置指南"
       }
     },
     "trackingPerformance": "追踪全部经营表现",
@@ -1860,7 +1870,7 @@
       "selectView": "视图模式"
     },
     "welcome": {
-      "message": "欢迎来到 {{location}} 的新仪表盘！让我们把门店设置好，为营业做好准备。",
+      "message": "{{location}} 的仪表盘已就绪。设置指南包含 12 个简短步骤，从门店资料到首笔测试销售，全部约需 20 分钟。可以随时中途停下，之后再继续。",
       "startGuide": "开始设置指南"
     }
   },
@@ -2703,7 +2713,7 @@
         "demo": {
           "ai": {
             "a1": "浓缩咖啡以 142 杯领先，比昨天增长 18%。",
-            "a2": "试试 5.50 美元的“可颂 + 拿铁”组合——预计客单价提升 12%。",
+            "a2": "试试 5.50 美元的“可颂 + 拿铁”组合，预计客单价提升 12%。",
             "a3": "预计 320–360 单，高峰在上午 9–11 点。建议安排 2 名咖啡师。",
             "placeholder": "从上方选择一个提问",
             "q1": "今天什么卖得最好？",
@@ -2726,7 +2736,7 @@
             "tier": "等级"
           },
           "mobile": {
-            "n1": "新订单 #4218 — 24.50 美元",
+            "n1": "新订单 #4218，24.50 美元",
             "n2": "已达成每日目标 🎉",
             "n3": "库存不足：浓缩咖啡豆",
             "n4": "Sara 已上班打卡"
@@ -2747,7 +2757,7 @@
             "totalLine": "合计",
             "charge": "收款",
             "choosePay": "选择顾客支付方式",
-            "emptyCart": "购物车为空 — 点击上方商品",
+            "emptyCart": "购物车为空，请点击上方商品",
             "newSale": "新销售",
             "salad": "沙拉"
           },
@@ -3302,7 +3312,7 @@
     "home": "首页",
     "login": "登录",
     "logout": "退出登录",
-    "onboardingBannerSubtitle": "随时自由浏览 — 准备好时再继续设置。",
+    "onboardingBannerSubtitle": "随时自由浏览，准备好时再继续设置。",
     "onboardingBannerTitle": "您的第一家门店仅差一步",
     "owner": "业主后台",
     "pricing": "定价",
@@ -3315,7 +3325,8 @@
     "backToWebsiteShort": "网站",
     "completeLaunch": "付款并启用",
     "errors": {
-      "failedToComplete": "完成设置失败。请重试。"
+      "failedToComplete": "完成设置失败。请重试。",
+      "failedToSaveCard": "保存银行卡失败，请重试。"
     },
     "location": "门店",
     "messages": {
@@ -3739,7 +3750,7 @@
         "peakRevenueDesc": "最繁忙的一小时内",
         "quietest": "最清闲",
         "quietestHour": "最清闲时段",
-        "quietestHourDesc": "{{count}} 笔订单 — 适合备货或休息",
+        "quietestHourDesc": "{{count}} 笔订单，适合备货或休息",
         "revenue": "营收",
         "rushPeriod": "高峰时段",
         "rushWindow": "高峰窗口",
@@ -3939,7 +3950,7 @@
       "brandLoginHint": "使用此 ID 登录品牌仪表盘。",
       "brandLoginId": "品牌登录 ID",
       "accessCredentials": "访问凭据",
-      "accessCredentialsSubtitle": "门店与品牌仪表盘登录 ID — 可搜索、复制、打开或重置。",
+      "accessCredentialsSubtitle": "门店与品牌仪表盘登录 ID，可搜索、复制、打开或重置。",
       "brandLogins": "品牌登录",
       "brandLoginsSubtitle": "品牌仪表盘的登录凭据",
       "brands": "品牌",
@@ -4103,9 +4114,6 @@
       "members_count_few": "{{count}} 名成员",
       "members_count_many": "{{count}} 名成员",
       "members_count_two": "2 名成员"
-    },
-    "account_settings": {
-      "version": "مينتكوم مكتب الخلفية v{{version}} ({{year}})"
     },
     "billing": {
       "active": "启用中",
@@ -5340,7 +5348,8 @@
       "showTaxIdDesc": "在页脚显示税号",
       "subtitle": "编辑收据样式",
       "title": "收据",
-      "uploadLogo": "上传标志"
+      "uploadLogo": "上传标志",
+      "logoAlt": "收据标志"
     },
     "sales": {
       "currency": "系统货币",
@@ -5408,7 +5417,7 @@
       "noCountries": "未找到国家/地区",
       "tryDifferentKeywords": "请尝试其他关键词",
       "registerHint": "请前往以下网站注册以获取凭据：",
-      "savedKeep": "已保存——如需更改请重新输入",
+      "savedKeep": "已保存，如需更改请重新输入",
       "noConnectionYet": "由于国家/地区设置不受支持或 Mintcom 集成尚未就绪，税务同步不可用。",
       "testConnection": "测试连接",
       "testing": "正在测试…",
@@ -5512,7 +5521,7 @@
       "emailResent": "链接已发送 ✓",
       "emailVerified": "邮箱已验证",
       "emailVerifyHint": "我们会发送确认链接以验证该邮箱，确保密码找回功能可用。",
-      "passwordAdminHint": "员工无法自行重置 POS 密码。留空则保留当前密码——出于安全考虑，密码不会显示。仅在需要设置新密码并告知员工时才填写。",
+      "passwordAdminHint": "员工无法自行重置 POS 密码。留空则保留当前密码。出于安全考虑，密码不会显示。仅在需要设置新密码并告知员工时才填写。",
       "resendVerification": "重新发送验证"
     },
     "messages": {
@@ -6060,7 +6069,9 @@
       "submit": "提交工单",
       "subtitle": "描述您的问题，我们会尽快回复",
       "success": "工单提交成功！我们将在 24 小时内回复。",
-      "title": "提交支持工单"
+      "title": "提交支持工单",
+      "sessionExpired": "会话已过期，请重新登录。",
+      "loadingAccount": "正在加载账户…"
     },
     "popularArticles": {
       "account": "如何管理您的账户设置",
@@ -6197,7 +6208,8 @@
       "replySent": "回复已发送",
       "replyError": "您的回复发送失败。请重试。",
       "statusError": "无法更新工单。请重试。",
-      "reopened": "工单已重新打开"
+      "reopened": "工单已重新打开",
+      "sendShortcutHint": "按 Ctrl+Enter 发送"
     }
   },
   "theme": {
@@ -6221,5 +6233,11 @@
   },
   "menu": {
     "dashboard": "仪表盘"
+  },
+  "pwa": {
+    "updateTitle": "Mintcom 新版本已就绪",
+    "updateBody": "立即更新，重新加载最新的缓存版本。",
+    "updateAction": "更新并重新加载",
+    "dismiss": "关闭更新提示"
   }
 }

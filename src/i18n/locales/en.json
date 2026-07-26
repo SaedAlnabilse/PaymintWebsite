@@ -261,7 +261,8 @@
       "googleLoadFailed": "Failed to load Google sign-in",
       "googleNoSession": "No active Google session found",
       "googlePromptFailed": "Google sign-in prompt failed",
-      "googleUnavailable": "Google sign-in is currently unavailable"
+      "googleUnavailable": "Google sign-in is currently unavailable",
+      "sessionIssue": "Session issue detected. Some features may not work. Please log out and log back in."
     },
     "forgotPassword": {
       "backToLogin": "Back to login",
@@ -688,75 +689,75 @@
       "aboutMinutes": "About {{minutes}} minutes",
       "addons": {
         "action": "Create Add-on",
-        "description": "Build sizes, toppings, or extras cashiers can attach at checkout — separate from base products so the menu stays flexible.",
+        "description": "Set up the sizes, toppings, and extras cashiers attach to an item at checkout. Keeping them separate from products means one product covers every variation instead of a dozen near duplicates.",
         "title": "Add Modifiers & Extras"
       },
       "allDoneSubtitle": "Your Location Is Fully Set Up and Ready to Go",
       "allDoneTitle": "All Done!",
       "categories": {
         "action": "New Category",
-        "description": "Group the menu first (Drinks, Food, Services) so products are easy to find on the POS.",
+        "description": "Create the groups your products sit in, such as Drinks, Food, or Services. Setting these up first means every product you add next has a home and stays quick to find on the POS.",
         "title": "Create Menu Categories"
       },
       "completed": "Completed",
       "congratsContinue": "Continue to Dashboard",
       "congratsGetApp": "Install POS App",
-      "congratsMessage": "You finished every setup step. Your location is ready for real sales — install the POS app and run your first test order.",
+      "congratsMessage": "Every setup step is done and your location is ready for real sales. Install the POS app on your devices to start ringing up orders, and reopen this guide any time from the Tasks button.",
       "congratsProgress": "All {{total}} setup steps completed",
       "congratsTitle": "Congratulations! 🎉",
       "discounts": {
         "action": "Create Offer",
-        "description": "Create a welcome, happy-hour, or staff discount so promotions are ready at checkout.",
+        "description": "Set up the offers you plan to run, such as a welcome deal, happy hour, or staff discount. Once saved, cashiers apply them in one tap at checkout instead of editing prices by hand.",
         "title": "Create a Discount Offer"
       },
       "goLive": {
         "action": "Get Mobile App",
-        "description": "Download the Mintcom POS app on iOS or Android, sign in, run one test sale, then check Sales reports to confirm totals look right.",
+        "description": "Download the Mintcom POS app on iOS or Android, sign in, and ring up one test sale. Then open your sales report and check the total, tax, and payment method all landed as expected.",
         "title": "Install POS & Run Test Sale"
       },
       "loyalty": {
         "action": "Open Loyalty",
-        "description": "Turn on points and add one reward so repeat customers earn automatically after each sale.",
+        "description": "Switch on points and add at least one reward customers can redeem. Regulars then earn automatically on every sale, with nothing for your cashiers to remember.",
         "title": "Turn On Loyalty Rewards"
       },
       "markAsCompleted": "Mark as completed",
       "payments": {
         "action": "Payment Methods",
-        "description": "Enable cash, card, and any wallet methods your cashiers will accept.",
+        "description": "Turn on the methods your cashiers can accept, such as cash, card, and wallets. Anything you leave off here will not appear on the POS payment screen.",
         "title": "Set Payment Methods"
       },
       "products": {
         "action": "Build Menu",
-        "description": "Add your opening lineup with prices and categories, then upload photos so the POS looks clear on day one — bestsellers and signature items first.",
+        "description": "Add your products with prices and a category, then upload photos so the POS grid is easy to scan. Start with bestsellers and signature items; the rest can be added any time.",
         "title": "Build Your Full Menu"
       },
       "profile": {
         "action": "Open Profile",
-        "description": "Set store name, address, and contact details used across the dashboard and reports.",
+        "description": "Add your store name, address, and contact details. They appear on receipts, on reports, and anywhere customers see your business, so it is worth getting them right before your first sale.",
         "title": "Complete Location Profile"
       },
       "progressText": "{{done}} of {{total}} completed",
       "receipt": {
         "action": "Receipt Settings",
-        "description": "Set logo, header, Tax ID, and footer so printed receipts match your brand.",
+        "description": "Add your logo, header text, Tax ID, and footer. Every printed and emailed receipt uses this layout, so customers see it on every single sale.",
         "title": "Configure Receipt Layout"
       },
       "roles": {
         "action": "Open Roles",
-        "description": "Review existing roles (cashier, manager, and custom ones) or create a new role with the permissions you need — do this before inviting staff.",
+        "description": "Check what the built in cashier and manager roles can do, and create your own if you need tighter limits. Doing this before you invite anyone means every new hire gets the right access from day one.",
         "title": "Review or Create Roles"
       },
-      "setupGuideSubtitle": "One clear path: brand, money rules, menu, offers, team — then your first test sale",
+      "setupGuideSubtitle": "Work through it top to bottom: store details, tax and payments, menu, offers, team, then your first test sale",
       "setupGuideTitle": "Setup Guide",
       "staff": {
         "action": "Add Staff",
-        "description": "Invite a cashier or manager and assign one of the roles you reviewed — no shared logins.",
+        "description": "Invite each cashier and manager with their own login and assign one of your roles. Individual logins are what make shift reports and activity logs meaningful, so avoid shared accounts.",
         "title": "Add Your Team"
       },
       "stepsCount": "{{count}} steps",
       "taxes": {
         "action": "Tax Settings",
-        "description": "Set the tax rate so order totals and settlements stay accurate.",
+        "description": "Enter the rate your business charges. It applies to every order from the moment you save it, so setting it before your first sale keeps totals, refunds, and reports accurate.",
         "title": "Set Tax Rate"
       },
       "title": "Tasks"
@@ -1029,7 +1030,15 @@
     "zero": "0",
     "zeroDecimal": "0.00",
     "optional": "Optional",
-    "tryAgain": "Try again"
+    "tryAgain": "Try again",
+    "moreActions": "More actions",
+    "orderActions": "Order actions",
+    "downloadOnAppStore": "Download on the App Store",
+    "getItOnGooglePlay": "Get it on Google Play",
+    "androidDownloadComingSoon": "Android app download coming soon",
+    "iosDownloadComingSoon": "iOS app download coming soon",
+    "ownerAndroidDownloadComingSoon": "Owner Android app download coming soon",
+    "ownerIosDownloadComingSoon": "Owner iOS app download coming soon"
   },
   "community": {
     "auth_required": "Please log in to {{action}}.",
@@ -1659,7 +1668,8 @@
       "ownerConflictTitle": "Someone is inside",
       "ownerDeviceConflictTitle": "Another device is inside",
       "securingMessage": "Checking this location before opening it.",
-      "securingTitle": "Securing dashboard"
+      "securingTitle": "Securing dashboard",
+      "controlGranted": "You now have control of this location dashboard."
     },
     "menu": {
       "activeLocation": "Active Location",
@@ -1841,12 +1851,12 @@
     "title": "Dashboard",
     "tour": {
       "taskItem": {
-        "desc": "Click on a task to expand it, then follow the link to complete the setup step.",
-        "title": "First Task"
+        "desc": "Open a step to see what it covers and how long it takes, then use its button to jump straight to the right screen. Mark it done when you come back. Your progress is saved, so you can finish the rest later.",
+        "title": "Start Here"
       },
       "tasks": {
-        "desc": "Here you can track your location's setup progress. Complete these tasks to get ready for business!",
-        "title": "Setup Tasks"
+        "desc": "Every step your location needs before its first real sale lives here, in the order we recommend doing them. The counter shows what is left, and you can reopen this list any time from the Tasks button.",
+        "title": "Your Setup Guide"
       }
     },
     "trackingPerformance": "Tracking all business performance",
@@ -1860,7 +1870,7 @@
       "selectView": "View Mode"
     },
     "welcome": {
-      "message": "Welcome to your new dashboard for {{location}}! Let's get your location set up and ready for business.",
+      "message": "Your dashboard for {{location}} is live. The setup guide walks you through 12 short steps, from your store details to your first test sale, and takes about 20 minutes in total. You can stop and come back any time.",
       "startGuide": "Start Setup Guide"
     }
   },
@@ -2710,7 +2720,7 @@
         "demo": {
           "ai": {
             "a1": "Espresso led with 142 cups, up 18% from yesterday.",
-            "a2": "Try a \"Croissant + Latte\" bundle at 5.50 USD — projects +12% basket.",
+            "a2": "Try a \"Croissant + Latte\" bundle at 5.50 USD. Projected basket lift: +12%.",
             "a3": "Expect 320–360 orders, peak 9–11 AM. Schedule 2 baristas.",
             "placeholder": "Pick a prompt above",
             "q1": "What sold best today?",
@@ -2720,7 +2730,7 @@
           "branch": {
             "airport": "Airport",
             "downtown": "Downtown",
-            "hint": "Switch brand, link locations — brand totals update live",
+            "hint": "Switch brand, link locations, and brand totals update live",
             "link": "Link",
             "linkAll": "Link all",
             "linked": "Linked",
@@ -2743,7 +2753,7 @@
             "free": "FREE",
             "freeItemHint": "Same as POS: free item from a reward category",
             "gold": "Gold",
-            "hint": "Redeem a % discount or a free item from a category — just like Mintcom POS",
+            "hint": "Redeem a % discount or a free item from a category, just like Mintcom POS",
             "itemCookie": "Cookie",
             "itemLatte": "Latte",
             "itemMuffin": "Muffin",
@@ -2772,8 +2782,8 @@
             "bullet1": "Live cash, stock & refund alerts",
             "bullet2": "Push banners with your business context",
             "bullet3": "Stay in control from anywhere",
-            "cashDesc": "Expected $420.00 — Counted $395.50",
-            "cashDesc2": "Expected $180.00 — Counted $172.00",
+            "cashDesc": "Expected $420.00, counted $395.50",
+            "cashDesc2": "Expected $180.00, counted $172.00",
             "criticalDesc": "Whole milk has 1 L remaining",
             "criticalDesc2": "Croissant dough has 0 units remaining",
             "criticalStock": "Critical stock",
@@ -2783,18 +2793,18 @@
             "justNow": "Just now",
             "lowStock": "Low stock",
             "markAll": "Mark all read",
-            "n1": "New order #4218 — 24.50 USD",
+            "n1": "New order #4218 for 24.50 USD",
             "n2": "Daily target reached 🎉",
             "n3": "Low stock: Espresso beans",
             "n4": "Sara clocked in",
             "now": "now",
             "overage": "Overage",
-            "overageDesc": "Expected $310.00 — Counted $318.25",
-            "overageDesc2": "Expected $95.00 — Counted $102.00",
+            "overageDesc": "Expected $310.00, counted $318.25",
+            "overageDesc2": "Expected $95.00, counted $102.00",
             "push": "Push notification",
             "refund": "Refund",
             "refundDesc": "Order #4218 refunded by Omar",
-            "refundDesc2": "Order #4301 partial refund — $6.50",
+            "refundDesc2": "Order #4301 partial refund of $6.50",
             "shortage": "Shortage",
             "stockDesc": "Espresso beans has 4 units remaining",
             "tabCash": "Cash",
@@ -2819,7 +2829,7 @@
             "choosePay": "Choose how the customer pays",
             "cookie": "Cookie",
             "croissant": "Croissant",
-            "emptyCart": "Cart is empty — tap a product above",
+            "emptyCart": "Cart is empty. Tap a product above",
             "espresso": "Espresso",
             "latte": "Latte",
             "muffin": "Muffin",
@@ -2861,7 +2871,7 @@
             "applePay": "Apple Pay",
             "card": "Card",
             "cardBrands": "Card brands",
-            "cardFixed": "Always available at checkout — card brands below",
+            "cardFixed": "Always available at checkout. Card brands below",
             "cash": "Cash",
             "cashFixed": "Always available at checkout",
             "cliq": "CliQ",
@@ -2915,7 +2925,7 @@
             "compact": "Compact",
             "cozy": "Cozy",
             "dark": "Dark",
-            "hint": "Switch density and theme — the preview updates live",
+            "hint": "Switch density and theme, and the preview updates live",
             "light": "Light"
           }
         },
@@ -3435,7 +3445,7 @@
     },
     "loyaltyPage": {
       "title": "Loyalty | Mintcom POS",
-      "description": "Built-in loyalty and rewards for Mintcom POS — points, discounts, and free items at the register."
+      "description": "Built-in loyalty and rewards for Mintcom POS: points, discounts, and free items at the register."
     },
     "multiLocation": {
       "title": "Multi-location | Mintcom POS",
@@ -3457,7 +3467,7 @@
     "home": "Home",
     "login": "Log In",
     "logout": "Log Out",
-    "onboardingBannerSubtitle": "Browse freely anytime — pick up setup when you’re ready.",
+    "onboardingBannerSubtitle": "Browse freely anytime, and pick up setup when you’re ready.",
     "onboardingBannerTitle": "Your first location is one step away",
     "owner": "Owner Portal",
     "pricing": "Pricing",
@@ -3476,7 +3486,8 @@
     "backToWebsiteShort": "Website",
     "completeLaunch": "Pay & Launch",
     "errors": {
-      "failedToComplete": "Failed to complete setup. Please try again."
+      "failedToComplete": "Failed to complete setup. Please try again.",
+      "failedToSaveCard": "Failed to save card. Please try again."
     },
     "location": "Location",
     "messages": {
@@ -3524,7 +3535,7 @@
         "USD": "USD - US Dollar"
       },
       "currency": "Currency",
-      "currencyLockedNote": "All locations in an account share one currency, so your reports stay in a single currency. You can change it from Account Management — it applies to every location. To use a different currency, create a separate account.",
+      "currencyLockedNote": "All locations in an account share one currency, so your reports stay in a single currency. You can change it from Account Management, where it applies to every location. To use a different currency, create a separate account.",
       "currencyTip": "Primary currency for sales.",
       "discounts": "Copy discounts options",
       "discountsDesc": "Copy all promo codes and discount rules",
@@ -3585,7 +3596,7 @@
       "addedLocation": "Added location",
       "billedCycle": "Billed {{cycle}}",
       "existingAccountBenefit": "Existing account benefit",
-      "trialPayNote": "You're covered by your 30-day trial — nothing is charged until it ends."
+      "trialPayNote": "You're covered by your 30-day trial, so nothing is charged until it ends."
     },
     "step3": {
       "errors": {
@@ -3900,7 +3911,7 @@
         "peakRevenueDesc": "During the busiest hour",
         "quietest": "Quietest",
         "quietestHour": "Quietest Hour",
-        "quietestHourDesc": "{{count}} orders — good time for prep or breaks",
+        "quietestHourDesc": "{{count}} orders, a good time for prep or breaks",
         "revenue": "Revenue",
         "rushPeriod": "Rush period",
         "rushWindow": "Rush Window",
@@ -4100,7 +4111,7 @@
       "brandLoginHint": "Use this ID to sign in to the brand dashboard.",
       "brandLoginId": "Brand Login ID",
       "accessCredentials": "Access Credentials",
-      "accessCredentialsSubtitle": "Login IDs for location and brand dashboards — search, copy, open, or reset.",
+      "accessCredentialsSubtitle": "Login IDs for location and brand dashboards. Search, copy, open, or reset.",
       "brandLogins": "Brand Logins",
       "brandLoginsSubtitle": "Login Credentials for Your Brand Dashboards",
       "brands": "Brands",
@@ -4264,9 +4275,6 @@
       "members_count_few": "{{count}} Members",
       "members_count_many": "{{count}} Members",
       "members_count_two": "2 Members"
-    },
-    "account_settings": {
-      "version": "مينتكوم مكتب الخلفية v{{version}} ({{year}})"
     },
     "billing": {
       "active": "Active",
@@ -5501,7 +5509,8 @@
       "showTaxIdDesc": "Show Tax ID on footer",
       "subtitle": "Edit Receipt Look",
       "title": "Receipts",
-      "uploadLogo": "Upload logo"
+      "uploadLogo": "Upload logo",
+      "logoAlt": "Receipt logo"
     },
     "sales": {
       "currency": "System Currency",
@@ -5569,7 +5578,7 @@
       "noCountries": "No countries found",
       "tryDifferentKeywords": "Try different keywords",
       "registerHint": "Get your credentials by registering at",
-      "savedKeep": "Saved — re-enter to change",
+      "savedKeep": "Saved. Re-enter to change",
       "noConnectionYet": "Tax Sync is unavailable due to unsupported country settings or pending Mintcom integration.",
       "testConnection": "Test connection",
       "testing": "Testing…",
@@ -5673,7 +5682,7 @@
       "emailResent": "Link sent ✓",
       "emailVerified": "Email verified",
       "emailVerifyHint": "We’ll email a confirmation link to verify this address so password recovery works.",
-      "passwordAdminHint": "Staff cannot reset their own POS password. Leave blank to keep the current one — passwords are never shown for security. Only enter a value if you want a new password to share with them.",
+      "passwordAdminHint": "Staff cannot reset their own POS password. Leave blank to keep the current one. Passwords are never shown, for security. Only enter a value if you want a new password to share with them.",
       "resendVerification": "Resend verification"
     },
     "messages": {
@@ -6221,7 +6230,9 @@
       "submit": "Submit ticket",
       "subtitle": "Describe Your Issue and We'll Get Back to You",
       "success": "Ticket submitted successfully! We'll respond within 24 hours.",
-      "title": "Submit a Support Ticket"
+      "title": "Submit a Support Ticket",
+      "sessionExpired": "Session expired. Please log in again.",
+      "loadingAccount": "Loading account..."
     },
     "popularArticles": {
       "account": "How to manage your account settings",
@@ -6358,7 +6369,8 @@
       "replySent": "Reply sent",
       "replyError": "Your reply couldn't be sent. Please try again.",
       "statusError": "Couldn't update the ticket. Please try again.",
-      "reopened": "Ticket reopened"
+      "reopened": "Ticket reopened",
+      "sendShortcutHint": "Press Ctrl+Enter to send"
     }
   },
   "theme": {
@@ -6384,7 +6396,7 @@
     "industries": {
       "badge": "Who it's for",
       "title": "Built for restaurants, cafés, and growing retail",
-      "subtitle": "You do not need a custom system for every business type. Mintcom adapts to how you sell — tables, takeaway, counters, and multi-branch brands.",
+      "subtitle": "You do not need a custom system for every business type. Mintcom adapts to how you sell: tables, takeaway, counters, and multi-branch brands.",
       "ctaTitle": "Not sure if Mintcom fits?",
       "ctaDesc": "Try the free POS demo or contact us. We will help you map Mintcom to your menu, staff, and locations.",
       "contactUs": "Contact us",
@@ -6427,7 +6439,7 @@
         },
         "qsr": {
           "title": "Quick service",
-          "description": "Keep lines short with a UI designed for real cashiers — not long training manuals.",
+          "description": "Keep lines short with a UI designed for real cashiers, not long training manuals.",
           "points": [
             "Intuitive POS layout",
             "Multiple tenders at checkout",
@@ -6448,7 +6460,7 @@
     "security": {
       "badge": "Trust & security",
       "title": "Your business data deserves serious protection",
-      "subtitle": "Mintcom is built so owners can share access with staff without sharing full control — and so your operational data stays private, encrypted, and auditable.",
+      "subtitle": "Mintcom is built so owners can share access with staff without sharing full control, and so your operational data stays private, encrypted, and auditable.",
       "trustTitle": "Transparent policies, practical controls",
       "trustBody": "Security is not only infrastructure. It is how staff log in, who can refund, and how long activity is retained. Review our privacy and terms anytime, and contact support if you need help securing your account.",
       "pillars": {
@@ -6481,12 +6493,12 @@
     "pricing": {
       "badge": "Simple pricing",
       "title": "One plan. Everything included.",
-      "subtitle": "No hardware packages, no confusing add-ons. Mintcom is software that runs on the devices you already own — with transparent pricing per location.",
+      "subtitle": "No hardware packages, no confusing add-ons. Mintcom is software that runs on the devices you already own, with transparent pricing per location.",
       "perLocation": "per location",
-      "extraLocation": "Additional locations from {{price}} USD {{period}} — discounted so growth stays affordable.",
+      "extraLocation": "Additional locations from {{price}} USD {{period}}, discounted so growth stays affordable.",
       "trialNote": "Start with a free trial. Cancel anytime from your owner portal.",
       "includedTitle": "What’s included",
-      "noHardware": "We don’t sell hardware. Use your own tablets, phones, or computers — Mintcom works with what you already have.",
+      "noHardware": "We don’t sell hardware. Use your own tablets, phones, or computers. Mintcom works with what you already have.",
       "save": "Save ${{amount}}",
       "faqTitle": "Pricing questions",
       "included": {
@@ -6504,7 +6516,7 @@
       "faq": {
         "q1": {
           "q": "Is hardware included?",
-          "a": "No. Mintcom is software only. You can use phones, tablets, or computers you already own — we never force you to buy equipment from us."
+          "a": "No. Mintcom is software only. You can use phones, tablets, or computers you already own. We never force you to buy equipment from us."
         },
         "q2": {
           "q": "What do I pay for each location?",
@@ -6516,7 +6528,7 @@
         },
         "q4": {
           "q": "Are there hidden fees?",
-          "a": "No surprise feature unlocks. Core POS, staff, reports, loyalty, and multi-location tools are part of the plan — not sold as separate paid modules."
+          "a": "No surprise feature unlocks. Core POS, staff, reports, loyalty, and multi-location tools are part of the plan, not sold as separate paid modules."
         },
         "q5": {
           "q": "Can I switch monthly and yearly?",
@@ -6524,13 +6536,13 @@
         },
         "q6": {
           "q": "What if I only need one store?",
-          "a": "Perfect. Mintcom works great for a single location — and is ready when you open the next one."
+          "a": "Perfect. Mintcom works great for a single location, and it is ready when you open the next one."
         }
       }
     },
     "howItWorks": {
       "badge": "Getting started",
-      "title": "From signup to first sale — without the chaos",
+      "title": "From signup to first sale, without the chaos",
       "subtitle": "Mintcom is designed so owners and staff can go live quickly. Here’s the simple path most businesses follow.",
       "tryDemo": "Try POS free",
       "ctaTitle": "Ready to try it yourself?",
@@ -6561,9 +6573,9 @@
     "loyalty": {
       "badge": "Customer loyalty",
       "title": "Turn regulars into your growth engine",
-      "subtitle": "Loyalty is built into Mintcom — not a separate app. Reward repeat visits at the register and keep customer relationships close to your sales data.",
+      "subtitle": "Loyalty is built into Mintcom, not a separate app. Reward repeat visits at the register and keep customer relationships close to your sales data.",
       "whyTitle": "Why built-in loyalty wins",
-      "whyBody": "Staff redeem rewards in the same POS they already use. Owners see the impact next to real sales — without juggling another subscription.",
+      "whyBody": "Staff redeem rewards in the same POS they already use. Owners see the impact next to real sales, without juggling another subscription.",
       "cta": "Start rewarding customers",
       "cards": {
         "earn": {
@@ -6572,7 +6584,7 @@
         },
         "discounts": {
           "title": "Redeem real discounts",
-          "description": "Offer percentage rewards at checkout so loyalty feels valuable — not like a gimmick."
+          "description": "Offer percentage rewards at checkout so loyalty feels valuable, not like a gimmick."
         },
         "gifts": {
           "title": "Gift free items",
@@ -6589,7 +6601,7 @@
       "title": "One owner account. Many locations.",
       "subtitle": "Whether you run two cafés or a growing brand, Mintcom keeps branches organized without losing local control on the floor.",
       "priceTitle": "Grow without punishing pricing",
-      "priceBody": "Additional locations start from {{price}} USD/month — designed so expansion is an opportunity, not a shock.",
+      "priceBody": "Additional locations start from {{price}} USD/month, designed so expansion is an opportunity rather than a shock.",
       "priceNote": "Yearly billing saves more. See the full pricing page for monthly and yearly options.",
       "cards": {
         "brands": {
@@ -6602,7 +6614,7 @@
         },
         "teams": {
           "title": "Right people, right access",
-          "description": "Owners, brand managers, and store staff get the access they need — nothing more."
+          "description": "Owners, brand managers, and store staff get the access they need, and nothing more."
         },
         "grow": {
           "title": "Add locations when ready",
@@ -6612,7 +6624,7 @@
     },
     "why": {
       "badge": "Why Mintcom",
-      "title": "Built for owners who want clarity — not complexity",
+      "title": "Built for owners who want clarity, not complexity",
       "subtitle": "Lots of POS tools look powerful until the bill, the add-ons, or the training get in the way. Mintcom focuses on what busy businesses actually use every day.",
       "ctaTitle": "See the difference in a live demo",
       "ctaDesc": "No pitch deck required. Try the POS yourself, then start a trial when you’re ready.",
@@ -6628,7 +6640,7 @@
         },
         "r3": {
           "title": "Fast to learn",
-          "description": "Designed with real cashiers and owners in mind — so training doesn’t steal a whole weekend."
+          "description": "Designed with real cashiers and owners in mind, so training doesn’t steal a whole weekend."
         },
         "r4": {
           "title": "Serious access control",
@@ -6636,12 +6648,18 @@
         },
         "r5": {
           "title": "Modern extras that help",
-          "description": "Owner mobile visibility and AI assistance when you want answers — without replacing good operations basics."
+          "description": "Owner mobile visibility and AI assistance when you want answers, without replacing good operations basics."
         }
       }
     }
   },
   "menu": {
     "dashboard": "Dashboard"
+  },
+  "pwa": {
+    "updateTitle": "New Mintcom Version Ready",
+    "updateBody": "Update now to reload the latest cached app version.",
+    "updateAction": "Update and reload",
+    "dismiss": "Dismiss update prompt"
   }
 }
