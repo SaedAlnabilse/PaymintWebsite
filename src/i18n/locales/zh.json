@@ -2725,7 +2725,14 @@
             "downtown": "市中心店",
             "mall": "商场店",
             "staff": "员工",
-            "today": "今天"
+            "today": "今天",
+            "hint": "切换品牌、关联门店，品牌总额实时更新",
+            "link": "关联",
+            "linkAll": "全部关联",
+            "linked": "已关联",
+            "locShare": "品牌占比",
+            "underBrand": "品牌下门店",
+            "unified": "品牌统一总额"
           },
           "loyalty": {
             "bronze": "青铜",
@@ -2733,19 +2740,78 @@
             "gold": "黄金",
             "redeem": "兑换",
             "silver": "白银",
-            "tier": "等级"
+            "tier": "等级",
+            "addItemsFirst": "请先向订单添加商品",
+            "applied": "已使用奖励",
+            "catBeverages": "饮品",
+            "catPastries": "烘焙点心",
+            "completeSale": "完成销售",
+            "earned": "已赚取",
+            "free": "免费",
+            "freeItemHint": "与 POS 一致：从奖励分类中免费选一件",
+            "hint": "兑换百分比折扣，或从分类中选一件免费商品，与 Mintcom POS 完全一致",
+            "itemCookie": "曲奇",
+            "itemLatte": "拿铁",
+            "itemMuffin": "玛芬",
+            "itemSandwich": "三明治",
+            "order": "当前订单",
+            "pickFrom": "选择免费商品来源",
+            "points": "积分",
+            "remove": "移除",
+            "reward10": "订单立减 10%",
+            "reward20": "订单立减 20%",
+            "rewardDiscount": "会员折扣",
+            "rewardFreeBev": "免费饮品",
+            "rewardFreePastry": "免费烘焙点心",
+            "rewardRemoved": "已移除奖励",
+            "rewards": "奖励",
+            "typeDiscount": "订单折扣",
+            "typeFreeItem": "免费商品来源"
           },
           "mobile": {
             "n1": "新订单 #4218，24.50 美元",
             "n2": "已达成每日目标 🎉",
             "n3": "库存不足：浓缩咖啡豆",
-            "n4": "Sara 已上班打卡"
+            "n4": "Sara 已上班打卡",
+            "alert": "条提醒",
+            "alerts": "条提醒",
+            "appName": "管理后台",
+            "bullet1": "现金、库存与退款实时提醒",
+            "bullet2": "推送横幅附带门店业务信息",
+            "bullet3": "随时随地掌控全局",
+            "cashDesc": "应有 $420.00，实点 $395.50",
+            "cashDesc2": "应有 $180.00，实点 $172.00",
+            "criticalDesc": "全脂牛奶仅剩 1 升",
+            "criticalDesc2": "可颂面团库存为 0",
+            "criticalStock": "库存告急",
+            "empty": "此标签下暂无提醒",
+            "eyebrow": "全部门店",
+            "hint": "筛选标签 · 点击标为已读 · 实时推送提醒",
+            "justNow": "刚刚",
+            "lowStock": "库存不足",
+            "markAll": "全部标为已读",
+            "now": "刚刚",
+            "overage": "溢余",
+            "overageDesc": "应有 $310.00，实点 $318.25",
+            "overageDesc2": "应有 $95.00，实点 $102.00",
+            "push": "推送通知",
+            "refund": "退款",
+            "refundDesc": "订单 #4218 由 Omar 退款",
+            "refundDesc2": "订单 #4301 部分退款 $6.50",
+            "shortage": "短缺",
+            "stockDesc": "浓缩咖啡豆仅剩 4 份",
+            "tabCash": "现金",
+            "tabRefunds": "退款",
+            "tabStock": "库存",
+            "title": "通知",
+            "today": "今天"
           },
           "onboard": {
             "s1": "添加员工",
             "s2": "分配角色",
             "s3": "完成首笔销售",
-            "s4": "准备就绪"
+            "s4": "准备就绪",
+            "restart": "重新开始导览"
           },
           "pos": {
             "croissant": "可颂",
@@ -2759,16 +2825,34 @@
             "choosePay": "选择顾客支付方式",
             "emptyCart": "购物车为空，请点击上方商品",
             "newSale": "新销售",
-            "salad": "沙拉"
+            "salad": "沙拉",
+            "all": "全部",
+            "catBeverages": "饮品",
+            "catFood": "餐食",
+            "catPastries": "烘焙点心",
+            "cookie": "曲奇",
+            "latte": "拿铁",
+            "muffin": "玛芬",
+            "noItems": "此分类下暂无商品",
+            "order": "订单",
+            "sandwich": "三明治",
+            "soup": "汤",
+            "tea": "茶"
           },
           "recipe": {
             "butter": "黄油",
             "flour": "面粉",
             "margin": "利润率",
-            "sugar": "糖"
+            "sugar": "糖",
+            "cost": "原料成本",
+            "eggs": "鸡蛋",
+            "hint": "切换原料即可重新计算利润率",
+            "price": "售价"
           },
           "reporting": {
-            "weekly": "每周销售"
+            "weekly": "每周销售",
+            "hint": "点击某一天查看销售详情",
+            "weekTotal": "本周"
           },
           "sales": {
             "card": "银行卡",
@@ -2777,7 +2861,29 @@
             "subtotal": "小计",
             "tax": "税费",
             "total": "已扣款",
-            "via": "通过{{m}}"
+            "via": "通过{{m}}",
+            "active": "已启用",
+            "addBrand": "添加卡组织",
+            "addMethod": "添加支付方式",
+            "allAdded": "已添加全部方式",
+            "amex": "Amex",
+            "applePay": "Apple Pay",
+            "cardBrands": "卡组织",
+            "cardFixed": "结账时始终可用，卡组织见下方",
+            "cashFixed": "结账时始终可用",
+            "cliq": "CliQ",
+            "discover": "Discover",
+            "googlePay": "Google Pay",
+            "mastercard": "Mastercard",
+            "methods": "支付方式",
+            "paypal": "PayPal",
+            "pickMethod": "选择一种支付方式",
+            "required": "必备",
+            "serviceCharge": "服务费",
+            "serviceHint": "结账时收取的可选费用",
+            "serviceRate": "费率",
+            "talabat": "Talabat",
+            "visa": "Visa"
           },
           "secure": {
             "c1": "加密备份",
@@ -2785,7 +2891,8 @@
             "c3": "基于角色的访问",
             "c4": "99.9% 可用性",
             "live": "在线",
-            "protected": "受保护"
+            "protected": "受保护",
+            "partial": "需要关注"
           },
           "staff": {
             "barista": "咖啡师",
@@ -2793,14 +2900,27 @@
             "manager": "经理",
             "off": "关闭",
             "on": "在班",
-            "working": "工作中"
+            "working": "工作中",
+            "add": "添加员工",
+            "assignRole": "分配角色：",
+            "editing": "正在编辑",
+            "hint": "先选择人员，再分配角色与权限",
+            "permOrders": "订单",
+            "permPos": "POS 销售",
+            "permRefunds": "退款",
+            "permReports": "报表",
+            "permSettings": "设置",
+            "permStaff": "员工管理",
+            "team": "团队"
           },
           "ui": {
             "compact": "紧凑",
             "cozy": "舒适",
             "dark": "深色",
-            "light": "浅色"
-          }
+            "light": "浅色",
+            "hint": "切换密度与主题，预览实时更新"
+          },
+          "tryHint": "试试右侧的实时预览 →"
         },
         "feature": "功能",
         "frame": {
