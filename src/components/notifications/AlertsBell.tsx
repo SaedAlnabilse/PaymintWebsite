@@ -37,6 +37,8 @@ export interface AlertsBellProps {
   establishmentId?: string;
   establishmentIds?: readonly string[];
   locations?: readonly AlertsBellLocation[];
+  /** Opens beside a desktop sidebar instead of back over the sidebar itself. */
+  placement?: 'dropdown' | 'sidebar';
   className?: string;
 }
 
@@ -56,6 +58,7 @@ export function AlertsBell({
   establishmentId,
   establishmentIds,
   locations = [],
+  placement = 'dropdown',
   className = '',
 }: AlertsBellProps) {
   const { t } = useTranslation();
@@ -226,7 +229,11 @@ export function AlertsBell({
           aria-label={t('notifications.bell.recentTitle', {
             defaultValue: 'Recent notifications',
           })}
-          className="absolute end-0 z-50 mt-2 w-[min(24rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl shadow-black/10 dark:border-white/10 dark:bg-[#0D0D0D] dark:shadow-black/40"
+          className={`absolute z-50 w-[min(24rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl shadow-black/10 dark:border-white/10 dark:bg-[#0D0D0D] dark:shadow-black/40 ${
+            placement === 'sidebar'
+              ? 'start-full top-0 ms-8'
+              : 'end-0 mt-2'
+          }`}
         >
           <header className="flex items-center justify-between gap-3 border-b border-gray-100 px-4 py-3 dark:border-white/5">
             <div className="min-w-0">

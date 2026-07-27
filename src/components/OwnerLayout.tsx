@@ -303,7 +303,7 @@ export function OwnerLayout() {
                                 <span className="text-sm font-bold text-gray-500 dark:text-gray-400">
                                     {t('notifications.menu.title')}
                                 </span>
-                                <AlertsBell scope="owner" locations={ownerLocations} />
+                                <AlertsBell scope="owner" locations={ownerLocations} placement="sidebar" />
                             </div>
 
                             {/* Menu Items */}
@@ -339,7 +339,7 @@ export function OwnerLayout() {
                         </div>
                     ) : (
                         <div className="flex flex-col items-center gap-2">
-                            <AlertsBell scope="owner" locations={ownerLocations} />
+                            <AlertsBell scope="owner" locations={ownerLocations} placement="sidebar" />
                             <div className="relative group">
                                 <LanguageSwitcher
                                     compact

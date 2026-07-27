@@ -1040,6 +1040,7 @@ export function DashboardLayout() {
                     scope="location"
                     establishmentId={currentEstablishment?.id}
                     locations={dashboardLocations}
+                    placement="sidebar"
                   />
                 </div>
               )}
@@ -1092,6 +1093,7 @@ export function DashboardLayout() {
                   scope="location"
                   establishmentId={currentEstablishment?.id}
                   locations={dashboardLocations}
+                  placement="sidebar"
                 />
               )}
               <div className="relative group">

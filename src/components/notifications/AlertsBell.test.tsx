@@ -193,6 +193,23 @@ describe('AlertsBell', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
+  it('opens beside a desktop sidebar using direction-aware logical positioning', () => {
+    vi.mocked(useBackofficeAlerts).mockReturnValue(createHookResult());
+
+    render(
+      <MemoryRouter>
+        <AlertsBell scope="owner" placement="sidebar" />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Notifications, 0 unread' }),
+    );
+
+    expect(screen.getByRole('dialog')).toHaveClass('start-full', 'top-0', 'ms-8');
+    expect(screen.getByRole('dialog')).not.toHaveClass('end-0');
+  });
+
   it('navigates trial alerts without marking them read', () => {
     const trial = makeAlert('trial', {
       type: 'TRIAL_EXPIRING',
