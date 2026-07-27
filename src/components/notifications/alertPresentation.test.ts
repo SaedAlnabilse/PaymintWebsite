@@ -200,7 +200,7 @@ describe('alert deep links', () => {
         'location',
         context,
       ),
-    ).toBe('../recipes?rawMaterialId=material%20%2F%20pistachios');
+    ).toBe('../inventory?rawMaterialId=material%20%2F%20pistachios');
   });
 
   it('links a product stock alert directly to its product editor target', () => {

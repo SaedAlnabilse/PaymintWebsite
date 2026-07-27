@@ -42,6 +42,12 @@ const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage').then(m 
 const AccountRecoveryPage = lazy(() => import('./pages/AccountRecoveryPage').then(m => ({ default: m.AccountRecoveryPage })));
 const CookiePolicyPage = lazy(() => import('./pages/CookiePolicyPage').then(m => ({ default: m.CookiePolicyPage })));
 const AboutUsPage = lazy(() => import('./pages/AboutUsPage').then(m => ({ default: m.AboutUsPage })));
+
+function LegacyRecipesRedirect() {
+  const location = useLocation();
+  const inventoryPath = location.pathname.replace(/\/recipes\/?$/, '/inventory');
+  return <Navigate to={`${inventoryPath}${location.search}`} replace />;
+}
 // Draft marketing pages (kept on disk; hidden from public routes until review is done)
 // IndustriesPage, SecurityPage, PricingPage, HowItWorksPage, LoyaltyPage (marketing),
 // MultiLocationPage, WhyMintcomPage — re-enable in routes when ready to publish.
@@ -884,6 +890,10 @@ const router = createBrowserRouter([
                     <InventoryPage />
                   </PageSuspense>
                 ),
+              },
+              {
+                path: "recipes",
+                element: <LegacyRecipesRedirect />,
               },
               {
                 path: "establishments",
