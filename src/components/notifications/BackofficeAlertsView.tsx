@@ -3,6 +3,7 @@ import { isToday, isYesterday } from 'date-fns';
 import {
   AlertCircle,
   Banknote,
+  Bell,
   BellOff,
   Boxes,
   Loader2,
@@ -295,11 +296,41 @@ export function BackofficeAlertsView({
   ];
 
   const statCards = [
-    { id: 'total', value: stats.total, Icon: AlertCircle, tone: 'text-gray-600 dark:text-gray-300' },
-    { id: 'cash', value: stats.cash, Icon: Banknote, tone: 'text-red-600 dark:text-red-400' },
-    { id: 'stock', value: stats.stock, Icon: Boxes, tone: 'text-amber-600 dark:text-amber-400' },
-    { id: 'refunds', value: stats.refunds, Icon: RotateCcw, tone: 'text-violet-600 dark:text-violet-400' },
-    { id: 'updates', value: stats.updates, Icon: Sparkles, tone: 'text-emerald-700 dark:text-mintcom-green' },
+    {
+      id: 'total',
+      value: stats.total,
+      Icon: Bell,
+      tone: 'text-slate-600 dark:text-slate-300',
+      background: 'bg-slate-500/10',
+    },
+    {
+      id: 'cash',
+      value: stats.cash,
+      Icon: Banknote,
+      tone: 'text-red-600 dark:text-red-400',
+      background: 'bg-red-500/10',
+    },
+    {
+      id: 'stock',
+      value: stats.stock,
+      Icon: Boxes,
+      tone: 'text-amber-600 dark:text-amber-400',
+      background: 'bg-amber-500/10',
+    },
+    {
+      id: 'refunds',
+      value: stats.refunds,
+      Icon: RotateCcw,
+      tone: 'text-violet-600 dark:text-violet-400',
+      background: 'bg-violet-500/10',
+    },
+    {
+      id: 'updates',
+      value: stats.updates,
+      Icon: Sparkles,
+      tone: 'text-emerald-700 dark:text-mintcom-green',
+      background: 'bg-mintcom-green/10',
+    },
   ];
 
   const filteredServerTotal =
@@ -421,20 +452,26 @@ export function BackofficeAlertsView({
       )}
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        {statCards.map(({ id, value, Icon, tone }) => (
+        {statCards.map(({ id, value, Icon, tone, background }) => (
           <div
             key={id}
-            className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-white/5 dark:bg-[#0D0D0D]"
+            className="group relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md dark:border-white/[0.03] dark:bg-[#1E293B] sm:p-5"
           >
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-xs font-bold text-gray-500 dark:text-gray-400">
+            <div
+              className={`pointer-events-none absolute end-0 top-0 h-24 w-24 rounded-full opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100 ${background}`}
+              aria-hidden="true"
+            />
+            <div className="relative z-10">
+              <div className={`mb-3 flex h-10 w-10 items-center justify-center rounded-xl ${background} ${tone}`}>
+                <Icon size={20} aria-hidden="true" />
+              </div>
+              <p className="dashboard-stat-title mb-1">
                 {t(`notifications.stats.${id}`)}
-              </span>
-              <Icon size={17} className={tone} />
+              </p>
+              <p className="text-2xl font-black tracking-tight text-gray-900 dark:text-white">
+                {value.toLocaleString(locale)}
+              </p>
             </div>
-            <p className="mt-2 text-2xl font-black text-gray-900 dark:text-white">
-              {value}
-            </p>
           </div>
         ))}
       </div>

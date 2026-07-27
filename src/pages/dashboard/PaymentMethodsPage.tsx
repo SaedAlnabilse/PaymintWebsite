@@ -136,12 +136,10 @@ export function PaymentMethodsPage() {
     setShowCardModal(true);
   };
 
-  // Card-brand fallback art. Uses the same maintained icon set the API seeds
-  // from (aaronfagan/svg-credit-card-payment-icons) — the old Wikimedia links
-  // for Visa/Mada/Discover/Samsung Pay/Uber Eats/Talabat are dead (files get
-  // renamed on Commons). Brands with no reliable hosted logo return null so
-  // the UI shows the neutral card icon instead of a broken image.
-  const CARD_ICON_SET = 'https://raw.githubusercontent.com/aaronfagan/svg-credit-card-payment-icons/main/flat';
+  // Keep the common card-brand artwork on our own origin. Third-party logo
+  // hosts can be blocked by the CSP attached to an already-open SPA document,
+  // which made these tiles appear blank until the user performed a hard reload.
+  const CARD_ICON_SET = '/payment-brand-icons';
   const getFallbackLogo = (name: string) => {
     const lower = name.toLowerCase();
     if (lower.includes('visa')) return `${CARD_ICON_SET}/visa.svg`;
@@ -1077,6 +1075,5 @@ export function PaymentMethodsPage() {
     </div>
   );
 }
-
 
 

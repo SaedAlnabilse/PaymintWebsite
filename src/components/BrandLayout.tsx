@@ -392,6 +392,7 @@ export function BrandLayout() {
                                     scope="brand"
                                     establishmentIds={brandEstablishmentIds}
                                     locations={brandLocations}
+                                    placement="sidebar"
                                 />
                             </div>
 
@@ -432,6 +433,7 @@ export function BrandLayout() {
                                 scope="brand"
                                 establishmentIds={brandEstablishmentIds}
                                 locations={brandLocations}
+                                placement="sidebar"
                             />
                             <div className="relative group">
                                 <LanguageSwitcher
