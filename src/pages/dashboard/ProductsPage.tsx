@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import {
@@ -182,6 +182,7 @@ export function ProductsPage() {
         establishmentId: currentEstablishment?.id || null,
     });
     const location = useLocation();
+    const navigate = useNavigate();
     const [products, setProducts] = useState<Product[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -326,28 +327,32 @@ export function ProductsPage() {
                 categoryId?: string;
             };
 
-            if (state) {
-                if (state.filterCategoryId || state.categoryId) {
+            const queryProductId = new URLSearchParams(location.search).get('productId');
+
+            if (state || queryProductId) {
+                if (state?.filterCategoryId || state?.categoryId) {
                     setSelectedCategoryId(state.filterCategoryId || state.categoryId || 'all');
                 }
 
-                if (state.productId) {
-                    const found = products.find((p: Product) => p.id === state.productId);
+                const targetProductId = queryProductId || state?.productId;
+                if (targetProductId) {
+                    const found = products.find((p: Product) => p.id === targetProductId);
                     if (found) {
                         setEditingProduct(found);
                         setShowModal(true);
                     }
-                } else if (state.openCreateModal) {
+                } else if (state?.openCreateModal) {
                     setEditingProduct(null);
                     setShowModal(true);
                 }
 
-                // Clear history state to avoid re-triggering on refresh
-                window.history.replaceState({}, document.title);
+                // Clean one-shot notification/state targets so refresh does not
+                // reopen the product after the manager has already acted on it.
+                navigate(location.pathname, { replace: true, state: null });
                 navigationStateChecked.current = true;
             }
         }
-    }, [isLoading, products, location.state]);
+    }, [isLoading, location.pathname, location.search, location.state, navigate, products]);
 
     useEffect(() => {
         fetchData();
@@ -1697,5 +1702,3 @@ export function ProductsPage() {
 
     );
 }
-
-

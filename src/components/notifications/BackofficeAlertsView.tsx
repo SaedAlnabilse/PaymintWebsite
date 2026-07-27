@@ -412,7 +412,7 @@ export function BackofficeAlertsView({
   const deepLinkFor = (alert: BackofficeAlert) =>
     resolveAlertDeepLink(
       {
-        alertKind: alert.alertKind,
+        ...alert,
         establishmentId: alert.establishmentId || alert.establishment?.id,
       },
       scope,
@@ -485,10 +485,10 @@ export function BackofficeAlertsView({
         {statCards.map(({ id, value, Icon, tone, background }) => (
           <div
             key={id}
-            className="group relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md dark:border-white/[0.03] dark:bg-[#1E293B] sm:p-5"
+            className="relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-white/[0.03] dark:bg-[#1E293B] sm:p-5"
           >
             <div
-              className={`pointer-events-none absolute end-0 top-0 h-24 w-24 rounded-full opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100 ${background}`}
+              className={`pointer-events-none absolute end-0 top-0 h-24 w-24 rounded-full opacity-0 blur-2xl ${background}`}
               aria-hidden="true"
             />
             <div className="relative z-10">

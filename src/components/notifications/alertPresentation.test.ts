@@ -188,4 +188,34 @@ describe('alert deep links', () => {
       ),
     ).toBe('/dashboard/Amman%20flagship%20%2F%20%D8%B9%D9%85%D8%A7%D9%86/orders');
   });
+
+  it('links a raw-material stock alert directly to its recipe material editor target', () => {
+    expect(
+      resolveAlertDeepLink(
+        {
+          alertKind: 'stock_warning',
+          establishmentId,
+          rawMaterial: { id: 'material / pistachios' },
+        },
+        'location',
+        context,
+      ),
+    ).toBe('../recipes?rawMaterialId=material%20%2F%20pistachios');
+  });
+
+  it('links a product stock alert directly to its product editor target', () => {
+    expect(
+      resolveAlertDeepLink(
+        {
+          alertKind: 'stock_critical',
+          establishmentId,
+          item: { id: 'seasonal-spice-kit' },
+        },
+        'owner',
+        context,
+      ),
+    ).toBe(
+      '/dashboard/amman-main/products?productId=seasonal-spice-kit',
+    );
+  });
 });

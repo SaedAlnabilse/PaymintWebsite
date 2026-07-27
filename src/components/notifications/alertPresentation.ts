@@ -61,6 +61,8 @@ export interface PresentableAlert {
 export interface DeepLinkAlert {
   alertKind: AdminPortalAlertKind;
   establishmentId?: string | null;
+  item?: { id?: string | null } | null;
+  rawMaterial?: { id?: string | null } | null;
 }
 
 export type EstablishmentSlugLookup = Readonly<
@@ -189,17 +191,22 @@ export const getAlertPresentation = (
   };
 };
 
-type LocationDestination =
-  | 'products'
-  | 'reports/cash-discrepancy'
-  | 'orders';
-
 const getLocationDestination = (
-  kind: AdminPortalAlertKind,
-): LocationDestination | null => {
-  if (isStockAlertKind(kind)) return 'products';
-  if (isCashAlertKind(kind)) return 'reports/cash-discrepancy';
-  if (isRefundAlertKind(kind)) return 'orders';
+  alert: DeepLinkAlert,
+): string | null => {
+  if (isStockAlertKind(alert.alertKind)) {
+    const rawMaterialId = alert.rawMaterial?.id?.trim();
+    if (rawMaterialId) {
+      return `recipes?rawMaterialId=${encodeURIComponent(rawMaterialId)}`;
+    }
+
+    const productId = alert.item?.id?.trim();
+    return productId
+      ? `products?productId=${encodeURIComponent(productId)}`
+      : 'products';
+  }
+  if (isCashAlertKind(alert.alertKind)) return 'reports/cash-discrepancy';
+  if (isRefundAlertKind(alert.alertKind)) return 'orders';
   return null;
 };
 
@@ -220,7 +227,7 @@ export const resolveAlertDeepLink = (
   if (alert.alertKind === 'support') return '/support';
   if (alert.alertKind === 'account' || alert.alertKind === 'system') return null;
 
-  const destination = getLocationDestination(alert.alertKind);
+  const destination = getLocationDestination(alert);
   if (!destination) return null;
 
   if (scope === 'location') {
@@ -235,4 +242,3 @@ export const resolveAlertDeepLink = (
 
   return `/dashboard/${encodeURIComponent(locationSlug)}/${destination}`;
 };
-

@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { useNavigate , useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   Plus,
   Minus,
@@ -157,7 +157,9 @@ export function RecipesPage() {
   const { currentEstablishment } = useAuth();
   usePermissionGuard(['manage_inventory']);
   const { locationSlug } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
+  const navigationTargetHandledRef = useRef(false);
   const [activeTab, setActiveTab] = useState<'materials' | 'sub' | 'final'>('materials');
   const [subRecipes, setSubRecipes] = useState<SubRecipe[]>([]);
   const [finalRecipes, setFinalRecipes] = useState<FinalRecipe[]>([]);
@@ -217,6 +219,36 @@ export function RecipesPage() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  useEffect(() => {
+    if (isLoading || navigationTargetHandledRef.current) return;
+
+    const rawMaterialId = new URLSearchParams(location.search).get('rawMaterialId');
+    if (!rawMaterialId) return;
+
+    navigationTargetHandledRef.current = true;
+    const materialIndex = rawMaterials.findIndex((material) => material.id === rawMaterialId);
+    const material = materialIndex >= 0 ? rawMaterials[materialIndex] : null;
+
+    if (material) {
+      setActiveTab('materials');
+      setSearchQuery('');
+      setStatusFilter('ALL');
+      setPage(Math.floor(materialIndex / itemsPerPage) + 1);
+      setEditingMaterial(material);
+      setMaterialForm({
+        name: material.name,
+        unit: material.unit,
+        quantity: material.quantity,
+        costPerUnit: material.costPerUnit,
+        lowStockThreshold: material.lowStockThreshold || 0,
+      });
+      setShowMaterialModal(true);
+    }
+
+    // This target is a one-shot action, not a persistent page filter.
+    navigate(location.pathname, { replace: true });
+  }, [isLoading, location.pathname, location.search, navigate, rawMaterials]);
 
   const fetchData = async () => {
     try {
@@ -1634,4 +1666,3 @@ export function RecipesPage() {
     </div>
   );
 }
-
