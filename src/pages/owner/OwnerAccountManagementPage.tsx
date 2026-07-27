@@ -1375,7 +1375,7 @@ export function OwnerAccountManagementPage() {
                             fit ? 'min-h-0 flex flex-col' : ''
                         }`}
                     >
-                        <div className={`${fit ? 'p-3 sm:p-4 flex-1 min-h-0 overflow-y-auto custom-scrollbar' : 'p-5 sm:p-6'}`}>
+                        <div className={`${fit ? 'p-3 sm:p-4 flex-1 min-h-0 overflow-y-auto custom-scrollbar' : 'p-5 sm:p-6'} flex h-full flex-col`}>
                             {/* Header — same icon/title metrics as Security Tips & Owner Account cards */}
                             <div className={`flex items-center gap-3 ${fit ? 'mb-3' : 'mb-5'}`}>
                                 <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0">
@@ -1496,34 +1496,39 @@ export function OwnerAccountManagementPage() {
                                 )}
                             </div>
 
-                            {/* Company / legal — compact chips */}
-                            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2.5 px-0.5">
-                                {t('owner.account.resources.company', { defaultValue: 'Company & legal' })}
-                            </p>
-                            <div className="grid grid-cols-2 gap-2">
+                            {/* Company / legal — fills the remaining panel height. */}
+                            <div className="flex min-h-0 flex-1 flex-col">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2.5 px-0.5 shrink-0">
+                                    {t('owner.account.resources.company', { defaultValue: 'Company & legal' })}
+                                </p>
+                                <div className="grid min-h-[12rem] flex-1 grid-cols-1 auto-rows-fr gap-3 sm:grid-cols-2">
                                 {[
                                     {
                                         href: '/qa',
                                         icon: HelpCircle,
                                         title: t('owner.account.resources.qa.title'),
+                                        description: t('owner.account.resources.qa.desc'),
                                         tone: 'text-purple-500 bg-purple-500/10 border-purple-500/10 hover:border-purple-400/40',
                                     },
                                     {
                                         href: '/legal/privacy',
                                         icon: Shield,
                                         title: t('owner.account.resources.privacyPolicy.title'),
+                                        description: t('owner.account.resources.privacyPolicy.desc'),
                                         tone: 'text-mintcom-green bg-mintcom-green/10 border-mintcom-green/10 hover:border-mintcom-green/40',
                                     },
                                     {
                                         href: '/legal/terms',
                                         icon: Scale,
                                         title: t('owner.account.resources.termsOfUse.title'),
+                                        description: t('owner.account.resources.termsOfUse.desc'),
                                         tone: 'text-blue-500 bg-blue-500/10 border-blue-500/10 hover:border-blue-400/40',
                                     },
                                     {
                                         href: '/about',
                                         icon: Info,
                                         title: t('owner.account.resources.aboutUs.title'),
+                                        description: t('owner.account.resources.aboutUs.desc'),
                                         tone: 'text-mintcom-green border-mintcom-green/10 hover:border-mintcom-green/40',
                                     },
                                 ].map((item) => (
@@ -1532,17 +1537,23 @@ export function OwnerAccountManagementPage() {
                                         href={item.href}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className={`group flex items-center gap-2.5 p-2.5 rounded-xl border bg-white dark:bg-white/[0.02] transition-all hover:shadow-sm ${item.tone}`}
+                                        className={`group flex min-h-[5.5rem] items-center gap-4 rounded-2xl border bg-white p-4 transition-all hover:shadow-sm dark:bg-white/[0.02] sm:p-5 ${item.tone}`}
                                     >
-                                        <div className="w-8 h-8 rounded-lg bg-white dark:bg-white/5 flex items-center justify-center shrink-0 shadow-sm border border-black/[0.03] dark:border-white/5">
-                                            <item.icon size={15} className="shrink-0" />
+                                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-black/[0.03] bg-white shadow-sm dark:border-white/5 dark:bg-white/5">
+                                            <item.icon size={20} className="shrink-0" />
                                         </div>
-                                        <span className="text-xs font-bold text-gray-800 dark:text-gray-100 truncate flex-1">
-                                            {item.title}
-                                        </span>
-                                        <ExternalLink size={12} className="text-gray-300 group-hover:text-gray-500 shrink-0 transition-colors" />
+                                        <div className="min-w-0 flex-1 self-center">
+                                            <h3 className="text-sm font-bold leading-tight text-gray-900 dark:text-white sm:text-base">
+                                                {item.title}
+                                            </h3>
+                                            <p className="mt-1 text-xs font-medium leading-relaxed text-gray-500 dark:text-gray-400">
+                                                {item.description}
+                                            </p>
+                                        </div>
+                                        <ExternalLink size={15} className="shrink-0 self-start text-gray-300 transition-colors group-hover:text-gray-500" />
                                     </a>
                                 ))}
+                                </div>
                             </div>
                         </div>
                     </motion.div>
