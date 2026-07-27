@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import {
     ArrowLeft,
     Send,
@@ -64,18 +65,18 @@ interface Ticket {
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const statusConfig: Record<string, { label: string; color: string; bg: string; icon: typeof Inbox }> = {
-    open: { label: 'Open', color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-900/20', icon: Inbox },
-    in_progress: { label: 'In Progress', color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-900/20', icon: Clock },
-    resolved: { label: 'Resolved', color: 'text-mintcom-green', bg: 'bg-mintcom-green/10 dark:bg-mintcom-green/', icon: CheckCircle2 },
-    closed: { label: 'Closed', color: 'text-gray-500', bg: 'bg-gray-50 dark:bg-gray-800', icon: XCircle },
+const statusConfig: Record<string, { labelKey: string; color: string; bg: string; icon: typeof Inbox }> = {
+    open: { labelKey: 'support.admin.status.open', color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-900/20', icon: Inbox },
+    in_progress: { labelKey: 'support.admin.status.in_progress', color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-900/20', icon: Clock },
+    resolved: { labelKey: 'support.admin.status.resolved', color: 'text-mintcom-green', bg: 'bg-mintcom-green/10 dark:bg-mintcom-green/', icon: CheckCircle2 },
+    closed: { labelKey: 'support.admin.status.closed', color: 'text-gray-500', bg: 'bg-gray-50 dark:bg-gray-800', icon: XCircle },
 };
 
-const priorityConfig: Record<string, { label: string; dot: string }> = {
-    low: { label: 'Low', dot: 'bg-gray-400' },
-    medium: { label: 'Medium', dot: 'bg-blue-500' },
-    high: { label: 'High', dot: 'bg-orange-500' },
-    urgent: { label: 'Urgent', dot: 'bg-red-500' },
+const priorityConfig: Record<string, { labelKey: string; dot: string }> = {
+    low: { labelKey: 'support.admin.priority.low', dot: 'bg-gray-400' },
+    medium: { labelKey: 'support.admin.priority.medium', dot: 'bg-blue-500' },
+    high: { labelKey: 'support.admin.priority.high', dot: 'bg-orange-500' },
+    urgent: { labelKey: 'support.admin.priority.urgent', dot: 'bg-red-500' },
 };
 
 const prioritySlaHours: Record<string, number> = {
@@ -85,27 +86,10 @@ const prioritySlaHours: Record<string, number> = {
     urgent: 2,
 };
 
-const quickReplies = [
-    {
-        label: 'Ask for details',
-        text: 'Thanks for reaching out. Could you send us the exact steps you took, what you expected to happen, and a screenshot or short screen recording if possible? That will help us investigate faster.',
-    },
-    {
-        label: 'Investigating',
-        text: 'Thanks for the report. We are checking this now and will update you here as soon as we confirm the cause or next step.',
-    },
-    {
-        label: 'Resolved',
-        text: 'This should now be resolved. Please refresh the page and try again. If the issue continues, reply here with what you see and we will reopen the investigation.',
-    },
-    {
-        label: 'Billing follow-up',
-        text: 'Thanks for contacting Mintcom Support. We are reviewing the billing details on your account and will follow up here with the safest next step.',
-    },
-];
+const quickReplyKeys = ['askDetails', 'investigating', 'resolved', 'billing'] as const;
 
-function formatDate(dateStr: string): string {
-    return new Date(dateStr).toLocaleString('en-US', {
+function formatDate(dateStr: string, locale: string): string {
+    return new Date(dateStr).toLocaleString(locale, {
         month: 'short',
         day: 'numeric',
         year: 'numeric',
@@ -118,25 +102,26 @@ function hoursSince(dateStr: string): number {
     return Math.max(0, (Date.now() - new Date(dateStr).getTime()) / 36e5);
 }
 
-function getSlaState(ticket: Ticket) {
+function getSlaState(ticket: Ticket, t: TFunction) {
     const slaHours = prioritySlaHours[ticket.priority] || prioritySlaHours.medium;
     const lastCustomerMessage = [...ticket.messages].reverse().find((msg) => msg.senderType === 'user');
     const anchorDate = lastCustomerMessage?.createdAt || ticket.createdAt;
     const remaining = slaHours - hoursSince(anchorDate);
+    const hoursLeft = t('support.admin.sla.hoursLeft', { hours: Math.ceil(remaining) });
 
     if (ticket.status === 'resolved' || ticket.status === 'closed') {
-        return { label: 'SLA complete', color: 'text-mintcom-green' };
+        return { label: t('support.admin.sla.complete'), color: 'text-mintcom-green' };
     }
 
     if (remaining <= 0) {
-        return { label: 'SLA overdue', color: 'text-red-600 dark:text-red-400' };
+        return { label: t('support.admin.sla.overdue'), color: 'text-red-600 dark:text-red-400' };
     }
 
     if (remaining <= 2) {
-        return { label: `${Math.ceil(remaining)}h left`, color: 'text-orange-600 dark:text-orange-400' };
+        return { label: hoursLeft, color: 'text-orange-600 dark:text-orange-400' };
     }
 
-    return { label: `${Math.ceil(remaining)}h left`, color: 'text-gray-500 dark:text-gray-400' };
+    return { label: hoursLeft, color: 'text-gray-500 dark:text-gray-400' };
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -157,6 +142,12 @@ export const SupportAdminDetailPage = () => {
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const isSupportTeam = isSupportAdminEmail(account?.email);
+    const locale = t('common.locale');
+    const quickReplies = quickReplyKeys.map((key) => ({
+        key,
+        label: t(`support.admin.detail.quickReplies.${key}.label`),
+        text: t(`support.admin.detail.quickReplies.${key}.text`),
+    }));
 
     // Fetch ticket data
     const fetchTicket = useCallback(async () => {
@@ -217,9 +208,9 @@ export const SupportAdminDetailPage = () => {
                     : prev,
             );
             setReplyText('');
-            toast.success('Reply sent! Customer has been notified by email.');
+            toast.success(t('support.admin.detail.replySent'));
         } catch {
-            toast.error('Failed to send reply');
+            toast.error(t('support.admin.detail.replyFailed'));
         } finally {
             setSending(false);
         }
@@ -234,9 +225,10 @@ export const SupportAdminDetailPage = () => {
                 status: newStatus.toUpperCase(),
             });
             setTicket((prev) => (prev ? { ...prev, status: newStatus } : prev));
-            toast.success(`Status changed to ${statusConfig[newStatus]?.label || newStatus}`);
+            const statusLabel = statusConfig[newStatus] ? t(statusConfig[newStatus].labelKey) : newStatus;
+            toast.success(t('support.admin.detail.statusChanged', { status: statusLabel }));
         } catch {
-            toast.error('Failed to change status');
+            toast.error(t('support.admin.detail.statusChangeFailed'));
         }
     };
 
@@ -271,7 +263,7 @@ export const SupportAdminDetailPage = () => {
             <>
                 <Navbar />
                 <SectionLoader
-                    message={t('support.admin.loading', { defaultValue: 'Loading ticket...' })}
+                    message={t('support.admin.loading')}
                     className="bg-gray-50 dark:bg-[#0a0a0a] pt-24"
                     minHeightClassName="min-h-screen"
                 />
@@ -285,9 +277,9 @@ export const SupportAdminDetailPage = () => {
                 <Navbar />
                 <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-[#0a0a0a] pt-24">
                     <div className="text-center">
-                        <h1 className="font-magilio text-2xl font-bold text-gray-900 dark:text-white mb-2">Ticket Not Found</h1>
+                        <h1 className="font-magilio text-2xl font-bold text-gray-900 dark:text-white mb-2">{t('support.admin.detail.notFound')}</h1>
                         <Link to="/support/admin" className="text-mintcom-green font-bold hover:underline">
-                            ← Back to Admin Portal
+                            ← {t('support.admin.detail.back')}
                         </Link>
                     </div>
                 </div>
@@ -299,7 +291,7 @@ export const SupportAdminDetailPage = () => {
     const currentStatus = statusConfig[ticket.status] || statusConfig.open;
     const currentPriority = priorityConfig[ticket.priority] || priorityConfig.medium;
     const StatusIcon = currentStatus.icon;
-    const slaState = getSlaState(ticket);
+    const slaState = getSlaState(ticket, t);
     const lastCustomerMessage = [...ticket.messages].reverse().find((msg) => msg.senderType === 'user');
     const lastSupportMessage = [...ticket.messages].reverse().find((msg) => msg.senderType === 'support');
 
@@ -315,7 +307,7 @@ export const SupportAdminDetailPage = () => {
                         className="inline-flex items-center gap-2 text-sm font-bold text-gray-500 dark:text-gray-400 hover:text-mintcom-green transition-colors mb-6"
                     >
                         <ArrowLeft className="w-4 h-4" />
-                        Back to Admin Portal
+                        {t('support.admin.detail.back')}
                     </Link>
 
                     {/* ── Ticket Info Card ────────────────────────────────────────── */}
@@ -332,18 +324,18 @@ export const SupportAdminDetailPage = () => {
                                     </button>
                                     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold ${currentStatus.bg} ${currentStatus.color}`}>
                                         <StatusIcon className="w-3 h-3" />
-                                        {currentStatus.label}
+                                        {t(currentStatus.labelKey)}
                                     </span>
                                     <span className="inline-flex items-center gap-1 text-[10px] font-bold">
                                         <span className={`w-2 h-2 rounded-full ${currentPriority.dot}`} />
-                                        {currentPriority.label}
+                                        {t(currentPriority.labelKey)}
                                     </span>
                                 </div>
                                 <h1 className="font-barlow text-lg font-bold text-gray-900 dark:text-white mb-1">{ticket.subject}</h1>
                                 <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400 flex-wrap">
                                     <span className="flex items-center gap-1"><Tag className="w-3 h-3" />{ticket.category}</span>
                                     <span>•</span>
-                                    <span>{formatDate(ticket.createdAt)}</span>
+                                    <span>{formatDate(ticket.createdAt, locale)}</span>
                                 </div>
                             </div>
 
@@ -353,7 +345,7 @@ export const SupportAdminDetailPage = () => {
                                     onClick={() => setShowStatusMenu(!showStatusMenu)}
                                     className="inline-flex items-center gap-2 px-3 py-2 text-xs font-bold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-white/10 rounded-xl hover:bg-gray-200 dark:hover:bg-white/15 transition-all"
                                 >
-                                    Change Status
+                                    {t('support.admin.detail.changeStatus')}
                                     <ChevronDown className="w-3 h-3" />
                                 </button>
                                 <AnimatePresence>
@@ -377,7 +369,7 @@ export const SupportAdminDetailPage = () => {
                                                             }`}
                                                     >
                                                         <cfg.icon className={`w-3 h-3 ${cfg.color}`} />
-                                                        {cfg.label}
+                                                        {t(cfg.labelKey)}
                                                     </button>
                                                 );
                                             })}
@@ -393,7 +385,7 @@ export const SupportAdminDetailPage = () => {
                                 <User className="w-4 h-4 text-blue-600" />
                             </div>
                             <div>
-                                <p className="font-bold text-gray-900 dark:text-white">{ticket.requesterName || 'Customer'}</p>
+                                <p className="font-bold text-gray-900 dark:text-white">{ticket.requesterName || t('support.admin.customerLabel')}</p>
                                 {ticket.requesterEmail && (
                                     <p className="text-gray-500 dark:text-gray-400 flex items-center gap-1">
                                         <Mail className="w-3 h-3" />{ticket.requesterEmail}
@@ -410,7 +402,7 @@ export const SupportAdminDetailPage = () => {
                         <div className="p-4 border-b border-gray-100 dark:border-white/5 flex items-center gap-2">
                             <MessageSquare className="w-4 h-4 text-gray-400" />
                             <h2 className="font-barlow text-sm font-bold text-gray-900 dark:text-white">
-                                Conversation ({ticket.messages.length} messages)
+                                {t('support.admin.detail.conversation', { count: ticket.messages.length })}
                             </h2>
                         </div>
 
@@ -443,13 +435,13 @@ export const SupportAdminDetailPage = () => {
                                                     <span className={`text-xs font-bold ${isSupport ? 'text-mintcom-green' : 'text-gray-900 dark:text-white'}`}>
                                                         {msg.senderName}
                                                     </span>
-                                                    <span className="text-[10px] text-gray-400">{formatDate(msg.createdAt)}</span>
+                                                    <span className="text-[10px] text-gray-400">{formatDate(msg.createdAt, locale)}</span>
                                                 </div>
                                                 <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{msg.content}</p>
                                                 {/* Attachments */}
                                                 {msg.attachments && Array.isArray(msg.attachments) && msg.attachments.length > 0 && (
                                                     <div className="mt-2 pt-2 border-t border-gray-200 dark:border-white/10">
-                                                        <p className="text-[10px] font-bold text-gray-400 mb-1">Attachments</p>
+                                                        <p className="text-[10px] font-bold text-gray-400 mb-1">{t('support.admin.detail.attachments')}</p>
                                                         <div className="flex flex-wrap gap-1.5">
                                                             {msg.attachments.map((att, i) => {
                                                                 const isImage = att.type?.startsWith('image/');
@@ -486,13 +478,13 @@ export const SupportAdminDetailPage = () => {
                             <div className="border-t border-gray-100 dark:border-white/5 p-4">
                                 <div className="flex items-center gap-2 mb-3 text-xs text-mintcom-green font-bold">
                                     <Shield className="w-3 h-3" />
-                                    Replying as Mintcom Support
+                                    {t('support.admin.detail.replyingAs')}
                                 </div>
                                 <div className="flex gap-3">
                                     <textarea maxLength={2000}
                                         value={replyText}
                                         onChange={(e) => setReplyText(e.target.value)}
-                                        placeholder={formatInputPlaceholder("Type your support reply...", t('common.locale'))}
+                                        placeholder={formatInputPlaceholder(t('support.admin.detail.replyPlaceholder'), locale)}
                                         rows={3}
                                         className="flex-1 resize-none bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl p-3 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-mintcom-green/30"
                                         onKeyDown={(e) => {
@@ -507,20 +499,20 @@ export const SupportAdminDetailPage = () => {
                                         className="self-end px-4 py-3 bg-mintcom-green text-black font-bold rounded-xl hover:opacity-90 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
                                     >
                                         {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                                        Send
+                                        {t('support.admin.detail.send')}
                                     </button>
                                 </div>
-                                <p className="mt-2 text-[10px] text-gray-400">Ctrl+Enter to send. Customer will be notified by email.</p>
+                                <p className="mt-2 text-[10px] text-gray-400">{t('support.admin.detail.replyHint')}</p>
                             </div>
                         ) : (
                             <div className="border-t border-gray-100 dark:border-white/5 p-4 text-center">
                                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                                    This ticket is closed.{' '}
+                                    {t('support.admin.detail.closedNotice')}{' '}
                                     <button
                                         onClick={() => handleChangeStatus('open')}
                                         className="text-mintcom-green font-bold hover:underline"
                                     >
-                                        Reopen it
+                                        {t('support.admin.detail.reopen')}
                                     </button>
                                 </p>
                             </div>
@@ -532,39 +524,39 @@ export const SupportAdminDetailPage = () => {
                         <div className="rounded-xl border border-gray-100 bg-white p-4 dark:border-white/5 dark:bg-white/[0.03]">
                             <div className="mb-3 flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-white">
                                 <TimerReset className="h-4 w-4 text-gray-400" />
-                                Support SLA
+                                {t('support.admin.detail.slaTitle')}
                             </div>
                             <p className={`text-lg font-black ${slaState.color}`}>{slaState.label}</p>
                             <p className="mt-1 text-xs font-medium text-gray-500 dark:text-gray-400">
-                                Based on {currentPriority.label.toLowerCase()} priority and the latest customer activity.
+                                {t('support.admin.detail.slaBasis', { priority: t(currentPriority.labelKey).toLowerCase() })}
                             </p>
                         </div>
 
                         <div className="rounded-xl border border-gray-100 bg-white p-4 dark:border-white/5 dark:bg-white/[0.03]">
                             <div className="mb-3 flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-white">
                                 <User className="h-4 w-4 text-gray-400" />
-                                Customer context
+                                {t('support.admin.detail.customerContext')}
                             </div>
                             <div className="space-y-3 text-xs">
-                                <InfoRow label="Name" value={ticket.requesterName || 'Customer'} />
-                                <InfoRow label="Email" value={ticket.requesterEmail || 'Not provided'} />
-                                <InfoRow label="Created" value={formatDate(ticket.createdAt)} />
-                                <InfoRow label="Last customer" value={lastCustomerMessage ? formatDate(lastCustomerMessage.createdAt) : 'No message yet'} />
-                                <InfoRow label="Last support" value={lastSupportMessage ? formatDate(lastSupportMessage.createdAt) : 'No reply yet'} />
+                                <InfoRow label={t('support.admin.detail.name')} value={ticket.requesterName || t('support.admin.customerLabel')} />
+                                <InfoRow label={t('support.admin.detail.email')} value={ticket.requesterEmail || t('support.admin.detail.notProvided')} />
+                                <InfoRow label={t('support.admin.detail.created')} value={formatDate(ticket.createdAt, locale)} />
+                                <InfoRow label={t('support.admin.detail.lastCustomer')} value={lastCustomerMessage ? formatDate(lastCustomerMessage.createdAt, locale) : t('support.admin.detail.noMessageYet')} />
+                                <InfoRow label={t('support.admin.detail.lastSupport')} value={lastSupportMessage ? formatDate(lastSupportMessage.createdAt, locale) : t('support.admin.detail.noReplyYet')} />
                             </div>
                         </div>
 
                         <div className="rounded-xl border border-gray-100 bg-white p-4 dark:border-white/5 dark:bg-white/[0.03]">
                             <div className="mb-3 flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-white">
                                 <ClipboardCheck className="h-4 w-4 text-gray-400" />
-                                Triage checklist
+                                {t('support.admin.detail.checklist.title')}
                             </div>
                             <div className="space-y-2 text-xs font-medium text-gray-600 dark:text-gray-300">
                                 {[
-                                    'Confirm issue category and priority',
-                                    'Check attachments and reproduction details',
-                                    'Reply with next action or resolution',
-                                    'Mark resolved only after customer can continue',
+                                    t('support.admin.detail.checklist.item1'),
+                                    t('support.admin.detail.checklist.item2'),
+                                    t('support.admin.detail.checklist.item3'),
+                                    t('support.admin.detail.checklist.item4'),
                                 ].map((item) => (
                                     <label key={item} className="flex items-start gap-2 rounded-lg bg-gray-50 p-2 dark:bg-white/5">
                                         <input type="checkbox" className="mt-0.5 h-3.5 w-3.5 rounded border-gray-300 text-mintcom-green focus:ring-mintcom-green" />
@@ -577,12 +569,12 @@ export const SupportAdminDetailPage = () => {
                         <div className="rounded-xl border border-gray-100 bg-white p-4 dark:border-white/5 dark:bg-white/[0.03]">
                             <div className="mb-3 flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-white">
                                 <MessageSquare className="h-4 w-4 text-gray-400" />
-                                Quick replies
+                                {t('support.admin.detail.quickReplies.title')}
                             </div>
                             <div className="space-y-2">
                                 {quickReplies.map((reply) => (
                                     <button
-                                        key={reply.label}
+                                        key={reply.key}
                                         type="button"
                                         onClick={() => insertQuickReply(reply.text)}
                                         className="w-full rounded-lg bg-gray-50 px-3 py-2 text-left text-xs font-bold text-gray-600 transition-colors hover:bg-mintcom-green/10 hover:text-gray-900 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-mintcom-green/10"
@@ -594,13 +586,13 @@ export const SupportAdminDetailPage = () => {
                         </div>
 
                         <div className="rounded-xl border border-gray-100 bg-white p-4 dark:border-white/5 dark:bg-white/[0.03]">
-                            <div className="mb-3 text-sm font-bold text-gray-900 dark:text-white">Internal Note</div>
+                            <div className="mb-3 text-sm font-bold text-gray-900 dark:text-white">{t('support.admin.detail.internalNote')}</div>
                             <textarea
                                 value={internalNote}
                                 onChange={(e) => setInternalNote(e.target.value)}
                                 rows={5}
                                 maxLength={1000}
-                                placeholder="Private note for this browser. Not sent to the customer."
+                                placeholder={t('support.admin.detail.internalNotePlaceholder')}
                                 className="w-full resize-none rounded-xl border border-gray-200 bg-gray-50 p-3 text-xs font-medium text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-mintcom-green/30 dark:border-white/10 dark:bg-white/5 dark:text-gray-200"
                             />
                         </div>

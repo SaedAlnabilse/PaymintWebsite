@@ -5802,17 +5802,182 @@
       "all": "All",
       "closed": "Closed",
       "customerLabel": "Customer",
+      "desk": {
+        "apply": "Apply",
+        "badge": "Support admin: {{email}}",
+        "description": "Triage customer tickets, keep urgent requests visible, and reply as Mintcom Support.",
+        "entity": "tickets",
+        "loadFailed": "Failed to load support tickets",
+        "loading": "Loading support queue...",
+        "noTicketsDesc": "No support tickets are available yet.",
+        "noTicketsTitle": "No Tickets Found",
+        "openFeedback": "Feedback",
+        "searchPlaceholder": "Search ticket number, subject, email, or customer...",
+        "senderCustomer": "Customer:",
+        "senderSupport": "Support:",
+        "sortNote": "Sorted by reply need, priority, and last update",
+        "ticketCount_one": "{{count}} ticket",
+        "ticketCount_other": "{{count}} tickets",
+        "title": "Support Desk"
+      },
+      "detail": {
+        "attachments": "Attachments",
+        "back": "Back to Admin Portal",
+        "changeStatus": "Change Status",
+        "checklist": {
+          "item1": "Confirm issue category and priority",
+          "item2": "Check attachments and reproduction details",
+          "item3": "Reply with next action or resolution",
+          "item4": "Mark resolved only after customer can continue",
+          "title": "Triage checklist"
+        },
+        "closedNotice": "This ticket is closed.",
+        "conversation_one": "Conversation ({{count}} message)",
+        "conversation_other": "Conversation ({{count}} messages)",
+        "created": "Created",
+        "customerContext": "Customer context",
+        "email": "Email",
+        "internalNote": "Internal Note",
+        "internalNotePlaceholder": "Private note for this browser. Not sent to the customer.",
+        "lastCustomer": "Last customer",
+        "lastSupport": "Last support",
+        "name": "Name",
+        "noMessageYet": "No message yet",
+        "noReplyYet": "No reply yet",
+        "notFound": "Ticket Not Found",
+        "notProvided": "Not provided",
+        "quickReplies": {
+          "askDetails": {
+            "label": "Ask for details",
+            "text": "Thanks for reaching out. Could you send us the exact steps you took, what you expected to happen, and a screenshot or short screen recording if possible? That will help us investigate faster."
+          },
+          "billing": {
+            "label": "Billing follow-up",
+            "text": "Thanks for contacting Mintcom Support. We are reviewing the billing details on your account and will follow up here with the safest next step."
+          },
+          "investigating": {
+            "label": "Investigating",
+            "text": "Thanks for the report. We are checking this now and will update you here as soon as we confirm the cause or next step."
+          },
+          "resolved": {
+            "label": "Resolved",
+            "text": "This should now be resolved. Please refresh the page and try again. If the issue continues, reply here with what you see and we will reopen the investigation."
+          },
+          "title": "Quick replies"
+        },
+        "reopen": "Reopen it",
+        "replyFailed": "Failed to send reply",
+        "replyHint": "Ctrl+Enter to send. Customer will be notified by email.",
+        "replyPlaceholder": "Type your support reply...",
+        "replySent": "Reply sent! Customer has been notified by email.",
+        "replyingAs": "Replying as Mintcom Support",
+        "send": "Send",
+        "slaBasis": "Based on {{priority}} priority and the latest customer activity.",
+        "slaTitle": "Support SLA",
+        "statusChangeFailed": "Failed to change status",
+        "statusChanged": "Status changed to {{status}}"
+      },
+      "feedbackPage": {
+        "anonymous": "Anonymous",
+        "apply": "Apply",
+        "back": "Back to tickets",
+        "categories": {
+          "bug": "Bug",
+          "feature": "Feature",
+          "general": "General",
+          "performance": "Performance",
+          "pricing": "Pricing",
+          "support": "Support",
+          "usability": "Usability"
+        },
+        "contactAllowed": "Contact Allowed",
+        "description": "Review product feedback by rating, POS area, and status so useful requests become planned improvements.",
+        "entity": "feedback",
+        "loadFailed": "Failed to load feedback",
+        "loading": "Loading feedback...",
+        "noFeedbackDesc": "No feedback is available yet.",
+        "noFeedbackTitle": "No Feedback Found",
+        "searchPlaceholder": "Search comments, area, route, name, or email...",
+        "stats": {
+          "average": "Average rating",
+          "low": "Low ratings",
+          "top": "Top: {{category}}",
+          "topArea": "Top area",
+          "total": "Total feedback"
+        },
+        "statusUpdated": "Feedback marked {{status}}",
+        "statuses": {
+          "archived": "Archived",
+          "done": "Done",
+          "new": "New",
+          "planned": "Planned",
+          "reviewing": "Reviewing"
+        },
+        "title": "Feedback Insights",
+        "updateFailed": "Failed to update feedback"
+      },
+      "filterLabels": {
+        "category": "Category",
+        "priority": "Priority",
+        "rating": "Rating",
+        "status": "Status"
+      },
       "filters": "Filters",
       "goToSupport": "Go to Support",
       "loading": "Loading ticket...",
       "needsReply": "Needs Reply",
       "noTickets": "No tickets found",
       "noTicketsYet": "No support tickets have been submitted yet.",
+      "priority": {
+        "high": "High",
+        "low": "Low",
+        "medium": "Medium",
+        "urgent": "Urgent"
+      },
+      "queues": {
+        "all": "All tickets",
+        "inProgress": "In progress",
+        "needsReply": "Needs reply",
+        "open": "Open",
+        "resolved": "Resolved",
+        "stale": "SLA overdue",
+        "urgent": "Urgent"
+      },
       "refresh": "Refresh",
       "searchPlaceholder": "Search by ticket ID, subject, name, or email...",
+      "sla": {
+        "complete": "SLA complete",
+        "hoursLeft": "{{hours}}h left",
+        "overdue": "SLA overdue",
+        "waiting": "Waiting on customer"
+      },
+      "stats": {
+        "active": "Active",
+        "needsReply": "Needs reply",
+        "resolved": "Resolved",
+        "slaOverdue": "SLA overdue"
+      },
+      "status": {
+        "closed": "Closed",
+        "in_progress": "In progress",
+        "open": "Open",
+        "resolved": "Resolved"
+      },
       "subtitle": "Manage All Customer Support Tickets",
       "supportLabel": "Support",
+      "time": {
+        "daysAgo": "{{days}}d ago",
+        "hoursAgo": "{{hours}}h ago",
+        "justNow": "Just now",
+        "minutesAgo": "{{minutes}}m ago"
+      },
       "title": "Support Admin Portal",
+      "triage": {
+        "rule1": "Urgent tickets target a 2 hour first response.",
+        "rule2": "High priority tickets target 8 hours.",
+        "rule3": "Resolved tickets can still be reopened from the conversation page.",
+        "title": "Triage Rules"
+      },
       "unknown": "Unknown"
     },
     "articles": {

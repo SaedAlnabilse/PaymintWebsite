@@ -5641,17 +5641,182 @@
       "all": "全部",
       "closed": "已关闭",
       "customerLabel": "顾客",
+      "desk": {
+        "apply": "应用",
+        "badge": "支持管理员：{{email}}",
+        "description": "分类处理客户工单，让紧急请求保持可见，并以 Mintcom 支持团队的身份回复。",
+        "entity": "工单",
+        "loadFailed": "加载支持工单失败",
+        "loading": "正在加载支持队列…",
+        "noTicketsDesc": "暂无支持工单。",
+        "noTicketsTitle": "未找到工单",
+        "openFeedback": "反馈",
+        "searchPlaceholder": "搜索工单号、主题、邮箱或客户…",
+        "senderCustomer": "顾客：",
+        "senderSupport": "支持：",
+        "sortNote": "按待回复情况、优先级和最后更新时间排序",
+        "ticketCount_one": "{{count}} 个工单",
+        "ticketCount_other": "{{count}} 个工单",
+        "title": "支持工作台"
+      },
+      "detail": {
+        "attachments": "附件",
+        "back": "返回管理后台",
+        "changeStatus": "更改状态",
+        "checklist": {
+          "item1": "确认问题类别和优先级",
+          "item2": "查看附件和复现步骤",
+          "item3": "回复下一步操作或解决方案",
+          "item4": "只有在客户能够继续使用后才标记为已解决",
+          "title": "分流清单"
+        },
+        "closedNotice": "此工单已关闭。",
+        "conversation_one": "对话（{{count}} 条消息）",
+        "conversation_other": "对话（{{count}} 条消息）",
+        "created": "创建时间",
+        "customerContext": "客户背景",
+        "email": "邮箱",
+        "internalNote": "内部备注",
+        "internalNotePlaceholder": "仅保存在此浏览器的私人备注，不会发送给客户。",
+        "lastCustomer": "客户最后消息",
+        "lastSupport": "支持最后回复",
+        "name": "姓名",
+        "noMessageYet": "暂无消息",
+        "noReplyYet": "暂无回复",
+        "notFound": "未找到工单",
+        "notProvided": "未提供",
+        "quickReplies": {
+          "askDetails": {
+            "label": "索取详情",
+            "text": "感谢您的反馈。您能否告知具体的操作步骤、您预期的结果，如果方便的话再提供一张截图或一段简短的录屏？这将帮助我们更快地排查问题。"
+          },
+          "billing": {
+            "label": "账单跟进",
+            "text": "感谢您联系 Mintcom 支持团队。我们正在核查您账户的账单详情，并会在此回复最稳妥的后续步骤。"
+          },
+          "investigating": {
+            "label": "正在排查",
+            "text": "感谢您的反馈。我们正在检查该问题，一旦确认原因或后续步骤，会立即在此更新。"
+          },
+          "resolved": {
+            "label": "已解决",
+            "text": "该问题现在应该已经解决。请刷新页面后重试。如果问题仍然存在，请在此回复您看到的情况，我们会重新展开排查。"
+          },
+          "title": "快捷回复"
+        },
+        "reopen": "重新打开",
+        "replyFailed": "发送回复失败",
+        "replyHint": "按 Ctrl+Enter 发送。系统将通过邮件通知客户。",
+        "replyPlaceholder": "输入支持回复…",
+        "replySent": "回复已发送！已通过邮件通知客户。",
+        "replyingAs": "以 Mintcom 支持团队身份回复",
+        "send": "发送",
+        "slaBasis": "依据{{priority}}优先级和客户的最新活动计算。",
+        "slaTitle": "支持响应时限",
+        "statusChangeFailed": "更改状态失败",
+        "statusChanged": "状态已更改为{{status}}"
+      },
+      "feedbackPage": {
+        "anonymous": "匿名",
+        "apply": "应用",
+        "back": "返回工单",
+        "categories": {
+          "bug": "缺陷",
+          "feature": "功能",
+          "general": "综合",
+          "performance": "性能",
+          "pricing": "定价",
+          "support": "支持",
+          "usability": "易用性"
+        },
+        "contactAllowed": "允许联系",
+        "description": "按评分、POS 区域和状态查看产品反馈，让有价值的请求转化为计划中的改进。",
+        "entity": "反馈",
+        "loadFailed": "加载反馈失败",
+        "loading": "正在加载反馈…",
+        "noFeedbackDesc": "暂无反馈。",
+        "noFeedbackTitle": "未找到反馈",
+        "searchPlaceholder": "搜索评论、区域、路径、姓名或邮箱…",
+        "stats": {
+          "average": "平均评分",
+          "low": "低评分",
+          "top": "最多：{{category}}",
+          "topArea": "主要区域",
+          "total": "反馈总数"
+        },
+        "statusUpdated": "反馈已标记为{{status}}",
+        "statuses": {
+          "archived": "已归档",
+          "done": "已完成",
+          "new": "新建",
+          "planned": "已计划",
+          "reviewing": "审核中"
+        },
+        "title": "反馈洞察",
+        "updateFailed": "更新反馈失败"
+      },
+      "filterLabels": {
+        "category": "类别",
+        "priority": "优先级",
+        "rating": "评分",
+        "status": "状态"
+      },
       "filters": "筛选",
       "goToSupport": "前往支持",
       "loading": "正在加载工单…",
       "needsReply": "待回复",
       "noTickets": "未找到工单",
       "noTicketsYet": "尚未提交任何支持工单。",
+      "priority": {
+        "high": "高",
+        "low": "低",
+        "medium": "中",
+        "urgent": "紧急"
+      },
+      "queues": {
+        "all": "全部工单",
+        "inProgress": "处理中",
+        "needsReply": "待回复",
+        "open": "待处理",
+        "resolved": "已解决",
+        "stale": "超出响应时限",
+        "urgent": "紧急"
+      },
       "refresh": "刷新",
       "searchPlaceholder": "按工单 ID、主题、姓名或邮箱搜索…",
+      "sla": {
+        "complete": "已达成响应时限",
+        "hoursLeft": "剩余 {{hours}} 小时",
+        "overdue": "超出响应时限",
+        "waiting": "等待客户回复"
+      },
+      "stats": {
+        "active": "进行中",
+        "needsReply": "待回复",
+        "resolved": "已解决",
+        "slaOverdue": "超出响应时限"
+      },
+      "status": {
+        "closed": "已关闭",
+        "in_progress": "处理中",
+        "open": "待处理",
+        "resolved": "已解决"
+      },
       "subtitle": "管理所有客户支持工单",
       "supportLabel": "支持",
+      "time": {
+        "daysAgo": "{{days}} 天前",
+        "hoursAgo": "{{hours}} 小时前",
+        "justNow": "刚刚",
+        "minutesAgo": "{{minutes}} 分钟前"
+      },
       "title": "支持管理后台",
+      "triage": {
+        "rule1": "紧急工单的目标首次响应时间为 2 小时。",
+        "rule2": "高优先级工单的目标响应时间为 8 小时。",
+        "rule3": "已解决的工单仍可从对话页面重新打开。",
+        "title": "分流规则"
+      },
       "unknown": "未知"
     },
     "articles": {

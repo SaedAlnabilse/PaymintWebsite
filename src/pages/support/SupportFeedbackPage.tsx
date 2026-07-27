@@ -59,8 +59,8 @@ const statusTone: Record<string, string> = {
   ARCHIVED: 'bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-300',
 };
 
-function formatDate(value: string) {
-  return new Date(value).toLocaleString('en-US', {
+function formatDate(value: string, locale: string) {
+  return new Date(value).toLocaleString(locale, {
     month: 'short',
     day: 'numeric',
     hour: '2-digit',
@@ -114,11 +114,11 @@ export const SupportFeedbackPage = () => {
         byStatus: [],
       });
     } catch {
-      toast.error('Failed to load feedback');
+      toast.error(t('support.admin.feedbackPage.loadFailed'));
     } finally {
       setLoading(false);
     }
-  }, [categoryFilter, ratingFilter, searchQuery, statusFilter]);
+  }, [categoryFilter, ratingFilter, searchQuery, statusFilter, t]);
 
   useEffect(() => {
     if (isAuthenticated && isSupportTeam) {
@@ -129,6 +129,42 @@ export const SupportFeedbackPage = () => {
   const topCategory = useMemo(() => stats.byCategory[0], [stats.byCategory]);
   const hasFeedbackSearch = searchQuery.trim().length > 0;
   const hasFeedbackFilters = statusFilter !== 'all' || categoryFilter !== 'all' || ratingFilter !== 'all';
+  const locale = t('common.locale');
+
+  const statusLabel = useCallback(
+    (status: string) => t(`support.admin.feedbackPage.statuses.${status.toLowerCase()}`, { defaultValue: status.replace('_', ' ').toLowerCase() }),
+    [t],
+  );
+
+  const categoryLabel = useCallback(
+    (category: string) => t(`support.admin.feedbackPage.categories.${category.toLowerCase()}`, { defaultValue: category }),
+    [t],
+  );
+
+  const statusFilterOptions = useMemo(
+    () => [
+      { value: 'all', label: t('support.admin.all') },
+      ...statusOptions.map((status) => ({ value: status, label: statusLabel(status) })),
+    ],
+    [statusLabel, t],
+  );
+
+  const categoryFilterOptions = useMemo(
+    () =>
+      categoryOptions.map((category) => ({
+        value: category,
+        label: category === 'all' ? t('support.admin.all') : categoryLabel(category),
+      })),
+    [categoryLabel, t],
+  );
+
+  const ratingFilterOptions = useMemo(
+    () => [
+      { value: 'all', label: t('support.admin.all') },
+      ...['1', '2', '3', '4', '5'].map((rating) => ({ value: rating, label: rating })),
+    ],
+    [t],
+  );
 
   const updateFeedback = async (item: FeedbackItem, status: string) => {
     try {
@@ -138,9 +174,9 @@ export const SupportFeedbackPage = () => {
           feedbackItem.id === item.id ? res.data : feedbackItem,
         ),
       );
-      toast.success(`Feedback marked ${status.toLowerCase()}`);
+      toast.success(t('support.admin.feedbackPage.statusUpdated', { status: statusLabel(status) }));
     } catch {
-      toast.error('Failed to update feedback');
+      toast.error(t('support.admin.feedbackPage.updateFailed'));
     }
   };
 
@@ -157,13 +193,13 @@ export const SupportFeedbackPage = () => {
             <div>
               <Link to="/support/admin" className="mb-4 inline-flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-mintcom-green dark:text-gray-400">
                 <ArrowLeft size={16} />
-                Back to tickets
+                {t('support.admin.feedbackPage.back')}
               </Link>
               <h1 className="font-magilio text-3xl font-black tracking-tight text-gray-900 dark:text-white">
-                Feedback Insights
+                {t('support.admin.feedbackPage.title')}
               </h1>
               <p className="mt-2 max-w-2xl text-sm font-medium text-gray-500 dark:text-gray-400">
-                Review product feedback by rating, POS area, and status so useful requests become planned improvements.
+                {t('support.admin.feedbackPage.description')}
               </p>
             </div>
             <button
@@ -172,18 +208,27 @@ export const SupportFeedbackPage = () => {
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-gray-900 px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-gray-800 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-gray-200"
             >
               <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
-              Refresh
+              {t('support.admin.refresh')}
             </button>
           </div>
 
           <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {[
-              { label: 'Total feedback', value: stats.total, icon: MessageSquare, tone: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-500/10' },
-              { label: 'Average rating', value: stats.averageRating.toFixed(1), icon: Star, tone: 'text-amber-500', bg: 'bg-amber-50 dark:bg-amber-500/10' },
-              { label: 'Low ratings', value: stats.lowRatingCount, icon: BarChart3, tone: 'text-red-500', bg: 'bg-red-50 dark:bg-red-500/10' },
-              { label: topCategory ? `Top: ${topCategory.category}` : 'Top area', value: topCategory?.count || 0, icon: CheckCircle2, tone: 'text-mintcom-green', bg: 'bg-mintcom-green/10' },
+              { id: 'total', label: t('support.admin.feedbackPage.stats.total'), value: stats.total, icon: MessageSquare, tone: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-500/10' },
+              { id: 'average', label: t('support.admin.feedbackPage.stats.average'), value: stats.averageRating.toFixed(1), icon: Star, tone: 'text-amber-500', bg: 'bg-amber-50 dark:bg-amber-500/10' },
+              { id: 'low', label: t('support.admin.feedbackPage.stats.low'), value: stats.lowRatingCount, icon: BarChart3, tone: 'text-red-500', bg: 'bg-red-50 dark:bg-red-500/10' },
+              {
+                id: 'top',
+                label: topCategory
+                  ? t('support.admin.feedbackPage.stats.top', { category: categoryLabel(topCategory.category) })
+                  : t('support.admin.feedbackPage.stats.topArea'),
+                value: topCategory?.count || 0,
+                icon: CheckCircle2,
+                tone: 'text-mintcom-green',
+                bg: 'bg-mintcom-green/10',
+              },
             ].map((item) => (
-              <div key={item.label} className="rounded-2xl border border-gray-100 bg-white p-5 dark:border-white/10 dark:bg-white/[0.03]">
+              <div key={item.id} className="rounded-2xl border border-gray-100 bg-white p-5 dark:border-white/10 dark:bg-white/[0.03]">
                 <div className="flex items-center gap-3">
                   <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${item.bg}`}>
                     <item.icon size={20} className={item.tone} />
@@ -208,7 +253,7 @@ export const SupportFeedbackPage = () => {
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') fetchFeedback();
                   }}
-                  placeholder={formatInputPlaceholder('Search comments, area, route, name, or email...', 'en')}
+                  placeholder={formatInputPlaceholder(t('support.admin.feedbackPage.searchPlaceholder'), locale)}
                   className="w-full rounded-xl border border-gray-200 bg-gray-50 py-3 pl-12 pr-11 text-sm font-bold text-gray-700 outline-none transition-colors focus:border-mintcom-green/50 focus:ring-2 focus:ring-mintcom-green/20 dark:border-white/10 dark:bg-white/5 dark:text-gray-200"
                 />
                 {searchQuery && (
@@ -226,39 +271,39 @@ export const SupportFeedbackPage = () => {
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-gray-100 px-4 py-3 text-sm font-bold text-gray-700 transition-colors hover:bg-gray-200 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/15"
               >
                 <Filter size={18} />
-                Filters
+                {t('support.admin.filters')}
               </button>
               <button
                 onClick={fetchFeedback}
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-mintcom-green px-5 py-3 text-sm font-black text-black transition-opacity hover:opacity-90"
               >
-                Apply
+                {t('support.admin.feedbackPage.apply')}
               </button>
             </div>
 
             {showFilters && (
               <div className="mt-4 grid gap-4 border-t border-gray-100 pt-4 dark:border-white/10 md:grid-cols-3">
-                <FilterGroup label="Status" value={statusFilter} options={['all', ...statusOptions]} onChange={setStatusFilter} />
-                <FilterGroup label="Category" value={categoryFilter} options={categoryOptions} onChange={setCategoryFilter} />
-                <FilterGroup label="Rating" value={ratingFilter} options={['all', '1', '2', '3', '4', '5']} onChange={setRatingFilter} />
+                <FilterGroup label={t('support.admin.filterLabels.status')} value={statusFilter} options={statusFilterOptions} onChange={setStatusFilter} />
+                <FilterGroup label={t('support.admin.filterLabels.category')} value={categoryFilter} options={categoryFilterOptions} onChange={setCategoryFilter} />
+                <FilterGroup label={t('support.admin.filterLabels.rating')} value={ratingFilter} options={ratingFilterOptions} onChange={setRatingFilter} />
               </div>
             )}
           </div>
 
           {loading ? (
-            <SurfaceLoader message="Loading feedback..." paddingClassName="py-16" />
+            <SurfaceLoader message={t('support.admin.feedbackPage.loading')} paddingClassName="py-16" />
           ) : feedback.length === 0 ? (
             <div className="rounded-2xl border border-gray-100 bg-white p-16 text-center dark:border-white/10 dark:bg-white/[0.03]">
               <Inbox className="mx-auto mb-4 h-14 w-14 text-gray-300 dark:text-gray-600" />
               <h3 className="font-barlow mb-2 text-lg font-black text-gray-900 dark:text-white">
-                {hasFeedbackSearch ? t('common.noResults') : hasFeedbackFilters ? t('common.noFilteredResults') : 'No Feedback Found'}
+                {hasFeedbackSearch ? t('common.noResults') : hasFeedbackFilters ? t('common.noFilteredResults') : t('support.admin.feedbackPage.noFeedbackTitle')}
               </h3>
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
                 {hasFeedbackSearch
-                  ? t('common.noMatchingResults', { entity: 'feedback', query: searchQuery.trim(), defaultValue: 'No {{entity}} matching "{{query}}"' })
+                  ? t('common.noMatchingResults', { entity: t('support.admin.feedbackPage.entity'), query: searchQuery.trim() })
                   : hasFeedbackFilters
                     ? t('common.noFilteredResultsDesc')
-                    : 'No feedback is available yet.'}
+                    : t('support.admin.feedbackPage.noFeedbackDesc')}
               </p>
             </div>
           ) : (
@@ -273,24 +318,24 @@ export const SupportFeedbackPage = () => {
                           {item.rating}/5
                         </span>
                         <span className={`rounded-lg px-2 py-1 text-xs font-black ${statusTone[item.status] || statusTone.NEW}`}>
-                          {item.status.replace('_', ' ').toLowerCase()}
+                          {statusLabel(item.status)}
                         </span>
                         <span className="rounded-lg bg-gray-100 px-2 py-1 text-xs font-black capitalize text-gray-600 dark:bg-white/10 dark:text-gray-300">
-                          {item.category}
+                          {categoryLabel(item.category)}
                         </span>
                         {item.area && (
                           <span className="rounded-lg bg-gray-100 px-2 py-1 text-xs font-black capitalize text-gray-600 dark:bg-white/10 dark:text-gray-300">
                             {item.area}
                           </span>
                         )}
-                        <span className="text-xs font-bold text-gray-400">{formatDate(item.createdAt)}</span>
+                        <span className="text-xs font-bold text-gray-400">{formatDate(item.createdAt, locale)}</span>
                       </div>
                       <p className="whitespace-pre-wrap text-sm font-medium leading-6 text-gray-700 dark:text-gray-200">{item.comment}</p>
                       <div className="mt-3 flex flex-wrap gap-3 text-xs font-medium text-gray-500 dark:text-gray-400">
-                        <span>{item.userName || 'Anonymous'}</span>
+                        <span>{item.userName || t('support.admin.feedbackPage.anonymous')}</span>
                         {item.userEmail && <span>{item.userEmail}</span>}
                         {item.route && <span>{item.route}</span>}
-                        {item.contactConsent && <span className="font-bold text-mintcom-green">Contact Allowed</span>}
+                        {item.contactConsent && <span className="font-bold text-mintcom-green">{t('support.admin.feedbackPage.contactAllowed')}</span>}
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-2 lg:w-80 lg:justify-end">
@@ -300,7 +345,7 @@ export const SupportFeedbackPage = () => {
                           onClick={() => updateFeedback(item, status)}
                           className="rounded-lg bg-gray-100 px-3 py-2 text-xs font-black text-gray-600 transition-colors hover:bg-mintcom-green/20 dark:bg-white/10 dark:text-gray-300"
                         >
-                          {status.replace('_', ' ').toLowerCase()}
+                          {statusLabel(status)}
                         </button>
                       ))}
                     </div>
@@ -324,7 +369,7 @@ function FilterGroup({
 }: {
   label: string;
   value: string;
-  options: string[];
+  options: { value: string; label: string }[];
   onChange: (value: string) => void;
 }) {
   return (
@@ -333,15 +378,15 @@ function FilterGroup({
       <div className="flex flex-wrap gap-2">
         {options.map((option) => (
           <button
-            key={option}
-            onClick={() => onChange(option)}
-            className={`rounded-lg px-3 py-1.5 text-xs font-bold capitalize transition-colors ${
-              value === option
+            key={option.value}
+            onClick={() => onChange(option.value)}
+            className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-colors ${
+              value === option.value
                 ? 'bg-gray-900 text-white dark:bg-white dark:text-black'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/15'
             }`}
           >
-            {option.replace('_', ' ').toLowerCase()}
+            {option.label}
           </button>
         ))}
       </div>

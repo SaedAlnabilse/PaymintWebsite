@@ -21,6 +21,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { useAuth } from '../../context/AuthContext';
 import { Navbar } from '../../components/Navbar';
 import { Footer } from '../../components/Footer';
@@ -60,29 +61,29 @@ interface Stats {
 type QueueKey = 'all' | 'needs_reply' | 'urgent' | 'stale' | 'open' | 'in_progress' | 'resolved';
 
 const statusConfig = {
-  open: { label: 'Open', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-500/15', icon: Inbox },
-  in_progress: { label: 'In progress', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-500/15', icon: Clock },
-  resolved: { label: 'Resolved', color: 'text-mintcom-green', bg: 'bg-mintcom-green/10', icon: CheckCircle2 },
-  closed: { label: 'Closed', color: 'text-gray-500 dark:text-gray-400', bg: 'bg-gray-100 dark:bg-white/10', icon: XCircle },
+  open: { labelKey: 'support.admin.status.open', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-500/15', icon: Inbox },
+  in_progress: { labelKey: 'support.admin.status.in_progress', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-500/15', icon: Clock },
+  resolved: { labelKey: 'support.admin.status.resolved', color: 'text-mintcom-green', bg: 'bg-mintcom-green/10', icon: CheckCircle2 },
+  closed: { labelKey: 'support.admin.status.closed', color: 'text-gray-500 dark:text-gray-400', bg: 'bg-gray-100 dark:bg-white/10', icon: XCircle },
 };
 
 const priorityConfig = {
-  low: { label: 'Low', dot: 'bg-gray-400', color: 'text-gray-500', weight: 1, slaHours: 48 },
-  medium: { label: 'Medium', dot: 'bg-blue-500', color: 'text-blue-600 dark:text-blue-400', weight: 2, slaHours: 24 },
-  high: { label: 'High', dot: 'bg-orange-500', color: 'text-orange-600 dark:text-orange-400', weight: 3, slaHours: 8 },
-  urgent: { label: 'Urgent', dot: 'bg-red-500', color: 'text-red-600 dark:text-red-400', weight: 4, slaHours: 2 },
+  low: { labelKey: 'support.admin.priority.low', dot: 'bg-gray-400', color: 'text-gray-500', weight: 1, slaHours: 48 },
+  medium: { labelKey: 'support.admin.priority.medium', dot: 'bg-blue-500', color: 'text-blue-600 dark:text-blue-400', weight: 2, slaHours: 24 },
+  high: { labelKey: 'support.admin.priority.high', dot: 'bg-orange-500', color: 'text-orange-600 dark:text-orange-400', weight: 3, slaHours: 8 },
+  urgent: { labelKey: 'support.admin.priority.urgent', dot: 'bg-red-500', color: 'text-red-600 dark:text-red-400', weight: 4, slaHours: 2 },
 };
 
-function timeAgo(dateStr: string): string {
+function timeAgo(dateStr: string, t: TFunction, locale: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.max(0, Math.floor(diff / 60000));
-  if (mins < 1) return 'Just now';
-  if (mins < 60) return `${mins}m ago`;
+  if (mins < 1) return t('support.admin.time.justNow');
+  if (mins < 60) return t('support.admin.time.minutesAgo', { minutes: mins });
   const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
+  if (hrs < 24) return t('support.admin.time.hoursAgo', { hours: hrs });
   const days = Math.floor(hrs / 24);
-  if (days < 7) return `${days}d ago`;
-  return new Date(dateStr).toLocaleDateString();
+  if (days < 7) return t('support.admin.time.daysAgo', { days });
+  return new Date(dateStr).toLocaleDateString(locale);
 }
 
 function hoursSince(dateStr: string): number {
@@ -112,15 +113,16 @@ function isStale(ticket: AdminTicket) {
   return hoursSince(getLastCustomerActivity(ticket)) >= priority.slaHours;
 }
 
-function getSlaLabel(ticket: AdminTicket) {
-  if (!needsSupportReply(ticket)) return { label: 'Waiting on customer', tone: 'text-gray-500' };
+function getSlaLabel(ticket: AdminTicket, t: TFunction) {
+  if (!needsSupportReply(ticket)) return { label: t('support.admin.sla.waiting'), tone: 'text-gray-500' };
 
   const priority = getPriority(ticket);
   const remaining = priority.slaHours - hoursSince(getLastCustomerActivity(ticket));
+  const hoursLeft = t('support.admin.sla.hoursLeft', { hours: Math.ceil(remaining) });
 
-  if (remaining <= 0) return { label: 'SLA overdue', tone: 'text-red-600 dark:text-red-400' };
-  if (remaining <= 2) return { label: `${Math.ceil(remaining)}h left`, tone: 'text-orange-600 dark:text-orange-400' };
-  return { label: `${Math.ceil(remaining)}h left`, tone: 'text-gray-500 dark:text-gray-400' };
+  if (remaining <= 0) return { label: t('support.admin.sla.overdue'), tone: 'text-red-600 dark:text-red-400' };
+  if (remaining <= 2) return { label: hoursLeft, tone: 'text-orange-600 dark:text-orange-400' };
+  return { label: hoursLeft, tone: 'text-gray-500 dark:text-gray-400' };
 }
 
 export const SupportAdminPage = () => {
@@ -155,11 +157,11 @@ export const SupportAdminPage = () => {
       setTickets(ticketsRes.data || []);
       setStats(statsRes.data || { open: 0, inProgress: 0, resolved: 0, closed: 0, total: 0 });
     } catch {
-      toast.error('Failed to load support tickets');
+      toast.error(t('support.admin.desk.loadFailed'));
     } finally {
       setLoading(false);
     }
-  }, [priorityFilter, searchQuery, statusFilter]);
+  }, [priorityFilter, searchQuery, statusFilter, t]);
 
   useEffect(() => {
     if (isAuthenticated && isSupportTeam) {
@@ -177,14 +179,31 @@ export const SupportAdminPage = () => {
   }, [tickets]);
 
   const queueItems = useMemo(() => ([
-    { key: 'needs_reply' as const, label: 'Needs reply', count: deskStats.needsReply, icon: AlertTriangle },
-    { key: 'urgent' as const, label: 'Urgent', count: deskStats.urgent, icon: TimerReset },
-    { key: 'stale' as const, label: 'SLA overdue', count: deskStats.stale, icon: Clock },
-    { key: 'open' as const, label: 'Open', count: stats.open, icon: Inbox },
-    { key: 'in_progress' as const, label: 'In progress', count: stats.inProgress, icon: MessageSquare },
-    { key: 'resolved' as const, label: 'Resolved', count: stats.resolved, icon: CheckCircle2 },
-    { key: 'all' as const, label: 'All tickets', count: stats.total, icon: BarChart3 },
-  ]), [deskStats.needsReply, deskStats.stale, deskStats.urgent, stats.inProgress, stats.open, stats.resolved, stats.total]);
+    { key: 'needs_reply' as const, label: t('support.admin.queues.needsReply'), count: deskStats.needsReply, icon: AlertTriangle },
+    { key: 'urgent' as const, label: t('support.admin.queues.urgent'), count: deskStats.urgent, icon: TimerReset },
+    { key: 'stale' as const, label: t('support.admin.queues.stale'), count: deskStats.stale, icon: Clock },
+    { key: 'open' as const, label: t('support.admin.queues.open'), count: stats.open, icon: Inbox },
+    { key: 'in_progress' as const, label: t('support.admin.queues.inProgress'), count: stats.inProgress, icon: MessageSquare },
+    { key: 'resolved' as const, label: t('support.admin.queues.resolved'), count: stats.resolved, icon: CheckCircle2 },
+    { key: 'all' as const, label: t('support.admin.queues.all'), count: stats.total, icon: BarChart3 },
+  ]), [deskStats.needsReply, deskStats.stale, deskStats.urgent, stats.inProgress, stats.open, stats.resolved, stats.total, t]);
+
+  const statusFilterOptions = useMemo(() => ([
+    { value: 'all', label: t('support.admin.all') },
+    { value: 'open', label: t('support.admin.status.open') },
+    { value: 'in_progress', label: t('support.admin.status.in_progress') },
+    { value: 'resolved', label: t('support.admin.status.resolved') },
+    { value: 'closed', label: t('support.admin.status.closed') },
+  ]), [t]);
+
+  const priorityFilterOptions = useMemo(() => ([
+    { value: 'all', label: t('support.admin.all') },
+    { value: 'low', label: t('support.admin.priority.low') },
+    { value: 'medium', label: t('support.admin.priority.medium') },
+    { value: 'high', label: t('support.admin.priority.high') },
+    { value: 'urgent', label: t('support.admin.priority.urgent') },
+  ]), [t]);
+
   const hasAdminSearch = searchQuery.trim().length > 0;
   const hasAdminFilters = queue !== 'all' || statusFilter !== 'all' || priorityFilter !== 'all';
 
@@ -233,13 +252,13 @@ export const SupportAdminPage = () => {
             <div>
               <div className="mb-3 inline-flex items-center gap-2 rounded-xl border border-mintcom-green/25 bg-mintcom-green/10 px-3 py-1.5 text-xs font-bold text-mintcom-green">
                 <Shield size={14} />
-                Support admin: {account?.email}
+                {t('support.admin.desk.badge', { email: account?.email })}
               </div>
               <h1 className="font-magilio text-3xl font-black tracking-tight text-gray-900 dark:text-white">
-                Support Desk
+                {t('support.admin.desk.title')}
               </h1>
               <p className="mt-2 max-w-2xl text-sm font-medium text-gray-500 dark:text-gray-400">
-                Triage customer tickets, keep urgent requests visible, and reply as Mintcom Support.
+                {t('support.admin.desk.description')}
               </p>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
@@ -249,26 +268,26 @@ export const SupportAdminPage = () => {
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-gray-900 px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-gray-800 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-gray-200"
               >
                 <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
-                Refresh
+                {t('support.admin.refresh')}
               </button>
               <button
                 onClick={() => navigate('/support/admin/feedback')}
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-mintcom-green px-4 py-3 text-sm font-black text-black transition-opacity hover:opacity-90"
               >
                 <Star size={16} />
-                Feedback
+                {t('support.admin.desk.openFeedback')}
               </button>
             </div>
           </div>
 
           <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {[
-              { label: 'Active', value: deskStats.active, icon: Inbox, tone: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-500/10' },
-              { label: 'Needs reply', value: deskStats.needsReply, icon: AlertTriangle, tone: 'text-amber-500', bg: 'bg-amber-50 dark:bg-amber-500/10' },
-              { label: 'SLA overdue', value: deskStats.stale, icon: TimerReset, tone: 'text-red-500', bg: 'bg-red-50 dark:bg-red-500/10' },
-              { label: 'Resolved', value: stats.resolved, icon: CheckCircle2, tone: 'text-mintcom-green', bg: 'bg-mintcom-green/10' },
+              { id: 'active', label: t('support.admin.stats.active'), value: deskStats.active, icon: Inbox, tone: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-500/10' },
+              { id: 'needsReply', label: t('support.admin.stats.needsReply'), value: deskStats.needsReply, icon: AlertTriangle, tone: 'text-amber-500', bg: 'bg-amber-50 dark:bg-amber-500/10' },
+              { id: 'slaOverdue', label: t('support.admin.stats.slaOverdue'), value: deskStats.stale, icon: TimerReset, tone: 'text-red-500', bg: 'bg-red-50 dark:bg-red-500/10' },
+              { id: 'resolved', label: t('support.admin.stats.resolved'), value: stats.resolved, icon: CheckCircle2, tone: 'text-mintcom-green', bg: 'bg-mintcom-green/10' },
             ].map((item) => (
-              <div key={item.label} className="rounded-2xl border border-gray-100 bg-white p-5 dark:border-white/10 dark:bg-white/[0.03]">
+              <div key={item.id} className="rounded-2xl border border-gray-100 bg-white p-5 dark:border-white/10 dark:bg-white/[0.03]">
                 <div className="flex items-center gap-3">
                   <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${item.bg}`}>
                     <item.icon size={20} className={item.tone} />
@@ -307,11 +326,11 @@ export const SupportAdminPage = () => {
               </div>
 
               <div className="rounded-2xl border border-gray-100 bg-white p-4 dark:border-white/10 dark:bg-white/[0.03]">
-                <h2 className="font-barlow mb-3 text-sm font-black text-gray-900 dark:text-white">Triage Rules</h2>
+                <h2 className="font-barlow mb-3 text-sm font-black text-gray-900 dark:text-white">{t('support.admin.triage.title')}</h2>
                 <div className="space-y-3 text-xs font-medium text-gray-500 dark:text-gray-400">
-                  <p>Urgent tickets target a 2 hour first response.</p>
-                  <p>High priority tickets target 8 hours.</p>
-                  <p>Resolved tickets can still be reopened from the conversation page.</p>
+                  <p>{t('support.admin.triage.rule1')}</p>
+                  <p>{t('support.admin.triage.rule2')}</p>
+                  <p>{t('support.admin.triage.rule3')}</p>
                 </div>
               </div>
             </aside>
@@ -329,7 +348,7 @@ export const SupportAdminPage = () => {
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') fetchTickets();
                       }}
-                      placeholder={formatInputPlaceholder('Search ticket number, subject, email, or customer...', t('common.locale'))}
+                      placeholder={formatInputPlaceholder(t('support.admin.desk.searchPlaceholder'), t('common.locale'))}
                       className="w-full rounded-xl border border-gray-200 bg-gray-50 py-3 pl-12 pr-11 text-sm font-bold text-gray-700 outline-none transition-colors focus:border-mintcom-green/50 focus:ring-2 focus:ring-mintcom-green/20 dark:border-white/10 dark:bg-white/5 dark:text-gray-200"
                     />
                     {searchQuery && (
@@ -347,13 +366,13 @@ export const SupportAdminPage = () => {
                     className="inline-flex items-center justify-center gap-2 rounded-xl bg-gray-100 px-4 py-3 text-sm font-bold text-gray-700 transition-colors hover:bg-gray-200 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/15"
                   >
                     <Filter size={18} />
-                    Filters
+                    {t('support.admin.filters')}
                   </button>
                   <button
                     onClick={fetchTickets}
                     className="inline-flex items-center justify-center gap-2 rounded-xl bg-mintcom-green px-5 py-3 text-sm font-black text-black transition-opacity hover:opacity-90"
                   >
-                    Apply
+                    {t('support.admin.desk.apply')}
                   </button>
                 </div>
 
@@ -367,15 +386,15 @@ export const SupportAdminPage = () => {
                     >
                       <div className="mt-4 grid gap-4 border-t border-gray-100 pt-4 dark:border-white/10 md:grid-cols-2">
                         <FilterGroup
-                          label="Status"
+                          label={t('support.admin.filterLabels.status')}
                           value={statusFilter}
-                          options={['all', 'open', 'in_progress', 'resolved', 'closed']}
+                          options={statusFilterOptions}
                           onChange={setStatusFilter}
                         />
                         <FilterGroup
-                          label="Priority"
+                          label={t('support.admin.filterLabels.priority')}
                           value={priorityFilter}
-                          options={['all', 'low', 'medium', 'high', 'urgent']}
+                          options={priorityFilterOptions}
                           onChange={setPriorityFilter}
                         />
                       </div>
@@ -385,26 +404,26 @@ export const SupportAdminPage = () => {
               </div>
 
               {loading ? (
-                <SurfaceLoader message="Loading support queue..." paddingClassName="py-16" />
+                <SurfaceLoader message={t('support.admin.desk.loading')} paddingClassName="py-16" />
               ) : filteredTickets.length === 0 ? (
                 <div className="rounded-2xl border border-gray-100 bg-white p-16 text-center dark:border-white/10 dark:bg-white/[0.03]">
                   <Inbox className="mx-auto mb-4 h-14 w-14 text-gray-300 dark:text-gray-600" />
                   <h3 className="font-barlow mb-2 text-lg font-black text-gray-900 dark:text-white">
-                    {hasAdminSearch ? t('common.noResults') : hasAdminFilters ? t('common.noFilteredResults') : 'No Tickets Found'}
+                    {hasAdminSearch ? t('common.noResults') : hasAdminFilters ? t('common.noFilteredResults') : t('support.admin.desk.noTicketsTitle')}
                   </h3>
                   <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
                     {hasAdminSearch
-                      ? t('common.noMatchingResults', { entity: 'tickets', query: searchQuery.trim(), defaultValue: 'No {{entity}} matching "{{query}}"' })
+                      ? t('common.noMatchingResults', { entity: t('support.admin.desk.entity'), query: searchQuery.trim() })
                       : hasAdminFilters
                         ? t('common.noFilteredResultsDesc')
-                        : 'No support tickets are available yet.'}
+                        : t('support.admin.desk.noTicketsDesc')}
                   </p>
                 </div>
               ) : (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between px-1 text-sm font-bold text-gray-500 dark:text-gray-400">
-                    <span>{filteredTickets.length} ticket{filteredTickets.length === 1 ? '' : 's'}</span>
-                    <span>Sorted by reply need, priority, and last update</span>
+                    <span>{t('support.admin.desk.ticketCount', { count: filteredTickets.length })}</span>
+                    <span>{t('support.admin.desk.sortNote')}</span>
                   </div>
                   {filteredTickets.map((ticket, index) => (
                     <TicketRow
@@ -433,7 +452,7 @@ function FilterGroup({
 }: {
   label: string;
   value: string;
-  options: string[];
+  options: { value: string; label: string }[];
   onChange: (value: string) => void;
 }) {
   return (
@@ -442,15 +461,15 @@ function FilterGroup({
       <div className="flex flex-wrap gap-2">
         {options.map((option) => (
           <button
-            key={option}
-            onClick={() => onChange(option)}
-            className={`rounded-lg px-3 py-1.5 text-xs font-bold capitalize transition-colors ${
-              value === option
+            key={option.value}
+            onClick={() => onChange(option.value)}
+            className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-colors ${
+              value === option.value
                 ? 'bg-gray-900 text-white dark:bg-white dark:text-black'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/15'
             }`}
           >
-            {option.replace('_', ' ')}
+            {option.label}
           </button>
         ))}
       </div>
@@ -459,10 +478,11 @@ function FilterGroup({
 }
 
 function TicketRow({ ticket, index, onOpen }: { ticket: AdminTicket; index: number; onOpen: () => void }) {
+  const { t } = useTranslation();
   const status = statusConfig[normalizeStatus(ticket.status) as keyof typeof statusConfig] || statusConfig.open;
   const priority = getPriority(ticket);
   const StatusIcon = status.icon;
-  const sla = getSlaLabel(ticket);
+  const sla = getSlaLabel(ticket, t);
   const waitingForSupport = needsSupportReply(ticket);
 
   return (
@@ -485,16 +505,16 @@ function TicketRow({ ticket, index, onOpen }: { ticket: AdminTicket; index: numb
             {waitingForSupport && (
               <span className="inline-flex items-center gap-1 rounded-lg bg-amber-100 px-2 py-1 text-[11px] font-black text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
                 <AlertTriangle size={12} />
-                Needs reply
+                {t('support.admin.queues.needsReply')}
               </span>
             )}
             <span className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-black ${status.bg} ${status.color}`}>
               <StatusIcon size={12} />
-              {status.label}
+              {t(status.labelKey)}
             </span>
             <span className={`inline-flex items-center gap-1.5 text-[11px] font-black ${priority.color}`}>
               <span className={`h-2 w-2 rounded-full ${priority.dot}`} />
-              {priority.label}
+              {t(priority.labelKey)}
             </span>
             <span className={`inline-flex items-center gap-1 text-[11px] font-black ${sla.tone}`}>
               <TimerReset size={12} />
@@ -506,21 +526,23 @@ function TicketRow({ ticket, index, onOpen }: { ticket: AdminTicket; index: numb
           <div className="mt-2 flex flex-wrap items-center gap-3 text-xs font-medium text-gray-500 dark:text-gray-400">
             <span className="inline-flex items-center gap-1">
               <UserRound size={13} />
-              {ticket.requesterName || 'Customer'}
+              {ticket.requesterName || t('support.admin.customerLabel')}
             </span>
             {ticket.requesterEmail && <span>{ticket.requesterEmail}</span>}
             <span className="inline-flex items-center gap-1">
               <Tag size={13} />
               {ticket.category}
             </span>
-            <span>{timeAgo(ticket.updatedAt)}</span>
+            <span>{timeAgo(ticket.updatedAt, t, t('common.locale'))}</span>
           </div>
 
           {ticket.lastMessage && (
             <p className="mt-3 line-clamp-2 text-sm font-medium text-gray-600 dark:text-gray-300">
               <span className="font-black">
-                {ticket.lastMessage.senderType === 'support' ? 'Support: ' : 'Customer: '}
-              </span>
+                {ticket.lastMessage.senderType === 'support'
+                  ? t('support.admin.desk.senderSupport')
+                  : t('support.admin.desk.senderCustomer')}
+              </span>{' '}
               {ticket.lastMessage.content}
             </p>
           )}
