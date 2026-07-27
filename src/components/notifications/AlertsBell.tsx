@@ -2,10 +2,12 @@ import {
   useCallback,
   useEffect,
   useId,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
 } from 'react';
+import { createPortal } from 'react-dom';
 import { AlertCircle, Bell, LoaderCircle, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
@@ -69,9 +71,13 @@ export function AlertsBell({
     locationSlug?: string;
   }>();
   const [isOpen, setIsOpen] = useState(false);
+  const [sidebarPanelPosition, setSidebarPanelPosition] = useState<
+    { left?: number; right?: number } | null
+  >(null);
   const panelId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLElement>(null);
 
   const hasAccess = checkPermission(
     account,
@@ -139,7 +145,8 @@ export function AlertsBell({
     const closeOnOutsidePointer = (event: PointerEvent) => {
       if (
         rootRef.current &&
-        !rootRef.current.contains(event.target as Node)
+        !rootRef.current.contains(event.target as Node) &&
+        !panelRef.current?.contains(event.target as Node)
       ) {
         setIsOpen(false);
       }
@@ -157,6 +164,44 @@ export function AlertsBell({
       document.removeEventListener('keydown', closeOnEscape);
     };
   }, [isOpen]);
+
+  useLayoutEffect(() => {
+    if (!isOpen || placement !== 'sidebar') {
+      setSidebarPanelPosition(null);
+      return;
+    }
+
+    const updatePosition = () => {
+      const root = rootRef.current;
+      if (!root) return;
+
+      const sidebar = root.closest('aside');
+      const anchorRect = (sidebar || root).getBoundingClientRect();
+      const panelWidth = Math.min(384, window.innerWidth - 32);
+      const viewportGap = 16;
+      const isRtl = document.documentElement.dir === 'rtl';
+
+      if (isRtl) {
+        setSidebarPanelPosition({
+          right: Math.min(
+            window.innerWidth - anchorRect.left + viewportGap,
+            window.innerWidth - panelWidth - viewportGap,
+          ),
+        });
+      } else {
+        setSidebarPanelPosition({
+          left: Math.min(
+            anchorRect.right + viewportGap,
+            window.innerWidth - panelWidth - viewportGap,
+          ),
+        });
+      }
+    };
+
+    updatePosition();
+    window.addEventListener('resize', updatePosition);
+    return () => window.removeEventListener('resize', updatePosition);
+  }, [isOpen, placement]);
 
   const activateAlert = useCallback(
     (alert: BackofficeAlert) => {
@@ -222,18 +267,28 @@ export function AlertsBell({
         )}
       </button>
 
-      {isOpen && (
+      {isOpen && (() => {
+        const panel = (
         <section
+          ref={panelRef}
           id={panelId}
           role="dialog"
           aria-label={t('notifications.bell.recentTitle', {
             defaultValue: 'Recent notifications',
           })}
-          className={`absolute z-50 w-[min(24rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl shadow-black/10 dark:border-white/10 dark:bg-[#0D0D0D] dark:shadow-black/40 ${
+          className={`${placement === 'sidebar' ? 'fixed bottom-4 z-[120]' : 'absolute z-50'} flex max-h-[calc(100vh-2rem)] w-[min(24rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl shadow-black/10 dark:border-white/10 dark:bg-[#0D0D0D] dark:shadow-black/40 ${
             placement === 'sidebar'
-              ? 'start-full top-0 ms-8'
+              ? ''
               : 'end-0 mt-2'
           }`}
+          style={
+            placement === 'sidebar'
+              ? {
+                  ...sidebarPanelPosition,
+                  visibility: sidebarPanelPosition ? 'visible' : 'hidden',
+                }
+              : undefined
+          }
         >
           <header className="flex items-center justify-between gap-3 border-b border-gray-100 px-4 py-3 dark:border-white/5">
             <div className="min-w-0">
@@ -270,7 +325,7 @@ export function AlertsBell({
             </div>
           </header>
 
-          <div className="max-h-[min(28rem,65vh)] overflow-y-auto">
+          <div className="min-h-0 flex-1 overflow-y-auto">
             {previewState.isLoading ? (
               <div
                 className="space-y-3 p-4"
@@ -353,7 +408,12 @@ export function AlertsBell({
             </footer>
           )}
         </section>
-      )}
+        );
+
+        return placement === 'sidebar'
+          ? createPortal(panel, document.body)
+          : panel;
+      })()}
     </div>
   );
 }
