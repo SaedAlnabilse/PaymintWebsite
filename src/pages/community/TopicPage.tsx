@@ -18,6 +18,7 @@ import { Pagination } from '../../components/community/Pagination';
 import { CommunityEmptyState } from '../../components/community/CommunityEmptyState';
 import { CommunitySkeleton } from '../../components/community/CommunitySkeleton';
 import { useCommunityRealtime, CommunityRealtimeEvents } from '../../hooks/useCommunityRealtime';
+import { sanitizeCommunityHtml } from '../../utils/sanitizeHtml';
 
 /**
  * Topic detail page — thread body + paginated replies.
@@ -25,7 +26,7 @@ import { useCommunityRealtime, CommunityRealtimeEvents } from '../../hooks/useCo
  * Uses dir="auto" on content blocks for mixed RTL/LTR.
  */
 export function TopicPage() {
-  const { topicId, categorySlug } = useParams<{ topicId: string; categorySlug: string; topicSlug: string }>();
+  const { topicId } = useParams<{ topicId: string; categorySlug: string; topicSlug: string }>();
   const { t } = useTranslation();
   const { isAuthenticated, account } = useAuth();
   // Mod UI is staff-only. Owners are customers — never treat tenant * as global mod.
@@ -185,7 +186,7 @@ export function TopicPage() {
         <div
           className="prose prose-sm max-w-none text-gray-700"
           dir="auto"
-          dangerouslySetInnerHTML={{ __html: topic.bodyHtml }}
+          dangerouslySetInnerHTML={{ __html: sanitizeCommunityHtml(topic.bodyHtml) }}
         />
 
         {/* Vote + Follow + Bookmark actions */}
@@ -308,7 +309,7 @@ function ReplyItem({ reply }: { reply: CommunityReply }) {
           <div
             className="prose prose-sm max-w-none text-gray-700"
             dir="auto"
-            dangerouslySetInnerHTML={{ __html: reply.bodyHtml }}
+            dangerouslySetInnerHTML={{ __html: sanitizeCommunityHtml(reply.bodyHtml) }}
           />
 
           {/* Vote on reply */}

@@ -34,6 +34,20 @@ interface GoogleAuthButtonProps {
   onError?: (error: string) => void;
   text?: 'signin_with' | 'signup_with' | 'continue_with' | 'signin';
   disabled?: boolean;
+  /**
+   * Server-issued nonce to embed in the id_token.
+   *
+   * Login generates its own (checked client-side only). Step-up must pass the
+   * nonce from its challenge so the backend can prove the token was minted for
+   * *this* verification and is not one captured from an earlier sign-in.
+   */
+  nonce?: string;
+  /**
+   * Force Google to re-authenticate rather than silently reusing a live
+   * session. Step-up defends against someone holding an already-signed-in
+   * browser, so simply picking an account would prove nothing.
+   */
+  forceReauth?: boolean;
 }
 
 // Public OAuth client ID. The env var still wins, but keeping the known public
@@ -103,15 +117,27 @@ function decodeJwtPayload(token: string): Record<string, unknown> | null {
 }
 
 export const GoogleAuthButton = forwardRef<GoogleAuthButtonHandle, GoogleAuthButtonProps>(
-  ({ onSuccess, onError, text = 'continue_with', disabled = false }, ref) => {
+  (
+    {
+      onSuccess,
+      onError,
+      text = 'continue_with',
+      disabled = false,
+      nonce: externalNonce,
+      forceReauth = false,
+    },
+    ref
+  ) => {
     const { t } = useTranslation();
     const [isLoading, setIsLoading] = useState(false);
 
     // Keep latest handlers in refs so the message listener never goes stale.
     const onSuccessRef = useRef(onSuccess);
     const onErrorRef = useRef(onError);
-    onSuccessRef.current = onSuccess;
-    onErrorRef.current = onError;
+    useEffect(() => {
+      onSuccessRef.current = onSuccess;
+      onErrorRef.current = onError;
+    }, [onError, onSuccess]);
 
     // The state/nonce of the in-flight popup, if any.
     const pendingRef = useRef<{ state: string; nonce: string } | null>(null);
@@ -207,7 +233,7 @@ export const GoogleAuthButton = forwardRef<GoogleAuthButtonHandle, GoogleAuthBut
       if (!GOOGLE_CLIENT_ID || disabled || isLoading) return;
 
       const state = randomString();
-      const nonce = randomString();
+      const nonce = externalNonce || randomString();
 
       const params = new URLSearchParams({
         client_id: GOOGLE_CLIENT_ID,
@@ -216,7 +242,9 @@ export const GoogleAuthButton = forwardRef<GoogleAuthButtonHandle, GoogleAuthBut
         scope: 'openid email profile',
         state,
         nonce,
-        prompt: 'select_account',
+        // `login` makes Google ask for credentials again instead of accepting
+        // an existing session — the whole point of a step-up check.
+        prompt: forceReauth ? 'login' : 'select_account',
       });
 
       const width = 480;
@@ -252,7 +280,7 @@ export const GoogleAuthButton = forwardRef<GoogleAuthButtonHandle, GoogleAuthBut
           }, 700);
         }
       }, 400);
-    }, [disabled, isLoading, finishFlow, t]);
+    }, [disabled, isLoading, finishFlow, t, externalNonce, forceReauth]);
 
     useImperativeHandle(ref, () => ({
       triggerPrompt: handleClick,

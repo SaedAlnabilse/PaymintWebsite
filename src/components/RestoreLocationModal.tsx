@@ -5,22 +5,45 @@ import { useTranslation } from 'react-i18next';
 import { X, Shield, Lock, User, RefreshCw, AlertTriangle, ArrowRight } from 'lucide-react';
 import { formatInputPlaceholder, formatInputLabel } from '../utils/textCase';
 
+export interface RestoreLocationFormData {
+    accountEmail: string;
+    password: string;
+    newLocationLoginId: string;
+    newLocationPassword: string;
+}
+
 interface RestoreLocationModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onRestore: (data: any) => Promise<void>;
+    onRestore: (data: RestoreLocationFormData) => Promise<void>;
     isRestoring: boolean;
+    errorMessage?: string | null;
 }
 
-export function RestoreLocationModal({ isOpen, onClose, onRestore, isRestoring }: RestoreLocationModalProps) {
+const EMPTY_FORM: RestoreLocationFormData = {
+    accountEmail: '',
+    password: '',
+    newLocationLoginId: '',
+    newLocationPassword: '',
+};
+
+export function RestoreLocationModal({
+    isOpen,
+    onClose,
+    onRestore,
+    isRestoring,
+    errorMessage,
+}: RestoreLocationModalProps) {
     const { t } = useTranslation();
     const [step, setStep] = useState(1);
-    const [formData, setFormData] = useState({
-        accountEmail: '',
-        password: '',
-        newLocationLoginId: '',
-        newLocationPassword: '',
-    });
+    const [formData, setFormData] = useState<RestoreLocationFormData>(EMPTY_FORM);
+
+    React.useEffect(() => {
+        if (!isOpen) {
+            setStep(1);
+            setFormData(EMPTY_FORM);
+        }
+    }, [isOpen]);
 
     const handleNext = (e: React.FormEvent) => {
         e.preventDefault();
@@ -41,7 +64,7 @@ export function RestoreLocationModal({ isOpen, onClose, onRestore, isRestoring }
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    onClick={onClose}
+                    onClick={() => !isRestoring && onClose()}
                     className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm"
                 />
                 <motion.div
@@ -70,7 +93,8 @@ export function RestoreLocationModal({ isOpen, onClose, onRestore, isRestoring }
                                 </div>
                             </div>
                             <button
-                                onClick={onClose}
+                                onClick={() => !isRestoring && onClose()}
+                                disabled={isRestoring}
                                 className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
                             >
                                 <X size={20} />
@@ -79,6 +103,11 @@ export function RestoreLocationModal({ isOpen, onClose, onRestore, isRestoring }
 
                         {step === 1 ? (
                             <form onSubmit={handleNext} className="space-y-6">
+                                {errorMessage && (
+                                    <div role="alert" className="p-4 bg-red-50 dark:bg-red-500/10 rounded-2xl border border-red-200 dark:border-red-500/20 text-sm font-bold text-red-700 dark:text-red-300">
+                                        {errorMessage}
+                                    </div>
+                                )}
                                 <div className="p-4 bg-blue-50 dark:bg-blue-500/5 rounded-2xl border border-blue-100 dark:border-blue-500/10 mb-6">
                                     <div className="flex gap-3">
                                         <Shield className="text-blue-500 shrink-0" size={18} />
@@ -140,6 +169,11 @@ export function RestoreLocationModal({ isOpen, onClose, onRestore, isRestoring }
                             </form>
                         ) : (
                             <form onSubmit={handleSubmit} className="space-y-6">
+                                {errorMessage && (
+                                    <div role="alert" className="p-4 bg-red-50 dark:bg-red-500/10 rounded-2xl border border-red-200 dark:border-red-500/20 text-sm font-bold text-red-700 dark:text-red-300">
+                                        {errorMessage}
+                                    </div>
+                                )}
                                 <div className="p-4 bg-amber-50 dark:bg-amber-500/5 rounded-2xl border border-amber-100 dark:border-amber-500/10 mb-6">
                                     <div className="flex gap-3">
                                         <AlertTriangle className="text-amber-500 shrink-0" size={18} />

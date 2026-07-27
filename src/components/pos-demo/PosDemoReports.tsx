@@ -28,7 +28,6 @@ import {
   CircleCheck,
   Clock,
   Coffee,
-  CreditCard,
   Eye,
   Filter,
   Info,
@@ -38,7 +37,6 @@ import {
   Percent,
   Printer,
   Receipt,
-  Search,
   ShoppingBag,
   SlidersHorizontal,
   Tag,
@@ -1279,6 +1277,7 @@ function rangeForPeriod(id: PeriodId): { start: Date; end: Date } {
 /* ─── Main ──────────────────────────────────────────────────────────────── */
 
 export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
+  const [renderedAt] = useState(Date.now);
   const [reportTab, setReportTab] = useState<'general' | 'items'>('general');
   const [period, setPeriod] = useState<PeriodId>('today');
   const [dateRange, setDateRange] = useState(() => rangeForPeriod('today'));
@@ -1297,7 +1296,6 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
   const [addonFilter, setAddonFilter] = useState<string>('all');
   const [topItemsPeriod, setTopItemsPeriod] = useState<'today' | 'week' | 'month'>('today');
   const [showTopPeriodMenu, setShowTopPeriodMenu] = useState(false);
-  const [orderSearch, setOrderSearch] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   /** Applied order filters (POS journey model) */
   const [orderFilters, setOrderFilters] = useState<OrderFilterState>(EMPTY_ORDER_FILTERS);
@@ -1457,18 +1455,8 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
       list = list.filter((o) => (o.discount ?? 0) > 0);
     }
 
-    const q = orderSearch.trim().toLowerCase();
-    if (q) {
-      list = list.filter(
-        (o) =>
-          String(o.orderNo).includes(q) ||
-          o.items.toLowerCase().includes(q) ||
-          o.employeeName.toLowerCase().includes(q) ||
-          (o.customer ?? '').toLowerCase().includes(q),
-      );
-    }
     return list;
-  }, [employeeFiltered, orderFilters, orderSearch, localRefunds]);
+  }, [employeeFiltered, orderFilters, localRefunds]);
 
   const hasActiveFilters = orderFiltersActive(orderFilters);
   const filterCount = countOrderFilters(orderFilters);
@@ -1839,29 +1827,32 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
       return `${h}h ${m}m`;
     };
     if (activeShift) {
-      const end = activeShift.end ?? Date.now();
+      const end = activeShift.end ?? renderedAt;
       return fmt(Math.max(0, end - activeShift.start));
     }
     if (shift.open && shift.startedAt && employee === 'all') {
-      return fmt(Date.now() - shift.startedAt);
+      return fmt(renderedAt - shift.startedAt);
     }
     if (employee !== 'all' && employeeShifts.length > 0) {
       // Sum closed + open shifts in list for this employee
       const total = employeeShifts.reduce((s, sh) => {
-        const end = sh.end ?? Date.now();
+        const end = sh.end ?? renderedAt;
         return s + Math.max(0, end - sh.start);
       }, 0);
       return fmt(total);
     }
     return '6h 24m';
-  }, [activeShift, shift.open, shift.startedAt, employee, employeeShifts]);
+  }, [activeShift, shift.open, shift.startedAt, employee, employeeShifts, renderedAt]);
 
   const ping = (msg: string) => {
     setToast(msg);
     window.setTimeout(() => setToast(null), 1600);
   };
 
-  const statusOf = (o: ReportOrder) => effectiveStatus(o, localRefunds[o.id]);
+  const statusOf = useCallback(
+    (order: ReportOrder) => effectiveStatus(order, localRefunds[order.id]),
+    [localRefunds],
+  );
 
   const canRefundOrder = (o: ReportOrder) => statusOf(o) !== 'REFUNDED';
 
@@ -1907,7 +1898,7 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
       map.set('Amex', summary.card * 0.1);
     }
     return Array.from(map.entries());
-  }, [employeeFiltered, summary.card, localRefunds]);
+  }, [employeeFiltered, summary.card, localRefunds, statusOf]);
 
   const otherBreakdown = useMemo(() => {
     const map = new Map<string, number>();
@@ -1923,7 +1914,7 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
       map.set('Talabat', summary.other * 0.4);
     }
     return Array.from(map.entries());
-  }, [employeeFiltered, summary.other, localRefunds]);
+  }, [employeeFiltered, summary.other, localRefunds, statusOf]);
 
   const top3 = topItems.slice(0, 3);
 
@@ -3751,4 +3742,3 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
     </div>
   );
 }
-

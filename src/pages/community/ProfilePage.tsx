@@ -57,7 +57,7 @@ export function ProfilePage() {
     <>
       <Helmet>
         <title>{profile.displayName} (@{profile.username}) | {t('community.hub.title', { defaultValue: 'Community' })} | Mintcom POS</title>
-        <meta name="description" content={profile.bio || `${profile.displayName} — ${profile.postCount} posts, ${profile.solutionCount} solutions`} />
+        <meta name="description" content={profile.bio || `${profile.displayName}: ${profile.postCount} posts, ${profile.solutionCount} solutions`} />
         <link rel="canonical" href={`/community/u/${profile.username}`} />
       </Helmet>
 

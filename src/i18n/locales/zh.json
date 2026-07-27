@@ -36,6 +36,14 @@
   },
   "account": {
     "deletionScheduled": "您的账户将在 {{count}} 天后被删除。",
+    "recovery": {
+      "deadline": "永久删除已安排在 {{date}}。",
+      "explanation": "请验证身份以取消删除。您的账户以及因账户删除而被锁定的门店都将恢复。",
+      "locked": "永久删除待处理期间，您的账户将保持锁定。",
+      "noCookieOnly": "为了保护您的账户，仅保持登录状态并不足够，还需要验证身份。",
+      "refreshFailed": "您的账户已恢复，但部分账户数据未能刷新，将在下一页重新加载。",
+      "title": "恢复您的 Mintcom 账户"
+    },
     "restoreAction": "恢复账户",
     "restored": "账户恢复成功",
     "restoreFailed": "恢复账户失败",
@@ -1847,6 +1855,16 @@
       "totalSales": "总销售额",
       "totalTax": "总税费",
       "variance": "差额"
+    },
+    "setupGuide": {
+      "help": "帮助",
+      "helpCenter": "帮助中心",
+      "later": "稍后",
+      "menuItem": "设置指南",
+      "message": "{{location}} 的仪表盘已就绪。设置指南包含 12 个简短步骤，从门店资料到首笔测试销售，全部约需 20 分钟。可以随时中途停下，之后再继续。",
+      "start": "开始设置",
+      "thisLocation": "此门店",
+      "title": "恭喜"
     },
     "title": "仪表盘",
     "tour": {
@@ -4288,6 +4306,7 @@
       "cancel": "取消",
       "canceled": "已取消",
       "canceledOn": "已于 {{date}} 取消",
+      "cancelsOn": "将于 {{date}} 取消",
       "cancelsSoon": "即将取消",
       "cancelSub": "取消订阅",
       "cards": "银行卡",
@@ -5294,9 +5313,15 @@
     "deletion": {
       "banner": {
         "cancel": "取消删除",
+        "cannotCancel": "无法从危险区域取消此次删除。请恢复安排此次删除的账户或订阅。",
+        "cannotCancelAction": "删除操作由其他位置管理",
         "cancelling": "正在取消…",
         "daysLeft": "剩余天数",
+        "deleting": "正在删除",
+        "deletingMessage": "宽限期已结束，永久删除正在处理中。",
         "desc": "此门店将于 {{date}} 被永久删除",
+        "reactivateSubscription": "重新激活订阅",
+        "restoreAccount": "恢复账户",
         "title": "已计划删除"
       },
       "confirm": {
@@ -5382,9 +5407,9 @@
         "warning": "您即将删除“{{name}}”。所有门店将恢复为独立模式。"
       },
       "dissolveEstablishment": {
-        "button": "将门店从品牌中分离",
-        "title": "将门店从品牌中分离",
-        "warning": "您即将解散“{{name}}”。这将永久停止运营，并将该门店从您的品牌组合中移除。"
+        "button": "永久删除门店",
+        "title": "永久删除门店",
+        "warning": "这将立即永久删除“{{name}}”及其全部数据，不提供 30 天宽限期。请使用业主邮箱和密码确认。最终 CSV 导出文件将通过电子邮件发送。"
       },
       "reactivate": {
         "button": "立即重新激活",
@@ -5449,6 +5474,8 @@
     "danger": {
       "cancelFailed": "取消删除失败",
       "description": "这将永久删除“{{name}}”。包括订单、商品和顾客信息在内的所有数据都将被删除。",
+      "pendingDeletion": "等待删除",
+      "refreshFailed": "门店已恢复，但无法加载更新后的登录信息。请刷新页面。",
       "startDeletion": "开始删除",
       "subtitle": "危险区域",
       "thisLocation": "此门店",
@@ -6391,6 +6418,110 @@
     "passwordsDoNotMatch": "两次输入的密码不一致",
     "passwordUppercase": "密码必须包含至少一个大写字母",
     "passwordSymbol": "密码必须包含至少一个符号"
+  },
+  "notifications": {
+    "menu": {
+      "title": "通知"
+    },
+    "title": "通知",
+    "subtitle": {
+      "owner": "来自所有门店的提醒。",
+      "location": "此门店的提醒。",
+      "brand": "{{name}} 旗下门店的提醒。"
+    },
+    "tabs": {
+      "all": "全部",
+      "cash": "现金",
+      "stock": "库存",
+      "refunds": "退款",
+      "updates": "更新"
+    },
+    "stats": {
+      "total": "总计",
+      "cash": "现金",
+      "stock": "库存",
+      "refunds": "退款",
+      "updates": "更新",
+      "unread": "未读",
+      "unreadCount": "{{count}} 条未读"
+    },
+    "kind": {
+      "shortage": "现金短缺",
+      "overage": "现金盈余",
+      "cashAlert": "现金提醒",
+      "criticalStock": "库存严重不足",
+      "lowStock": "库存偏低",
+      "refund": "退款",
+      "supportUpdate": "客服更新",
+      "billingUpdate": "账单更新",
+      "accountUpdate": "账户更新",
+      "systemUpdate": "系统更新"
+    },
+    "actions": {
+      "markAllRead": "全部标为已读",
+      "dismiss": "关闭",
+      "retry": "重试",
+      "loadMore": "加载更多",
+      "viewAll": "查看全部",
+      "allLocations": "所有门店",
+      "refresh": "刷新"
+    },
+    "filters": {
+      "searchLabel": "搜索提醒",
+      "searchPlaceholder": "按提醒、门店、员工或商品搜索",
+      "locationLabel": "按门店筛选",
+      "unknownLocation": "未知门店"
+    },
+    "empty": {
+      "all": "没有提醒",
+      "cash": "没有现金提醒",
+      "stock": "没有库存提醒",
+      "refunds": "没有退款提醒",
+      "updates": "没有更新提醒",
+      "subtitle": "您已处理完所有提醒。"
+    },
+    "showingOf": "显示 {{loaded}} 条，共 {{total}} 条",
+    "errors": {
+      "loadFailed": "无法加载通知。",
+      "dismissBlocked": "此通知无法关闭。",
+      "dismissFailed": "无法关闭此通知。",
+      "markReadFailed": "无法更新通知的已读状态。"
+    },
+    "time": {
+      "justNow": "刚刚",
+      "minutesAgo": "{{count}} 分钟前",
+      "hoursAgo": "{{count}} 小时前",
+      "daysAgo": "{{count}} 天前",
+      "today": "今天",
+      "yesterday": "昨天",
+      "unknownDate": "未知日期"
+    },
+    "details": {
+      "expectedCounted": "预期 {{expected}}，实点 {{actual}}",
+      "itemRemaining": "{{item}} · 剩余 {{count}}",
+      "materialRemaining": "{{material}} · 剩余 {{count}} {{unit}}",
+      "stockLeft": "剩余 {{count}}",
+      "kindByEmployee": "{{employee}}：{{kind}}"
+    },
+    "accessibility": {
+      "openAlert": "打开提醒：{{title}}",
+      "closeDropdown": "关闭通知下拉菜单"
+    },
+    "trial": {
+      "persistent": "常驻提醒",
+      "notice": "试用提醒会一直显示，直到问题解决，且无法标为已读或关闭。",
+      "noneClearable": "没有可标为已读的提醒。"
+    },
+    "messages": {
+      "markedAllRead": "已将 {{count}} 条提醒标为已读。"
+    },
+    "daySummary": "{{count}} 条提醒",
+    "bell": {
+      "ariaLabel": "通知，{{count}} 条未读",
+      "recentTitle": "最近通知",
+      "empty": "没有最近通知",
+      "loadFailed": "无法加载最近通知。"
+    }
   },
   "menu": {
     "dashboard": "仪表盘"

@@ -22,6 +22,12 @@ interface AppleAuthButtonProps {
   onBeforeSignIn?: () => boolean;
   text?: 'signin_with' | 'signup_with' | 'continue_with';
   disabled?: boolean;
+  /**
+   * Server-issued raw nonce. Step-up passes the nonce from its challenge so the
+   * backend can prove the identity token was minted for *this* verification
+   * rather than replayed from an earlier sign-in.
+   */
+  nonce?: string;
 }
 
 declare global {
@@ -98,6 +104,7 @@ export function AppleAuthButton({
   onBeforeSignIn,
   text = 'continue_with',
   disabled = false,
+  nonce: externalNonce,
 }: AppleAuthButtonProps) {
   const { t } = useTranslation();
   const [isScriptLoaded, setIsScriptLoaded] = useState(false);
@@ -162,7 +169,7 @@ export function AppleAuthButton({
 
     setIsLoading(true);
     try {
-      const rawNonce = randomString();
+      const rawNonce = externalNonce || randomString();
       const hashedNonce = await sha256Hex(rawNonce);
 
       const data = await window.AppleID.auth.signIn({
@@ -206,7 +213,15 @@ export function AppleAuthButton({
     } finally {
       setIsLoading(false);
     }
-  }, [disabled, isLoading, onBeforeSignIn, onSuccess, onError, t]);
+  }, [
+    disabled,
+    isLoading,
+    onBeforeSignIn,
+    onSuccess,
+    onError,
+    t,
+    externalNonce,
+  ]);
 
   if (!APPLE_AUTH_ENABLED) return null;
 

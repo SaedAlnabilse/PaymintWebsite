@@ -212,7 +212,7 @@ export function FeaturePosScreenshot({
   return (
     <div
       role="img"
-      aria-label="Mintcom POS sales screen — same as Try POS"
+      aria-label="Mintcom POS sales screen, same as Try POS"
       className={outer}
     >
       <div className={card}>

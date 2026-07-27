@@ -114,7 +114,7 @@ export function PosDemoLogin({
     const match = resolveStaff(username, password);
     if (!match) {
       setSubmitting(false);
-      setPasswordError('Invalid credentials — try a demo account below');
+      setPasswordError('Invalid credentials. Try a demo account below');
       triggerShake();
       return;
     }

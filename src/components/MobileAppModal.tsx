@@ -109,9 +109,9 @@ export function MobileAppModal({ isOpen, onClose, androidUrl = '', iosUrl = '' }
                       target="_blank"
                       rel="noopener noreferrer"
                       className="block transition-transform hover:scale-[1.03] active:scale-[0.98] focus:outline-none"
-                      aria-label="Download on the App Store"
+                      aria-label={t('common.downloadOnAppStore')}
                     >
-                      <img src={AppStoreBadge} alt="App Store" className="block h-[44px] w-[140px] object-contain" />
+                      <img src={AppStoreBadge} alt={t('portal.mobileApp.appStore')} className="block h-[44px] w-[140px] object-contain" />
                     </a>
                   ) : (
                     <button
@@ -120,7 +120,7 @@ export function MobileAppModal({ isOpen, onClose, androidUrl = '', iosUrl = '' }
                       className="block opacity-50 cursor-not-allowed"
                       aria-label={t('landing.download.comingSoon')}
                     >
-                      <img src={AppStoreBadge} alt="App Store" className="block h-[44px] w-[140px] object-contain" />
+                      <img src={AppStoreBadge} alt={t('portal.mobileApp.appStore')} className="block h-[44px] w-[140px] object-contain" />
                     </button>
                   )}
                   {hasAndroidDownload ? (
@@ -130,9 +130,9 @@ export function MobileAppModal({ isOpen, onClose, androidUrl = '', iosUrl = '' }
                       target="_blank"
                       rel="noopener noreferrer"
                       className="block transition-transform hover:scale-[1.03] active:scale-[0.98] focus:outline-none"
-                      aria-label="Get it on Google Play"
+                      aria-label={t('common.getItOnGooglePlay')}
                     >
-                      <img src={GooglePlayBadge} alt="Google Play" className="block h-[44px] w-[140px] object-contain" />
+                      <img src={GooglePlayBadge} alt={t('portal.mobileApp.playStore')} className="block h-[44px] w-[140px] object-contain" />
                     </a>
                   ) : (
                     <button
@@ -141,7 +141,7 @@ export function MobileAppModal({ isOpen, onClose, androidUrl = '', iosUrl = '' }
                       className="block opacity-50 cursor-not-allowed"
                       aria-label={t('landing.download.comingSoon')}
                     >
-                      <img src={GooglePlayBadge} alt="Google Play" className="block h-[44px] w-[140px] object-contain" />
+                      <img src={GooglePlayBadge} alt={t('portal.mobileApp.playStore')} className="block h-[44px] w-[140px] object-contain" />
                     </button>
                   )}
                 </div>

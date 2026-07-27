@@ -47,7 +47,7 @@ export function OwnerEstablishmentsPage() {
     ];
 
     const navigate = useNavigate();
-    const { account, establishments, setCurrentEstablishment } = useAuth();
+    const { establishments, setCurrentEstablishment } = useAuth();
     const [searchParams] = useSearchParams();
     const highlightId = searchParams.get('highlight');
     const launchSetupForHighlightedLocation = searchParams.get('setup') === '1';
@@ -113,27 +113,6 @@ export function OwnerEstablishmentsPage() {
             ? establishment.establishmentLoginId 
             : establishment.id;
         const shouldLaunchSetup = launchSetupForHighlightedLocation || establishment.id === highlightId;
-
-        if (shouldLaunchSetup) {
-            const welcomeTargets = new Set<string>(
-                [establishment.id, establishment.establishmentLoginId, slug].filter(Boolean)
-            );
-
-            welcomeTargets.forEach((target) => {
-                localStorage.setItem(`mintcom.dashboard.welcome.pending.${target}`, 'true');
-                localStorage.removeItem(`mintcom.dashboard.setup.dismissed.${target}`);
-                localStorage.removeItem(`mintcom.dashboard.setup.dismissed.v3.${account?.id || 'anonymous'}.${target}`);
-                localStorage.removeItem(`mintcom.dashboard.setup.dismissed.v3.anonymous.${target}`);
-                localStorage.removeItem(`mintcom.dashboard.setup.dismissed.v6.${account?.id || 'anonymous'}.${target}`);
-                localStorage.removeItem(`mintcom.dashboard.setup.dismissed.v6.anonymous.${target}`);
-                sessionStorage.removeItem(`mintcom.dashboard.setup.session.dismissed.v4.${account?.id || 'anonymous'}.${target}`);
-                sessionStorage.removeItem(`mintcom.dashboard.setup.session.dismissed.v4.anonymous.${target}`);
-                sessionStorage.removeItem(`mintcom.dashboard.setup.session.dismissed.v5.${account?.id || 'anonymous'}.${target}`);
-                sessionStorage.removeItem(`mintcom.dashboard.setup.session.dismissed.v5.anonymous.${target}`);
-                sessionStorage.removeItem(`mintcom.dashboard.setup.session.dismissed.v6.${account?.id || 'anonymous'}.${target}`);
-                sessionStorage.removeItem(`mintcom.dashboard.setup.session.dismissed.v6.anonymous.${target}`);
-            });
-        }
 
         window.open(`/dashboard/${slug}${shouldLaunchSetup ? '?setup=1' : ''}`, '_blank');
     };
@@ -655,7 +634,6 @@ export function OwnerEstablishmentsPage() {
         </div>
     );
 }
-
 
 
 

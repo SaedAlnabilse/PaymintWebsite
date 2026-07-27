@@ -66,6 +66,18 @@ export const LEGACY_ALIAS_MAP: Record<string, string> = {
  * User needs at least ONE of the listed permissions to access the route.
  */
 export const REQUIRED_PERMISSIONS: Record<string, string[]> = {
+  // Notifications
+  'notifications': [
+    'dashboard',
+    'view_reports',
+    'manage_inventory',
+    'manage_employees',
+    'manage_settings',
+    'manage_billing',
+    'manage_open_tickets',
+    'pos',
+  ],
+
   // Reports
   'reports': ['view_reports'],
   'reports/sales': ['view_reports'],

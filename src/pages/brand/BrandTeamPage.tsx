@@ -19,8 +19,6 @@ import {
     X,
     MoreVertical,
     UserCheck,
-    Eye,
-    EyeOff,
     AlertTriangle
 } from 'lucide-react';
 import api from '../../config/api';
@@ -31,8 +29,10 @@ import { useAuth } from '../../context/AuthContext';
 import { Pagination } from '../../components/ui';
 import { AppStrings } from '../../constants/AppStrings';
 import { SectionLoader } from '../../components/LoadingState';
-import { formatInputPlaceholder, formatInputLabel } from '../../utils/textCase';
+import { formatInputPlaceholder } from '../../utils/textCase';
 import { StatValue } from '../../components/ui/StatValue';
+import { StepUpVerifier } from '../../components/StepUpVerifier';
+import { reauthHeaders } from '../../services/stepUp';
 
 interface Employee {
     id: string;
@@ -62,7 +62,6 @@ const getDisplayInitial = (emp: { firstName?: string; username?: string }) =>
     (emp.firstName?.trim()?.charAt(0) || emp.username?.trim()?.charAt(0) || '?').toUpperCase();
 
 const MAX_EMPLOYEES_PER_ACCOUNT = 50;
-const MAX_DELETE_PASSWORD_ATTEMPTS = 3;
 const EMPLOYEE_LIMIT_POPUP_MESSAGE =
     `Maximum is ${MAX_EMPLOYEES_PER_ACCOUNT} employees.\n` +
     `To add more than ${MAX_EMPLOYEES_PER_ACCOUNT} employees, contact Mintcom support at info@mintcompos.com with your account email. Never send your password to support.`;
@@ -72,7 +71,7 @@ export default function BrandTeamPage() {
     const { brandId: paramBrandId } = useParams<{ brandId: string }>();
     const context = useOutletContext<{ brand: any }>() || {};
     const brandId = context.brand?.id || paramBrandId;
-    const { establishments, account, logout } = useAuth();
+    const { establishments } = useAuth();
 
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [brandName, setBrandName] = useState('');
@@ -92,11 +91,8 @@ export default function BrandTeamPage() {
     // Delete confirmation modal state
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
-    const [deletePassword, setDeletePassword] = useState('');
-    const [showDeletePassword, setShowDeletePassword] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [deleteError, setDeleteError] = useState('');
-    const [deleteAttemptCount, setDeleteAttemptCount] = useState(0);
 
     const fetchBrandInfo = useCallback(async () => {
         try {
@@ -189,9 +185,7 @@ export default function BrandTeamPage() {
 
     const openDeleteModal = (emp: Employee) => {
         setEmployeeToDelete(emp);
-        setDeletePassword('');
         setDeleteError('');
-        setDeleteAttemptCount(0);
         setDeleteModalOpen(true);
         setActiveMenu(null);
     };
@@ -199,54 +193,28 @@ export default function BrandTeamPage() {
     const closeDeleteModal = () => {
         setDeleteModalOpen(false);
         setEmployeeToDelete(null);
-        setDeletePassword('');
         setDeleteError('');
-        setDeleteAttemptCount(0);
     };
 
-    const confirmDelete = async () => {
-        if (!employeeToDelete || !account?.email) return;
-
-        if (!deletePassword.trim()) {
-            setDeleteError(t('owner.staff.enterPassword'));
-            return;
-        }
+    /**
+     * Runs once StepUpVerifier has produced a single-use reauth token. The
+     * proof already establishes the owner is present, so no credential travels
+     * with the request itself.
+     */
+    const confirmDelete = async (reauthToken: string) => {
+        if (!employeeToDelete) return;
 
         setIsDeleting(true);
         setDeleteError('');
 
         try {
             await api.delete(`/api/brands/${brandId}/employees/${employeeToDelete.id}/brand-access`, {
-                data: { email: account.email, password: deletePassword },
-                headers: { 'X-Skip-Auth-Redirect': 'true' }
+                headers: reauthHeaders(reauthToken)
             });
             toast.success(t('brand.team.removeAccessSuccess', 'Brand access removed'));
             closeDeleteModal();
             fetchEmployees();
         } catch (error: any) {
-            if (error.response?.status === 401) {
-                const nextAttemptCount = deleteAttemptCount + 1;
-                const remainingAttempts = MAX_DELETE_PASSWORD_ATTEMPTS - nextAttemptCount;
-
-                setDeleteAttemptCount(nextAttemptCount);
-
-                if (remainingAttempts > 0) {
-                    setDeleteError(
-                        t('owner.staff.incorrectPasswordRemaining', {
-                            count: remainingAttempts,
-                        }),
-                    );
-                    return;
-                }
-
-                const tooManyAttemptsMessage = t('owner.staff.tooManyPasswordAttempts');
-                setDeleteError(tooManyAttemptsMessage);
-                toast.error(tooManyAttemptsMessage);
-                closeDeleteModal();
-                await logout();
-                return;
-            }
-
             setDeleteError(error.response?.data?.message || t('owner.staff.incorrectPassword'));
         } finally {
             setIsDeleting(false);
@@ -895,51 +863,30 @@ export default function BrandTeamPage() {
                             </p>
                          </div>
                         <div className="px-10 pb-8 space-y-5">
-                            <div>
-                                <label className="text-[10px] font-normal  tracking-[0.2em] text-gray-400 mb-2.5 block px-1">
-                                    {formatInputLabel(t('common.password'), t('common.locale'))}
-                                </label>
-                                <div className="relative group">
-                                    <input maxLength={255}
-                                        type={showDeletePassword ? 'text' : 'password'}
-                                        value={deletePassword}
-                                        onChange={(e) => { setDeletePassword(e.target.value); setDeleteError(''); }}
-                                        placeholder={formatInputPlaceholder(t('owner.staff.enterPasswordPlaceholder'), t('common.locale'))}
-                                        className={`w-full bg-gray-50 dark:bg-black/20 border ${deleteError ? 'border-red-500 ring-2 ring-red-500/20' : 'border-gray-200 dark:border-white/5'} rounded-2xl px-5 py-4 pr-12 text-sm font-bold text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500/20 transition-all shadow-sm`}
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowDeletePassword(!showDeletePassword)}
-                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                                    >
-                                        {showDeletePassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                                    </button>
-                                </div>
-                                {deleteError && <p className="mt-2.5 px-1 text-[11px] font-black text-red-500 flex items-center gap-1.5 animate-pulse"><AlertTriangle size={12} /> {deleteError}</p>}
-                            </div>
+                            {deleteError && (
+                                <p className="px-1 text-[11px] font-black text-red-500 flex items-center gap-1.5">
+                                    <AlertTriangle size={12} /> {deleteError}
+                                </p>
+                            )}
+                            {/* Offers whichever proof this owner can actually produce —
+                                a Google/Apple owner has no password to type here. */}
+                            <StepUpVerifier
+                                action="revoke-brand-access"
+                                targetId={employeeToDelete.id}
+                                onVerified={confirmDelete}
+                                onError={setDeleteError}
+                                submitLabel={t('brand.team.removeAccessConfirm', 'Remove access')}
+                                disabled={isDeleting}
+                            />
                         </div>
                         </div>
 
-                        <div className="p-8 border-t border-gray-100 dark:border-white/5 flex items-center gap-4 bg-gray-50/50 dark:bg-black/20">
+                        <div className="p-8 border-t border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-black/20">
                             <button
                                 onClick={closeDeleteModal}
-                                className="flex-1 py-4 rounded-2xl border border-gray-200 dark:border-white/10 text-gray-500 dark:text-gray-400 font-black text-xs tracking-widest uppercase hover:bg-white dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white transition-all active:scale-95"
+                                className="w-full py-4 rounded-2xl border border-gray-200 dark:border-white/10 text-gray-500 dark:text-gray-400 font-black text-xs tracking-widest uppercase hover:bg-white dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white transition-all active:scale-95"
                             >
                                 {t('common.cancel')}
-                            </button>
-                            <button
-                                onClick={confirmDelete}
-                                disabled={isDeleting || !deletePassword}
-                                className="flex-[1.5] py-4 rounded-2xl bg-red-500 text-white font-black text-xs tracking-widest uppercase hover:bg-red-600 transition-all disabled:opacity-50 disabled:grayscale flex items-center justify-center gap-2 shadow-xl shadow-red-500/20 active:scale-95"
-                            >
-                                {isDeleting ? (
-                                    <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin" />
-                                ) : (
-                                    <>
-                                        <Trash2 size={18} strokeWidth={2.5} />
-                                        {t('brand.team.removeAccessConfirm', 'Remove access')}
-                                    </>
-                                )}
                             </button>
                         </div>
                     </motion.div>

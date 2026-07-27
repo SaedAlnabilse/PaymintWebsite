@@ -8,9 +8,11 @@ import { ThemeToggle } from './ThemeToggle';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { ConfirmModal } from './ConfirmModal';
 import { DeletionRestorationBanner } from './DeletionRestorationBanner';
+import { AlertsBell } from './notifications/AlertsBell';
 import { useTranslation } from 'react-i18next';
 import {
     LayoutDashboard,
+    Bell,
     Store,
     Users,
     CreditCard,
@@ -33,11 +35,21 @@ import MintcomLeafIcon from '../assets/small-logo.svg';
 
 export function OwnerLayout() {
     const { t } = useTranslation();
-    const { account, logout } = useAuth();
+    const { account, establishments, logout } = useAuth();
     const isRtl = t('common.locale') === 'ar';
+    const ownerLocations = useMemo(
+        () => establishments.map((establishment) => ({
+            id: establishment.id,
+            name: establishment.name,
+            slug: establishment.establishmentLoginId,
+            currency: establishment.currency,
+        })),
+        [establishments],
+    );
 
     const menuItems = useMemo(() => [
         { path: '/owner', label: t('owner.menu.overview'), icon: LayoutDashboard },
+        { path: '/owner/notifications', label: t('notifications.menu.title'), icon: Bell },
         { path: '/owner/establishments', label: t('owner.menu.locations'), icon: Store },
         { path: '/owner/brands', label: t('owner.menu.brands'), icon: Building2 },
         { path: '/owner/employees', label: t('owner.menu.employees'), icon: Users },
@@ -287,6 +299,13 @@ export function OwnerLayout() {
                                 </div>
                             </div>
 
+                            <div className="flex items-center justify-between gap-3 px-3 py-1">
+                                <span className="text-sm font-bold text-gray-500 dark:text-gray-400">
+                                    {t('notifications.menu.title')}
+                                </span>
+                                <AlertsBell scope="owner" locations={ownerLocations} />
+                            </div>
+
                             {/* Menu Items */}
                             <div className="flex justify-end">
                                 <LanguageSwitcher
@@ -320,6 +339,7 @@ export function OwnerLayout() {
                         </div>
                     ) : (
                         <div className="flex flex-col items-center gap-2">
+                            <AlertsBell scope="owner" locations={ownerLocations} />
                             <div className="relative group">
                                 <LanguageSwitcher
                                     compact
@@ -394,6 +414,7 @@ export function OwnerLayout() {
                         className="h-8 w-auto object-contain hidden dark:block"
                     />
                     <div className="flex items-center gap-2">
+                        <AlertsBell scope="owner" locations={ownerLocations} />
                         <LanguageSwitcher
                             compact
                             dropdownDirection="up"
@@ -510,4 +531,3 @@ export function OwnerLayout() {
         </div >
     );
 }
-

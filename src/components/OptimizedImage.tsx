@@ -55,12 +55,6 @@ export function OptimizedImage({
 }: OptimizedImageProps) {
   const [status, setStatus] = useState<'loading' | 'loaded' | 'error'>('loading');
   const imgRef = useRef<HTMLImageElement>(null);
-  const srcRef = useRef(src);
-  const onErrorRef = useRef(onError);
-  const onLoadRef = useRef(onLoad);
-  srcRef.current = src;
-  onErrorRef.current = onError;
-  onLoadRef.current = onLoad;
 
   // When src changes, always re-enter loading. The follow-up effect below
   // re-checks the <img> after it remounts — important when we were previously
@@ -83,19 +77,19 @@ export function OptimizedImage({
       } else {
         // Broken cached response (0×0)
         setStatus('error');
-        onErrorRef.current?.();
+        onError?.();
       }
     }
-  }, [src, status]);
+  }, [onError, src, status]);
 
   const handleLoad = () => {
     setStatus('loaded');
-    onLoadRef.current?.();
+    onLoad?.();
   };
 
   const handleError = () => {
     setStatus('error');
-    onErrorRef.current?.();
+    onError?.();
   };
 
   const dimensionStyle: React.CSSProperties = {};

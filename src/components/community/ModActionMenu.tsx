@@ -3,21 +3,6 @@ import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { communityApi } from '../../services/communityApi';
 
-const ACTIONS = [
-  'HIDE',
-  'UNHIDE',
-  'LOCK',
-  'UNLOCK',
-  'PIN',
-  'UNPIN',
-  'DELETE',
-  'WARN',
-  'SUSPEND',
-  'BAN',
-  'UNBAN',
-  'SHADOWBAN',
-] as const;
-
 interface ModActionMenuProps {
   targetType: 'TOPIC' | 'REPLY' | 'PROFILE';
   topicId?: string;

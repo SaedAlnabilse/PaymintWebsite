@@ -2,6 +2,12 @@ import { useEffect } from 'react';
 import { useParams, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { LoadingFallback } from './LoadingFallback';
+import {
+    ACCOUNT_RECOVERY_PATH,
+    buildLocationDeletionRecoveryPath,
+    hasPendingAccountDeletion,
+    isManualEstablishmentDeletionPending,
+} from '../utils/deletionRecovery';
 
 const LOCKED_SUBSCRIPTION_STATUSES = new Set([
     'CANCELED',
@@ -23,12 +29,19 @@ export function EstablishmentUrlResolver({ children }: { children: React.ReactNo
     const { locationSlug } = useParams<{ locationSlug: string }>();
     const navigate = useNavigate();
     const location = useLocation();
+    const accountDeletionPending = hasPendingAccountDeletion(account);
+    const manualDeletionPending = isManualEstablishmentDeletionPending(currentEstablishment);
 
     useEffect(() => {
         if (authLoading) return;
 
         if (!isAuthenticated) {
             navigate('/login', { replace: true, state: { from: location } });
+            return;
+        }
+
+        if (accountDeletionPending) {
+            navigate(ACCOUNT_RECOVERY_PATH, { replace: true });
             return;
         }
 
@@ -61,6 +74,14 @@ export function EstablishmentUrlResolver({ children }: { children: React.ReactNo
 
             if (!persistedEstablishmentId || persistedEstablishmentId !== currentEstablishment.id) {
                 setCurrentEstablishment(currentEstablishment);
+            }
+
+            if (isManualEstablishmentDeletionPending(currentEstablishment)) {
+                const recoveryPath = buildLocationDeletionRecoveryPath(locationSlug);
+                if (`${location.pathname}${location.search}` !== recoveryPath) {
+                    navigate(recoveryPath, { replace: true });
+                }
+                return;
             }
 
             // Force redirect to slug if we are on ID
@@ -98,11 +119,16 @@ export function EstablishmentUrlResolver({ children }: { children: React.ReactNo
         currentEstablishment,
         navigate,
         setCurrentEstablishment,
-        location
+        location,
+        accountDeletionPending,
     ]);
 
     if (authLoading) {
         return <LoadingFallback message="Validating location..." />;
+    }
+
+    if (accountDeletionPending) {
+        return <Navigate to={ACCOUNT_RECOVERY_PATH} replace />;
     }
 
     if (!currentEstablishment || (
@@ -112,7 +138,14 @@ export function EstablishmentUrlResolver({ children }: { children: React.ReactNo
         return <LoadingFallback message="Switching location..." />;
     }
 
-    if (LOCKED_SUBSCRIPTION_STATUSES.has(currentEstablishment.subscriptionStatus)) {
+    if (manualDeletionPending) {
+        const recoveryPath = buildLocationDeletionRecoveryPath(
+            locationSlug || currentEstablishment.id,
+        );
+        if (`${location.pathname}${location.search}` !== recoveryPath) {
+            return <Navigate to={recoveryPath} replace />;
+        }
+    } else if (LOCKED_SUBSCRIPTION_STATUSES.has(currentEstablishment.subscriptionStatus)) {
         // Only the owner can manage billing. Secondary admins/employees can't
         // reach the owner portal, so send them a clear message instead of
         // redirecting into an owner-only page (which would bounce in a loop).
@@ -129,4 +162,3 @@ export function EstablishmentUrlResolver({ children }: { children: React.ReactNo
 
     return <>{children}</>;
 }
-

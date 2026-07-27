@@ -470,7 +470,7 @@ export function DemoSalesTrendChart({
           <div className="flex flex-1 flex-col items-center justify-center text-center">
             <TrendingUp size={36} className="mb-2 text-gray-300 dark:text-mintcom-gray" />
             <p className="text-[11px] font-bold text-text-secondary">
-              {viewMode === 'live' ? 'No live sales yet — ring a sale to populate the chart' : 'No data for this range'}
+              {viewMode === 'live' ? 'No live sales yet. Ring a sale to populate the chart' : 'No data for this range'}
             </p>
           </div>
         ) : (

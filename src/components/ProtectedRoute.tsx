@@ -1,6 +1,10 @@
 import { Navigate, Outlet, useLocation, useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { FullScreenLoader } from './LoadingState';
+import {
+  ACCOUNT_RECOVERY_PATH,
+  hasPendingAccountDeletion,
+} from '../utils/deletionRecovery';
 
 const LOCKED_SUBSCRIPTION_STATUSES = new Set([
   'CANCELED',
@@ -19,6 +23,13 @@ export function ProtectedRoute() {
   // Only redirect if we're NOT loading and there's NO account data
   if (!isAuthenticated && !account) {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+  }
+
+  if (
+    hasPendingAccountDeletion(account) &&
+    location.pathname !== ACCOUNT_RECOVERY_PATH
+  ) {
+    return <Navigate to={ACCOUNT_RECOVERY_PATH} replace />;
   }
 
   // First-time owners (no establishments yet) may still browse the site, support,
@@ -40,6 +51,10 @@ export function OwnerRoute() {
 
   if (!isAuthenticated && !account) {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+  }
+
+  if (hasPendingAccountDeletion(account)) {
+    return <Navigate to={ACCOUNT_RECOVERY_PATH} replace />;
   }
 
   // `isSecondaryAdmin` is true for admin users and Back Office employees;
@@ -66,6 +81,10 @@ export function EstablishmentRequiredRoute() {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
 
+  if (hasPendingAccountDeletion(account)) {
+    return <Navigate to={ACCOUNT_RECOVERY_PATH} replace />;
+  }
+
   // Location dashboards need a real establishment — send first-time owners to setup.
   if (needsOnboarding) {
     return <Navigate to="/onboarding" replace />;
@@ -88,7 +107,6 @@ export function EstablishmentRequiredRoute() {
 
   return <Outlet />;
 }
-
 
 
 

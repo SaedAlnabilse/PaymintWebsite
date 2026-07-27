@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Helmet } from 'react-helmet-async';
-import { useAuth } from '../context/AuthContext';
 import { Navbar } from '../components/Navbar';
 import { Hero } from '../components/Hero';
 import { WhyChooseUs } from '../components/WhyChooseUs';

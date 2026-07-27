@@ -378,7 +378,7 @@ export function FiscalComplianceCard({ initial, disabled, onSaved }: FiscalCompl
                         spellCheck={false}
                         placeholder={
                           field.placeholder ||
-                          (savedSecret ? t('settings.fiscal.savedKeep', 'Saved — re-enter to change') : '')
+                          (savedSecret ? t('settings.fiscal.savedKeep', 'Saved. Re-enter to change') : '')
                         }
                         className={`w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-sm font-semibold text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-mintcom-green/20 focus:border-mintcom-green transition-all ${isSecret ? 'pr-11' : ''}`}
                       />

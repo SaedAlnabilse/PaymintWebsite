@@ -7,9 +7,11 @@ import { useAuth } from '../context/AuthContext';
 import { ThemeToggle } from './ThemeToggle';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { DeletionRestorationBanner } from './DeletionRestorationBanner';
+import { AlertsBell } from './notifications/AlertsBell';
 import { useTranslation } from 'react-i18next';
 import {
     LayoutDashboard,
+    Bell,
     Store,
     Users,
     LogOut,
@@ -38,6 +40,7 @@ interface Brand {
     establishments: {
         id: string;
         name: string;
+        currency?: string;
     }[];
 }
 
@@ -50,7 +53,7 @@ export function BrandLayout() {
     const { t } = useTranslation();
     const isRtl = t('common.locale') === 'ar';
     const { brandId } = useParams<{ brandId: string }>();
-    const { account, logout } = useAuth();
+    const { account, establishments, logout } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -74,9 +77,28 @@ export function BrandLayout() {
 
     const menuItems = useMemo(() => brandId ? [
         { path: `/brand/${brandId}`, label: t('brand.menu.overview'), icon: LayoutDashboard, description: t('brand.menu.overviewDesc') },
+        { path: `/brand/${brandId}/notifications`, label: t('notifications.menu.title'), icon: Bell, description: t('notifications.title') },
         { path: `/brand/${brandId}/locations`, label: t('brand.menu.locations'), icon: Store, description: t('brand.menu.locationsDesc') },
         { path: `/brand/${brandId}/team`, label: t('brand.menu.team'), icon: Users, description: t('brand.menu.teamDesc') },
     ] : [], [brandId, t]);
+
+    const brandLocations = useMemo(() => {
+        const accountLocations = new Map(establishments.map((establishment) => [establishment.id, establishment]));
+
+        return (brand?.establishments ?? []).map((brandLocation) => {
+            const accountLocation = accountLocations.get(brandLocation.id);
+            return {
+                id: brandLocation.id,
+                name: brandLocation.name || accountLocation?.name || '',
+                slug: accountLocation?.establishmentLoginId,
+                currency: brandLocation.currency || accountLocation?.currency,
+            };
+        });
+    }, [brand, establishments]);
+    const brandEstablishmentIds = useMemo(
+        () => brandLocations.map((location) => location.id),
+        [brandLocations],
+    );
 
     // Scroll to top on route change
     useEffect(() => {
@@ -362,6 +384,17 @@ export function BrandLayout() {
                                 </div>
                             </div>
 
+                            <div className="flex items-center justify-between gap-3 px-3 py-1">
+                                <span className="text-sm font-bold text-gray-500 dark:text-gray-400">
+                                    {t('notifications.menu.title')}
+                                </span>
+                                <AlertsBell
+                                    scope="brand"
+                                    establishmentIds={brandEstablishmentIds}
+                                    locations={brandLocations}
+                                />
+                            </div>
+
                             {/* Menu Items */}
                             <div className="flex justify-end">
                                 <LanguageSwitcher
@@ -395,6 +428,11 @@ export function BrandLayout() {
                         </div>
                     ) : (
                         <div className="flex flex-col items-center gap-2">
+                            <AlertsBell
+                                scope="brand"
+                                establishmentIds={brandEstablishmentIds}
+                                locations={brandLocations}
+                            />
                             <div className="relative group">
                                 <LanguageSwitcher
                                     compact
@@ -462,7 +500,14 @@ export function BrandLayout() {
                         <span className="text-lg font-bold text-gray-900 dark:text-white">{brand?.name}</span>
                     </div>
 
-                    <ThemeToggle />
+                    <div className="flex items-center gap-2">
+                        <AlertsBell
+                            scope="brand"
+                            establishmentIds={brandEstablishmentIds}
+                            locations={brandLocations}
+                        />
+                        <ThemeToggle />
+                    </div>
                 </div>
 
                 {/* Content Landscape */}
@@ -600,4 +645,3 @@ export function BrandLayout() {
         </div>
     );
 }
-

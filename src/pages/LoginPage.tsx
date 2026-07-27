@@ -22,6 +22,7 @@ import MintcomLogoWhite from '../assets/white-green-full-logo.svg';
 import { formatInputPlaceholder, formatInputLabel } from '../utils/textCase';
 import { useScrollLock } from '../hooks/useScrollLock';
 import { launchFirstTimeOnboarding } from '../utils/onboardingLaunch';
+import { ACCOUNT_RECOVERY_PATH } from '../utils/deletionRecovery';
 
 type SocialProvider = 'google' | 'apple';
 
@@ -78,7 +79,18 @@ export function LoginPage() {
 
   const redirectTo = (location.state as { from?: string })?.from;
 
-  const finishLogin = (needsOnboarding?: boolean) => {
+  const finishLogin = ({
+    needsOnboarding,
+    requiresAccountRecovery,
+  }: {
+    needsOnboarding?: boolean;
+    requiresAccountRecovery?: boolean;
+  }) => {
+    if (requiresAccountRecovery) {
+      navigate(ACCOUNT_RECOVERY_PATH, { replace: true });
+      return;
+    }
+
     if (needsOnboarding) {
       // First location: open setup in a new tab, keep this tab on the site.
       launchFirstTimeOnboarding(navigate);
@@ -93,7 +105,7 @@ export function LoginPage() {
       const result = await loginWithGoogle(credential, undefined, 'login');
       if (result.success) {
         toast.success(result.message || t('common.welcome'));
-        finishLogin(result.needsOnboarding);
+        finishLogin(result);
       } else if (result.code === 'ACCOUNT_NOT_FOUND') {
         setSocialProvider('google');
         setShowNoAccountModal(true);
@@ -113,7 +125,7 @@ export function LoginPage() {
       const result = await loginWithApple(credential, 'login');
       if (result.success) {
         toast.success(result.message || t('common.welcome'));
-        finishLogin(result.needsOnboarding);
+        finishLogin(result);
       } else if (result.code === 'ACCOUNT_NOT_FOUND') {
         setSocialProvider('apple');
         setShowNoAccountModal(true);
@@ -135,7 +147,7 @@ export function LoginPage() {
       const result = await login(data.email, data.password);
       if (result.success) {
         toast.success(t('common.welcomeBack'));
-        finishLogin(result.needsOnboarding);
+        finishLogin(result);
       } else {
         if (result.error === 'Email not verified') {
           setUnverifiedEmail(data.email);

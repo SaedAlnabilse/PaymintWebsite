@@ -25,6 +25,7 @@ import { ErrorPage } from './components/ErrorPage';
 import { ProtectedRoute, OwnerRoute } from './components/ProtectedRoute';
 import { ChatWidgetEnhancer } from './components/ChatWidgetEnhancer';
 import { ScrollToTop } from './components/ScrollToTop';
+import { ACCOUNT_RECOVERY_PATH } from './utils/deletionRecovery';
 
 // ============================================================================
 // Lazy Imports - Public Pages
@@ -38,6 +39,7 @@ const SignUpPage = lazy(() => import('./pages/SignUpPage').then(m => ({ default:
 const VerifyEmailPage = lazy(() => import('./pages/VerifyEmailPage').then(m => ({ default: m.VerifyEmailPage })));
 const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage').then(m => ({ default: m.ForgotPasswordPage })));
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage').then(m => ({ default: m.ResetPasswordPage })));
+const AccountRecoveryPage = lazy(() => import('./pages/AccountRecoveryPage').then(m => ({ default: m.AccountRecoveryPage })));
 const CookiePolicyPage = lazy(() => import('./pages/CookiePolicyPage').then(m => ({ default: m.CookiePolicyPage })));
 const AboutUsPage = lazy(() => import('./pages/AboutUsPage').then(m => ({ default: m.AboutUsPage })));
 // Draft marketing pages (kept on disk; hidden from public routes until review is done)
@@ -86,6 +88,7 @@ const OwnerMergePage = lazy(() => import('./pages/owner/OwnerMergePage').then(m 
 const OwnerBrandsPage = lazy(() => import('./pages/owner/OwnerBrandsPage').then(m => ({ default: m.OwnerBrandsPage })));
 const OwnerRolesPage = lazy(() => import('./pages/owner/OwnerRolesPage').then(m => ({ default: m.OwnerRolesPage })));
 const OwnerAccountManagementPage = lazy(() => import('./pages/owner/OwnerAccountManagementPage').then(m => ({ default: m.OwnerAccountManagementPage })));
+const OwnerNotificationsPage = lazy(() => import('./pages/owner/OwnerNotificationsPage').then(m => ({ default: m.OwnerNotificationsPage })));
 
 // ============================================================================
 // Lazy Imports - Brand Portal Pages
@@ -93,6 +96,7 @@ const OwnerAccountManagementPage = lazy(() => import('./pages/owner/OwnerAccount
 const BrandDashboardPage = lazy(() => import('./pages/brand/BrandDashboardPage').then(m => ({ default: m.BrandDashboardPage })));
 const BrandLocationsPage = lazy(() => import('./pages/brand/BrandLocationsPage').then(m => ({ default: m.BrandLocationsPage })));
 const BrandTeamPage = lazy(() => import('./pages/brand/BrandTeamPage'));
+const BrandNotificationsPage = lazy(() => import('./pages/brand/BrandNotificationsPage').then(m => ({ default: m.BrandNotificationsPage })));
 
 // ============================================================================
 // Lazy Imports - Dashboard Pages (Largest chunk - most features)
@@ -114,13 +118,13 @@ const InventoryPage = lazy(() => import('./pages/dashboard/RecipesPage').then(m 
 const EstablishmentsPage = lazy(() => import('./pages/dashboard/EstablishmentsPage').then(m => ({ default: m.EstablishmentsPage })));
 const AdminUsersPage = lazy(() => import('./pages/dashboard/AdminUsersPage').then(m => ({ default: m.AdminUsersPage })));
 const CustomRolesPage = lazy(() => import('./pages/dashboard/CustomRolesPage').then(m => ({ default: m.CustomRolesPage })));
+const NotificationsPage = lazy(() => import('./pages/dashboard/NotificationsPage').then(m => ({ default: m.NotificationsPage })));
 
 // ============================================================================
 // Lazy Imports - Community
 // ============================================================================
 const CommunityLayout = lazy(() => import('./components/community/CommunityLayout').then(m => ({ default: m.CommunityLayout })));
 const CommunityHomePage = lazy(() => import('./pages/community/CommunityHomePage').then(m => ({ default: m.CommunityHomePage })));
-const CommunityComingSoonPage = lazy(() => import('./pages/community/CommunityComingSoonPage').then(m => ({ default: m.CommunityComingSoonPage })));
 const CategoryPage = lazy(() => import('./pages/community/CategoryPage').then(m => ({ default: m.CategoryPage })));
 const TopicPage = lazy(() => import('./pages/community/TopicPage').then(m => ({ default: m.TopicPage })));
 const CommunitySearchPage = lazy(() => import('./pages/community/CommunitySearchPage').then(m => ({ default: m.CommunitySearchPage })));
@@ -157,7 +161,7 @@ function LayoutSuspense({ children }: { children: React.ReactNode }) {
 
 const routeSeo = [
   { path: '/', title: 'Mintcom POS | Cloud POS & Business Management', description: 'Run sales, inventory, staff, reports, loyalty, and multi-location operations from Mintcom.' },
-  { path: '/try-pos', title: 'Try Mintcom POS | Free interactive demo', description: 'Try a full Mintcom POS experience free — clock in, sell items, customize add-ons, and take payment. No account required.' },
+  { path: '/try-pos', title: 'Try Mintcom POS | Free interactive demo', description: 'Try a full Mintcom POS experience free: clock in, sell items, customize add-ons, and take payment. No account required.' },
   { path: '/login', title: 'Login | Mintcom POS', description: 'Sign in securely to your Mintcom account.' },
   { path: '/signup', title: 'Create Account | Mintcom POS', description: 'Create a Mintcom account for your business.' },
   { path: '/support', title: 'Support | Mintcom POS', description: 'Find Mintcom help articles and support tickets.' },
@@ -560,6 +564,20 @@ const router = createBrowserRouter([
             element: <Navigate to="/" replace />,
           },
           {
+            path: ACCOUNT_RECOVERY_PATH,
+            element: (
+              <PageSuspense>
+                <AccountRecoveryPage />
+              </PageSuspense>
+            ),
+          },
+          // Retain the old URL for a short transition period. All in-product
+          // and email recovery links use ACCOUNT_RECOVERY_PATH.
+          {
+            path: "/account-recovery",
+            element: <Navigate to={ACCOUNT_RECOVERY_PATH} replace />,
+          },
+          {
             path: "/onboarding",
             element: (
               <PageSuspense>
@@ -611,6 +629,14 @@ const router = createBrowserRouter([
                 element: (
                   <PageSuspense>
                     <OwnerOverviewPage />
+                  </PageSuspense>
+                ),
+              },
+              {
+                path: "notifications",
+                element: (
+                  <PageSuspense>
+                    <OwnerNotificationsPage />
                   </PageSuspense>
                 ),
               },
@@ -691,6 +717,14 @@ const router = createBrowserRouter([
                 ),
               },
               {
+                path: "notifications",
+                element: (
+                  <PageSuspense>
+                    <BrandNotificationsPage />
+                  </PageSuspense>
+                ),
+              },
+              {
                 path: "locations",
                 element: (
                   <PageSuspense>
@@ -736,6 +770,14 @@ const router = createBrowserRouter([
                 element: (
                   <PageSuspense>
                     <DashboardPage />
+                  </PageSuspense>
+                ),
+              },
+              {
+                path: "notifications",
+                element: (
+                  <PageSuspense>
+                    <NotificationsPage />
                   </PageSuspense>
                 ),
               },

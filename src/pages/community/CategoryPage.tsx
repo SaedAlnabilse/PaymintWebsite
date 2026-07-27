@@ -19,7 +19,7 @@ import { CommunitySkeleton } from '../../components/community/CommunitySkeleton'
  */
 export function CategoryPage() {
   const { categorySlug } = useParams<{ categorySlug: string }>();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const [category, setCategory] = useState<CommunityCategory | null>(null);
   const [topics, setTopics] = useState<PaginatedResponse<CommunityTopicListItem> | null>(null);
   const [loading, setLoading] = useState(true);

@@ -1,37 +1,20 @@
-import { useState, useEffect } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
-import { SecurityVerificationModal } from './SecurityVerificationModal';
+import { useNavigate } from 'react-router-dom';
+import {
+  ACCOUNT_RECOVERY_PATH,
+  getDaysUntilDeletion,
+  hasPendingAccountDeletion,
+} from '../utils/deletionRecovery';
 
 export function DeletionRestorationBanner() {
   const { t } = useTranslation();
-  const { account, updateAccount } = useAuth();
-  const [daysRemaining, setDaysRemaining] = useState<number | null>(null);
-  const [showVerifyModal, setShowVerifyModal] = useState(false);
+  const { account } = useAuth();
+  const navigate = useNavigate();
+  const daysRemaining = getDaysUntilDeletion(account?.deletionScheduledFor);
 
-  useEffect(() => {
-    if (account?.deletionRequestedAt) {
-      const deletionDate = new Date(account.deletionRequestedAt);
-      deletionDate.setDate(deletionDate.getDate() + 30);
-      const now = new Date();
-      const diffTime = deletionDate.getTime() - now.getTime();
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      setDaysRemaining(diffDays > 0 ? diffDays : 0);
-    }
-  }, [account?.deletionRequestedAt]);
-
-  if (!account?.deletionRequestedAt) return null;
-
-  const handleRestoreClick = () => {
-    setShowVerifyModal(true);
-  };
-
-  const handleSuccess = () => {
-    updateAccount({ deletionRequestedAt: undefined });
-    toast.success(t('account.restored'));
-  };
+  if (!hasPendingAccountDeletion(account)) return null;
 
   return (
     <div className="bg-red-600 text-white px-4 py-2 flex items-center justify-center gap-4 z-[100] shadow-lg animate-in slide-in-from-top duration-300">
@@ -42,21 +25,12 @@ export function DeletionRestorationBanner() {
         </p>
       </div>
       <button
-        onClick={handleRestoreClick}
+        type="button"
+        onClick={() => navigate(ACCOUNT_RECOVERY_PATH)}
         className="flex items-center gap-2 px-4 py-1.5 bg-white text-red-600 rounded-lg label-strong font-sans hover:bg-gray-100 transition-all shadow-sm"
       >
         {t('account.restoreAction')}
       </button>
-
-      <SecurityVerificationModal
-        isOpen={showVerifyModal}
-        onClose={() => setShowVerifyModal(false)}
-        onSuccess={handleSuccess}
-        targetId="me"
-        targetName={account.email || ''}
-        mode="reactivate-account"
-      />
     </div>
   );
 }
-

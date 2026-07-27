@@ -171,18 +171,6 @@ const persistStoredLaunchData = (value: Record<string, unknown>) => {
   }
 };
 
-const clearStoredLaunchData = () => {
-  if (typeof window === 'undefined') {
-    return;
-  }
-
-  try {
-    sessionStorage.removeItem(ONBOARDING_LAUNCH_STORAGE_KEY);
-  } catch (error) {
-    console.warn('[Onboarding] Failed to clear launch data:', error);
-  }
-};
-
 const CARD_INPUT_CLASS =
   'min-w-0 w-full flex-1 bg-transparent font-sans text-sm font-bold leading-none text-gray-900 dark:text-white placeholder:font-sans placeholder:font-medium placeholder:text-gray-400 focus:outline-none';
 
@@ -921,18 +909,6 @@ export function OnboardingPage() {
     }
   };
 
-  const findOwnedEstablishmentByLoginId = async (loginId: string) => {
-    const normalizedLoginId = String(loginId || '').trim().toLowerCase();
-    if (!normalizedLoginId) return null;
-
-    const latestEstablishments = await refreshEstablishments();
-    return (
-      latestEstablishments.find(
-        (est) => est.establishmentLoginId?.toLowerCase() === normalizedLoginId,
-      ) || null
-    );
-  };
-
   const finishOnboardingWithEstablishment = async (establishment: any) => {
     const estId = establishment?.id;
     if (!estId) {
@@ -951,48 +927,6 @@ export function OnboardingPage() {
 
     setCurrentEstablishment(nextEstablishment);
     localStorage.setItem('selectedEstablishmentId', estId);
-
-    try {
-      const welcomeTargets = new Set<string>(
-        [estId, nextEstablishment.establishmentLoginId, formData.establishmentLoginId].filter(
-          Boolean,
-        ) as string[],
-      );
-
-      welcomeTargets.forEach((target) => {
-        localStorage.removeItem(`mintcom.dashboard.setup.dismissed.${target}`);
-        localStorage.removeItem(
-          `mintcom.dashboard.setup.dismissed.v3.${account?.id || 'anonymous'}.${target}`,
-        );
-        localStorage.removeItem(`mintcom.dashboard.setup.dismissed.v3.anonymous.${target}`);
-        localStorage.removeItem(
-          `mintcom.dashboard.setup.dismissed.v6.${account?.id || 'anonymous'}.${target}`,
-        );
-        localStorage.removeItem(`mintcom.dashboard.setup.dismissed.v6.anonymous.${target}`);
-        sessionStorage.removeItem(
-          `mintcom.dashboard.setup.session.dismissed.v4.${account?.id || 'anonymous'}.${target}`,
-        );
-        sessionStorage.removeItem(
-          `mintcom.dashboard.setup.session.dismissed.v4.anonymous.${target}`,
-        );
-        sessionStorage.removeItem(
-          `mintcom.dashboard.setup.session.dismissed.v5.${account?.id || 'anonymous'}.${target}`,
-        );
-        sessionStorage.removeItem(
-          `mintcom.dashboard.setup.session.dismissed.v5.anonymous.${target}`,
-        );
-        sessionStorage.removeItem(
-          `mintcom.dashboard.setup.session.dismissed.v6.${account?.id || 'anonymous'}.${target}`,
-        );
-        sessionStorage.removeItem(
-          `mintcom.dashboard.setup.session.dismissed.v6.anonymous.${target}`,
-        );
-        localStorage.removeItem(`mintcom.dashboard.visited.${target}`);
-        localStorage.setItem(`mintcom.dashboard.welcome.pending.${target}`, 'true');
-      });
-    } catch (storageError) {
-      console.warn('[Onboarding] Failed to persist welcome popup trigger:', storageError);
-    }
 
     updateFormData((prev: any) => ({ ...prev, establishmentId: estId }));
     goToPhase('launch', {
@@ -1075,7 +1009,7 @@ export function OnboardingPage() {
         }
       } catch (err: any) {
         console.error('Failed to save payment method:', err);
-        toast.error('Failed to save card. Please try again.');
+        toast.error(t('onboarding.errors.failedToSaveCard'));
         setIsLoading(false);
         return;
       }
@@ -2324,7 +2258,7 @@ export function OnboardingPage() {
                         <p className="text-center text-xs font-sans text-gray-500 dark:text-gray-400">
                           {t('onboarding.step2.trialPayNote', {
                             defaultValue:
-                              "You're covered by your 30-day trial — nothing is charged until it ends.",
+                              "You're covered by your 30-day trial, so nothing is charged until it ends.",
                             days: TRIAL_DAYS,
                           })}
                         </p>
@@ -2517,19 +2451,19 @@ export function OnboardingPage() {
                               download={isDirectInstallerDownload(ANDROID_DOWNLOAD_URL) ? true : undefined}
                               target="_blank"
                               rel="noopener noreferrer"
-                              aria-label="Get it on Google Play"
+                              aria-label={t('common.getItOnGooglePlay')}
                               className="inline-flex shrink-0 transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-mintcom-green/40 rounded-md"
                             >
-                              <img src={GooglePlayBadge} alt="Get it on Google Play" className="block h-[52px] w-auto object-contain" />
+                              <img src={GooglePlayBadge} alt={t('common.getItOnGooglePlay')} className="block h-[52px] w-auto object-contain" />
                             </a>
                           ) : (
                             <button
                               type="button"
                               disabled
-                              aria-label="Android app download coming soon"
+                              aria-label={t('common.androidDownloadComingSoon')}
                               className="inline-flex shrink-0 cursor-not-allowed opacity-50"
                             >
-                              <img src={GooglePlayBadge} alt="Get it on Google Play" className="block h-[52px] w-auto object-contain" />
+                              <img src={GooglePlayBadge} alt={t('common.getItOnGooglePlay')} className="block h-[52px] w-auto object-contain" />
                             </button>
                           )}
                           {hasIosDownload ? (
@@ -2537,19 +2471,19 @@ export function OnboardingPage() {
                               href={IOS_DOWNLOAD_URL}
                               target="_blank"
                               rel="noopener noreferrer"
-                              aria-label="Download on the App Store"
+                              aria-label={t('common.downloadOnAppStore')}
                               className="inline-flex shrink-0 transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-mintcom-green/40 rounded-md"
                             >
-                              <img src={AppStoreBadge} alt="Download on the App Store" className="block h-[52px] w-auto object-contain" />
+                              <img src={AppStoreBadge} alt={t('common.downloadOnAppStore')} className="block h-[52px] w-auto object-contain" />
                             </a>
                           ) : (
                             <button
                               type="button"
                               disabled
-                              aria-label="iOS app download coming soon"
+                              aria-label={t('common.iosDownloadComingSoon')}
                               className="inline-flex shrink-0 cursor-not-allowed opacity-50"
                             >
-                              <img src={AppStoreBadge} alt="Download on the App Store" className="block h-[52px] w-auto object-contain" />
+                              <img src={AppStoreBadge} alt={t('common.downloadOnAppStore')} className="block h-[52px] w-auto object-contain" />
                             </button>
                           )}
                         </div>
@@ -2577,19 +2511,19 @@ export function OnboardingPage() {
                               href={OWNER_ANDROID_DOWNLOAD_URL}
                               target="_blank"
                               rel="noopener noreferrer"
-                              aria-label="Get it on Google Play"
+                              aria-label={t('common.getItOnGooglePlay')}
                               className="inline-flex shrink-0 transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-mintcom-green/40 rounded-md"
                             >
-                              <img src={GooglePlayBadge} alt="Get it on Google Play" className="block h-[52px] w-auto object-contain" />
+                              <img src={GooglePlayBadge} alt={t('common.getItOnGooglePlay')} className="block h-[52px] w-auto object-contain" />
                             </a>
                           ) : (
                             <button
                               type="button"
                               disabled
-                              aria-label="Owner Android app download coming soon"
+                              aria-label={t('common.ownerAndroidDownloadComingSoon')}
                               className="inline-flex shrink-0 cursor-not-allowed opacity-50"
                             >
-                              <img src={GooglePlayBadge} alt="Get it on Google Play" className="block h-[52px] w-auto object-contain" />
+                              <img src={GooglePlayBadge} alt={t('common.getItOnGooglePlay')} className="block h-[52px] w-auto object-contain" />
                             </button>
                           )}
                           {hasOwnerIosDownload ? (
@@ -2597,19 +2531,19 @@ export function OnboardingPage() {
                               href={OWNER_IOS_DOWNLOAD_URL}
                               target="_blank"
                               rel="noopener noreferrer"
-                              aria-label="Download on the App Store"
+                              aria-label={t('common.downloadOnAppStore')}
                               className="inline-flex shrink-0 transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-mintcom-green/40 rounded-md"
                             >
-                              <img src={AppStoreBadge} alt="Download on the App Store" className="block h-[52px] w-auto object-contain" />
+                              <img src={AppStoreBadge} alt={t('common.downloadOnAppStore')} className="block h-[52px] w-auto object-contain" />
                             </a>
                           ) : (
                             <button
                               type="button"
                               disabled
-                              aria-label="Owner iOS app download coming soon"
+                              aria-label={t('common.ownerIosDownloadComingSoon')}
                               className="inline-flex shrink-0 cursor-not-allowed opacity-50"
                             >
-                              <img src={AppStoreBadge} alt="Download on the App Store" className="block h-[52px] w-auto object-contain" />
+                              <img src={AppStoreBadge} alt={t('common.downloadOnAppStore')} className="block h-[52px] w-auto object-contain" />
                             </button>
                           )}
                         </div>
@@ -2741,7 +2675,7 @@ export function OnboardingPage() {
                         <button
                           type="button"
                           disabled
-                          aria-label="Video guide coming soon"
+                          aria-label={t('owner.account.videoGuideComingSoon')}
                           className="group p-4 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-xl opacity-60 cursor-not-allowed text-left"
                         >
                           <div className="w-10 h-10 bg-red-500/10 rounded-lg flex items-center justify-center mb-3">

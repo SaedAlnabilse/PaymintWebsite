@@ -1,6 +1,12 @@
 import axios from 'axios';
 import { env } from './env';
 import { sanitizeTextPayload } from '../utils/textLimitUtils';
+import {
+  isAccountPendingDeletionError,
+  isLocationRecoveryPage,
+  isLocationRecoveryRequest,
+} from './recoveryRouting';
+import { mergeAccountDeletionLock } from '../utils/deletionRecovery';
 
 const ESTABLISHMENT_HEADER = 'X-Establishment-Id';
 const SKIP_ESTABLISHMENT_HEADER = 'X-Skip-Establishment-Header';
@@ -186,8 +192,15 @@ api.interceptors.response.use(
     const isLogoutRequest = error.config?.url?.includes('/api/accounts/logout');
     const isLoginPage = window.location.pathname.includes('/login');
     const isOwnerBillingPage = window.location.pathname.startsWith('/owner/billing');
+    const isAccountRestorePage = window.location.pathname.startsWith('/account-restore');
     const isBillingRequest = error.config?.url?.includes('/billing');
     const skipAuthRedirect = Boolean((error.config as any)?.skipAuthRedirect);
+    const accountPendingDeletion = isAccountPendingDeletionError(error);
+    const locationRecoveryRequest = isLocationRecoveryRequest(
+      error.config?.url,
+      error.config?.method,
+    );
+    const locationRecoveryPage = isLocationRecoveryPage(window.location.pathname);
     
     // Log all 401 errors for debugging
     if (error.response?.status === 401) {
@@ -221,13 +234,51 @@ api.interceptors.response.use(
       window.location.href = '/login';
     }
 
+    if (accountPendingDeletion && !isAccountRestorePage) {
+      const lockPayload = {
+        deletionRequestedAt: error.response?.data?.deletionRequestedAt,
+        deletionScheduledFor: error.response?.data?.deletionScheduledFor,
+      };
+
+      // A second tab can still hold account data from before deletion was
+      // requested. Persist the authoritative lock before the hard redirect so
+      // AccountRecoveryPage renders instead of mistaking the owner for active.
+      try {
+        const cachedAccount = JSON.parse(localStorage.getItem('account') || 'null');
+        if (cachedAccount && lockPayload.deletionScheduledFor) {
+          localStorage.setItem(
+            'account',
+            JSON.stringify(mergeAccountDeletionLock(cachedAccount, lockPayload)),
+          );
+        }
+      } catch {
+        // A malformed cache must not prevent navigation to the recovery route.
+      }
+
+      window.dispatchEvent(
+        new CustomEvent('account-pending-deletion', {
+          detail: {
+            message:
+              error.response?.data?.message ||
+              'This account is scheduled for deletion. Restore it to continue.',
+            ...lockPayload,
+          },
+        }),
+      );
+      window.location.href = '/account-restore';
+    }
+
     if (
       (error.response?.status === 402 || error.response?.status === 423) &&
+      !accountPendingDeletion &&
       error.response?.data?.code !== 'DASHBOARD_SESSION_KICKED' &&
       error.response?.data?.code !== 'DASHBOARD_SESSION_ENDED' &&
       !isLoginPage &&
       !isOwnerBillingPage &&
-      !isBillingRequest
+      !isBillingRequest &&
+      !skipAuthRedirect &&
+      !locationRecoveryRequest &&
+      !locationRecoveryPage
     ) {
       const errorMessage =
         error.response?.data?.message ||

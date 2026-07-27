@@ -805,13 +805,12 @@ export function ProductsPage() {
         // Key: "productName|categoryId" (lowercase) to detect duplicates per category
         const existingProducts: Set<string> = new Set();
         try {
-            const prodRes = await api.get('/api/items', { params: { includeInactive: true } });
-            const prods = prodRes.data?.items ?? prodRes.data;
-            if (Array.isArray(prods)) {
-                prods.forEach((p: Product) => {
-                    existingProducts.add(`${p.name.toLowerCase().trim()}|${p.categoryId || ''}`);
-                });
-            }
+            const prods = await fetchAllPages<Product>(api, '/api/items', {
+                includeInactive: true,
+            });
+            prods.forEach((p) => {
+                existingProducts.add(`${p.name.toLowerCase().trim()}|${p.categoryId || ''}`);
+            });
         } catch {
             // Fallback to current state
             products.forEach(p => {
@@ -1698,6 +1697,5 @@ export function ProductsPage() {
 
     );
 }
-
 
 

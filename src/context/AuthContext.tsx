@@ -2,9 +2,11 @@ import { createContext, useContext, useState, useEffect, type ReactNode } from '
 import { AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import api from '../config/api';
+import i18n from '../i18n';
 import { LogoutOverlay } from '../components/LogoutOverlay';
 import { LoginOverlay } from '../components/LoginOverlay';
 import type { Account, Establishment } from '../types';
+import { hasPendingAccountDeletion } from '../utils/deletionRecovery';
 
 interface AuthContextType {
   // Account (Main Account)
@@ -74,6 +76,9 @@ interface AuthResult {
   // True when the account has no establishments yet, so the user must be sent
   // straight into onboarding instead of the marketing/landing page.
   needsOnboarding?: boolean;
+  // Pending-deletion owners must enter the dedicated recovery flow before any
+  // onboarding or portal routing decisions are made.
+  requiresAccountRecovery?: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -119,7 +124,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loginSuccess, setLoginSuccess] = useState(false);
 
   // Check if user needs to complete onboarding (no establishments)
-  const needsOnboarding = account !== null && establishments.length === 0;
+  const needsOnboarding =
+    account !== null &&
+    !hasPendingAccountDeletion(account) &&
+    establishments.length === 0;
 
   useEffect(() => {
     initializeAuth();
@@ -162,7 +170,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             // Don't clear auth - let the user stay "logged in" with cached data
             // But show a warning that some features may not work
             console.warn('[Auth] Cookie not being sent properly - APIs will fail');
-            toast.error('Session issue detected. Some features may not work. Please log out and log back in.');
+            toast.error(i18n.t('auth.errors.sessionIssue'));
           }
         }
       }
@@ -203,6 +211,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('[Auth] Failed to refresh profile:', error);
     }
+  };
+
+  const loadRecoveryAwareEstablishments = async (
+    accountData: Account,
+    loginEstablishments: Establishment[] | null | undefined,
+  ): Promise<Establishment[]> => {
+    let finalEstablishments = loginEstablishments || [];
+
+    // Login responses intentionally stay compact and can contain active rows
+    // only. The owner list endpoint also returns future manual-deletion rows,
+    // which must be loaded before deciding that this is a brand-new account.
+    if (!accountData.isSecondaryAdmin) {
+      try {
+        const response = await api.get('/api/establishments');
+        finalEstablishments = response.data || [];
+      } catch (error) {
+        console.error('[Auth] Failed to load recovery-aware establishments:', error);
+      }
+    }
+
+    setEstablishments(finalEstablishments);
+    if (finalEstablishments.length > 0) {
+      const defaultEstablishment = finalEstablishments[0];
+      setCurrentEstablishmentState(defaultEstablishment);
+      sessionStorage.setItem(
+        'currentEstablishment',
+        JSON.stringify(defaultEstablishment),
+      );
+    } else {
+      setCurrentEstablishmentState(null);
+      sessionStorage.removeItem('currentEstablishment');
+    }
+
+    return finalEstablishments;
   };
 
   const register = async (data: RegisterData): Promise<AuthResult> => {
@@ -247,15 +289,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.setItem('account', JSON.stringify(accountData));
 
         setAccount(accountData);
-        setEstablishments(estList || []);
-
-        // Auto-select the first establishment if available
-        // This ensures the X-Establishment-Id header is set for subsequent requests
-        if (estList && estList.length > 0) {
-          const defaultEst = estList[0];
-          setCurrentEstablishmentState(defaultEst);
-          sessionStorage.setItem('currentEstablishment', JSON.stringify(defaultEst));
-        }
+        const finalEstablishments = await loadRecoveryAwareEstablishments(
+          accountData,
+          estList,
+        );
 
         // Keep overlay on until navigation completes
         setTimeout(() => {
@@ -266,7 +303,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return {
           success: true,
           isSecondaryAdmin: !!accountData.isSecondaryAdmin,
-          needsOnboarding: !(estList && estList.length > 0),
+          requiresAccountRecovery: hasPendingAccountDeletion(accountData),
+          needsOnboarding:
+            !hasPendingAccountDeletion(accountData) &&
+            finalEstablishments.length === 0,
         };
       }
 
@@ -321,14 +361,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.setItem('account', JSON.stringify(accountData));
 
         setAccount(accountData);
-        setEstablishments(estList || []);
-
-        // Auto-select the first establishment if available
-        if (estList && estList.length > 0) {
-          const defaultEst = estList[0];
-          setCurrentEstablishmentState(defaultEst);
-          sessionStorage.setItem('currentEstablishment', JSON.stringify(defaultEst));
-        }
+        const finalEstablishments = await loadRecoveryAwareEstablishments(
+          accountData,
+          estList,
+        );
 
         // Keep overlay on until navigation completes
         setTimeout(() => {
@@ -339,7 +375,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return {
           success: true,
           isSecondaryAdmin: !!accountData.isSecondaryAdmin,
-          needsOnboarding: !(estList && estList.length > 0),
+          requiresAccountRecovery: hasPendingAccountDeletion(accountData),
+          needsOnboarding:
+            !hasPendingAccountDeletion(accountData) &&
+            finalEstablishments.length === 0,
           message: response.data.isNewUser ? 'Account created successfully!' : 'Welcome back!'
         };
       }
@@ -391,14 +430,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.setItem('account', JSON.stringify(accountData));
 
         setAccount(accountData);
-        setEstablishments(estList || []);
-
-        // Auto-select the first establishment if available
-        if (estList && estList.length > 0) {
-          const defaultEst = estList[0];
-          setCurrentEstablishmentState(defaultEst);
-          sessionStorage.setItem('currentEstablishment', JSON.stringify(defaultEst));
-        }
+        const finalEstablishments = await loadRecoveryAwareEstablishments(
+          accountData,
+          estList,
+        );
 
         // Keep overlay on until navigation completes
         setTimeout(() => {
@@ -409,7 +444,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return {
           success: true,
           isSecondaryAdmin: !!accountData.isSecondaryAdmin,
-          needsOnboarding: !(estList && estList.length > 0),
+          requiresAccountRecovery: hasPendingAccountDeletion(accountData),
+          needsOnboarding:
+            !hasPendingAccountDeletion(accountData) &&
+            finalEstablishments.length === 0,
           message: response.data.isNewUser ? 'Account created successfully!' : 'Welcome back!'
         };
       }
@@ -557,6 +595,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (finalEstablishments.length > 0) {
         setCurrentEstablishment(finalEstablishments[0]);
+      } else {
+        setCurrentEstablishmentState(null);
+        sessionStorage.removeItem('currentEstablishment');
       }
 
       return finalEstablishments;

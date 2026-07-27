@@ -2,7 +2,7 @@
  * Fetch *every* page of a paginated list endpoint and return the full array.
  *
  * Many list endpoints return `{ items, total, limit, offset }` and cap how many
- * rows a single request yields (e.g. `/api/items` defaults to 500, max 2000).
+ * rows a single request yields (for example, `/api/items` is capped at 100).
  * A naive single `GET` therefore silently drops every row past that cap. This
  * helper loops over `offset` until all `total` rows have been retrieved, so the
  * caller gets the complete list and can keep paginating/filtering client-side.
@@ -22,7 +22,7 @@ interface PagedPayload<T> {
   offset?: number;
 }
 
-const DEFAULT_PAGE_SIZE = 500;
+const DEFAULT_PAGE_SIZE = 100;
 // Hard stop so a bad `total` from the backend can never spin forever.
 const MAX_PAGES = 1000;
 

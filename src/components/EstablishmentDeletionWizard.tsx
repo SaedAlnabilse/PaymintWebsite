@@ -14,7 +14,6 @@ import {
     ShoppingCart,
     Clock,
     X,
-    Check,
     FileSpreadsheet,
     ChevronRight,
     Shield,
@@ -26,6 +25,8 @@ import {
 import api from '../config/api';
 import toast from 'react-hot-toast';
 import { QuickInfo } from './QuickInfo';
+import { StepUpVerifier } from './StepUpVerifier';
+import { reauthHeaders } from '../services/stepUp';
 import { StatValue } from './ui/StatValue';
 
 interface ApiError {
@@ -67,7 +68,8 @@ interface EstablishmentStats {
 interface DeletionStatus {
     id: string;
     name: string;
-    status: 'active' | 'pending_deletion' | 'deleted';
+    status: 'active' | 'pending_deletion' | 'deleting' | 'deleted';
+    reason?: string | null;
     deletionRequestedAt: string | null;
     deletionScheduledFor: string | null;
     deletionExportSentTo: string | null;
@@ -79,7 +81,7 @@ interface EstablishmentDeletionWizardProps {
     establishmentId: string;
     establishmentName: string;
     onClose: () => void;
-    onDeletionRequested: () => void;
+    onDeletionRequested: () => void | Promise<void>;
 }
 
 type WizardStep = 'warning' | 'export' | 'confirm';
@@ -99,8 +101,6 @@ export function EstablishmentDeletionWizard({
     const [establishmentPassword, setEstablishmentPassword] = useState('');
     const [showEstablishmentPassword, setShowEstablishmentPassword] = useState(false);
     const [accountEmail, setAccountEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [showPassword, setShowPassword] = useState(false);
 
     // Export options
     const [exportOptions, setExportOptions] = useState({
@@ -127,7 +127,12 @@ export function EstablishmentDeletionWizard({
         fetchStats();
     }, [establishmentId, onClose, t]);
 
-    const handleRequestDeletion = async () => {
+    /**
+     * Runs once StepUpVerifier has produced a single-use reauth token. That
+     * proof replaces the owner password; the location credential below is a
+     * separate factor and is still sent and checked.
+     */
+    const handleRequestDeletion = async (reauthToken: string) => {
         if (!establishmentLoginId) {
             toast.error(t('owner.brands.wizard.adminLoginId'));
             return;
@@ -143,23 +148,28 @@ export function EstablishmentDeletionWizard({
             return;
         }
 
-        if (password.length < 6) {
-            toast.error(t('security.deletion.confirm.yourPassword'));
-            return;
-        }
-
         try {
             setIsSubmitting(true);
-            await api.post(`/api/establishments/${establishmentId}/request-deletion`, {
-                ...exportOptions,
-                exportFinancial: true, // Always mandatory
-                establishmentLoginId,
-                establishmentPassword,
-                accountEmail,
-                password,
-            });
+            await api.post(
+                `/api/establishments/${establishmentId}/request-deletion`,
+                {
+                    ...exportOptions,
+                    exportFinancial: true, // Always mandatory
+                    establishmentLoginId,
+                    establishmentPassword,
+                    accountEmail,
+                },
+                { headers: reauthHeaders(reauthToken) },
+            );
             toast.success(t('security.deletion.confirm.success'));
-            onDeletionRequested();
+            try {
+                await onDeletionRequested();
+            } catch (refreshError) {
+                // The destructive request already succeeded. A follow-up UI
+                // refresh must never turn that into a false "deletion failed"
+                // message or encourage the owner to submit it again.
+                console.error('Deletion scheduled, but recovery state refresh failed:', refreshError);
+            }
             onClose();
         } catch (err) {
             toast.error((err as ApiError).response?.data?.message || t('security.deletion.confirm.fail'));
@@ -507,7 +517,11 @@ export function EstablishmentDeletionWizard({
                                     />
                                 </div>
 
-                                {/* Password Input */}
+                                {/* Owner identity. The location credential above is a
+                                    separate factor and is still required; this block
+                                    proves the owner is present, using whichever method
+                                    their account supports — a Google/Apple owner has no
+                                    password to type. */}
                                 <div>
                                     <label className="block text-sm font-normal text-gray-900 dark:text-white tracking-tight mb-2 flex items-center gap-2">
                                         <div className="flex items-center gap-2">
@@ -516,29 +530,20 @@ export function EstablishmentDeletionWizard({
                                         </div>
                                         <QuickInfo text={t('security.deletion.confirm.confirmYou')} />
                                     </label>
-                                    <div className="relative">
-                                        <input maxLength={255}
-                                            type={showPassword ? 'text' : 'password'}
-                                            value={password}
-                                            onChange={(e) => setPassword(e.target.value)}
-                                            className={`w-full px-4 py-3 pr-12 bg-white dark:bg-[#2a2a2a] border rounded-xl text-gray-900 dark:text-white font-medium focus:outline-none transition-colors ${password.length >= 6
-                                                ? 'border-mintcom-green focus:border-mintcom-green'
-                                                : 'border-gray-300 dark:border-gray-700 focus:border-mintcom-red'
-                                                }`}
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowPassword(!showPassword)}
-                                            className="absolute right-3 rtl:right-auto rtl:left-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                                        >
-                                            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                                        </button>
-                                    </div>
-                                    {password.length >= 6 && (
-                                        <p className="text-mintcom-green text-sm mt-2 flex items-center gap-1">
-                                            <Check size={14} /> {t('security.deletion.confirm.passwordEntered')}
-                                        </p>
-                                    )}
+                                    <StepUpVerifier
+                                        action="request-establishment-deletion"
+                                        targetId={establishmentId}
+                                        onVerified={handleRequestDeletion}
+                                        onError={(message) => toast.error(message)}
+                                        submitLabel={t('security.deletion.confirm.button')}
+                                        disabled={isSubmitting}
+                                        canSubmit={
+                                            !!establishmentLoginId &&
+                                            establishmentPassword.length >= 6 &&
+                                            !!accountEmail &&
+                                            accountEmail.includes('@')
+                                        }
+                                    />
                                 </div>
                             </motion.div>
                         )}
@@ -574,29 +579,14 @@ export function EstablishmentDeletionWizard({
                             <ChevronRight size={18} />
                         </button>
                     ) : (
-                        <button
-                            onClick={handleRequestDeletion}
-                            disabled={
-                                !establishmentLoginId ||
-                                establishmentPassword.length < 6 ||
-                                !accountEmail ||
-                                password.length < 6 ||
-                                isSubmitting
-                            }
-                            className="px-6 py-3 bg-mintcom-red text-white rounded-xl font-bold hover:bg-mintcom-red transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {isSubmitting ? (
-                                <>
-                                    <Loader2 size={18} className="animate-spin" />
-                                    {t('security.deletion.confirm.processing')}
-                                </>
-                            ) : (
-                                <>
-                                    <Trash2 size={18} />
-                                    {t('security.deletion.confirm.button')}
-                                </>
-                            )}
-                        </button>
+                        // The confirm action lives inside StepUpVerifier, which only
+                        // enables it once the owner has proven presence.
+                        isSubmitting && (
+                            <span className="px-6 py-3 text-mintcom-red font-bold flex items-center gap-2">
+                                <Loader2 size={18} className="animate-spin" />
+                                {t('security.deletion.confirm.processing')}
+                            </span>
+                        )
                     )}
                 </div>
             </motion.div>
@@ -688,7 +678,37 @@ export function PendingDeletionBanner({
     isCancelling,
 }: PendingDeletionBannerProps) {
     const { t } = useTranslation();
-    if (deletionStatus.status !== 'pending_deletion') return null;
+    if (!['pending_deletion', 'deleting'].includes(deletionStatus.status)) return null;
+
+    const isDeleting = deletionStatus.status === 'deleting';
+    const reason = (deletionStatus.reason || '').toUpperCase();
+    const isAccountDeletion = reason === 'ACCOUNT_PENDING_DELETION';
+    const isBillingDeletion = [
+        'SUBSCRIPTION_CANCELED',
+        'PAYMENT_PAST_DUE',
+        'TRIAL_EXPIRED',
+        'NO_PAYMENT_METHOD',
+    ].includes(reason);
+
+    const handleRecoveryAction = () => {
+        if (deletionStatus.canCancel) {
+            onCancelDeletion();
+        } else if (isAccountDeletion) {
+            window.location.href = '/account-restore';
+        } else if (isBillingDeletion) {
+            window.location.href = '/owner/billing';
+        }
+    };
+
+    const actionLabel = isDeleting
+        ? t('security.deletion.banner.deleting')
+        : deletionStatus.canCancel
+          ? t('security.deletion.banner.cancel')
+          : isAccountDeletion
+            ? t('security.deletion.banner.restoreAccount')
+            : isBillingDeletion
+              ? t('security.deletion.banner.reactivateSubscription')
+              : t('security.deletion.banner.cannotCancelAction');
 
     const scheduledDate = deletionStatus.deletionScheduledFor
         ? new Date(deletionStatus.deletionScheduledFor).toLocaleDateString(t('common.locale') === 'ar' ? 'ar-EG' : 'en-US', {
@@ -715,6 +735,13 @@ export function PendingDeletionBanner({
                         <p className="text-white/80 text-sm">
                             {t('security.deletion.banner.desc', { date: scheduledDate })}
                         </p>
+                        {!deletionStatus.canCancel && (
+                            <p className="mt-2 text-xs font-bold text-white">
+                                {isDeleting
+                                    ? t('security.deletion.banner.deletingMessage')
+                                    : t('security.deletion.banner.cannotCancel')}
+                            </p>
+                        )}
                     </div>
                 </div>
                 <div className="flex items-center gap-4">
@@ -723,8 +750,12 @@ export function PendingDeletionBanner({
                         <div className="text-xs text-white/80">{t('security.deletion.banner.daysLeft')}</div>
                     </div>
                     <button
-                        onClick={onCancelDeletion}
-                        disabled={isCancelling}
+                        onClick={handleRecoveryAction}
+                        disabled={
+                            isCancelling ||
+                            isDeleting ||
+                            (!deletionStatus.canCancel && !isAccountDeletion && !isBillingDeletion)
+                        }
                         className="px-6 py-3 bg-white text-mintcom-red font-bold rounded-xl hover:bg-white/90 transition-colors flex items-center gap-2 disabled:opacity-50"
                     >
                         {isCancelling ? (
@@ -735,7 +766,7 @@ export function PendingDeletionBanner({
                         ) : (
                             <>
                                 <Shield size={18} />
-                                {t('security.deletion.banner.cancel')}
+                                {actionLabel}
                             </>
                         )}
                     </button>
@@ -744,4 +775,3 @@ export function PendingDeletionBanner({
         </motion.div>
     );
 }
-

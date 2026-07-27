@@ -13,12 +13,8 @@ import {
   ImagePlus,
   Layers,
   Package,
-  Tag,
   X,
 } from 'lucide-react';
-
-const money = (n: number) =>
-  n.toLocaleString(undefined, { style: 'currency', currency: 'USD', minimumFractionDigits: 2 });
 
 export type DemoProductFormValue = {
   id?: string;
@@ -642,4 +638,3 @@ export function DemoProductFormModal({
     </div>
   );
 }
-

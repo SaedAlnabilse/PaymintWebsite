@@ -15,7 +15,6 @@ import {
   Menu,
   LogOut,
   Search,
-  Wifi,
   Plus,
   Pencil,
   Trash2,
@@ -31,7 +30,6 @@ import {
   Shield,
   Info,
   Package,
-  Factory,
   BookOpen,
   Building2,
   MapPin,
@@ -44,11 +42,7 @@ import {
   Smartphone,
   X,
   List,
-  LogIn,
-  DollarSign,
   Hash,
-  LayoutGrid,
-  Inbox,
   Percent,
   Box,
   Grid3X3,
@@ -61,9 +55,7 @@ import {
   Receipt,
   SlidersHorizontal,
   ChevronRight,
-  Filter,
   ArrowUpDown,
-  Activity,
   Layers,
   Archive,
   Link2,
@@ -79,8 +71,6 @@ import {
   Repeat2,
   Star,
   Eye,
-  ShieldAlert,
-  Mail,
   ScanFace,
   CircleCheck,
 } from 'lucide-react';
@@ -98,9 +88,44 @@ export const DESIGN_W = 900;
 export const DESIGN_H = 600;
 const DEFAULT_IMG = '/default_product.png?v=pos-box';
 
-/** POS AmountText: "1,234.00 USD" */
-const posAmount = (n: number) =>
-  `${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD`;
+function PreviewSegment({
+  options,
+}: {
+  options: { label: string; icon: ReactNode; on?: boolean; count?: number }[];
+}) {
+  return (
+    <div className="relative flex shrink-0 rounded-lg bg-[#E8E8E8] p-0.5 dark:bg-white/10">
+      {options.map((option) => (
+        <span
+          key={option.label}
+          className={`relative z-10 flex flex-1 items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-[12px] font-semibold sm:text-[13px] ${
+            option.on ? 'bg-mintcom-green text-white shadow-sm' : 'text-gray-500 dark:text-gray-400'
+          }`}
+        >
+          <span className={`shrink-0 ${option.on ? 'text-white' : 'text-gray-500 dark:text-gray-400'}`}>
+            {option.icon}
+          </span>
+          <span className="truncate">{option.label}</span>
+          {typeof option.count === 'number' && (
+            <span
+              className={`rounded-md px-1.5 py-px text-[10px] font-bold tabular-nums ${
+                option.on
+                  ? 'bg-white/30 text-white'
+                  : 'bg-[#E5E7EB] text-gray-500 dark:bg-white/10 dark:text-gray-400'
+              }`}
+            >
+              {option.count}
+            </span>
+          )}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function PreviewBold({ children }: { children: ReactNode }) {
+  return <span className="font-bold text-gray-900 dark:text-white">{children}</span>;
+}
 
 /* ─── Shared frame ──────────────────────────────────────────────────────── */
 
@@ -953,35 +978,6 @@ function ProductionShot() {
     },
   ] as const;
 
-  const Segment = ({
-    options,
-  }: {
-    options: { label: string; icon: ReactNode; on?: boolean; count?: number }[];
-  }) => (
-    <div className="relative flex shrink-0 rounded-lg bg-[#E8E8E8] p-0.5 dark:bg-white/10">
-      {options.map((o) => (
-        <span
-          key={o.label}
-          className={`relative z-10 flex flex-1 items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-[12px] font-semibold sm:text-[13px] ${
-            o.on ? 'bg-mintcom-green text-white shadow-sm' : 'text-gray-500 dark:text-gray-400'
-          }`}
-        >
-          <span className={`shrink-0 ${o.on ? 'text-white' : 'text-gray-500 dark:text-gray-400'}`}>{o.icon}</span>
-          <span className="truncate">{o.label}</span>
-          {typeof o.count === 'number' && (
-            <span
-              className={`rounded-md px-1.5 py-px text-[10px] font-bold tabular-nums ${
-                o.on ? 'bg-white/30 text-white' : 'bg-[#E5E7EB] text-gray-500 dark:bg-white/10 dark:text-gray-400'
-              }`}
-            >
-              {o.count}
-            </span>
-          )}
-        </span>
-      ))}
-    </div>
-  );
-
   return (
     <SettingsShell
       active="manufacturing"
@@ -990,7 +986,7 @@ function ProductionShot() {
     >
       <div className="flex h-full min-h-0 w-full flex-col gap-2.5 overflow-hidden font-sans">
         {/* Main tabs — Raw Materials | Recipes */}
-        <Segment
+        <PreviewSegment
           options={[
             { label: 'Raw Materials', icon: <Package size={14} />, on: true },
             { label: 'Recipes', icon: <BookOpen size={14} /> },
@@ -998,7 +994,7 @@ function ProductionShot() {
         />
 
         {/* Sub-tabs — Raw Materials | Prepared Items + counts */}
-        <Segment
+        <PreviewSegment
           options={[
             { label: 'Raw Materials', icon: <Box size={14} />, on: true, count: 8 },
             { label: 'Prepared Items', icon: <Layers size={14} />, count: 2 },
@@ -1087,11 +1083,6 @@ function ProductionShot() {
  */
 function AiShot() {
   const chips = ['Top sellers', 'Last week', 'Staff', 'Stock'];
-
-  /** Bold span like AIMessageBubble **markdown** */
-  const B = ({ children }: { children: ReactNode }) => (
-    <span className="font-bold text-gray-900 dark:text-white">{children}</span>
-  );
 
   return (
     <div
@@ -1214,30 +1205,30 @@ function AiShot() {
                   </span>
                   <div className="min-w-0 max-w-[88%] rounded-2xl rounded-bl-md border border-gray-200 dark:border-white/10 bg-white dark:bg-mintcom-surface px-3.5 py-2.5 shadow-sm">
                     <p className="text-[12px] font-medium leading-[17px] text-gray-900 dark:text-white">
-                      Good morning! Here&apos;s how <B>Cafe Delight</B> is doing so far today:
+                      Good morning! Here&apos;s how <PreviewBold>Cafe Delight</PreviewBold> is doing so far today:
                     </p>
                     <div className="mt-1.5 space-y-0.5 text-[12px] font-medium leading-[17px] text-gray-900 dark:text-white">
                       <p className="flex gap-1.5">
                         <span className="shrink-0 w-2.5">-</span>
                         <span>
-                          Net sales: <B>1284.50 USD</B> (42 orders)
+                          Net sales: <PreviewBold>1284.50 USD</PreviewBold> (42 orders)
                         </span>
                       </p>
                       <p className="flex gap-1.5">
                         <span className="shrink-0 w-2.5">-</span>
                         <span>
-                          Top seller: <B>Latte</B> — 48 sold
+                          Top seller: <PreviewBold>Latte</PreviewBold>, 48 sold
                         </span>
                       </p>
                       <p className="flex gap-1.5">
                         <span className="shrink-0 w-2.5">-</span>
                         <span>
-                          Peak window: <B>9–11 AM</B>
+                          Peak window: <PreviewBold>9–11 AM</PreviewBold>
                         </span>
                       </p>
                     </div>
                     <p className="mt-1.5 text-[12px] font-medium leading-[17px] text-gray-900 dark:text-white">
-                      Strong start — keep the rush covered!
+                      Strong start, keep the rush covered!
                     </p>
                   </div>
                 </div>
@@ -1254,8 +1245,8 @@ function AiShot() {
                   </span>
                   <div className="min-w-0 max-w-[88%] rounded-2xl rounded-bl-md border border-gray-200 dark:border-white/10 bg-white dark:bg-mintcom-surface px-3.5 py-2.5 shadow-sm">
                     <p className="text-[12px] font-medium leading-[17px] text-gray-900 dark:text-white">
-                      <B>Oat milk</B> is running low — only <B>1.5 L</B> left
-                      (threshold <B>3 L</B>). Worth restocking before the
+                      <PreviewBold>Oat milk</PreviewBold> is running low, with only <PreviewBold>1.5 L</PreviewBold> left
+                      (threshold <PreviewBold>3 L</PreviewBold>). Worth restocking before the
                       afternoon rush.
                     </p>
                   </div>
@@ -1314,7 +1305,7 @@ function AiShot() {
               </div>
             </div>
             <p className="text-[12px] leading-relaxed text-gray-500 dark:text-gray-400">
-              Sales, stock, and staffing answers — scoped to one location or your whole brand.
+              Sales, stock, and staffing answers, scoped to one location or your whole brand.
             </p>
           </div>
 
@@ -2274,7 +2265,7 @@ function SecureShot() {
               </div>
             </div>
             <p className="text-[12px] font-medium leading-relaxed text-gray-600 dark:text-gray-300">
-              The moment Mintcom goes to the background, the session locks. Come back and unlock with Face ID — or use your password.
+              The moment Mintcom goes to the background, the session locks. Come back and unlock with Face ID, or use your password.
             </p>
           </div>
 
@@ -2684,7 +2675,7 @@ function MobileShot() {
               </div>
             </div>
             <p className="text-[12px] leading-relaxed text-gray-500 dark:text-gray-400">
-              Cash shortage, stock, and refunds — same feed as the admin portal Notifications
+              Cash shortage, stock, and refunds, the same feed as the admin portal Notifications
               screen.
             </p>
           </div>
@@ -2718,7 +2709,7 @@ function MobileShot() {
               Real-time push
             </div>
             <p className="mt-1.5 text-[12px] font-medium leading-snug text-gray-900 dark:text-white/90">
-              Banners land on the lock screen — tap to open the matching tab.
+              Banners land on the lock screen. Tap one to open the matching tab.
             </p>
           </div>
         </div>
