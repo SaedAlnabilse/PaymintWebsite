@@ -197,7 +197,7 @@ const getLocationDestination = (
   if (isStockAlertKind(alert.alertKind)) {
     const rawMaterialId = alert.rawMaterial?.id?.trim();
     if (rawMaterialId) {
-      return `recipes?rawMaterialId=${encodeURIComponent(rawMaterialId)}`;
+      return `inventory?rawMaterialId=${encodeURIComponent(rawMaterialId)}`;
     }
 
     const productId = alert.item?.id?.trim();
