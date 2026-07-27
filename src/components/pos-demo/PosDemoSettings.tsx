@@ -4,7 +4,6 @@
  * unsaved-changes confirmation. Local demo state only (nothing persists).
  */
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Link } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   Apple,
@@ -148,7 +147,6 @@ type CardType = { id: string; name: string; active: boolean };
 type Reward = { id: string; name: string; type: 'FREE_ITEM' | 'DISCOUNT'; points: number; value?: number };
 type Product = DemoCatalogProduct;
 type Category = DemoCatalogCategory;
-type StockRow = { id: string; name: string; qty: number; unit: string; min: number };
 type AddonGroup = DemoCatalogAddon;
 type Employee = { id: string; name: string; username: string; role: string; pin: string; emoji: string; owner?: boolean };
 type ActivityEntry = { id: string; at: number; who: string; action: string; detail: string };
@@ -283,75 +281,6 @@ function Toggle({ on, onToggle, disabled }: { on: boolean; onToggle: () => void;
         }`}
       />
     </button>
-  );
-}
-
-function Accordion({
-  title,
-  hint,
-  open,
-  onToggle,
-  badge,
-  children,
-  actions,
-}: {
-  title: string;
-  hint?: string;
-  open: boolean;
-  onToggle: () => void;
-  badge?: string | number;
-  children: ReactNode;
-  actions?: ReactNode;
-}) {
-  return (
-    <Shell>
-      <button
-        type="button"
-        onClick={onToggle}
-        className="flex w-full items-center gap-3 px-3.5 py-3 text-start"
-      >
-        <span
-          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl transition-colors ${
-            open ? 'bg-mintcom-green text-white' : 'bg-cream-100 text-mintcom-green dark:bg-mintcom-dark'
-          }`}
-        >
-          <ChevronDown size={16} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-text-primary dark:text-white">{title}</span>
-            {badge != null && (
-              <span className="rounded-full bg-mintcom-green/15 px-1.5 py-0.5 text-[9px] font-black text-mintcom-green">
-                {badge}
-              </span>
-            )}
-          </span>
-          {hint && (
-            <span className="mt-0.5 block text-[11px] text-text-secondary dark:text-mintcom-textSecondary">
-              {hint}
-            </span>
-          )}
-        </span>
-        {actions && (
-          <span onClick={(e) => e.stopPropagation()} className="shrink-0">
-            {actions}
-          </span>
-        )}
-      </button>
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="overflow-hidden"
-          >
-            <div className="border-t border-gray-100 px-3.5 py-3 dark:border-white/8">{children}</div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </Shell>
   );
 }
 
@@ -627,8 +556,8 @@ export function DemoSettingsScreen({
   salesSettings?: DemoSalesSettings;
   onSalesSettingsChange?: (next: DemoSalesSettings) => void;
 }) {
+  const [renderedAt] = useState(Date.now);
   const [active, setActive] = useState<SettingsTab>('business');
-  const [search, setSearch] = useState('');
   const [selectedSettingsCategory, setSelectedSettingsCategory] = useState('all');
   const [productSearch, setProductSearch] = useState('');
   const [catMenuOpen, setCatMenuOpen] = useState(false);
@@ -650,7 +579,7 @@ export function DemoSettingsScreen({
   });
 
   // Business — mirrors YourBusinessScreen
-  const [bizName, setBizName] = useState(businessName);
+  const [bizName] = useState(businessName);
   const [joinDate] = useState('30/04/2026');
   const [themeId, setThemeId] = useState<(typeof THEMES)[number]['id']>('green');
   const [useDeviceTheme, setUseDeviceTheme] = useState(false);
@@ -730,7 +659,7 @@ export function DemoSettingsScreen({
 
   // Sales — seeded from parent session settings (POS appSettings)
   const seed = salesSettings ?? DEFAULT_DEMO_SALES_SETTINGS;
-  const [taxOn, setTaxOn] = useState(seed.taxEnabled);
+  const [taxOn] = useState(seed.taxEnabled);
   const [taxRate, setTaxRate] = useState(seed.taxRate.toFixed(2));
   // Service charge (mirrors ServiceChargeSettingsGroup)
   const [serviceOn, setServiceOn] = useState(seed.serviceChargeEnabled);
@@ -803,26 +732,6 @@ export function DemoSettingsScreen({
     }));
   };
 
-  const [stock, setStock] = useState<StockRow[]>(() => {
-    const fromProducts = catalog.products
-      .filter((p) => p.trackStock)
-      .map((p) => ({
-        id: p.id,
-        name: p.name,
-        qty: p.availableStock ?? 0,
-        unit: 'pcs',
-        min: p.redThreshold ?? 2,
-      }));
-    return fromProducts.length
-      ? fromProducts
-      : [
-          { id: 's1', name: 'Oat milk', qty: 2, unit: 'L', min: 5 },
-          { id: 's2', name: 'Croissant dough', qty: 18, unit: 'pcs', min: 10 },
-          { id: 's3', name: 'Espresso beans', qty: 4, unit: 'kg', min: 6 },
-          { id: 's4', name: 'To-go cups L', qty: 120, unit: 'pcs', min: 40 },
-          { id: 's5', name: 'Vanilla syrup', qty: 1, unit: 'bot', min: 3 },
-        ];
-  });
   // Stock Management (mirrors POS): Item Stock + Add-on Availability tabs
   const [stockTab, setStockTab] = useState<'stock' | 'availability'>('stock');
   const [stockSearch, setStockSearch] = useState('');
@@ -834,10 +743,10 @@ export function DemoSettingsScreen({
   const [draftMulti, setDraftMulti] = useState(false);
   const [draftRequired, setDraftRequired] = useState(false);
   const [activity, setActivity] = useState<ActivityEntry[]>([
-    { id: 'a1', at: Date.now() - 3600_000, who: 'Maya', action: 'Updated tax rate', detail: '8%' },
-    { id: 'a2', at: Date.now() - 7200_000, who: 'Sara', action: 'Restocked item', detail: 'To-go cups L +40' },
-    { id: 'a3', at: Date.now() - 86400_000, who: 'Maya', action: 'Added discount', detail: 'Happy hour 10%' },
-    { id: 'a4', at: Date.now() - 172800_000, who: 'Omar', action: 'Edited product', detail: 'Latte price $4.50' },
+    { id: 'a1', at: renderedAt - 3600_000, who: 'Maya', action: 'Updated tax rate', detail: '8%' },
+    { id: 'a2', at: renderedAt - 7200_000, who: 'Sara', action: 'Restocked item', detail: 'To-go cups L +40' },
+    { id: 'a3', at: renderedAt - 86400_000, who: 'Maya', action: 'Added discount', detail: 'Happy hour 10%' },
+    { id: 'a4', at: renderedAt - 172800_000, who: 'Omar', action: 'Edited product', detail: 'Latte price $4.50' },
   ]);
   const [lang, setLang] = useState<'en' | 'ar'>('en');
   const [aboutChangelogOpen, setAboutChangelogOpen] = useState(false);
@@ -851,7 +760,6 @@ export function DemoSettingsScreen({
     | { type: 'card'; c?: CardType }
     | { type: 'product'; p?: Product }
     | { type: 'category'; c?: Category }
-    | { type: 'restock'; s: StockRow }
     | { type: 'addon-opt'; groupId: string; opt?: { id: string; name: string; price: number } }
     | { type: 'addon-group'; g?: AddonGroup }
     | { type: 'printer' }
@@ -863,15 +771,12 @@ export function DemoSettingsScreen({
   // Form draft for modals
   const [draftName, setDraftName] = useState('');
   const [draftUsername, setDraftUsername] = useState('');
-  const [draftRole, setDraftRole] = useState('');
   const [draftPin, setDraftPin] = useState('');
   const [draftPass, setDraftPass] = useState('');
   const [draftPct, setDraftPct] = useState('');
   const [draftPrice, setDraftPrice] = useState('');
   const [draftEmoji, setDraftEmoji] = useState('');
   const [draftIcon, setDraftIcon] = useState('');
-  const [draftCat, setDraftCat] = useState('bev');
-  const [draftQty, setDraftQty] = useState('');
   const [draftAdminOnly, setDraftAdminOnly] = useState(false);
   const [draftRewardType, setDraftRewardType] = useState<'FREE_ITEM' | 'DISCOUNT'>('FREE_ITEM');
   const [draftRewardPoints, setDraftRewardPoints] = useState('100');
@@ -944,19 +849,10 @@ export function DemoSettingsScreen({
       return;
     }
     setActive(id);
-    setSearch('');
   };
 
   const toggleGroup = (key: string) =>
     setOpenGroups((g) => ({ ...g, [key]: !g[key] }));
-
-  const filteredNav = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return NAV;
-    return NAV.filter(
-      (n) => n.label.toLowerCase().includes(q) || n.sub.toLowerCase().includes(q) || n.id.includes(q),
-    );
-  }, [search]);
 
   const activeMeta = NAV.find((n) => n.id === active) ?? NAV[0];
 
@@ -977,7 +873,6 @@ export function DemoSettingsScreen({
       setDraftUsername('');
       setDraftBaseRole('USER');
       setDraftCustomRoleId('');
-      setDraftRole('USER');
       // Demo only: optional prefilled 6-digit password label (still called password)
       setDraftPin(String(Math.floor(100000 + Math.random() * 900000)));
       setDraftPass('');
@@ -993,7 +888,6 @@ export function DemoSettingsScreen({
       setDraftUsername(emp.username);
       setDraftBaseRole(base);
       setDraftCustomRoleId(base === 'USER' ? (roleRaw === 'MANAGER' ? 'role-manager' : roleRaw === 'CASHIER' ? 'role-cashier' : roleRaw === 'BARISTA' ? 'role-barista' : 'role-cashier') : '');
-      setDraftRole(emp.role);
       setDraftPin(emp.pin || '');
       setDraftPass('');
       setDraftPosAccess(true);
@@ -1164,29 +1058,6 @@ export function DemoSettingsScreen({
             : p,
         ),
       );
-      // Keep stock board in sync when tracking
-      if (value.trackStock) {
-        setStock((list) => {
-          const exists = list.some((s) => s.id === modal.p!.id);
-          if (exists) {
-            return list.map((s) =>
-              s.id === modal.p!.id
-                ? { ...s, name: value.name, qty: value.availableStock, min: value.redThreshold || s.min }
-                : s,
-            );
-          }
-          return [
-            {
-              id: modal.p!.id,
-              name: value.name,
-              qty: value.availableStock,
-              unit: 'pcs',
-              min: value.redThreshold || 2,
-            },
-            ...list,
-          ];
-        });
-      }
       logActivity('Edited product', value.name);
       softCatalogPing('Product updated');
     } else {
@@ -1211,18 +1082,6 @@ export function DemoSettingsScreen({
           imageDataUrl: value.imageDataUrl,
         },
       ]);
-      if (value.trackStock) {
-        setStock((list) => [
-          {
-            id,
-            name: value.name,
-            qty: value.availableStock,
-            unit: 'pcs',
-            min: value.redThreshold || 2,
-          },
-          ...list,
-        ]);
-      }
       logActivity('Added product', value.name);
       softCatalogPing('Product added');
     }
@@ -1234,11 +1093,6 @@ export function DemoSettingsScreen({
     setDraftIcon(c?.icon ?? '');
     setModal({ type: 'category', c });
   };
-  const openRestock = (s: StockRow) => {
-    setDraftQty('10');
-    setModal({ type: 'restock', s });
-  };
-
   // Save a product's stock from the Stock Management "Item Stock" tab.
   // Writes straight into the shared catalog so Sales & Product Management match.
   const saveStock = (productId: string) => {
@@ -1433,14 +1287,6 @@ export function DemoSettingsScreen({
         logActivity('Added category', draftName.trim());
         softCatalogPing('Category added');
       }
-    } else if (modal.type === 'restock') {
-      const qty = Math.max(0, parseInt(draftQty, 10) || 0);
-      setStock((list) =>
-        list.map((s) => (s.id === modal.s.id ? { ...s, qty: s.qty + qty } : s)),
-      );
-      logActivity('Restocked item', `${modal.s.name} +${qty}`);
-      ping(`Restocked ${modal.s.name} +${qty}`);
-      markDirty();
     } else if (modal.type === 'addon-opt') {
       const price = Math.max(0, parseFloat(draftPrice) || 0);
       if (!draftName.trim()) return;
@@ -1833,7 +1679,7 @@ export function DemoSettingsScreen({
                       <div className={showLogo ? '' : 'pointer-events-none opacity-50'}>
                         <button
                           type="button"
-                          onClick={() => ping('Demo — receipt logo upload is managed on the real POS')}
+                          onClick={() => ping('Demo only: receipt logo upload is managed on the real POS')}
                           className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 bg-cream-50 py-3 text-sm font-medium text-text-primary dark:border-white/10 dark:bg-mintcom-dark dark:text-white"
                         >
                           <UploadCloud size={18} /> Upload logo
@@ -3195,7 +3041,7 @@ export function DemoSettingsScreen({
           {/* ── Activity Log (mirrors POS ActivityLogScreen) ── */}
           {active === 'activity' && (() => {
             const end = new Date();
-            const start = new Date(Date.now() - 6 * 86400_000);
+            const start = new Date(renderedAt - 6 * 86400_000);
             const fmtD = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
             return (
               <div className="mx-auto max-w-2xl">
@@ -3336,7 +3182,7 @@ export function DemoSettingsScreen({
                 {/* Intro paragraphs */}
                 <p className="mb-4 text-[14px] leading-relaxed text-text-secondary dark:text-mintcom-textSecondary">
                   Mintcom LLC is a technology solutions company specializing in Point of Sale (POS) systems and
-                  digital business management platforms. Our products are designed to simplify daily operations —
+                  digital business management platforms. Our products are designed to simplify daily operations,
                   from fast, reliable sales processing on digital devices to automated management tools that give
                   businesses full operational visibility.
                 </p>
@@ -3347,7 +3193,7 @@ export function DemoSettingsScreen({
                 <p className="mb-4 text-[14px] leading-relaxed text-text-secondary dark:text-mintcom-textSecondary">
                   The Mintcom app is available on both iOS and Android and can be downloaded for free. Businesses
                   can create a Mintcom account and complete setup directly through the POS app or via the online
-                  management dashboard. Mintcom also supports multi-branch operations — owners and account managers
+                  management dashboard. Mintcom also supports multi-branch operations, so owners and account managers
                   can add, merge, or separate establishments from a single universal dashboard, with discounted
                   pricing for additional branches.
                 </p>
@@ -3357,7 +3203,7 @@ export function DemoSettingsScreen({
                   Our Value Proposition
                 </h3>
                 {[
-                  'Affordable. Transparent. Complete. Mintcom offers one of the most competitive POS solutions in the market when considering the full range of included services. Our pricing is transparent, with no hidden fees or unexpected costs — just a complete, all-in-one system at an accessible monthly rate.',
+                  'Affordable. Transparent. Complete. Mintcom offers one of the most competitive POS solutions in the market when considering the full range of included services. Our pricing is transparent, with no hidden fees or unexpected costs, just a complete, all-in-one system at an accessible monthly rate.',
                   'Built for Simplicity. We developed Mintcom in close collaboration with business owners and frontline staff. The result is an intuitive system that can be learned in minutes, not days. Guided in-app tours and clear workflows ensure users always know what to do.',
                   'Performance-Driven Design. Speed, reliability, and usability are central to everything we build. Mintcom is engineered for fast transactions and smooth daily operations, with workflows designed using behavioral insights so critical actions are easy to access.',
                 ].map((p) => (
@@ -3422,7 +3268,7 @@ export function DemoSettingsScreen({
                 </button>
                 {aboutChangelogOpen && (
                   <div className="mt-4 rounded-xl border border-gray-200 bg-cream-50 p-4 dark:border-white/8 dark:bg-mintcom-dark">
-                    <p className="mb-4 text-[15px] font-bold text-mintcom-green">Version 1.0.0 — May 2026</p>
+                    <p className="mb-4 text-[15px] font-bold text-mintcom-green">Version 1.0.0, May 2026</p>
                     {[
                       { title: 'Initial release', items: ['Complete POS system with sales management', 'Product and inventory management', 'Comprehensive reporting and analytics', 'Multi-payment support (Cash, Card, Other)'] },
                       { title: 'Features', items: ['Real-time stock tracking and alerts', 'Shift management with opening and closing balance', 'Activity logging for audit trails', 'Customizable themes and settings', 'PDF receipt generation'] },
@@ -3536,7 +3382,6 @@ export function DemoSettingsScreen({
             setDirty(false);
             setActive(pendingTab);
             setPendingTab(null);
-            setSearch('');
           }
         }}
       />
@@ -3857,7 +3702,7 @@ export function DemoSettingsScreen({
                                 Included by default
                               </p>
                               <p className="text-[10px] leading-snug text-text-secondary">
-                                Sales screen access is included — take orders, accept payments, and open shifts.
+                                Sales screen access is included, so this role can take orders, accept payments, and open shifts.
                               </p>
                             </div>
                           </div>
@@ -4262,7 +4107,7 @@ export function DemoSettingsScreen({
                 <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-mintcom-green/15 text-xl">{draftEmoji || ''}</span>
                 <button
                   type="button"
-                  onClick={() => ping('Demo — image upload disabled')}
+                  onClick={() => ping('Demo only: image upload disabled')}
                   className="flex items-center gap-1.5 rounded-xl border border-gray-200 px-3 py-2 text-[12px] font-bold text-text-secondary dark:border-white/10 dark:text-mintcom-textSecondary"
                 >
                   <UploadCloud size={14} /> Upload Image
@@ -4292,7 +4137,7 @@ export function DemoSettingsScreen({
                 </span>
                 <button
                   type="button"
-                  onClick={() => ping('Demo — image upload disabled')}
+                  onClick={() => ping('Demo only: image upload disabled')}
                   className="flex items-center gap-1.5 rounded-xl border border-gray-200 px-3 py-2 text-[12px] font-bold text-text-secondary dark:border-white/10 dark:text-mintcom-textSecondary"
                 >
                   <UploadCloud size={14} /> Upload Image
@@ -4527,35 +4372,6 @@ export function DemoSettingsScreen({
             </ModalShell>
           );
         })()}
-
-        {modal?.type === 'restock' && (
-          <ModalShell
-            title={`Restock · ${modal.s.name}`}
-            subtitle={`Current: ${modal.s.qty} ${modal.s.unit}`}
-            onClose={() => setModal(null)}
-            footer={
-              <button type="button" onClick={saveModal} className="w-full rounded-xl bg-mintcom-green py-2.5 text-sm font-black text-white">
-                Add stock
-              </button>
-            }
-          >
-            <Field label={`Quantity to add (${modal.s.unit})`}>
-              <input className={inputCls} value={draftQty} inputMode="numeric" onChange={(e) => setDraftQty(e.target.value)} />
-            </Field>
-            <div className="flex gap-1.5">
-              {[5, 10, 20, 50].map((n) => (
-                <button
-                  key={n}
-                  type="button"
-                  onClick={() => setDraftQty(String(n))}
-                  className="flex-1 rounded-xl bg-cream-100 py-2 text-[11px] font-bold dark:bg-mintcom-dark dark:text-white"
-                >
-                  +{n}
-                </button>
-              ))}
-            </div>
-          </ModalShell>
-        )}
 
         {modal?.type === 'addon-opt' && (
           <ModalShell
@@ -5440,4 +5256,3 @@ export function DemoSettingsScreen({
     </div>
   );
 }
-

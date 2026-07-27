@@ -3,7 +3,7 @@ import { ANDROID_DOWNLOAD_URL, IOS_DOWNLOAD_URL } from '../config/downloads';
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 
-import { NavLink, Outlet, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate, useLocation, useParams, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useRealtime } from '../hooks/useRealtime';
@@ -11,9 +11,12 @@ import { ThemeToggle } from './ThemeToggle';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { DeletionRestorationBanner } from './DeletionRestorationBanner';
 import { BottomNavigation } from './mobile/BottomNavigation';
+import { AlertsBell } from './notifications/AlertsBell';
+import { SetupGuideHelpMenu } from './dashboard/SetupGuideHelpMenu';
 import { useTranslation } from 'react-i18next';
 import {
   LayoutDashboard,
+  Bell,
 
   MapPin,
   ShoppingCart,
@@ -86,6 +89,7 @@ const isMenuGroup = (item: MenuItemOrGroup): item is MenuGroup => {
 // ... (keep generic interface definitions)
 
 import { REQUIRED_PERMISSIONS, hasPermission as checkPerms } from '../config/permissions';
+import { useSetupGuideFirstRun } from '../hooks/useSetupGuideFirstRun';
 
 const SIDEBAR_STATE_KEY = 'dashboard_sidebar_expanded';
 
@@ -98,7 +102,17 @@ export function DashboardLayout() {
   const canSwitchLocation = (establishments?.length || 0) > 1;
   const navigate = useNavigate();
   const location = useLocation();
+  const { locationSlug } = useParams<{ locationSlug: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
+  const dashboardLocations = useMemo(
+    () => currentEstablishment ? [{
+      id: currentEstablishment.id,
+      name: currentEstablishment.name,
+      slug: locationSlug,
+      currency: currentEstablishment.currency,
+    }] : [],
+    [currentEstablishment, locationSlug],
+  );
 
   const [mobileAppModalOpen, setMobileAppModalOpen] = useState(false);
 
@@ -132,6 +146,24 @@ export function DashboardLayout() {
   const dashboardSessionRef = useRef<DashboardSession | null>(null);
   const forcedLogoutRef = useRef(false);
   const takeoverInFlightRef = useRef(false);
+  const normalizedDashboardPath = location.pathname.replace(/\/+$/, '');
+  const dashboardOverviewPath = locationSlug
+    ? `/dashboard/${locationSlug}`
+    : '';
+  const isDashboardOverview =
+    Boolean(dashboardOverviewPath) &&
+    normalizedDashboardPath === dashboardOverviewPath;
+  const hasCurrentDashboardSession =
+    dashboardSession?.establishmentId === currentEstablishment?.id;
+  const setupGuide = useSetupGuideFirstRun(currentEstablishment?.id, {
+    // A claim records the guide as shown, so wait until the dashboard seat has
+    // been acquired and the overview can actually render the granted modal.
+    offerFirstRun:
+      isDashboardOverview &&
+      hasCurrentDashboardSession &&
+      !sessionConflict,
+    replayScopeKey: normalizedDashboardPath,
+  });
 
   useRealtime({
     establishmentId: currentEstablishment?.id || null,
@@ -194,7 +226,7 @@ export function DashboardLayout() {
       dashboardSessionRef.current = result.session;
       setDashboardSession(result.session);
       setSessionConflict(null);
-      toast.success('You now have control of this location dashboard.');
+      toast.success(t('dashboard.session.controlGranted'));
     } catch (error: any) {
       if (isDashboardSessionConflict(error)) {
         setSessionConflict(error.response.data);
@@ -369,6 +401,7 @@ export function DashboardLayout() {
     // Translate menu structure dynamically
     const translatedMenuStructure: MenuItemOrGroup[] = [
       { path: '.', label: t('dashboard.menu.dashboard'), icon: LayoutDashboard },
+      { path: 'notifications', label: t('notifications.menu.title'), icon: Bell },
       {
         label: t('dashboard.menu.salesAndReporting'),
         icon: FileBarChart,
@@ -621,8 +654,22 @@ export function DashboardLayout() {
     setExpandedGroup(prev => prev === label ? null : label);
   };
 
+  const handleSetupGuideReplay = useCallback(async () => {
+    const allowed = await setupGuide.replay();
+    if (!allowed) return false;
+
+    if (!isDashboardOverview && locationSlug) {
+      navigate(`/dashboard/${locationSlug}`);
+    }
+    return true;
+  }, [isDashboardOverview, locationSlug, navigate, setupGuide.replay]);
+
+  const openHelpCenter = useCallback(() => {
+    navigate('/support');
+  }, [navigate]);
+
   const isDashboardContentLocked = Boolean(
-    currentEstablishment?.id && (!dashboardSession || sessionConflict),
+    currentEstablishment?.id && (!hasCurrentDashboardSession || sessionConflict),
   );
   const conflictActorName =
     sessionConflict?.activeSession?.displayName ||
@@ -984,6 +1031,19 @@ export function DashboardLayout() {
                 </div>
               </div>
 
+              {hasAccess('notifications') && (
+                <div className="flex items-center justify-between gap-3 px-3 py-1">
+                  <span className="text-sm font-bold text-gray-500 dark:text-gray-400">
+                    {t('notifications.menu.title')}
+                  </span>
+                  <AlertsBell
+                    scope="location"
+                    establishmentId={currentEstablishment?.id}
+                    locations={dashboardLocations}
+                  />
+                </div>
+              )}
+
               <div className="flex justify-end">
                 <LanguageSwitcher
                   dropdownDirection="up"
@@ -1010,6 +1070,12 @@ export function DashboardLayout() {
                 <span>{t('dashboard.menu.getMobileApp')}</span>
               </button>
 
+              <SetupGuideHelpMenu
+                canReplay={setupGuide.canReplay}
+                onReplay={handleSetupGuideReplay}
+                onOpenHelpCenter={openHelpCenter}
+              />
+
               <button
                 type="button"
                 onClick={handleLogout}
@@ -1021,6 +1087,13 @@ export function DashboardLayout() {
             </div>
           ) : (
             <div className="flex flex-col items-center gap-2">
+              {hasAccess('notifications') && (
+                <AlertsBell
+                  scope="location"
+                  establishmentId={currentEstablishment?.id}
+                  locations={dashboardLocations}
+                />
+              )}
               <div className="relative group">
                 <LanguageSwitcher
                   compact
@@ -1043,6 +1116,13 @@ export function DashboardLayout() {
                   {t('dashboard.menu.getMobileApp')}
                 </div>
               </button>
+
+              <SetupGuideHelpMenu
+                compact
+                canReplay={setupGuide.canReplay}
+                onReplay={handleSetupGuideReplay}
+                onOpenHelpCenter={openHelpCenter}
+              />
 
               <div className="relative group">
                 <ThemeToggle
@@ -1090,11 +1170,24 @@ export function DashboardLayout() {
             <span className="font-bold text-gray-900 dark:text-white">{t('dashboard.title')}</span>
           </div>
 
-          <ThemeToggle />
+          <div className="flex items-center gap-2">
+            {hasAccess('notifications') && (
+              <AlertsBell
+                scope="location"
+                establishmentId={currentEstablishment?.id}
+                locations={dashboardLocations}
+              />
+            )}
+            <ThemeToggle />
+          </div>
         </div>
 
         {/* Content Landscape */}
-        <main className="flex-1 relative bg-gray-50 dark:bg-mintcom-dark overflow-hidden">
+        <main
+          data-setup-guide-focus-fallback
+          tabIndex={-1}
+          className="flex-1 relative bg-gray-50 dark:bg-mintcom-dark overflow-hidden"
+        >
           <div ref={mainContentRef} className="h-full overflow-y-auto relative z-10 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-white/10">
             <div className="p-4 md:p-6 lg:p-8 pb-24 max-w-[1920px] mx-auto">
               {isDashboardContentLocked ? (
@@ -1118,7 +1211,7 @@ export function DashboardLayout() {
                   </div>
                 </div>
               ) : (
-                <Outlet context={{ sidebarOpen }} />
+                <Outlet context={{ sidebarOpen, setupGuide }} />
               )}
             </div>
           </div>
@@ -1205,6 +1298,13 @@ export function DashboardLayout() {
 
             {/* Footer */}
             <div className="p-4 border-t border-gray-100 dark:border-white/5">
+              <div className="mb-3">
+                <SetupGuideHelpMenu
+                  canReplay={setupGuide.canReplay}
+                  onReplay={handleSetupGuideReplay}
+                  onOpenHelpCenter={openHelpCenter}
+                />
+              </div>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-mintcom-green to-emerald-600 flex items-center justify-center">
                   <span className="text-black font-bold">{account?.firstName?.charAt(0).toUpperCase()}</span>

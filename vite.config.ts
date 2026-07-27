@@ -56,6 +56,18 @@ export default defineConfig({
       output: {
         // Optimized chunking strategy to reduce HTTP requests
         manualChunks: (id) => {
+          // Match React-prefixed packages with dedicated chunks before the
+          // broad `node_modules/react` ecosystem rule below.
+          if (id.includes('node_modules/react-hook-form') ||
+              id.includes('node_modules/@hookform') ||
+              id.includes('node_modules/zod')) {
+            return 'forms';
+          }
+
+          if (id.includes('node_modules/react-hot-toast')) {
+            return 'notifications';
+          }
+
           // React ecosystem - always needed
           if (id.includes('node_modules/react') ||
               id.includes('node_modules/react-dom') ||
@@ -74,13 +86,6 @@ export default defineConfig({
               id.includes('node_modules/d3-') ||
               id.includes('node_modules/victory-')) {
             return 'recharts';
-          }
-
-          // Form libraries
-          if (id.includes('node_modules/react-hook-form') ||
-              id.includes('node_modules/@hookform') ||
-              id.includes('node_modules/zod')) {
-            return 'forms';
           }
 
           // Date utilities
@@ -103,10 +108,6 @@ export default defineConfig({
             return 'http';
           }
 
-          // Toast notifications
-          if (id.includes('node_modules/react-hot-toast')) {
-            return 'notifications';
-          }
         },
       },
     },

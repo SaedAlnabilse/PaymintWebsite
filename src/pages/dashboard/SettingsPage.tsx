@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useForm } from 'react-hook-form';
-import { useBlocker, useLocation } from 'react-router-dom';
+import { useBlocker, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Store, Save, CreditCard, Receipt, Trash2, AlertTriangle, DollarSign, Copy, Key, Shield, ShieldCheck } from 'lucide-react';
 import api, { extractErrorMessage } from '../../config/api';
@@ -9,7 +9,10 @@ import toast from 'react-hot-toast';
 import { ConfirmModal } from '../../components/ConfirmModal';
 import { BusyOverlay } from '../../components/BusyOverlay';
 import { EstablishmentDeletionWizard, PendingDeletionBanner } from '../../components/EstablishmentDeletionWizard';
-import { RestoreLocationModal } from '../../components/RestoreLocationModal';
+import {
+  RestoreLocationModal,
+  type RestoreLocationFormData,
+} from '../../components/RestoreLocationModal';
 import { CustomSelect } from '../../components/CustomSelect';
 import { useCurrency } from '../../context/CurrencyContext';
 import { useTranslation } from 'react-i18next';
@@ -20,6 +23,13 @@ import { DataChangeEventTypes } from '../../services/realtimeService';
 import { SectionLoader } from '../../components/LoadingState';
 import { CURRENCIES } from '../../data/globalLocaleOptions';
 import { formatInputPlaceholder, formatInputLabel } from '../../utils/textCase';
+import {
+  buildLocationDeletionRecoveryPath,
+  getDaysUntilDeletion,
+  getEstablishmentSlug,
+  isLocationDeletionRecoveryDeepLink,
+  isManualEstablishmentDeletionPending,
+} from '../../utils/deletionRecovery';
 import {
   MAX_ESTABLISHMENT_NAME_LENGTH,
   MAX_ESTABLISHMENT_TAGLINE_LENGTH,
@@ -127,7 +137,8 @@ const normalizeSettingsTab = (tab: string | null | undefined): SettingsTab | nul
 interface DeletionStatus {
   id: string;
   name: string;
-  status: 'active' | 'pending_deletion' | 'deleted';
+  status: 'active' | 'pending_deletion' | 'deleting' | 'deleted';
+  reason?: string | null;
   deletionRequestedAt: string | null;
   deletionScheduledFor: string | null;
   deletionExportSentTo: string | null;
@@ -143,6 +154,7 @@ interface EstablishmentInfo {
 export function SettingsPage() {
   const { t } = useTranslation();
   const location = useLocation();
+  const navigate = useNavigate();
   const {
     account,
     currentEstablishment,
@@ -151,6 +163,7 @@ export function SettingsPage() {
     refreshEstablishments,
     isLoading: isAuthLoading,
   } = useAuth();
+  const manualDeletionPending = isManualEstablishmentDeletionPending(currentEstablishment);
   usePermissionGuard([
     'manage_settings',
     'manage_taxes_backoffice',
@@ -164,7 +177,7 @@ export function SettingsPage() {
   const { refreshCurrency, currencySymbol } = useCurrency();
   const { onRefresh } = useRealtime({
     establishmentId: currentEstablishment?.id || null,
-    enabled: !!currentEstablishment?.id,
+    enabled: Boolean(currentEstablishment?.id && !manualDeletionPending),
   });
 
   const tabs = useMemo(() => {
@@ -177,8 +190,11 @@ export function SettingsPage() {
     ];
 
     // If owner or has specific permissions, show the tabs
-    return availableTabs.filter(tab => checkPermission(account, [tab.permission]));
-  }, [account, t]);
+    const permittedTabs = availableTabs.filter(tab => checkPermission(account, [tab.permission]));
+    return manualDeletionPending
+      ? permittedTabs.filter((tab) => tab.id === 'danger')
+      : permittedTabs;
+  }, [account, manualDeletionPending, t]);
 
   const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
 
@@ -205,7 +221,9 @@ export function SettingsPage() {
   useEffect(() => {
     const state = location.state as { openSettingsTab?: SettingsTab | 'tax' } | null;
     const queryTab = normalizeSettingsTab(new URLSearchParams(location.search).get('tab'));
-    const requestedTab = normalizeSettingsTab(state?.openSettingsTab) || queryTab;
+    const requestedTab = isLocationDeletionRecoveryDeepLink(location.search)
+      ? 'danger'
+      : normalizeSettingsTab(state?.openSettingsTab) || queryTab;
     if (!requestedTab) return;
 
     if (tabs.some((tab: any) => tab.id === requestedTab)) {
@@ -219,7 +237,7 @@ export function SettingsPage() {
   }, [location.state, location.search, tabs]);
 
   const [settings, setSettings] = useState<AppSettings | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!manualDeletionPending);
   const [isSaving, setIsSaving] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [selectedLogo, setSelectedLogo] = useState<File | null>(null);
@@ -370,10 +388,18 @@ export function SettingsPage() {
 
 
   useEffect(() => {
+    if (manualDeletionPending) {
+      // Billing deliberately blocks normal settings for an inactive location.
+      // The deletion-status endpoint is independent, so never let a failed
+      // /app-settings request hide the one screen that can restore the data.
+      setIsLoading(false);
+      return;
+    }
+
     if (!isAuthLoading && hasValidatedCurrentEstablishment) {
       fetchSettings();
     }
-  }, [isAuthLoading, hasValidatedCurrentEstablishment, currentEstablishment?.id]);
+  }, [isAuthLoading, hasValidatedCurrentEstablishment, currentEstablishment?.id, manualDeletionPending]);
 
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -387,6 +413,11 @@ export function SettingsPage() {
   }, [hasUnsavedChanges]);
 
   const fetchSettings = async (showLoading = true) => {
+    if (manualDeletionPending) {
+      if (showLoading) setIsLoading(false);
+      return;
+    }
+
     try {
       if (showLoading) setIsLoading(true);
       const response = await api.get('/app-settings');
@@ -470,13 +501,13 @@ export function SettingsPage() {
 
   useEffect(() => {
     const unsubscribe = onRefresh((eventType) => {
-      if (eventType === DataChangeEventTypes.SETTINGS_UPDATED) {
+      if (!manualDeletionPending && eventType === DataChangeEventTypes.SETTINGS_UPDATED) {
         fetchSettings(false);
       }
     });
 
     return unsubscribe;
-  }, [onRefresh]);
+  }, [manualDeletionPending, onRefresh]);
 
   const handleRemoveLogo = () => {
     setPreviewImage(null);
@@ -625,6 +656,22 @@ export function SettingsPage() {
   const [establishmentInfo, setEstablishmentInfo] = useState<EstablishmentInfo | null>(null);
   const [isCancellingDeletion, setIsCancellingDeletion] = useState(false);
   const [showRestoreModal, setShowRestoreModal] = useState(false);
+  const [restoreError, setRestoreError] = useState<string | null>(null);
+
+  const fallbackDeletionStatus: DeletionStatus | null = manualDeletionPending && currentEstablishment
+    ? {
+        id: currentEstablishment.id,
+        name: currentEstablishment.name,
+        status: 'pending_deletion',
+        reason: currentEstablishment.accessLockReason || 'PENDING_DELETION',
+        deletionRequestedAt: currentEstablishment.deletionRequestedAt || null,
+        deletionScheduledFor: currentEstablishment.deletionScheduledFor || null,
+        deletionExportSentTo: currentEstablishment.deletionExportSentTo || null,
+        canCancel: true,
+        daysRemaining: getDaysUntilDeletion(currentEstablishment.deletionScheduledFor),
+      }
+    : null;
+  const effectiveDeletionStatus = deletionStatus || fallbackDeletionStatus;
 
   useEffect(() => {
     if (!isAuthLoading && hasValidatedCurrentEstablishment) {
@@ -642,42 +689,92 @@ export function SettingsPage() {
       const response = await api.get(
         `/api/establishments/${currentEstablishment.id}/deletion-status`,
       );
-      setDeletionStatus(response.data);
+      const status = response.data?.data || response.data;
+      setDeletionStatus({
+        ...status,
+        // Never reconstruct the deadline from the request date or a fixed
+        // grace period. The server's scheduled timestamp is authoritative.
+        daysRemaining: getDaysUntilDeletion(status.deletionScheduledFor),
+      });
     } catch (err) {
       console.error('Failed to fetch establishment info:', err);
     }
   };
 
-  const handleCancelDeletion = async () => {
+  const handleCancelDeletion = () => {
+    setRestoreError(null);
     setShowRestoreModal(true);
   };
 
-  const handleRestore = async (data: any) => {
+  const handleRestore = async (data: RestoreLocationFormData) => {
     if (!establishmentInfo) return;
+    let restoreSucceeded = false;
     try {
       setIsCancellingDeletion(true);
-      await api.post(`/api/establishments/${establishmentInfo.id}/cancel-deletion`, data);
-      
-      toast.success(t('security.restore.success'));
-      setShowRestoreModal(false);
+      setRestoreError(null);
+      await api.post(
+        `/api/establishments/${establishmentInfo.id}/cancel-deletion`,
+        data,
+        { headers: { 'X-Skip-Auth-Redirect': 'true' } },
+      );
+      restoreSucceeded = true;
       
       // Refresh context to update establishment data (new loginId)
       const updatedEstablishments = await refreshEstablishments();
       
       // If the current establishment was updated, we might need to update session storage
       if (updatedEstablishments && updatedEstablishments.length > 0) {
-          const updated = updatedEstablishments.find((e: any) => e.id === establishmentInfo.id);
+          const updated = updatedEstablishments.find((establishment) => establishment.id === establishmentInfo.id);
           if (updated) {
               setCurrentEstablishment(updated);
+              setShowRestoreModal(false);
+              toast.success(t('security.restore.success'));
+              navigate(`/dashboard/${encodeURIComponent(getEstablishmentSlug(updated))}`, {
+                replace: true,
+              });
+              return;
           }
       }
 
-      fetchEstablishmentInfo();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || t('settings.danger.cancelFailed'));
+      setShowRestoreModal(false);
+      toast.success(t('security.restore.success'));
+      navigate('/select-establishment', { replace: true });
+    } catch (err) {
+      const message = extractErrorMessage(err) ||
+        (err instanceof Error ? err.message : '') ||
+        t('settings.danger.cancelFailed');
+      if (restoreSucceeded) {
+        setShowRestoreModal(false);
+        toast.success(t('security.restore.success'));
+        toast.error(
+          t('settings.danger.refreshFailed', {
+            defaultValue: 'The location was restored, but its updated login could not be loaded. Please refresh the page.',
+          }),
+        );
+        navigate('/select-establishment', { replace: true });
+      } else {
+        setRestoreError(message);
+      }
     } finally {
       setIsCancellingDeletion(false);
     }
+  };
+
+  const handleDeletionRequested = async () => {
+    setShowDeletionWizard(false);
+    const updatedEstablishments = await refreshEstablishments();
+    const updated = updatedEstablishments.find(
+      (establishment) => establishment.id === currentEstablishment?.id,
+    );
+
+    if (updated) {
+      setCurrentEstablishment(updated);
+      navigate(buildLocationDeletionRecoveryPath(getEstablishmentSlug(updated)), {
+        replace: true,
+      });
+    }
+
+    await fetchEstablishmentInfo();
   };
 
   const showFormValidationError = (errs: any) => {
@@ -748,7 +845,7 @@ export function SettingsPage() {
     syncTabQueryParam(newTab);
   };
 
-  if (isLoading) {
+  if (isLoading && !manualDeletionPending) {
     return <SectionLoader message={t('settings.messages.loading')} />;
   }
 
@@ -770,7 +867,7 @@ export function SettingsPage() {
                     </p>
         </div>
 
-        {activeTab !== 'einvoicing' && (
+        {activeTab !== 'einvoicing' && activeTab !== 'danger' && (
           <button
             type="button"
             onClick={handleSubmit(onSubmit, showFormValidationError)}
@@ -1402,7 +1499,7 @@ export function SettingsPage() {
                     <div className={`overflow-hidden transition-all duration-300 ${watch('showLogoOnReceipt') ? 'opacity-100' : 'opacity-50 pointer-events-none grayscale'}`}>
                       <div className="flex items-center gap-6 p-2">
                         <div className="w-20 h-20 bg-gray-50 dark:bg-white/5 rounded-xl overflow-hidden flex items-center justify-center border border-gray-200 dark:border-white/5">
-                          {receiptLogoPreview ? <img src={receiptLogoPreview} alt="Receipt Logo" className="w-full h-full object-cover" loading="lazy" decoding="async" /> : <Store className="w-8 h-8 text-gray-300 dark:text-gray-600" />}
+                          {receiptLogoPreview ? <img src={receiptLogoPreview} alt={t('settings.receipts.logoAlt')} className="w-full h-full object-cover" loading="lazy" decoding="async" /> : <Store className="w-8 h-8 text-gray-300 dark:text-gray-600" />}
                         </div>
                         <label className="px-5 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl hover:opacity-90 cursor-pointer label-strong font-sans transition-all hover:scale-[1.02] active:scale-[0.98] shadow-md hover:shadow-lg">
                           {t('settings.receipts.uploadLogo')}
@@ -1515,9 +1612,9 @@ export function SettingsPage() {
               </div>
             </div>
 
-            {deletionStatus?.status === 'pending_deletion' ? (
+            {effectiveDeletionStatus && ['pending_deletion', 'deleting'].includes(effectiveDeletionStatus.status) ? (
               <div>
-                <PendingDeletionBanner deletionStatus={deletionStatus} onCancelDeletion={handleCancelDeletion} isCancelling={isCancellingDeletion} />
+                <PendingDeletionBanner deletionStatus={effectiveDeletionStatus} onCancelDeletion={handleCancelDeletion} isCancelling={isCancellingDeletion} />
               </div>
             ) : (
               <div className="space-y-6">
@@ -1558,15 +1655,18 @@ export function SettingsPage() {
         showCancel={confirmConfig.showCancel}
       />
       {showDeletionWizard && establishmentInfo && (
-        <EstablishmentDeletionWizard establishmentId={establishmentInfo.id} establishmentName={establishmentInfo.name} onClose={() => setShowDeletionWizard(false)} onDeletionRequested={() => { fetchEstablishmentInfo(); setShowDeletionWizard(false); }} />
+        <EstablishmentDeletionWizard establishmentId={establishmentInfo.id} establishmentName={establishmentInfo.name} onClose={() => setShowDeletionWizard(false)} onDeletionRequested={handleDeletionRequested} />
       )}
       <RestoreLocationModal
         isOpen={showRestoreModal}
-        onClose={() => setShowRestoreModal(false)}
+        onClose={() => {
+          setShowRestoreModal(false);
+          setRestoreError(null);
+        }}
         onRestore={handleRestore}
         isRestoring={isCancellingDeletion}
+        errorMessage={restoreError}
       />
     </div>
   );
 }
-

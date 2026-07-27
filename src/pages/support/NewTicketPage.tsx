@@ -158,7 +158,7 @@ export const NewTicketPage = () => {
 
       // If it was a 401 (auth issue), don't fallback — the user needs to log in again
       if (axiosErr?.response?.status === 401) {
-        toast.error('Session expired. Please log in again.');
+        toast.error(t('support.newTicket.sessionExpired'));
         setIsSubmitting(false);
         return;
       }
@@ -178,7 +178,7 @@ export const NewTicketPage = () => {
             <div className="max-w-3xl mx-auto">
               <div className="rounded-3xl border border-gray-100 bg-white dark:border-white/10 dark:bg-white/[0.03] p-10 text-center">
                 <Loader2 size={28} className="animate-spin mx-auto mb-3 text-mintcom-green" />
-                <p className="text-sm font-bold text-gray-500 dark:text-gray-400 transition-colors">Loading account...</p>
+                <p className="text-sm font-bold text-gray-500 dark:text-gray-400 transition-colors">{t('support.newTicket.loadingAccount')}</p>
               </div>
             </div>
           </div>

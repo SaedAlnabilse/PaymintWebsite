@@ -42,7 +42,6 @@ import {
   TrendingDown,
   Award,
   Target,
-  Clock,
   Timer,
   LogOut,
   Moon,

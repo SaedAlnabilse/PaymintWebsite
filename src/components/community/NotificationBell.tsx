@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
@@ -14,7 +14,7 @@ export function NotificationBell() {
   const { isAuthenticated } = useAuth();
   const [unread, setUnread] = useState(0);
 
-  const refresh = async () => {
+  const refresh = useCallback(async () => {
     if (!isAuthenticated) return;
     try {
       const data = await communityApi.getNotifications(1, 1);
@@ -22,13 +22,13 @@ export function NotificationBell() {
     } catch {
       // silent — bell is secondary
     }
-  };
+  }, [isAuthenticated]);
 
   useEffect(() => {
     refresh();
     const id = setInterval(refresh, 60_000);
     return () => clearInterval(id);
-  }, [isAuthenticated]);
+  }, [refresh]);
 
   useCommunityRealtime({
     enabled: isAuthenticated,

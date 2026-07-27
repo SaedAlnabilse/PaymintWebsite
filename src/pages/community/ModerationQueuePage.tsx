@@ -15,14 +15,7 @@ import { CommunitySkeleton } from '../../components/community/CommunitySkeleton'
  */
 export function ModerationQueuePage() {
   const { t } = useTranslation();
-  const { isAuthenticated, account } = useAuth();
-  const allowed =
-    isAuthenticated &&
-    !!(
-      account?.isSecondaryAdmin ||
-      (Array.isArray(account?.permissions) &&
-        account.permissions.includes('community_moderate'))
-    );
+  const { isAuthenticated } = useAuth();
 
   const [items, setItems] = useState<any[]>([]);
   const [page, setPage] = useState(1);

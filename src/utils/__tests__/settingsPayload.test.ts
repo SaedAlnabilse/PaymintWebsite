@@ -5,6 +5,7 @@ import {
   buildAppSettingsUpdatePayload,
   getChangedAppSettingsKeys,
   normalizeBackendTaxRateForForm,
+  MAX_SERVICE_CHARGE_PERCENT,
 } from '../settingsPayload';
 
 describe('settings update payload', () => {
@@ -81,12 +82,24 @@ describe('settings update payload', () => {
     expect(payload.holdOrderTableCount).toBe(20);
   });
 
-  it('caps service charge value at the backend limit', () => {
+  it('caps a FIXED service charge at the backend limit', () => {
+    // serviceChargeType must be set: the cap is type-dependent, and omitting it
+    // defaults to PERCENTAGE, which is capped at 100 — not the fixed limit.
     const payload = buildAppSettingsUpdatePayload({
+      serviceChargeType: 'FIXED',
       serviceChargeValue: MAX_SERVICE_CHARGE_VALUE + 1,
     });
 
     expect(payload.serviceChargeValue).toBe(MAX_SERVICE_CHARGE_VALUE);
+  });
+
+  it('caps a PERCENTAGE service charge at 100', () => {
+    const payload = buildAppSettingsUpdatePayload({
+      serviceChargeType: 'PERCENTAGE',
+      serviceChargeValue: 5000,
+    });
+
+    expect(payload.serviceChargeValue).toBe(MAX_SERVICE_CHARGE_PERCENT);
   });
 
   it('preserves receipt/profile booleans and explicit logo removal', () => {

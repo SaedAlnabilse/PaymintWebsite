@@ -144,15 +144,38 @@ export function MarkdownEditor({
 }
 
 /**
- * Client-side markdown preview (basic — not XSS-safe, used for preview only).
- * The server stores sanitized bodyHtml which is what gets rendered to users.
+ * Only http/https/mailto may reach an `href`. The escaping below neutralises
+ * tags but does nothing to a scheme, so without this a preview of
+ * `[x](javascript:...)` produced a live javascript: link.
  */
-function renderMarkdownPreview(markdown: string): string {
-  // Very basic markdown → HTML for preview (not for production rendering)
+export function safePreviewUrl(url: string): string {
+  const trimmed = url.trim();
+  // Reject control characters and whitespace, which browsers strip when
+  // resolving a URL and which are the classic way to smuggle `java\tscript:`.
+  if (/[\s<>"']/.test(trimmed)) return '#';
+  if (/^(?:https?:|mailto:)/i.test(trimmed)) return trimmed;
+  // Allow site-relative links; reject every other scheme.
+  if (/^\/(?!\/)/.test(trimmed)) return trimmed;
+  return '#';
+}
+
+/**
+ * Client-side markdown preview — what the author sees before posting.
+ *
+ * The authoritative render is the server's sanitized `bodyHtml`; this only ever
+ * shows the author their own draft, so the risk is self-XSS rather than stored
+ * XSS. It is still escaped properly: a draft can be pasted from anywhere, and
+ * "only self-XSS" stops being true the moment this helper gets reused.
+ */
+export function renderMarkdownPreview(markdown: string): string {
   return markdown
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
+    // `"` must be escaped too — the link rule below drops values into an
+    // attribute, and an unescaped quote there closes `href` and lets the rest
+    // of the URL become new attributes (e.g. onmouseover=...).
+    .replace(/"/g, '&quot;')
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.+?)\*/g, '<em>$1</em>')
     .replace(/`(.+?)`/g, '<code>$1</code>')
@@ -160,5 +183,12 @@ function renderMarkdownPreview(markdown: string): string {
     .replace(/^[-*] (.+)$/gm, '<li>$1</li>')
     .replace(/\n\n/g, '</p><p>')
     .replace(/^(.+)$/m, '<p>$1</p>')
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" rel="nofollow ugc" target="_blank">$1</a>');
+    // Runs last, so `&`, `<`, `>` and `"` in the URL are already entity-encoded
+    // by the passes above — the value cannot break out of the attribute, and
+    // re-escaping here would turn a legitimate `?a=1&b=2` into `&amp;amp;`.
+    .replace(
+      /\[([^\]]+)\]\(([^)]+)\)/g,
+      (_match, text: string, url: string) =>
+        `<a href="${safePreviewUrl(url)}" rel="nofollow ugc noopener noreferrer" target="_blank">${text}</a>`,
+    );
 }

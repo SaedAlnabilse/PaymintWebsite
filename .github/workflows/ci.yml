@@ -24,6 +24,10 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
+      # audit-level controls the failure threshold, not which findings print.
+      - name: Audit Production Dependencies (report all; block critical)
+        run: npm audit --omit=dev --audit-level=critical
+
       - name: Validate Locales (encoding + key resolution)
         run: npm run validate:locales
 

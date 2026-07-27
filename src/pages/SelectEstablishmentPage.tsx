@@ -1,8 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Store, Plus, LogOut, ChevronRight, CheckCircle2, Loader2, Crown, ArrowLeft } from 'lucide-react';
+import { Store, Plus, LogOut, ChevronRight, CheckCircle2, Loader2, Crown, ArrowLeft, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import type { Establishment } from '../types';
+import {
+  buildLocationDeletionRecoveryPath,
+  getEstablishmentSlug,
+  isManualEstablishmentDeletionPending,
+} from '../utils/deletionRecovery';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 
@@ -32,15 +38,18 @@ export function SelectEstablishmentPage() {
       // We don't show the full switching overlay for auto-redirects 
       // to avoid race conditions with the Resolver component
       setCurrentEstablishment(est);
-      const slug = est.establishmentLoginId && est.establishmentLoginId.trim().length > 0
-        ? est.establishmentLoginId
-        : est.id;
-      
-      navigate(`/dashboard/${slug}`, { replace: true });
+      const slug = getEstablishmentSlug(est);
+
+      navigate(
+        isManualEstablishmentDeletionPending(est)
+          ? buildLocationDeletionRecoveryPath(slug)
+          : `/dashboard/${encodeURIComponent(slug)}`,
+        { replace: true },
+      );
     }
   }, [account, establishments, navigate, setCurrentEstablishment]);
 
-  const handleSelect = (est: any) => {
+  const handleSelect = (est: Establishment) => {
     // Manual selection DOES show the overlay
     setSelectedName(est.name);
     setIsSwitching(true);
@@ -49,10 +58,12 @@ export function SelectEstablishmentPage() {
     setTimeout(() => {
       setCurrentEstablishment(est);
       toast.success(t('establishments.activeToast', { name: est.name }));
-      const slug = est.establishmentLoginId && est.establishmentLoginId.trim().length > 0
-        ? est.establishmentLoginId
-        : est.id;
-      navigate(`/dashboard/${slug}`);
+      const slug = getEstablishmentSlug(est);
+      navigate(
+        isManualEstablishmentDeletionPending(est)
+          ? buildLocationDeletionRecoveryPath(slug)
+          : `/dashboard/${encodeURIComponent(slug)}`,
+      );
     }, 800);
   };
 
@@ -150,13 +161,22 @@ export function SelectEstablishmentPage() {
                 <span className="px-2.5 py-1 rounded-lg bg-gray-100 dark:bg-white/5 text-[10px] font-sans font-bold text-gray-500">
                   {est.currency?.toUpperCase()}
                 </span>
-                <span className="px-2.5 py-1 rounded-lg bg-mintcom-green/10 text-[10px] font-sans font-bold text-mintcom-green border border-mintcom-green/20">
-                  {t(`common.status.${est.subscriptionStatus.toLowerCase()}`, { defaultValue: est.subscriptionStatus }).toUpperCase()}
-                </span>
+                {isManualEstablishmentDeletionPending(est) ? (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-red-50 text-[10px] font-sans font-bold text-red-600 border border-red-200 dark:bg-red-500/10 dark:border-red-500/20">
+                    <AlertTriangle size={11} />
+                    {t('settings.danger.pendingDeletion', { defaultValue: 'PENDING DELETION' })}
+                  </span>
+                ) : (
+                  <span className="px-2.5 py-1 rounded-lg bg-mintcom-green/10 text-[10px] font-sans font-bold text-mintcom-green border border-mintcom-green/20">
+                    {t(`common.status.${est.subscriptionStatus.toLowerCase()}`, { defaultValue: est.subscriptionStatus }).toUpperCase()}
+                  </span>
+                )}
               </div>
 
               <div className={`flex items-center gap-2 text-[13.5px] font-sans font-bold transition-all ${hoveredId === est.id ? 'text-mintcom-green' : 'text-gray-400'}`}>
-                {t('dashboard.menu.overview').charAt(0).toUpperCase() + t('dashboard.menu.overview').slice(1).toLowerCase()}
+                {isManualEstablishmentDeletionPending(est)
+                  ? t('account.restoreAction', { defaultValue: 'Restore' })
+                  : t('dashboard.menu.overview').charAt(0).toUpperCase() + t('dashboard.menu.overview').slice(1).toLowerCase()}
                 <ChevronRight size={14} className={t('common.locale') === 'ar' ? 'rotate-180' : ''} />
               </div>
             </motion.div>
@@ -235,5 +255,3 @@ export function SelectEstablishmentPage() {
     </div>
   );
 }
-
-

@@ -39,7 +39,6 @@ const WorkflowFeatureCard = ({
 }: {
   feature: WorkflowFeature;
   index: number;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   t: (...args: any[]) => any;
   onOpen: (index: number) => void;
 }) => {
@@ -132,7 +131,6 @@ const WorkflowFeatureModal = ({
   onPrev: () => void;
   onNext: () => void;
   onJumpTo: (i: number) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   t: (...args: any[]) => any;
   isRtl: boolean;
 }) => {

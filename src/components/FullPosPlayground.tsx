@@ -7,17 +7,13 @@ import {
   ArrowLeft,
   ArrowRight,
   BadgePercent,
-  BarChart3,
   Bell,
   BookOpen,
   Check,
   ChevronDown,
-  Clock,
   DollarSign,
-  FileText,
   Hash,
   Headphones,
-  HelpCircle,
   Home,
   Inbox,
   LayoutGrid,
@@ -27,18 +23,15 @@ import {
   LogOut,
   Menu,
   Minus,
-  Pause,
   PauseCircle,
   Package,
   Pencil,
   Percent,
   PieChart,
-  Play,
   Plus,
   Printer,
   Repeat,
   RotateCcw,
-  RefreshCw,
   Search,
   Settings,
   ShoppingBag,
@@ -388,7 +381,7 @@ const STAFF: Staff[] = [
     role: 'Cashier',
     pin: '1234',
     emoji: '',
-    accessNote: 'Full access — all screens',
+    accessNote: 'Full access to all screens',
     perms: [...ALL_PERMS],
   },
   {
@@ -406,96 +399,10 @@ const STAFF: Staff[] = [
     role: 'Manager',
     pin: '9999',
     emoji: '',
-    accessNote: 'Full access — all screens',
+    accessNote: 'Full access to all screens',
     perms: [...ALL_PERMS],
   },
 ];
-
-const CATEGORIES = [
-  { id: 'all', name: 'All Menu', emoji: '' },
-  { id: 'beverages', name: 'Beverages', emoji: '' },
-  { id: 'pastries', name: 'Pastries', emoji: '' },
-  { id: 'food', name: 'Food', emoji: '' },
-  { id: 'desserts', name: 'Desserts', emoji: '' },
-];
-
-function buildCatalog(): PosProduct[] {
-  const size: PosAttribute = {
-    id: 'size',
-    name: 'Size',
-    required: true,
-    options: [
-      { id: 's', name: 'S', price: 0 },
-      { id: 'm', name: 'M', price: 0.5 },
-      { id: 'l', name: 'L', price: 1 },
-    ],
-  };
-  const milk: PosAttribute = {
-    id: 'milk',
-    name: 'Milk',
-    options: [
-      { id: 'whole', name: 'Whole', price: 0 },
-      { id: 'oat', name: 'Oat', price: 0.75 },
-      { id: 'almond', name: 'Almond', price: 0.75 },
-    ],
-  };
-  const extras: PosAttribute = {
-    id: 'extras',
-    name: 'Extras',
-    multi: true,
-    options: [
-      { id: 'shot', name: 'Extra shot', price: 1 },
-      { id: 'syrup', name: 'Vanilla syrup', price: 0.5 },
-      { id: 'whip', name: 'Whipped cream', price: 0.5 },
-    ],
-  };
-  const heat: PosAttribute = {
-    id: 'heat',
-    name: 'Warming',
-    options: [
-      { id: 'plain', name: 'As is', price: 0 },
-      { id: 'warm', name: 'Warmed', price: 0.25 },
-    ],
-  };
-  const dressing: PosAttribute = {
-    id: 'dressing',
-    name: 'Dressing',
-    options: [
-      { id: 'ranch', name: 'Ranch', price: 0 },
-      { id: 'caesar', name: 'Caesar', price: 0 },
-      { id: 'balsamic', name: 'Balsamic', price: 0.5 },
-    ],
-  };
-  const toppings: PosAttribute = {
-    id: 'toppings',
-    name: 'Add-ons',
-    multi: true,
-    options: [
-      { id: 'cheese', name: 'Extra cheese', price: 1 },
-      { id: 'avocado', name: 'Avocado', price: 1.5 },
-      { id: 'bacon', name: 'Bacon', price: 1.5 },
-    ],
-  };
-
-  return [
-    { id: 'espresso', name: 'Espresso', price: 3.5, emoji: '', categoryId: 'beverages', attributes: [size, extras] },
-    { id: 'latte', name: 'Latte', price: 4.5, emoji: '', categoryId: 'beverages', attributes: [size, milk, extras] },
-    { id: 'cappuccino', name: 'Cappuccino', price: 4.25, emoji: '', categoryId: 'beverages', attributes: [size, milk, extras] },
-    { id: 'coldbrew', name: 'Cold brew', price: 4.75, emoji: '', categoryId: 'beverages', attributes: [size, milk] },
-    { id: 'soda', name: 'Soda', price: 2.5, emoji: '', categoryId: 'beverages', attributes: [size] },
-    { id: 'tea', name: 'Tea', price: 2.75, emoji: '', categoryId: 'beverages', attributes: [size, milk] },
-    { id: 'croissant', name: 'Croissant', price: 4, emoji: '', categoryId: 'pastries', attributes: [heat] },
-    { id: 'muffin', name: 'Muffin', price: 3.25, emoji: '', categoryId: 'pastries', attributes: [heat] },
-    { id: 'bagel', name: 'Bagel', price: 3.75, emoji: '', categoryId: 'pastries', attributes: [heat, toppings] },
-    { id: 'cookie', name: 'Cookie', price: 2, emoji: '', categoryId: 'pastries' },
-    { id: 'salad', name: 'Garden salad', price: 6.5, emoji: '', categoryId: 'food', attributes: [dressing, toppings] },
-    { id: 'sandwich', name: 'Club sandwich', price: 7.5, emoji: '', categoryId: 'food', attributes: [toppings] },
-    { id: 'soup', name: 'Soup of day', price: 5.5, emoji: '', categoryId: 'food', attributes: [size] },
-    { id: 'wrap', name: 'Chicken wrap', price: 8, emoji: '', categoryId: 'food', attributes: [toppings] },
-    { id: 'cheesecake', name: 'Cheesecake', price: 5.5, emoji: '', categoryId: 'desserts' },
-    { id: 'brownie', name: 'Brownie', price: 3.5, emoji: '', categoryId: 'desserts', attributes: [heat] },
-  ];
-}
 
 export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
   const [catalog, setCatalog] = useState(() => createInitialCatalog());
@@ -507,8 +414,6 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
   const [screen, setScreen] = useState<Screen>('dashboard');
   const notifUnread = 3; // seed unread stock/system alerts in notifications center
   const [staff, setStaff] = useState<Staff | null>(null);
-  const [pin, setPin] = useState('');
-  const [pinError, setPinError] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [catOpen, setCatOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -551,7 +456,6 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
   const [loyaltyCustomer, setLoyaltyCustomer] = useState<DemoLoyaltyCustomer | null>(null);
   const [appliedLoyaltyReward, setAppliedLoyaltyReward] = useState<DemoAppliedReward | null>(null);
   const [orderNo, setOrderNo] = useState(1042);
-  const [payMethod, setPayMethod] = useState<PayMethod | null>(null);
   const [lastReceipt, setLastReceipt] = useState<{
     lines: CartLine[];
     total: number;
@@ -580,8 +484,7 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
   const [editLineId, setEditLineId] = useState<string | null>(null);
   const [lastAdded, setLastAdded] = useState<string | null>(null);
   const [shift, setShift] = useState<DemoShift>(() => emptyShift());
-  const [now, setNow] = useState(() => new Date());
-  const [flash, setFlash] = useState<string | null>(null);
+  const [, setFlash] = useState<string | null>(null);
   const [mobileCartOpen, setMobileCartOpen] = useState(false);
   /** When true, Dashboard auto-opens the Open Shift amount popup */
   const [promptOpenShift, setPromptOpenShift] = useState(false);
@@ -663,11 +566,6 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
     setShowSplitPanel(true);
     setMobileCartOpen(false);
   };
-
-  useEffect(() => {
-    const id = window.setInterval(() => setNow(new Date()), 30_000);
-    return () => window.clearInterval(id);
-  }, []);
 
   // Lock document to a true full-screen POS shell (no body/page scroll)
   useEffect(() => {
@@ -1150,30 +1048,6 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
     ping('Order cleared');
   };
 
-  const submitPin = (digit?: string) => {
-    const next = digit !== undefined ? (pin + digit).slice(0, 4) : pin;
-    if (digit !== undefined) setPin(next);
-    const value = digit !== undefined ? next : pin;
-    if (value.length < 4) return;
-    const match = STAFF.find((s) => s.pin === value);
-    if (!match) {
-      setPinError(true);
-      setPin('');
-      window.setTimeout(() => setPinError(false), 500);
-      return;
-    }
-    setStaff(match);
-    setPin('');
-    setPhase('app');
-    // Land on first allowed screen
-    const home = match.perms.includes('dashboard')
-      ? 'dashboard'
-      : match.perms.includes('sales')
-        ? 'sales'
-        : 'support';
-    setScreen(home);
-  };
-
   const finalizeSale = (
     method: PayMethod,
     methodLabel: string,
@@ -1181,7 +1055,6 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
   ) => {
     if (!cart.length) return;
     if (!requireOpenShiftForPayment()) return;
-    setPayMethod(method);
     const methodBucket: 'cash' | 'card' | 'other' =
       method === 'cash' ? 'cash' : method === 'card' ? 'card' : method === 'split' ? 'other' : 'other';
     // For split, bucket is mixed — track real amounts from `amounts`
@@ -1299,7 +1172,7 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
     // (onOpenShiftSuccessDismiss) — same as real POS.
   };
 
-  const closeShift = (_actualCash: number) => {
+  const closeShift = () => {
     setShift(emptyShift());
     ping('Shift closed');
   };
@@ -1337,8 +1210,6 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
     setShowReceipt(false);
     setPhase('login');
   };
-
-  const timeLabel = now.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
 
   /* ─── Store Connection ─── */
   if (phase === 'connect') {
@@ -1648,7 +1519,6 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
               onOpenShift={openShift}
               onCloseShift={closeShift}
               onGoSales={() => goScreen('sales')}
-              onGoOrders={() => goScreen('reports')}
               onSignOut={clockOut}
               autoOpenShiftModal={promptOpenShift}
               onAutoOpenShiftModalHandled={() => setPromptOpenShift(false)}
@@ -1940,7 +1810,7 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
                   {trainingMode && (
                     <div className="mt-2.5 flex items-center gap-2 rounded-xl border border-amber-600/30 bg-amber-50 px-3 py-1.5 text-[11px] font-bold text-amber-800 dark:bg-amber-900/30 dark:text-amber-200">
                       <BookOpen size={13} />
-                      Training mode — practice sales only, not recorded
+                      Training mode: practice sales only, not recorded
                     </div>
                   )}
                 </header>
@@ -2067,7 +1937,6 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
                 orderNo={orderNo}
                 cart={cart}
                 orderType={orderType}
-                setOrderType={setOrderType}
                 discountPct={discountPct}
                 discountName={discountName}
                 orderDiscounts={[...ORDER_DISCOUNTS]}
@@ -2094,7 +1963,6 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
                 }
                 serviceChargeEditDisabled={cart.length === 0}
                 total={total}
-                itemCount={itemCount}
                 onShowNote={() => {
                   if (!cart.length) { ping('Add items first'); return; }
                   setNoteModalOpen(true);
@@ -2582,7 +2450,6 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
                   orderNo={orderNo}
                   cart={cart}
                   orderType={orderType}
-                  setOrderType={setOrderType}
                   discountPct={discountPct}
                   discountName={discountName}
                   orderDiscounts={[...ORDER_DISCOUNTS]}
@@ -2609,7 +2476,6 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
                   }
                   serviceChargeEditDisabled={cart.length === 0}
                   total={total}
-                  itemCount={itemCount}
                   onShowNote={() => {
                     if (!cart.length) { ping('Add items first'); return; }
                     setNoteModalOpen(true);
@@ -3097,7 +2963,7 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
                 </h3>
                 <p className="mb-4 text-[15px] text-text-secondary dark:text-mintcom-textSecondary">
                   {trainingMode
-                    ? 'Training only — no real sale, stock, or report entry'
+                    ? 'Training only: no real sale, stock, or report entry'
                     : 'Transaction completed successfully'}
                 </p>
 
@@ -3220,13 +3086,52 @@ function EmptyCartIcon({
   );
 }
 
+function ActionBtn({
+  title,
+  onClick,
+  disabled,
+  danger,
+  activeGreen,
+  children,
+  badge,
+}: {
+  title: string;
+  onClick: () => void;
+  disabled?: boolean;
+  danger?: boolean;
+  activeGreen?: boolean;
+  children: ReactNode;
+  badge?: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      title={title}
+      aria-label={title}
+      onClick={onClick}
+      disabled={disabled}
+      className={`relative flex h-[42px] flex-1 items-center justify-center rounded-xl !text-white shadow-[0_1px_2px_rgba(0,0,0,0.12)] transition-opacity disabled:opacity-60 ${
+        disabled
+          ? 'bg-[#9CA3AF]'
+          : danger
+            ? 'bg-[#D55263]'
+            : activeGreen
+              ? 'bg-[#22c55e]'
+              : 'bg-[#7dc6a2]'
+      }`}
+    >
+      {children}
+      {badge}
+    </button>
+  );
+}
+
 /* ─── Order panel (desktop + mobile sheet) ─── */
 function OrderPanel({
   className = '',
   orderNo,
   cart,
   orderType,
-  setOrderType,
   discountPct,
   discountName,
   orderDiscounts = [],
@@ -3245,7 +3150,6 @@ function OrderPanel({
   onEditServiceCharge,
   serviceChargeEditDisabled = false,
   total,
-  itemCount,
   onShowNote,
   onHold,
   onClear,
@@ -3273,7 +3177,6 @@ function OrderPanel({
   orderNo: number;
   cart: CartLine[];
   orderType: OrderType;
-  setOrderType: (t: OrderType) => void;
   discountPct: number;
   discountName?: string | null;
   orderDiscounts?: ReadonlyArray<{ id: string; name: string; pct: number }>;
@@ -3293,7 +3196,6 @@ function OrderPanel({
   /** POS disables SC edit when cart is empty but still shows the row */
   serviceChargeEditDisabled?: boolean;
   total: number;
-  itemCount: number;
   onShowNote: () => void;
   onHold: () => void;
   onClear: () => void;
@@ -3412,45 +3314,6 @@ function OrderPanel({
     if (empty) return;
     setDiscountOpen((v) => !v);
   };
-
-  /** Shared equal-width green action button — mirrors POS actionIconBtn */
-  const ActionBtn = ({
-    title,
-    onClick,
-    disabled,
-    danger,
-    activeGreen,
-    children,
-    badge,
-  }: {
-    title: string;
-    onClick: () => void;
-    disabled?: boolean;
-    danger?: boolean;
-    activeGreen?: boolean;
-    children: ReactNode;
-    badge?: ReactNode;
-  }) => (
-    <button
-      type="button"
-      title={title}
-      aria-label={title}
-      onClick={onClick}
-      disabled={disabled}
-      className={`relative flex h-[42px] flex-1 items-center justify-center rounded-xl !text-white shadow-[0_1px_2px_rgba(0,0,0,0.12)] transition-opacity disabled:opacity-60 ${
-        disabled
-          ? 'bg-[#9CA3AF]'
-          : danger
-            ? 'bg-[#D55263]'
-            : activeGreen
-              ? 'bg-[#22c55e]'
-              : 'bg-[#7dc6a2]'
-      }`}
-    >
-      {children}
-      {badge}
-    </button>
-  );
 
   const noteLine = lineNoteEdit
     ? cart.find((l) => l.id === lineNoteEdit.id) ?? null
@@ -4942,38 +4805,6 @@ function HoldOrderModal({
   );
 }
 
-function IconBtn({
-  children,
-  onClick,
-  label,
-  active,
-  danger,
-}: {
-  children: ReactNode;
-  onClick: () => void;
-  label: string;
-  active?: boolean;
-  danger?: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      title={label}
-      aria-label={label}
-      onClick={onClick}
-      className={`flex h-9 w-9 items-center justify-center rounded-xl !text-white shadow-sm transition-transform active:scale-95 ${
-        danger
-          ? 'bg-mintcom-red'
-          : active
-            ? 'bg-mintcom-greenDark'
-            : 'bg-mintcom-green'
-      }`}
-    >
-      {children}
-    </button>
-  );
-}
-
 function PayTile({
   label,
   icon,
@@ -5006,81 +4837,6 @@ function Row({ label, value }: { label: string; value: string }) {
       <span>{label}</span>
       <span className="tabular-nums">{value}</span>
     </div>
-  );
-}
-
-function DemoChrome({
-  staff,
-  timeLabel,
-  flash,
-  onExit,
-}: {
-  staff?: Staff | null;
-  timeLabel?: string;
-  flash?: string | null;
-  onExit: (() => void) | null;
-}) {
-  return (
-    <header className="flex shrink-0 items-center justify-between gap-2 border-b border-gray-200 bg-white/90 px-3 py-2 backdrop-blur-xl dark:border-mintcom-tertiary dark:bg-mintcom-surface/90 sm:px-4">
-      <div className="flex min-w-0 items-center gap-2">
-        <Link
-          to="/"
-          className="inline-flex items-center gap-1.5 rounded-xl px-2 py-1.5 text-xs font-bold text-text-secondary transition-colors hover:bg-cream-100 hover:text-mintcom-green dark:text-mintcom-textSecondary dark:hover:bg-white/10"
-        >
-          <ArrowLeft size={14} />
-          <span className="hidden sm:inline">Website</span>
-        </Link>
-        <div className="hidden h-4 w-px bg-gray-200 dark:bg-mintcom-tertiary sm:block" />
-        <div className="flex min-w-0 items-center gap-2">
-          <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-mintcom-green opacity-60" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-mintcom-green" />
-          </span>
-          <div className="min-w-0">
-            <p className="truncate text-xs font-black text-text-primary dark:text-white sm:text-sm">
-              Mintcom POS · Demo
-            </p>
-            <p className="truncate text-[10px] text-text-tertiary dark:text-mintcom-gray">
-              Sandbox · matches live sales screen
-            </p>
-          </div>
-        </div>
-      </div>
-      <div className="flex items-center gap-2">
-        <AnimatePresence>
-          {flash && (
-            <motion.span
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className="hidden rounded-full bg-mintcom-green px-2.5 py-0.5 text-[10px] font-black text-white sm:inline"
-            >
-              {flash}
-            </motion.span>
-          )}
-        </AnimatePresence>
-        {staff && (
-          <span className="hidden items-center gap-1.5 rounded-full border border-gray-200 bg-cream-50 px-2.5 py-1 text-[11px] font-bold dark:border-white/10 dark:bg-mintcom-dark sm:inline-flex">
-            {staff.name}
-          </span>
-        )}
-        {timeLabel && (
-          <span className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-cream-50 px-2.5 py-1 text-[11px] font-semibold text-text-secondary dark:border-white/10 dark:bg-mintcom-dark dark:text-mintcom-textSecondary">
-            <Clock size={12} className="text-mintcom-green" />
-            {timeLabel}
-          </span>
-        )}
-        {onExit && (
-          <button
-            type="button"
-            onClick={onExit}
-            className="rounded-xl border border-gray-200 px-2.5 py-1.5 text-[11px] font-bold text-text-secondary hover:bg-cream-100 dark:border-white/10 dark:text-mintcom-textSecondary dark:hover:bg-white/10"
-          >
-            Exit
-          </button>
-        )}
-      </div>
-    </header>
   );
 }
 
@@ -5426,7 +5182,6 @@ function ServiceChargeEditModal({
 
   if (!open) return null;
 
-  const value = cents / 100;
   const display =
     type === 'PERCENTAGE'
       ? (cents / 100).toFixed(2)
@@ -5568,11 +5323,9 @@ function ServiceChargeEditModal({
 function PaymentCheckoutPanel({
   cart,
   orderNo,
-  orderType: _orderType,
   orderNote = '',
   subtotal,
   discount,
-  discountPct: _discountPct,
   tax,
   taxRate = 8,
   total,
@@ -5580,7 +5333,6 @@ function PaymentCheckoutPanel({
   onClose,
   onComplete,
   staffName = 'Cashier',
-  businessName: _businessName = 'Cafe Delight',
 }: {
   cart: CartLine[];
   orderNo: number;

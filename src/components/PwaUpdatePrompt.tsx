@@ -1,7 +1,9 @@
 import { RefreshCw, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 export function PwaUpdatePrompt() {
+  const { t } = useTranslation();
   const {
     needRefresh: [needRefresh, setNeedRefresh],
     updateServiceWorker,
@@ -19,21 +21,21 @@ export function PwaUpdatePrompt() {
     >
       <RefreshCw className="mt-0.5 h-5 w-5 flex-shrink-0 text-[#2D7A55]" aria-hidden="true" />
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold">New Mintcom Version Ready</p>
+        <p className="text-sm font-semibold">{t('pwa.updateTitle')}</p>
         <p className="mt-1 text-sm text-slate-600">
-          Update now to reload the latest cached app version.
+          {t('pwa.updateBody')}
         </p>
         <button
           type="button"
           className="mt-3 rounded-md bg-[#2D7A55] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[#236244] focus:outline-none focus:ring-2 focus:ring-[#7dc6a2] focus:ring-offset-2"
           onClick={() => void updateServiceWorker(true)}
         >
-          Update and reload
+          {t('pwa.updateAction')}
         </button>
       </div>
       <button
         type="button"
-        aria-label="Dismiss update prompt"
+        aria-label={t('pwa.dismiss')}
         className="rounded-md p-1 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#7dc6a2]"
         onClick={() => setNeedRefresh(false)}
       >

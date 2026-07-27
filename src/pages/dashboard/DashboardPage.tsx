@@ -1,5 +1,11 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import {
+  useLocation,
+  useNavigate,
+  useOutletContext,
+  useParams,
+  useSearchParams,
+} from 'react-router-dom';
 import {
   FileBarChart,
   Calendar,
@@ -12,7 +18,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { format, subHours } from 'date-fns';
 import api from '../../config/api';
 import { useAuth } from '../../context/AuthContext';
-import { useTheme } from '../../context/ThemeContext';
 import { useRealtime } from '../../hooks/useRealtime';
 import { DataChangeEventTypes } from '../../services/realtimeService';
 import { useTranslation } from 'react-i18next';
@@ -30,6 +35,7 @@ import type {
 
 // Sub-components
 import { TourGuide } from '../../components/TourGuide';
+import { SetupGuideWelcomeModal } from '../../components/dashboard/SetupGuideWelcomeModal';
 import { DashboardStatsCards } from '../../components/dashboard/overview/DashboardStatsCards';
 import { RevenueChart } from '../../components/dashboard/overview/RevenueChart';
 import { PaymentMethodsBreakdown } from '../../components/dashboard/overview/PaymentMethodsBreakdown';
@@ -47,73 +53,26 @@ import {
   normalizeDashboardStats,
   normalizePeakHours,
 } from '../../utils/reportFallbacks';
+import type { SetupGuideController } from '../../hooks/useSetupGuideFirstRun';
 
 // View mode types
 type ViewMode = 'current_shift' | 'previous_shift' | 'last_24_hours';
 
 // Auto-refresh interval: 1 hour in milliseconds
 const AUTO_REFRESH_INTERVAL = 60 * 60 * 1000;
-const NEW_LOCATION_WELCOME_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
-const DASHBOARD_SETUP_STORAGE_VERSION = 'v6';
-const DASHBOARD_WELCOME_SEEN_STORAGE_VERSION = 'v1';
-const DASHBOARD_WELCOME_OVERLAY_ID = 'mintcom-dashboard-welcome-popup';
-const DASHBOARD_SETUP_DISMISSED_COMPAT_VERSIONS = ['v3', 'v4', 'v5', 'v6'] as const;
-
-const getBrowserStorage = (type: 'localStorage' | 'sessionStorage'): Storage | null => {
-  if (typeof window === 'undefined') {
-    return null;
-  }
-
-  try {
-    return window[type];
-  } catch {
-    return null;
-  }
-};
-
-const readStorageFlag = (storage: Storage | null, key: string) => {
-  try {
-    return storage?.getItem(key) === 'true';
-  } catch {
-    return false;
-  }
-};
-
-const writeStorageFlag = (storage: Storage | null, key: string) => {
-  try {
-    storage?.setItem(key, 'true');
-  } catch {
-    // Storage can be unavailable in strict privacy modes; the in-memory guard still prevents repeats in this tab.
-  }
-};
-
-const removeStorageItem = (storage: Storage | null, key: string) => {
-  try {
-    storage?.removeItem(key);
-  } catch {
-    // Ignore unavailable storage.
-  }
-};
-
-const welcomeSeenKey = (scope: string, locationKey: string) =>
-  `mintcom.dashboard.welcome.seen.${DASHBOARD_WELCOME_SEEN_STORAGE_VERSION}.${scope}${locationKey}`;
-
-const setupDismissedKey = (version: string, scope: string, locationKey: string) =>
-  `mintcom.dashboard.setup.dismissed.${version}.${scope}${locationKey}`;
-
-const setupSessionDismissedKey = (version: string, scope: string, locationKey: string) =>
-  `mintcom.dashboard.setup.session.dismissed.${version}.${scope}${locationKey}`;
 
 export const DashboardPage = () => {
   const { t } = useTranslation();
   const isRTL = t('common.locale') === 'ar';
   const { currencySymbol } = useCurrency();
-  const { resolvedTheme } = useTheme();
   const { locationSlug } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { currentEstablishment, account } = useAuth();
+  const { setupGuide } = useOutletContext<{
+    setupGuide: SetupGuideController;
+  }>();
   const accountRole = ((account as { role?: string } | null)?.role || '')
     .toString()
     .toUpperCase();
@@ -140,66 +99,9 @@ export const DashboardPage = () => {
   
   // Modals
   const [showPayInOutModal, setShowPayInOutModal] = useState(false);
-  const [showWelcomePopup, setShowWelcomePopup] = useState(false);
   const [showTasksTour, setShowTasksTour] = useState(false);
-  const welcomeHandledRef = useRef<string | null>(null);
-  const scopedStoragePrefix = `${account?.id || 'anonymous'}.`;
-  const primaryLocationKey = useMemo(
-    () => currentEstablishment?.id || currentEstablishment?.establishmentLoginId || locationSlug || null,
-    [currentEstablishment?.establishmentLoginId, currentEstablishment?.id, locationSlug],
-  );
-  const locationStorageKeys = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          [locationSlug, currentEstablishment?.establishmentLoginId, currentEstablishment?.id].filter(
-            Boolean,
-          ) as string[],
-        ),
-      ),
-    [currentEstablishment?.establishmentLoginId, currentEstablishment?.id, locationSlug],
-  );
-  const dashboardSetupKey = currentEstablishment?.id || currentEstablishment?.establishmentLoginId || locationSlug || null;
+  const setupReplayRequestRef = useRef<string | null>(null);
   const isSetupLaunchRequest = searchParams.get('setup') === '1' || searchParams.get('welcome') === '1';
-  const hasSeenWelcomeForLocation = useCallback(() => {
-    const local = getBrowserStorage('localStorage');
-    const session = getBrowserStorage('sessionStorage');
-
-    return locationStorageKeys.some((key) => {
-      const hasVersionedDismissal = DASHBOARD_SETUP_DISMISSED_COMPAT_VERSIONS.some(
-        (version) =>
-          readStorageFlag(local, setupDismissedKey(version, scopedStoragePrefix, key)) ||
-          readStorageFlag(session, setupSessionDismissedKey(version, scopedStoragePrefix, key)),
-      );
-
-      return (
-        readStorageFlag(local, welcomeSeenKey(scopedStoragePrefix, key)) ||
-        readStorageFlag(local, `mintcom.dashboard.visited.${key}`) ||
-        readStorageFlag(local, `mintcom.dashboard.setup.dismissed.${key}`) ||
-        hasVersionedDismissal
-      );
-    });
-  }, [locationStorageKeys, scopedStoragePrefix]);
-  const markWelcomeSeenForLocation = useCallback(() => {
-    if (!primaryLocationKey || locationStorageKeys.length === 0) {
-      return;
-    }
-
-    const local = getBrowserStorage('localStorage');
-    const session = getBrowserStorage('sessionStorage');
-
-    writeStorageFlag(
-      session,
-      setupSessionDismissedKey(DASHBOARD_SETUP_STORAGE_VERSION, scopedStoragePrefix, primaryLocationKey),
-    );
-
-    locationStorageKeys.forEach((key) => {
-      writeStorageFlag(local, welcomeSeenKey(scopedStoragePrefix, key));
-      writeStorageFlag(local, setupDismissedKey(DASHBOARD_SETUP_STORAGE_VERSION, scopedStoragePrefix, key));
-      writeStorageFlag(local, `mintcom.dashboard.visited.${key}`);
-      removeStorageItem(local, `mintcom.dashboard.welcome.pending.${key}`);
-    });
-  }, [locationStorageKeys, primaryLocationKey, scopedStoragePrefix]);
   const clearSetupLaunchParams = useCallback(() => {
     if (!isSetupLaunchRequest) {
       return;
@@ -217,338 +119,66 @@ export const DashboardPage = () => {
       { replace: true },
     );
   }, [isSetupLaunchRequest, location.pathname, navigate, searchParams]);
-  const isRecentlyCreatedLocation = useMemo(() => {
-    if (!currentEstablishment?.createdAt) {
-      return false;
-    }
-
-    const createdAtMs = Date.parse(currentEstablishment.createdAt);
-    if (!Number.isFinite(createdAtMs)) {
-      return false;
-    }
-
-    const ageMs = Date.now() - createdAtMs;
-    return ageMs >= 0 && ageMs <= NEW_LOCATION_WELCOME_WINDOW_MS;
-  }, [currentEstablishment?.createdAt]);
-
-  // Check if setup welcome should open for this dashboard tab.
-  useEffect(() => {
-    if (!dashboardSetupKey || !primaryLocationKey || locationStorageKeys.length === 0) {
-      return;
-    }
-
-    if (showWelcomePopup || welcomeHandledRef.current === primaryLocationKey) {
-      return;
-    }
-
-    const local = getBrowserStorage('localStorage');
-    const hasPendingWelcome = locationStorageKeys.some((key) =>
-      readStorageFlag(local, `mintcom.dashboard.welcome.pending.${key}`),
-    );
-    const hasSeenWelcome = hasSeenWelcomeForLocation();
-    const shouldShowWelcome = !hasSeenWelcome;
-
-    const debugState = {
-      version: DASHBOARD_SETUP_STORAGE_VERSION,
-      welcomeSeenVersion: DASHBOARD_WELCOME_SEEN_STORAGE_VERSION,
-      pathname: location.pathname,
-      accountId: account?.id || null,
-      currentEstablishmentId: currentEstablishment?.id || null,
-      currentEstablishmentLoginId: currentEstablishment?.establishmentLoginId || null,
-      locationSlug: locationSlug || null,
-      locationKeys: locationStorageKeys,
-      primaryLocationKey,
-      hasPendingWelcome,
-      hasSeenWelcome,
-      isRecentlyCreatedLocation,
-      isSetupLaunchRequest,
-      isLoading,
-      shouldShowWelcome,
-      showWelcomePopup,
-    };
-
-    (window as any).__mintcomSetupDebug = debugState;
-    (window as any).__mintcomShowSetupPopup = () => {
-      welcomeHandledRef.current = null;
-      markWelcomeSeenForLocation();
-      setShowWelcomePopup(true);
-    };
-
-    welcomeHandledRef.current = primaryLocationKey;
-
-    if (shouldShowWelcome) {
-      markWelcomeSeenForLocation();
-      setShowWelcomePopup(true);
-      return;
-    }
-
-    if (hasPendingWelcome) {
-      markWelcomeSeenForLocation();
-    }
-
-    if (isSetupLaunchRequest) {
-      clearSetupLaunchParams();
-    }
-  }, [
-    dashboardSetupKey,
-    account?.id,
-    clearSetupLaunchParams,
-    currentEstablishment?.establishmentLoginId,
-    currentEstablishment?.id,
-    hasSeenWelcomeForLocation,
-    isLoading,
-    isRecentlyCreatedLocation,
-    isSetupLaunchRequest,
-    location.pathname,
-    locationSlug,
-    locationStorageKeys,
-    markWelcomeSeenForLocation,
-    primaryLocationKey,
-    scopedStoragePrefix,
-    showWelcomePopup,
-  ]);
 
   useEffect(() => {
-    if (!showWelcomePopup) {
+    if (!isSetupLaunchRequest || !currentEstablishment?.id) {
+      setupReplayRequestRef.current = null;
       return;
     }
 
-    document.body.classList.remove('app-loading');
-    console.log('[Mintcom Setup Debug] showWelcomePopup state is true');
-    const timer = window.setTimeout(() => {
-      console.log('[Mintcom Setup Debug] popup DOM render check', {
-        exists: Boolean(document.getElementById('mintcom-dashboard-welcome-popup')),
-        bodyClass: document.body.className,
-      });
-    }, 50);
+    const replayKey = `${currentEstablishment.id}:${location.search}`;
+    if (setupReplayRequestRef.current === replayKey) return;
+    setupReplayRequestRef.current = replayKey;
 
-    return () => window.clearTimeout(timer);
-  }, [showWelcomePopup]);
-
-  useEffect(() => {
-    if (!showWelcomePopup) {
-      document.getElementById(DASHBOARD_WELCOME_OVERLAY_ID)?.remove();
-      return;
-    }
-
-    document.getElementById(DASHBOARD_WELCOME_OVERLAY_ID)?.remove();
-    document.body.classList.remove('app-loading');
-
-    const isDark = resolvedTheme === 'dark';
-    const palette = isDark
-      ? {
-          overlayBg: 'rgba(0, 0, 0, 0.72)',
-          cardBg: '#0F172A',
-          cardBorder: '1px solid rgba(255, 255, 255, 0.12)',
-          cardShadow: '0 24px 80px rgba(0, 0, 0, 0.45)',
-          titleColor: '#fff',
-          messageColor: '#CBD5E1',
-          iconBg: 'rgba(124, 195, 159, 0.14)',
-          closeBg: 'transparent',
-          closeBorder: '1px solid rgba(255, 255, 255, 0.05)',
-          closeColor: '#9CA3AF',
-        }
-      : {
-          overlayBg: 'rgba(15, 23, 42, 0.45)',
-          cardBg: '#FFFFFF',
-          cardBorder: '1px solid rgba(15, 23, 42, 0.08)',
-          cardShadow: '0 24px 80px rgba(15, 23, 42, 0.18)',
-          titleColor: '#0F172A',
-          messageColor: '#475569',
-          iconBg: 'rgba(124, 195, 159, 0.18)',
-          closeBg: '#FFFFFF',
-          closeBorder: '1px solid #E5E7EB',
-          closeColor: '#9CA3AF',
-        };
-
-    const overlay = document.createElement('div');
-    overlay.id = DASHBOARD_WELCOME_OVERLAY_ID;
-    overlay.dir = isRTL ? 'rtl' : 'ltr';
-    overlay.style.position = 'fixed';
-    overlay.style.inset = '0';
-    overlay.style.zIndex = '2147483647';
-    overlay.style.display = 'flex';
-    overlay.style.alignItems = 'center';
-    overlay.style.justifyContent = 'center';
-    overlay.style.padding = '16px';
-    overlay.style.background = palette.overlayBg;
-    overlay.style.backdropFilter = 'blur(6px)';
-    overlay.style.pointerEvents = 'auto';
-
-    const card = document.createElement('div');
-    card.style.width = '100%';
-    card.style.maxWidth = '384px';
-    card.style.borderRadius = '32px';
-    card.style.border = palette.cardBorder;
-    card.style.background = palette.cardBg;
-    card.style.color = palette.titleColor;
-    card.style.boxShadow = palette.cardShadow;
-    card.style.position = 'relative';
-    card.style.overflow = 'hidden';
-    card.style.fontFamily = 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-
-    const content = document.createElement('div');
-    content.style.padding = '32px 24px';
-    content.style.display = 'flex';
-    content.style.flexDirection = 'column';
-    content.style.alignItems = 'center';
-    content.style.textAlign = 'center';
-
-    const icon = document.createElement('div');
-    icon.style.width = '64px';
-    icon.style.height = '64px';
-    icon.style.borderRadius = '999px';
-    icon.style.display = 'flex';
-    icon.style.alignItems = 'center';
-    icon.style.justifyContent = 'center';
-    icon.style.marginBottom = '16px';
-    icon.style.fontSize = '30px';
-    icon.style.fontWeight = '800';
-    icon.style.color = '#7dc6a2';
-    icon.style.background = palette.iconBg;
-    icon.innerHTML = `
-      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#7dc6a2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M5.8 11.3 2 22l10.7-3.79" />
-        <path d="M4 3h.01" />
-        <path d="M22 8h.01" />
-        <path d="M15 2h.01" />
-        <path d="M22 20h.01" />
-        <path d="m22 2-2.24.75a2.9 2.9 0 0 0-1.96 3.12c.1.86-.57 1.63-1.45 1.63h-.38c-.86 0-1.6.6-1.76 1.44L14 10" />
-        <path d="m22 13-.82-.33c-.86-.34-1.82.2-1.98 1.11-.11.7-.72 1.22-1.43 1.22H17" />
-        <path d="m11 2 .33.82c.34.86-.2 1.82-1.11 1.98C9.52 4.91 9 5.52 9 6.23V7" />
-        <path d="M11 13c1.93 1.93 2.83 4.17 2 5-.83.83-3.07-.07-5-2-1.93-1.93-2.83-4.17-2-5 .83-.83 3.07.07 5 2Z" />
-      </svg>
-    `;
-
-    const title = document.createElement('h3');
-    title.style.margin = '0 0 8px';
-    title.style.fontSize = '24px';
-    title.style.fontWeight = '800';
-    title.style.color = palette.titleColor;
-    title.style.display = 'flex';
-    title.style.alignItems = 'center';
-    title.style.justifyContent = 'center';
-    title.style.gap = '8px';
-    const titleText = document.createElement('span');
-    titleText.textContent = t('common.congratulations');
-    const titleIcon = document.createElement('span');
-    titleIcon.textContent = '🎉';
-    titleIcon.setAttribute('aria-hidden', 'true');
-    title.append(titleText, titleIcon);
-
-    const message = document.createElement('p');
-    message.textContent = t('dashboard.welcome.message', {
-      location: currentEstablishment?.name || 'this location',
-    });
-    message.style.margin = '0 0 24px';
-    message.style.color = palette.messageColor;
-    message.style.lineHeight = '1.6';
-    message.style.fontSize = '14px';
-
-    const startButton = document.createElement('button');
-    startButton.type = 'button';
-    startButton.textContent = t('dashboard.welcome.startGuide');
-    startButton.style.width = '100%';
-    startButton.style.border = '0';
-    startButton.style.borderRadius = '14px';
-    startButton.style.padding = '14px 16px';
-    startButton.style.background = '#7dc6a2';
-    startButton.style.color = '#07110B';
-    startButton.style.fontWeight = '800';
-    startButton.style.cursor = 'pointer';
-    startButton.style.boxShadow = '0 16px 36px rgba(124, 195, 159, 0.28)';
-
-    const closeButton = document.createElement('button');
-    closeButton.type = 'button';
-    closeButton.innerHTML = `
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M18 6 6 18" />
-        <path d="m6 6 12 12" />
-      </svg>
-    `;
-    closeButton.setAttribute('aria-label', t('common.close'));
-    closeButton.style.position = 'absolute';
-    closeButton.style.top = '14px';
-    closeButton.style.right = isRTL ? 'auto' : '14px';
-    closeButton.style.left = isRTL ? '14px' : 'auto';
-    closeButton.style.width = '36px';
-    closeButton.style.height = '36px';
-    closeButton.style.display = 'flex';
-    closeButton.style.alignItems = 'center';
-    closeButton.style.justifyContent = 'center';
-    closeButton.style.border = palette.closeBorder;
-    closeButton.style.borderRadius = '12px';
-    closeButton.style.background = palette.closeBg;
-    closeButton.style.color = palette.closeColor;
-    closeButton.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)';
-    closeButton.style.lineHeight = '1';
-    closeButton.style.cursor = 'pointer';
-
-    content.append(icon, title, message, startButton);
-    card.append(content, closeButton);
-    overlay.append(card);
-    document.body.append(overlay);
-
-    console.log('[Mintcom Setup Debug] imperative overlay appended', {
-      exists: Boolean(document.getElementById(DASHBOARD_WELCOME_OVERLAY_ID)),
-    });
-
-    const close = () => handleCloseWelcome();
-    const start = () => handleStartTasks();
-
-    overlay.addEventListener('click', close);
-    card.addEventListener('click', (event) => event.stopPropagation());
-    closeButton.addEventListener('click', close);
-    startButton.addEventListener('click', start);
-
-    return () => {
-      overlay.removeEventListener('click', close);
-      closeButton.removeEventListener('click', close);
-      startButton.removeEventListener('click', start);
-      overlay.remove();
-    };
-  }, [
-    currentEstablishment?.name,
-    isRTL,
-    resolvedTheme,
-    showWelcomePopup,
-    t,
-  ]);
-
-  const handleCloseWelcome = useCallback(() => {
-    welcomeHandledRef.current = primaryLocationKey;
-    setShowWelcomePopup(false);
-    markWelcomeSeenForLocation();
+    // Query-param launch is still server-authorized. The normal state -> claim
+    // flow remains active in parallel so a new location records its first run.
+    void setupGuide.replay();
+    // Consume the one-shot URL immediately. Waiting for the request would let
+    // a slow response navigate the user back here after they had already left.
     clearSetupLaunchParams();
   }, [
     clearSetupLaunchParams,
-    markWelcomeSeenForLocation,
-    primaryLocationKey,
+    currentEstablishment?.id,
+    isSetupLaunchRequest,
+    location.search,
+    setupGuide.replay,
   ]);
 
   const waitForTasksGuideTargets = useCallback(async () => {
     const timeoutAt = Date.now() + 5000;
 
     while (Date.now() < timeoutAt) {
-      const firstTask =
-        document.getElementById('task-item-location-profile') ||
-        document.getElementById('widget-task-item-location-profile');
+      const firstTarget = Array.from(
+        document.querySelectorAll<HTMLElement>(
+          '[data-tour-id="tasks-setup-overview"]',
+        ),
+      ).find((element) => {
+        const rect = element.getBoundingClientRect();
+        return rect.width > 2 && rect.height > 2;
+      });
 
-      if (firstTask) {
+      if (firstTarget) {
         setShowTasksTour(true);
         return;
       }
 
       await new Promise((resolve) => window.setTimeout(resolve, 100));
     }
-
-    setShowTasksTour(true);
   }, []);
 
   const handleStartTasks = () => {
-    handleCloseWelcome();
     window.dispatchEvent(new Event('mintcom-open-tasks'));
     void waitForTasksGuideTargets();
+  };
+
+  const handleCloseSetupTour = () => {
+    setShowTasksTour(false);
+    void setupGuide.reportProgress('DISMISSED');
+  };
+
+  const handleCompleteSetupTour = () => {
+    setShowTasksTour(false);
+    void setupGuide.reportProgress('COMPLETED');
   };
 
   const fallbackShiftStatus: ShiftStatus = useMemo(
@@ -1178,11 +808,24 @@ export const DashboardPage = () => {
         )}
       </AnimatePresence>
 
+      <SetupGuideWelcomeModal
+        isOpen={setupGuide.isOpen}
+        onClose={setupGuide.close}
+        onStart={handleStartTasks}
+        establishmentName={currentEstablishment?.name}
+      />
+
       <TourGuide
         isOpen={showTasksTour}
-        onClose={() => setShowTasksTour(false)}
-        onComplete={() => setShowTasksTour(false)}
+        onClose={handleCloseSetupTour}
+        onComplete={handleCompleteSetupTour}
         steps={[
+          {
+            targetId: 'tasks-setup-overview',
+            title: t('dashboard.tour.tasks.title'),
+            description: t('dashboard.tour.tasks.desc'),
+            position: isRTL ? 'right' : 'left'
+          },
           {
             targetId: 'task-item-location-profile',
             title: t('dashboard.tour.taskItem.title'),
@@ -1194,5 +837,3 @@ export const DashboardPage = () => {
     </>
   );
 };
-
-

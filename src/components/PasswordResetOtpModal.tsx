@@ -44,6 +44,7 @@ export function PasswordResetOtpModal({
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [maskedEmail, setMaskedEmail] = useState('');
+    const [resetProof, setResetProof] = useState('');
     const [error, setError] = useState('');
 
     const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -57,6 +58,7 @@ export function PasswordResetOtpModal({
             setOtp(['', '', '', '', '', '']);
             setNewPassword('');
             setConfirmPassword('');
+            setResetProof('');
             setError('');
         }
     }, [isOpen]);
@@ -87,6 +89,7 @@ export function PasswordResetOtpModal({
         try {
             const response = await api.post('/api/accounts/request-password-otp');
             setMaskedEmail(response.data.email);
+            setResetProof('');
             setStep('verify');
             toast.success(t('passwordReset.messages.codeSent'));
         } catch (err) {
@@ -131,7 +134,11 @@ export function PasswordResetOtpModal({
         setError('');
 
         try {
-            await api.post('/api/accounts/verify-password-otp', { otp: otpString });
+            const response = await api.post<{ resetProof: string }>(
+                '/api/accounts/verify-password-otp',
+                { otp: otpString },
+            );
+            setResetProof(response.data.resetProof);
             setStep('newPassword');
             toast.success(t('passwordReset.messages.codeVerified'));
         } catch (err) {
@@ -177,11 +184,12 @@ export function PasswordResetOtpModal({
         setError('');
 
         try {
-            const otpString = otp.join('');
-
             if (type === 'account') {
+                if (!resetProof) {
+                    throw new Error('Password-reset proof is missing');
+                }
                 await api.post('/api/accounts/reset-password-otp', {
-                    otp: otpString,
+                    resetProof,
                     newPassword,
                 });
             } else if (type === 'establishment') {
@@ -495,5 +503,3 @@ export function PasswordResetOtpModal({
         document.body
     );
 }
-
-

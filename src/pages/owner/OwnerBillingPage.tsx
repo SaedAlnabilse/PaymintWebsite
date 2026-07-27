@@ -11,6 +11,11 @@ import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 import { Pagination } from '../../components/ui';
 import { StatValue } from '../../components/ui/StatValue';
+import {
+    isActivePendingCancellation,
+    requiresPaidReactivation,
+} from '../../utils/subscriptionRecovery';
+import { getDaysUntilDeletion } from '../../utils/deletionRecovery';
 
 interface SavedCard {
     id: string;
@@ -29,9 +34,12 @@ interface EstablishmentBilling {
     name: string;
     establishmentLoginId?: string;
     subscriptionStatus: string;
+    isActive?: boolean;
     cancelAtPeriodEnd: boolean;
     canceledAt?: string;
+    deletionScheduledFor?: string | null;
     trialEndsAt?: string;
+    currentPeriodEnd?: string;
     subscriptionEndDate?: string;
     monthlyPrice: number;
     billingCycle?: 'monthly' | 'yearly';
@@ -253,8 +261,9 @@ export function OwnerBillingPage() {
         });
     };
 
-    const handleResumeSubscription = async (establishmentId: string, name: string, isPendingCancel: boolean) => {
-        if (isPendingCancel) {
+    const handleResumeSubscription = async (establishmentId: string, name: string) => {
+        const est = billingData?.establishments.find(e => e.id === establishmentId);
+        if (est && isActivePendingCancellation(est)) {
             try {
                 const res = await api.post(`/api/accounts/subscriptions/${establishmentId}/resume`);
                 toast.success(res.data.message);
@@ -263,10 +272,6 @@ export function OwnerBillingPage() {
                 toast.error(err.response?.data?.message || t('owner.billing.resumeFailed'));
             }
         } else {
-            // Check if within paid period
-            const est = billingData?.establishments.find(e => e.id === establishmentId);
-            const isWithinPaidPeriod = est?.subscriptionEndDate ? new Date() < new Date(est.subscriptionEndDate) : false;
-            
             // Find index for correct price
             const fullIndex = billingData?.establishments.findIndex(e => e.id === establishmentId) ?? 0;
             const price = est ? getEstablishmentPrice(est, fullIndex) : 20;
@@ -277,7 +282,9 @@ export function OwnerBillingPage() {
                 targetName: name,
                 mode: 'reactivate',
                 price: price,
-                isResuming: isWithinPaidPeriod
+                // A locked/finalized subscription starts a paid cycle. The
+                // current period date is not authority for no-charge resume.
+                isResuming: false
             });
         }
     };
@@ -291,18 +298,8 @@ export function OwnerBillingPage() {
         });
     };
 
-    const getDaysLeft = (canceledAt?: string) => {
-        if (!canceledAt) return 30;
-        const cancelDate = new Date(canceledAt);
-        const now = new Date();
-        const diffTime = now.getTime() - cancelDate.getTime();
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        const remaining = 30 - diffDays;
-        return remaining > 0 ? remaining : 0;
-    };
-
     const getStatusBadge = (est: EstablishmentBilling) => {
-        if (est.cancelAtPeriodEnd) {
+        if (isActivePendingCancellation(est)) {
             return (
                 <div className="flex flex-col items-center gap-1">
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-lg text-xs font-bold tracking-widest text-amber-500">
@@ -311,7 +308,7 @@ export function OwnerBillingPage() {
                     </span>
                     {est.subscriptionEndDate && (
                         <span className="text-[10px] font-bold text-amber-500/60 tracking-tight">
-                            {t('owner.billing.canceledOn', { date: formatBillingDate(est.canceledAt || new Date()) })}
+                            {t('owner.billing.cancelsOn', { date: formatBillingDate(est.subscriptionEndDate) })}
                         </span>
                     )}
                 </div>
@@ -334,7 +331,7 @@ export function OwnerBillingPage() {
                     </span>
                 );
             case 'CANCELED': {
-                const daysLeft = getDaysLeft(est.canceledAt);
+                const daysLeft = getDaysUntilDeletion(est.deletionScheduledFor) ?? 0;
                 return (
                     <div className="flex flex-col items-center gap-1">
                         <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-500/10 border border-red-500/20 rounded-lg text-xs font-bold tracking-widest text-red-500">
@@ -886,9 +883,9 @@ export function OwnerBillingPage() {
                                                                 {t('owner.billing.cancelSub')}
                                                             </button>
                                                         )}
-                                                        {(est.cancelAtPeriodEnd || ['CANCELED', 'PAST_DUE', 'SUSPENDED'].includes(est.subscriptionStatus?.toUpperCase())) && (
+                                                        {(isActivePendingCancellation(est) || requiresPaidReactivation(est)) && (
                                                             <button
-                                                                onClick={() => handleResumeSubscription(est.id, est.name, est.cancelAtPeriodEnd)}
+                                                                onClick={() => handleResumeSubscription(est.id, est.name)}
                                                                 className="w-full px-4 py-3 text-left text-xs font-bold text-mintcom-green hover:bg-mintcom-green/10 tracking-wide transition-colors flex items-center gap-2"
                                                             >
                                                                 <RotateCcw size={14} />
@@ -914,7 +911,9 @@ export function OwnerBillingPage() {
                     </div>
 
                     {/* Alert Banner for Cancellations */}
-                    {billingData?.establishments.some(e => e.cancelAtPeriodEnd) && (
+                    {billingData?.establishments.some((establishment) =>
+                        isActivePendingCancellation(establishment),
+                    ) && (
                         <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-start gap-3">
                             <AlertCircle size={18} className="text-amber-500 shrink-0 mt-0.5" />
                             <div>
@@ -1072,6 +1071,3 @@ export function OwnerBillingPage() {
         </div>
     );
 };
-
-
-

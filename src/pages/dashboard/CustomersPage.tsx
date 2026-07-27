@@ -119,7 +119,7 @@ function TableActionMenu({ customer, onViewProfile, onDelete }: TableActionMenuP
       <button
         ref={triggerRef}
         onClick={() => setIsOpen(!isOpen)}
-        aria-label="More actions"
+        aria-label={t('common.moreActions')}
         className={`p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl border transition-all ${
           isOpen 
             ? 'bg-mintcom-green text-black border-mintcom-green' 

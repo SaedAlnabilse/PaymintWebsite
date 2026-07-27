@@ -96,7 +96,7 @@ const todayStamp = () => new Date().toISOString().split('T')[0];
 
 /** Normalize a single cell value to a primitive suitable for a spreadsheet/table. */
 const cellValue = (row: any, key: string): string | number => {
-  let value = row?.[key];
+  const value = row?.[key];
   if (value === null || value === undefined) return '';
   if (typeof value === 'number') return value;
   if (typeof value === 'object' && !Array.isArray(value)) {
@@ -124,22 +124,41 @@ const triggerDownload = (blob: Blob, filename: string) => {
 
 // ─── Excel ─────────────────────────────────────────────────────────────────
 
-/** Build a worksheet for one section. `preamble` rows (title/meta) are placed above the table. */
-const buildSheet = (XLSX: typeof import('xlsx'), section: ExportSection, preamble: any[][] = []): any => {
+/**
+ * One cell in `write-excel-file`'s array-of-arrays form. Blanks are emitted as
+ * a null value so Excel shows a genuinely empty cell rather than an empty
+ * string, and numbers keep their numeric type so they stay sortable/summable.
+ */
+type XlsxCell = { value: string | number | null; type: StringConstructor | NumberConstructor };
+
+const xlsxCell = (value: string | number): XlsxCell =>
+  typeof value === 'number'
+    ? { value, type: Number }
+    : { value: value === '' ? null : value, type: String };
+
+/** Build the rows for one section. `preamble` rows (title/meta) are placed above the table. */
+const buildSheetRows = (section: ExportSection, preamble: string[][] = []): XlsxCell[][] => {
   const header = section.columns.map(c => c.label);
   const body = (section.rows || []).map(row => section.columns.map(c => cellValue(row, c.key)));
-  const aoa = [...preamble, header, ...body];
-  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  return [
+    // Preamble rows are intentionally ragged (one cell wide) — that is what
+    // puts the title flush left above the table.
+    ...preamble.map(r => r.map(v => xlsxCell(v))),
+    header.map(h => xlsxCell(h)),
+    ...body.map(r => r.map(v => xlsxCell(v))),
+  ];
+};
 
-  // Auto-size columns to the widest cell (capped so a long string can't blow out the layout).
-  ws['!cols'] = section.columns.map((c, i) => {
+/** Auto-size columns to the widest cell (capped so a long string can't blow out the layout). */
+const buildColumnWidths = (section: ExportSection) => {
+  const body = (section.rows || []).map(row => section.columns.map(c => cellValue(row, c.key)));
+  return section.columns.map((c, i) => {
     const widest = Math.max(
       String(c.label).length,
       ...body.map(r => String(r[i] ?? '').length),
     );
-    return { wch: Math.min(Math.max(widest + 2, 10), 60) };
+    return { width: Math.min(Math.max(widest + 2, 10), 60) };
   });
-  return ws;
 };
 
 /** Sanitize a worksheet name for Excel (max 31 chars, no : \\ / ? * [ ]). */
@@ -149,19 +168,19 @@ const safeSheetName = (name: string, fallback: string): string => {
 };
 
 const buildXLSX = async (title: string, sections: ExportSection[], meta?: ExportMeta) => {
-  const XLSX = await import('xlsx');
-  const wb = XLSX.utils.book_new();
+  // Browser build: pure JS + fflate, returns a Blob. Loaded lazily so the
+  // spreadsheet writer is only fetched when someone actually exports.
+  const { default: writeXlsxFile } = await import('write-excel-file/browser');
   const used = new Set<string>();
 
-  sections.forEach((section, idx) => {
+  const sheets = sections.map((section, idx) => {
     // Prepend a title + meta block above the table on the first sheet only.
-    const preamble: any[][] = [];
+    const preamble: string[][] = [];
     if (idx === 0 && (title || (meta && meta.length))) {
       if (title) preamble.push([title]);
       (meta || []).forEach(m => preamble.push([`${m.label}: ${m.value}`]));
       preamble.push([]); // spacer row
     }
-    const ws = buildSheet(XLSX, section, preamble);
 
     let name = safeSheetName(section.name, `Sheet${idx + 1}`);
     let suffix = 1;
@@ -169,14 +188,16 @@ const buildXLSX = async (title: string, sections: ExportSection[], meta?: Export
       name = safeSheetName(`${section.name} ${++suffix}`, `Sheet${idx + 1}`);
     }
     used.add(name.toLowerCase());
-    XLSX.utils.book_append_sheet(wb, ws, name);
+
+    return {
+      data: buildSheetRows(section, preamble),
+      sheet: name,
+      columns: buildColumnWidths(section),
+    };
   });
 
-  const out = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-  triggerDownload(
-    new Blob([out], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }),
-    `${title ? slug(title) : 'export'}_${todayStamp()}.xlsx`,
-  );
+  const blob = await writeXlsxFile(sheets as never).toBlob();
+  triggerDownload(blob, `${title ? slug(title) : 'export'}_${todayStamp()}.xlsx`);
 };
 
 const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 60) || 'export';

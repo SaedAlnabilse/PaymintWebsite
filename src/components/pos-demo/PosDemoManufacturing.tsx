@@ -20,7 +20,6 @@ import {
   Pencil,
   Plus,
   RotateCcw,
-  Trash2,
   Wrench,
   X,
 } from 'lucide-react';
@@ -352,14 +351,12 @@ function ModalShell({
   onClose,
   children,
   footer,
-  wide,
 }: {
   title: string;
   subtitle?: string;
   onClose: () => void;
   children: ReactNode;
   footer?: ReactNode;
-  wide?: boolean;
 }) {
   const [host, setHost] = useState<HTMLElement | null>(null);
 
@@ -594,24 +591,6 @@ export function DemoManufacturingPanel({ onActivity }: { onActivity?: (action: s
       }
     }
     return { ok: missing.length === 0, missing };
-  };
-
-  const estimateCost = (ings: Ingredient[], multiplier = 1) => {
-    let total = 0;
-    for (const ing of ings) {
-      if (ing.source === 'raw') {
-        const m = rawMaterials.find((x) => x.id === ing.ingredientId);
-        if (m) total += m.costPerUnit * ing.quantity * multiplier;
-      } else {
-        // approximate intermediate cost from its own recipe once
-        const sub = subRecipes.find((x) => x.id === ing.ingredientId);
-        if (sub && sub.yieldQty > 0) {
-          const unitCost = estimateCost(sub.ingredients, 1) / sub.yieldQty;
-          total += unitCost * ing.quantity * multiplier;
-        }
-      }
-    }
-    return total;
   };
 
   const deductIngredients = (ings: Ingredient[], multiplier: number) => {
@@ -1711,7 +1690,6 @@ export function DemoManufacturingPanel({ onActivity }: { onActivity?: (action: s
               setShowUnitPicker(false);
               setModal(null);
             }}
-            wide
             footer={
               <FooterActions
                 onCancel={() => {
@@ -1819,7 +1797,6 @@ export function DemoManufacturingPanel({ onActivity }: { onActivity?: (action: s
           <ModalShell
             title={modal.edit ? 'Edit Recipe' : 'Add Final Recipe'}
             onClose={() => setModal(null)}
-            wide
             footer={
               <FooterActions
                 onCancel={() => setModal(null)}
@@ -1903,47 +1880,6 @@ function Empty({ icon, title, body }: { icon: ReactNode; title: string; body: st
   );
 }
 
-function IngredientTable({
-  ings,
-  getAvailable,
-}: {
-  ings: Ingredient[];
-  getAvailable: (i: Ingredient) => number;
-}) {
-  return (
-    <div className="overflow-hidden rounded-xl border border-gray-100 dark:border-white/8">
-      <div className="grid grid-cols-[1fr_auto_auto] gap-2 bg-cream-50 px-2.5 py-1.5 text-[9px] font-bold uppercase tracking-wider text-text-tertiary dark:bg-mintcom-dark">
-        <span>Ingredient</span>
-        <span>Need</span>
-        <span>Have</span>
-      </div>
-      {ings.map((ing) => {
-        const have = getAvailable(ing);
-        const short = have + 1e-9 < ing.quantity;
-        return (
-          <div
-            key={`${ing.ingredientId}-${ing.quantity}`}
-            className="grid grid-cols-[1fr_auto_auto] gap-2 border-t border-gray-100 px-2.5 py-1.5 text-[11px] dark:border-white/8"
-          >
-            <span className="truncate font-medium dark:text-white">
-              {ing.ingredientName}
-              <span className="ms-1 text-[9px] text-text-tertiary">
-                {ing.source === 'raw' ? 'raw' : 'prep'}
-              </span>
-            </span>
-            <span className="tabular-nums font-bold">
-              {fmtQty(ing.quantity)} {ing.unit}
-            </span>
-            <span className={`tabular-nums font-bold ${short ? 'text-mintcom-red' : 'text-mintcom-green'}`}>
-              {fmtQty(have)}
-            </span>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
 /** Shared control height for ingredient add row — keeps Item / Qty / Add aligned */
 const ingCtrlH = 'h-11';
 const ingCtrlBase =
@@ -1977,7 +1913,7 @@ function IngredientEditor({
       </p>
       {error && <p className="mb-2 text-[12px] text-[#ef4444]">{error}</p>}
       {ings.length === 0 && (
-        <p className="mb-2 text-[13px] text-text-tertiary">No ingredients yet — add below.</p>
+        <p className="mb-2 text-[13px] text-text-tertiary">No ingredients yet. Add one below.</p>
       )}
       <div className="mb-3 space-y-1.5">
         {ings.map((ing) => (
@@ -2054,4 +1990,3 @@ function IngredientEditor({
     </div>
   );
 }
-

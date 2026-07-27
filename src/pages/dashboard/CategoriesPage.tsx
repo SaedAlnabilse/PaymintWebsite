@@ -22,6 +22,7 @@ import {
   Upload
 } from 'lucide-react';
 import api from '../../config/api';
+import { fetchAllPages } from '../../utils/fetchAllPages';
 import toast from 'react-hot-toast';
 import { ConfirmModal } from '../../components/ConfirmModal';
 import { CategoryFormModal, ICON_MAP } from '../../components/forms/CategoryFormModal';
@@ -145,9 +146,9 @@ export function CategoriesPage() {
   const fetchData = async (silent = false, preserveCurrentOrder = false) => {
     try {
       if (!silent) setIsLoading(true);
-      const [catsRes, prodsRes] = await Promise.all([
+      const [catsRes, products] = await Promise.all([
         api.get('/api/categories', { params: { includeInactive: true } }),
-        api.get('/api/items')
+        fetchAllPages<Product>(api, '/api/items'),
       ]);
       const sortedCategories = sortArchivedLastByNewest(Array.isArray(catsRes.data) ? catsRes.data : []);
       if (preserveCurrentOrder && recentlyArchivedCategoryIds.size > 0) {
@@ -168,7 +169,7 @@ export function CategoriesPage() {
         setRecentlyArchivedCategoryIds(new Set());
         setCategories(sortedCategories);
       }
-      setProducts(prodsRes.data?.items || []);
+      setProducts(products);
     } catch {
       toast.error(t('categories.messages.loadFailed'));
     } finally {
@@ -1097,5 +1098,4 @@ export function CategoriesPage() {
     </div>
   );
 }
-
 

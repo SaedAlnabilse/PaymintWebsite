@@ -5,8 +5,6 @@ import {
   ArrowUpDown,
   ArrowUpRight,
   Check,
-  CheckCheck,
-  ChevronRight,
   Clock,
   AlertTriangle,
   FolderOpen,
@@ -16,7 +14,6 @@ import {
   LogOut,
   Package,
   Pause,
-  Play,
   Receipt,
   ShoppingBag,
   TrendingUp,
@@ -599,37 +596,6 @@ export function PayInOutModal({
   );
 }
 
-function Row({
-  label,
-  value,
-  accent,
-  bold,
-}: {
-  label: string;
-  value: string;
-  accent?: 'green' | 'red';
-  bold?: boolean;
-}) {
-  return (
-    <>
-      <span className="text-text-secondary dark:text-mintcom-textSecondary">{label}</span>
-      <span
-        className={`text-end tabular-nums ${
-          bold
-            ? 'font-black text-text-primary dark:text-white'
-            : accent === 'green'
-              ? 'font-bold text-mintcom-green'
-              : accent === 'red'
-                ? 'font-bold text-mintcom-red'
-                : 'font-semibold text-text-primary dark:text-white'
-        }`}
-      >
-        {value}
-      </span>
-    </>
-  );
-}
-
 /* ─── Dashboard — mirrors mintcom-pos DashboardScreen + ShiftManagementCard ─ */
 export function DemoDashboardScreen({
   staff,
@@ -637,7 +603,6 @@ export function DemoDashboardScreen({
   onOpenShift,
   onCloseShift,
   onGoSales,
-  onGoOrders,
   onSignOut,
   autoOpenShiftModal = false,
   onAutoOpenShiftModalHandled,
@@ -651,7 +616,6 @@ export function DemoDashboardScreen({
   onOpenShift: (openingCash: number) => void;
   onCloseShift: (actualCash: number) => void;
   onGoSales: () => void;
-  onGoOrders?: () => void;
   /** POS "Review & Sign Out" after close-shift review */
   onSignOut?: () => void;
   /** Parent asks to open the Open Shift amount popup (e.g. user tapped Sales without a shift). */
@@ -663,6 +627,7 @@ export function DemoDashboardScreen({
   canCloseShift?: boolean;
   canViewAnalytics?: boolean;
 }) {
+  const [renderedAt] = useState(Date.now);
   const [shiftModal, setShiftModal] = useState<'open' | 'close' | null>(null);
   const [shiftStartedSuccess, setShiftStartedSuccess] = useState(false);
   const [myOrdersOpen, setMyOrdersOpen] = useState(false);
@@ -704,21 +669,17 @@ export function DemoDashboardScreen({
   /** Demo last-shift cash drawer moves (POS PayCard when viewing prior period) */
   const displayPayIn = isOpen ? shift.payIn : 85.0;
   const displayPayOut = isOpen ? shift.payOut : 40.0;
-  const displayExpectedCash = isOpen
-    ? shift.openingCash + shift.cashSales + shift.payIn - shift.payOut
-    : 565.0;
-
   const netSales = shift.cashSales + shift.cardSales + shift.otherSales;
   const expectedCash = shift.openingCash + shift.cashSales + shift.payIn - shift.payOut;
 
   const hoursParts = useMemo(() => {
     if (!shift.startedAt) return { h: 0, m: 0 };
-    const ms = Date.now() - shift.startedAt;
+    const ms = renderedAt - shift.startedAt;
     return {
       h: Math.floor(ms / 3_600_000),
       m: Math.floor((ms % 3_600_000) / 60_000),
     };
-  }, [shift.startedAt, shift.open, shift.orders, shift.cashSales]);
+  }, [renderedAt, shift.startedAt]);
 
   // POS dashboard card: "0h 9m"
   const hoursLabel = `${hoursParts.h}h ${hoursParts.m}m`;
@@ -1354,14 +1315,14 @@ const INITIAL_ALERTS: DemoAlert[] = [
     id: 'a2',
     kind: 'stock_red',
     title: 'Critical Stock Alert',
-    message: 'Espresso beans — 4 left, below the red threshold (5). Reorder now.',
+    message: 'Espresso beans: 4 left, below the red threshold (5). Reorder now.',
     time: '18m ago',
   },
   {
     id: 'a3',
     kind: 'stock_yellow',
     title: 'Low Stock',
-    message: 'To-go cups (L) — 28 left, low-stock threshold reached. Reorder soon.',
+    message: 'To-go cups (L): 28 left, low-stock threshold reached. Reorder soon.',
     time: '1h ago',
   },
   {
@@ -1407,12 +1368,6 @@ const INITIAL_HISTORY: DemoHistory[] = [
     isNew: false,
   },
 ];
-
-function orderTypeShort(t: DemoHeldTicket['type']) {
-  if (t === 'dine-in') return 'Dine in';
-  if (t === 'takeaway') return 'Takeaway';
-  return 'Delivery';
-}
 
 function relTime(at: number) {
   const m = Math.max(1, Math.round((Date.now() - at) / 60000));
@@ -1547,23 +1502,23 @@ function AlertCard({ alert }: { alert: DemoAlert }) {
 }
 
 /* History → NotificationItem card (gradient icon + trash). */
-function historyIcon(kind: HistoryKind) {
+function HistoryIcon({ kind, className }: { kind: HistoryKind; className: string }) {
+  const props = { size: 20, className };
   switch (kind) {
     case 'refund':
-      return RotateCcw;
+      return <RotateCcw {...props} />;
     case 'cash':
-      return DollarSign;
+      return <DollarSign {...props} />;
     case 'order':
-      return ShoppingBag;
+      return <ShoppingBag {...props} />;
     case 'stock':
-      return Package;
+      return <Package {...props} />;
     default:
-      return Bell;
+      return <Bell {...props} />;
   }
 }
 
 function HistoryCard({ item, onDelete }: { item: DemoHistory; onDelete: (id: string) => void }) {
-  const Icon = historyIcon(item.kind);
   return (
     <div className="mb-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-white/8 dark:bg-mintcom-surface">
       <div className="flex items-start gap-4">
@@ -1574,7 +1529,10 @@ function HistoryCard({ item, onDelete }: { item: DemoHistory; onDelete: (id: str
               : 'bg-cream-100 dark:bg-mintcom-dark'
           }`}
         >
-          <Icon size={20} className={item.isNew ? 'text-white' : 'text-text-tertiary dark:text-mintcom-gray'} />
+          <HistoryIcon
+            kind={item.kind}
+            className={item.isNew ? 'text-white' : 'text-text-tertiary dark:text-mintcom-gray'}
+          />
         </span>
         <div className="min-w-0 flex-1">
           <div className="mb-1.5 flex items-center gap-2">
@@ -1841,7 +1799,7 @@ export function DemoMyOrdersModal({
     if (!selected) return;
     const fresh = sales.find((s) => s.id === selected.id);
     if (fresh) setSelected(fresh);
-  }, [sales, selected?.id]);
+  }, [sales, selected]);
 
   if (!open) return null;
 

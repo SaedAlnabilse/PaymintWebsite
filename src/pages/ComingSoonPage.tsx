@@ -5,7 +5,7 @@ export function ComingSoonPage() {
   return (
     <div className="min-h-screen bg-white dark:bg-[#0f0f0f] flex flex-col items-center justify-center relative overflow-hidden font-sans selection:bg-mintcom-green/30">
       <Helmet>
-        <title>Mintcom POS | Coming Soon — The Smarter Way to Run Your Business</title>
+        <title>Mintcom POS | Coming Soon: The Smarter Way to Run Your Business</title>
         <meta name="description" content="Mintcom is a complete 360° POS solution. Manage sales, inventory, staff, reporting, and multi-branch operations from one simple system. Launching soon." />
       </Helmet>
 
@@ -103,8 +103,8 @@ export function ComingSoonPage() {
           transition={{ delay: 0.5, duration: 0.7 }}
           className="mb-10 max-w-2xl mx-auto text-base sm:text-lg font-light leading-relaxed text-gray-600 dark:text-gray-400"
         >
-          A complete 360° POS solution is almost here. Sales, inventory, staff management, 
-          real-time reporting, loyalty programs, and multi-branch control — all from one 
+          A complete 360° POS solution is almost here. Sales, inventory, staff management,
+          real-time reporting, loyalty programs, and multi-branch control, all from one
           simple system. No hidden costs. No complexity.
         </motion.p>
 
@@ -149,7 +149,7 @@ export function ComingSoonPage() {
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6l4 2m6-2a10 10 0 11-20 0 10 10 0 0120 0z" />
             </svg>
-            We're putting the finishing touches — stay tuned
+            We're putting the finishing touches on it. Stay tuned
           </div>
         </motion.div>
 

@@ -1749,7 +1749,7 @@ export function OrdersPage() {
                               actionMenuTriggerRef.current = e.currentTarget;
                               setActiveActionMenu(activeActionMenu === order.id ? null : order.id);
                             }}
-                            aria-label="Order actions"
+                            aria-label={t('common.orderActions')}
                             aria-expanded={activeActionMenu === order.id}
                             className={`p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-colors ${activeActionMenu === order.id
                               ? 'text-mintcom-green bg-gray-100 dark:bg-white/5'

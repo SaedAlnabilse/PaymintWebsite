@@ -45,7 +45,10 @@ import { getBusinessTypeIcon } from '../../utils/businessTypeIcons';
 import { SectionLoader } from '../../components/LoadingState';
 import { Pagination } from '../../components/ui';
 import { formatInputPlaceholder } from '../../utils/textCase';
+import { StepUpVerifier } from '../../components/StepUpVerifier';
+import { reauthHeaders } from '../../services/stepUp';
 import { getLocalizedManual } from '../../utils/localizedDocs';
+import { ACCOUNT_RECOVERY_PATH } from '../../utils/deletionRecovery';
 
 const CRED_ITEMS_PER_PAGE = 3;
 
@@ -111,7 +114,6 @@ export function OwnerAccountManagementPage() {
     const [brands, setBrands] = useState<BrandCredential[]>([]);
     const [totalStaff, setTotalStaff] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
-    const [isRestoring, setIsRestoring] = useState(false);
     const [copiedId, setCopiedId] = useState<string | null>(null);
 
     // Active establishments blocking deletion modal
@@ -143,7 +145,6 @@ export function OwnerAccountManagementPage() {
     const [deleteStep, setDeleteStep] = useState(1);
     const [deleteReason, setDeleteReason] = useState('');
     const [deleteConfirmationText, setDeleteConfirmationText] = useState('');
-    const [deletePassword, setDeletePassword] = useState('');
 
     // Global Currency state
     const [globalCurrency, setGlobalCurrency] = useState('AED');
@@ -163,7 +164,7 @@ export function OwnerAccountManagementPage() {
             if (response.data?.success) {
                 setGlobalCurrency(newCurrency);
                 toast.success(t('owner.account.currencyUpdated', { currency: newCurrency }));
-                
+
                 // Update local establishments data
                 if (accountDetails?.establishments) {
                     setAccountDetails(prev => prev ? ({
@@ -344,8 +345,7 @@ export function OwnerAccountManagementPage() {
             setDeleteStep(1);
             setDeleteReason('');
             setDeleteConfirmationText('');
-            setDeletePassword('');
-        }
+            }
     }, [showDeleteConfirm]);
 
     const fetchAccountData = useCallback(async () => {
@@ -424,15 +424,18 @@ export function OwnerAccountManagementPage() {
         setShowDeleteConfirm(true);
     };
 
-    const handleDeleteAccount = async () => {
+    /**
+     * Runs once StepUpVerifier has produced a single-use reauth token. The
+     * proof already establishes the owner is present, so no password travels
+     * with the deletion itself.
+     */
+    const handleDeleteAccount = async (reauthToken: string) => {
         try {
             setIsDeletingAccount(true);
             // Call the correct endpoint for account deletion
             await api.delete('/api/accounts/me', {
-                data: {
-                    reason: deleteReason,
-                    password: deletePassword
-                }
+                headers: reauthHeaders(reauthToken),
+                data: { reason: deleteReason }
             });
 
             toast.success(t('owner.account.deletionInitiated'));
@@ -444,28 +447,19 @@ export function OwnerAccountManagementPage() {
             }, 3000);
         } catch (err) {
             console.error('Failed to delete account:', err);
-            toast.error(t('owner.account.deletionFailed'));
+            const responseMessage = (err as any)?.response?.data?.message;
+            toast.error(
+                Array.isArray(responseMessage)
+                    ? responseMessage.join(' ')
+                    : responseMessage || t('owner.account.deletionFailed')
+            );
         } finally {
             setIsDeletingAccount(false);
         }
     };
 
-    const handleRestoreAccount = async () => {
-        try {
-            setIsRestoring(true);
-            const response = await api.post('/api/accounts/me/restore');
-
-            if (response.data.success) {
-                toast.success(t('owner.account.accountRestored'));
-                updateAccount({ deletionRequestedAt: undefined });
-                setAccountDetails(prev => prev ? { ...prev, deletionRequestedAt: undefined } : null);
-            }
-        } catch (err: any) {
-            console.error('Failed to restore account:', err);
-            toast.error(err.response?.data?.message || t('owner.account.restoreFailed'));
-        } finally {
-            setIsRestoring(false);
-        }
+    const handleRestoreAccount = () => {
+        navigate(ACCOUNT_RECOVERY_PATH);
     };
 
     const copyToClipboard = async (text: string, id: string) => {
@@ -843,7 +837,7 @@ export function OwnerAccountManagementPage() {
                                             </h2>
                                             <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                                                 {t('owner.account.accessCredentialsSubtitle', {
-                                                    defaultValue: 'Login IDs for location and brand dashboards — search, copy, open, or reset.',
+                                                    defaultValue: 'Login IDs for location and brand dashboards. Search, copy, open, or reset.',
                                                 })}
                                             </p>
                                         </div>
@@ -1397,11 +1391,11 @@ export function OwnerAccountManagementPage() {
                                 </div>
                             </div>
 
-                            {/* Guides — 2-column tiles */}
+                            {/* Guides — 3-column tiles (stacks on phones) */}
                             <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2.5 px-0.5">
                                 {t('owner.account.resources.guides', { defaultValue: 'Guides' })}
                             </p>
-                            <div className={`grid grid-cols-1 sm:grid-cols-2 gap-2.5 ${fit ? 'mb-3' : 'mb-5'}`}>
+                            <div className={`grid grid-cols-1 md:grid-cols-3 gap-2.5 ${fit ? 'mb-3' : 'mb-5'}`}>
                                 <a
                                     href={userManualDoc.path}
                                     download={userManualDoc.filename}
@@ -1450,40 +1444,52 @@ export function OwnerAccountManagementPage() {
                                     </div>
                                 </a>
 
+                                {/* Same vertical tile shape as the two manuals so all three
+                                    sit on one row and share a height. */}
                                 {hasOnboardingVideo ? (
                                     <a
                                         href={ONBOARDING_VIDEO_URL}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="group relative sm:col-span-2 flex items-center gap-3 p-3.5 rounded-2xl border border-red-100 dark:border-red-500/15 bg-gradient-to-r from-red-50/90 via-white to-white dark:from-red-500/10 dark:via-white/[0.02] dark:to-transparent hover:border-red-300 dark:hover:border-red-500/30 hover:shadow-md hover:shadow-red-500/5 transition-all"
+                                        className="group relative flex flex-col gap-3 p-3.5 rounded-2xl border border-red-100 dark:border-red-500/15 bg-gradient-to-br from-red-50/90 to-white dark:from-red-500/10 dark:to-white/[0.02] hover:border-red-300 dark:hover:border-red-500/30 hover:shadow-md hover:shadow-red-500/5 transition-all"
                                     >
-                                        <div className="w-10 h-10 rounded-xl bg-red-500 text-white flex items-center justify-center shadow-sm shadow-red-500/25 shrink-0">
-                                            <PlayCircle size={18} />
+                                        <div className="flex items-start justify-between gap-2">
+                                            <div className="w-9 h-9 rounded-xl bg-red-500 text-white flex items-center justify-center shadow-sm shadow-red-500/25">
+                                                <PlayCircle size={16} />
+                                            </div>
+                                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-red-600 dark:text-red-400 opacity-70 group-hover:opacity-100 transition-opacity">
+                                                <ExternalLink size={12} />
+                                                {t('common.view')}
+                                            </span>
                                         </div>
-                                        <div className="flex-1 min-w-0">
-                                            <h4 className="text-sm font-bold text-gray-900 dark:text-white">
+                                        <div>
+                                            <h4 className="text-sm font-bold text-gray-900 dark:text-white leading-tight">
                                                 {t('owner.account.resources.videoTutorial.title')}
                                             </h4>
-                                            <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate">
+                                            <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 leading-snug line-clamp-2">
                                                 {t('owner.account.resources.videoTutorial.desc')}
                                             </p>
                                         </div>
-                                        <ExternalLink size={15} className="text-red-400 shrink-0 opacity-70 group-hover:opacity-100" />
                                     </a>
                                 ) : (
                                     <div
                                         aria-label={t('owner.account.videoGuideComingSoon')}
-                                        className="sm:col-span-2 flex items-center gap-3 p-3.5 rounded-2xl border border-gray-100 dark:border-white/10 bg-gray-50/80 dark:bg-white/[0.03] opacity-60"
+                                        className="flex flex-col gap-3 p-3.5 rounded-2xl border border-gray-100 dark:border-white/10 bg-gray-50/80 dark:bg-white/[0.03] opacity-60"
                                     >
-                                        <div className="w-10 h-10 rounded-xl bg-gray-200 dark:bg-white/10 text-gray-500 flex items-center justify-center shrink-0">
-                                            <PlayCircle size={18} />
+                                        <div className="flex items-start justify-between gap-2">
+                                            <div className="w-9 h-9 rounded-xl bg-gray-200 dark:bg-white/10 text-gray-500 flex items-center justify-center">
+                                                <PlayCircle size={16} />
+                                            </div>
+                                            <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 whitespace-nowrap">
+                                                {t('common.comingSoon', { defaultValue: 'Coming soon' })}
+                                            </span>
                                         </div>
-                                        <div className="flex-1 min-w-0">
-                                            <h4 className="text-sm font-bold text-gray-900 dark:text-white">
+                                        <div>
+                                            <h4 className="text-sm font-bold text-gray-900 dark:text-white leading-tight">
                                                 {t('owner.account.resources.videoTutorial.title')}
                                             </h4>
-                                            <p className="text-[11px] text-gray-500 dark:text-gray-400">
-                                                {t('common.comingSoon', { defaultValue: 'Coming soon' })}
+                                            <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 leading-snug line-clamp-2">
+                                                {t('owner.account.resources.videoTutorial.desc')}
                                             </p>
                                         </div>
                                     </div>
@@ -1654,17 +1660,9 @@ export function OwnerAccountManagementPage() {
                                     {accountDetails?.deletionRequestedAt ? (
                                         <button
                                             onClick={handleRestoreAccount}
-                                            disabled={isRestoring}
-                                            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-mintcom-green hover:bg-[#5fa888] text-black rounded-xl text-sm font-black transition-all shadow-lg shadow-mintcom-green/20 disabled:opacity-70"
+                                            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-mintcom-green hover:bg-[#5fa888] text-black rounded-xl text-sm font-black transition-all shadow-lg shadow-mintcom-green/20"
                                         >
-                                            {isRestoring ? (
-                                                <>
-                                                    <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
-                                                    {t('common.restoring')}
-                                                </>
-                                            ) : (
-                                                t('owner.account.restoreMyAccount')
-                                            )}
+                                            {t('owner.account.restoreMyAccount')}
                                         </button>
                                     ) : (
                                         <button
@@ -1824,29 +1822,17 @@ export function OwnerAccountManagementPage() {
                                         <Lock size={14} />
                                         {t('owner.account.deleteAccountModal.confirmPassword')}
                                     </label>
-                                    <input maxLength={255}
-                                        type="password"
-                                        value={deletePassword}
-                                        onChange={(e) => setDeletePassword(e.target.value)}
-                                        placeholder={formatInputPlaceholder(t('owner.account.deleteAccountModal.passwordPlaceholder'), t('common.locale'))}
-                                        className="w-full px-4 py-3 bg-gray-50 dark:bg-[#0F172A] border border-gray-200 dark:border-white/[0.1] rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500/50"
+                                    {/* Offers whichever proof this owner can actually produce —
+                                        a Google/Apple owner has no password to type here. */}
+                                    <StepUpVerifier
+                                        action="delete-account"
+                                        onVerified={handleDeleteAccount}
+                                        onError={(message) => toast.error(message)}
+                                        submitLabel={t('owner.account.deleteAccountModal.confirmFinal')}
+                                        disabled={isDeletingAccount}
                                     />
                                 </div>
                                 <div className="flex flex-col gap-3">
-                                    <button
-                                        onClick={handleDeleteAccount}
-                                        disabled={!deletePassword || isDeletingAccount}
-                                        className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white rounded-2xl text-sm font-black transition-all shadow-lg shadow-red-500/20"
-                                    >
-                                        {isDeletingAccount ? (
-                                            <>
-                                                <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                                                {t('owner.account.deleteAccountModal.deleting')}
-                                            </>
-                                        ) : (
-                                            t('owner.account.deleteAccountModal.confirmFinal')
-                                        )}
-                                    </button>
                                     <button
                                         onClick={() => setDeleteStep(2)}
                                         disabled={isDeletingAccount}

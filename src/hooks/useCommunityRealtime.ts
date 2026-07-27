@@ -42,8 +42,11 @@ export function useCommunityRealtime(options: UseCommunityRealtimeOptions) {
   const [connected, setConnected] = useState(false);
   const onEventRef = useRef(onEvent);
   const onReconnectRef = useRef(onReconnect);
-  onEventRef.current = onEvent;
-  onReconnectRef.current = onReconnect;
+
+  useEffect(() => {
+    onEventRef.current = onEvent;
+    onReconnectRef.current = onReconnect;
+  }, [onEvent, onReconnect]);
 
   useEffect(() => {
     if (!enabled) return;

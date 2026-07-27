@@ -255,7 +255,7 @@ export const ChatWidgetEnhancer = () => {
                                 <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed mb-2 max-w-sm">
                                     {t(
                                         'chat.tasks.congratsMessage',
-                                        'You finished every setup step. Your location is ready for real sales — install the POS app and run your first test order.',
+                                        'Every setup step is done and your location is ready for real sales. Install the POS app on your devices to start ringing up orders, and reopen this guide any time from the Tasks button.',
                                     )}
                                 </p>
                                 <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 mb-6">

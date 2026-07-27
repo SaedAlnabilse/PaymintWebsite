@@ -11,7 +11,9 @@ export interface Account {
   establishmentLoginId?: string; // Account-level Owner POS ID
   defaultPaymentMethod?: string; // Last 4 digits of saved card (e.g., "4242")
   defaultCardId?: string; // ID of the default saved card
-  deletionRequestedAt?: string; // ISO date string if deletion is pending
+  deletionRequestedAt?: string | null; // ISO date string if deletion is pending
+  deletionScheduledFor?: string | null; // Authoritative end of the restoration window
+  authProvider?: 'password' | 'google' | 'apple';
   permissions?: string[]; // Admin permissions
   isSecondaryAdmin?: boolean; // Flag for secondary admin users
   hasPassword?: boolean; // Whether the user has a local password
@@ -30,6 +32,12 @@ export interface Establishment {
   phone?: string;
   trialEndDate?: string;
   employeeCount?: number;
+  isActive?: boolean;
+  deletionRequestedAt?: string | null;
+  deletionScheduledFor?: string | null;
+  deletionExportSentTo?: string | null;
+  accessLockedAt?: string | null;
+  accessLockReason?: string | null;
 }
 
 export interface StaffMember {

@@ -528,7 +528,7 @@ export const TicketDetailPage = () => {
                         }
                       }}
                     />
-                    <p className="text-xs text-gray-400 mt-1.5">Press Ctrl+Enter to send</p>
+                    <p className="text-xs text-gray-400 mt-1.5">{t('support.tickets.sendShortcutHint')}</p>
                   </div>
 
                   <div className="flex items-center justify-end gap-3">

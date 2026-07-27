@@ -36,6 +36,14 @@
   },
   "account": {
     "deletionScheduled": "Your account is scheduled for deletion in {{count}} days.",
+    "recovery": {
+      "deadline": "Permanent deletion is scheduled for {{date}}.",
+      "explanation": "Verify your identity to cancel deletion. Your account and the locations locked by this account deletion will be restored.",
+      "locked": "Your account is locked while permanent deletion is pending.",
+      "noCookieOnly": "For your security, being signed in is not enough. Identity verification is required.",
+      "refreshFailed": "Your account was restored, but some account data could not be refreshed. It will reload on the next page.",
+      "title": "Restore your Mintcom account"
+    },
     "restoreAction": "Restore account",
     "restored": "Account restored successfully",
     "restoreFailed": "Failed to restore account",
@@ -1847,6 +1855,16 @@
       "totalSales": "Total Sales",
       "totalTax": "Total Tax",
       "variance": "Variance"
+    },
+    "setupGuide": {
+      "help": "Help",
+      "helpCenter": "Help center",
+      "later": "Later",
+      "menuItem": "Setup guide",
+      "message": "Your dashboard for {{location}} is live. The setup guide walks you through 12 short steps, from your store details to your first test sale, and takes about 20 minutes in total. You can stop and come back any time.",
+      "start": "Start setup",
+      "thisLocation": "this location",
+      "title": "Congratulations"
     },
     "title": "Dashboard",
     "tour": {
@@ -4288,6 +4306,7 @@
       "cancel": "Cancel",
       "canceled": "Canceled",
       "canceledOn": "Canceled on {{date}}",
+      "cancelsOn": "Cancels on {{date}}",
       "cancelsSoon": "Cancels soon",
       "cancelSub": "Cancel Subscription",
       "cards": "Cards",
@@ -5294,9 +5313,15 @@
     "deletion": {
       "banner": {
         "cancel": "Cancel deletion",
+        "cannotCancel": "This deletion cannot be cancelled from the Danger Zone. Restore the account or subscription that scheduled it.",
+        "cannotCancelAction": "Deletion managed elsewhere",
         "cancelling": "Cancelling...",
         "daysLeft": "Days left",
+        "deleting": "Deletion in progress",
+        "deletingMessage": "The grace period has ended and permanent deletion is now being processed.",
         "desc": "This location will be permanently deleted on {{date}}",
+        "reactivateSubscription": "Reactivate subscription",
+        "restoreAccount": "Restore account",
         "title": "Deletion Scheduled"
       },
       "confirm": {
@@ -5361,6 +5386,11 @@
         "title": "Cancel Subscription",
         "warning": "You keep full access to \"{{name}}\" until the end of the paid period. After that it is locked, and its data is deleted 30 days later. You can resume anytime before then."
       },
+      "deleteAccount": {
+        "button": "Delete my account",
+        "title": "Delete Account",
+        "warning": "Your account will be locked immediately and permanently deleted after 30 days."
+      },
       "deleteCard": {
         "button": "Delete Card",
         "title": "Delete Payment Method",
@@ -5382,9 +5412,9 @@
         "warning": "You are about to delete \"{{name}}\". All locations will return to independent mode."
       },
       "dissolveEstablishment": {
-        "button": "Dissolve Location from Brand",
-        "title": "Dissolve Location from Brand",
-        "warning": "You are about to dissolve \"{{name}}\". This will permanently cease operations and remove this location from your brand portfolio."
+        "button": "Permanently Delete Location",
+        "title": "Permanently Delete Location",
+        "warning": "This immediately and permanently deletes \"{{name}}\" and all of its data, with no 30-day grace period. Confirm with your owner email and password. Final CSV exports will be emailed to you."
       },
       "reactivate": {
         "button": "Reactivate Now",
@@ -5397,6 +5427,11 @@
         "button": "Restore Account",
         "title": "Restore Account",
         "warning": "You are about to restore your account and cancel the scheduled deletion. Your data will be preserved."
+      },
+      "revokeBrandAccess": {
+        "button": "Remove access",
+        "title": "Remove Brand Access",
+        "warning": "{{name}} will lose access to every location in this brand."
       },
       "stopTrial": {
         "button": "Stop Trial Now",
@@ -5418,6 +5453,22 @@
       "step2Desc": "Set a new Login ID and password for this location to restore it.",
       "success": "Location has been restored successfully",
       "title": "Restore Location"
+    },
+    "stepUp": {
+      "appleHint": "Sign in with Apple again to confirm it is really you.",
+      "challengeFailed": "Could not start verification. Please try again.",
+      "codeLabel": "Verification code",
+      "codePending": "Request a code to continue.",
+      "codeSent": "We sent a 6-digit code to {{email}}.",
+      "googleHint": "Sign in with Google again to confirm it is really you.",
+      "otherWays": "Another way to verify",
+      "preparing": "Preparing verification…",
+      "resendCode": "Send a new code",
+      "sendCode": "Send me a code",
+      "useApple": "Verify with Apple",
+      "useEmail": "Email me a code instead",
+      "useGoogle": "Verify with Google",
+      "usePassword": "Use my password"
     },
     "verificationFailed": "Verification failed",
     "verifying": "Verifying..."
@@ -5449,6 +5500,8 @@
     "danger": {
       "cancelFailed": "Failed To Cancel Deletion",
       "description": "This will permanently delete \"{{name}}\". All data including orders, products, and customer info will be deleted.",
+      "pendingDeletion": "PENDING DELETION",
+      "refreshFailed": "The location was restored, but its updated login could not be loaded. Please refresh the page.",
       "startDeletion": "Start Deletion",
       "subtitle": "Danger Zone",
       "thisLocation": "This location",
@@ -6651,6 +6704,110 @@
           "description": "Owner mobile visibility and AI assistance when you want answers, without replacing good operations basics."
         }
       }
+    }
+  },
+  "notifications": {
+    "menu": {
+      "title": "Notifications"
+    },
+    "title": "Notifications",
+    "subtitle": {
+      "owner": "Alerts across all your locations.",
+      "location": "Alerts for this location.",
+      "brand": "Alerts for locations in {{name}}."
+    },
+    "tabs": {
+      "all": "All",
+      "cash": "Cash",
+      "stock": "Stock",
+      "refunds": "Refunds",
+      "updates": "Updates"
+    },
+    "stats": {
+      "total": "Total",
+      "cash": "Cash",
+      "stock": "Stock",
+      "refunds": "Refunds",
+      "updates": "Updates",
+      "unread": "Unread",
+      "unreadCount": "{{count}} unread"
+    },
+    "kind": {
+      "shortage": "Cash shortage",
+      "overage": "Cash overage",
+      "cashAlert": "Cash alert",
+      "criticalStock": "Critical stock",
+      "lowStock": "Low stock",
+      "refund": "Refund",
+      "supportUpdate": "Support update",
+      "billingUpdate": "Billing update",
+      "accountUpdate": "Account update",
+      "systemUpdate": "System update"
+    },
+    "actions": {
+      "markAllRead": "Mark all read",
+      "dismiss": "Dismiss",
+      "retry": "Retry",
+      "loadMore": "Load more",
+      "viewAll": "View all",
+      "allLocations": "All locations",
+      "refresh": "Refresh"
+    },
+    "filters": {
+      "searchLabel": "Search alerts",
+      "searchPlaceholder": "Search by alert, location, employee, or item",
+      "locationLabel": "Filter by location",
+      "unknownLocation": "Unknown location"
+    },
+    "empty": {
+      "all": "No alerts",
+      "cash": "No cash alerts",
+      "stock": "No stock alerts",
+      "refunds": "No refund alerts",
+      "updates": "No update alerts",
+      "subtitle": "You're all caught up."
+    },
+    "showingOf": "Showing {{loaded}} of {{total}}",
+    "errors": {
+      "loadFailed": "Couldn't load notifications.",
+      "dismissBlocked": "This notification can't be dismissed.",
+      "dismissFailed": "Couldn't dismiss the notification.",
+      "markReadFailed": "Couldn't update the notification's read status."
+    },
+    "time": {
+      "justNow": "Just now",
+      "minutesAgo": "{{count}} minutes ago",
+      "hoursAgo": "{{count}} hours ago",
+      "daysAgo": "{{count}} days ago",
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "unknownDate": "Unknown date"
+    },
+    "details": {
+      "expectedCounted": "Expected {{expected}}, counted {{actual}}",
+      "itemRemaining": "{{item}} · {{count}} remaining",
+      "materialRemaining": "{{material}} · {{count}} {{unit}} remaining",
+      "stockLeft": "{{count}} left",
+      "kindByEmployee": "{{kind}} by {{employee}}"
+    },
+    "accessibility": {
+      "openAlert": "Open alert: {{title}}",
+      "closeDropdown": "Close notifications dropdown"
+    },
+    "trial": {
+      "persistent": "Persistent alert",
+      "notice": "Trial alerts stay visible until resolved and can't be marked read or dismissed.",
+      "noneClearable": "There are no clearable alerts to mark as read."
+    },
+    "messages": {
+      "markedAllRead": "Marked {{count}} alerts as read."
+    },
+    "daySummary": "{{count}} alerts",
+    "bell": {
+      "ariaLabel": "Notifications, {{count}} unread",
+      "recentTitle": "Recent notifications",
+      "empty": "No recent notifications",
+      "loadFailed": "Couldn't load recent notifications."
     }
   },
   "menu": {

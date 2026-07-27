@@ -71,8 +71,6 @@ export function DemoRefundModal({ open, orderNo, orderTotal, lines, onClose, onC
     setSuccess(null);
   }, [open, canItem, orderNo]);
 
-  if (!open) return null;
-
   const selectedAmount = useMemo(() => {
     if (mode === 'order') return orderTotal;
     let sum = 0;
@@ -82,6 +80,8 @@ export function DemoRefundModal({ open, orderNo, orderTotal, lines, onClose, onC
     }
     return sum;
   }, [mode, orderTotal, refundable, selected]);
+
+  if (!open) return null;
 
   const selectedCount = Object.values(selected).reduce((s, n) => s + n, 0);
 
