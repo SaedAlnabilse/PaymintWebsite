@@ -206,7 +206,8 @@ describe('AlertsBell', () => {
       screen.getByRole('button', { name: 'Notifications, 0 unread' }),
     );
 
-    expect(screen.getByRole('dialog')).toHaveClass('start-full', 'top-0', 'ms-8');
+    expect(screen.getByRole('dialog')).toHaveClass('fixed', 'bottom-4');
+    expect(screen.getByRole('dialog')).toHaveStyle({ visibility: 'visible' });
     expect(screen.getByRole('dialog')).not.toHaveClass('end-0');
   });
 

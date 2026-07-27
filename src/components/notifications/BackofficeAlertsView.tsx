@@ -2,10 +2,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { isToday, isYesterday } from 'date-fns';
 import {
   AlertCircle,
-  Banknote,
   Bell,
   BellOff,
   Boxes,
+  CircleDollarSign,
   Loader2,
   RefreshCw,
   RotateCcw,
@@ -287,12 +287,42 @@ export function BackofficeAlertsView({
     return Array.from(groups.entries()).map(([key, group]) => ({ key, ...group }));
   }, [filteredAlerts, locale, t]);
 
-  const tabs: Array<{ id: AlertTab; count: number }> = [
-    { id: 'all', count: stats.total },
-    { id: 'cash', count: stats.cash },
-    { id: 'stock', count: stats.stock },
-    { id: 'refunds', count: stats.refunds },
-    { id: 'updates', count: stats.updates },
+  const tabs: Array<{
+    id: AlertTab;
+    count: number;
+    activeClass: string;
+    inactiveClass: string;
+  }> = [
+    {
+      id: 'all',
+      count: stats.total,
+      activeClass: 'bg-slate-600 text-white shadow-slate-500/20',
+      inactiveClass: 'bg-slate-500/10 text-slate-700 dark:text-slate-300',
+    },
+    {
+      id: 'cash',
+      count: stats.cash,
+      activeClass: 'bg-red-500 text-white shadow-red-500/20',
+      inactiveClass: 'bg-red-500/10 text-red-700 dark:text-red-300',
+    },
+    {
+      id: 'stock',
+      count: stats.stock,
+      activeClass: 'bg-amber-500 text-white shadow-amber-500/20',
+      inactiveClass: 'bg-amber-500/10 text-amber-700 dark:text-amber-300',
+    },
+    {
+      id: 'refunds',
+      count: stats.refunds,
+      activeClass: 'bg-violet-500 text-white shadow-violet-500/20',
+      inactiveClass: 'bg-violet-500/10 text-violet-700 dark:text-violet-300',
+    },
+    {
+      id: 'updates',
+      count: stats.updates,
+      activeClass: 'bg-mintcom-green text-emerald-950 shadow-emerald-500/20',
+      inactiveClass: 'bg-mintcom-green/10 text-emerald-800 dark:text-mintcom-green',
+    },
   ];
 
   const statCards = [
@@ -306,7 +336,7 @@ export function BackofficeAlertsView({
     {
       id: 'cash',
       value: stats.cash,
-      Icon: Banknote,
+      Icon: CircleDollarSign,
       tone: 'text-red-600 dark:text-red-400',
       background: 'bg-red-500/10',
     },
@@ -492,7 +522,8 @@ export function BackofficeAlertsView({
           />
         </label>
 
-        <div className="flex gap-2 overflow-x-auto pb-1" role="tablist">
+        <div className="w-full overflow-x-auto pb-1 scrollbar-none" role="tablist">
+          <div className="grid min-w-[40rem] grid-cols-5 gap-2">
           {tabs.map((tab) => (
             <button
               key={tab.id}
@@ -500,22 +531,25 @@ export function BackofficeAlertsView({
               role="tab"
               aria-selected={activeTab === tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`inline-flex shrink-0 items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-bold transition ${
+              className={`inline-flex w-full items-center justify-center gap-2 rounded-xl px-3.5 py-2.5 text-sm font-bold transition-all duration-200 ${
                 activeTab === tab.id
-                  ? 'bg-mintcom-green text-black'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10'
+                  ? `${tab.activeClass} shadow-lg`
+                  : `${tab.inactiveClass} hover:brightness-95 dark:hover:brightness-110`
               }`}
             >
               {t(`notifications.tabs.${tab.id}`)}
               <span
                 className={`rounded-full px-1.5 py-0.5 text-[11px] ${
-                  activeTab === tab.id ? 'bg-black/10' : 'bg-white dark:bg-black/30'
+                  activeTab === tab.id
+                    ? 'bg-white/20'
+                    : 'bg-white/80 text-gray-700 dark:bg-black/25 dark:text-white'
                 }`}
               >
                 {tab.count}
               </span>
             </button>
           ))}
+          </div>
         </div>
 
         {isMultiLocation && filterLocations.length > 0 && (
@@ -523,11 +557,12 @@ export function BackofficeAlertsView({
             <p className="mb-2 text-xs font-black uppercase tracking-wide text-gray-500 dark:text-gray-400">
               {t('notifications.filters.locationLabel')}
             </p>
-            <div className="flex gap-2 overflow-x-auto pb-1">
+            <div className="w-full overflow-x-auto pb-1 scrollbar-none">
+              <div className="flex min-w-full gap-2">
               <button
                 type="button"
                 onClick={() => setSelectedLocationId('all')}
-                className={`shrink-0 rounded-xl border px-3.5 py-2 text-sm font-bold transition ${
+                className={`min-w-48 flex-1 basis-48 shrink-0 rounded-xl border px-3.5 py-2.5 text-sm font-bold transition ${
                   selectedLocationId === 'all'
                     ? 'border-mintcom-green bg-mintcom-green/15 text-emerald-800 dark:text-mintcom-green'
                     : 'border-gray-200 bg-white text-gray-600 hover:border-mintcom-green dark:border-white/10 dark:bg-black/20 dark:text-gray-300'
@@ -547,7 +582,7 @@ export function BackofficeAlertsView({
                     key={location.id}
                     type="button"
                     onClick={() => setSelectedLocationId(location.id)}
-                    className={`max-w-xs shrink-0 truncate rounded-xl border px-3.5 py-2 text-sm font-bold transition ${
+                      className={`min-w-64 flex-1 basis-64 shrink-0 truncate rounded-xl border px-3.5 py-2.5 text-sm font-bold transition ${
                       selectedLocationId === location.id
                         ? 'border-mintcom-green bg-mintcom-green/15 text-emerald-800 dark:text-mintcom-green'
                         : 'border-gray-200 bg-white text-gray-600 hover:border-mintcom-green dark:border-white/10 dark:bg-black/20 dark:text-gray-300'
@@ -557,6 +592,7 @@ export function BackofficeAlertsView({
                   </button>
                 );
               })}
+              </div>
             </div>
           </div>
         )}
