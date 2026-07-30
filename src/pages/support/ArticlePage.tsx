@@ -183,20 +183,6 @@ export const ArticlePage = () => {
       const title = t(titleKeyById[id] ?? `support.articles.${key}`, { defaultValue: `Article ${id}` });
       const excerpt = t(`support.articles.${key}_excerpt`, { defaultValue: '' });
 
-      // Translate article paragraphs dynamically if locale keys exist
-      const translatedLines: string[] = [];
-      const hasTranslatedArticle = t(`support.articles.${key}.h1`, { defaultValue: '' }) !== '';
-      if (hasTranslatedArticle) {
-        let idx = 1;
-        while (t(`support.articles.${key}.h${idx}`, { defaultValue: '' })) {
-          translatedLines.push(`## ${t(`support.articles.${key}.h${idx}`)}`);
-          if (t(`support.articles.${key}.p${idx}`, { defaultValue: '' })) {
-            translatedLines.push(t(`support.articles.${key}.p${idx}`));
-          }
-          idx++;
-        }
-      }
-
       articles[id] = {
         id,
         title,
@@ -205,7 +191,7 @@ export const ArticlePage = () => {
         readTime: stats.readTime,
         views: stats.views,
         lastUpdated: 'May 2026',
-        content: translatedLines.length > 0 ? translatedLines : [...(SUPPORT_ARTICLE_CONTENT[id] ?? fallbackContent(excerpt))],
+        content: [...(SUPPORT_ARTICLE_CONTENT[id] ?? fallbackContent(excerpt))],
         relatedArticles: [...(SUPPORT_ARTICLE_RELATED[id] ?? [])],
       };
     });
