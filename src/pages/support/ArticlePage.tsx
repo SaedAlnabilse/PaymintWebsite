@@ -13,7 +13,7 @@ import { LoginRequiredModal } from '../../components/LoginRequiredModal';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 import { getArticleViews, useSupportArticleMetrics } from '../../hooks/useSupportArticleMetrics';
-import { SUPPORT_ARTICLE_CONTENT, SUPPORT_ARTICLE_RELATED } from '../../data/supportArticleContent';
+import { getLocalizedSupportArticleContent, SUPPORT_ARTICLE_RELATED } from '../../data/supportArticleContent';
 
 const catAccent: Record<string, { bg: string; light: string; border: string; text: string }> = {
   'getting-started': { bg: 'bg-blue-500',     light: 'bg-blue-50 dark:bg-blue-500/10',     border: 'border-blue-200 dark:border-blue-500/20',    text: 'text-blue-600 dark:text-blue-400'    },
@@ -65,7 +65,8 @@ function ContentLine({ line, index }: { line: string; index: number }) {
 }
 
 export const ArticlePage = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const currentLanguage = i18n.resolvedLanguage || i18n.language || 'en';
   const { articleId } = useParams<{ articleId: string }>();
   const navigate = useNavigate();
   const isRtl = t('common.locale') === 'ar';
@@ -191,13 +192,13 @@ export const ArticlePage = () => {
         readTime: stats.readTime,
         views: stats.views,
         lastUpdated: 'May 2026',
-        content: [...(SUPPORT_ARTICLE_CONTENT[id] ?? fallbackContent(excerpt))],
+        content: [...(getLocalizedSupportArticleContent(currentLanguage, id) ?? fallbackContent(excerpt))],
         relatedArticles: [...(SUPPORT_ARTICLE_RELATED[id] ?? [])],
       };
     });
 
     return articles;
-  }, [t]);
+  }, [t, currentLanguage]);
 
   const article = articleId ? allArticles[articleId] : null;
   const acc     = article ? catAccent[article.categoryId]  : null;

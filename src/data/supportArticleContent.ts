@@ -1,3 +1,6 @@
+import { SUPPORT_ARTICLE_CONTENT_AR } from './supportArticleContent.ar';
+import { SUPPORT_ARTICLE_CONTENT_ZH } from './supportArticleContent.zh';
+
 export const SUPPORT_ARTICLE_CONTENT: Record<string, string[]> = {
   'gs-1': [
     '## Manage Your Account Settings',
@@ -843,3 +846,15 @@ export const SUPPORT_ARTICLE_RELATED: Record<string, string[]> = {
   'ft-12': ['gs-11', 'ft-11', 'bl-6'],
   'ft-13': ['gs-3', 'tc-11', 'ft-9'],
 };
+
+const SUPPORT_ARTICLE_CONTENT_BY_LOCALE: Record<string, Record<string, string[]>> = {
+  en: SUPPORT_ARTICLE_CONTENT,
+  ar: SUPPORT_ARTICLE_CONTENT_AR,
+  zh: SUPPORT_ARTICLE_CONTENT_ZH,
+};
+
+export function getLocalizedSupportArticleContent(locale: string, id: string): string[] | undefined {
+  const baseLocale = locale.split('-')[0];
+  const localeContent = SUPPORT_ARTICLE_CONTENT_BY_LOCALE[baseLocale];
+  return localeContent?.[id] ?? SUPPORT_ARTICLE_CONTENT[id];
+}

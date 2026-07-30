@@ -812,11 +812,26 @@ export function DashboardLayout() {
                   <div className="flex items-center gap-1.5">
                     <RealtimeStatusIndicator />
                   </div>
-                  {canSwitchLocation && (
-                    <div className="flex items-center gap-1 text-xs font-medium text-gray-400 tracking-widest group-hover:text-gray-900 dark:group-hover:text-white transition-colors">
-                      {t('dashboard.menu.switchLocation')} <ChevronRight size={10} className={`mt-0.5 ${t('common.locale') === 'ar' ? 'rotate-180' : ''}`} />
-                    </div>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {canAccessOwnerPortal && (
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          navigate('/owner');
+                        }}
+                        className="flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-bold text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-colors"
+                      >
+                        <Crown size={14} />
+                        <span>{t('dashboard.menu.backToOwnerPortal')}</span>
+                      </button>
+                    )}
+                    {canSwitchLocation && (
+                      <div className="flex items-center gap-1 text-xs font-medium text-gray-400 tracking-widest group-hover:text-gray-900 dark:group-hover:text-white transition-colors">
+                        {t('dashboard.menu.switchLocation')} <ChevronRight size={10} className={`mt-0.5 ${t('common.locale') === 'ar' ? 'rotate-180' : ''}`} />
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -1034,17 +1049,6 @@ export function DashboardLayout() {
                   <p className="text-xs text-gray-500 truncate">{account?.email || t('staff.roles.manager')}</p>
                 </div>
               </div>
-
-              {canAccessOwnerPortal && (
-                <button
-                  type="button"
-                  onClick={() => navigate('/owner')}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-all text-left rtl:text-right"
-                >
-                  <Crown size={20} />
-                  <span>{t('dashboard.menu.backToOwnerPortal')}</span>
-                </button>
-              )}
 
               {hasAccess('notifications') && (
                 <div className="flex items-center justify-between gap-3 px-3 py-1">

@@ -454,7 +454,11 @@ export const TicketDetailPage = () => {
                   {/* Bubble */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1.5">
-                      <span className="font-bold text-sm">{message.senderName}</span>
+                      <span className="font-bold text-sm">
+                        {message.sender === 'support'
+                          ? message.senderName.replace(/\\s*\\(Mintcom Support\\)\\s*$/i, '')
+                          : message.senderName}
+                      </span>
                       <span className="text-xs text-gray-400">{formatTimestamp(message.timestamp)}</span>
                     </div>
 
@@ -575,4 +579,3 @@ export const TicketDetailPage = () => {
     </div>
   );
 };
-
