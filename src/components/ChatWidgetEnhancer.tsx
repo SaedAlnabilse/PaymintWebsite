@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { DualLauncher } from './Chat/DualLauncher';
 import { FAQModal } from './Chat/FAQModal';
@@ -31,6 +31,7 @@ export const ChatWidgetEnhancer = () => {
     const [tasksCount, setTasksCount] = useState(0);
     const [showCongratsPopup, setShowCongratsPopup] = useState(false);
     const [isHiddenByOverlay, setIsHiddenByOverlay] = useState(false);
+    const activeCongratsSeenKeyRef = useRef<string | null>(null);
 
     // Must match TasksModal: ChatWidgetEnhancer sits outside the dashboard route tree,
     // so useParams().locationSlug is always undefined — parse pathname instead.
@@ -49,15 +50,29 @@ export const ChatWidgetEnhancer = () => {
 
     const openCongratsOnce = useCallback(() => {
         if (typeof window === 'undefined') return false;
-        const seen = window.localStorage.getItem(popupSeenKey);
-        if (seen) return false;
+        try {
+            if (window.localStorage.getItem(popupSeenKey)) return false;
+        } catch {
+            // Storage privacy/errors must not suppress a completion message.
+        }
 
+        activeCongratsSeenKeyRef.current = popupSeenKey;
         setIsTasksOpen(false);
         setIsChatOpen(false);
         setIsFAQOpen(false);
         setShowCongratsPopup(true);
-        window.localStorage.setItem(popupSeenKey, 'true');
         return true;
+    }, [popupSeenKey]);
+
+    const acknowledgeCongrats = useCallback(() => {
+        const seenKey = activeCongratsSeenKeyRef.current || popupSeenKey;
+        try {
+            window.localStorage.setItem(seenKey, 'true');
+        } catch {
+            // The popup can still close when storage is unavailable.
+        }
+        activeCongratsSeenKeyRef.current = null;
+        setShowCongratsPopup(false);
     }, [popupSeenKey]);
 
     useEffect(() => {
@@ -130,10 +145,10 @@ export const ChatWidgetEnhancer = () => {
         setIsTasksOpen(false);
     };
 
-    const closeCongrats = () => setShowCongratsPopup(false);
+    const closeCongrats = acknowledgeCongrats;
 
     const handleGetAppFromCongrats = () => {
-        setShowCongratsPopup(false);
+        acknowledgeCongrats();
         window.dispatchEvent(new Event('mintcom-open-mobile-app'));
     };
 

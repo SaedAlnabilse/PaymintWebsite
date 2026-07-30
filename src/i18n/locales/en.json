@@ -1683,6 +1683,7 @@
       "activeLocation": "Active Location",
       "activityLog": "Activity Log",
       "addons": "Add-ons",
+      "backToOwnerPortal": "Back to Owner Portal",
       "billing": "Billing",
       "cashGapReports": "Cash Gap Reports",
       "categories": "Categories",
@@ -4789,7 +4790,8 @@
       "logoTip": "Logo displayed to customers.",
       "nameLabel": "Name",
       "namePlaceholder": "e.g. Digital Wallet",
-      "nameTip": "The name used for reporting."
+      "nameTip": "The name used for reporting.",
+      "systemBrandLocked": "This standard card-network logo and name are protected and cannot be changed."
     },
     "messages": {
       "added": "Payment method added",
@@ -6789,6 +6791,69 @@
       "materialRemaining": "{{material}} · {{count}} {{unit}} remaining",
       "stockLeft": "{{count}} left",
       "kindByEmployee": "{{kind}} by {{employee}}"
+    },
+    "generated": {
+      "stockItemLow": {
+        "title": "Low stock alert",
+        "message": "{{item}} is running low with {{count}} units remaining"
+      },
+      "stockItemCritical": {
+        "title": "Critical stock alert",
+        "message": "{{item}} has only {{count}} units remaining"
+      },
+      "stockItemOut": {
+        "title": "Out of stock",
+        "message": "{{item}} is now out of stock"
+      },
+      "stockItemOutBackordered": {
+        "message": "{{item}} is out of stock (backordered: {{count}} units)"
+      },
+      "stockMaterialLow": {
+        "title": "Low raw material stock",
+        "message": "{{material}} is running low with {{count}} {{unit}} remaining"
+      },
+      "stockMaterialOut": {
+        "title": "Raw material out of stock",
+        "message": "{{material}} is now out of stock"
+      },
+      "refundItems": {
+        "title": "Items refunded",
+        "message": "{{count}} item line(s) from order #{{orderNumber}} have been refunded. Refund order #{{refundOrderNumber}}"
+      },
+      "refundOrder": {
+        "title": "Order refunded",
+        "message": "Order #{{orderNumber}} has been refunded. Refund order #{{refundOrderNumber}}"
+      },
+      "trialExpiring": {
+        "title": "Trial expiring soon",
+        "message": "Your free trial for \"{{establishment}}\" expires in {{hours}} hours. Subscribe now to continue using Mintcom and keep all your data."
+      },
+      "trialExpired": {
+        "title": "Trial expired, account suspended",
+        "message": "Your free trial for \"{{establishment}}\" has expired. You have been logged out. Subscribe to regain access to your data and continue using Mintcom."
+      },
+      "supportReply": {
+        "title": "New support reply",
+        "message": "Mintcom Support replied to ticket {{ticketNumber}}. Open Support > My Tickets to read the answer."
+      },
+      "supportStatusUpdate": {
+        "title": "Support ticket updated",
+        "message": "Ticket {{ticketNumber}} is now {{status}}. Open Support > My Tickets for details."
+      },
+      "supportStatusLabel": {
+        "open": "open",
+        "inProgress": "in progress",
+        "resolved": "resolved",
+        "closed": "closed"
+      },
+      "lowInventoryRealtime": {
+        "title": "Low inventory alert",
+        "message": "{{item}} is running low ({{count}} remaining)"
+      },
+      "passwordHelpRequest": {
+        "title": "Password help request",
+        "message": "{{staffName}} (@{{username}}) needs help signing in. Open Employees if you want to set a new password (leave blank to keep the current one) and share it with them."
+      }
     },
     "accessibility": {
       "openAlert": "Open alert: {{title}}",

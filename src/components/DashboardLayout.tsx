@@ -42,7 +42,8 @@ import {
   PlusCircle,
   ShoppingBag,
   Clock,
-  FileText
+  FileText,
+  Crown
 } from 'lucide-react';
 
 // Mintcom Logo imports
@@ -100,6 +101,9 @@ export function DashboardLayout() {
   // Switching locations only makes sense when there is more than one to move
   // between. A single-location user (owner or employee) has nothing to switch to.
   const canSwitchLocation = (establishments?.length || 0) > 1;
+  // The owner portal is available to the account owner regardless of how many
+  // locations they have. Secondary admins do not have access to that portal.
+  const canAccessOwnerPortal = Boolean(account && !account.isSecondaryAdmin);
   const navigate = useNavigate();
   const location = useLocation();
   const { locationSlug } = useParams<{ locationSlug: string }>();
@@ -1031,6 +1035,17 @@ export function DashboardLayout() {
                 </div>
               </div>
 
+              {canAccessOwnerPortal && (
+                <button
+                  type="button"
+                  onClick={() => navigate('/owner')}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-all text-left rtl:text-right"
+                >
+                  <Crown size={20} />
+                  <span>{t('dashboard.menu.backToOwnerPortal')}</span>
+                </button>
+              )}
+
               {hasAccess('notifications') && (
                 <div className="flex items-center justify-between gap-3 px-3 py-1">
                   <span className="text-sm font-bold text-gray-500 dark:text-gray-400">
@@ -1088,6 +1103,20 @@ export function DashboardLayout() {
             </div>
           ) : (
             <div className="flex flex-col items-center gap-2">
+              {canAccessOwnerPortal && (
+                <button
+                  type="button"
+                  onClick={() => navigate('/owner')}
+                  aria-label={t('dashboard.menu.backToOwnerPortal')}
+                  className="w-12 h-12 flex items-center justify-center rounded-xl text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-all relative group"
+                >
+                  <Crown size={24} />
+                  <div className="absolute left-full rtl:left-auto rtl:right-full top-1/2 -translate-y-1/2 ml-2 rtl:ml-0 rtl:mr-2 px-3 py-1.5 bg-gray-900/90 backdrop-blur-md text-white text-xs font-sans font-medium tracking-normal rounded-lg opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all duration-300 pointer-events-none z-[80] whitespace-nowrap border border-white/10 shadow-xl translate-x-1 rtl:-translate-x-1 group-hover:translate-x-0 group-focus-within:translate-x-0">
+                    {t('dashboard.menu.backToOwnerPortal')}
+                  </div>
+                </button>
+              )}
+
               {hasAccess('notifications') && (
                 <AlertsBell
                   scope="location"
@@ -1300,6 +1329,19 @@ export function DashboardLayout() {
 
             {/* Footer */}
             <div className="p-4 border-t border-gray-100 dark:border-white/5">
+              {canAccessOwnerPortal && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigate('/owner');
+                    setMobileMenuOpen(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 mb-3 rounded-xl text-sm font-bold text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-all text-left rtl:text-right"
+                >
+                  <Crown size={20} />
+                  <span>{t('dashboard.menu.backToOwnerPortal')}</span>
+                </button>
+              )}
               <div className="mb-3">
                 <SetupGuideHelpMenu
                   canReplay={setupGuide.canReplay}

@@ -35,7 +35,7 @@ import {
 } from 'lucide-react';
 import api from '../../config/api';
 import { ONBOARDING_VIDEO_URL } from '../../config/downloads';
-import { CURRENCIES } from '../../context/CurrencyContext';
+import { CURRENCIES, useCurrency } from '../../context/CurrencyContext';
 import { useAuth } from '../../context/AuthContext';
 import { PasswordResetOtpModal } from '../../components/PasswordResetOtpModal';
 import { ConfirmModal } from '../../components/ConfirmModal';
@@ -105,7 +105,8 @@ const DELETE_REASON_OPTIONS = [
 
 export function OwnerAccountManagementPage() {
     const { t, i18n } = useTranslation();
-    const { account, establishments, logout, updateAccount } = useAuth();
+    const { account, establishments, logout, updateAccount, updateEstablishmentsCurrency } = useAuth();
+    const { updateCurrency } = useCurrency();
     const navigate = useNavigate();
     const hasOnboardingVideo = Boolean(ONBOARDING_VIDEO_URL);
     const userManualDoc = getLocalizedManual('user', i18n.language);
@@ -162,14 +163,17 @@ export function OwnerAccountManagementPage() {
             setIsUpdatingCurrency(true);
             const response = await api.put('/api/accounts/currency', { currency: newCurrency });
             if (response.data?.success) {
-                setGlobalCurrency(newCurrency);
-                toast.success(t('owner.account.currencyUpdated', { currency: newCurrency }));
+                const currency = newCurrency.toUpperCase();
+                setGlobalCurrency(currency);
+                updateCurrency(currency);
+                updateEstablishmentsCurrency(currency);
+                toast.success(t('owner.account.currencyUpdated', { currency }));
 
                 // Update local establishments data
                 if (accountDetails?.establishments) {
                     setAccountDetails(prev => prev ? ({
                         ...prev,
-                        establishments: prev.establishments!.map(e => ({ ...e, currency: newCurrency }))
+                        establishments: prev.establishments!.map(e => ({ ...e, currency }))
                     }) : prev);
                 }
             }

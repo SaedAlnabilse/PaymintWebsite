@@ -1683,6 +1683,7 @@
       "activeLocation": "الموقع النشط",
       "activityLog": "سجل النشاط",
       "addons": "الإضافات",
+      "backToOwnerPortal": "العودة إلى بوابة المالك",
       "billing": "الفوترة",
       "cashGapReports": "تقارير فجوة النقد",
       "categories": "الفئات",
@@ -4789,7 +4790,8 @@
       "logoTip": "الشعار المعروض للعملاء.",
       "nameLabel": "الاسم",
       "namePlaceholder": "مثال: محفظة رقمية",
-      "nameTip": "الاسم المستخدم للتقارير."
+      "nameTip": "الاسم المستخدم للتقارير.",
+      "systemBrandLocked": "شعار واسم شبكة البطاقات القياسيان محميان ولا يمكن تغييرهما."
     },
     "messages": {
       "added": "تم إضافة طريقة الدفع",
@@ -6789,6 +6791,69 @@
       "materialRemaining": "{{material}} · المتبقي {{count}} {{unit}}",
       "stockLeft": "متبقي {{count}}",
       "kindByEmployee": "{{kind}} بواسطة {{employee}}"
+    },
+    "generated": {
+      "stockItemLow": {
+        "title": "تنبيه مخزون منخفض",
+        "message": "{{item}} كمية منخفضة، تبقى {{count}} وحدة"
+      },
+      "stockItemCritical": {
+        "title": "تنبيه مخزون حرج",
+        "message": "{{item}} تبقى منه {{count}} وحدة فقط"
+      },
+      "stockItemOut": {
+        "title": "نفدت الكمية",
+        "message": "{{item}} نفدت كميته الآن"
+      },
+      "stockItemOutBackordered": {
+        "message": "{{item}} نفدت كميته (طلبات معلقة: {{count}} وحدة)"
+      },
+      "stockMaterialLow": {
+        "title": "مخزون مواد خام منخفض",
+        "message": "{{material}} كمية منخفضة، تبقى {{count}} {{unit}}"
+      },
+      "stockMaterialOut": {
+        "title": "نفدت المادة الخام",
+        "message": "{{material}} نفدت كميته الآن"
+      },
+      "refundItems": {
+        "title": "تم استرداد الأصناف",
+        "message": "تم استرداد {{count}} من أصناف الطلب رقم {{orderNumber}}. طلب الاسترداد رقم {{refundOrderNumber}}"
+      },
+      "refundOrder": {
+        "title": "تم استرداد الطلب",
+        "message": "تم استرداد الطلب رقم {{orderNumber}}. طلب الاسترداد رقم {{refundOrderNumber}}"
+      },
+      "trialExpiring": {
+        "title": "الفترة التجريبية على وشك الانتهاء",
+        "message": "تنتهي فترتك التجريبية لـ \"{{establishment}}\" خلال {{hours}} ساعة. اشترك الآن للاستمرار في استخدام Mintcom والاحتفاظ بجميع بياناتك."
+      },
+      "trialExpired": {
+        "title": "انتهت الفترة التجريبية، تم تعليق الحساب",
+        "message": "انتهت فترتك التجريبية لـ \"{{establishment}}\". تم تسجيل خروجك. اشترك لاستعادة الوصول إلى بياناتك ومتابعة استخدام Mintcom."
+      },
+      "supportReply": {
+        "title": "رد جديد من الدعم",
+        "message": "رد فريق دعم Mintcom على التذكرة رقم {{ticketNumber}}. افتح الدعم > تذاكري لقراءة الرد."
+      },
+      "supportStatusUpdate": {
+        "title": "تم تحديث حالة التذكرة",
+        "message": "أصبحت حالة التذكرة رقم {{ticketNumber}} الآن {{status}}. افتح الدعم > تذاكري للتفاصيل."
+      },
+      "supportStatusLabel": {
+        "open": "مفتوحة",
+        "inProgress": "قيد المعالجة",
+        "resolved": "تم حلها",
+        "closed": "مغلقة"
+      },
+      "lowInventoryRealtime": {
+        "title": "تنبيه مخزون منخفض",
+        "message": "{{item}} كمية منخفضة (تبقى {{count}})"
+      },
+      "passwordHelpRequest": {
+        "title": "طلب مساعدة في كلمة المرور",
+        "message": "يحتاج {{staffName}} (@{{username}}) للمساعدة في تسجيل الدخول. افتح الموظفين لتعيين كلمة مرور جديدة (اتركها فارغة للإبقاء على الحالية) وشاركها معه."
+      }
     },
     "accessibility": {
       "openAlert": "فتح التنبيه: {{title}}",

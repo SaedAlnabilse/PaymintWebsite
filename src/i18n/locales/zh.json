@@ -4789,7 +4789,8 @@
       "logoTip": "向顾客展示的标志。",
       "nameLabel": "名称",
       "namePlaceholder": "例如：数字钱包",
-      "nameTip": "用于报表的名称。"
+      "nameTip": "用于报表的名称。",
+      "systemBrandLocked": "标准卡组织的徽标和名称受保护，无法更改。"
     },
     "messages": {
       "added": "支付方式已添加",

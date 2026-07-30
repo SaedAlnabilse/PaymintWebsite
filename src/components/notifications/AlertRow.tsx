@@ -135,6 +135,16 @@ export function AlertRow({
   })();
 
   const description = (() => {
+    if (alert.messageKey) {
+      const params = alert.params ? { ...alert.params } : undefined;
+      if (params?.statusKey) {
+        params.status = t(
+          `notifications.generated.supportStatusLabel.${params.statusKey}`,
+        );
+      }
+      return t(alert.messageKey, params);
+    }
+
     if (isCashAlertKind(alert.alertKind)) {
       const expected = toFiniteNumber(alert.expectedAmount);
       const actual = toFiniteNumber(alert.actualAmount);
@@ -189,8 +199,9 @@ export function AlertRow({
     return t(presentation.labelKey);
   })();
 
-  const title =
-    isCashAlertKind(alert.alertKind) && employeeName
+  const title = alert.titleKey
+    ? t(alert.titleKey, alert.params ?? undefined)
+    : isCashAlertKind(alert.alertKind) && employeeName
       ? t('notifications.details.kindByEmployee', {
           kind: t(presentation.labelKey),
           employee: employeeName,

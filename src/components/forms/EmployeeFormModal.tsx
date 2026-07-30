@@ -1210,7 +1210,12 @@ export function EmployeeFormModal({
           </div>
 
           <div ref={scrollRef} className="overflow-y-auto p-4 sm:p-8 pt-4 custom-scrollbar flex-1 pb-safe">
-            <form id="employee-form" onSubmit={handleSubmit} className="space-y-6">
+            <form
+              id="employee-form"
+              onSubmit={handleSubmit}
+              autoComplete="off"
+              className="space-y-6"
+            >
               {/* Error Banner */}
               {Object.keys(errors).length > 0 && (
                 <div ref={errorBannerRef} className="p-4 rounded-xl bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400 text-sm font-bold flex items-center gap-2 animate-pulse">
@@ -1718,6 +1723,9 @@ export function EmployeeFormModal({
                 <input maxLength={255}
                   type="text"
                   value={username}
+                  // This is an account-creation field, never a sign-in field. `new-password`
+                  // prevents browsers/password managers from inserting a saved login username.
+                  autoComplete="new-password"
                   onChange={(e) => {
                     setUsername(e.target.value);
                     setUsernameAvailabilityError('');
@@ -1763,6 +1771,7 @@ export function EmployeeFormModal({
                   <input maxLength={255}
                     type={showPassword ? 'text' : 'password'}
                     value={password}
+                    autoComplete="new-password"
                     onChange={(e) => { setPassword(e.target.value); if (errors.password) setErrors({ ...errors, password: '' }); }}
                     placeholder={formatInputPlaceholder(initialData ? t('staff.form.leaveBlank') : t('staff.form.passwordPlaceholder'), t('common.locale'))}
                     className={`w-full bg-gray-50 dark:bg-white/5 border ${errors.password ? 'border-mintcom-red ring-2 ring-mintcom-red/20' : 'border-gray-200 dark:border-white/10'} rounded-xl px-4 py-3 pr-12 text-sm font-bold text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:border-mintcom-green focus:ring-1 focus:ring-mintcom-green transition-colors`}
@@ -1797,6 +1806,7 @@ export function EmployeeFormModal({
                   <input maxLength={255}
                     type={showConfirmPassword ? 'text' : 'password'}
                     value={confirmPassword}
+                    autoComplete="new-password"
                     onChange={(e) => { setConfirmPassword(e.target.value); if (errors.confirmPassword) setErrors({ ...errors, confirmPassword: '' }); }}
                     placeholder={formatInputPlaceholder(t('staff.form.confirmPasswordPlaceholder'), t('common.locale'))}
                     className={`w-full bg-gray-50 dark:bg-white/5 border ${errors.confirmPassword ? 'border-mintcom-red ring-2 ring-mintcom-red/20' : 'border-gray-200 dark:border-white/10'} rounded-xl px-4 py-3 pr-12 text-sm font-bold text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:border-mintcom-green focus:ring-1 focus:ring-mintcom-green transition-colors`}
