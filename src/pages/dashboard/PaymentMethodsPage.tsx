@@ -17,6 +17,7 @@ import {
   DollarSign,
   Wallet,
   Star,
+  Lock,
   RotateCcw
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -60,6 +61,9 @@ interface CardType {
 }
 
 type StatusFilterValue = 'ALL' | 'ACTIVE' | 'INACTIVE';
+
+const isSystemCardBrand = (name: string) =>
+  ['visa', 'mastercard', 'american express'].includes(name.trim().toLowerCase());
 
 export function PaymentMethodsPage() {
   const { t } = useTranslation();
@@ -108,6 +112,7 @@ export function PaymentMethodsPage() {
   const watchName = watch('name');
   const isEditingInactiveMethod = !!editingMethod && !editingMethod.isDefault && !editingMethod.isActive;
   const isEditingInactiveCard = !!editingCard && editingCard.isActive === false;
+  const isEditingSystemCard = !!editingCard && isSystemCardBrand(editingCard.name);
   const movePaymentMethodsCreateViewToActive = () => {
     if (paymentMethodStatusFilter === 'INACTIVE') {
       setPaymentMethodStatusFilter('ACTIVE');
@@ -168,7 +173,7 @@ export function PaymentMethodsPage() {
 
   /**
    * Resolve the logo for a card-type tile.
-   * Known brands (Visa / Mastercard / Amex / …) always use the maintained CDN
+   * Known brands (Visa / Mastercard / Amex / …) always use the maintained local
    * set so they paint on first render — no hard refresh, no broken upload paths.
    * Custom brands keep their stored image when present.
    */
@@ -585,7 +590,7 @@ export function PaymentMethodsPage() {
                   
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => { setEditingCard(card); setNewCardName(card.name); setCardImagePreview(card.imageUrl || card.logo || null); setSelectedCardImage(null); setShowCardModal(true); setCardErrors({}); }}
+                      onClick={() => { setEditingCard(card); setNewCardName(card.name); setCardImagePreview(resolveCardLogoUrl(card)); setSelectedCardImage(null); setShowCardModal(true); setCardErrors({}); }}
                       className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-gray-50 dark:bg-white/5 text-gray-500 hover:text-mintcom-green hover:bg-mintcom-green/10 border border-gray-100 dark:border-white/5 transition-all font-bold text-xs active:scale-95"
                     >
                       <Edit2 size={16} /> {t('common.edit')}
@@ -959,8 +964,15 @@ export function PaymentMethodsPage() {
 
               <div className="p-8 space-y-8">
                 <div className="flex flex-col items-center gap-4">
-                  <div className="w-32 h-32 bg-gray-50 dark:bg-white/5 rounded-3xl flex items-center justify-center border-2 border-dashed border-gray-200 dark:border-white/10 overflow-hidden relative group transition-all hover:border-mintcom-green/50">
-                    {cardImagePreview ? (
+                  <div className={`w-32 h-32 bg-gray-50 dark:bg-white/5 rounded-3xl flex items-center justify-center border-2 border-dashed border-gray-200 dark:border-white/10 overflow-hidden relative group transition-all ${isEditingSystemCard ? '' : 'hover:border-mintcom-green/50'}`}>
+                    {isEditingSystemCard ? (
+                      <>
+                        <img src={cardImagePreview || resolveCardLogoUrl(editingCard!) || undefined} alt={editingCard!.name} className="w-full h-full object-contain p-4" />
+                        <div className="absolute inset-x-0 bottom-0 py-1.5 bg-black/60 text-white flex items-center justify-center gap-1 text-[9px] font-black uppercase tracking-wider">
+                          <Lock size={11} /> {t('paymentMethods.system')}
+                        </div>
+                      </>
+                    ) : cardImagePreview ? (
                       <>
                         <img src={cardImagePreview} alt="Preview" className="w-full h-full object-contain p-4" loading="lazy" decoding="async" />
                         <button
@@ -980,7 +992,9 @@ export function PaymentMethodsPage() {
                     )}
                   </div>
                   <p className="text-[10px] font-medium text-gray-400 dark:text-gray-500 mt-2 text-center px-4">
-                    {t('common.imageRecommendation', { defaultValue: 'Recommended: 512x512px (Square) or 4:3. PNG or SVG for transparency.' })}
+                    {isEditingSystemCard
+                      ? t('paymentMethods.form.systemBrandLocked')
+                      : t('common.imageRecommendation', { defaultValue: 'Recommended: 512x512px (Square) or 4:3. PNG or SVG for transparency.' })}
                   </p>
                 </div>
 
@@ -996,7 +1010,8 @@ export function PaymentMethodsPage() {
                         setNewCardName(e.target.value);
                         if (cardErrors.cardName) setCardErrors({ ...cardErrors, cardName: '' });
                       }}
-                      className={`w-full px-5 py-4 bg-gray-50 dark:bg-black/20 border ${cardErrors.cardName ? 'border-mintcom-red ring-2 ring-mintcom-red/20' : 'border-gray-200 dark:border-white/10'} rounded-2xl text-gray-900 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-mintcom-green/20 transition-all shadow-sm`}
+                      disabled={isEditingSystemCard}
+                      className={`w-full px-5 py-4 bg-gray-50 dark:bg-black/20 border ${cardErrors.cardName ? 'border-mintcom-red ring-2 ring-mintcom-red/20' : 'border-gray-200 dark:border-white/10'} rounded-2xl text-gray-900 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-mintcom-green/20 transition-all shadow-sm disabled:cursor-not-allowed disabled:opacity-60`}
                       placeholder={formatInputPlaceholder(t('paymentMethods.form.brandPlaceholder'), t('common.locale'))}
                     />
                     {cardErrors.cardName && <p className="text-mintcom-red text-[10px] font-black mt-2 px-1 uppercase tracking-widest">{cardErrors.cardName}</p>}
@@ -1042,7 +1057,7 @@ export function PaymentMethodsPage() {
                       )}
                       <button
                         onClick={handleAddCardType}
-                        disabled={isSubmitting || !newCardName.trim()}
+                        disabled={isSubmitting || isEditingSystemCard || !newCardName.trim()}
                         className={`flex-1 py-4 bg-mintcom-green text-black font-black text-xs tracking-[0.2em] uppercase rounded-2xl hover:scale-[1.02] active:scale-95 transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:grayscale disabled:scale-100 ${newCardName.trim() ? 'shadow-mintcom-green/20' : 'shadow-black/5'}`}
                       >
                         {isSubmitting ? (
@@ -1075,5 +1090,3 @@ export function PaymentMethodsPage() {
     </div>
   );
 }
-
-

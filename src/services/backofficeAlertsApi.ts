@@ -23,6 +23,9 @@ export interface BackofficeAlert {
   severity: AlertSeverity;
   title: string;
   message: string;
+  titleKey?: string | null;
+  messageKey?: string | null;
+  params?: Record<string, string | number> | null;
   isRead: boolean;
   isDismissible?: boolean;
   createdAt: string;

@@ -25,8 +25,13 @@ export const TOTAL_SETUP_TASKS = SETUP_TASK_IDS.length;
 export const getTasksStorageKey = (contextId: string) =>
   `mintcom.widget.tasks.v1.${contextId}`;
 
+// v1 marked this flag before the popup had actually rendered. If that render
+// was interrupted, the user could be permanently suppressed without ever
+// seeing the congratulations. v2 is written only after acknowledgement.
+export const SETUP_TASKS_COMPLETION_POPUP_VERSION = 'v2';
+
 export const getPopupSeenKey = (contextId: string) =>
-  `mintcom.widget.tasks.popup.seen.${contextId}`;
+  `mintcom.widget.tasks.popup.seen.${SETUP_TASKS_COMPLETION_POPUP_VERSION}.${contextId}`;
 
 /** Match TasksModal: derive context from the URL (useParams is empty outside route trees). */
 export function getDashboardTasksContextId(pathname: string): string {

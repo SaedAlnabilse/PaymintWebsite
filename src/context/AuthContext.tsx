@@ -43,6 +43,7 @@ interface AuthContextType {
   setCurrentEstablishment: (establishment: Establishment) => void;
   refreshEstablishments: () => Promise<Establishment[]>;
   refreshProfile: () => Promise<void>;
+  updateEstablishmentsCurrency: (currency: string) => void;
 
   // Account update
   updateAccount: (updates: Partial<Account>) => void;
@@ -609,6 +610,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // The system currency applies to every establishment. Keep the cached
+  // establishment data (including this tab's selected establishment) in sync
+  // as soon as the owner saves it, so dependent screens rerender immediately.
+  const updateEstablishmentsCurrency = (currency: string) => {
+    const normalizedCurrency = currency.toUpperCase();
+    setEstablishments(previous =>
+      previous.map(establishment => ({ ...establishment, currency: normalizedCurrency })),
+    );
+    setCurrentEstablishmentState(previous => {
+      if (!previous) return previous;
+      const updated = { ...previous, currency: normalizedCurrency };
+      sessionStorage.setItem('currentEstablishment', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   // Update account data (e.g., after setting Owner POS ID)
   const updateAccount = (updates: Partial<Account>) => {
     if (account) {
@@ -639,6 +656,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setCurrentEstablishment,
         refreshEstablishments,
         refreshProfile,
+        updateEstablishmentsCurrency,
         updateAccount,
       }}
     >

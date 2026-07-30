@@ -10,6 +10,7 @@ export { CURRENCIES } from '../data/globalLocaleOptions';
 interface CurrencyContextType {
   currency: string;
   currencySymbol: string;
+  updateCurrency: (currency: string) => void;
   refreshCurrency: () => Promise<void>;
   formatAmount: (amount: number | string | null | undefined) => string;
   loading: boolean;
@@ -25,6 +26,12 @@ export const CurrencyProvider: React.FC<CurrencyProviderProps> = ({ children }) 
   const { isAuthenticated, currentEstablishment } = useAuth();
   const [currency, setCurrency] = useState<string>('JOD');
   const [loading, setLoading] = useState(true);
+
+  // Lets an in-app settings save update every currency consumer immediately,
+  // without waiting for the next settings poll.
+  const updateCurrency = useCallback((nextCurrency: string) => {
+    setCurrency(normalizeCurrencyCode(nextCurrency));
+  }, []);
 
   // Kept as currencySymbol for existing consumers, but it intentionally stores the ISO code.
   const currencySymbol = normalizeCurrencyCode(GLOBAL_CURRENCIES.find(c => c.code === currency)?.symbol || currency);
@@ -74,6 +81,7 @@ export const CurrencyProvider: React.FC<CurrencyProviderProps> = ({ children }) 
       value={{
         currency,
         currencySymbol,
+        updateCurrency,
         refreshCurrency,
         formatAmount,
         loading,
