@@ -185,15 +185,15 @@ export const ArticlePage = () => {
 
       // Translate article paragraphs dynamically if locale keys exist
       const translatedLines: string[] = [];
-      const hasTranslatedArticle = t(`support.articles.${key}.h1`, { defaultValue: '' }) !== '';
-      if (hasTranslatedArticle) {
-        let idx = 1;
-        while (t(`support.articles.${key}.h${idx}`, { defaultValue: '' })) {
-          translatedLines.push(`## ${t(`support.articles.${key}.h${idx}`)}`);
-          if (t(`support.articles.${key}.p${idx}`, { defaultValue: '' })) {
-            translatedLines.push(t(`support.articles.${key}.p${idx}`));
+      if (t(`support.articles.${key}.h1`, { defaultValue: '' }) !== '') {
+        for (let idx = 1; idx <= 20; idx++) {
+          const heading = t(`support.articles.${key}.h${idx}`, { defaultValue: '' });
+          if (!heading) break;
+          translatedLines.push(`## ${heading}`);
+          const p = t(`support.articles.${key}.p${idx}`, { defaultValue: '' });
+          if (p) {
+            translatedLines.push(p);
           }
-          idx++;
         }
       }
 
