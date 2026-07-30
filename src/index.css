@@ -3,6 +3,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700;800;900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
 @import url('https://fonts.cdnfonts.com/css/magilio');
 
@@ -40,6 +41,11 @@
 
   [dir="rtl"] body {
     text-align: right;
+  }
+
+  /* Chinese Support */
+  html[lang="zh"] body {
+    font-family: 'Inter', 'Noto Sans SC', sans-serif;
   }
 
   /* Flip flex directions for RTL */

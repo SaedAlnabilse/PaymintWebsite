@@ -105,6 +105,7 @@ const DELETE_REASON_OPTIONS = [
 
 export function OwnerAccountManagementPage() {
     const { t, i18n } = useTranslation();
+    const isRtl = i18n.dir(i18n.language) === 'rtl';
     const { account, establishments, logout, updateAccount, updateEstablishmentsCurrency } = useAuth();
     const { updateCurrency } = useCurrency();
     const navigate = useNavigate();
@@ -566,7 +567,7 @@ export function OwnerAccountManagementPage() {
 
             <div className={fit ? 'flex-1 min-h-0 flex flex-col gap-3' : 'space-y-6'}>
             {/* Row 1: Owner Account + System Currency — same height, right column width matches Resources/Danger */}
-            <div className={`flex flex-col lg:flex-row lg:items-stretch ${fit ? 'gap-3 shrink-0' : 'gap-6'}`}>
+            <div className={`flex flex-col lg:items-stretch ${isRtl ? 'lg:flex-row-reverse' : 'lg:flex-row'} ${fit ? 'gap-3 shrink-0' : 'gap-6'}`}>
                     {/* Account Information Card */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -575,7 +576,7 @@ export function OwnerAccountManagementPage() {
                         className={`flex-1 min-w-0 bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.05] shadow-sm overflow-hidden ${fit ? 'lg:max-h-[11.5rem]' : ''}`}
                     >
                         {/* Top bar — shared metrics with System Currency header (padding / icon / title) */}
-                        <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 dark:border-white/[0.05] ${fit ? 'px-4 py-2.5' : 'px-5 sm:px-6 py-3.5 gap-3'}`}>
+                        <div className={`flex flex-col sm:items-center justify-between gap-2 border-b border-gray-100 dark:border-white/[0.05] ${isRtl ? 'sm:flex-row-reverse' : 'sm:flex-row'} ${fit ? 'px-4 py-2.5' : 'px-5 sm:px-6 py-3.5 gap-3'}`}>
                             <div className="flex items-center gap-3 min-w-0">
                                 <div className="w-10 h-10 rounded-xl bg-mintcom-green/10 flex items-center justify-center shrink-0">
                                     <User className="w-5 h-5 text-mintcom-green" />
@@ -679,7 +680,7 @@ export function OwnerAccountManagementPage() {
                                     </div>
                                 </div>
                             ) : (
-                                <div className="flex flex-col sm:flex-row sm:items-center gap-5">
+                                <div className={`flex flex-col sm:items-center gap-5 ${isRtl ? 'sm:flex-row-reverse' : 'sm:flex-row'}`}>
                                     {/* Avatar + identity */}
                                     <div className="flex items-center gap-4 min-w-0 flex-1">
                                         <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-mintcom-green to-[#5BA882] text-white flex items-center justify-center text-lg font-black shadow-md shadow-mintcom-green/20 shrink-0">
@@ -691,7 +692,7 @@ export function OwnerAccountManagementPage() {
                                                 {accountDetails?.firstName} {accountDetails?.lastName}
                                             </h3>
                                             <div className="flex items-center flex-wrap gap-2 mt-1">
-                                                <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-600 dark:text-gray-300 truncate">
+                                                <span dir="ltr" className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-600 dark:text-gray-300 truncate">
                                                     <Mail size={13} className="text-gray-400 shrink-0" />
                                                     <span className="truncate">{accountDetails?.email}</span>
                                                 </span>
@@ -710,7 +711,7 @@ export function OwnerAccountManagementPage() {
                                     </div>
 
                                     {/* Meta chips */}
-                                    <div className="flex flex-wrap items-center gap-2 sm:justify-end shrink-0">
+                                    <div className={`flex flex-wrap items-center gap-2 shrink-0 ${isRtl ? 'sm:justify-start' : 'sm:justify-end'}`}>
                                         <div className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-gray-50 dark:bg-white/[0.04] border border-gray-100 dark:border-white/[0.06]">
                                             <Calendar size={14} className="text-gray-400 shrink-0" />
                                             <div className="leading-tight">
@@ -828,7 +829,7 @@ export function OwnerAccountManagementPage() {
                         >
                             {/* Header */}
                             <div className={`shrink-0 border-b border-gray-100 dark:border-white/[0.05] ${fit ? 'p-3 sm:p-4' : 'p-5 sm:p-6'}`}>
-                                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                                <div className={`flex flex-col lg:items-center lg:justify-between gap-4 ${isRtl ? 'lg:flex-row-reverse' : 'lg:flex-row'}`}>
                                     <div className="flex items-center gap-3 min-w-0">
                                         <div className="w-10 h-10 rounded-xl bg-mintcom-green/10 flex items-center justify-center shrink-0">
                                             <Key className="w-5 h-5 text-mintcom-green" />
@@ -848,7 +849,7 @@ export function OwnerAccountManagementPage() {
                                     </div>
                                     {!isSingleCredential && (
                                     <div className="relative w-full lg:w-72 shrink-0">
-                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                                        <Search className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none ${isRtl ? 'right-3' : 'left-3'}`} />
                                         <input
                                             type="text"
                                             value={credSearch}
@@ -859,13 +860,13 @@ export function OwnerAccountManagementPage() {
                                                 }),
                                                 t('common.locale'),
                                             )}
-                                            className="w-full h-10 pl-9 pr-9 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm font-semibold text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-mintcom-green/20 focus:border-mintcom-green transition-all"
+                                            className={`w-full h-10 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm font-semibold text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-mintcom-green/20 focus:border-mintcom-green transition-all ${isRtl ? 'pr-9 pl-9 text-right' : 'pl-9 pr-9'}`}
                                         />
                                         {credSearch && (
                                             <button
                                                 type="button"
                                                 onClick={() => setCredSearch('')}
-                                                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                                                className={`absolute top-1/2 -translate-y-1/2 p-1 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 ${isRtl ? 'left-2.5' : 'right-2.5'}`}
                                                 aria-label={t('common.clearSearch', { defaultValue: 'Clear search' })}
                                             >
                                                 <X size={14} />
@@ -876,7 +877,7 @@ export function OwnerAccountManagementPage() {
                                 </div>
 
                                 {/* Tabs (only when both types exist) + Staff */}
-                                <div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                                <div className={`mt-4 flex flex-col sm:items-center gap-2 sm:gap-3 ${isRtl ? 'sm:flex-row-reverse' : 'sm:flex-row'}`}>
                                     {showCredTabs ? (
                                     <div className="flex items-center gap-1 p-1 rounded-xl bg-gray-100/80 dark:bg-white/[0.04] w-full sm:w-auto min-w-0">
                                         {([
@@ -976,7 +977,7 @@ export function OwnerAccountManagementPage() {
                             {/* Column header — fixed outside scroll so nothing can appear above it */}
                             {!isSingleCredential && (
                                 <div className="shrink-0 hidden sm:grid grid-cols-[minmax(0,1fr)_13.5rem_5.25rem] gap-0 table-header-row bg-gray-50 dark:bg-[#1E293B] border-b border-gray-200 dark:border-white/10">
-                                    <div className="text-left font-semibold px-5 lg:px-6 py-3.5">
+                                    <div className={`${isRtl ? 'text-right' : 'text-left'} font-semibold px-5 lg:px-6 py-3.5`}>
                                         {credTab === 'locations'
                                             ? t('owner.account.locations', { defaultValue: 'Locations' })
                                             : t('owner.account.brands', { defaultValue: 'Brands' })}
@@ -1090,15 +1091,15 @@ export function OwnerAccountManagementPage() {
                                         const RowIcon = row.icon;
                                         const isBrand = row.kind === 'brand';
                                         return (
-                                            <div className="h-full flex flex-col items-center justify-center p-5 sm:p-8">
+                                            <div className={`h-full flex flex-col justify-center p-5 sm:p-8 ${isRtl ? 'items-start' : 'items-center'}`}>
                                                 <div
-                                                    className={`w-full max-w-lg rounded-2xl border border-gray-200 dark:border-white/[0.08] p-5 sm:p-6 shadow-sm bg-gradient-to-br from-gray-50/90 via-white ${
+                                                    className={`w-full max-w-2xl rounded-2xl border border-gray-200 dark:border-white/[0.08] p-5 sm:p-6 shadow-sm bg-gradient-to-br from-gray-50/90 via-white ${
                                                         isBrand
                                                             ? 'to-purple-500/10 dark:from-white/[0.04] dark:via-white/[0.02] dark:to-purple-500/15'
                                                             : 'to-mintcom-green/5 dark:from-white/[0.04] dark:via-white/[0.02] dark:to-mintcom-green/10'
                                                     }`}
                                                 >
-                                                    <div className="flex items-start gap-4">
+                                                    <div className={`flex items-start gap-4 ${isRtl ? 'flex-row-reverse' : ''}`}>
                                                         <div
                                                             className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ring-1 ${
                                                                 isBrand
@@ -1109,7 +1110,7 @@ export function OwnerAccountManagementPage() {
                                                             <RowIcon className={`w-7 h-7 ${isBrand ? 'text-purple-500' : 'text-mintcom-green'}`} />
                                                         </div>
                                                         <div className="min-w-0 flex-1">
-                                                            <div className="flex flex-wrap items-center gap-2">
+                                                            <div className={`flex flex-wrap items-center gap-2 ${isRtl ? 'flex-row-reverse justify-end' : ''}`}>
                                                                 <h3 className="text-lg font-black tracking-tight text-gray-900 dark:text-white truncate" title={row.name}>
                                                                     {row.name}
                                                                 </h3>
@@ -1133,8 +1134,8 @@ export function OwnerAccountManagementPage() {
                                                             <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mt-3 mb-1.5">
                                                                 {t('owner.account.loginId', { defaultValue: 'Login ID' })}
                                                             </p>
-                                                            <div className="flex items-center gap-2 h-12 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-black/20 px-3 shadow-inner">
-                                                                <code className="flex-1 min-w-0 text-sm font-mono font-black text-gray-900 dark:text-white truncate select-all" title={row.loginId}>
+                                                            <div dir="ltr" className="flex items-center gap-2 h-12 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-black/20 px-3 shadow-inner">
+                                                                <code className="flex-1 min-w-0 text-sm font-mono font-black text-gray-900 dark:text-white truncate select-all text-left" title={row.loginId}>
                                                                     {row.loginId || t('common.na')}
                                                                 </code>
                                                                 <button
@@ -1159,7 +1160,7 @@ export function OwnerAccountManagementPage() {
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <div className="mt-5 flex flex-col sm:flex-row gap-2.5">
+                                                    <div className={`mt-5 flex flex-col gap-2.5 ${isRtl ? 'sm:flex-row-reverse' : 'sm:flex-row'}`}>
                                                         {row.onOpen && (
                                                             <button
                                                                 type="button"
