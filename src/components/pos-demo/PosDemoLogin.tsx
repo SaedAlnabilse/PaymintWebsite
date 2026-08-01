@@ -24,6 +24,7 @@ export type DemoLoginStaff = {
   name: string;
   role: string;
   pin: string;
+  password?: string;
   emoji: string;
   accessNote?: string;
 };
@@ -41,9 +42,12 @@ export function PosDemoLogin({
   onBack,
   onSuccess,
 }: Props) {
-  const username = 'Sara';
-  /** Demo password (6+ chars). Digits-only is a valid password. */
-  const password = '123456';
+  // Keep the read-only credentials displayed by this guided demo in sync with
+  // the account that the login validator receives from the playground.
+  const demoStaff =
+    staffList.find((staff) => staff.id.toLowerCase() === 'sara') ?? staffList[0];
+  const username = demoStaff?.name ?? '';
+  const password = demoStaff?.password ?? demoStaff?.pin ?? '';
   const [usernameError, setUsernameError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -78,14 +82,14 @@ export function PosDemoLogin({
           s.id.toLowerCase() === u ||
           s.role.toLowerCase() === u,
       );
-      const staffPassword = (byUser as any)?.password ?? byUser?.pin;
+      const staffPassword = byUser?.password ?? byUser?.pin;
       if (byUser && staffPassword === p) return byUser;
       if (byUser) return null;
     }
 
     // Password-only unique match (sandbox convenience)
     const byPassword = staffList.filter(
-      (s) => ((s as any).password ?? s.pin) === p,
+      (s) => (s.password ?? s.pin) === p,
     );
     if (byPassword.length === 1) return byPassword[0];
     return null;
