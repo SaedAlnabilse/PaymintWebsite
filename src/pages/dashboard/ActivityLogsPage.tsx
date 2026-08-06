@@ -8,6 +8,7 @@ import {
   Shield,
   FileText,
   UserRound,
+  Layers,
 } from 'lucide-react';
 
 import api from '../../config/api';
@@ -120,6 +121,7 @@ export function ActivityLogsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [actionFilter, setActionFilter] = useState('all');
+  const [resourceFilter, setResourceFilter] = useState('all');
   /** `all` | `__me__` | staff employee id */
   const [userFilter, setUserFilter] = useState<string>('all');
   const [staffOptions, setStaffOptions] = useState<ActivityStaffOption[]>([]);
@@ -199,13 +201,25 @@ export function ActivityLogsPage() {
     return userFilter;
   }, [userFilter, myPerformedById]);
 
+  const resourceFilterOptions = useMemo(() => [
+    { label: t('activity.resources.product', { defaultValue: 'Products' }), value: 'product' },
+    { label: t('activity.resources.category', { defaultValue: 'Categories' }), value: 'category' },
+    { label: t('activity.resources.employee', { defaultValue: 'Staff' }), value: 'employee' },
+    { label: t('activity.resources.discount', { defaultValue: 'Discounts' }), value: 'discount' },
+    { label: t('activity.resources.payment_method', { defaultValue: 'Payment Methods' }), value: 'payment_method' },
+    { label: t('activity.resources.order', { defaultValue: 'Orders' }), value: 'order' },
+    { label: t('activity.resources.settings', { defaultValue: 'Settings' }), value: 'settings' },
+    { label: t('activity.resources.attribute', { defaultValue: 'Attributes' }), value: 'attribute' },
+  ], [t]);
+
   const hasActiveFilters = useMemo(
     () =>
       Boolean(searchQuery.trim()) ||
       actionFilter !== 'all' ||
+      resourceFilter !== 'all' ||
       userFilter !== 'all' ||
       activePreset !== 'last_30_days',
-    [searchQuery, actionFilter, userFilter, activePreset],
+    [searchQuery, actionFilter, resourceFilter, userFilter, activePreset],
   );
 
   const fetchStaffOptions = useCallback(async () => {
@@ -262,6 +276,7 @@ export function ActivityLogsPage() {
   const clearAllFilters = () => {
     setSearchQuery('');
     setActionFilter('all');
+    setResourceFilter('all');
     setUserFilter('all');
     handlePresetChange('last_30_days');
     setPage(1);
@@ -286,6 +301,7 @@ export function ActivityLogsPage() {
       };
 
       if (actionFilter !== 'all') params.action = actionFilter;
+      if (resourceFilter !== 'all') params.resource = resourceFilter;
 
       if (resolvedPerformedById) {
         params.performedById = resolvedPerformedById;
@@ -319,6 +335,7 @@ export function ActivityLogsPage() {
   }, [
     page,
     actionFilter,
+    resourceFilter,
     dateRange,
     searchQuery,
     userFilter,
@@ -408,6 +425,22 @@ export function ActivityLogsPage() {
     return actorName?.charAt(0)?.toUpperCase() || 'A';
   };
 
+  const getMetadataSummary = (metadata?: Record<string, any>) => {
+    if (!metadata || typeof metadata !== 'object') return null;
+    const entries = Object.entries(metadata).filter(
+      ([, v]) => v !== null && v !== undefined && v !== '',
+    );
+    if (entries.length === 0) return null;
+    return entries
+      .slice(0, 2)
+      .map(([k, v]) => {
+        const displayValue = typeof v === 'object' ? JSON.stringify(v) : String(v);
+        return `${k}: ${displayValue.length > 30 ? displayValue.slice(0, 30) + '…' : displayValue}`;
+      })
+      .join(', ')
+      + (entries.length > 2 ? ` (+${entries.length - 2})` : '');
+  };
+
   const handleExport = (format: ExportFormat) => {
     const logsToExport = Array.isArray(logs) ? logs : [];
     const exportData = logsToExport.map(l => ({
@@ -415,7 +448,6 @@ export function ActivityLogsPage() {
       user: getActorName(l),
       action: l.action,
       desc: l.description,
-      ip: l.ipAddress
     }));
 
     if (exportData.length === 0) {
@@ -432,7 +464,6 @@ export function ActivityLogsPage() {
         { key: 'user', label: t('activity.user') },
         { key: 'action', label: t('activity.action') },
         { key: 'desc', label: t('activity.details') },
-        { key: 'ip', label: t('activity.ip') },
       ],
       rows: exportData,
     });
@@ -557,6 +588,17 @@ export function ActivityLogsPage() {
               />
             </div>
 
+            {/* Resource Type Filter */}
+            <div className="w-full md:w-48">
+              <SingleSelect
+                value={resourceFilter === 'all' ? null : resourceFilter}
+                onChange={(val) => { setResourceFilter(val || 'all'); setPage(1); }}
+                options={resourceFilterOptions}
+                allOptionLabel={t('activity.allResources', { defaultValue: 'All types' })}
+                placeholder={formatInputPlaceholder(t('activity.filterByType', { defaultValue: 'Resource type' }), t('common.locale'))}
+              />
+            </div>
+
             {/* Date Filters Container - Split for visual feedback */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
               {/* Presets Dropdown */}
@@ -620,6 +662,17 @@ export function ActivityLogsPage() {
                 className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[11px] font-bold border border-blue-500/20 hover:bg-blue-500/15 transition-colors"
               >
                 {getActionLabel(actionFilter)}
+                <X size={11} strokeWidth={2.5} />
+              </button>
+            )}
+            {resourceFilter !== 'all' && (
+              <button
+                type="button"
+                onClick={() => { setResourceFilter('all'); setPage(1); }}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 text-[11px] font-bold border border-purple-500/20 hover:bg-purple-500/15 transition-colors"
+              >
+                <Layers size={11} />
+                {resourceFilterOptions.find(o => o.value === resourceFilter)?.label || resourceFilter}
                 <X size={11} strokeWidth={2.5} />
               </button>
             )}
@@ -702,7 +755,6 @@ export function ActivityLogsPage() {
                       </div>
                       <div>
                         <p className="text-sm font-bold text-gray-900 dark:text-white tracking-tight truncate max-w-[150px]">{getActorName(log)}</p>
-                        <p className="text-xs text-gray-400 font-black">{log.ipAddress || t('activity.internal')}</p>
                       </div>
                     </div>
                     <span className={`inline-flex px-2 py-0.5 rounded-lg text-[10px] font-black tracking-widest border ${getActionColor(log.action)}`}>
@@ -804,10 +856,7 @@ export function ActivityLogsPage() {
                           <div className="w-8 h-8 rounded-lg bg-mintcom-green/10 text-mintcom-green flex items-center justify-center font-black group-hover:scale-110 transition-transform shrink-0">
                             {getActorInitial(log)}
                           </div>
-                          <div>
-                            <p className="text-sm font-bold text-gray-900 dark:text-white tracking-tight truncate max-w-[100px]">{getActorName(log)}</p>
-                            <p className="text-xs text-gray-400 font-black">{log.ipAddress || t('activity.internal')}</p>
-                          </div>
+                          <p className="text-sm font-bold text-gray-900 dark:text-white tracking-tight truncate max-w-[100px]">{getActorName(log)}</p>
                         </div>
                       </td>
                       <td className="px-8 py-4 text-start">
@@ -821,17 +870,20 @@ export function ActivityLogsPage() {
                         </p>
                       </td>
                       <td className="px-8 py-4 text-end">
-                        {log.metadata ? (
-                          <div className="flex justify-end">
+                        {log.metadata && Object.keys(log.metadata).length > 0 ? (
+                          <div className="flex items-center justify-end gap-2">
+                            <span className="text-xs text-gray-500 dark:text-gray-400 max-w-[200px] truncate text-end" title={getMetadataSummary(log.metadata) || ''}>
+                              {getMetadataSummary(log.metadata)}
+                            </span>
                             <button
                               onClick={() => setSelectedLog(log)}
-                              className="p-2 rounded-lg bg-gray-50 dark:bg-white/5 text-gray-400 hover:text-mintcom-green transition-all"
+                              className="p-2 rounded-lg bg-gray-50 dark:bg-white/5 text-gray-400 hover:text-mintcom-green transition-all shrink-0"
                             >
                               <FileText size={16} />
                             </button>
                           </div>
                         ) : (
-                          <span className="text-xs font-black text-gray-200 dark:text-white/5 tracking-widest">-</span>
+                          <span className="text-xs text-gray-300 dark:text-gray-600">—</span>
                         )}
                       </td>
                     </tr>

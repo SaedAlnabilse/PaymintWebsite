@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Store, Save, CreditCard, Receipt, Trash2, AlertTriangle, DollarSign, Copy, Key, Shield, ShieldCheck } from 'lucide-react';
 import api, { extractErrorMessage } from '../../config/api';
 import { FiscalComplianceCard } from '../../components/FiscalComplianceCard';
+import { InvoicePreviewCard } from '../../components/InvoicePreviewCard';
 import toast from 'react-hot-toast';
 import { ConfirmModal } from '../../components/ConfirmModal';
 import { BusyOverlay } from '../../components/BusyOverlay';
@@ -1591,10 +1592,17 @@ export function SettingsPage() {
 
 
         {activeTab === 'einvoicing' && (
-          <FiscalComplianceCard
-            initial={fiscalInitial}
-            onSaved={() => fetchSettings(false)}
-          />
+          <div className="space-y-6">
+            <FiscalComplianceCard
+              initial={fiscalInitial}
+              onSaved={() => fetchSettings(false)}
+            />
+            <InvoicePreviewCard
+              establishmentName={currentEstablishment?.name}
+              currency={settings?.currency}
+              taxRate={typeof settings?.taxRate === 'number' ? settings.taxRate : undefined}
+            />
+          </div>
         )}
 
         {activeTab === 'danger' && (
