@@ -176,7 +176,9 @@ export const Footer = ({ minimal = false }: { minimal?: boolean }) => {
 
                 {/* Legal links under company */}
                 <h4 className="mb-4 mt-8 text-[11px] font-semibold uppercase tracking-[0.15em] text-gray-900 dark:text-gray-200">
-                  Legal
+                  {/* Was hardcoded English while every sibling heading used
+                      t() — visible as a lone "LEGAL" on the Arabic site. */}
+                  {t('footer.legal', { defaultValue: 'Legal' })}
                 </h4>
                 <ul className="space-y-2.5">
                   {resourceLinks.map((link) => (

@@ -50,7 +50,7 @@ export function InvoicePreviewCard({ establishmentName, currency, taxRate }: Inv
       '<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:"Inter",sans-serif;background:#f3f4f6;padding:40px 20px}',
       '@media print{body{background:#fff;padding:0}}</style></head><body>',
       el.outerHTML,
-      '<script>setTimeout(function(){window.print()},300)<\/script></body></html>',
+      '<script>setTimeout(function(){window.print()},300)</script></body></html>',
     ].join(''));
     w.document.close();
   };

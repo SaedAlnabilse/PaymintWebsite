@@ -190,7 +190,10 @@
     display: none;
   }
 
-  @media (max-width: 319px) {
+  /* Use the compact leaf icon below sm (640px) so the full text logo does
+     not crowd the mobile controls off-screen on small phones. Desktop (lg+)
+     keeps the full wordmark. */
+  @media (max-width: 639px) {
     .navbar-logo-full {
       display: none;
     }

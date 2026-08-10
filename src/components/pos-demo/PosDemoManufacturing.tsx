@@ -1005,7 +1005,7 @@ export function DemoManufacturingPanel({ onActivity }: { onActivity?: (action: s
                                   onClick={() =>
                                     setModal({
                                       type: 'confirm',
-                                      title: 'Confirm',
+                                      title: `Archive "${m.name}"`,
                                       body: `Archive "${m.name}"? It has usage or history, so it will become inactive instead of being deleted.`,
                                       onConfirm: () => {
                                         setRawMaterials((list) =>
@@ -1268,10 +1268,10 @@ export function DemoManufacturingPanel({ onActivity }: { onActivity?: (action: s
                                 tone="amber"
                                 label="Archive"
                                 onClick={() =>
-                                  setModal({
-                                    type: 'confirm',
-                                    title: 'Confirm',
-                                    body: `Archive "${r.name}"? It will become inactive instead of being deleted.`,
+                                    setModal({
+                                      type: 'confirm',
+                                      title: `Archive "${r.name}"`,
+                                      body: `Archive "${r.name}"? It will become inactive instead of being deleted.`,
                                     onConfirm: () => {
                                       setSubRecipes((list) =>
                                         list.map((x) =>
@@ -1373,10 +1373,10 @@ export function DemoManufacturingPanel({ onActivity }: { onActivity?: (action: s
                                 tone="amber"
                                 label="Archive"
                                 onClick={() =>
-                                  setModal({
-                                    type: 'confirm',
-                                    title: 'Confirm',
-                                    body: `Archive "${r.menuItemName}"? It will become inactive instead of being deleted.`,
+                                    setModal({
+                                      type: 'confirm',
+                                      title: `Archive "${r.menuItemName}"`,
+                                      body: `Archive "${r.menuItemName}"? It will become inactive instead of being deleted.`,
                                     onConfirm: () => {
                                       setFinalRecipes((list) =>
                                         list.map((x) =>
@@ -1853,7 +1853,7 @@ export function DemoManufacturingPanel({ onActivity }: { onActivity?: (action: s
               <FooterActions
                 onCancel={() => setModal(null)}
                 onConfirm={modal.onConfirm}
-                confirmLabel="Confirm"
+                confirmLabel="Archive"
                 danger
               />
             }

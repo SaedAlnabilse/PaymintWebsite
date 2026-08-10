@@ -121,7 +121,6 @@ const SEED_ADDONS: DemoCatalogAddon[] = [
     options: [
       { id: 'cheese', name: 'Extra cheese', price: 1 },
       { id: 'avocado', name: 'Avocado', price: 1.5 },
-      { id: 'bacon', name: 'Bacon', price: 1.5 },
     ],
   },
   {

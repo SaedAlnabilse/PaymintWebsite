@@ -21,6 +21,7 @@ import { RoleDeleteResolutionModal } from '../../components/RoleDeleteResolution
 import { Pagination, SearchInput } from '../../components/ui';
 import { getLocalizedRoleName } from '../../utils/roleNames';
 import { formatInputPlaceholder } from '../../utils/textCase';
+import { retryTransientRequest } from '../../utils/retryTransientRequest';
 
 interface CustomRole {
   id: string;
@@ -101,7 +102,9 @@ export function OwnerRolesPage() {
   const fetchRoles = useCallback(async () => {
     try {
       setIsLoading(true);
-      const response = await api.get('/api/custom-roles/owner/global');
+      const response = await retryTransientRequest(() =>
+        api.get('/api/custom-roles/owner/global'),
+      );
       // Backend returns { items, total, limit, offset }
       setRoles(response.data?.items || []);
     } catch {
@@ -637,5 +640,4 @@ export function OwnerRolesPage() {
     </div>
   );
 }
-
 

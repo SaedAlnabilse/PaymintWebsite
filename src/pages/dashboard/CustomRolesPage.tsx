@@ -23,6 +23,7 @@ import { Pagination, SearchInput } from '../../components/ui';
 import { usePermissionGuard } from '../../hooks/usePermissionGuard';
 import { getLocalizedRoleName } from '../../utils/roleNames';
 import { formatInputPlaceholder } from '../../utils/textCase';
+import { retryTransientRequest } from '../../utils/retryTransientRequest';
 
 interface CustomRole {
   id: string;
@@ -116,20 +117,23 @@ export function CustomRolesPage() {
   const [isResolvingRoleDelete, setIsResolvingRoleDelete] = useState(false);
 
   useEffect(() => {
-    fetchRoles();
-  }, []);
+    void fetchRoles();
+  }, [currentEstablishment?.id]);
 
   const getRoleDisplayName = (name: string) => getLocalizedRoleName(name, t);
 
   const fetchRoles = async () => {
     try {
       setIsLoading(true);
-      const currentEstablishment = sessionStorage.getItem('currentEstablishment');
-      if (!currentEstablishment) return;
-
-      const { id: establishmentId } = JSON.parse(currentEstablishment);
+      const establishmentId = currentEstablishment?.id;
+      if (!establishmentId) {
+        setRoles([]);
+        return;
+      }
       // Load every page so roles past the backend default (100) are not dropped.
-      const allRoles = await fetchAllPages<any>(api, `/api/custom-roles/${establishmentId}`);
+      const allRoles = await retryTransientRequest(() =>
+        fetchAllPages<any>(api, `/api/custom-roles/${establishmentId}`),
+      );
       setRoles(allRoles);
     } catch {
       toast.error(t('dashboard.roles.messages.loadFailed'));
@@ -658,6 +662,5 @@ export function CustomRolesPage() {
     </div>
   );
 }
-
 
 

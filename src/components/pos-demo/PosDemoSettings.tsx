@@ -352,12 +352,30 @@ function Field({
 
 /* ─── Sales (Payment Processes) group primitives — mirror the POS groups ─── */
 function InfoDot({ text }: { text: string }) {
+  const [open, setOpen] = useState(false);
   return (
-    <span
-      title={text}
-      className="ms-1.5 flex h-4 w-4 cursor-help items-center justify-center rounded-full bg-gray-200 text-[9px] font-black text-text-tertiary dark:bg-white/10"
-    >
-      i
+    <span className="relative ms-1.5 inline-flex">
+      <button
+        type="button"
+        title={text}
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen((v) => !v);
+        }}
+        aria-label="More info"
+        className="flex h-4 w-4 cursor-help items-center justify-center rounded-full bg-gray-200 text-[9px] font-black text-text-tertiary transition-colors hover:bg-mintcom-green hover:text-white dark:bg-white/10 dark:hover:bg-mintcom-green"
+      >
+        i
+      </button>
+      {open && (
+        <span
+          role="tooltip"
+          onClick={(e) => e.stopPropagation()}
+          className="absolute start-0 top-6 z-50 max-w-[240px] rounded-xl border border-gray-200 bg-white px-3 py-2 text-[12px] font-medium leading-snug text-text-primary shadow-lg dark:border-white/10 dark:bg-mintcom-dark dark:text-white"
+        >
+          {text}
+        </span>
+      )}
     </span>
   );
 }
@@ -588,15 +606,15 @@ export function DemoSettingsScreen({
   const [employees, setEmployees] = useState<Employee[]>([
     // `pin` field is demo-only storage for staff password (min 6 anything)
     { id: 'owner', name: 'Cafe Delight', username: 'owner', role: 'Owner', pin: '', emoji: '', owner: true },
-    { id: '1', name: 'Sara Hassan', username: 'sara', role: 'Cashier', pin: '123456', emoji: '' },
-    { id: '2', name: 'Omar Ali', username: 'omar', role: 'USER', pin: '000000', emoji: '' },
-    { id: '3', name: 'Maya Nour', username: 'maya', role: 'ADMIN', pin: '999999', emoji: '' },
+    { id: '1', name: 'Emma Thompson', username: 'emma', role: 'Cashier', pin: '123456', emoji: '' },
+    { id: '2', name: 'Jake Miller', username: 'jake', role: 'USER', pin: '000000', emoji: '' },
+    { id: '3', name: 'Chloe Davis', username: 'chloe', role: 'ADMIN', pin: '999999', emoji: '' },
   ]);
   const [receiptSettingsOpen, setReceiptSettingsOpen] = useState(false);
   const [receiptHeader, setReceiptHeader] = useState(businessName);
   const [receiptFooter, setReceiptFooter] = useState('Thank you, come again!');
   const [bizDescription, setBizDescription] = useState('Specialty Coffee House');
-  const [bizAddress, setBizAddress] = useState('Amman, 7th Circle');
+  const [bizAddress, setBizAddress] = useState('123 Main Street, Springfield, IL');
   const [showBizNameOnReceipt, setShowBizNameOnReceipt] = useState(true);
   const [showDescription, setShowDescription] = useState(true);
   const [showAddress, setShowAddress] = useState(true);
@@ -743,13 +761,20 @@ export function DemoSettingsScreen({
   const [draftMulti, setDraftMulti] = useState(false);
   const [draftRequired, setDraftRequired] = useState(false);
   const [activity, setActivity] = useState<ActivityEntry[]>([
-    { id: 'a1', at: renderedAt - 3600_000, who: 'Maya', action: 'Updated tax rate', detail: '8%' },
-    { id: 'a2', at: renderedAt - 7200_000, who: 'Sara', action: 'Restocked item', detail: 'To-go cups L +40' },
-    { id: 'a3', at: renderedAt - 86400_000, who: 'Maya', action: 'Added discount', detail: 'Happy hour 10%' },
-    { id: 'a4', at: renderedAt - 172800_000, who: 'Omar', action: 'Edited product', detail: 'Latte price $4.50' },
+    { id: 'a1', at: renderedAt - 1800_000, who: 'Chloe', action: 'Updated tax rate', detail: '8%' },
+    { id: 'a2', at: renderedAt - 3600_000, who: 'Emma', action: 'Restocked item', detail: 'To-go cups L +40' },
+    { id: 'a3', at: renderedAt - 5400_000, who: 'Jake', action: 'Opened shift', detail: 'Opening cash $150' },
+    { id: 'a4', at: renderedAt - 7200_000, who: 'Chloe', action: 'Added discount', detail: 'Happy hour 10%' },
+    { id: 'a5', at: renderedAt - 86400_000, who: 'Emma', action: 'Edited product', detail: 'Latte price $4.50' },
+    { id: 'a6', at: renderedAt - 90000_000, who: 'Jake', action: 'Added payment method', detail: 'Visa' },
+    { id: 'a7', at: renderedAt - 172800_000, who: 'Chloe', action: 'Added employee', detail: 'Emma Thompson' },
+    { id: 'a8', at: renderedAt - 200000_000, who: 'Emma', action: 'Updated stock', detail: 'Croissant → 12' },
+    { id: 'a9', at: renderedAt - 259200_000, who: 'Chloe', action: 'Added category', detail: 'Seasonal Drinks' },
+    { id: 'a10', at: renderedAt - 345600_000, who: 'Jake', action: 'Closed shift', detail: 'Cash $412.75' },
+    { id: 'a11', at: renderedAt - 432000_000, who: 'Emma', action: 'Edited employee', detail: 'Jake Miller → Barista' },
+    { id: 'a12', at: renderedAt - 518400_000, who: 'Chloe', action: 'Added attribute', detail: 'Milk Options' },
   ]);
   const [lang, setLang] = useState<'en' | 'ar'>('en');
-  const [aboutChangelogOpen, setAboutChangelogOpen] = useState(false);
 
   // Modals
   type ModalKind =
@@ -1714,7 +1739,7 @@ export function DemoSettingsScreen({
                           markDirty();
                         }}
                         className={`${inputCls} ${!showAddress ? 'opacity-50' : ''}`}
-                        placeholder="e.g. Amman, 7th Circle"
+                        placeholder="e.g. 123 Main Street, Springfield, IL"
                       />
                     </div>
 
@@ -3123,14 +3148,14 @@ export function DemoSettingsScreen({
 
           {/* ── Language (mirrors POS LanguageSettingsScreen) ── */}
           {active === 'language' && (
-            <div className="mx-auto max-w-xl">
-              {/* Language list */}
-              <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/8 dark:bg-mintcom-surface">
+            <div className="mx-auto max-w-2xl">
+              {/* Language list — one card per language (POS LanguageSettingsScreen) */}
+              <div className="flex flex-col gap-3">
                 {([
                   { code: 'en' as const, native: 'English', name: 'English', soon: false },
                   { code: 'ar' as const, native: 'العربية', name: 'Arabic', soon: true },
                   { code: 'zh' as const, native: '中文', name: 'Chinese', soon: true },
-                ]).map((l, i, arr) => {
+                ]).map((l) => {
                   const selected = lang === l.code;
                   return (
                     <button
@@ -3142,24 +3167,27 @@ export function DemoSettingsScreen({
                         setLang(l.code as 'en' | 'ar');
                         markDirty();
                       }}
-                      className={`flex w-full items-center justify-between gap-3 px-4 py-3.5 text-start ${
-                        i < arr.length - 1 ? 'border-b border-gray-100 dark:border-white/8' : ''
-                      } ${l.soon ? 'cursor-not-allowed opacity-60' : ''}`}
+                      className={`flex w-full items-center justify-between gap-3 rounded-xl border-2 px-5 py-4 text-start transition-colors ${
+                        selected
+                          ? 'border-mintcom-green bg-mintcom-green/10'
+                          : 'border-gray-200 bg-white hover:border-mintcom-green/60 dark:border-white/10 dark:bg-mintcom-surface'
+                      } ${l.soon ? 'cursor-not-allowed opacity-55' : ''}`}
                     >
                       <div className="min-w-0">
-                        <p className="text-[15px] font-bold text-text-primary dark:text-white">{l.native}</p>
-                        <p className="text-[12px] text-text-secondary dark:text-mintcom-textSecondary">{l.name}</p>
+                        <p className="text-[18px] font-semibold text-text-primary dark:text-white">{l.native}</p>
+                        <p className="mt-0.5 text-sm text-text-secondary dark:text-mintcom-textSecondary">{l.name}</p>
                       </div>
                       {l.soon ? (
-                        <span className="rounded-full bg-cream-100 px-2.5 py-1 text-[10px] font-black uppercase text-text-tertiary dark:bg-white/10">
+                        <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-cream-100 px-2.5 py-1 text-[11px] font-bold text-text-tertiary dark:bg-white/10">
+                          <Clock size={13} />
                           Coming Soon
                         </span>
                       ) : selected ? (
-                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-mintcom-green text-white">
-                          <Check size={15} />
+                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-mintcom-green text-white">
+                          <Check size={16} />
                         </span>
                       ) : (
-                        <span className="h-6 w-6 rounded-full border-2 border-gray-200 dark:border-white/15" />
+                        <span className="h-7 w-7 shrink-0 rounded-full border-2 border-gray-300 dark:border-white/20" />
                       )}
                     </button>
                   );
@@ -3167,9 +3195,9 @@ export function DemoSettingsScreen({
               </div>
 
               {/* Restart info */}
-              <div className="mt-3 flex items-start gap-2 rounded-xl bg-cream-100 px-3 py-2.5 dark:bg-mintcom-dark">
-                <Info size={18} className="mt-0.5 shrink-0 text-mintcom-green" />
-                <p className="text-[12px] leading-relaxed text-text-secondary dark:text-mintcom-textSecondary">
+              <div className="mt-4 flex items-start gap-3 rounded-xl border border-gray-200 bg-cream-50 px-4 py-3.5 dark:border-white/10 dark:bg-mintcom-dark">
+                <Info size={20} className="mt-0.5 shrink-0 text-mintcom-green" />
+                <p className="text-sm leading-relaxed text-text-secondary dark:text-mintcom-textSecondary">
                   The app will automatically restart when you change the language to apply layout changes.
                 </p>
               </div>
@@ -3253,38 +3281,6 @@ export function DemoSettingsScreen({
                     ))}
                   </div>
                 </div>
-
-                {/* What's New */}
-                <button
-                  type="button"
-                  onClick={() => setAboutChangelogOpen((v) => !v)}
-                  className="mt-4 flex w-full items-center justify-between border-b border-gray-200 py-4 text-start dark:border-white/8"
-                >
-                  <span className="flex items-center gap-2.5">
-                    <Gift size={20} className="text-mintcom-green" />
-                    <span className="text-[17px] font-bold text-text-primary dark:text-white">What's New</span>
-                  </span>
-                  <ChevronDown size={20} className={`text-text-secondary transition-transform ${aboutChangelogOpen ? 'rotate-180' : ''}`} />
-                </button>
-                {aboutChangelogOpen && (
-                  <div className="mt-4 rounded-xl border border-gray-200 bg-cream-50 p-4 dark:border-white/8 dark:bg-mintcom-dark">
-                    <p className="mb-4 text-[15px] font-bold text-mintcom-green">Version 1.0.0, May 2026</p>
-                    {[
-                      { title: 'Initial release', items: ['Complete POS system with sales management', 'Product and inventory management', 'Comprehensive reporting and analytics', 'Multi-payment support (Cash, Card, Other)'] },
-                      { title: 'Features', items: ['Real-time stock tracking and alerts', 'Shift management with opening and closing balance', 'Activity logging for audit trails', 'Customizable themes and settings', 'PDF receipt generation'] },
-                    ].map((sec) => (
-                      <div key={sec.title} className="mb-2">
-                        <p className="mb-2 mt-3 text-[15px] font-bold text-text-primary dark:text-white">{sec.title}</p>
-                        {sec.items.map((it) => (
-                          <div key={it} className="mb-3 flex items-start gap-3">
-                            <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-mintcom-green" />
-                            <p className="text-[14px] leading-relaxed text-text-secondary dark:text-mintcom-textSecondary">{it}</p>
-                          </div>
-                        ))}
-                      </div>
-                    ))}
-                  </div>
-                )}
 
                 {/* Contact Us */}
                 <h3 className="mb-4 mt-6 border-b border-gray-100 pb-2 text-[17px] font-black text-text-primary dark:border-white/8 dark:text-white">
@@ -3372,9 +3368,9 @@ export function DemoSettingsScreen({
       {/* Unsaved changes (tab switch) — like POS ConfirmationModal */}
       <ConfirmModal
         open={!!pendingTab}
-        title="Unsaved changes"
-        body="You have unsaved settings on this tab. Leave without saving?"
-        confirmLabel="Leave without saving"
+        title="Unsaved Changes"
+        body="Are you sure you want to leave without saving your changes?"
+        confirmLabel="Confirm"
         danger
         onCancel={() => setPendingTab(null)}
         onConfirm={() => {

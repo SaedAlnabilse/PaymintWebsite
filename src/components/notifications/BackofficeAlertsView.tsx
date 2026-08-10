@@ -379,6 +379,14 @@ export function BackofficeAlertsView({
     hasClientFilter && alerts.length < total && filteredAlerts.length < filteredServerTotal;
   const trialAlertsPresent = alerts.some((alert) => isTrialAlert(alert));
 
+  // Counts cover the complete server-side feed while the client initially has
+  // only its first page. If a selected category promises more rows than are
+  // loaded, keep paging before presenting a contradictory empty state.
+  useEffect(() => {
+    if (!showFilteredProgress || !hasMore || isLoadingMore || isLoading) return;
+    void loadMore();
+  }, [hasMore, isLoading, isLoadingMore, loadMore, showFilteredProgress]);
+
   const handleMarkAllRead = async () => {
     try {
       const result = await markAllRead(

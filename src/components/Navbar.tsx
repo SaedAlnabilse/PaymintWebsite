@@ -278,7 +278,10 @@ export const Navbar = () => {
 
             {/* Mobile controls */}
             <div className="relative z-[60] flex shrink-0 items-center gap-1 xs:gap-1.5 sm:gap-2 lg:hidden">
-              <LanguageSwitcher compact showGlobeIcon={false} buttonClassName="min-h-9 px-2.5 xs:px-3 rounded-full text-sm" />
+              {/* Keep the globe on mobile: a bare "EN" chip reads as a label,
+                  not a control, and QA reported the homepage as having no
+                  language switcher at all (TC-036). */}
+              <LanguageSwitcher compact buttonClassName="min-h-9 px-2.5 xs:px-3 rounded-full text-sm" iconSize={15} />
               <ThemeToggle
                 iconSize={17}
                 className="h-9 w-9 rounded-full border border-gray-200 bg-gray-50 text-gray-600 hover:text-mintcom-green dark:border-white/10 dark:bg-white/5 dark:text-gray-400 dark:hover:text-mintcom-green"

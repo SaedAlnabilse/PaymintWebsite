@@ -2044,7 +2044,8 @@
     "multiLocation": "多门店",
     "pricingPage": "定价",
     "security": "安全",
-    "whyMintcom": "为何选择 Mintcom"
+    "whyMintcom": "为何选择 Mintcom",
+    "legal": "法律"
   },
   "hardware": {
     "tip": "专业提示：所有推荐硬件均可与 Mintcom POS 应用即插即用。"

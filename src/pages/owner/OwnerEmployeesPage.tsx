@@ -29,6 +29,7 @@ import { SearchInput, SelectInput, Pagination } from '../../components/ui';
 import { PortalDropdown } from '../../components/PortalDropdown';
 import { SectionLoader } from '../../components/LoadingState';
 import { formatInputPlaceholder } from '../../utils/textCase';
+import { retryTransientRequest } from '../../utils/retryTransientRequest';
 import { StatValue } from '../../components/ui/StatValue';
 import { StepUpVerifier } from '../../components/StepUpVerifier';
 import { reauthHeaders } from '../../services/stepUp';
@@ -132,8 +133,10 @@ export function OwnerEmployeesPage() {
     const fetchEmployees = useCallback(async (silent = false) => {
         try {
             if (!silent) setIsLoading(true);
-            const response = await api.get('/api/accounts/all-employees');
-            const nextEmployees: Employee[] = response.data || [];
+            const response = await retryTransientRequest(() =>
+                api.get('/api/accounts/all-employees'),
+            );
+            const nextEmployees: Employee[] = Array.isArray(response.data) ? response.data : [];
             setEmployees(nextEmployees);
             // Keep open edit form in sync after verification / resend refresh.
             setEditingEmployee((current) => {
@@ -580,7 +583,7 @@ export function OwnerEmployeesPage() {
             ) : (
                 <>
                     {viewMode === 'grid' ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 items-stretch gap-6 px-4">
                             {paginatedEmployees.map((emp) => {
                                 const activeAssignments = getActiveAssignments(emp);
                                 const accessCount = activeAssignments.length;
@@ -588,24 +591,24 @@ export function OwnerEmployeesPage() {
                                 return (
                                 <div
                                     key={emp.id}
-                                    className={`group relative bg-white dark:bg-[#1E293B] rounded-2xl border shadow-sm hover:shadow-lg hover:border-indigo-500/30 p-6 transition-all duration-300 overflow-hidden ${isOwnerEmployee(emp) ? 'border-amber-300/60 dark:border-amber-500/30 bg-amber-50/40 dark:bg-amber-500/[0.04]' : 'border-gray-200 dark:border-white/5'}`}
+                                    className={`group relative min-w-0 h-full bg-white dark:bg-[#1E293B] rounded-2xl border shadow-sm hover:shadow-lg hover:border-indigo-500/30 p-6 transition-all duration-300 overflow-hidden ${isOwnerEmployee(emp) ? 'border-amber-300/60 dark:border-amber-500/30 bg-amber-50/40 dark:bg-amber-500/[0.04]' : 'border-gray-200 dark:border-white/5'}`}
                                 >
                                     <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
 
-                                    <div className="relative z-10">
+                                    <div className="relative z-10 flex h-full min-w-0 flex-col">
                                         <div className="flex items-start justify-between mb-6">
-                                            <div className="flex items-center gap-4">
+                                            <div className="flex min-w-0 items-center gap-4">
                                                 <div className="w-14 h-14 rounded-[12px] bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 flex items-center justify-center relative flex-shrink-0 group-hover:scale-105 transition-transform duration-300">
                                                     <span className="text-gray-900 dark:text-white font-bold text-xl">
                                                         {getDisplayInitial(emp.firstName, emp.username)}
                                                     </span>
                                                     <div className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-[#0A0A0A] ${emp.isActive ? 'bg-mintcom-green' : 'bg-mintcom-red'}`} />
                                                 </div>
-                                                <div>
-                                                    <h3 className="text-lg font-bold tracking-tight text-gray-900 dark:text-white leading-tight">
+                                                <div className="min-w-0">
+                                                    <h3 className="truncate text-lg font-bold tracking-tight text-gray-900 dark:text-white leading-tight">
                                                         {getDisplayName(emp)}
                                                     </h3>
-                                                    <p className="text-xs text-gray-500 mt-1">
+                                                    <p className="truncate text-xs text-gray-500 mt-1">
                                                         {emp.username}
                                                     </p>
                                                 </div>
@@ -663,7 +666,7 @@ export function OwnerEmployeesPage() {
                                             </span>
                                         </div>
 
-                                        <div className="space-y-4 pt-4 border-t border-gray-100 dark:border-white/5">
+                                        <div className="mt-auto space-y-4 pt-4 border-t border-gray-100 dark:border-white/5">
                                             <div className="grid grid-cols-2 gap-3">
                                                 <div>
                                                     <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('common.status.label', 'Status')}</p>
@@ -1177,7 +1180,6 @@ export function OwnerEmployeesPage() {
         </div>
     );
 }
-
 
 
 

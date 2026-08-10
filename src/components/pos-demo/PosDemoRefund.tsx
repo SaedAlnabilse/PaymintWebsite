@@ -208,7 +208,7 @@ export function DemoRefundModal({ open, orderNo, orderTotal, lines, onClose, onC
                 setMode('item');
                 setError('');
               }}
-              className={`inline-flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-[11px] font-bold ${
+              className={`inline-flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-[12px] font-bold ${
                 mode === 'item'
                   ? 'bg-mintcom-red/15 text-mintcom-red shadow-sm'
                   : 'text-text-secondary'
@@ -222,7 +222,7 @@ export function DemoRefundModal({ open, orderNo, orderTotal, lines, onClose, onC
                 setMode('order');
                 setError('');
               }}
-              className={`inline-flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-[11px] font-bold ${
+              className={`inline-flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-[12px] font-bold ${
                 mode === 'order'
                   ? 'bg-mintcom-green/15 text-mintcom-green shadow-sm'
                   : 'text-text-secondary'
@@ -235,7 +235,7 @@ export function DemoRefundModal({ open, orderNo, orderTotal, lines, onClose, onC
 
         {mode === 'item' && canItem && (
           <div className="mb-3 space-y-1.5">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-text-tertiary">
+            <p className="text-xs font-bold uppercase tracking-wider text-text-tertiary">
               Select items
             </p>
             {refundable.map((line) => {
@@ -264,11 +264,11 @@ export function DemoRefundModal({ open, orderNo, orderTotal, lines, onClose, onC
                     onClick={() => toggleLine(line.id, line.remaining)}
                     className="min-w-0 flex-1 text-start"
                   >
-                    <p className="truncate text-xs font-bold dark:text-white">
+                    <p className="truncate text-[13px] font-bold dark:text-white">
                       {line.emoji ? `${line.emoji} ` : ''}
                       {line.name}
                     </p>
-                    <p className="text-[10px] text-text-tertiary">
+                    <p className="text-[11px] text-text-tertiary">
                       Remaining: {isOn ? line.remaining - q : line.remaining} ·{' '}
                       {money(line.unitPrice)}/ea
                     </p>
@@ -318,7 +318,7 @@ export function DemoRefundModal({ open, orderNo, orderTotal, lines, onClose, onC
         )}
 
         <label className="mb-3 block">
-          <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-text-tertiary">
+          <span className="mb-1 block text-xs font-bold uppercase tracking-wider text-text-tertiary">
             Reason <span className="text-mintcom-red">*</span>
           </span>
           <textarea

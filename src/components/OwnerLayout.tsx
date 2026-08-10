@@ -403,16 +403,10 @@ export function OwnerLayout() {
                     >
                         <Menu size={22} />
                     </button>
-                    <img
-                        src={MintcomLogoGreen}
-                        alt={t('brand.name')}
-                        className="h-8 w-auto object-contain dark:hidden"
-                    />
-                    <img
-                        src={MintcomLogoWhite}
-                        alt={t('brand.name')}
-                        className="h-8 w-auto object-contain hidden dark:block"
-                    />
+                    <div className="flex items-center gap-2 min-w-0">
+                        <img src={MintcomLeafIcon} className="w-8 h-8 object-contain shrink-0" alt={t('brand.name')} />
+                        <span className="font-bold text-gray-900 dark:text-white truncate">{t('brand.name')}</span>
+                    </div>
                     <div className="flex items-center gap-2">
                         <AlertsBell scope="owner" locations={ownerLocations} />
                         <LanguageSwitcher
