@@ -210,6 +210,7 @@ const buildPDF = async (title: string, sections: ExportSection[], meta?: ExportM
     import('jspdf-autotable'),
   ]);
   const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+  doc.setCharSpace(0.5);
   const marginX = 40;
   let cursorY = 48;
 
@@ -251,7 +252,7 @@ const buildPDF = async (title: string, sections: ExportSection[], meta?: ExportM
       body,
       startY: cursorY,
       margin: { left: marginX, right: marginX },
-      styles: { fontSize: 8, cellPadding: 4, overflow: 'linebreak' },
+      styles: { fontSize: 9, cellPadding: 3, overflow: 'linebreak' },
       headStyles: { fillColor: [125, 198, 162], textColor: [7, 17, 11], fontStyle: 'bold' },
       alternateRowStyles: { fillColor: [247, 250, 248] },
     });

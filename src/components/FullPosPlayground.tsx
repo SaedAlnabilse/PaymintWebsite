@@ -8,7 +8,6 @@ import {
   ArrowRight,
   BadgePercent,
   Bell,
-  BookOpen,
   Check,
   ChevronDown,
   DollarSign,
@@ -342,7 +341,7 @@ type DemoAppliedReward = {
 
 /** Single demo guest — shown in the search fields; Check Points loads them */
 const DEMO_LOYALTY_CUSTOMERS: DemoLoyaltyCustomer[] = [
-  { id: 'c1', name: 'Lina Hassan', phone: '0790123456', points: 1000, tier: 'Gold' },
+  { id: 'c1', name: 'Emma Wilson', phone: '0790123456', points: 1000, tier: 'Gold' },
 ];
 
 const DEMO_LOYALTY_REWARDS: DemoLoyaltyReward[] = [
@@ -376,8 +375,8 @@ const ORDER_DISCOUNTS = [
 
 const STAFF: Staff[] = [
   {
-    id: 'sara',
-    name: 'Sara',
+    id: 'emma',
+    name: 'Emma',
     role: 'Cashier',
     pin: '1234',
     emoji: '',
@@ -385,8 +384,8 @@ const STAFF: Staff[] = [
     perms: [...ALL_PERMS],
   },
   {
-    id: 'omar',
-    name: 'Omar',
+    id: 'jake',
+    name: 'Jake',
     role: 'Barista',
     pin: '0000',
     emoji: '',
@@ -394,8 +393,8 @@ const STAFF: Staff[] = [
     perms: ['sales', 'notifications', 'support', 'hold', 'void_item', 'loyalty'],
   },
   {
-    id: 'maya',
-    name: 'Maya',
+    id: 'chloe',
+    name: 'Chloe',
     role: 'Manager',
     pin: '9999',
     emoji: '',
@@ -439,7 +438,47 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
     DEFAULT_DEMO_SALES_SETTINGS.serviceChargeValue,
   );
   const [scModalOpen, setScModalOpen] = useState(false);
-  const [held, setHeld] = useState<HeldTicket[]>([]);
+  const [held, setHeld] = useState<HeldTicket[]>(() => [
+    {
+      id: 'held-1',
+      orderNo: 101,
+      type: 'dine-in',
+      label: 'Table 1',
+      note: 'Window seat',
+      discountPct: 0,
+      at: Date.now() - 0.5 * 3600_000,
+      lines: [
+        { id: 'h1-l1', productId: 'latte', name: 'Latte', basePrice: 4.5, unitPrice: 4.5, qty: 2, emoji: '', imageDataUrl: null, addons: [] },
+        { id: 'h1-l2', productId: 'croissant', name: 'Croissant', basePrice: 4, unitPrice: 4, qty: 1, emoji: '', imageDataUrl: null, addons: [] },
+      ],
+    },
+    {
+      id: 'held-2',
+      orderNo: 102,
+      type: 'dine-in',
+      label: 'Table 3',
+      note: '',
+      discountPct: 0,
+      at: Date.now() - 0.25 * 3600_000,
+      lines: [
+        { id: 'h2-l1', productId: 'cappuccino', name: 'Cappuccino', basePrice: 4.25, unitPrice: 4.25, qty: 1, emoji: '', imageDataUrl: null, addons: [] },
+        { id: 'h2-l2', productId: 'muffin', name: 'Muffin', basePrice: 3.25, unitPrice: 3.25, qty: 2, emoji: '', imageDataUrl: null, addons: [] },
+      ],
+    },
+    {
+      id: 'held-3',
+      orderNo: 103,
+      type: 'takeaway',
+      label: 'Takeaway',
+      note: 'Call when ready',
+      discountPct: 0,
+      at: Date.now() - 0.1 * 3600_000,
+      lines: [
+        { id: 'h3-l1', productId: 'espresso', name: 'Espresso', basePrice: 3.5, unitPrice: 3.5, qty: 1, emoji: '', imageDataUrl: null, addons: [] },
+        { id: 'h3-l2', productId: 'bagel', name: 'Bagel', basePrice: 3.75, unitPrice: 3.75, qty: 1, emoji: '', imageDataUrl: null, addons: [] },
+      ],
+    },
+  ]);
   const [orderType, setOrderType] = useState<OrderType>('dine-in');
   const [discountPct, setDiscountPct] = useState(0);
   const [discountName, setDiscountName] = useState<string | null>(null);
@@ -482,8 +521,36 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
   const [addonErrors, setAddonErrors] = useState<string[]>([]);
   /** When set, confirmAddons updates this cart line instead of adding a new one */
   const [editLineId, setEditLineId] = useState<string | null>(null);
+
+  // Lock background scroll while a full-screen modal overlay is open (addon,
+  // split, payment) so only the pop-up scrolls — mirrors POS modal behavior.
+  const modalOpen = !!(addonItem || showSplitPanel || showPaymentPanel);
+  useEffect(() => {
+    if (!modalOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [modalOpen]);
   const [lastAdded, setLastAdded] = useState<string | null>(null);
-  const [shift, setShift] = useState<DemoShift>(() => emptyShift());
+  const [shift, setShift] = useState<DemoShift>(() => ({
+    ...emptyShift(),
+    open: true,
+    openingCash: 150,
+    cashSales: 245.5,
+    cardSales: 412.75,
+    otherSales: 35,
+    orders: 18,
+    startedAt: Date.now() - 6 * 3600_000,
+    payIn: 100,
+    payOut: 45,
+    movements: [
+      { id: 'mov-1', type: 'in', amount: 100, reason: 'Cash drop', at: Date.now() - 3 * 3600_000 },
+      { id: 'mov-2', type: 'out', amount: 45, reason: 'Office supplies', at: Date.now() - 1.5 * 3600_000 },
+      { id: 'mov-3', type: 'in', amount: 50, reason: 'Bank deposit correction', at: Date.now() - 0.5 * 3600_000 },
+    ],
+  }));
   const [, setFlash] = useState<string | null>(null);
   const [mobileCartOpen, setMobileCartOpen] = useState(false);
   /** When true, Dashboard auto-opens the Open Shift amount popup */
@@ -491,8 +558,7 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
   /** After opening shift from a blocked payment, return here with cart intact */
   const [returnToSalesAfterShift, setReturnToSalesAfterShift] = useState(false);
   const [showHoldModal, setShowHoldModal] = useState(false);
-  /** Mirrors POS SalesHeader training / retail / sort controls */
-  const [trainingMode, setTrainingMode] = useState(false);
+  /** Mirrors POS SalesHeader retail / sort controls */
   const [retailMode, setRetailMode] = useState(false);
   const [sortBy, setSortBy] = useState<'recent' | 'alpha' | 'bestseller'>('recent');
   const [sortOpen, setSortOpen] = useState(false);
@@ -1070,35 +1136,6 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
         ? Math.max(0, Math.round((amounts.tendered ?? total) * 100) / 100)
         : undefined;
 
-    // Training mode: practice checkout only — do not count toward shift (matches POS)
-    if (trainingMode) {
-      setLastReceipt({
-        lines: cart,
-        total,
-        method,
-        orderNo: thisOrderNo,
-        type: orderType,
-        discountPct,
-        discount,
-        tax,
-        subtotal,
-        changeAmount,
-        tendered,
-      });
-      setShowReceipt(true);
-      setShowPaymentPanel(false);
-      setShowSplitPanel(false);
-      setCart([]);
-      setDiscountPct(0);
-      setDiscountName(null);
-      setOrderNote('');
-      setLoyaltyCustomer(null);
-      setAppliedLoyaltyReward(null);
-      setOrderNo((n) => n + 1);
-      ping(`Training sale · not recorded · ${methodLabel}`);
-      return;
-    }
-
     setShift((s) => ({
       ...s,
       orders: s.orders + 1,
@@ -1549,6 +1586,14 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
                 setHeld((list) => list.filter((h) => h.id !== id));
                 ping('Held order dismissed');
               }}
+              onAlertClick={(a) => {
+                if (a.kind === 'system_update') {
+                  ping('System update details — demo');
+                } else {
+                  setScreen('dashboard');
+                  ping(`Opening inventory · ${a.title}`);
+                }
+              }}
             />
           )}
           {screen === 'settings' && (
@@ -1606,23 +1651,6 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
                         <Wifi size={13} className="text-mintcom-green" />
                         <span className="hidden sm:inline">Synced</span>
                       </span>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setTrainingMode((v) => !v);
-                          ping(trainingMode ? 'Training off' : 'Training on · practice only');
-                        }}
-                        className={`inline-flex h-9 items-center gap-1.5 rounded-xl border px-2.5 text-[12px] font-semibold transition-colors ${
-                          trainingMode
-                            ? 'border-amber-700 bg-amber-700 text-white'
-                            : 'border-gray-200 bg-white text-text-secondary dark:border-white/10 dark:bg-mintcom-dark dark:text-mintcom-textSecondary'
-                        }`}
-                        title="Training mode"
-                      >
-                        <BookOpen size={14} />
-                        <span className="hidden sm:inline">Train</span>
-                      </button>
 
                       <button
                         type="button"
@@ -1807,12 +1835,6 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
                     </div>
                   </div>
 
-                  {trainingMode && (
-                    <div className="mt-2.5 flex items-center gap-2 rounded-xl border border-amber-600/30 bg-amber-50 px-3 py-1.5 text-[11px] font-bold text-amber-800 dark:bg-amber-900/30 dark:text-amber-200">
-                      <BookOpen size={13} />
-                      Training mode: practice sales only, not recorded
-                    </div>
-                  )}
                 </header>
 
                 {/* Product grid / retail list — mirrors POS ProductCard */}
@@ -2577,7 +2599,7 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
                   exit={{ opacity: 0, scale: 0.98 }}
                   transition={{ type: 'spring', stiffness: 400, damping: 32 }}
                   onClick={(e) => e.stopPropagation()}
-                  className="relative flex w-[min(96%,440px)] flex-col overflow-hidden rounded-xl border border-[#e9ecef] bg-white shadow-[0_8px_40px_rgba(0,0,0,0.18)] dark:border-white/10 dark:bg-mintcom-surface"
+                  className="relative flex w-[min(96%,560px)] flex-col overflow-hidden rounded-xl border border-[#e9ecef] bg-white shadow-[0_8px_40px_rgba(0,0,0,0.18)] dark:border-white/10 dark:bg-mintcom-surface"
                 >
                   {addonDiscountOpen && (
                     <button
@@ -2787,7 +2809,7 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
                     Option tiles always h-[120px] in a 3-col grid (1 or 2 options
                     stay same size as a full row of 3).
                   */}
-                  <div className="h-[200px] shrink-0 overflow-y-auto overscroll-contain px-3.5 py-3 sm:h-[220px] sm:px-4 sm:py-3.5">
+                  <div className="h-[240px] shrink-0 overflow-y-auto overscroll-contain px-3.5 py-3 sm:h-[300px] sm:px-4 sm:py-3.5">
                     {!(addonItem.attributes?.length) ? (
                       <div className="flex h-full items-center justify-center px-4">
                         <p className="text-center text-sm leading-5 text-[#999]">
@@ -2959,12 +2981,10 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
                   <Check size={48} strokeWidth={2.5} />
                 </div>
                 <h3 className="mb-2.5 text-[28px] font-bold leading-tight text-text-primary dark:text-white sm:text-[32px]">
-                  {trainingMode ? 'Practice complete' : 'Payment Successful'}
+                  Payment Successful
                 </h3>
                 <p className="mb-4 text-[15px] text-text-secondary dark:text-mintcom-textSecondary">
-                  {trainingMode
-                    ? 'Training only: no real sale, stock, or report entry'
-                    : 'Transaction completed successfully'}
+                  Transaction completed successfully
                 </p>
 
                 {/* Change (cash + change) or Payment Method — POS PaymentSuccessfulModal */}
@@ -4146,7 +4166,7 @@ function DemoLoyaltyModal({
           <div className="min-h-0 flex-1 overflow-y-auto">
             {/* Tabs — hidden on FOUND / FREE_ITEM */}
             {mode !== 'FOUND' && mode !== 'FREE_ITEM' && (
-              <div className="flex border-b border-gray-200 dark:border-white/10">
+              <div className="flex gap-1 px-2 pt-2">
                 {tabs.map((t) => {
                   const on = mode === t.id;
                   const Icon = t.icon;
@@ -4158,10 +4178,10 @@ function DemoLoyaltyModal({
                         setMode(t.id);
                         setError('');
                       }}
-                      className={`flex flex-1 items-center justify-center gap-1.5 py-3 text-[12px] font-bold transition-colors ${
+                      className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2.5 text-[12px] font-bold transition-colors ${
                         on
-                          ? 'border-b-[3px] border-mintcom-green text-mintcom-green'
-                          : 'text-text-secondary hover:text-text-primary'
+                          ? 'bg-mintcom-green/10 text-mintcom-green'
+                          : 'text-text-secondary hover:bg-gray-100 hover:text-text-primary dark:hover:bg-white/5'
                       }`}
                     >
                       <Icon size={16} />
@@ -4190,7 +4210,7 @@ function DemoLoyaltyModal({
                   <div className="flex cursor-not-allowed items-center gap-2 rounded-xl border border-gray-200 bg-gray-100 px-3 opacity-90 dark:border-white/10 dark:bg-mintcom-dark">
                     <User size={16} className="shrink-0 text-text-tertiary" />
                     <input
-                      value={guest?.name ?? 'Lina Hassan'}
+                      value={guest?.name ?? 'Emma Wilson'}
                       readOnly
                       tabIndex={-1}
                       aria-readonly="true"
@@ -4762,7 +4782,7 @@ function HoldOrderModal({
                   // Typing a name takes priority — clear table so field is active
                   if (selectedTable) clearTable();
                 }}
-                placeholder="e.g. Sara, Uber Eats, Walk-in"
+                placeholder="e.g. Emma, Uber Eats, Walk-in"
                 maxLength={40}
                 className="w-full rounded-xl border border-gray-200 bg-cream-50 px-3 py-2.5 pe-9 text-sm font-medium outline-none focus:border-mintcom-green dark:border-mintcom-tertiary dark:bg-mintcom-dark dark:text-white"
               />
@@ -5080,7 +5100,7 @@ function TaxRateModal({
             <X size={20} />
           </button>
         </div>
-        <div className="space-y-3 p-4">
+        <div className="space-y-2.5 px-4 pb-4 pt-3">
           <p className="text-[12px] font-medium text-text-secondary">
             Enter Tax Percentage (%)
           </p>
@@ -6833,12 +6853,12 @@ function SplitPaymentDemoModal({
 
               <div className="flex shrink-0 items-center gap-2 border-t border-gray-100 bg-white px-3 py-2 dark:border-white/8 dark:bg-mintcom-surface">
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[10px] font-medium text-text-secondary">
+                  <p className="truncate text-[11px] font-bold text-text-secondary">
                     {splitPayments.length > 0
                       ? `${splitPayments.length} persons`
                       : 'No splits yet'}
                   </p>
-                  <p className="text-[13px] font-extrabold tabular-nums text-text-primary dark:text-white">
+                  <p className="text-[15px] font-extrabold tabular-nums text-text-primary dark:text-white">
                     <span className={splitComplete ? 'text-mintcom-green' : ''}>
                       {splitAllocated.toFixed(2)}
                     </span>
@@ -6848,7 +6868,7 @@ function SplitPaymentDemoModal({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="shrink-0 rounded-xl border border-gray-200 bg-cream-50 px-3 py-2.5 text-[12px] font-bold text-text-secondary dark:border-white/10 dark:bg-mintcom-dark"
+                  className="inline-flex h-11 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-cream-50 px-4 text-[14px] font-extrabold text-text-secondary dark:border-white/10 dark:bg-mintcom-dark dark:text-white/80"
                 >
                   Cancel
                 </button>
@@ -6859,10 +6879,10 @@ function SplitPaymentDemoModal({
                     if (!splitComplete) return;
                     enterPayMode(splitPayments);
                   }}
-                  className={`inline-flex shrink-0 items-center gap-1 rounded-xl px-3.5 py-2.5 text-[12px] font-extrabold ${
+                  className={`inline-flex h-11 min-w-[160px] shrink-0 items-center justify-center gap-1.5 rounded-xl px-4 text-[14px] font-extrabold ${
                     splitComplete
                       ? 'bg-mintcom-green text-white shadow-md shadow-mintcom-green/25'
-                      : 'bg-cream-100 text-text-tertiary dark:bg-white/5'
+                      : 'bg-cream-100 text-text-tertiary dark:bg-white/5 dark:text-white/50'
                   }`}
                 >
                   {splitComplete ? 'Proceed to Payment' : 'Add all to continue'}
@@ -7098,13 +7118,13 @@ function SplitPaymentDemoModal({
 
               <div className="flex shrink-0 items-center gap-2 border-t border-gray-100 bg-white px-3 py-2 dark:border-white/8 dark:bg-mintcom-surface">
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[10px] font-medium text-text-secondary">
+                  <p className="truncate text-[11px] font-bold text-text-secondary">
                     {hasItemSelection
                       ? `${itemSelectedCount} items selected`
                       : 'Select items to continue'}
                   </p>
                   <p
-                    className={`text-[13px] font-extrabold tabular-nums ${
+                    className={`text-[15px] font-extrabold tabular-nums ${
                       hasItemSelection
                         ? 'text-mintcom-green'
                         : 'text-text-primary dark:text-white'
@@ -7116,7 +7136,7 @@ function SplitPaymentDemoModal({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="shrink-0 rounded-xl border border-gray-200 bg-cream-50 px-3 py-2.5 text-[12px] font-bold text-text-secondary dark:border-white/10 dark:bg-mintcom-dark"
+                  className="inline-flex h-11 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-cream-50 px-4 text-[14px] font-extrabold text-text-secondary dark:border-white/10 dark:bg-mintcom-dark dark:text-white/80"
                 >
                   Cancel
                 </button>
@@ -7133,10 +7153,10 @@ function SplitPaymentDemoModal({
                     }
                     enterPayMode(parts);
                   }}
-                  className={`inline-flex shrink-0 items-center gap-1 rounded-xl px-3.5 py-2.5 text-[12px] font-extrabold ${
+                  className={`inline-flex h-11 min-w-[160px] shrink-0 items-center justify-center gap-1.5 rounded-xl px-4 text-[14px] font-extrabold ${
                     hasItemSelection
                       ? 'bg-mintcom-green text-white shadow-md shadow-mintcom-green/25'
-                      : 'bg-cream-100 text-text-tertiary dark:bg-white/5'
+                      : 'bg-cream-100 text-text-tertiary dark:bg-white/5 dark:text-white/50'
                   }`}
                 >
                   {hasItemSelection

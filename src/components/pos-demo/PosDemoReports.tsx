@@ -292,7 +292,7 @@ function seedHistory(): ReportOrder[] {
       cardType: extra?.cardType,
       status: extra?.status ?? 'COMPLETED',
       at: now - hoursAgo * 3600_000,
-      employeeName: extra?.employeeName ?? (i % 3 === 0 ? 'Maya Nour' : i % 2 === 0 ? 'Omar Ali' : 'Sara Hassan'),
+      employeeName: extra?.employeeName ?? (i % 3 === 0 ? 'Chloe Davis' : i % 2 === 0 ? 'Jake Miller' : 'Emma Thompson'),
       items: lines.map((l) => `${l.emoji} ${l.name}${l.qty > 1 ? ` ×${l.qty}` : ''}`).join(' · '),
       lines,
       customer: extra?.customer,
@@ -317,36 +317,43 @@ function seedHistory(): ReportOrder[] {
       { name: 'Club Sandwich', qty: 1, unitPrice: 7.5, emoji: '', category: 'Food' },
       { name: 'Garden Salad', qty: 1, unitPrice: 6.5, emoji: '', category: 'Food' },
     ], { methodLabel: 'CliQ' }),
-    mk(4, 5, 'card', [
+    mk(4, 4, 'card', [
       { name: 'Cappuccino', qty: 2, unitPrice: 4.25, emoji: '', category: 'Beverages' },
       { name: 'Cheesecake', qty: 1, unitPrice: 5.5, emoji: '', category: 'Desserts' },
-    ], { cardType: 'Mastercard', customer: 'Lina K.' }),
-    mk(5, 8, 'cash', [
+    ], { cardType: 'Mastercard', customer: 'Emma W.' }),
+    mk(5, 5, 'cash', [
       { name: 'Latte', qty: 1, unitPrice: 4.5, emoji: '', category: 'Beverages' },
       { name: 'Brownie', qty: 2, unitPrice: 3.5, emoji: '', category: 'Desserts' },
-    ], { discount: 1.5 }),
-    mk(6, 12, 'card', [
+    ], { discount: 1.5, employeeName: 'Jake Miller' }),
+    mk(6, 6, 'card', [
       { name: 'Espresso', qty: 3, unitPrice: 3.5, emoji: '', category: 'Beverages' },
-    ], { cardType: 'Visa' }),
-    mk(7, 20, 'other', [
+    ], { cardType: 'Visa', employeeName: 'Emma Thompson' }),
+    mk(7, 7, 'other', [
       { name: 'Club Sandwich', qty: 2, unitPrice: 7.5, emoji: '', category: 'Food' },
-    ], { methodLabel: 'Talabat' }),
-    mk(8, 28, 'cash', [
+    ], { methodLabel: 'Talabat', employeeName: 'Chloe Davis' }),
+    mk(8, 8, 'cash', [
       { name: 'Croissant', qty: 4, unitPrice: 4, emoji: '', category: 'Pastries' },
-    ]),
-    mk(9, 36, 'card', [
+    ], { employeeName: 'Jake Miller' }),
+    mk(9, 9, 'card', [
       { name: 'Latte', qty: 1, unitPrice: 4.5, emoji: '', category: 'Beverages' },
-    ], { status: 'REFUNDED', cardType: 'Visa', refundReason: 'Wrong order' }),
-    mk(10, 48, 'card', [
+    ], { status: 'REFUNDED', cardType: 'Visa', refundReason: 'Wrong order', employeeName: 'Emma Thompson' }),
+    mk(10, 10, 'card', [
       { name: 'Garden Salad', qty: 1, unitPrice: 6.5, emoji: '', category: 'Food' },
       { name: 'Latte', qty: 1, unitPrice: 4.5, emoji: '', category: 'Beverages' },
-    ], { cardType: 'Amex', employeeName: 'Maya Nour' }),
-    mk(11, 60, 'cash', [
+    ], { cardType: 'Amex', employeeName: 'Chloe Davis' }),
+    mk(11, 11, 'cash', [
       { name: 'Cappuccino', qty: 1, unitPrice: 4.25, emoji: '', category: 'Beverages' },
-    ]),
-    mk(12, 72, 'other', [
+    ], { employeeName: 'Jake Miller' }),
+    mk(12, 12, 'other', [
       { name: 'Cheesecake', qty: 2, unitPrice: 5.5, emoji: '', category: 'Desserts' },
-    ], { methodLabel: 'CliQ' }),
+    ], { methodLabel: 'CliQ', employeeName: 'Emma Thompson' }),
+    mk(13, 14, 'card', [
+      { name: 'Muffin', qty: 2, unitPrice: 3.25, emoji: '', category: 'Pastries' },
+      { name: 'Latte', qty: 1, unitPrice: 4.5, emoji: '', category: 'Beverages' },
+    ], { cardType: 'Visa', employeeName: 'Chloe Davis' }),
+    mk(14, 16, 'cash', [
+      { name: 'Bagel', qty: 1, unitPrice: 3.75, emoji: '', category: 'Pastries' },
+    ], { employeeName: 'Jake Miller' }),
   ];
 }
 
@@ -626,8 +633,8 @@ function BreakdownRow({
 }) {
   return (
     <div className="flex items-start justify-between gap-3 rounded-xl border border-gray-200 bg-gray-50 p-3.5 dark:border-white/10 dark:bg-white/[0.04]">
-      <div className="flex min-w-0 flex-1 items-start gap-2.5">
-        <span className="mt-0.5 flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-xl bg-mintcom-green/15 text-mintcom-green">
+      <div className="flex min-w-0 flex-1 items-center gap-2.5">
+        <span className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-xl bg-mintcom-green/15 text-mintcom-green">
           {icon}
         </span>
         <div className="min-w-0 flex-1 pe-1">
@@ -663,8 +670,8 @@ function HeroTotal({
 }) {
   return (
     <div className="rounded-xl border border-mintcom-green/20 bg-mintcom-green/[0.07] p-4">
-      <div className="flex items-start gap-2.5">
-        <span className="mt-0.5 flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-xl bg-mintcom-green/12 text-mintcom-green">
+      <div className="flex items-center gap-2.5">
+        <span className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-xl bg-mintcom-green/12 text-mintcom-green">
           {icon ?? <Wallet size={18} />}
         </span>
         <p className="min-w-0 flex-1 text-[12px] font-bold uppercase leading-snug tracking-wide text-text-secondary dark:text-mintcom-textSecondary">
@@ -939,7 +946,7 @@ function StatCard({
   // Match POS SalesSummaryCards: icon 42×42 r12, title 11/500, value 15/700
   const className = `relative flex min-h-[72px] min-w-0 flex-1 items-center gap-3 rounded-xl border p-3 text-start transition-all ${
     primary
-      ? 'border-transparent bg-mintcom-green text-white shadow-sm shadow-mintcom-green/20'
+      ? 'border-transparent bg-mintcom-green !text-white shadow-sm shadow-mintcom-green/20'
       : 'border-gray-200/90 bg-white dark:border-white/10 dark:bg-mintcom-surface'
   } ${onClick ? 'cursor-pointer' : ''}`;
 
@@ -984,7 +991,7 @@ function StatCard({
       <div className={`min-w-0 flex-1 ${info ? 'pe-5' : ''} ${onClick ? 'pe-0.5' : ''}`}>
         <p
           className={`text-[11px] font-medium leading-snug tracking-normal ${
-            primary ? 'text-white' : 'text-text-secondary dark:text-mintcom-textSecondary'
+            primary ? '!text-white' : 'text-text-secondary dark:text-mintcom-textSecondary'
           }`}
         >
           {label}
@@ -992,7 +999,7 @@ function StatCard({
         {hint && (
           <p
             className={`text-[9px] font-medium leading-snug ${
-              primary ? 'text-white/82' : 'text-text-tertiary'
+              primary ? '!text-white/82' : 'text-text-tertiary'
             }`}
           >
             {hint}
@@ -1000,7 +1007,7 @@ function StatCard({
         )}
         <div
           className={`mt-0.5 text-[15px] font-bold tabular-nums leading-tight tracking-normal ${
-            primary ? 'text-white' : 'text-text-primary dark:text-white'
+            primary ? '!text-white' : 'text-text-primary dark:text-white'
           }`}
         >
           {value}
@@ -1011,7 +1018,7 @@ function StatCard({
         <ChevronRight
           size={18}
           strokeWidth={2}
-          className={`mb-0.5 shrink-0 self-end ${primary ? 'text-white' : 'text-text-tertiary'}`}
+          className={`mb-0.5 shrink-0 self-end ${primary ? '!text-white' : 'text-text-tertiary'}`}
           aria-hidden
         />
       )}
@@ -1177,7 +1184,7 @@ function OrderTableRow({
           <button
             type="button"
             onClick={onRefund}
-            className="rounded-xl bg-[#D55263] px-2 py-1 text-[11px] font-medium text-white shadow-sm sm:rounded-xl sm:px-2.5 sm:py-1"
+            className="inline-flex h-7 items-center rounded-xl bg-[#D55263] px-2.5 text-[11px] font-bold !text-white shadow-sm sm:h-8 sm:px-3"
           >
             Refund
           </button>
@@ -1372,7 +1379,7 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
   const employees = useMemo(() => {
     const names = Array.from(new Set(inRange.map((o) => o.employeeName)));
     // Always offer known demo staff so shift filter can be explored even on quiet days
-    for (const n of ['You', 'Maya Nour', 'Omar Ali', 'Sara Hassan']) {
+    for (const n of ['You', 'Chloe Davis', 'Jake Miller', 'Emma Thompson']) {
       if (!names.includes(n)) names.push(n);
     }
     return names;
@@ -2072,7 +2079,7 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
         {(
           [
             { id: 'general' as const, label: 'General Report' },
-            { id: 'items' as const, label: 'Item Report' },
+            { id: 'items' as const, label: 'Items Report' },
           ] as const
         ).map((t) => (
           <button
@@ -2572,13 +2579,13 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
                   </button>
                 </div>
                 <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-                  {employeeFiltered.length === 0 && (
+                  {filteredOrders.length === 0 && (
                     <div className="flex flex-col items-center py-10 text-center">
                       <ShoppingBag size={32} className="mb-2 text-gray-300" />
                       <p className="text-sm text-text-secondary">No related orders found</p>
                     </div>
                   )}
-                  {employeeFiltered.map((o, idx) => {
+                  {filteredOrders.map((o, idx) => {
                     const st = statusOf(o);
                     const lr = localRefunds[o.id];
                     const displayTotal =
@@ -2592,7 +2599,7 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
                         status={st}
                         displayTotal={displayTotal}
                         canRefund={canRefundOrder(o)}
-                        isLast={idx === employeeFiltered.length - 1}
+                        isLast={idx === filteredOrders.length - 1}
                         onView={() => setSelectedOrder(o)}
                         onRefund={() => {
                           setSelectedOrder(o);
@@ -2639,8 +2646,8 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
                               : ''
                           }`}
                         >
-                          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gray-50 dark:bg-white/5">
-                            <Package size={22} className="text-gray-400" strokeWidth={1.5} />
+                          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gray-50 text-[24px] leading-none dark:bg-white/5">
+                            {row.emoji || <Package size={22} className="text-gray-400" strokeWidth={1.5} />}
                           </span>
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-1.5">
@@ -3395,7 +3402,7 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
         {modal === 'other' && (
           <ModalShell
             title="Other payment methods"
-            subtitle="Non cash / card methods"
+            subtitle="Non-Cash / Card Methods"
             icon={<PosOtherReceiptIcon size={20} />}
             onClose={() => setModal(null)}
           >
@@ -3429,7 +3436,7 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
         {/* Pay in / Pay out — POS PayInPayOutLogModal */}
         {modal === 'payinout' && (
           <ModalShell
-            title="Pay-in / Pay-out log"
+            title="Pay-In / Pay-Out Log"
             subtitle="Non-sales cash movements"
             icon={<Banknote size={20} />}
             onClose={() => setModal(null)}
@@ -3437,14 +3444,14 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
             <div className="flex flex-col gap-3">
               <div className="grid grid-cols-2 gap-2.5">
                 <div className="rounded-xl bg-mintcom-green p-4 !text-white shadow-sm">
-                  <p className="text-[12px] font-semibold !text-white/90">Total pay in</p>
+                  <p className="text-[12px] font-semibold !text-white/90">Total Pay In</p>
                   <p className="mt-1 text-[22px] font-extrabold tabular-nums !text-white">
                     {money(summary.payIn)}
                   </p>
                 </div>
-                <div className="rounded-xl bg-[#D55263] p-4 text-white shadow-sm">
-                  <p className="text-[12px] font-semibold text-white/90">Total pay out</p>
-                  <p className="mt-1 text-[22px] font-extrabold tabular-nums">
+                <div className="rounded-xl bg-[#D55263] p-4 !text-white shadow-sm">
+                  <p className="text-[12px] font-semibold !text-white/90">Total Pay Out</p>
+                  <p className="mt-1 text-[22px] font-extrabold tabular-nums !text-white">
                     {money(summary.payOut)}
                   </p>
                 </div>
@@ -3462,11 +3469,11 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
                 {shift.movements.length === 0 ? (
                   <div className="px-4 py-10 text-center">
                     <Banknote size={36} className="mx-auto mb-2 text-gray-300" />
-                    <p className="text-[13px] font-medium text-text-secondary">
-                      No movements this shift
+                    <p className="text-[13px] font-bold text-text-secondary">
+                      No PAY-IN/PAY-OUT entries found
                     </p>
                     <p className="mt-1 text-[12px] text-text-tertiary">
-                      Use Cash in / out on the dashboard
+                      For selected range
                     </p>
                   </div>
                 ) : (
@@ -3477,15 +3484,15 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
                     >
                       <span>
                         <span
-                          className={`inline-block rounded-xl px-2 py-0.5 text-[10px] font-bold uppercase text-white ${
+                          className={`inline-block rounded-xl px-2 py-0.5 text-[10px] font-bold uppercase !text-white ${
                             m.type === 'in' ? 'bg-mintcom-green' : 'bg-[#D55263]'
                           }`}
                         >
-                          {m.type === 'in' ? 'In' : 'Out'}
+                          {m.type === 'in' ? 'PAY-IN' : 'PAY-OUT'}
                         </span>
                       </span>
                       <span className="truncate font-medium text-text-secondary dark:text-mintcom-textSecondary">
-                        {m.reason || 'No note'}
+                        {m.reason || 'No note provided'}
                       </span>
                       <span className="text-end text-[13px] font-bold tabular-nums text-text-primary dark:text-white">
                         {money(m.amount)}
@@ -3520,7 +3527,7 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
             onClose={() => setModal(null)}
           >
             <div className="flex flex-col gap-2.5">
-              <HeroTotal label="Active hours" value={hoursWorked} icon={<Clock size={18} />} />
+              <HeroTotal label="Active Hours" value={hoursWorked} icon={<Clock size={18} />} />
               <BreakdownRow
                 icon={<User size={20} />}
                 label={employee === 'all' ? 'All employees' : employee}

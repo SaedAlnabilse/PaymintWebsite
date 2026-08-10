@@ -192,8 +192,8 @@ export function ReportsPage() {
         return;
       }
 
-      const res = await api.get('/reports/employees');
-      setEmployees(res.data?.map((u: any) => ({ label: u.name, value: u.id })) || []);
+      const res = await api.get('/api/users');
+      setEmployees((res.data || []).map((u: any) => ({ label: u.name || u.username, value: u.id })));
     } catch (error: any) {
       console.error('[Reports] Failed to load employees', error?.response?.status, error?.response?.data || error);
     }

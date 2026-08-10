@@ -33,6 +33,7 @@ import { SelectInput } from '../../components/ui';
 import { OptimizedImage } from '../../components/OptimizedImage';
 import { useRealtime } from '../../hooks/useRealtime';
 import { DataChangeEventTypes } from '../../services/realtimeService';
+import { retryTransientRequest } from '../../utils/retryTransientRequest';
 
 const paymentMethodSchema = z.object({
   name: z.string().min(1, 'common.required'),
@@ -184,9 +185,8 @@ export function PaymentMethodsPage() {
   };
 
   useEffect(() => {
-    fetchPaymentMethods();
-    fetchCardTypes();
-  }, [currentEstablishment]);
+    void fetchInitialData();
+  }, [currentEstablishment?.id]);
 
   useEffect(() => {
     const state = location.state as { openCreateModal?: boolean } | null;
@@ -205,13 +205,14 @@ export function PaymentMethodsPage() {
   const fetchPaymentMethods = async (silent = false) => {
     try {
       if (!silent) setIsLoading(true);
-      const response = await api.get('/app-settings/payment-methods', {
-        params: { includeInactive: true },
-      });
+      const response = await retryTransientRequest(() =>
+        api.get('/app-settings/payment-methods', {
+          params: { includeInactive: true },
+        }),
+      );
       setPaymentMethods(Array.isArray(response.data) ? response.data : []);
     } catch {
       toast.error(t('paymentMethods.messages.failedToLoad'));
-      setPaymentMethods([]);
     } finally {
       if (!silent) setIsLoading(false);
     }
@@ -219,13 +220,24 @@ export function PaymentMethodsPage() {
 
   const fetchCardTypes = async () => {
     try {
-      const response = await api.get('/card-types', {
-        params: { includeInactive: true },
-      });
+      const response = await retryTransientRequest(() =>
+        api.get('/card-types', {
+          params: { includeInactive: true },
+        }),
+      );
       setCardTypes(Array.isArray(response.data) ? response.data : []);
     } catch {
       console.error('Failed to load card types');
       toast.error(t('paymentMethods.messages.failedToLoad'));
+    }
+  };
+
+  const fetchInitialData = async () => {
+    setIsLoading(true);
+    try {
+      await Promise.all([fetchPaymentMethods(true), fetchCardTypes()]);
+    } finally {
+      setIsLoading(false);
     }
   };
 

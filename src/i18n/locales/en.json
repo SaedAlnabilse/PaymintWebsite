@@ -112,7 +112,19 @@
     "syncError": "Failed to sync logs",
     "time": "Time",
     "title": "Activity Log",
-    "user": "User"
+    "user": "User",
+    "allResources": "All types",
+    "filterByType": "Resource type",
+    "resources": {
+      "product": "Products",
+      "category": "Categories",
+      "employee": "Staff",
+      "discount": "Discounts",
+      "payment_method": "Payment Methods",
+      "order": "Orders",
+      "settings": "Settings",
+      "attribute": "Attributes"
+    }
   },
   "adminUsers": {
     "aboutDesc": "Admins have full access to the dashboard and app.",
@@ -2045,7 +2057,8 @@
     "loyalty": "Loyalty",
     "whyMintcom": "Why Mintcom",
     "multiLocation": "Multi-location",
-    "pricingPage": "Pricing"
+    "pricingPage": "Pricing",
+    "legal": "Legal"
   },
   "hardware": {
     "tip": "Pro Tip: All recommended hardware is plug-and-play with the Mintcom POS app."
@@ -5652,7 +5665,13 @@
       "fillRequired": "Please fill in all required fields before saving.",
       "disableTitle": "Turn off E-Invoicing?",
       "disableMessage": "New sales will no longer be reported to the tax authority and receipts will stop carrying the verification QR code. Your connection details are kept, so you can turn it back on anytime.",
-      "disableConfirm": "Turn off"
+      "disableConfirm": "Turn off",
+      "preview": {
+        "yourEstablishment": "Your Establishment",
+        "title": "Invoice Template Preview",
+        "subtitle": "This is how your e-invoices will appear",
+        "print": "Print / Save PDF"
+      }
     },
     "title": "Settings"
   },

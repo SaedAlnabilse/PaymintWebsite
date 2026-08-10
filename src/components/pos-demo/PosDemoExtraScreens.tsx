@@ -721,7 +721,7 @@ export function DemoDashboardScreen({
     ended.setDate(ended.getDate() - 1);
     ended.setHours(14, 22, 0, 0);
     return {
-      name: 'Sara',
+      name: 'Emma',
       endedAt: ended.getTime(),
       autoClose: true as boolean,
     };
@@ -1353,17 +1353,17 @@ const INITIAL_HISTORY: DemoHistory[] = [
   },
   {
     id: 'h3',
-    kind: 'system',
-    title: 'Printer Ready',
-    message: 'Kitchen printer reconnected successfully.',
+    kind: 'stock',
+    title: 'Stock Updated',
+    message: 'Croissant restocked: +24 units added to inventory.',
     at: Date.now() - DAY_MS - 2 * HOUR_MS,
     isNew: false,
   },
   {
     id: 'h4',
     kind: 'order',
-    title: 'New Online Order',
-    message: 'Order #1051 was received from a delivery channel.',
+    title: 'Held Order Resumed',
+    message: 'Table 3 order was resumed from hold and completed checkout.',
     at: Date.now() - 3 * DAY_MS,
     isNew: false,
   },
@@ -1483,10 +1483,14 @@ function alertTone(kind: AlertKind) {
   }
 }
 
-function AlertCard({ alert }: { alert: DemoAlert }) {
+function AlertCard({ alert, onClick }: { alert: DemoAlert; onClick?: () => void }) {
   const tone = alertTone(alert.kind);
   return (
-    <div className={`mb-3 overflow-hidden rounded-xl p-4 shadow-md ${tone.wrap}`}>
+    <button
+      type="button"
+      onClick={onClick}
+      className={`mb-3 w-full overflow-hidden rounded-xl p-4 text-start shadow-md transition-transform active:scale-[0.99] ${tone.wrap}`}
+    >
       <div className="mb-2 flex items-start justify-between gap-3">
         <div className="flex min-w-0 flex-1 items-center gap-2.5">
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/20">
@@ -1497,7 +1501,7 @@ function AlertCard({ alert }: { alert: DemoAlert }) {
         <span className={`shrink-0 text-[12px] font-semibold ${tone.sub}`}>{alert.time}</span>
       </div>
       <p className={`text-[14px] leading-5 ${tone.sub}`}>{alert.message}</p>
-    </div>
+    </button>
   );
 }
 
@@ -1609,11 +1613,13 @@ export function DemoNotificationsScreen({
   held,
   staffName,
   onResumeHeld,
+  onAlertClick,
 }: {
   held: DemoHeldTicket[];
   staffName?: string;
   onResumeHeld: (ticket: DemoHeldTicket) => void;
   onDismissHeld?: (id: string) => void;
+  onAlertClick?: (alert: DemoAlert) => void;
 }) {
   const [alerts] = useState(INITIAL_ALERTS);
   const [history, setHistory] = useState(INITIAL_HISTORY);
@@ -1686,9 +1692,8 @@ export function DemoNotificationsScreen({
           <>
             {alerts.length > 0 && (
               <>
-                <SectionPill title="Alerts" special />
                 {alerts.map((a) => (
-                  <AlertCard key={a.id} alert={a} />
+                  <AlertCard key={a.id} alert={a} onClick={() => onAlertClick?.(a)} />
                 ))}
               </>
             )}

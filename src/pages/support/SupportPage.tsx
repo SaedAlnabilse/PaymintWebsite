@@ -447,7 +447,7 @@ export const SupportPage = () => {
           <div className="grid gap-8 lg:grid-cols-[1fr_340px] xl:grid-cols-[1fr_380px]">
 
             {/* ── Articles list ── */}
-            <div>
+            <div className="min-w-0">
               <div className="mb-6 flex items-center justify-between">
                 <h2 className="font-magilio text-2xl font-bold tracking-tight text-gray-900 dark:text-white md:text-3xl">
                   {t('support.articles.popular')}
@@ -531,7 +531,8 @@ export const SupportPage = () => {
 
             {/* ── User Manual card ── */}
             <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}>
+              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+              className="min-w-0">
               <div className="relative overflow-hidden rounded-3xl border border-mintcom-green/20 bg-gradient-to-b from-mintcom-green/10 to-mintcom-green/4 p-7 dark:from-mintcom-green/12 dark:to-mintcom-green/3">
                 {/* decorative circles */}
                 <div aria-hidden className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-mintcom-green/20 blur-2xl" />

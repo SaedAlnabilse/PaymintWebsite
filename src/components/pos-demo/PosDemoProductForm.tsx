@@ -212,7 +212,7 @@ export function DemoProductFormModal({
       <motion.div
         initial={{ opacity: 0, scale: 0.96, y: 10 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="flex max-h-[min(560px,90%)] w-full max-w-[min(94%,440px)] flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl dark:border-white/10 dark:bg-mintcom-surface"
+        className="flex max-h-[min(560px,90%)] w-full max-w-[min(94%,560px)] flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl dark:border-white/10 dark:bg-mintcom-surface"
       >
         {/* Header */}
         <div className="flex shrink-0 items-center justify-between border-b border-gray-100 px-5 py-3.5 dark:border-white/8">
@@ -519,7 +519,7 @@ export function DemoProductFormModal({
             <div className="space-y-3 border-t border-gray-100 bg-cream-50/60 p-3 dark:border-white/8 dark:bg-mintcom-dark/50">
               <div>
                 <label className="mb-1 block text-center text-[12px] text-text-secondary">
-                  Available stock
+                  Available Stock
                 </label>
                 <input
                   value={availableStock}
@@ -561,8 +561,8 @@ export function DemoProductFormModal({
               </div>
               <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-white px-3 py-2.5 dark:border-white/10 dark:bg-mintcom-surface">
                 <div>
-                  <p className="text-xs font-bold dark:text-white">Allow overselling</p>
-                  <p className="text-[10px] text-text-tertiary">Sell when stock hits zero</p>
+                  <p className="text-sm font-bold dark:text-white">Allow Overselling</p>
+                  <p className="text-[12px] text-text-tertiary">Sell when stock hits zero</p>
                 </div>
                 <Toggle on={allowNegative} onToggle={() => setAllowNegative((v) => !v)} />
               </div>

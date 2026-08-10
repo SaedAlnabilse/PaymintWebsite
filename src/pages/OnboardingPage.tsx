@@ -205,9 +205,14 @@ function EmbeddedCardField({
 }
 
 function CardBrandMark({ brand }: { brand: 'mastercard' | 'visa' | 'amex' }) {
-  // Equal-height badges so Visa / Mastercard / Amex align consistently across OS fonts.
+  // Equal-height badges so Visa / Mastercard / Amex align consistently across
+  // OS fonts. The three used to differ in more than height: Mastercard was
+  // 11px/bold, Visa 11px/black with extra tracking, and Amex a 9px pill — three
+  // typographic treatments inside identical shells, which read as misalignment
+  // (TC-045). They now share one label style; only the brand mark differs.
   const shell =
     'inline-flex h-8 min-w-[4.5rem] items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 font-sans text-[11px] font-bold leading-none tracking-wide text-gray-600 dark:border-white/10 dark:bg-white/5 dark:text-gray-300';
+  const labelClass = 'font-sans text-[11px] font-bold leading-none tracking-wide';
 
   if (brand === 'mastercard') {
     return (
@@ -216,7 +221,7 @@ function CardBrandMark({ brand }: { brand: 'mastercard' | 'visa' | 'amex' }) {
           <span className="absolute left-0 top-0 h-3.5 w-3.5 rounded-full bg-[#EB001B]" />
           <span className="absolute right-0 top-0 h-3.5 w-3.5 rounded-full bg-[#F79E1B]/90" />
         </span>
-        <span className="font-sans text-[11px] font-bold leading-none">Mastercard</span>
+        <span className={labelClass}>Mastercard</span>
       </span>
     );
   }
@@ -224,7 +229,7 @@ function CardBrandMark({ brand }: { brand: 'mastercard' | 'visa' | 'amex' }) {
   if (brand === 'visa') {
     return (
       <span className={shell} aria-label="Visa">
-        <span className="font-sans text-[11px] font-black leading-none tracking-[0.12em] text-[#1A4F9C] dark:text-[#6B9FE8]">
+        <span className={`${labelClass} text-[#1A4F9C] dark:text-[#6B9FE8]`}>
           VISA
         </span>
       </span>
@@ -233,7 +238,7 @@ function CardBrandMark({ brand }: { brand: 'mastercard' | 'visa' | 'amex' }) {
 
   return (
     <span className={shell} aria-label="American Express">
-      <span className="rounded bg-[#2E77BC] px-1.5 py-0.5 font-sans text-[9px] font-black leading-none tracking-wide text-white">
+      <span className={`${labelClass} text-[#2E77BC] dark:text-[#6BA6DC]`}>
         AMEX
       </span>
     </span>
@@ -1192,13 +1197,32 @@ export function OnboardingPage() {
             >
               <div className="bg-white dark:bg-white/5 rounded-[2.5rem] border border-gray-200 dark:border-white/10 p-8 lg:p-12 shadow-2xl shadow-gray-200/50 dark:shadow-none">
                 <div className="mb-10">
-                  <div className="flex justify-between items-start mb-2">
-                    <h2 className="font-magilio text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">{t('onboarding.step1.title')}</h2>
+                  {/* Steps 2–4 each have a Back control; step 1 had none, so a
+                      first-time owner arriving from signup was stranded here
+                      with no way out but the browser's own back button
+                      (TC-042). There is no previous step, so this exits the
+                      wizard: to the owner portal when adding another location,
+                      otherwise back to the site. */}
+                  <div className="flex justify-between items-center mb-6">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        isAdditionalLocation ? navigate('/owner') : navigate('/')
+                      }
+                      className="flex items-center gap-2 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors text-xs font-sans font-bold"
+                    >
+                      {!isRTL && <ArrowLeft size={14} />}
+                      {t('onboarding.back')}
+                      {isRTL && <ArrowLeft size={14} />}
+                    </button>
                     {isAdditionalLocation && (
                       <button type="button" onClick={() => navigate('/owner')} className="text-gray-400 hover:text-mintcom-green hover:underline transition-colors flex items-center text-xs font-sans font-bold">
                         {t('common.dashboard', { defaultValue: 'Go to dashboard' })}
                       </button>
                     )}
+                  </div>
+                  <div className="flex justify-between items-start mb-2">
+                    <h2 className="font-magilio text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">{t('onboarding.step1.title')}</h2>
                   </div>
                   <p className="text-sm font-sans text-gray-600 dark:text-gray-300">{t('onboarding.step1.subtitle')}</p>
                 </div>
@@ -2586,27 +2610,8 @@ export function OnboardingPage() {
                       <div className="flex-1 min-w-0">
                         <p className="text-xs text-gray-400 dark:text-gray-500 mb-0.5">{t('onboarding.step5.password')}</p>
                         <p className="text-gray-900 dark:text-white font-sans font-bold text-sm truncate font-mono tracking-wider">
-                          {showEstablishmentPassword ? formData.establishmentPassword : '********'}
+                          {'********'}
                         </p>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => setShowEstablishmentPassword(!showEstablishmentPassword)}
-                          className="p-2 hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg text-gray-400 dark:text-gray-500 hover:text-mintcom-green transition-colors"
-                          title={showEstablishmentPassword ? t('auth.login.hidePassword') : t('auth.login.showPassword')}
-                        >
-                          {showEstablishmentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                        </button>
-                        <button
-                          onClick={() => {
-                            navigator.clipboard.writeText(formData.establishmentPassword);
-                            toast.success(t('common.copied'));
-                          }}
-                          className="p-2 hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg text-gray-400 dark:text-gray-500 hover:text-mintcom-green transition-colors"
-                          title={t('common.copy')}
-                        >
-                          <Copy size={16} />
-                        </button>
                       </div>
                     </div>
                   </motion.div>

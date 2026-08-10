@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useLayoutEffect } from 'react';
+import { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronDown, Check, X, Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -87,9 +87,12 @@ export function SingleSelect({
         }
     }, [isOpen]);
 
-    // Close when clicking outside
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
+    const updateDropdownPositionRef = useRef(updateDropdownPosition);
+    const handleClickOutsideRef = useRef<(event: MouseEvent) => void>(() => {});
+
+    useLayoutEffect(() => {
+        updateDropdownPositionRef.current = updateDropdownPosition;
+        handleClickOutsideRef.current = (event: MouseEvent) => {
             if (
                 containerRef.current &&
                 !containerRef.current.contains(event.target as Node) &&
@@ -99,33 +102,39 @@ export function SingleSelect({
                 setIsOpen(false);
             }
         };
+    });
 
+    const clickOutsideWrapper = useCallback((event: MouseEvent) => {
+        handleClickOutsideRef.current(event);
+    }, []);
+    const scrollWrapper = useCallback(() => {
+        updateDropdownPositionRef.current();
+    }, []);
+
+    useEffect(() => {
         if (isOpen) {
-            document.addEventListener('mousedown', handleClickOutside);
-            window.addEventListener('scroll', updateDropdownPosition, true);
-            window.addEventListener('resize', updateDropdownPosition);
-            
-            // Focus input
+            document.addEventListener('mousedown', clickOutsideWrapper);
+            window.addEventListener('scroll', scrollWrapper, true);
+            window.addEventListener('resize', scrollWrapper);
+
             const timer = setTimeout(() => {
                 searchInputRef.current?.focus();
             }, 100);
 
-            // Auto-scroll container into view when opening (only for modals/popups)
             if (scrollIntoViewOnOpen && containerRef.current) {
                 setTimeout(() => {
                     containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }, 150);
             }
 
-            return () => clearTimeout(timer);
+            return () => {
+                clearTimeout(timer);
+                document.removeEventListener('mousedown', clickOutsideWrapper);
+                window.removeEventListener('scroll', scrollWrapper, true);
+                window.removeEventListener('resize', scrollWrapper);
+            };
         }
-
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-            window.removeEventListener('scroll', updateDropdownPosition, true);
-            window.removeEventListener('resize', updateDropdownPosition);
-        };
-    }, [isOpen, scrollIntoViewOnOpen]);
+    }, [isOpen, scrollIntoViewOnOpen, clickOutsideWrapper, scrollWrapper]);
 
     const toggleOpen = () => {
         if (disabled) return;
