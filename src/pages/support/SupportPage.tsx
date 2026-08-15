@@ -25,10 +25,10 @@ const categoryAccent: Record<string, { border: string; glow: string; iconBg: str
     dot: 'bg-blue-400',
   },
   billing: {
-    border: 'border-purple-400/40 hover:border-purple-400/70',
-    glow: 'group-hover:shadow-[0_12px_40px_-12px_rgba(167,139,250,0.35)]',
-    iconBg: 'bg-purple-500',
-    dot: 'bg-purple-400',
+    border: 'border-indigo-400/40 hover:border-indigo-400/70',
+    glow: 'group-hover:shadow-[0_12px_40px_-12px_rgba(129,140,248,0.35)]',
+    iconBg: 'bg-indigo-500',
+    dot: 'bg-indigo-400',
   },
   technical: {
     border: 'border-orange-400/40 hover:border-orange-400/70',

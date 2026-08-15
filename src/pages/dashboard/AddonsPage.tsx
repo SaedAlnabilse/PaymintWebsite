@@ -12,12 +12,11 @@ import {
   Trash2,
   ChevronDown,
   X,
-  Layers,
-  DollarSign,
   MousePointerClick,
   CheckSquare,
   RotateCcw
 } from 'lucide-react';
+import { biIcon } from '../../components/ui/BiIcon';
 import { TEXT_INPUT_LIMITS } from '../../config/textLimits';
 
 import toast from 'react-hot-toast';
@@ -670,15 +669,15 @@ export function AddonsPage() {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
-          { label: t('attributes.stats.groups'), value: stats.totalGroups, icon: Layers, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-          { label: t('attributes.stats.options'), value: stats.totalOptions, icon: Package, color: 'text-mintcom-green', bg: 'bg-mintcom-green/10' },
-          { label: t('attributes.stats.sales'), value: stats.paidOptions, sub: t('attributes.stats.withPrice'), icon: DollarSign, color: 'text-orange-500', bg: 'bg-orange-500/10' },
+          { label: t('attributes.stats.groups'), value: stats.totalGroups, icon: biIcon('bi-collection'), color: 'text-mintcom-green', bg: 'bg-mintcom-green/10' },
+          { label: t('attributes.stats.options'), value: stats.totalOptions, icon: biIcon('bi-box-seam'), color: 'text-mintcom-green', bg: 'bg-mintcom-green/10' },
+          { label: t('attributes.stats.sales'), value: stats.paidOptions, sub: t('attributes.stats.withPrice'), icon: biIcon('bi-cash-coin'), color: 'text-mintcom-green', bg: 'bg-mintcom-green/10' },
         ].map((stat, i) => (
           <div key={i} className="p-6 rounded-3xl bg-white dark:bg-[#1E293B] border border-gray-200 dark:border-white/[0.03] shadow-sm overflow-hidden text-left relative">
             <div className={`absolute top-0 right-0 w-24 h-24 rounded-full blur-2xl opacity-0 transition-opacity duration-500 pointer-events-none ${stat.bg}`} />
             <div className="relative z-10 flex items-center gap-5">
               <div className={`p-4 rounded-2xl ${stat.bg} ${stat.color}`}>
-                <stat.icon size={24} strokeWidth={2.5} />
+                <stat.icon size={24} />
               </div>
               <div>
                 <p className="dashboard-stat-title mb-1.5">{stat.label}</p>

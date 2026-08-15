@@ -74,7 +74,7 @@ const actionColors: Record<string, string> = {
   'Archived sub-attribute': 'bg-mintcom-red/10 text-mintcom-red border-mintcom-red/20',
 
   // Staff
-  'Added employee': 'bg-purple-500/10 text-purple-500 border-purple-500/20',
+  'Added employee': 'bg-mintcom-green/10 text-mintcom-green border-mintcom-green/20',
   'Updated employee': 'bg-blue-500/10 text-blue-500 border-blue-500/20',
   'Deleted employee': 'bg-gray-500/10 text-gray-500 border-gray-500/20',
   'Deactivated employee': 'bg-gray-500/10 text-gray-500 border-gray-500/20',
@@ -669,7 +669,7 @@ export function ActivityLogsPage() {
               <button
                 type="button"
                 onClick={() => { setResourceFilter('all'); setPage(1); }}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 text-[11px] font-bold border border-purple-500/20 hover:bg-purple-500/15 transition-colors"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[11px] font-bold border border-blue-500/20 hover:bg-blue-500/15 transition-colors"
               >
                 <Layers size={11} />
                 {resourceFilterOptions.find(o => o.value === resourceFilter)?.label || resourceFilter}

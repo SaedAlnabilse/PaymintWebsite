@@ -291,7 +291,7 @@ export function AdminUsersPage() {
                                 >
                                     <div className="flex items-start justify-between mb-4">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-500 border border-purple-500/20 flex items-center justify-center font-black text-sm shadow-sm">
+                                            <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-500 border border-blue-500/20 flex items-center justify-center font-black text-sm shadow-sm">
                                                 {admin.firstName.charAt(0)}{admin.lastName.charAt(0)}
                                             </div>
                                             <div>
@@ -349,7 +349,7 @@ export function AdminUsersPage() {
 
                                     <div className="relative z-10 flex items-start justify-between">
                                         <div className="flex items-center gap-4">
-                                            <div className="w-14 h-14 rounded-2xl bg-purple-500/10 text-purple-500 border border-purple-500/20 flex items-center justify-center font-black text-xl shadow-sm group-hover:scale-110 transition-transform duration-300">
+                                            <div className="w-14 h-14 rounded-2xl bg-blue-500/10 text-blue-500 border border-blue-500/20 flex items-center justify-center font-black text-xl shadow-sm group-hover:scale-110 transition-transform duration-300">
                                                 {admin.firstName.charAt(0)}{admin.lastName.charAt(0)}
                                             </div>
                                             <div className={t('common.locale') === 'ar' ? 'mr-4' : 'ml-4'}>

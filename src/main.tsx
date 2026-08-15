@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { HelmetProvider } from 'react-helmet-async'
 import './i18n' // Initialize i18n before app
+import 'bootstrap-icons/font/bootstrap-icons.css'
 import './index.css'
 import App from './App.tsx'
 

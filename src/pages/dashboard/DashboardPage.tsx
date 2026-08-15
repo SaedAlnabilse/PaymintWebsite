@@ -42,7 +42,7 @@ import { PaymentMethodsBreakdown } from '../../components/dashboard/overview/Pay
 import { TopSellingProducts } from '../../components/dashboard/overview/TopSellingProducts';
 import { PeakHoursChart } from '../../components/dashboard/overview/PeakHoursChart';
 import { PayInPayOutLogModal } from '../../components/dashboard/reports/PayInPayOutLogModal';
-import { SectionLoader } from '../../components/LoadingState';
+import { CenteredOverlay, SectionLoader } from '../../components/LoadingState';
 import { BusyOverlay } from '../../components/BusyOverlay';
 import { ExportMenu } from '../../components/ExportMenu';
 import { exportSections } from '../../utils/export';
@@ -633,7 +633,9 @@ export const DashboardPage = () => {
       <AnimatePresence mode="wait">
         {isLoading && !stats ? (
           <motion.div key="loader" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <SectionLoader message={t('dashboard.loading')} />
+            <CenteredOverlay>
+              <SectionLoader message={t('dashboard.loading')} minHeightClassName="" />
+            </CenteredOverlay>
           </motion.div>
         ) : (
           <motion.div

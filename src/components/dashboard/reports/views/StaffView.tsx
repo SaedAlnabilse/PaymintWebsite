@@ -1,4 +1,5 @@
 import { Users, Activity, TrendingUp, ShoppingBag, Star } from 'lucide-react';
+import { BiIcon } from '../../../ui/BiIcon';
 import { useCurrency } from '../../../../context/CurrencyContext';
 import type { Shift, ShiftOption } from '../../../../types';
 import { motion } from 'framer-motion';
@@ -140,7 +141,7 @@ export const StaffView = React.memo(function StaffView({ shifts, selectedEmploye
       <div className="bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.03] p-6 shadow-sm">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 rounded-xl bg-mintcom-green/10 flex items-center justify-center text-mintcom-green">
-            <Users size={20} />
+            <BiIcon icon="bi-people" size={20} />
           </div>
           <div>
             <h3 className="text-lg font-bold text-gray-900 dark:text-white">

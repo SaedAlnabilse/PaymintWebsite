@@ -1,16 +1,10 @@
 import {
   TrendingUp,
   Wallet,
-  DollarSign,
-  Percent,
-  ShoppingBag,
-  ArrowDownRight,
-  ArrowUpRight,
-  Clock,
   Activity,
-  CreditCard,
   ExternalLink
 } from 'lucide-react';
+import { biIcon } from '../../../ui/BiIcon';
 import { motion } from 'framer-motion';
 import { ComposedChart, Area, Bar, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, PieChart, Pie, Cell } from 'recharts';
 import { format } from 'date-fns';
@@ -138,7 +132,7 @@ export const SalesView = React.memo(function SalesView({ salesData, selectedDate
             label: t('orders.reports.sales.totalSales'),
             amount: grossSales,
             isCurrency: true,
-            icon: Wallet,
+            icon: biIcon('bi-wallet2'),
             color: 'text-mintcom-green',
             bg: 'bg-mintcom-green/10',
             sub: t('orders.reports.sales.totalIncTax')
@@ -147,7 +141,7 @@ export const SalesView = React.memo(function SalesView({ salesData, selectedDate
             label: t('orders.reports.sales.netSales'),
             amount: netSales,
             isCurrency: true,
-            icon: TrendingUp,
+            icon: biIcon('bi-cash-coin'),
             color: 'text-mintcom-green',
             bg: 'bg-mintcom-green/10',
             sub: t('orders.reports.sales.exclTax')
@@ -156,7 +150,7 @@ export const SalesView = React.memo(function SalesView({ salesData, selectedDate
             label: t('orders.reports.sales.profit'),
             amount: (salesData.grossProfit ?? 0),
             isCurrency: true,
-            icon: DollarSign,
+            icon: biIcon('bi-graph-up-arrow'),
             color: (salesData.grossProfit ?? 0) >= 0 ? 'text-mintcom-green' : 'text-red-500',
             bg: (salesData.grossProfit ?? 0) >= 0 ? 'bg-mintcom-green/10' : 'bg-red-500/10',
             sub: t('orders.reports.sales.netSalesCost')
@@ -165,7 +159,7 @@ export const SalesView = React.memo(function SalesView({ salesData, selectedDate
             label: t('orders.reports.sales.totalTax'),
             amount: (salesData.taxCollected ?? 0),
             isCurrency: true,
-            icon: Percent,
+            icon: biIcon('bi-receipt'),
             color: 'text-mintcom-green',
             bg: 'bg-mintcom-green/10',
             sub: t('orders.reports.sales.taxAmount')
@@ -174,7 +168,7 @@ export const SalesView = React.memo(function SalesView({ salesData, selectedDate
             label: t('orders.reports.sales.serviceCharge', { defaultValue: 'Service Charge' }),
             amount: serviceChargeCollected,
             isCurrency: true,
-            icon: CreditCard,
+            icon: biIcon('bi-credit-card'),
             color: 'text-mintcom-green',
             bg: 'bg-mintcom-green/10',
             sub: t('orders.reports.sales.serviceChargeSub', {
@@ -189,7 +183,7 @@ export const SalesView = React.memo(function SalesView({ salesData, selectedDate
             value: (salesData.totalOrders ?? 0),
             isCurrency: false,
             suffix: t('dashboard.stats.orders'),
-            icon: ShoppingBag,
+            icon: biIcon('bi-receipt-cutoff'),
             color: 'text-mintcom-green',
             bg: 'bg-mintcom-green/10',
             sub: t('orders.reports.sales.completed')
@@ -198,7 +192,7 @@ export const SalesView = React.memo(function SalesView({ salesData, selectedDate
             label: t('orders.reports.sales.refunds'),
             amount: (salesData.totalRefunds ?? 0),
             isCurrency: true,
-            icon: ArrowDownRight,
+            icon: biIcon('bi-arrow-counterclockwise'),
             color: 'text-red-500',
             bg: 'bg-red-500/10',
             sub: t('orders.reports.sales.returns')
@@ -208,7 +202,7 @@ export const SalesView = React.memo(function SalesView({ salesData, selectedDate
             value: (salesData.totalHoursWorked ?? 0),
             isCurrency: false,
             suffix: t('orders.reports.sales.hours'),
-            icon: Clock,
+            icon: biIcon('bi-clock-history'),
             color: 'text-mintcom-green',
             bg: 'bg-mintcom-green/10',
             sub: t('orders.reports.sales.staffHours'),
@@ -220,7 +214,7 @@ export const SalesView = React.memo(function SalesView({ salesData, selectedDate
           {
             label: t('orders.reports.sales.nonSales'),
             value: null,
-            icon: ArrowUpRight,
+            icon: biIcon('bi-arrow-left-right'),
             color: 'text-mintcom-green',
             bg: 'bg-mintcom-green/10',
             sub: null,

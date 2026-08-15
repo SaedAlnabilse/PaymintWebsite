@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { startGlobalLoading, stopGlobalLoading } from '../config/api';
-import { FullScreenLoader, SectionLoader } from './LoadingState';
+import { CenteredOverlay, FullScreenLoader, SectionLoader } from './LoadingState';
 
 interface LoadingFallbackProps {
   /** Optional message to display below the spinner */
@@ -31,11 +31,9 @@ export function LoadingFallback({
   }
 
   return (
-    <SectionLoader
-      message={displayMessage}
-      minHeightClassName="py-20"
-      className="w-full"
-    />
+    <CenteredOverlay>
+      <SectionLoader message={displayMessage} minHeightClassName="" className="w-full" />
+    </CenteredOverlay>
   );
 }
 

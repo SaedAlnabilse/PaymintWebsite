@@ -765,7 +765,7 @@ export function ReportsPage() {
         {/* Unified Filter Dashboard */}
 
         {/* Unified Filter Control Deck */}
-        <div className="bg-white dark:bg-[#1E293B] rounded-[20px] shadow-xl shadow-indigo-500/5 dark:shadow-black/20 border border-gray-100 dark:border-white/[0.05] p-2">
+        <div className="bg-white dark:bg-[#1E293B] rounded-[20px] border border-gray-100 dark:border-white/[0.05] p-2">
           {/* Single Row Layout - wraps on smaller screens */}
           <div className="flex flex-wrap items-stretch gap-2">
 

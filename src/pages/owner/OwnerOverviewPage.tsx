@@ -3,17 +3,13 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
-    TrendingUp,
     Store,
-    Users,
-    Building2,
     Activity,
     Zap,
-    DollarSign,
-    Wallet,
     UserPlus,
     ExternalLink
 } from 'lucide-react';
+
 import {
     Area,
     ComposedChart,
@@ -35,6 +31,7 @@ import { formatInputPlaceholder } from '../../utils/textCase';
 import { formatCurrencyCode } from '../../utils/currency';
 import { StatValue } from '../../components/ui/StatValue';
 import { QuickInfo } from '../../components/QuickInfo';
+import { biIcon } from '../../components/ui/BiIcon';
 
 interface OverviewStats {
     /** Gross sales including tax + service charge */
@@ -256,9 +253,9 @@ export function OwnerOverviewPage() {
                     {
                         label: t('owner.overview.activeLocations'),
                         value: stats.activeLocations,
-                        icon: Store,
-                        color: 'text-purple-500',
-                        bg: 'bg-purple-500/10',
+                        icon: biIcon('bi-geo-alt'),
+                        color: 'text-mintcom-green',
+                        bg: 'bg-mintcom-green/10',
                         isCurrency: false,
                         sub: null as string | null,
                         info: t('owner.overview.activeLocationsInfo'),
@@ -267,9 +264,9 @@ export function OwnerOverviewPage() {
                     {
                         label: t('owner.overview.totalBrands'),
                         value: stats.totalBrands,
-                        icon: Building2,
-                        color: 'text-orange-500',
-                        bg: 'bg-orange-500/10',
+                        icon: biIcon('bi-collection'),
+                        color: 'text-mintcom-green',
+                        bg: 'bg-mintcom-green/10',
                         isCurrency: false,
                         sub: null as string | null,
                         info: null as string | null,
@@ -278,9 +275,9 @@ export function OwnerOverviewPage() {
                     {
                         label: t('owner.overview.totalStaff'),
                         value: stats.totalEmployees,
-                        icon: Users,
-                        color: 'text-pink-500',
-                        bg: 'bg-pink-500/10',
+                        icon: biIcon('bi-people'),
+                        color: 'text-mintcom-green',
+                        bg: 'bg-mintcom-green/10',
                         isCurrency: false,
                         sub: null as string | null,
                         info: null as string | null,
@@ -289,7 +286,7 @@ export function OwnerOverviewPage() {
                     {
                         label: t('owner.overview.netSales'),
                         value: stats.netSales,
-                        icon: DollarSign,
+                        icon: biIcon('bi-cash-coin'),
                         color: 'text-mintcom-green',
                         bg: 'bg-mintcom-green/10',
                         isCurrency: true,
@@ -300,7 +297,7 @@ export function OwnerOverviewPage() {
                     {
                         label: t('owner.overview.totalSales'),
                         value: stats.totalRevenue,
-                        icon: Wallet,
+                        icon: biIcon('bi-wallet2'),
                         color: 'text-mintcom-green',
                         bg: 'bg-mintcom-green/10',
                         isCurrency: true,
@@ -311,9 +308,9 @@ export function OwnerOverviewPage() {
                     {
                         label: t('owner.overview.totalProfit'),
                         value: stats.totalProfit,
-                        icon: TrendingUp,
-                        color: 'text-blue-500',
-                        bg: 'bg-blue-500/10',
+                        icon: biIcon('bi-graph-up-arrow'),
+                        color: 'text-mintcom-green',
+                        bg: 'bg-mintcom-green/10',
                         isCurrency: true,
                         sub: null as string | null,
                         info: t('owner.overview.totalProfitInfo'),

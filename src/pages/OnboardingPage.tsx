@@ -2523,8 +2523,8 @@ export function OnboardingPage() {
                     className="bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-white/10 rounded-2xl p-5"
                   >
                     <div className="flex items-start gap-4">
-                      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-purple-500/10 shadow-sm transition-colors dark:bg-purple-500/20">
-                        <Smartphone size={28} className="text-purple-600 dark:text-purple-400" />
+                      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-blue-500/10 shadow-sm transition-colors dark:bg-blue-500/20">
+                        <Smartphone size={28} className="text-blue-600 dark:text-blue-400" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <h3 className="font-barlow text-lg font-bold text-gray-900 dark:text-white">{t('onboarding.step5.ownerApp')}</h3>
@@ -2698,8 +2698,8 @@ export function OnboardingPage() {
                         rel="noopener noreferrer"
                         className="group p-4 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-xl hover:border-mintcom-green/50 hover:bg-mintcom-green/5 transition-all"
                       >
-                        <div className="w-10 h-10 bg-purple-500/10 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                          <HelpCircle size={20} className="text-purple-500" />
+                        <div className="w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                          <HelpCircle size={20} className="text-blue-500" />
                         </div>
                         <h4 className="font-barlow font-bold text-gray-900 dark:text-white text-sm">{t('onboarding.step5.qaCenter')}</h4>
                         <p className="text-xs text-gray-500 mt-1">{t('onboarding.step5.faqs')}</p>

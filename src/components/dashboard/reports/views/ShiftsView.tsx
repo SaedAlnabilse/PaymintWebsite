@@ -1,4 +1,5 @@
-import { Activity, Clock } from 'lucide-react';
+import { Clock } from 'lucide-react';
+import { BiIcon } from '../../../ui/BiIcon';
 import { useCurrency } from '../../../../context/CurrencyContext';
 import type { Shift } from '../../../../types';
 import { motion } from 'framer-motion';
@@ -71,7 +72,7 @@ export const ShiftsView = React.memo(function ShiftsView({ shifts }: ShiftsViewP
         <div className="p-4 sm:p-5 bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.03] flex flex-col transition-all duration-300">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 rounded-xl bg-orange-500/10 text-orange-500 flex items-center justify-center">
-              <Activity size={20} />
+              <BiIcon icon="bi-person-workspace" size={20} />
             </div>
             <p className="dashboard-stat-title">{t('orders.reports.shifts.cashVariance')}</p>
           </div>
@@ -86,7 +87,7 @@ export const ShiftsView = React.memo(function ShiftsView({ shifts }: ShiftsViewP
         <div className="p-4 sm:p-5 bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.03] flex flex-col transition-all duration-300">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 rounded-xl bg-mintcom-green/10 text-mintcom-green flex items-center justify-center">
-              <Clock size={20} />
+              <BiIcon icon="bi-clock-history" size={20} />
             </div>
             <p className="dashboard-stat-title">{t('dashboard.menu.shiftsReports')}</p>
           </div>

@@ -131,7 +131,7 @@ export function CookiePolicyPage() {
 
               <div className="p-6 bg-gray-50 dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/5">
                 <div className="flex items-center gap-3 mb-3 text-gray-900 dark:text-white">
-                  <div className="p-2 bg-purple-100 dark:bg-purple-900/20 text-purple-600 rounded-lg">
+                  <div className="p-2 bg-blue-100 dark:bg-blue-900/20 text-blue-600 rounded-lg">
                     <Globe size={20} />
                   </div>
                   <h3 className="font-barlow text-base font-bold text-gray-900 dark:text-white m-0">{t('legal.cookies.cards.advertising')}</h3>

@@ -6,17 +6,16 @@ import { format } from 'date-fns';
 import {
     Users,
     Store,
-    DollarSign,
     ShoppingBag,
     Clock,
     TrendingUp,
     TrendingDown,
     BarChart3,
-    Target,
     Award,
     ChevronRight,
     Globe,
 } from 'lucide-react';
+import { biIcon } from '../../components/ui/BiIcon';
 import {
     Area,
     ComposedChart,
@@ -415,36 +414,36 @@ export function BrandDashboardPage() {
                         label: t('brand.dashboard.totalRevenue'),
                         value: stats?.totalRevenue || 0,
                         change: stats?.revenueGrowth || 0,
-                        icon: DollarSign,
+                        icon: biIcon('bi-wallet2'),
                         color: 'text-mintcom-green',
-                        bg: 'bg-mintcom-green/',
+                        bg: 'bg-mintcom-green/10',
                         isCurrency: true
                     },
                     {
                         label: t('brand.dashboard.totalOrders'),
                         value: stats?.totalOrders || 0,
                         change: stats?.orderGrowth || 0,
-                        icon: ShoppingBag,
-                        color: 'text-blue-500',
-                        bg: 'bg-blue-500/10',
+                        icon: biIcon('bi-receipt-cutoff'),
+                        color: 'text-mintcom-green',
+                        bg: 'bg-mintcom-green/10',
                         isCurrency: false
                     },
                     {
                         label: t('brand.dashboard.avgOrderValue'),
                         value: stats?.avgOrderValue || 0,
                         change: null,
-                        icon: Target,
-                        color: 'text-purple-500',
-                        bg: 'bg-purple-500/10',
+                        icon: biIcon('bi-calculator'),
+                        color: 'text-mintcom-green',
+                        bg: 'bg-mintcom-green/10',
                         isCurrency: true
                     },
                     {
                         label: t('brand.dashboard.teamSize'),
                         value: stats?.totalEmployees || 0,
                         change: null,
-                        icon: Users,
-                        color: 'text-orange-500',
-                        bg: 'bg-orange-500/10',
+                        icon: biIcon('bi-people'),
+                        color: 'text-mintcom-green',
+                        bg: 'bg-mintcom-green/10',
                         isCurrency: false
                     },
                 ].map((stat, i) => (

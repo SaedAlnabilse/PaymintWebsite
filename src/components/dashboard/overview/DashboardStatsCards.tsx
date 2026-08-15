@@ -2,18 +2,8 @@ import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import {
-  Wallet,
-  DollarSign,
-  TrendingUp,
-  Percent,
-  Receipt,
-  ShoppingBag,
-  ArrowDownRight,
-  ArrowUpRight,
-  Scale,
-  ExternalLink
-} from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
+import { biIcon } from '../../ui/BiIcon';
 import { useCurrency } from '../../../context/CurrencyContext';
 import { StatValue } from '../../ui/StatValue';
 
@@ -65,7 +55,7 @@ export const DashboardStatsCards = React.memo(function DashboardStatsCards({ sta
       label: t('dashboard.stats.totalSales'),
       value: grossSales,
       sub: t('dashboard.stats.includingTaxServiceCharge'),
-      icon: Wallet,
+      icon: biIcon('bi-wallet2'),
       color: 'text-mintcom-green',
       bg: 'bg-mintcom-green/10',
       isCurrency: true
@@ -74,7 +64,7 @@ export const DashboardStatsCards = React.memo(function DashboardStatsCards({ sta
       label: t('dashboard.stats.netSales'),
       value: netSales,
       sub: t('dashboard.stats.excludingTaxServiceCharge'),
-      icon: DollarSign,
+      icon: biIcon('bi-cash-coin'),
       color: 'text-mintcom-green',
       bg: 'bg-mintcom-green/10',
       isCurrency: true
@@ -83,7 +73,7 @@ export const DashboardStatsCards = React.memo(function DashboardStatsCards({ sta
       label: t('dashboard.stats.profit'),
       value: stats?.grossProfit ?? 0,
       sub: t('dashboard.stats.netSalesCosts'),
-      icon: TrendingUp,
+      icon: biIcon('bi-graph-up-arrow'),
       color: 'text-mintcom-green',
       bg: 'bg-mintcom-green/10',
       isCurrency: true
@@ -92,7 +82,7 @@ export const DashboardStatsCards = React.memo(function DashboardStatsCards({ sta
       label: t('dashboard.stats.tax'),
       value: stats?.taxCollected ?? 0,
       sub: t('dashboard.stats.totalTax'),
-      icon: Percent,
+      icon: biIcon('bi-receipt'),
       color: 'text-mintcom-green',
       bg: 'bg-mintcom-green/10',
       isCurrency: true
@@ -101,7 +91,7 @@ export const DashboardStatsCards = React.memo(function DashboardStatsCards({ sta
       label: t('dashboard.stats.totalOrders'),
       value: stats?.totalOrders ?? 0,
       sub: viewMode === 'current_shift' ? t('dashboard.stats.thisShift') : viewMode === 'previous_shift' ? t('dashboard.stats.previousShift') : t('dashboard.stats.last24h'),
-      icon: Receipt,
+      icon: biIcon('bi-receipt-cutoff'),
       color: 'text-mintcom-green',
       bg: 'bg-mintcom-green/10',
       isCurrency: false,
@@ -117,7 +107,7 @@ export const DashboardStatsCards = React.memo(function DashboardStatsCards({ sta
       value: stats?.pendingOrders ?? 0,
       // Open held tickets (HeldOrder), not last-24h sales — matches Orders page.
       sub: t('dashboard.stats.pendingOrders'),
-      icon: ShoppingBag,
+      icon: biIcon('bi-pause-circle'),
       color: 'text-mintcom-green',
       bg: 'bg-mintcom-green/10',
       isCurrency: false,
@@ -133,7 +123,7 @@ export const DashboardStatsCards = React.memo(function DashboardStatsCards({ sta
       label: t('dashboard.stats.avgOrder'),
       value: stats?.averageOrderValue ?? 0,
       sub: t('dashboard.stats.averageValue'),
-      icon: Scale,
+      icon: biIcon('bi-calculator'),
       color: 'text-mintcom-green',
       bg: 'bg-mintcom-green/10',
       isCurrency: true
@@ -142,16 +132,17 @@ export const DashboardStatsCards = React.memo(function DashboardStatsCards({ sta
       label: t('dashboard.stats.refunds'),
       value: stats?.totalRefunds ?? 0,
       sub: viewMode === 'current_shift' ? t('dashboard.stats.thisShift') : viewMode === 'previous_shift' ? t('dashboard.stats.previousShift') : t('dashboard.stats.last24h'),
-      icon: ArrowDownRight,
-      color: 'text-mintcom-green',
-      bg: 'bg-mintcom-green/10',
+      icon: biIcon('bi-arrow-counterclockwise'),
+      // Refunds read red everywhere, matching the sales report.
+      color: 'text-red-500',
+      bg: 'bg-red-500/10',
       isCurrency: true
     },
     {
       label: t('dashboard.stats.nonSales'),
       value: null, // Custom content
       sub: null,
-      icon: ArrowUpRight,
+      icon: biIcon('bi-arrow-left-right'),
       color: 'text-mintcom-green',
       bg: 'bg-mintcom-green/10',
       customContent: (
@@ -176,7 +167,7 @@ export const DashboardStatsCards = React.memo(function DashboardStatsCards({ sta
       label: t('dashboard.stats.variance'),
       value: null as any,
       sub: null as any,
-      icon: Scale,
+      icon: biIcon('bi-plus-slash-minus'),
       color: previousShiftSnapshot.discrepancy > 0.01 ? 'text-amber-500' : previousShiftSnapshot.discrepancy < -0.01 ? 'text-red-500' : 'text-mintcom-green',
       bg: previousShiftSnapshot.discrepancy > 0.01 ? 'bg-amber-500/10' : previousShiftSnapshot.discrepancy < -0.01 ? 'bg-red-500/10' : 'bg-mintcom-green/10',
       customContent: (

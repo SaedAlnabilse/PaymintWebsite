@@ -16,7 +16,6 @@ import { SetupGuideHelpMenu } from './dashboard/SetupGuideHelpMenu';
 import { useTranslation } from 'react-i18next';
 import {
   LayoutDashboard,
-  Bell,
 
   MapPin,
   ShoppingCart,
@@ -42,8 +41,7 @@ import {
   PlusCircle,
   ShoppingBag,
   Clock,
-  FileText,
-  Crown
+  FileText
 } from 'lucide-react';
 
 // Mintcom Logo imports
@@ -53,6 +51,7 @@ import MintcomLeafIcon from '../assets/small-logo.svg';
 import { ConfirmModal } from './ConfirmModal';
 import { getBusinessTypeIcon } from '../utils/businessTypeIcons';
 import { RealtimeStatusIndicator } from './RealtimeStatusIndicator';
+import { CenteredOverlay, SectionLoader } from './LoadingState';
 import toast from 'react-hot-toast';
 import realtimeService from '../services/realtimeService';
 import {
@@ -104,6 +103,9 @@ export function DashboardLayout() {
   // The owner portal is available to the account owner regardless of how many
   // locations they have. Secondary admins do not have access to that portal.
   const canAccessOwnerPortal = Boolean(account && !account.isSecondaryAdmin);
+  // With several locations the card already shows "Switch Location", so the
+  // owner portal shortcut is only surfaced for single location accounts.
+  const showOwnerPortalLink = canAccessOwnerPortal && !canSwitchLocation;
   const navigate = useNavigate();
   const location = useLocation();
   const { locationSlug } = useParams<{ locationSlug: string }>();
@@ -405,7 +407,6 @@ export function DashboardLayout() {
     // Translate menu structure dynamically
     const translatedMenuStructure: MenuItemOrGroup[] = [
       { path: '.', label: t('dashboard.menu.dashboard'), icon: LayoutDashboard },
-      { path: 'notifications', label: t('notifications.menu.title'), icon: Bell },
       {
         label: t('dashboard.menu.salesAndReporting'),
         icon: FileBarChart,
@@ -813,17 +814,16 @@ export function DashboardLayout() {
                     <RealtimeStatusIndicator />
                   </div>
                   <div className="flex items-center gap-2">
-                    {canAccessOwnerPortal && (
+                    {showOwnerPortalLink && (
                       <button
                         type="button"
                         onClick={(event) => {
                           event.stopPropagation();
                           navigate('/owner');
                         }}
-                        className="flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-bold text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-colors"
+                        className="rounded-lg px-2 py-1 text-xs font-bold text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-colors"
                       >
-                        <Crown size={14} />
-                        <span>{t('dashboard.menu.backToOwnerPortal')}</span>
+                        {t('dashboard.menu.backToOwnerPortal')}
                       </button>
                     )}
                     {canSwitchLocation && (
@@ -1059,7 +1059,6 @@ export function DashboardLayout() {
                     scope="location"
                     establishmentId={currentEstablishment?.id}
                     locations={dashboardLocations}
-                    placement="sidebar"
                   />
                 </div>
               )}
@@ -1107,34 +1106,19 @@ export function DashboardLayout() {
             </div>
           ) : (
             <div className="flex flex-col items-center gap-2">
-              {canAccessOwnerPortal && (
-                <button
-                  type="button"
-                  onClick={() => navigate('/owner')}
-                  aria-label={t('dashboard.menu.backToOwnerPortal')}
-                  className="w-12 h-12 flex items-center justify-center rounded-xl text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-all relative group"
-                >
-                  <Crown size={24} />
-                  <div className="absolute left-full rtl:left-auto rtl:right-full top-1/2 -translate-y-1/2 ml-2 rtl:ml-0 rtl:mr-2 px-3 py-1.5 bg-gray-900/90 backdrop-blur-md text-white text-xs font-sans font-medium tracking-normal rounded-lg opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all duration-300 pointer-events-none z-[80] whitespace-nowrap border border-white/10 shadow-xl translate-x-1 rtl:-translate-x-1 group-hover:translate-x-0 group-focus-within:translate-x-0">
-                    {t('dashboard.menu.backToOwnerPortal')}
-                  </div>
-                </button>
-              )}
-
               {hasAccess('notifications') && (
                 <AlertsBell
                   scope="location"
                   establishmentId={currentEstablishment?.id}
                   locations={dashboardLocations}
-                  placement="sidebar"
                 />
               )}
               <div className="relative group">
                 <LanguageSwitcher
-                  compact
-                  showGlobeIcon={false}
+                  iconOnly
+                  iconSize={24}
                   dropdownDirection="right"
-                  buttonClassName="w-12 h-12 rounded-xl !px-0 !py-0 flex items-center justify-center gap-0 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white"
+                  buttonClassName="w-12 h-12 rounded-xl !px-0 !py-0 flex items-center justify-center gap-0 !bg-transparent dark:!bg-transparent !border-transparent text-gray-500 dark:text-gray-400 hover:!bg-gray-100 dark:hover:!bg-white/5 hover:text-gray-900 dark:hover:text-white"
                 />
                 <div className="absolute left-full rtl:left-auto rtl:right-full top-1/2 -translate-y-1/2 ml-2 rtl:ml-0 rtl:mr-2 px-3 py-1.5 bg-gray-900/90 backdrop-blur-md text-white text-xs font-sans font-medium tracking-normal rounded-lg opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all duration-300 pointer-events-none z-[80] whitespace-nowrap border border-white/10 shadow-xl translate-x-1 rtl:-translate-x-1 group-hover:translate-x-0 group-focus-within:translate-x-0">
                   {t('common.aria.changeLanguage')}
@@ -1226,25 +1210,26 @@ export function DashboardLayout() {
           <div ref={mainContentRef} className="h-full overflow-y-auto relative z-10 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-white/10">
             <div className="p-4 md:p-6 lg:p-8 pb-24 max-w-[1920px] mx-auto">
               {isDashboardContentLocked ? (
-                <div className="min-h-[60vh] flex items-center justify-center">
-                  <div className="w-full max-w-sm text-center">
-                    <div className="mx-auto mb-5 h-12 w-12 rounded-2xl bg-mintcom-green/10 border border-mintcom-green/20 flex items-center justify-center">
-                      <Shield size={24} className="text-mintcom-green" />
+                <CenteredOverlay>
+                  {sessionConflict ? (
+                    <div className="w-full max-w-sm text-center pointer-events-auto">
+                      <div className="mx-auto mb-5 h-12 w-12 rounded-2xl bg-mintcom-green/10 border border-mintcom-green/20 flex items-center justify-center">
+                        <Shield size={24} className="text-mintcom-green" />
+                      </div>
+                      <h2 className="text-lg font-black text-gray-900 dark:text-white">
+                        {t('dashboard.session.inUseTitle', { defaultValue: 'Dashboard in use' })}
+                      </h2>
+                      <p className="mt-2 text-sm font-bold text-gray-500 dark:text-gray-400 leading-relaxed">
+                        {conflictMessage}
+                      </p>
                     </div>
-                    <h2 className="text-lg font-black text-gray-900 dark:text-white">
-                      {sessionConflict
-                        ? t('dashboard.session.inUseTitle', { defaultValue: 'Dashboard in use' })
-                        : t('dashboard.session.securingTitle', { defaultValue: 'Securing dashboard' })}
-                    </h2>
-                    <p className="mt-2 text-sm font-bold text-gray-500 dark:text-gray-400 leading-relaxed">
-                      {sessionConflict
-                        ? conflictMessage
-                        : t('dashboard.session.securingMessage', {
-                            defaultValue: 'Checking this location before opening it.',
-                          })}
-                    </p>
-                  </div>
-                </div>
+                  ) : (
+                    <SectionLoader
+                      message={t('dashboard.session.securingTitle', { defaultValue: 'Securing Dashboard' })}
+                      minHeightClassName=""
+                    />
+                  )}
+                </CenteredOverlay>
               ) : (
                 <Outlet context={{ sidebarOpen, setupGuide }} />
               )}
@@ -1333,17 +1318,16 @@ export function DashboardLayout() {
 
             {/* Footer */}
             <div className="p-4 border-t border-gray-100 dark:border-white/5">
-              {canAccessOwnerPortal && (
+              {showOwnerPortalLink && (
                 <button
                   type="button"
                   onClick={() => {
                     navigate('/owner');
                     setMobileMenuOpen(false);
                   }}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 mb-3 rounded-xl text-sm font-bold text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-all text-left rtl:text-right"
+                  className="w-full px-3 py-2.5 mb-3 rounded-xl text-sm font-bold text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-all text-left rtl:text-right"
                 >
-                  <Crown size={20} />
-                  <span>{t('dashboard.menu.backToOwnerPortal')}</span>
+                  {t('dashboard.menu.backToOwnerPortal')}
                 </button>
               )}
               <div className="mb-3">

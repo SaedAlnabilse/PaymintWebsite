@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { Spinner } from './ui/Spinner';
 
@@ -58,6 +59,24 @@ export function SectionLoader({
     <div className={`flex items-center justify-center ${minHeightClassName} ${className}`}>
       <LoadingIndicator message={message} spinnerSize={spinnerSize} />
     </div>
+  );
+}
+
+/**
+ * Portals its children to a fixed, viewport-centered box.
+ * Used to make every dashboard loading state (route-chunk load, in-page data
+ * load, session-lock screen) land in the exact same spot, since a
+ * document.body portal is unaffected by whatever padding/width the caller's
+ * parent happens to have at that moment.
+ */
+export function CenteredOverlay({ children }: { children: React.ReactNode }) {
+  if (typeof document === 'undefined') return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[9000] flex items-center justify-center bg-gray-50 dark:bg-mintcom-dark pointer-events-none">
+      {children}
+    </div>,
+    document.body
   );
 }
 

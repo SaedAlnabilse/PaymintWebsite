@@ -1,13 +1,12 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-    Search,
-    Receipt,
-    Wallet,
-    Undo2,
-    Download,
-    X
+  Search,
+  Receipt,
+  Download,
+  X
 } from 'lucide-react';
+import { biIcon } from '../../ui/BiIcon';
 import { useTranslation } from 'react-i18next';
 import { getDateLocale } from '../../../utils/dateLocale';
 import { useCurrency } from '../../../context/CurrencyContext';
@@ -185,9 +184,9 @@ export function ReceiptsReport({ startDate, endDate, employeeId }: ReceiptsRepor
         <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {[
-                    { label: t('orders.reports.receipts.revenueSelected'), value: orders.reduce((acc, o) => acc + (o.total || 0), 0), isCurrency: true, icon: Wallet, color: 'text-mintcom-green', bg: 'bg-mintcom-green/10' },
-                    { label: t('orders.reports.receipts.receiptsCount'), value: orders.length, isCurrency: false, icon: Receipt, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-                    { label: t('orders.reports.receipts.refundsHeld'), value: orders.filter(o => o.status === 'HELD' || o.paymentStatus === 'REFUNDED').length, isCurrency: false, icon: Undo2, color: 'text-orange-500', bg: 'bg-orange-500/10' },
+                    { label: t('orders.reports.receipts.revenueSelected'), value: orders.reduce((acc, o) => acc + (o.total || 0), 0), isCurrency: true, icon: biIcon('bi-wallet2'), color: 'text-mintcom-green', bg: 'bg-mintcom-green/10' },
+                    { label: t('orders.reports.receipts.receiptsCount'), value: orders.length, isCurrency: false, icon: biIcon('bi-receipt-cutoff'), color: 'text-blue-500', bg: 'bg-blue-500/10' },
+                    { label: t('orders.reports.receipts.refundsHeld'), value: orders.filter(o => o.status === 'HELD' || o.paymentStatus === 'REFUNDED').length, isCurrency: false, icon: biIcon('bi-arrow-counterclockwise'), color: 'text-orange-500', bg: 'bg-orange-500/10' },
                 ].map((stat, i) => (
                     <motion.div
                         key={i}

@@ -3525,7 +3525,7 @@ export function DemoSettingsScreen({
                       <span className="flex items-center gap-2">
                         <Briefcase
                           size={16}
-                          className={draftBaseRole === 'ADMIN' ? 'text-purple-600' : 'text-mintcom-green'}
+                          className={draftBaseRole === 'ADMIN' ? 'text-blue-600' : 'text-mintcom-green'}
                         />
                         <span
                           className={`text-[13px] font-medium ${
@@ -3546,13 +3546,13 @@ export function DemoSettingsScreen({
                           type="button"
                           onClick={applyAdminRole}
                           className={`flex w-full items-center justify-between gap-2 border-b border-gray-100 px-3.5 py-3 text-start dark:border-white/8 ${
-                            draftBaseRole === 'ADMIN' ? 'bg-purple-50 dark:bg-purple-500/10' : ''
+                            draftBaseRole === 'ADMIN' ? 'bg-blue-50 dark:bg-blue-500/10' : ''
                           }`}
                         >
                           <span>
                             <span
                               className={`block text-[14px] font-semibold ${
-                                draftBaseRole === 'ADMIN' ? 'text-purple-600' : 'text-text-primary dark:text-white'
+                                draftBaseRole === 'ADMIN' ? 'text-blue-600' : 'text-text-primary dark:text-white'
                               }`}
                             >
                               Admin (Full Access)
@@ -3560,7 +3560,7 @@ export function DemoSettingsScreen({
                             <span className="text-[12px] text-text-secondary">All permissions enabled</span>
                           </span>
                           {draftBaseRole === 'ADMIN' && (
-                            <span className="flex h-5 w-5 items-center justify-center rounded border-2 border-purple-600 bg-purple-600">
+                            <span className="flex h-5 w-5 items-center justify-center rounded border-2 border-blue-600 bg-blue-600">
                               <Check size={12} className="text-white" strokeWidth={3} />
                             </span>
                           )}

@@ -13,10 +13,9 @@ import {
   Trash2,
   MoreVertical,
   Key,
-  UserCheck,
-  Star,
   ArrowUpDown
 } from 'lucide-react';
+import { biIcon } from '../../components/ui/BiIcon';
 import api, { extractErrorMessage } from '../../config/api';
 import toast from 'react-hot-toast';
 import { ConfirmModal } from '../../components/ConfirmModal';
@@ -453,7 +452,7 @@ export function StaffPage() {
       case 'ACCOUNT_OWNER':
         return 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20';
       case 'ADMIN':
-        return 'bg-purple-500/10 text-purple-500 border-purple-500/20';
+        return 'bg-slate-500/10 text-slate-600 dark:text-slate-300 border-slate-500/20';
       case 'MANAGER':
         return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
       default:
@@ -505,10 +504,10 @@ export function StaffPage() {
 
       <div className="flex overflow-x-auto scrollbar-none gap-3 -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:gap-4 sm:overflow-visible pb-2 sm:pb-0">
         {[
-          { label: t('owner.employees.totalUsers'), info: t('owner.staff.usersInfo'), value: staff.length, icon: Users, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-          { label: t('owner.employees.activeNow'), info: t('owner.staff.activeInfo'), value: staff.filter(s => s.isClockedIn).length, icon: UserCheck, color: 'text-mintcom-green', bg: 'bg-mintcom-green/' },
-          { label: t('owner.staff.admins'), info: t('owner.staff.adminsInfo'), value: staff.filter(isAdminEquivalentStaff).length, icon: Shield, color: 'text-purple-500', bg: 'bg-purple-500/10' },
-          { label: t('owner.staff.standardUsers'), info: t('owner.staff.standardInfo'), value: staff.filter(s => !isAdminEquivalentStaff(s)).length, icon: Star, color: 'text-orange-500', bg: 'bg-orange-500/10' },
+          { label: t('owner.employees.totalUsers'), info: t('owner.staff.usersInfo'), value: staff.length, icon: biIcon('bi-people'), color: 'text-mintcom-green', bg: 'bg-mintcom-green/10' },
+          { label: t('owner.employees.activeNow'), info: t('owner.staff.activeInfo'), value: staff.filter(s => s.isClockedIn).length, icon: biIcon('bi-person-check'), color: 'text-mintcom-green', bg: 'bg-mintcom-green/10' },
+          { label: t('owner.staff.admins'), info: t('owner.staff.adminsInfo'), value: staff.filter(isAdminEquivalentStaff).length, icon: biIcon('bi-shield-check'), color: 'text-mintcom-green', bg: 'bg-mintcom-green/10' },
+          { label: t('owner.staff.standardUsers'), info: t('owner.staff.standardInfo'), value: staff.filter(s => !isAdminEquivalentStaff(s)).length, icon: biIcon('bi-person-badge'), color: 'text-mintcom-green', bg: 'bg-mintcom-green/10' },
         ].map((stat, i) => (
           <div
             key={i}

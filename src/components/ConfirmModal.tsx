@@ -49,16 +49,16 @@ export function ConfirmModal({
           iconRing: 'ring-accent/20'
         };
       case 'warning':
-        // Soft violet — caution without yellow or red (danger stays red).
+        // Soft blue — caution without yellow or red (danger stays red).
         return {
           icon: AlertCircle,
-          color: 'text-violet-600 dark:text-violet-400',
-          accentBar: 'bg-violet-600',
-          bgColor: 'bg-violet-500/10',
-          borderColor: 'border-violet-500/25',
-          buttonBg: 'bg-violet-600 text-white hover:bg-violet-700',
+          color: 'text-blue-600 dark:text-blue-400',
+          accentBar: 'bg-blue-600',
+          bgColor: 'bg-blue-500/10',
+          borderColor: 'border-blue-500/25',
+          buttonBg: 'bg-blue-600 text-white hover:bg-blue-700',
           glow: '',
-          iconRing: 'ring-violet-500/20'
+          iconRing: 'ring-blue-500/20'
         };
       case 'info':
         return {

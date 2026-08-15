@@ -128,6 +128,15 @@ type DemoReportShift = {
   label: string;
 };
 
+type ShiftLogRow = {
+  id: string;
+  employeeName: string;
+  type: 'open' | 'close';
+  at: number;
+  amount: number;
+  isAuto?: boolean;
+};
+
 function dayKey(ts: number) {
   const d = new Date(ts);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -225,8 +234,74 @@ type ReportLine = {
   qty: number;
   unitPrice: number;
   emoji: string;
+  image?: string | null;
   category: string;
 };
+
+/** Cafe Delight demo photos — same set served from public/demo-products as the Sales screen */
+const REPORT_ITEM_IMAGES: Record<string, string> = {
+  Espresso: '/demo-products/espresso.jpg',
+  Latte: '/demo-products/latte.jpg',
+  Cappuccino: '/demo-products/cappuccino.jpg',
+  Croissant: '/demo-products/croissant.jpg',
+  Muffin: '/demo-products/muffin.jpg',
+  Bagel: '/demo-products/bagel.jpg',
+  'Garden Salad': '/demo-products/salad.jpg',
+  'Club Sandwich': '/demo-products/sandwich.jpg',
+  Cheesecake: '/demo-products/cheesecake.jpg',
+  Brownie: '/demo-products/brownie.jpg',
+};
+
+/* ─── Price/change history — POS PriceAuditModal (clock badge on item rows) ─── */
+
+type PriceHistoryEntry = {
+  id: string;
+  itemName: string;
+  field: 'price';
+  oldPrice: number;
+  newPrice: number;
+  changedByName: string;
+  createdAt: number;
+};
+
+const ITEM_CURRENT_PRICE: Record<string, number> = {
+  Latte: 4.5,
+  Croissant: 4,
+  Espresso: 3.5,
+  'Club Sandwich': 7.5,
+  'Garden Salad': 6.5,
+  Cappuccino: 4.25,
+  Cheesecake: 5.5,
+  Brownie: 3.5,
+  Muffin: 3.25,
+  Bagel: 3.75,
+};
+
+/** Only some items carry a price-change record — mirrors real catalogs where most items never get edited */
+function seedPriceHistory(): Record<string, PriceHistoryEntry[]> {
+  const now = Date.now();
+  const changedBy = ['Sam Cashier', 'Emma Thompson', 'You'];
+  const map: Record<string, PriceHistoryEntry[]> = {};
+  let i = 0;
+  for (const [name, price] of Object.entries(ITEM_CURRENT_PRICE)) {
+    if (i % 2 === 0) {
+      const oldPrice = +(price - (0.25 + (i % 3) * 0.25)).toFixed(2);
+      map[name] = [
+        {
+          id: `hist-price-${name}`,
+          itemName: name,
+          field: 'price',
+          oldPrice,
+          newPrice: price,
+          changedByName: changedBy[i % changedBy.length],
+          createdAt: now - (3 + i) * 86400_000,
+        },
+      ];
+    }
+    i += 1;
+  }
+  return map;
+}
 
 type ReportOrder = {
   id: string;
@@ -265,7 +340,11 @@ function seedHistory(): ReportOrder[] {
     lines: Omit<ReportLine, 'id'>[],
     prefix: string,
   ): ReportLine[] =>
-    lines.map((l, idx) => ({ ...l, id: `${prefix}-L${idx}` }));
+    lines.map((l, idx) => ({
+      ...l,
+      id: `${prefix}-L${idx}`,
+      image: REPORT_ITEM_IMAGES[l.name] ?? null,
+    }));
 
   const mk = (
     i: number,
@@ -307,52 +386,52 @@ function seedHistory(): ReportOrder[] {
 
   return [
     mk(1, 1, 'card', [
-      { name: 'Latte', qty: 2, unitPrice: 4.5, emoji: '', category: 'Beverages' },
-      { name: 'Croissant', qty: 1, unitPrice: 4, emoji: '', category: 'Pastries' },
+      { name: 'Latte', qty: 2, unitPrice: 4.5, emoji: '☕', category: 'Beverages' },
+      { name: 'Croissant', qty: 1, unitPrice: 4, emoji: '🥐', category: 'Pastries' },
     ], { cardType: 'Visa' }),
     mk(2, 2, 'cash', [
-      { name: 'Espresso', qty: 1, unitPrice: 3.5, emoji: '', category: 'Beverages' },
+      { name: 'Espresso', qty: 1, unitPrice: 3.5, emoji: '☕', category: 'Beverages' },
     ]),
     mk(3, 3, 'other', [
-      { name: 'Club Sandwich', qty: 1, unitPrice: 7.5, emoji: '', category: 'Food' },
-      { name: 'Garden Salad', qty: 1, unitPrice: 6.5, emoji: '', category: 'Food' },
+      { name: 'Club Sandwich', qty: 1, unitPrice: 7.5, emoji: '🥪', category: 'Food' },
+      { name: 'Garden Salad', qty: 1, unitPrice: 6.5, emoji: '🥗', category: 'Food' },
     ], { methodLabel: 'CliQ' }),
     mk(4, 4, 'card', [
-      { name: 'Cappuccino', qty: 2, unitPrice: 4.25, emoji: '', category: 'Beverages' },
-      { name: 'Cheesecake', qty: 1, unitPrice: 5.5, emoji: '', category: 'Desserts' },
+      { name: 'Cappuccino', qty: 2, unitPrice: 4.25, emoji: '☕', category: 'Beverages' },
+      { name: 'Cheesecake', qty: 1, unitPrice: 5.5, emoji: '🍰', category: 'Desserts' },
     ], { cardType: 'Mastercard', customer: 'Emma W.' }),
     mk(5, 5, 'cash', [
-      { name: 'Latte', qty: 1, unitPrice: 4.5, emoji: '', category: 'Beverages' },
-      { name: 'Brownie', qty: 2, unitPrice: 3.5, emoji: '', category: 'Desserts' },
+      { name: 'Latte', qty: 1, unitPrice: 4.5, emoji: '☕', category: 'Beverages' },
+      { name: 'Brownie', qty: 2, unitPrice: 3.5, emoji: '🍫', category: 'Desserts' },
     ], { discount: 1.5, employeeName: 'Jake Miller' }),
     mk(6, 6, 'card', [
-      { name: 'Espresso', qty: 3, unitPrice: 3.5, emoji: '', category: 'Beverages' },
+      { name: 'Espresso', qty: 3, unitPrice: 3.5, emoji: '☕', category: 'Beverages' },
     ], { cardType: 'Visa', employeeName: 'Emma Thompson' }),
     mk(7, 7, 'other', [
-      { name: 'Club Sandwich', qty: 2, unitPrice: 7.5, emoji: '', category: 'Food' },
+      { name: 'Club Sandwich', qty: 2, unitPrice: 7.5, emoji: '🥪', category: 'Food' },
     ], { methodLabel: 'Talabat', employeeName: 'Chloe Davis' }),
     mk(8, 8, 'cash', [
-      { name: 'Croissant', qty: 4, unitPrice: 4, emoji: '', category: 'Pastries' },
+      { name: 'Croissant', qty: 4, unitPrice: 4, emoji: '🥐', category: 'Pastries' },
     ], { employeeName: 'Jake Miller' }),
     mk(9, 9, 'card', [
-      { name: 'Latte', qty: 1, unitPrice: 4.5, emoji: '', category: 'Beverages' },
+      { name: 'Latte', qty: 1, unitPrice: 4.5, emoji: '☕', category: 'Beverages' },
     ], { status: 'REFUNDED', cardType: 'Visa', refundReason: 'Wrong order', employeeName: 'Emma Thompson' }),
     mk(10, 10, 'card', [
-      { name: 'Garden Salad', qty: 1, unitPrice: 6.5, emoji: '', category: 'Food' },
-      { name: 'Latte', qty: 1, unitPrice: 4.5, emoji: '', category: 'Beverages' },
+      { name: 'Garden Salad', qty: 1, unitPrice: 6.5, emoji: '🥗', category: 'Food' },
+      { name: 'Latte', qty: 1, unitPrice: 4.5, emoji: '☕', category: 'Beverages' },
     ], { cardType: 'Amex', employeeName: 'Chloe Davis' }),
     mk(11, 11, 'cash', [
-      { name: 'Cappuccino', qty: 1, unitPrice: 4.25, emoji: '', category: 'Beverages' },
+      { name: 'Cappuccino', qty: 1, unitPrice: 4.25, emoji: '☕', category: 'Beverages' },
     ], { employeeName: 'Jake Miller' }),
     mk(12, 12, 'other', [
-      { name: 'Cheesecake', qty: 2, unitPrice: 5.5, emoji: '', category: 'Desserts' },
+      { name: 'Cheesecake', qty: 2, unitPrice: 5.5, emoji: '🍰', category: 'Desserts' },
     ], { methodLabel: 'CliQ', employeeName: 'Emma Thompson' }),
     mk(13, 14, 'card', [
-      { name: 'Muffin', qty: 2, unitPrice: 3.25, emoji: '', category: 'Pastries' },
-      { name: 'Latte', qty: 1, unitPrice: 4.5, emoji: '', category: 'Beverages' },
+      { name: 'Muffin', qty: 2, unitPrice: 3.25, emoji: '🧁', category: 'Pastries' },
+      { name: 'Latte', qty: 1, unitPrice: 4.5, emoji: '☕', category: 'Beverages' },
     ], { cardType: 'Visa', employeeName: 'Chloe Davis' }),
     mk(14, 16, 'cash', [
-      { name: 'Bagel', qty: 1, unitPrice: 3.75, emoji: '', category: 'Pastries' },
+      { name: 'Bagel', qty: 1, unitPrice: 3.75, emoji: '🥯', category: 'Pastries' },
     ], { employeeName: 'Jake Miller' }),
   ];
 }
@@ -392,6 +471,7 @@ function saleToOrder(s: DemoSale, staffFallback = 'You'): ReportOrder {
       qty: l.qty,
       unitPrice: l.unitPrice,
       emoji: l.emoji,
+      image: REPORT_ITEM_IMAGES[l.name] ?? null,
       category:
         /latte|espresso|capp|coffee|tea|milk/i.test(l.name)
           ? 'Beverages'
@@ -412,6 +492,7 @@ function saleToOrder(s: DemoSale, staffFallback = 'You'): ReportOrder {
         qty,
         unitPrice: s.total / Math.max(1, qty),
         emoji: t.match(/^\S+/)?.[0] ?? '•',
+        image: REPORT_ITEM_IMAGES[name] ?? null,
         category: 'Food',
       };
     });
@@ -999,7 +1080,7 @@ function StatCard({
         {hint && (
           <p
             className={`text-[9px] font-medium leading-snug ${
-              primary ? '!text-white/82' : 'text-text-tertiary'
+              primary ? '!text-white' : 'text-text-tertiary'
             }`}
           >
             {hint}
@@ -1159,7 +1240,11 @@ function OrderTableRow({
       >
         #{order.orderNo}
       </button>
-      <button type="button" onClick={onView} className="min-w-0 flex-1 text-start">
+      <button
+        type="button"
+        onClick={onView}
+        className="w-[76px] shrink-0 text-start sm:w-[90px]"
+      >
         <p className={`text-[12px] font-medium leading-tight ${statusColor}`}>
           {statusLabel === 'Partially Refunded' ? 'Partial' : statusLabel}
         </p>
@@ -1167,7 +1252,10 @@ function OrderTableRow({
           {timeStr}
         </p>
       </button>
-      <span className="hidden shrink-0 text-[10px] text-text-tertiary sm:inline" title={dateStr}>
+      <span
+        className="hidden w-[92px] shrink-0 text-[10px] text-text-tertiary sm:inline"
+        title={dateStr}
+      >
         {dateStr}
       </span>
       <button
@@ -1179,6 +1267,7 @@ function OrderTableRow({
       >
         {money(displayTotal)}
       </button>
+      <div className="min-w-0 flex-1" />
       <div className="flex w-auto shrink-0 items-center justify-end gap-1 sm:gap-1.5">
         {canRefund && (
           <button
@@ -1332,6 +1421,17 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
   const [toast, setToast] = useState<string | null>(null);
   /** Session refunds applied in this reports view (item or full) */
   const [localRefunds, setLocalRefunds] = useState<Record<string, LocalRefundState>>({});
+  const [auditModal, setAuditModal] = useState<{
+    open: boolean;
+    itemName: string;
+    history: PriceHistoryEntry[];
+  }>({ open: false, itemName: '', history: [] });
+  const priceHistoryByName = useMemo(() => seedPriceHistory(), []);
+  const openAudit = (name: string) => {
+    const entries = priceHistoryByName[name];
+    if (!entries) return;
+    setAuditModal({ open: true, itemName: name, history: entries });
+  };
 
   const history = useMemo(() => seedHistory(), []);
 
@@ -1400,6 +1500,52 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
         : null,
     [employeeShifts, selectedShiftId],
   );
+
+  /** Open/close shift log — POS TotalTimeWorkedLogModal (CASH_IN / CASH_OUT rows) */
+  const shiftLogRows = useMemo(() => {
+    const pool = allOrders.filter((o) => o.at >= rangeStart - 7 * 86400_000);
+    const netFor = (name: string, start: number, end: number | null) =>
+      pool
+        .filter(
+          (o) =>
+            o.employeeName === name &&
+            o.at >= start &&
+            (end == null || o.at <= end) &&
+            effectiveStatus(o, localRefunds[o.id]) !== 'REFUNDED',
+        )
+        .reduce(
+          (s, o) => s + Math.max(0, o.total - (localRefunds[o.id]?.amount ?? o.refundedAmount ?? 0)),
+          0,
+        );
+
+    const names = employee === 'all' ? employees : [employee];
+    const rows: ShiftLogRow[] = [];
+    for (const name of names) {
+      const shifts = buildEmployeeShifts(pool, name, shift);
+      for (const s of shifts) {
+        const isLiveOpen = name === 'You' && s.id === 'live-open';
+        const opening = isLiveOpen ? shift.openingCash : 100;
+        rows.push({
+          id: `${s.id}-open`,
+          employeeName: name,
+          type: 'open',
+          at: s.start,
+          amount: opening,
+        });
+        if (s.end != null) {
+          rows.push({
+            id: `${s.id}-close`,
+            employeeName: name,
+            type: 'close',
+            at: s.end,
+            amount: opening + netFor(name, s.start, s.end),
+            isAuto: true,
+          });
+        }
+      }
+    }
+    return rows.sort((a, b) => b.at - a.at);
+  }, [allOrders, rangeStart, employee, employees, shift, localRefunds]);
 
   const employeeFiltered = useMemo(() => {
     let list = employee === 'all' ? inRange : inRange.filter((o) => o.employeeName === employee);
@@ -1677,7 +1823,10 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
   }, [topItemsPeriod]);
 
   const topItems = useMemo(() => {
-    const map = new Map<string, { name: string; emoji: string; qty: number; revenue: number }>();
+    const map = new Map<
+      string,
+      { name: string; emoji: string; image?: string | null; qty: number; revenue: number }
+    >();
     const pool = allOrders.filter(
       (o) =>
         o.at >= topItemsRangeStart &&
@@ -1689,7 +1838,13 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
       for (const l of o.lines) {
         const left = Math.max(0, l.qty - (rq[l.id] ?? 0));
         if (left <= 0) continue;
-        const cur = map.get(l.name) ?? { name: l.name, emoji: l.emoji, qty: 0, revenue: 0 };
+        const cur = map.get(l.name) ?? {
+          name: l.name,
+          emoji: l.emoji,
+          image: l.image,
+          qty: 0,
+          revenue: 0,
+        };
         cur.qty += left;
         cur.revenue += l.unitPrice * left;
         map.set(l.name, cur);
@@ -1704,7 +1859,15 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
   const itemBreakdown = useMemo(() => {
     const items = new Map<
       string,
-      { name: string; emoji: string; cat: string; qty: number; sales: number; refunds: number }
+      {
+        name: string;
+        emoji: string;
+        image?: string | null;
+        cat: string;
+        qty: number;
+        sales: number;
+        refunds: number;
+      }
     >();
     const cats = new Map<string, { name: string; qty: number; sales: number; refunds: number }>();
     type ModRow = {
@@ -1743,6 +1906,7 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
         const it = items.get(l.name) ?? {
           name: l.name,
           emoji: l.emoji,
+          image: l.image,
           cat: l.category,
           qty: 0,
           sales: 0,
@@ -2320,24 +2484,60 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
                   ) : (
                     <div className="flex h-full flex-col justify-between gap-0">
                       {top3.map((item, i) => (
-                        <div
+                        <button
+                          type="button"
                           key={item.name}
-                          className="flex min-h-0 flex-1 items-center gap-2.5 border-b border-gray-100 px-1 last:border-0 dark:border-white/8"
+                          onClick={() => {
+                            setReportTab('items');
+                            setItemMainTab('products');
+                            setItemNameFilter(item.name);
+                          }}
+                          className="flex min-h-0 flex-1 items-center gap-2.5 border-b border-gray-100 px-1 text-start transition-colors last:border-0 hover:bg-gray-50 dark:border-white/8 dark:hover:bg-white/5"
                         >
-                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gray-50 text-lg dark:bg-white/5">
-                            {item.emoji || <Package size={18} className="text-gray-400" />}
+                          <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gray-50 text-lg dark:bg-white/5">
+                            {item.image ? (
+                              <img
+                                src={item.image}
+                                alt={item.name}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              item.emoji || <Package size={18} className="text-gray-400" />
+                            )}
                           </span>
                           <div className="min-w-0 flex-1">
-                            <p className="truncate text-[13px] font-semibold text-text-primary dark:text-white">
-                              {item.name}
-                            </p>
+                            <div className="flex items-center gap-1.5">
+                              <p className="truncate text-[13px] font-semibold text-text-primary dark:text-white">
+                                {item.name}
+                              </p>
+                              {priceHistoryByName[item.name] && (
+                                <span
+                                  role="button"
+                                  tabIndex={0}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    openAudit(item.name);
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                      e.stopPropagation();
+                                      openAudit(item.name);
+                                    }
+                                  }}
+                                  className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-amber-500/50 bg-amber-500/10 text-amber-500"
+                                  aria-label="View price history"
+                                >
+                                  <Clock size={12} />
+                                </span>
+                              )}
+                            </div>
                             <p className="text-[11px] text-text-tertiary">{item.qty} sold</p>
                           </div>
                           <p className="text-[13px] font-semibold tabular-nums text-mintcom-green">
                             {money(item.revenue)}
                           </p>
                           <span className="text-[10px] font-bold text-text-tertiary">#{i + 1}</span>
-                        </div>
+                        </button>
                       ))}
                     </div>
                   )}
@@ -2646,8 +2846,16 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
                               : ''
                           }`}
                         >
-                          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gray-50 text-[24px] leading-none dark:bg-white/5">
-                            {row.emoji || <Package size={22} className="text-gray-400" strokeWidth={1.5} />}
+                          <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gray-50 text-[24px] leading-none dark:bg-white/5">
+                            {row.image ? (
+                              <img
+                                src={row.image}
+                                alt={row.name}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              row.emoji || <Package size={22} className="text-gray-400" strokeWidth={1.5} />
+                            )}
                           </span>
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-1.5">
@@ -2655,7 +2863,21 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
                                 {row.name}
                               </p>
                               {row.refunds > 0 && (
-                                <Clock size={14} className="shrink-0 text-amber-500" />
+                                <Undo2
+                                  size={13}
+                                  className="shrink-0 text-amber-500"
+                                  aria-label="Has refunds"
+                                />
+                              )}
+                              {priceHistoryByName[row.name] && (
+                                <button
+                                  type="button"
+                                  onClick={() => openAudit(row.name)}
+                                  className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-amber-500/50 bg-amber-500/10 text-amber-500"
+                                  aria-label="View price history"
+                                >
+                                  <Clock size={12} />
+                                </button>
                               )}
                             </div>
                             <p className="text-[12px] text-text-tertiary">{row.qty} sold</p>
@@ -3317,7 +3539,10 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
               emoji: l.emoji,
               refundedQty: mergedRefundedQty(selectedOrder, localRefunds[selectedOrder.id])[l.id] ?? 0,
             }))}
-            onClose={() => setModal(null)}
+            onClose={() => {
+              setModal(null);
+              setSelectedOrder(null);
+            }}
             onConfirm={applyRefundResult}
           />
         )}
@@ -3521,46 +3746,168 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
         {/* Time worked — POS TotalTimeWorkedLogModal */}
         {modal === 'time' && (
           <ModalShell
-            title="Total time worked"
+            title="Total Time Worked Log"
             subtitle="Shift hours for the selected range"
             icon={<Clock size={20} />}
             onClose={() => setModal(null)}
           >
-            <div className="flex flex-col gap-2.5">
-              <HeroTotal label="Active Hours" value={hoursWorked} icon={<Clock size={18} />} />
-              <BreakdownRow
-                icon={<User size={20} />}
-                label={employee === 'all' ? 'All employees' : employee}
-                detail={
-                  activeShift
-                    ? activeShift.end == null
-                      ? `Open shift · since ${new Date(activeShift.start).toLocaleTimeString(undefined, {
+            <div className="flex flex-col gap-3">
+              <div className="grid grid-cols-3 gap-2">
+                <div className="rounded-xl bg-mintcom-green px-2.5 py-3 text-center !text-white shadow-sm">
+                  <p className="text-[10px] font-semibold uppercase tracking-wide !text-white/90">
+                    Total Shifts
+                  </p>
+                  <p className="mt-1.5 text-[18px] font-extrabold tabular-nums !text-white">
+                    {shiftLogRows.filter((r) => r.type === 'open').length}
+                  </p>
+                </div>
+                <div className="rounded-xl bg-mintcom-green px-2.5 py-3 text-center !text-white shadow-sm">
+                  <p className="text-[10px] font-semibold uppercase tracking-wide !text-white/90">
+                    Active Hours
+                  </p>
+                  <p className="mt-1.5 text-[18px] font-extrabold tabular-nums !text-white">
+                    {hoursWorked}
+                  </p>
+                </div>
+                <div className="rounded-xl bg-mintcom-green px-2.5 py-3 text-center !text-white shadow-sm">
+                  <p className="text-[10px] font-semibold uppercase tracking-wide !text-white/90">
+                    Last Updated
+                  </p>
+                  <p className="mt-1.5 text-[18px] font-extrabold !text-white">Today</p>
+                </div>
+              </div>
+
+              {/* Table header like POS TotalTimeWorkedLogModal */}
+              <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-white/10">
+                <div className="grid grid-cols-[70px_1fr_78px_66px] gap-1 bg-mintcom-green px-3 py-2.5 text-[11px] font-bold uppercase tracking-wide !text-white sm:grid-cols-[80px_1fr_90px_88px_66px]">
+                  <span className="!text-white">Type</span>
+                  <span className="!text-white">Shift Summary</span>
+                  <span className="text-end !text-white">Amount</span>
+                  <span className="hidden text-end !text-white sm:block">Date</span>
+                  <span className="text-end !text-white">Time</span>
+                </div>
+                {shiftLogRows.length === 0 ? (
+                  <div className="px-4 py-10 text-center">
+                    <Clock size={36} className="mx-auto mb-2 text-gray-300" />
+                    <p className="text-[13px] font-bold text-text-secondary">
+                      No shift entries found
+                    </p>
+                    <p className="mt-1 text-[12px] text-text-tertiary">
+                      For selected range
+                    </p>
+                  </div>
+                ) : (
+                  shiftLogRows.map((r) => (
+                    <div
+                      key={r.id}
+                      className="grid grid-cols-[70px_1fr_78px_66px] items-center gap-1 border-t border-gray-100 px-3 py-3 text-[12px] dark:border-white/8 sm:grid-cols-[80px_1fr_90px_88px_66px]"
+                    >
+                      <span>
+                        <span
+                          className={`inline-block rounded-xl px-2 py-0.5 text-center text-[10px] font-bold uppercase !text-white ${
+                            r.type === 'open' ? 'bg-mintcom-green' : 'bg-[#D55263]'
+                          }`}
+                        >
+                          {r.type === 'open' ? 'Open' : 'Close'}
+                        </span>
+                        {r.type === 'close' && r.isAuto && (
+                          <span className="mt-1 block text-center text-[9px] font-bold uppercase text-amber-600 dark:text-amber-400">
+                            Auto
+                          </span>
+                        )}
+                      </span>
+                      <span className="truncate font-medium text-text-secondary dark:text-mintcom-textSecondary">
+                        {r.employeeName} {r.type === 'open' ? 'started shift' : 'closed shift'}
+                        {employee === 'all' ? '' : ` · ${r.type === 'open' ? 'Opening' : 'Closing'} balance`}
+                      </span>
+                      <span className="text-end text-[13px] font-bold tabular-nums text-text-primary dark:text-white">
+                        {money(r.amount)}
+                      </span>
+                      <span className="hidden text-end text-text-tertiary sm:block">
+                        {new Date(r.at).toLocaleDateString(undefined, {
+                          month: 'short',
+                          day: '2-digit',
+                          year: 'numeric',
+                        })}
+                      </span>
+                      <span className="text-end text-text-tertiary">
+                        {new Date(r.at).toLocaleTimeString(undefined, {
                           hour: '2-digit',
                           minute: '2-digit',
-                        })}`
-                      : activeShift.label
-                    : employee !== 'all'
-                      ? `${employeeShifts.length} shift${employeeShifts.length === 1 ? '' : 's'} in range`
-                      : shift.open && shift.startedAt
-                        ? `Open since ${new Date(shift.startedAt).toLocaleTimeString(undefined, {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}`
-                        : 'Sample total for historical ranges'
-                }
-                value={hoursWorked}
-              />
-              <BreakdownRow
-                icon={<Calendar size={20} />}
-                label="Period"
-                detail={periodLabel}
-                value={
-                  activeShift?.end == null && activeShift
-                    ? 'Open'
-                    : 'Closed'
-                }
-                isLast
-              />
+                        })}
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </ModalShell>
+        )}
+
+        {/* Price/change history — POS PriceAuditModal */}
+        {auditModal.open && (
+          <ModalShell
+            title={auditModal.itemName}
+            subtitle={`Change History · ${auditModal.history.length} change${auditModal.history.length === 1 ? '' : 's'}`}
+            icon={<Clock size={20} className="text-amber-500" />}
+            onClose={() => setAuditModal({ open: false, itemName: '', history: [] })}
+          >
+            <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-white/10">
+              <div className="grid grid-cols-[80px_60px_1fr_70px] gap-1 bg-mintcom-green px-3 py-2.5 text-[11px] font-bold uppercase tracking-wide !text-white sm:grid-cols-[90px_70px_1fr_1fr_90px]">
+                <span className="!text-white">Date</span>
+                <span className="!text-white">Field</span>
+                <span className="text-center !text-white">Old → New</span>
+                <span className="hidden !text-white sm:block" />
+                <span className="text-end !text-white">Changed By</span>
+              </div>
+              {auditModal.history.length === 0 ? (
+                <div className="px-4 py-10 text-center">
+                  <Clock size={36} className="mx-auto mb-2 text-gray-300" />
+                  <p className="text-[13px] font-bold text-text-secondary">
+                    No history has been recorded for this item yet.
+                  </p>
+                </div>
+              ) : (
+                auditModal.history.map((h) => (
+                  <div
+                    key={h.id}
+                    className="grid grid-cols-[80px_60px_1fr_70px] items-center gap-1 border-t border-gray-100 px-3 py-3 text-[12px] dark:border-white/8 sm:grid-cols-[90px_70px_1fr_1fr_90px]"
+                  >
+                    <span className="text-text-secondary dark:text-mintcom-textSecondary">
+                      <span className="block font-semibold">
+                        {new Date(h.createdAt).toLocaleDateString(undefined, {
+                          month: 'short',
+                          day: '2-digit',
+                        })}
+                      </span>
+                      <span className="block text-[10px]">
+                        {new Date(h.createdAt).toLocaleTimeString(undefined, {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </span>
+                    </span>
+                    <span>
+                      <span className="inline-block rounded-lg bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold uppercase text-amber-600 dark:text-amber-400">
+                        Price
+                      </span>
+                    </span>
+                    <span className="flex items-center justify-center gap-2 text-[13px]">
+                      <span className="font-medium text-text-tertiary line-through">
+                        {money(h.oldPrice)}
+                      </span>
+                      <ChevronRight size={13} className="text-text-tertiary" />
+                      <span className="font-bold text-text-primary dark:text-white">
+                        {money(h.newPrice)}
+                      </span>
+                    </span>
+                    <span className="hidden sm:block" />
+                    <span className="truncate text-end text-text-secondary dark:text-mintcom-textSecondary">
+                      {h.changedByName}
+                    </span>
+                  </div>
+                ))
+              )}
             </div>
           </ModalShell>
         )}

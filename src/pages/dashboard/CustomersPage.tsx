@@ -16,10 +16,10 @@ import {
   Edit2,
   Award,
   X,
-  ShoppingBag,
   MoreVertical,
   Eye
 } from 'lucide-react';
+import { biIcon } from '../../components/ui/BiIcon';
 import api from '../../config/api';
 import toast from 'react-hot-toast';
 import { ConfirmModal } from '../../components/ConfirmModal';
@@ -483,9 +483,9 @@ export function CustomersPage() {
 
       <div className="flex overflow-x-auto scrollbar-none gap-3 -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-3 sm:gap-4 sm:overflow-visible pb-2 sm:pb-0">
         {[
-          { label: t('customers.stats.total'), value: stats.totalCustomers, icon: User, color: 'text-mintcom-green', bg: 'bg-mintcom-green/10', isCurrency: false },
-          { label: t('customers.stats.points'), value: stats.totalPoints, icon: Award, color: 'text-blue-500', bg: 'bg-blue-500/10', isCurrency: false },
-          { label: t('customers.stats.spent'), value: stats.totalSpent, icon: ShoppingBag, color: 'text-purple-500', bg: 'bg-purple-500/10', isCurrency: true },
+          { label: t('customers.stats.total'), value: stats.totalCustomers, icon: biIcon('bi-people'), color: 'text-mintcom-green', bg: 'bg-mintcom-green/10', isCurrency: false },
+          { label: t('customers.stats.points'), value: stats.totalPoints, icon: biIcon('bi-award'), color: 'text-mintcom-green', bg: 'bg-mintcom-green/10', isCurrency: false },
+          { label: t('customers.stats.spent'), value: stats.totalSpent, icon: biIcon('bi-bag-check'), color: 'text-mintcom-green', bg: 'bg-mintcom-green/10', isCurrency: true },
         ].map((stat, i) => (
           <motion.div
             key={i}

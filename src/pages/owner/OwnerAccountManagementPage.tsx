@@ -794,9 +794,9 @@ export function OwnerAccountManagementPage() {
                                     disabled={isUpdatingCurrency}
                                     className="w-full h-12 bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/[0.08] rounded-xl px-4 font-bold text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 transition-all appearance-none cursor-pointer disabled:opacity-50"
                                 >
-                                    {CURRENCIES.map((c) => (
+                                    {CURRENCIES.filter((c) => c.code !== 'ALL').map((c) => (
                                         <option key={c.code} value={c.code} className="bg-white dark:bg-gray-800">
-                                            {c.code} ({c.symbol})
+                                            {c.code}
                                         </option>
                                     ))}
                                 </select>
@@ -907,7 +907,7 @@ export function OwnerAccountManagementPage() {
                                                     className={`flex-1 sm:flex-none inline-flex items-center justify-center gap-2 h-9 px-3.5 rounded-lg text-xs font-bold transition-all ${
                                                         active
                                                             ? isBrandTab
-                                                                ? 'bg-white dark:bg-[#0F172A] text-purple-600 dark:text-purple-400 shadow-sm ring-1 ring-purple-500/20'
+                                                                ? 'bg-white dark:bg-[#0F172A] text-blue-600 dark:text-blue-400 shadow-sm ring-1 ring-blue-500/20'
                                                                 : 'bg-white dark:bg-[#0F172A] text-mintcom-green shadow-sm'
                                                             : 'text-gray-500 hover:text-gray-800 dark:hover:text-gray-200'
                                                     }`}
@@ -918,7 +918,7 @@ export function OwnerAccountManagementPage() {
                                                         className={`min-w-[1.25rem] h-5 px-1.5 rounded-md text-[10px] font-black flex items-center justify-center tabular-nums ${
                                                             active
                                                                 ? isBrandTab
-                                                                    ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400'
+                                                                    ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
                                                                     : 'bg-mintcom-green/10 text-mintcom-green'
                                                                 : 'bg-gray-200/80 dark:bg-white/10 text-gray-500'
                                                         }`}
@@ -933,7 +933,7 @@ export function OwnerAccountManagementPage() {
                                         <div
                                             className={`inline-flex items-center gap-2 h-9 px-3 rounded-xl text-xs font-bold ${
                                                 isSingleBrandOnly || (brands.length > 0 && locationLoginEstablishments.length === 0)
-                                                    ? 'bg-purple-500/10 border border-purple-500/15 text-purple-600 dark:text-purple-400'
+                                                    ? 'bg-blue-500/10 border border-blue-500/15 text-blue-600 dark:text-blue-400'
                                                     : 'bg-mintcom-green/10 border border-mintcom-green/15 text-mintcom-green'
                                             }`}
                                         >
@@ -1095,7 +1095,7 @@ export function OwnerAccountManagementPage() {
                                                 <div
                                                     className={`w-full max-w-2xl rounded-2xl border border-gray-200 dark:border-white/[0.08] p-5 sm:p-6 shadow-sm bg-gradient-to-br from-gray-50/90 via-white ${
                                                         isBrand
-                                                            ? 'to-purple-500/10 dark:from-white/[0.04] dark:via-white/[0.02] dark:to-purple-500/15'
+                                                            ? 'to-blue-500/10 dark:from-white/[0.04] dark:via-white/[0.02] dark:to-blue-500/15'
                                                             : 'to-mintcom-green/5 dark:from-white/[0.04] dark:via-white/[0.02] dark:to-mintcom-green/10'
                                                     }`}
                                                 >
@@ -1103,11 +1103,11 @@ export function OwnerAccountManagementPage() {
                                                         <div
                                                             className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ring-1 ${
                                                                 isBrand
-                                                                    ? 'bg-purple-500/15 dark:bg-purple-500/20 ring-purple-500/20'
+                                                                    ? 'bg-blue-500/15 dark:bg-blue-500/20 ring-blue-500/20'
                                                                     : 'bg-mintcom-green/15 dark:bg-mintcom-green/20 ring-mintcom-green/20'
                                                             }`}
                                                         >
-                                                            <RowIcon className={`w-7 h-7 ${isBrand ? 'text-purple-500' : 'text-mintcom-green'}`} />
+                                                            <RowIcon className={`w-7 h-7 ${isBrand ? 'text-blue-500' : 'text-mintcom-green'}`} />
                                                         </div>
                                                         <div className="min-w-0 flex-1">
                                                             <div className={`flex flex-wrap items-center gap-2 ${isRtl ? 'flex-row-reverse justify-end' : ''}`}>
@@ -1118,7 +1118,7 @@ export function OwnerAccountManagementPage() {
                                                                     className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-md border ${
                                                                         row.isActive
                                                                             ? isBrand
-                                                                                ? 'bg-purple-500/10 text-purple-600 border-purple-500/20'
+                                                                                ? 'bg-blue-500/10 text-blue-600 border-blue-500/20'
                                                                                 : 'bg-mintcom-green/10 text-mintcom-green border-mintcom-green/20'
                                                                             : 'bg-gray-100 dark:bg-white/5 text-gray-400 border-gray-200 dark:border-white/10'
                                                                     }`}
@@ -1167,7 +1167,7 @@ export function OwnerAccountManagementPage() {
                                                                 onClick={row.onOpen}
                                                                 className={`flex-1 inline-flex items-center justify-center gap-2 h-11 px-4 rounded-xl text-sm font-black transition-all shadow-sm ${
                                                                     isBrand
-                                                                        ? 'bg-purple-600 hover:bg-purple-500 text-white shadow-purple-500/20'
+                                                                        ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-500/20'
                                                                         : 'bg-mintcom-green hover:bg-[#5fa888] text-black shadow-mintcom-green/20'
                                                                 }`}
                                                             >
@@ -1211,7 +1211,7 @@ export function OwnerAccountManagementPage() {
                                                             <div
                                                                 className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
                                                                     row.kind === 'brand'
-                                                                        ? 'bg-purple-500/10 text-purple-500'
+                                                                        ? 'bg-blue-500/10 text-blue-500'
                                                                         : 'bg-gray-100 dark:bg-white/5 text-gray-400'
                                                                 }`}
                                                             >
@@ -1226,7 +1226,7 @@ export function OwnerAccountManagementPage() {
                                                                         className={`shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-black tracking-wider border ${
                                                                             row.isActive
                                                                                 ? row.kind === 'brand'
-                                                                                    ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20'
+                                                                                    ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20'
                                                                                     : 'bg-mintcom-green/10 text-mintcom-green border-mintcom-green/20'
                                                                                 : 'bg-gray-100 dark:bg-white/5 text-gray-400 border-gray-200 dark:border-white/10'
                                                                         }`}
@@ -1253,7 +1253,7 @@ export function OwnerAccountManagementPage() {
                                                                     disabled={!row.loginId}
                                                                     className={`shrink-0 p-1 rounded-md text-gray-500 transition-colors disabled:opacity-40 ${
                                                                         row.kind === 'brand'
-                                                                            ? 'hover:text-purple-600 hover:bg-purple-500/10'
+                                                                            ? 'hover:text-blue-600 hover:bg-blue-500/10'
                                                                             : 'hover:text-mintcom-green hover:bg-mintcom-green/10'
                                                                     }`}
                                                                     title={t('common.copy')}
@@ -1261,7 +1261,7 @@ export function OwnerAccountManagementPage() {
                                                                     {copiedId === row.copyKey ? (
                                                                         <CheckCircle2
                                                                             size={14}
-                                                                            className={row.kind === 'brand' ? 'text-purple-500' : 'text-mintcom-green'}
+                                                                            className={row.kind === 'brand' ? 'text-blue-500' : 'text-mintcom-green'}
                                                                         />
                                                                     ) : (
                                                                         <Copy size={14} />
@@ -1279,7 +1279,7 @@ export function OwnerAccountManagementPage() {
                                                                         disabled={!row.onOpen}
                                                                         className={`w-7 h-7 rounded-lg inline-flex items-center justify-center text-gray-400 transition-all disabled:opacity-0 disabled:pointer-events-none sm:disabled:opacity-30 sm:disabled:pointer-events-none sm:disabled:hover:bg-transparent sm:disabled:hover:text-gray-400 ${
                                                                             row.kind === 'brand'
-                                                                                ? 'hover:text-purple-600 hover:bg-purple-500/10'
+                                                                                ? 'hover:text-blue-600 hover:bg-blue-500/10'
                                                                                 : 'hover:text-mintcom-green hover:bg-mintcom-green/10'
                                                                         }`}
                                                                         aria-label={
@@ -1513,7 +1513,7 @@ export function OwnerAccountManagementPage() {
                                         icon: HelpCircle,
                                         title: t('owner.account.resources.qa.title'),
                                         description: t('owner.account.resources.qa.desc'),
-                                        tone: 'text-purple-500 bg-purple-500/10 border-purple-500/10 hover:border-purple-400/40',
+                                        tone: 'text-blue-500 bg-blue-500/10 border-blue-500/10 hover:border-blue-400/40',
                                     },
                                     {
                                         href: '/legal/privacy',

@@ -13,6 +13,7 @@ import {
   Lock,
   Heart,
   Smartphone,
+  Sparkles,
   ChevronLeft,
   ChevronRight,
   ArrowUpRight,
@@ -21,8 +22,6 @@ import {
 } from 'lucide-react';
 import MintcomLeafIcon from '../assets/small-logo.svg';
 import { FeatureInteractiveDemo, hasInteractiveDemo } from './FeatureInteractiveDemos';
-
-const MintcomLeaf = () => <img src={MintcomLeafIcon} alt="" className="h-full w-full scale-x-[-1] object-contain" />;
 
 type WorkflowFeature = {
   title: string;
@@ -399,7 +398,7 @@ export const Features = () => {
       id: 'aiSystem',
       title: t('landing.workflow.aiSystem.title'),
       description: t('landing.workflow.aiSystem.description'),
-      icon: MintcomLeaf as unknown as LucideIcon,
+      icon: Sparkles,
     },
     {
       id: 'multiBranch',

@@ -39,7 +39,7 @@ export function FAQModal({ isOpen, onClose }: FAQModalProps) {
 
   const CATEGORY_CONFIG: Record<FAQItem['category'], { label: string; icon: React.ReactNode; color: string; activeChip: string }> = useMemo(() => ({
     general: { label: t('support.qa.categories.general'), icon: <HelpCircle size={14} />, color: 'text-blue-500 bg-blue-500/10', activeChip: 'bg-blue-500 text-white' },
-    products: { label: t('support.qa.categories.products'), icon: <Package size={14} />, color: 'text-purple-500 bg-purple-500/10', activeChip: 'bg-purple-500 text-white' },
+    products: { label: t('support.qa.categories.products'), icon: <Package size={14} />, color: 'text-indigo-500 bg-indigo-500/10', activeChip: 'bg-indigo-500 text-white' },
     orders: { label: t('support.qa.categories.orders'), icon: <ClipboardList size={14} />, color: 'text-orange-500 bg-orange-500/10', activeChip: 'bg-orange-500 text-white' },
     staff: { label: t('support.qa.categories.staff'), icon: <Users size={14} />, color: 'text-cyan-500 bg-cyan-500/10', activeChip: 'bg-cyan-500 text-white' },
     billing: { label: t('support.qa.categories.billing'), icon: <CreditCard size={14} />, color: 'text-mintcom-green bg-mintcom-green/', activeChip: 'bg-mintcom-green text-white' },
@@ -76,7 +76,7 @@ export function FAQModal({ isOpen, onClose }: FAQModalProps) {
           className={`fixed bottom-[100px] ${isRTL ? 'left-[30px]' : 'right-[30px]'} z-[950] w-[400px] max-w-[calc(100vw-60px)] h-[600px] max-h-[calc(100vh-150px)] bg-white dark:bg-[#0F172A] rounded-3xl shadow-2xl border border-gray-200/50 dark:border-white/10 flex flex-col overflow-hidden`}
         >
           {/* Header */}
-          <div className="p-4 bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center justify-between">
+          <div className="p-4 bg-gradient-to-r from-indigo-500 to-blue-600 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="p-2.5 bg-white/20 backdrop-blur-sm rounded-xl">
                 <HelpCircle size={20} className="text-white" />

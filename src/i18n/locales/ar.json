@@ -4394,7 +4394,31 @@
       "card_added_and_assigned": "تمت إضافة البطاقة وتعيينها لهذا الموقع",
       "cardholder": "حامل البطاقة",
       "change_card": "تغيير البطاقة",
-      "saved_card": "محفوظة"
+      "saved_card": "محفوظة",
+      "invoice": {
+        "action": "الفواتير",
+        "title": "فاتورة الاشتراك",
+        "summaryTitle": "ملخص الاشتراك",
+        "download": "تنزيل",
+        "print": "طباعة / حفظ PDF",
+        "historyTitle": "سجل الفواتير",
+        "printHistory": "طباعة السجل",
+        "downloadHistory": "تنزيل الكل",
+        "exportCsv": "CSV",
+        "exportFailed": "تعذّر تصدير سجل الفواتير. يرجى المحاولة مرة أخرى.",
+        "popupBlocked": "يرجى السماح بالنوافذ المنبثقة لهذا الموقع للطباعة.",
+        "loadFailed": "تعذّر تحميل الفواتير",
+        "emptyTitle": "لا توجد فواتير بعد",
+        "emptyBody": "تصدر فاتورة مرقّمة تلقائياً عند إتمام أول عملية دفع لهذا الموقع.",
+        "viewSummary": "عرض ملخص الاشتراك",
+        "view": "عرض",
+        "colNumber": "الفاتورة",
+        "colDate": "التاريخ",
+        "colPeriod": "الفترة",
+        "colStatus": "الحالة",
+        "colAmount": "المبلغ",
+        "pageTotal": "هذه الصفحة: {{amount}}"
+      }
     },
     "brands": {
       "activeBrands": "العلامات التجارية النشطة",

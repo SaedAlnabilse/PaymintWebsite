@@ -1,4 +1,5 @@
 import { Scale } from 'lucide-react';
+import { BiIcon } from '../../../ui/BiIcon';
 import { useCurrency } from '../../../../context/CurrencyContext';
 import type { SalesSummary } from '../../../../types';
 import React from 'react';
@@ -196,7 +197,7 @@ export const TaxesView = React.memo(function TaxesView({ salesData }: TaxesViewP
           <div className="p-6 border-b border-gray-100 dark:border-white/5">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500">
-                <Scale size={20} />
+                <BiIcon icon="bi-receipt" size={20} />
               </div>
               <div>
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white">
@@ -365,7 +366,7 @@ export const TaxesView = React.memo(function TaxesView({ salesData }: TaxesViewP
 
           <div className="rounded-2xl border border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-white/[0.02] p-5">
             <div className="w-10 h-10 rounded-xl bg-gray-200/60 dark:bg-white/5 flex items-center justify-center text-gray-400 dark:text-white/30 mb-3">
-              <Scale size={18} />
+              <BiIcon icon="bi-receipt" size={18} />
             </div>
             <StatValue
               value={toNumber(salesData.taxExemptSales)}

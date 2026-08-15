@@ -54,7 +54,7 @@ const categoryOptions = ['all', 'general', 'bug', 'feature', 'usability', 'perfo
 const statusTone: Record<string, string> = {
   NEW: 'bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300',
   REVIEWING: 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300',
-  PLANNED: 'bg-purple-50 text-purple-700 dark:bg-purple-500/10 dark:text-purple-300',
+  PLANNED: 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300',
   DONE: 'bg-mintcom-green/10 text-green-700 dark:text-mintcom-green',
   ARCHIVED: 'bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-300',
 };

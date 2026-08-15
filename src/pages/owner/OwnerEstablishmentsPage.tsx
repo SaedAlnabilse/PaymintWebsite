@@ -24,6 +24,7 @@ import { StatValue } from '../../components/ui/StatValue';
 import { getBusinessTypeIcon } from '../../utils/businessTypeIcons';
 import { formatBusinessTypeLabel } from '../../utils/businessTypeLabel';
 import { formatInputPlaceholder } from '../../utils/textCase';
+import { BiIcon } from '../../components/ui/BiIcon';
 
 type ViewMode = 'grid' | 'list';
 const ITEMS_PER_PAGE = 10;
@@ -172,7 +173,7 @@ export function OwnerEstablishmentsPage() {
                         onClick={() => navigate('/owner/brands')}
                         className="px-5 py-3 rounded-xl bg-white dark:bg-white/5 text-gray-900 dark:text-white font-bold text-sm border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/10 transition-all flex items-center gap-2"
                     >
-                        <Building2 size={18} className="text-purple-500" />
+                        <Building2 size={18} className="text-blue-500" />
                         <span>{t('owner.overview.brands')}</span>
                     </button>
 
@@ -191,10 +192,10 @@ export function OwnerEstablishmentsPage() {
                 <div
                     className="group relative p-6 rounded-2xl bg-white dark:bg-[#1E293B] border border-gray-200 dark:border-white/5 shadow-sm transition-all duration-300 overflow-hidden"
                 >
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl opacity-0 transition-opacity duration-500 pointer-events-none" />
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-mintcom-green/10 rounded-full blur-2xl opacity-0 transition-opacity duration-500 pointer-events-none" />
                     <div className="relative z-10 flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center transition-transform duration-300">
-                            <Store size={24} />
+                        <div className="w-12 h-12 rounded-xl bg-mintcom-green/10 text-mintcom-green flex items-center justify-center transition-transform duration-300">
+                            <BiIcon icon="bi-geo-alt" />
                         </div>
                         <div>
                             <p className="dashboard-stat-title">{t('owner.locations.total')}</p>
@@ -209,7 +210,7 @@ export function OwnerEstablishmentsPage() {
                     <div className="absolute top-0 right-0 w-24 h-24 bg-mintcom-green/10 rounded-full blur-2xl opacity-0 transition-opacity duration-500 pointer-events-none" />
                     <div className="relative z-10 flex items-center gap-4">
                         <div className="w-12 h-12 rounded-xl bg-mintcom-green/10 text-mintcom-green flex items-center justify-center transition-transform duration-300">
-                            <Zap size={24} />
+                            <BiIcon icon="bi-check-circle" />
                         </div>
                         <div>
                             <p className="dashboard-stat-title">{t('owner.locations.active')}</p>
@@ -221,10 +222,10 @@ export function OwnerEstablishmentsPage() {
                 <div
                     className="group relative p-6 rounded-2xl bg-white dark:bg-[#1E293B] border border-gray-200 dark:border-white/5 shadow-sm transition-all duration-300 overflow-hidden"
                 >
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl opacity-0 transition-opacity duration-500 pointer-events-none" />
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-mintcom-green/10 rounded-full blur-2xl opacity-0 transition-opacity duration-500 pointer-events-none" />
                     <div className="relative z-10 flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center transition-transform duration-300">
-                            <Settings size={24} />
+                        <div className="w-12 h-12 rounded-xl bg-mintcom-green/10 text-mintcom-green flex items-center justify-center transition-transform duration-300">
+                            <BiIcon icon="bi-hourglass-split" />
                         </div>
                         <div>
                             <p className="dashboard-stat-title">{t('owner.locations.trial')}</p>

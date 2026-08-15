@@ -24,6 +24,7 @@ import {
     X,
     AlertTriangle
 } from 'lucide-react';
+
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -39,6 +40,7 @@ import { SectionLoader } from '../../components/LoadingState';
 import { StatValue } from '../../components/ui/StatValue';
 import { formatInputPlaceholder, formatInputLabel } from '../../utils/textCase';
 import { getPasswordSchema } from '../../utils/validation';
+import { biIcon } from '../../components/ui/BiIcon';
 
 interface Brand {
     id: string;
@@ -363,7 +365,7 @@ export function OwnerBrandsPage() {
     const getRoleBadgeColor = (role: string) => {
         switch (role?.toUpperCase()) {
             case 'MANAGER':
-                return 'bg-purple-500/10 text-purple-500 border-purple-500/20';
+                return 'bg-slate-500/10 text-slate-600 dark:text-slate-300 border-slate-500/20';
             case 'CASHIER':
                 return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
             case 'WAITER':
@@ -507,9 +509,9 @@ export function OwnerBrandsPage() {
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {[
-                    { label: t('owner.brands.activeBrands'), value: brands.length, icon: Building2, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-                    { label: t('owner.brands.linkedLocations'), value: brands.reduce((acc, b) => acc + b.establishmentCount, 0), icon: Link2, color: 'text-purple-500', bg: 'bg-purple-500/10' },
-                    { label: t('owner.brands.availableLocations'), value: availableEstablishments.length, icon: Store, color: 'text-orange-500', bg: 'bg-orange-500/10' },
+                    { label: t('owner.brands.activeBrands'), value: brands.length, icon: biIcon('bi-collection'), color: 'text-mintcom-green', bg: 'bg-mintcom-green/10' },
+                    { label: t('owner.brands.linkedLocations'), value: brands.reduce((acc, b) => acc + b.establishmentCount, 0), icon: biIcon('bi-diagram-3'), color: 'text-mintcom-green', bg: 'bg-mintcom-green/10' },
+                    { label: t('owner.brands.availableLocations'), value: availableEstablishments.length, icon: biIcon('bi-geo-alt'), color: 'text-mintcom-green', bg: 'bg-mintcom-green/10' },
                 ].map((stat, i) => (
                     <div
                         key={i}
@@ -612,22 +614,22 @@ export function OwnerBrandsPage() {
                                     key={brand.id}
                                     className={`group relative bg-white dark:bg-[#1E293B] rounded-2xl border p-6 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden ${brand.id === 'cmkek5eme0001vjjqvfm3wjwa'
                                         ? 'border-mintcom-green bg-mintcom-green/[0.02]'
-                                        : 'border-gray-200 dark:border-white/5 hover:border-purple-500/30'
+                                        : 'border-gray-200 dark:border-white/5 hover:border-blue-500/30'
                                         }`}
                                 >
                                     {/* Hover gradient */}
-                                    <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                                    <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
 
                                     <div className="relative z-10">
                                         {/* Header */}
                                         <div className="flex items-start justify-between mb-6">
                                             <div className="flex items-center gap-4">
-                                                <div className="w-14 h-14 rounded-xl bg-purple-500/10 flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform duration-300">
-                                                    <Building2 size={28} className="text-purple-500" />
+                                                <div className="w-14 h-14 rounded-xl bg-blue-500/10 flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform duration-300">
+                                                    <Building2 size={28} className="text-blue-500" />
                                                 </div>
                                                 <div>
                                                     <div className="flex items-center gap-2 mb-1">
-                                                        <h3 className="text-xl font-bold tracking-tight text-gray-900 dark:text-white group-hover:text-purple-500 transition-colors">
+                                                        <h3 className="text-xl font-bold tracking-tight text-gray-900 dark:text-white group-hover:text-blue-500 transition-colors">
                                                             {brand.name}
                                                         </h3>
                                                     </div>
@@ -690,16 +692,16 @@ export function OwnerBrandsPage() {
 
                                         {/* Details */}
                                         <div className="grid grid-cols-2 gap-4 mb-6 relative z-10">
-                                            <div className="p-4 bg-gray-50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5 rounded-xl group-hover:border-purple-500/10 transition-colors">
+                                            <div className="p-4 bg-gray-50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5 rounded-xl group-hover:border-blue-500/10 transition-colors">
                                                 <div className="flex items-center gap-2 mb-2">
-                                                    <Hash size={14} className="text-purple-500" />
+                                                    <Hash size={14} className="text-blue-500" />
                                                     <span className="dashboard-card-label">{t('owner.brands.loginId')}</span>
                                                 </div>
                                                 <p className="text-sm font-mono font-bold text-gray-900 dark:text-white truncate">
                                                     {brand.establishmentLoginId}
                                                 </p>
                                             </div>
-                                            <div className="p-4 bg-gray-50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5 rounded-xl group-hover:border-purple-500/10 transition-colors">
+                                            <div className="p-4 bg-gray-50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5 rounded-xl group-hover:border-blue-500/10 transition-colors">
                                                 <div className="flex items-center gap-2 mb-2">
                                                     <Calendar size={14} className="text-blue-500" />
                                                     <span className="dashboard-card-label">{t('owner.brands.created')}</span>
@@ -719,7 +721,7 @@ export function OwnerBrandsPage() {
                                                 {brand.establishments.slice(0, 4).map((est) => {
                                                     const Icon = getBusinessTypeIcon(est.type);
                                                     return (
-                                                        <div key={est.id} className="px-3 py-2 bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-white/5 rounded-lg flex items-center gap-2 hover:border-purple-500/30 transition-all">
+                                                        <div key={est.id} className="px-3 py-2 bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-white/5 rounded-lg flex items-center gap-2 hover:border-blue-500/30 transition-all">
                                                             <Icon size={12} className="text-gray-400" />
                                                             <span className="text-xs font-bold text-gray-600 dark:text-gray-400 truncate max-w-[100px]">{est.name}</span>
                                                         </div>
@@ -742,7 +744,7 @@ export function OwnerBrandsPage() {
                                                     const slug = brand.establishmentLoginId || brand.id;
                                                     window.open(`/brand/${slug}`, '_blank');
                                                 }}
-                                                className="flex-1 py-3 rounded-xl bg-gray-50 dark:bg-white/5 text-gray-700 dark:text-gray-300 label-strong hover:bg-purple-500 hover:text-white transition-all flex items-center justify-center gap-2 group/btn border border-gray-200 dark:border-white/5 hover:border-purple-500 shadow-sm"
+                                                className="flex-1 py-3 rounded-xl bg-gray-50 dark:bg-white/5 text-gray-700 dark:text-gray-300 label-strong hover:bg-blue-500 hover:text-white transition-all flex items-center justify-center gap-2 group/btn border border-gray-200 dark:border-white/5 hover:border-blue-500 shadow-sm"
                                             >
                                                 <span>{t('owner.brands.openDashboard')}</span>
                                                 <ExternalLink size={14} className="group-hover/btn:translate-x-0.5 transition-transform" />
