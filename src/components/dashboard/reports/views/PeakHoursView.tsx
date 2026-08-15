@@ -1,4 +1,5 @@
-import { Activity, Clock, Info, Moon, ShoppingBag, TrendingUp, Wallet, Zap } from 'lucide-react';
+import { Activity, Info, TrendingUp, Wallet } from 'lucide-react';
+import { biIcon } from '../../../ui/BiIcon';
 import { useCurrency } from '../../../../context/CurrencyContext';
 import type { PeakHour } from '../../../../types';
 import {
@@ -168,7 +169,7 @@ export const PeakHoursView = React.memo(function PeakHoursView({ peakHours }: Pe
 
   const statCards = [
     {
-      icon: Zap,
+      icon: biIcon('bi-lightning-charge'),
       label: t('orders.reports.peakHours.busiestHour'),
       value: hasData ? peak.hourLabel : '—',
       detail: t('orders.reports.peakHours.busiestHourDesc', {
@@ -180,7 +181,7 @@ export const PeakHoursView = React.memo(function PeakHoursView({ peakHours }: Pe
       ring: 'ring-orange-500/10',
     },
     {
-      icon: Moon,
+      icon: biIcon('bi-moon-stars'),
       label: t('orders.reports.peakHours.quietestHour'),
       value: hasData ? quietest.hourLabel : '—',
       detail: t('orders.reports.peakHours.quietestHourDesc', {
@@ -191,7 +192,7 @@ export const PeakHoursView = React.memo(function PeakHoursView({ peakHours }: Pe
       ring: 'ring-slate-500/10',
     },
     {
-      icon: Clock,
+      icon: biIcon('bi-clock-history'),
       label: t('orders.reports.peakHours.rushWindow'),
       value: hasData
         ? `${buildHourLabel(rushWindow.start, locale)} – ${buildHourLabel(rushWindow.end, locale)}`
@@ -200,12 +201,12 @@ export const PeakHoursView = React.memo(function PeakHoursView({ peakHours }: Pe
         count: hasData ? rushWindow.count : 0,
         percent: `${Math.round(rushShare * 100)}%`,
       }),
-      color: 'text-violet-500',
-      bg: 'bg-violet-500/10',
-      ring: 'ring-violet-500/10',
+      color: 'text-blue-500',
+      bg: 'bg-blue-500/10',
+      ring: 'ring-blue-500/10',
     },
     {
-      icon: ShoppingBag,
+      icon: biIcon('bi-receipt-cutoff'),
       label: t('orders.reports.peakHours.totalOrders'),
       value: totalOrders,
       integer: true,

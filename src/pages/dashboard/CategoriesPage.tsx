@@ -9,7 +9,6 @@ import { useTranslation } from 'react-i18next';
 import {
   Plus,
   Package,
-  TrendingUp,
   Layers,
   ChevronRight,
   Edit2,
@@ -21,6 +20,7 @@ import {
   List,
   Upload
 } from 'lucide-react';
+import { biIcon } from '../../components/ui/BiIcon';
 import api from '../../config/api';
 import { fetchAllPages } from '../../utils/fetchAllPages';
 import toast from 'react-hot-toast';
@@ -602,9 +602,9 @@ export function CategoriesPage() {
 
       <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-3 scrollbar-none snap-x snap-mandatory">
         {[
-          { label: t('categories.stats.totalCategories'), value: stats.total, icon: Layers, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-          { label: t('categories.stats.totalItems'), value: stats.products, icon: Package, color: 'text-mintcom-green', bg: 'bg-mintcom-green/10' },
-          { label: t('categories.stats.topCategory'), value: stats.top?.name || t('common.notAvailable'), sub: `${stats.top?._count?.items || 0} ${t('dashboard.menu.products')}`, icon: TrendingUp, color: 'text-purple-500', bg: 'bg-purple-500/10' },
+          { label: t('categories.stats.totalCategories'), value: stats.total, icon: biIcon('bi-grid-3x3-gap'), color: 'text-mintcom-green', bg: 'bg-mintcom-green/10' },
+          { label: t('categories.stats.totalItems'), value: stats.products, icon: biIcon('bi-box-seam'), color: 'text-mintcom-green', bg: 'bg-mintcom-green/10' },
+          { label: t('categories.stats.topCategory'), value: stats.top?.name || t('common.notAvailable'), sub: `${stats.top?._count?.items || 0} ${t('dashboard.menu.products')}`, icon: biIcon('bi-graph-up-arrow'), color: 'text-mintcom-green', bg: 'bg-mintcom-green/10' },
         ].map((stat, i) => (
           <motion.div
             key={i}

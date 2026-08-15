@@ -283,7 +283,7 @@ export function AlertRow({
                 {footerPill}
               </span>
               {trialAlert && (
-                <span className="rounded-full bg-violet-50 px-2.5 py-1 text-xs font-bold text-violet-700 dark:bg-violet-500/10 dark:text-violet-300">
+                <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">
                   {t('notifications.trial.persistent')}
                 </span>
               )}

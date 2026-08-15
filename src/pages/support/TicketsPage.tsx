@@ -294,7 +294,7 @@ export const TicketsPage = () => {
               { key: 'open' as const, icon: Inbox, value: stats.open, label: t('support.tickets.stats.open'), iconColor: 'text-blue-500', bgColor: 'bg-blue-50 dark:bg-blue-500/10' },
               { key: 'inProgress' as const, icon: Clock, value: stats.inProgress, label: t('support.tickets.stats.inProgress'), iconColor: 'text-amber-500', bgColor: 'bg-amber-50 dark:bg-amber-500/10' },
               { key: 'resolved' as const, icon: CheckCircle2, value: stats.resolved, label: t('support.tickets.stats.resolved'), iconColor: 'text-mintcom-green', bgColor: 'bg-mintcom-green/10 dark:bg-mintcom-green/' },
-              { key: 'total' as const, icon: BarChart3, value: stats.total, label: t('support.tickets.stats.total'), iconColor: 'text-purple-500', bgColor: 'bg-purple-50 dark:bg-purple-500/10' },
+              { key: 'total' as const, icon: BarChart3, value: stats.total, label: t('support.tickets.stats.total'), iconColor: 'text-slate-600 dark:text-slate-300', bgColor: 'bg-slate-50 dark:bg-slate-500/10' },
             ].map((stat) => (
               <motion.div
                 key={stat.key}

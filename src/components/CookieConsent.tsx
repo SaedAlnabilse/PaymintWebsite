@@ -280,7 +280,7 @@ export function CookieConsent() {
                         onClick={() => setExpandedSection(expandedSection === 'marketing' ? null : 'marketing')}
                         className="flex-1 flex items-center gap-3 text-left"
                       >
-                        <div className="p-2 rounded-lg bg-purple-500/10 text-purple-500">
+                        <div className="p-2 rounded-lg bg-blue-500/10 text-blue-500">
                           <Globe size={20} />
                         </div>
                         <span className="font-bold text-gray-900 dark:text-white text-sm">{t('cookies.types.marketing.title')}</span>

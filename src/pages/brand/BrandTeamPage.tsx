@@ -6,7 +6,6 @@ import { motion } from 'framer-motion';
 
 import {
     Users,
-    Shield,
     Search,
     MapPin,
     UserPlus,
@@ -18,9 +17,9 @@ import {
     List,
     X,
     MoreVertical,
-    UserCheck,
     AlertTriangle
 } from 'lucide-react';
+import { biIcon } from '../../components/ui/BiIcon';
 import api from '../../config/api';
 import toast from 'react-hot-toast';
 import { CustomSelect } from '../../components/CustomSelect';
@@ -366,9 +365,9 @@ export default function BrandTeamPage() {
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {[
-                    { label: t('owner.staff.totalUsers'), value: stats.total, icon: Users, color: 'text-gray-900 dark:text-white', bg: 'bg-gray-100 dark:bg-white/5' },
-                    { label: t('staff.roles.user'), value: stats.users, icon: UserCheck, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-                    { label: t('owner.staff.admins'), value: stats.admins, icon: Shield, color: 'text-mintcom-green', bg: 'bg-mintcom-green/10' },
+                    { label: t('owner.staff.totalUsers'), value: stats.total, icon: biIcon('bi-people'), color: 'text-mintcom-green', bg: 'bg-mintcom-green/10' },
+                    { label: t('staff.roles.user'), value: stats.users, icon: biIcon('bi-person-check'), color: 'text-mintcom-green', bg: 'bg-mintcom-green/10' },
+                    { label: t('owner.staff.admins'), value: stats.admins, icon: biIcon('bi-shield-check'), color: 'text-mintcom-green', bg: 'bg-mintcom-green/10' },
                 ].map((stat, i) => (
                     <div
                         key={i}

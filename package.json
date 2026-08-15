@@ -21,6 +21,7 @@
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
     "axios": "^1.13.2",
+    "bootstrap-icons": "^1.13.1",
     "date-fns": "^4.1.0",
     "dompurify": "^3.4.12",
     "framer-motion": "^12.23.25",

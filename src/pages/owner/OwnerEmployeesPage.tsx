@@ -11,15 +11,14 @@ import {
     Trash2,
     UserPlus,
     MapPin,
-    Star,
     AlertTriangle,
     Grid3X3,
     List,
     MoreVertical,
-    UserCheck,
     ArrowUpDown,
   X
 } from 'lucide-react';
+
 import api from '../../config/api';
 import { EmployeeFormModal } from '../../components/forms/EmployeeFormModal';
 import { BusyOverlay } from '../../components/BusyOverlay';
@@ -33,6 +32,7 @@ import { retryTransientRequest } from '../../utils/retryTransientRequest';
 import { StatValue } from '../../components/ui/StatValue';
 import { StepUpVerifier } from '../../components/StepUpVerifier';
 import { reauthHeaders } from '../../services/stepUp';
+import { biIcon } from '../../components/ui/BiIcon';
 
 interface EmployeeAssignment {
     establishmentId: string;
@@ -375,7 +375,7 @@ export function OwnerEmployeesPage() {
             case 'ACCOUNT_OWNER':
                 return 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20';
             case 'ADMIN':
-                return 'bg-purple-500/10 text-purple-500 border-purple-500/20';
+                return 'bg-slate-500/10 text-slate-600 dark:text-slate-300 border-slate-500/20';
             case 'MANAGER':
                 return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
             default:
@@ -474,10 +474,10 @@ export function OwnerEmployeesPage() {
             {/* Stats Grid */}
             <div id="tour-stats-grid" className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {[
-                    { label: t('owner.staff.totalUsers'), info: t('owner.staff.usersInfo'), value: stats.total, icon: Users, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-                    { label: t('owner.staff.activeNow'), info: t('owner.staff.activeInfo'), value: stats.active, icon: UserCheck, color: 'text-mintcom-green', bg: 'bg-mintcom-green/10' },
-                    { label: t('owner.staff.admins'), info: t('owner.staff.adminsInfo'), value: stats.admins, icon: Shield, color: 'text-purple-500', bg: 'bg-purple-500/10' },
-                    { label: t('owner.staff.standardUsers'), info: t('owner.staff.standardInfo'), value: stats.staff, icon: Star, color: 'text-orange-500', bg: 'bg-orange-500/10' },
+                    { label: t('owner.staff.totalUsers'), info: t('owner.staff.usersInfo'), value: stats.total, icon: biIcon('bi-people'), color: 'text-mintcom-green', bg: 'bg-mintcom-green/10' },
+                    { label: t('owner.staff.activeNow'), info: t('owner.staff.activeInfo'), value: stats.active, icon: biIcon('bi-person-check'), color: 'text-mintcom-green', bg: 'bg-mintcom-green/10' },
+                    { label: t('owner.staff.admins'), info: t('owner.staff.adminsInfo'), value: stats.admins, icon: biIcon('bi-shield-check'), color: 'text-mintcom-green', bg: 'bg-mintcom-green/10' },
+                    { label: t('owner.staff.standardUsers'), info: t('owner.staff.standardInfo'), value: stats.staff, icon: biIcon('bi-person-badge'), color: 'text-mintcom-green', bg: 'bg-mintcom-green/10' },
                 ].map((stat, i) => (
                     <div
                         key={i}
@@ -487,7 +487,7 @@ export function OwnerEmployeesPage() {
                         <div className="relative z-10">
                             <div className="flex items-center gap-3 mb-2 sm:mb-3">
                                 <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl ${stat.bg} ${stat.color} flex items-center justify-center transition-transform duration-300`}>
-                                    <stat.icon size={16} className="sm:w-5 sm:h-5" />
+                                    <stat.icon size={18} />
                                 </div>
                             </div>
                             <div>

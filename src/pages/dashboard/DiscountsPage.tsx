@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
-import { Plus, Percent, DollarSign, Trash2, Edit2, Tag, ShieldAlert, Award, Grid3X3, List, ArrowUpDown, RotateCcw } from 'lucide-react';
+import { Plus, Percent, DollarSign, Trash2, Edit2, Tag, ShieldAlert, Grid3X3, List, ArrowUpDown, RotateCcw } from 'lucide-react';
+import { BiIcon } from '../../components/ui/BiIcon';
 import api from '../../config/api';
 import { useCurrency } from '../../context/CurrencyContext';
 import toast from 'react-hot-toast';
@@ -414,24 +415,24 @@ export function DiscountsPage() {
       {!isLoading && filteredDiscounts.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="group relative bg-white dark:bg-[#1E293B] border border-gray-200 dark:border-white/[0.03] rounded-2xl p-4 sm:p-5 flex items-center justify-between transition-all duration-300 overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 rounded-full blur-3xl opacity-0 transition-opacity duration-500 pointer-events-none" />
+            <div className="absolute top-0 right-0 w-32 h-32 bg-mintcom-green/5 rounded-full blur-3xl opacity-0 transition-opacity duration-500 pointer-events-none" />
             <div className="relative z-10">
               <p className="dashboard-stat-title mb-1 truncate">{t('discounts.allDiscounts', 'All Discounts')}</p>
               <StatValue value={stats.total} isInteger={true} className="text-2xl mt-1" />
             </div>
-            <div className="w-12 h-12 bg-purple-500/10 rounded-2xl flex items-center justify-center relative z-10 transition-transform">
-              <Award className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+            <div className="w-12 h-12 bg-mintcom-green/10 rounded-2xl flex items-center justify-center relative z-10 transition-transform">
+              <BiIcon icon="bi-percent" size={24} className="text-mintcom-green" />
             </div>
           </div>
 
           <div className="group relative bg-white dark:bg-[#1E293B] border border-gray-200 dark:border-white/[0.03] rounded-2xl p-4 sm:p-5 flex items-center justify-between transition-all duration-300 overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full blur-3xl opacity-0 transition-opacity duration-500 pointer-events-none" />
+            <div className="absolute top-0 right-0 w-32 h-32 bg-mintcom-green/5 rounded-full blur-3xl opacity-0 transition-opacity duration-500 pointer-events-none" />
             <div className="relative z-10">
               <p className="dashboard-stat-title mb-1 truncate">{t('discounts.form.managerOnly')}</p>
               <StatValue value={stats.adminOnly} isInteger={true} className="text-2xl text-amber-600 dark:text-yellow-400 mt-1" />
             </div>
-            <div className="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center relative z-10 transition-transform">
-              <ShieldAlert className="w-6 h-6 text-amber-600 dark:text-yellow-400" />
+            <div className="w-12 h-12 bg-mintcom-green/10 rounded-2xl flex items-center justify-center relative z-10 transition-transform">
+              <BiIcon icon="bi-shield-lock" size={24} className="text-mintcom-green" />
             </div>
           </div>
         </div>
@@ -487,7 +488,7 @@ export function DiscountsPage() {
                     <div className="absolute top-0 right-0 w-32 h-32 bg-mintcom-green/5 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
 
                     <div className="flex justify-between items-start mb-6 relative z-10">
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110 ${discount.type === 'percentage' ? 'bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400' : 'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400'}`}>
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110 ${discount.type === 'percentage' ? 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400' : 'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400'}`}>
                         {discount.type === 'percentage' ? <Percent size={20} /> : <DollarSign size={20} />}
                       </div>
 
@@ -609,7 +610,7 @@ export function DiscountsPage() {
                       >
                           <td className="px-6 py-4 text-start">
                             <div className="flex items-center gap-4">
-                              <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110 shrink-0 ${discount.type === 'percentage' ? 'bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400' : 'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400'}`}>
+                              <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110 shrink-0 ${discount.type === 'percentage' ? 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400' : 'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400'}`}>
                                 {discount.type === 'percentage' ? <Percent size={18} /> : <DollarSign size={18} />}
                               </div>
                               <div>

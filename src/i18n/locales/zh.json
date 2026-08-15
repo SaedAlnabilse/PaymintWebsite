@@ -4381,7 +4381,31 @@
       "card_added_and_assigned": "已添加银行卡并分配给该门店",
       "cardholder": "持卡人",
       "change_card": "更换银行卡",
-      "saved_card": "已保存"
+      "saved_card": "已保存",
+      "invoice": {
+        "action": "发票",
+        "title": "订阅发票",
+        "summaryTitle": "订阅摘要",
+        "download": "下载",
+        "print": "打印 / 保存 PDF",
+        "historyTitle": "发票记录",
+        "printHistory": "打印记录",
+        "downloadHistory": "全部下载",
+        "exportCsv": "CSV",
+        "exportFailed": "无法导出发票记录，请重试。",
+        "popupBlocked": "请允许本站弹出窗口以进行打印。",
+        "loadFailed": "无法加载发票",
+        "emptyTitle": "暂无发票",
+        "emptyBody": "该门店首次成功付款后，系统会自动开具带编号的发票。",
+        "viewSummary": "查看订阅摘要",
+        "view": "查看",
+        "colNumber": "发票",
+        "colDate": "日期",
+        "colPeriod": "周期",
+        "colStatus": "状态",
+        "colAmount": "金额",
+        "pageTotal": "本页：{{amount}}"
+      }
     },
     "brands": {
       "activeBrands": "启用中的品牌",

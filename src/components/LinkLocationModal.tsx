@@ -165,7 +165,7 @@ export function LinkLocationModal({
     const getRoleBadgeColor = (role: string) => {
         switch (role?.toUpperCase()) {
             case 'ADMIN': return 'bg-mintcom-green/10 text-mintcom-green border-mintcom-green/20';
-            case 'MANAGER': return 'bg-purple-500/10 text-purple-500 border-purple-500/20';
+            case 'MANAGER': return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
             default: return 'bg-gray-500/10 text-gray-500 border-gray-500/20';
         }
     };

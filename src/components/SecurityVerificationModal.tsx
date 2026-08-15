@@ -154,8 +154,8 @@ export function SecurityVerificationModal({
                     warning: t('security.modes.dissolveBrand.warning', { name: targetName }),
                     buttonText: t('security.modes.dissolveBrand.button'),
                     icon: Building2,
-                    color: 'text-purple-500',
-                    bg: 'bg-purple-500/10',
+                    color: 'text-blue-500',
+                    bg: 'bg-blue-500/10',
                     endpoint: `/api/brands/${targetId}/dissolve`,
                     method: 'delete' as const,
                     action: 'dissolve-brand' as StepUpAction

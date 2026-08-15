@@ -12,7 +12,6 @@ import {
   ShoppingCart,
   Clock,
   ChevronRight,
-  TrendingUp,
   MoreVertical,
   PlayCircle,
   History,
@@ -21,6 +20,7 @@ import {
   ArrowUpDown,
   ExternalLink
 } from 'lucide-react';
+import { biIcon } from '../../components/ui/BiIcon';
 import api from '../../config/api';
 import { ConfirmModal } from '../../components/ConfirmModal';
 import { OrderDetailModal } from '../../components/OrderDetailModal';
@@ -1380,7 +1380,7 @@ export function OrdersPage() {
             sub: statusFilter === 'HELD'
               ? t('orders.status.onHold')
               : t('dashboard.stats.completedOrders', { defaultValue: 'Completed orders' }),
-            icon: TrendingUp,
+            icon: biIcon('bi-wallet2'),
             color: 'text-mintcom-green',
             bg: 'bg-mintcom-green/10',
             onClick: undefined,
@@ -1395,9 +1395,9 @@ export function OrdersPage() {
             sub: statusFilter === 'HELD'
               ? t('orders.status.onHold')
               : t('dashboard.stats.completedOrders', { defaultValue: 'Completed orders' }),
-            icon: ShoppingCart,
-            color: 'text-blue-500',
-            bg: 'bg-blue-500/10',
+            icon: biIcon('bi-receipt-cutoff'),
+            color: 'text-mintcom-green',
+            bg: 'bg-mintcom-green/10',
             onClick: () => { setStatusFilter('all'); setPage(1); },
             active: statusFilter === 'all'
           },
@@ -1405,9 +1405,9 @@ export function OrdersPage() {
             label: t('orders.kpi.onHold'),
             value: totalHeldCount,
             isCurrency: false,
-            icon: Clock,
-            color: 'text-orange-500',
-            bg: 'bg-orange-500/10',
+            icon: biIcon('bi-pause-circle'),
+            color: 'text-mintcom-green',
+            bg: 'bg-mintcom-green/10',
             onClick: () => { setStatusFilter('HELD'); setPaymentFilter('all'); setPage(1); },
             active: statusFilter === 'HELD'
           },

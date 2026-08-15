@@ -1505,15 +1505,15 @@ export function EmployeeFormModal({
                                     });
                                   }
                                 }}
-                                className={`w-full flex items-center justify-between p-3 rounded-lg text-left transition-colors ${role === 'ADMIN' ? 'bg-purple-500/10' : 'hover:bg-gray-50 dark:hover:bg-white/5'}`}
+                                className={`w-full flex items-center justify-between p-3 rounded-lg text-left transition-colors ${role === 'ADMIN' ? 'bg-blue-500/10' : 'hover:bg-gray-50 dark:hover:bg-white/5'}`}
                               >
                                 <div>
-                                  <span className={`text-xs font-bold ${role === 'ADMIN' ? 'text-purple-500' : 'text-gray-700 dark:text-gray-300'}`}>
+                                  <span className={`text-xs font-bold ${role === 'ADMIN' ? 'text-blue-500' : 'text-gray-700 dark:text-gray-300'}`}>
                                     {t('staff.form.adminRole')}
                                   </span>
                                   <p className="text-xs font-bold text-gray-500 mt-0.5">{t('staff.form.adminDesc')}</p>
                                 </div>
-                                {role === 'ADMIN' && <Check size={14} className="text-purple-500" />}
+                                {role === 'ADMIN' && <Check size={14} className="text-blue-500" />}
                               </button>
                             )}
 

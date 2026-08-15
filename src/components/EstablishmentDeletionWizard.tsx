@@ -435,14 +435,14 @@ export function EstablishmentDeletionWizard({
                                 exit={{ opacity: 0, x: -20 }}
                                 className="space-y-6"
                             >
-                                <div className="bg-purple-50 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/20 rounded-2xl p-4">
+                                <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 rounded-2xl p-4">
                                     <div className="flex items-start gap-3">
-                                        <Calendar className="text-purple-500 flex-shrink-0 mt-0.5" size={20} />
+                                        <Calendar className="text-blue-500 flex-shrink-0 mt-0.5" size={20} />
                                         <div>
-                                            <h3 className="font-bold text-purple-700 dark:text-purple-400">
+                                            <h3 className="font-bold text-blue-700 dark:text-blue-400">
                                                 {t('security.deletion.confirm.gracePeriod')}
                                             </h3>
-                                            <p className="text-purple-600 dark:text-purple-300 text-sm mt-1">
+                                            <p className="text-blue-600 dark:text-blue-300 text-sm mt-1">
                                                 {t('security.deletion.confirm.gracePeriodDesc')}
                                             </p>
                                         </div>

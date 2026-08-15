@@ -5,17 +5,14 @@ import { useTranslation } from 'react-i18next';
 
 import {
     Store,
-    Users,
     Search,
-    ShoppingBag,
-    DollarSign,
-    Activity,
     MoreVertical,
     Eye,
     X,
     Trash2,
     Plus
 } from 'lucide-react';
+import { biIcon } from '../../components/ui/BiIcon';
 import api from '../../config/api';
 import toast from 'react-hot-toast';
 import { CustomSelect } from '../../components/CustomSelect';
@@ -420,11 +417,11 @@ export function BrandLocationsPage() {
             {/* Stats Grid */}
             <div className={`grid grid-cols-2 lg:grid-cols-5 gap-4 transition-opacity duration-200 ${isRefreshing ? 'opacity-70' : 'opacity-100'}`}>
                 {[
-                    { label: t('owner.locations.total'), value: stats.totalLocations, icon: Store, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-                    { label: t('owner.locations.active'), value: stats.activeLocations, icon: Activity, color: 'text-mintcom-green', bg: 'bg-mintcom-green/' },
-                    { label: t('brand.dashboard.totalRevenue'), value: stats.totalRevenue, icon: DollarSign, color: 'text-purple-500', bg: 'bg-purple-500/10' },
-                    { label: t('owner.menu.employees'), value: stats.totalEmployees, icon: Users, color: 'text-orange-500', bg: 'bg-orange-500/10' },
-                    { label: t('brand.dashboard.orders'), value: stats.totalOrders, icon: ShoppingBag, color: 'text-pink-500', bg: 'bg-pink-500/10' },
+                    { label: t('owner.locations.total'), value: stats.totalLocations, icon: biIcon('bi-geo-alt'), color: 'text-mintcom-green', bg: 'bg-mintcom-green/10' },
+                    { label: t('owner.locations.active'), value: stats.activeLocations, icon: biIcon('bi-check-circle'), color: 'text-mintcom-green', bg: 'bg-mintcom-green/10' },
+                    { label: t('brand.dashboard.totalRevenue'), value: stats.totalRevenue, icon: biIcon('bi-wallet2'), color: 'text-mintcom-green', bg: 'bg-mintcom-green/10' },
+                    { label: t('owner.menu.employees'), value: stats.totalEmployees, icon: biIcon('bi-people'), color: 'text-mintcom-green', bg: 'bg-mintcom-green/10' },
+                    { label: t('brand.dashboard.orders'), value: stats.totalOrders, icon: biIcon('bi-receipt-cutoff'), color: 'text-mintcom-green', bg: 'bg-mintcom-green/10' },
                 ].map((stat, i) => (
                     <div
                         key={i}

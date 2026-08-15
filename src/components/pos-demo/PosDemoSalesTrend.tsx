@@ -497,10 +497,14 @@ export function DemoSalesTrendChart({
               </span>
             </div>
 
-            {/* Plot + x labels under dots */}
-            <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-              <div className="relative min-h-0 min-w-[260px] flex-1">
-                <svg
+            {/* Plot + x labels under dots — horizontally scrollable like POS when many points */}
+            <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-x-auto overflow-y-hidden overscroll-contain">
+              <div
+                className="flex h-full min-h-0 flex-1 flex-col"
+                style={{ width: `max(100%, ${Math.max(260, (data.length - 1) * 56 + 40)}px)` }}
+              >
+                <div className="relative min-h-0 flex-1">
+                  <svg
                   viewBox={`0 0 ${W} ${H}`}
                   className="h-full w-full"
                   preserveAspectRatio="none"
@@ -667,6 +671,7 @@ export function DemoSalesTrendChart({
                   );
                 })}
               </div>
+            </div>
             </div>
           </>
         )}

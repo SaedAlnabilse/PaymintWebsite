@@ -11,7 +11,6 @@ import { AlertsBell } from './notifications/AlertsBell';
 import { useTranslation } from 'react-i18next';
 import {
     LayoutDashboard,
-    Bell,
     Store,
     Users,
     LogOut,
@@ -77,7 +76,6 @@ export function BrandLayout() {
 
     const menuItems = useMemo(() => brandId ? [
         { path: `/brand/${brandId}`, label: t('brand.menu.overview'), icon: LayoutDashboard, description: t('brand.menu.overviewDesc') },
-        { path: `/brand/${brandId}/notifications`, label: t('notifications.menu.title'), icon: Bell, description: t('notifications.title') },
         { path: `/brand/${brandId}/locations`, label: t('brand.menu.locations'), icon: Store, description: t('brand.menu.locationsDesc') },
         { path: `/brand/${brandId}/team`, label: t('brand.menu.team'), icon: Users, description: t('brand.menu.teamDesc') },
     ] : [], [brandId, t]);
@@ -392,7 +390,6 @@ export function BrandLayout() {
                                     scope="brand"
                                     establishmentIds={brandEstablishmentIds}
                                     locations={brandLocations}
-                                    placement="sidebar"
                                 />
                             </div>
 
@@ -433,14 +430,13 @@ export function BrandLayout() {
                                 scope="brand"
                                 establishmentIds={brandEstablishmentIds}
                                 locations={brandLocations}
-                                placement="sidebar"
                             />
                             <div className="relative group">
                                 <LanguageSwitcher
-                                    compact
-                                    showGlobeIcon={false}
+                                    iconOnly
+                                    iconSize={24}
                                     dropdownDirection="right"
-                                    buttonClassName="w-12 h-12 rounded-xl !px-0 !py-0 flex items-center justify-center gap-0 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white"
+                                    buttonClassName="w-12 h-12 rounded-xl !px-0 !py-0 flex items-center justify-center gap-0 !bg-transparent dark:!bg-transparent !border-transparent text-gray-500 dark:text-gray-400 hover:!bg-gray-100 dark:hover:!bg-white/5 hover:text-gray-900 dark:hover:text-white"
                                 />
                                 <div className="absolute left-full rtl:left-auto rtl:right-full top-1/2 -translate-y-1/2 ml-2 rtl:ml-0 rtl:mr-2 px-3 py-1.5 bg-gray-900/90 backdrop-blur-md text-white text-xs font-sans font-medium tracking-normal rounded-lg opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all duration-300 pointer-events-none z-[80] whitespace-nowrap border border-white/10 shadow-xl translate-x-1 rtl:-translate-x-1 group-hover:translate-x-0 group-focus-within:translate-x-0">
                                     {t('common.aria.changeLanguage')}

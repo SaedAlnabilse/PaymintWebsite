@@ -12,7 +12,6 @@ import { AlertsBell } from './notifications/AlertsBell';
 import { useTranslation } from 'react-i18next';
 import {
     LayoutDashboard,
-    Bell,
     Store,
     Users,
     CreditCard,
@@ -49,7 +48,6 @@ export function OwnerLayout() {
 
     const menuItems = useMemo(() => [
         { path: '/owner', label: t('owner.menu.overview'), icon: LayoutDashboard },
-        { path: '/owner/notifications', label: t('notifications.menu.title'), icon: Bell },
         { path: '/owner/establishments', label: t('owner.menu.locations'), icon: Store },
         { path: '/owner/brands', label: t('owner.menu.brands'), icon: Building2 },
         { path: '/owner/employees', label: t('owner.menu.employees'), icon: Users },
@@ -303,7 +301,7 @@ export function OwnerLayout() {
                                 <span className="text-sm font-bold text-gray-500 dark:text-gray-400">
                                     {t('notifications.menu.title')}
                                 </span>
-                                <AlertsBell scope="owner" locations={ownerLocations} placement="sidebar" />
+                                <AlertsBell scope="owner" locations={ownerLocations} />
                             </div>
 
                             {/* Menu Items */}
@@ -339,13 +337,13 @@ export function OwnerLayout() {
                         </div>
                     ) : (
                         <div className="flex flex-col items-center gap-2">
-                            <AlertsBell scope="owner" locations={ownerLocations} placement="sidebar" />
+                            <AlertsBell scope="owner" locations={ownerLocations} />
                             <div className="relative group">
                                 <LanguageSwitcher
-                                    compact
-                                    showGlobeIcon={false}
+                                    iconOnly
+                                    iconSize={24}
                                     dropdownDirection="right"
-                                    buttonClassName="w-12 h-12 rounded-xl !px-0 !py-0 flex items-center justify-center gap-0 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white"
+                                    buttonClassName="w-12 h-12 rounded-xl !px-0 !py-0 flex items-center justify-center gap-0 !bg-transparent dark:!bg-transparent !border-transparent text-gray-500 dark:text-gray-400 hover:!bg-gray-100 dark:hover:!bg-white/5 hover:text-gray-900 dark:hover:text-white"
                                 />
                                 <div className="absolute left-full rtl:left-auto rtl:right-full top-1/2 -translate-y-1/2 ml-2 rtl:ml-0 rtl:mr-2 px-3 py-1.5 bg-gray-900/90 backdrop-blur-md text-white text-xs font-sans font-medium tracking-normal rounded-lg opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all duration-300 pointer-events-none z-[80] whitespace-nowrap border border-white/10 shadow-xl translate-x-1 rtl:-translate-x-1 group-hover:translate-x-0 group-focus-within:translate-x-0">
                                     {t('common.aria.changeLanguage')}

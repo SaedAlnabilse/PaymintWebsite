@@ -847,7 +847,7 @@ export function DemoDashboardScreen({
         <div className="flex min-h-0 min-w-0 flex-1 flex-row gap-4 overflow-hidden">
           {/* LEFT ~1/3 — Net / Cash / Card */}
           <div className="flex w-[32%] min-w-0 shrink-0 flex-col gap-3">
-            <div className="flex min-h-0 flex-1 flex-col justify-between rounded-xl bg-mintcom-green p-4 !text-white">
+            <div className="flex min-h-0 flex-1 flex-col rounded-xl bg-mintcom-green p-4 !text-white">
               <div className="flex items-center gap-3">
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white text-mintcom-green">
                   <TrendingUp size={22} strokeWidth={2.25} className="text-mintcom-green" />
@@ -859,7 +859,7 @@ export function DemoDashboardScreen({
                   </p>
                 </div>
               </div>
-              <p className="mt-3 text-center text-[28px] font-extrabold tabular-nums tracking-tight !text-white">
+              <p className="flex flex-1 items-center justify-center text-center text-[28px] font-extrabold tabular-nums tracking-tight !text-white">
                 {money(displayNetSales)}
               </p>
             </div>
@@ -1152,7 +1152,7 @@ function MetricSalesCard({
 }) {
   // Static POS SalesCard — equal height via parent flex, fixed padding/type
   return (
-    <div className="flex min-h-0 flex-1 flex-col justify-between rounded-xl border border-[#D3D6DE] bg-[#E8E8E8] p-4 dark:border-white/10 dark:bg-mintcom-dark">
+    <div className="flex min-h-0 flex-1 flex-col rounded-xl border border-[#D3D6DE] bg-[#E8E8E8] p-4 dark:border-white/10 dark:bg-mintcom-dark">
       <div className="flex items-center gap-3">
         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-mintcom-green !text-white [&_svg]:text-white">
           {icon}
@@ -1164,7 +1164,7 @@ function MetricSalesCard({
           </p>
         </div>
       </div>
-      <p className="mt-2 text-center text-[26px] font-bold tabular-nums tracking-normal text-[#1F1D2B] dark:text-white">
+      <p className="flex flex-1 items-center justify-center text-center text-[26px] font-bold tabular-nums tracking-normal text-[#1F1D2B] dark:text-white">
         {value}
       </p>
     </div>

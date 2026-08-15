@@ -2,15 +2,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { isToday, isYesterday } from 'date-fns';
 import {
   AlertCircle,
-  Bell,
   BellOff,
-  Boxes,
-  CircleDollarSign,
   Loader2,
   RefreshCw,
-  RotateCcw,
   Search,
-  Sparkles,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
@@ -31,6 +26,7 @@ import {
   resolveAlertDeepLink,
   type AlertCategory,
 } from './alertPresentation';
+import { BiIcon } from '../ui/BiIcon';
 
 export interface BackofficeAlertLocation {
   id: string;
@@ -296,31 +292,31 @@ export function BackofficeAlertsView({
     {
       id: 'all',
       count: stats.total,
-      activeClass: 'bg-slate-600 text-white shadow-slate-500/20',
+      activeClass: 'bg-slate-600 text-white',
       inactiveClass: 'bg-slate-500/10 text-slate-700 dark:text-slate-300',
     },
     {
       id: 'cash',
       count: stats.cash,
-      activeClass: 'bg-red-500 text-white shadow-red-500/20',
-      inactiveClass: 'bg-red-500/10 text-red-700 dark:text-red-300',
+      activeClass: 'bg-blue-500 text-white',
+      inactiveClass: 'bg-blue-500/10 text-blue-700 dark:text-blue-400',
     },
     {
       id: 'stock',
       count: stats.stock,
-      activeClass: 'bg-amber-500 text-white shadow-amber-500/20',
+      activeClass: 'bg-amber-500 text-white',
       inactiveClass: 'bg-amber-500/10 text-amber-700 dark:text-amber-300',
     },
     {
       id: 'refunds',
       count: stats.refunds,
-      activeClass: 'bg-violet-500 text-white shadow-violet-500/20',
-      inactiveClass: 'bg-violet-500/10 text-violet-700 dark:text-violet-300',
+      activeClass: 'bg-red-500 text-white',
+      inactiveClass: 'bg-red-500/10 text-red-700 dark:text-red-300',
     },
     {
       id: 'updates',
       count: stats.updates,
-      activeClass: 'bg-mintcom-green text-emerald-950 shadow-emerald-500/20',
+      activeClass: 'bg-mintcom-green text-emerald-950',
       inactiveClass: 'bg-mintcom-green/10 text-emerald-800 dark:text-mintcom-green',
     },
   ];
@@ -329,36 +325,37 @@ export function BackofficeAlertsView({
     {
       id: 'total',
       value: stats.total,
-      Icon: Bell,
-      tone: 'text-slate-600 dark:text-slate-300',
-      background: 'bg-slate-500/10',
+      icon: 'bi-bell',
+      tone: 'text-mintcom-green',
+      background: 'bg-mintcom-green/10',
     },
     {
       id: 'cash',
       value: stats.cash,
-      Icon: CircleDollarSign,
-      tone: 'text-red-600 dark:text-red-400',
-      background: 'bg-red-500/10',
+      icon: 'bi-cash-coin',
+      tone: 'text-mintcom-green',
+      background: 'bg-mintcom-green/10',
     },
     {
       id: 'stock',
       value: stats.stock,
-      Icon: Boxes,
-      tone: 'text-amber-600 dark:text-amber-400',
-      background: 'bg-amber-500/10',
+      icon: 'bi-box-seam',
+      tone: 'text-mintcom-green',
+      background: 'bg-mintcom-green/10',
     },
     {
       id: 'refunds',
       value: stats.refunds,
-      Icon: RotateCcw,
-      tone: 'text-violet-600 dark:text-violet-400',
-      background: 'bg-violet-500/10',
+      icon: 'bi-arrow-counterclockwise',
+      // Refunds read red everywhere, matching the sales report.
+      tone: 'text-red-500',
+      background: 'bg-red-500/10',
     },
     {
       id: 'updates',
       value: stats.updates,
-      Icon: Sparkles,
-      tone: 'text-emerald-700 dark:text-mintcom-green',
+      icon: 'bi-arrow-repeat',
+      tone: 'text-mintcom-green',
       background: 'bg-mintcom-green/10',
     },
   ];
@@ -483,14 +480,14 @@ export function BackofficeAlertsView({
       </header>
 
       {trialAlertsPresent && (
-        <div className="flex gap-3 rounded-2xl border border-violet-200 bg-violet-50 px-4 py-3 text-sm text-violet-800 dark:border-violet-500/20 dark:bg-violet-500/10 dark:text-violet-200">
+        <div className="flex gap-3 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800 dark:border-blue-500/20 dark:bg-blue-500/10 dark:text-blue-200">
           <AlertCircle size={18} className="mt-0.5 shrink-0" />
           <p>{t('notifications.trial.notice')}</p>
         </div>
       )}
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        {statCards.map(({ id, value, Icon, tone, background }) => (
+        {statCards.map(({ id, value, icon, tone, background }) => (
           <div
             key={id}
             className="relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-white/[0.03] dark:bg-[#1E293B] sm:p-5"
@@ -501,7 +498,7 @@ export function BackofficeAlertsView({
             />
             <div className="relative z-10">
               <div className={`mb-3 flex h-10 w-10 items-center justify-center rounded-xl ${background} ${tone}`}>
-                <Icon size={20} aria-hidden="true" />
+                <BiIcon icon={icon} size={20} />
               </div>
               <p className="dashboard-stat-title mb-1">
                 {t(`notifications.stats.${id}`)}
@@ -541,7 +538,7 @@ export function BackofficeAlertsView({
               onClick={() => setActiveTab(tab.id)}
               className={`inline-flex w-full items-center justify-center gap-2 rounded-xl px-3.5 py-2.5 text-sm font-bold transition-all duration-200 ${
                 activeTab === tab.id
-                  ? `${tab.activeClass} shadow-lg`
+                  ? tab.activeClass
                   : `${tab.inactiveClass} hover:brightness-95 dark:hover:brightness-110`
               }`}
             >

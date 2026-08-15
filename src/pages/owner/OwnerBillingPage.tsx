@@ -2,9 +2,12 @@ import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { Plus, CreditCard, DollarSign, Trash2, AlertCircle, Calendar, CheckCircle2, XCircle, Zap, MoreVertical, Eye, ArrowUpDown, RotateCcw, Check } from 'lucide-react';
+import { Plus, CreditCard, DollarSign, Trash2, AlertCircle, Calendar, CheckCircle2, XCircle, Zap, MoreVertical, Eye, ArrowUpDown, RotateCcw, Check, FileText } from 'lucide-react';
+
 import api from '../../config/api';
 import { AddPaymentMethodModal } from '../../components/AddPaymentMethodModal';
+import { type SubscriptionInvoiceData } from '../../components/billing/SubscriptionInvoice';
+import { InvoiceHistoryModal } from '../../components/billing/InvoiceHistoryModal';
 import { SecurityVerificationModal } from '../../components/SecurityVerificationModal';
 import { BusyOverlay } from '../../components/BusyOverlay';
 import { useAuth } from '../../context/AuthContext';
@@ -16,6 +19,7 @@ import {
     requiresPaidReactivation,
 } from '../../utils/subscriptionRecovery';
 import { getDaysUntilDeletion } from '../../utils/deletionRecovery';
+import { biIcon } from '../../components/ui/BiIcon';
 
 interface SavedCard {
     id: string;
@@ -83,6 +87,8 @@ export function OwnerBillingPage() {
     const [addCardEstablishmentId, setAddCardEstablishmentId] = useState<string | null>(null);
     const [addCardEstablishmentName, setAddCardEstablishmentName] = useState<string | null>(null);
     const [isAssigningCard, setIsAssigningCard] = useState(false);
+    const [invoiceHistoryFor, setInvoiceHistoryFor] = useState<{ id: string; name: string } | null>(null);
+    const [invoiceSummary, setInvoiceSummary] = useState<SubscriptionInvoiceData | null>(null);
 
     const { refreshEstablishments, setCurrentEstablishment, establishments } = useAuth();
 
@@ -387,6 +393,70 @@ export function OwnerBillingPage() {
         return index === 0 ? FIRST_LOCATION_PRICE : ADDITIONAL_LOCATION_PRICE;
     };
 
+    /**
+     * Builds the *summary* document shown when a location has never been
+     * charged, so nothing has been issued for it yet.
+     *
+     * This is deliberately not an invoice: it carries no number, is priced from
+     * today's plan table, and is labelled so it cannot be filed as a tax
+     * document. Real invoices come from the server and are never recomputed.
+     */
+    const buildSummaryData = (est: EstablishmentBilling, index: number): SubscriptionInvoiceData => {
+        const isYearly = est.billingCycle === 'yearly';
+        const monthlyRate = index === 0 ? FIRST_LOCATION_PRICE : ADDITIONAL_LOCATION_PRICE;
+        const total = getEstablishmentPrice(est, index);
+        const quantity = isYearly ? 12 : 1;
+        const subtotal = monthlyRate * quantity;
+
+        return {
+            number: null,
+            status: est.subscriptionStatus?.toUpperCase() || 'ACTIVE',
+            issueDate: new Date(),
+            currency: 'USD',
+            subtotal,
+            discount: Math.max(0, subtotal - total),
+            taxAmount: 0,
+            total,
+            cardBrand: est.paymentCard?.brand || null,
+            cardLast4: est.paymentCard?.last4 || null,
+            isEstimate: true,
+            nextBillDate: est.nextBillDate || est.trialEndsAt || null,
+            establishmentId: est.id,
+            establishmentName: est.name,
+            snapshot: {
+                seller: {
+                    name: 'Mintcom POS',
+                    address: 'Amman, Jordan',
+                    email: 'support@mintcompos.com',
+                },
+                billTo: {
+                    name: est.name,
+                    reference: est.establishmentLoginId || null,
+                },
+                billingCycle: isYearly ? 'yearly' : 'monthly',
+                lineItems: [{
+                    description: isYearly
+                        ? 'Mintcom POS — Premium Plan (Yearly)'
+                        : 'Mintcom POS — Premium Plan (Monthly)',
+                    detail: isYearly
+                        ? 'Full software license · 12-month subscription'
+                        : 'Full software license · 1-month subscription',
+                    unitPrice: monthlyRate,
+                    quantity,
+                    amount: subtotal,
+                }],
+                terms: 'No charge is due until the date above. Prices shown are the current plan rates and may change before the first charge.',
+            },
+        };
+    };
+
+    const openInvoiceForEstablishment = (est: EstablishmentBilling) => {
+        const index = billingData?.establishments.findIndex(e => e.id === est.id) ?? 0;
+        setActiveMenu(null);
+        setInvoiceSummary(buildSummaryData(est, index < 0 ? 0 : index));
+        setInvoiceHistoryFor({ id: est.id, name: est.name });
+    };
+
     /** Split "Brand — Branch" so long QA names stay readable without ellipsis. */
     const splitLocationName = (name: string) => {
         const seps = [' — ', ' – ', ' - '];
@@ -515,16 +585,16 @@ export function OwnerBillingPage() {
             {/* Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {[
-                    { label: t('owner.billing.cards'), value: billingData?.savedCards.length || 0, icon: CreditCard, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-                    { label: t('owner.billing.plans'), value: billingData?.establishments.filter(e => e.subscriptionStatus === 'ACTIVE' || e.subscriptionStatus === 'TRIAL').length || 0, icon: Zap, color: 'text-mintcom-green', bg: 'bg-mintcom-green/10' },
+                    { label: t('owner.billing.cards'), value: billingData?.savedCards.length || 0, icon: biIcon('bi-credit-card'), color: 'text-mintcom-green', bg: 'bg-mintcom-green/10' },
+                    { label: t('owner.billing.plans'), value: billingData?.establishments.filter(e => e.subscriptionStatus === 'ACTIVE' || e.subscriptionStatus === 'TRIAL').length || 0, icon: biIcon('bi-lightning-charge'), color: 'text-mintcom-green', bg: 'bg-mintcom-green/10' },
                     {
                         label: t('owner.billing.nextBill'),
                         value: tableNextBillDate
                             ? formatBillingDate(tableNextBillDate)
                             : t('owner.billing.noBill'),
-                        icon: Calendar,
-                        color: 'text-purple-500',
-                        bg: 'bg-purple-500/10'
+                        icon: biIcon('bi-calendar-event'),
+                        color: 'text-mintcom-green',
+                        bg: 'bg-mintcom-green/10'
                     },
                 ].map((stat, i) => (
                     <motion.div
@@ -853,6 +923,13 @@ export function OwnerBillingPage() {
                                                             <Eye size={14} />
                                                             {t('owner.billing.viewDashboard')}
                                                         </button>
+                                                        <button
+                                                            onClick={() => openInvoiceForEstablishment(est)}
+                                                            className="w-full px-4 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 tracking-wide transition-colors flex items-center gap-2"
+                                                        >
+                                                            <FileText size={14} />
+                                                            {t('owner.billing.invoice.action', { defaultValue: 'Invoices' })}
+                                                        </button>
                                                         {!isCanceledEstablishment(est) && (
                                                             <button
                                                                 onClick={() => {
@@ -1057,6 +1134,12 @@ export function OwnerBillingPage() {
                     </AnimatePresence>,
                     document.body,
                 )}
+
+            <InvoiceHistoryModal
+                establishment={invoiceHistoryFor}
+                fallbackSummary={invoiceSummary}
+                onClose={() => setInvoiceHistoryFor(null)}
+            />
 
             <SecurityVerificationModal
                 isOpen={securityModal.isOpen}

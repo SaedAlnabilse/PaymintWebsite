@@ -948,8 +948,8 @@ const DeviceMockup = ({ t }: { t: any }) => {
       value: '6',
       sub: null as string | null,
       icon: Store,
-      iconColor: 'text-purple-400',
-      iconBg: 'bg-purple-500/10',
+      iconColor: 'text-blue-400',
+      iconBg: 'bg-blue-500/10',
     },
     {
       label: t('owner.overview.totalBrands', 'Total Brands'),

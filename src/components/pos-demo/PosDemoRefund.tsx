@@ -177,7 +177,7 @@ export function DemoRefundModal({ open, orderNo, orderTotal, lines, onClose, onC
   }
 
   return (
-    <Overlay onClose={onClose} wide={mode === 'item' && canItem}>
+    <Overlay onClose={onClose}>
       <div className="flex shrink-0 items-center justify-between border-b border-gray-100 px-4 py-3 dark:border-white/8">
         <div className="flex items-center gap-2">
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-mintcom-red/15 text-mintcom-red">
@@ -208,7 +208,7 @@ export function DemoRefundModal({ open, orderNo, orderTotal, lines, onClose, onC
                 setMode('item');
                 setError('');
               }}
-              className={`inline-flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-[12px] font-bold ${
+              className={`inline-flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-[12px] font-bold ${
                 mode === 'item'
                   ? 'bg-mintcom-red/15 text-mintcom-red shadow-sm'
                   : 'text-text-secondary'
@@ -222,7 +222,7 @@ export function DemoRefundModal({ open, orderNo, orderTotal, lines, onClose, onC
                 setMode('order');
                 setError('');
               }}
-              className={`inline-flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-[12px] font-bold ${
+              className={`inline-flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-[12px] font-bold ${
                 mode === 'order'
                   ? 'bg-mintcom-green/15 text-mintcom-green shadow-sm'
                   : 'text-text-secondary'
@@ -264,10 +264,7 @@ export function DemoRefundModal({ open, orderNo, orderTotal, lines, onClose, onC
                     onClick={() => toggleLine(line.id, line.remaining)}
                     className="min-w-0 flex-1 text-start"
                   >
-                    <p className="truncate text-[13px] font-bold dark:text-white">
-                      {line.emoji ? `${line.emoji} ` : ''}
-                      {line.name}
-                    </p>
+                    <p className="truncate text-[13px] font-bold dark:text-white">{line.name}</p>
                     <p className="text-[11px] text-text-tertiary">
                       Remaining: {isOn ? line.remaining - q : line.remaining} ·{' '}
                       {money(line.unitPrice)}/ea
@@ -376,11 +373,9 @@ export function DemoRefundModal({ open, orderNo, orderTotal, lines, onClose, onC
 function Overlay({
   children,
   onClose,
-  wide,
 }: {
   children: ReactNode;
   onClose: () => void;
-  wide?: boolean;
 }) {
   return (
     <div className="absolute inset-0 z-[90] flex items-center justify-center bg-black/50 p-2 backdrop-blur-sm sm:p-2.5">
@@ -388,9 +383,7 @@ function Overlay({
       <motion.div
         initial={{ opacity: 0, scale: 0.96, y: 8 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        className={`relative z-10 flex max-h-[min(520px,88%)] w-full flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl dark:border-white/10 dark:bg-mintcom-surface ${
-          wide ? 'max-w-[min(94%,420px)]' : 'max-w-[min(94%,380px)]'
-        }`}
+        className="relative z-10 flex max-h-[min(520px,88%)] w-full max-w-[min(94%,420px)] flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl dark:border-white/10 dark:bg-mintcom-surface"
       >
         {children}
       </motion.div>

@@ -1497,8 +1497,8 @@ function BranchShot() {
                 label: 'Linked locations',
                 value: String(linkedCount),
                 Icon: Link2,
-                color: 'text-purple-500',
-                bg: 'bg-purple-500/10',
+                color: 'text-blue-500',
+                bg: 'bg-blue-500/10',
               },
               {
                 label: 'Available locations',
@@ -1556,13 +1556,13 @@ function BranchShot() {
                     : 'border-gray-200 dark:border-white/10'
                 }`}
               >
-                <div className="pointer-events-none absolute -end-4 -top-4 h-14 w-14 rounded-full bg-purple-500/10 blur-xl" />
+                <div className="pointer-events-none absolute -end-4 -top-4 h-14 w-14 rounded-full bg-blue-500/10 blur-xl" />
 
                 <div className="relative z-10 flex min-h-0 flex-1 flex-col">
                   <div className="mb-1.5 flex items-start justify-between gap-1.5">
                     <div className="flex min-w-0 items-center gap-2">
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-purple-500/10">
-                        <Building2 size={15} className="text-purple-500" />
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-500/10">
+                        <Building2 size={15} className="text-blue-500" />
                       </span>
                       <div className="min-w-0">
                         <p className="truncate text-[12px] font-bold leading-tight tracking-tight text-gray-900 dark:text-white">
@@ -1586,7 +1586,7 @@ function BranchShot() {
                   <div className="mb-1.5 grid grid-cols-2 gap-1">
                     <div className="rounded-lg border border-gray-100 bg-gray-50 px-1.5 py-1 dark:border-white/10 dark:bg-white/5">
                       <div className="mb-px flex items-center gap-0.5">
-                        <Hash size={9} className="text-purple-500" />
+                        <Hash size={9} className="text-blue-500" />
                         <span className="text-[7px] font-semibold uppercase tracking-wide text-gray-400">
                           Login ID
                         </span>
@@ -1723,7 +1723,7 @@ function SimpleUiShot() {
           {/* LEFT */}
           <div className="flex w-[30%] min-w-0 shrink-0 flex-col gap-3">
             {/* Net Sales primary — white text only on green */}
-            <div className="flex min-h-0 flex-1 flex-col justify-between rounded-xl bg-mintcom-green p-3.5 !text-white">
+            <div className="flex min-h-0 flex-1 flex-col gap-3 rounded-xl bg-mintcom-green p-3.5 !text-white">
               <div className="flex items-center gap-3">
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white dark:bg-mintcom-surface text-mintcom-green">
                   <TrendingUp size={22} strokeWidth={2.25} />
@@ -1735,13 +1735,13 @@ function SimpleUiShot() {
                   </p>
                 </div>
               </div>
-              <p className="mt-2 text-center text-[24px] font-extrabold tabular-nums tracking-tight !text-white sm:text-[28px]">
+              <p className="flex flex-1 items-center justify-center text-center text-[24px] font-extrabold tabular-nums tracking-tight !text-white sm:text-[28px]">
                 {reportMoney(displayNet)}
               </p>
             </div>
 
             {/* Cash Sales — MetricSalesCard + PosCashIcon */}
-            <div className={`flex min-h-0 flex-1 flex-col justify-between p-3.5 ${cardShell}`}>
+            <div className={`flex min-h-0 flex-1 flex-col gap-3 p-3.5 ${cardShell}`}>
               <div className="flex items-center gap-3">
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-mintcom-green text-white">
                   <PosCashIcon size={22} className="text-white" />
@@ -1753,13 +1753,13 @@ function SimpleUiShot() {
                   </p>
                 </div>
               </div>
-              <p className="mt-2 text-center text-[22px] font-bold tabular-nums tracking-normal text-gray-900 dark:text-white sm:text-[26px]">
+              <p className="flex flex-1 items-center justify-center text-center text-[22px] font-bold tabular-nums tracking-normal text-gray-900 dark:text-white sm:text-[26px]">
                 {reportMoney(displayCash)}
               </p>
             </div>
 
             {/* Card Sales */}
-            <div className={`flex min-h-0 flex-1 flex-col justify-between p-3.5 ${cardShell}`}>
+            <div className={`flex min-h-0 flex-1 flex-col gap-3 p-3.5 ${cardShell}`}>
               <div className="flex items-center gap-3">
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-mintcom-green text-white">
                   <PosCardIcon size={22} className="text-white" />
@@ -1771,7 +1771,7 @@ function SimpleUiShot() {
                   </p>
                 </div>
               </div>
-              <p className="mt-2 text-center text-[22px] font-bold tabular-nums tracking-normal text-gray-900 dark:text-white sm:text-[26px]">
+              <p className="flex flex-1 items-center justify-center text-center text-[22px] font-bold tabular-nums tracking-normal text-gray-900 dark:text-white sm:text-[26px]">
                 {reportMoney(displayCard)}
               </p>
             </div>
@@ -2030,7 +2030,7 @@ function OnboardShot() {
             [
               { label: 'Total users', value: '4', color: 'text-blue-500', bg: 'bg-blue-500/10', Icon: Users },
               { label: 'Active now', value: '2', color: 'text-mintcom-green', bg: 'bg-mintcom-green/15', Icon: User },
-              { label: 'Admins', value: '1', color: 'text-purple-500', bg: 'bg-purple-500/10', Icon: Shield },
+              { label: 'Admins', value: '1', color: 'text-slate-600 dark:text-slate-300', bg: 'bg-slate-500/10', Icon: Shield },
               { label: 'Standard users', value: '3', color: 'text-orange-500', bg: 'bg-orange-500/10', Icon: Star },
             ] as const
           ).map((s) => (

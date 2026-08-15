@@ -1688,7 +1688,7 @@
       "ownerConflictTitle": "Someone is inside",
       "ownerDeviceConflictTitle": "Another device is inside",
       "securingMessage": "Checking this location before opening it.",
-      "securingTitle": "Securing dashboard",
+      "securingTitle": "Securing Dashboard",
       "controlGranted": "You now have control of this location dashboard."
     },
     "menu": {
@@ -4394,7 +4394,31 @@
       "card_added_and_assigned": "Card added and assigned to this location",
       "cardholder": "Cardholder",
       "change_card": "Change card",
-      "saved_card": "Saved"
+      "saved_card": "Saved",
+      "invoice": {
+        "action": "Invoices",
+        "title": "Subscription invoice",
+        "summaryTitle": "Subscription summary",
+        "download": "Download",
+        "print": "Print / Save PDF",
+        "historyTitle": "Invoice history",
+        "printHistory": "Print history",
+        "downloadHistory": "Download all",
+        "exportCsv": "CSV",
+        "exportFailed": "Could not export the invoice history. Please try again.",
+        "popupBlocked": "Allow pop-ups for this site to print.",
+        "loadFailed": "Could not load invoices",
+        "emptyTitle": "No invoices yet",
+        "emptyBody": "A numbered invoice is issued automatically the first time a payment for this location settles.",
+        "viewSummary": "View subscription summary",
+        "view": "View",
+        "colNumber": "Invoice",
+        "colDate": "Date",
+        "colPeriod": "Period",
+        "colStatus": "Status",
+        "colAmount": "Amount",
+        "pageTotal": "This page: {{amount}}"
+      }
     },
     "brands": {
       "activeBrands": "Active brands",

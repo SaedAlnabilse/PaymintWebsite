@@ -14,7 +14,7 @@ import { getArticleViews, useSupportArticleMetrics } from '../../hooks/useSuppor
 
 const accentMap: Record<string, { bg: string; light: string; border: string; text: string; glow: string }> = {
   'getting-started': { bg: 'bg-blue-500',    light: 'bg-blue-50 dark:bg-blue-500/10',    border: 'border-blue-200 dark:border-blue-500/20',   text: 'text-blue-600 dark:text-blue-400',   glow: 'rgba(96,165,250,0.25)'  },
-  billing:           { bg: 'bg-purple-500',  light: 'bg-purple-50 dark:bg-purple-500/10',border: 'border-purple-200 dark:border-purple-500/20',text: 'text-purple-600 dark:text-purple-400',glow: 'rgba(167,139,250,0.25)' },
+  billing:           { bg: 'bg-indigo-500',  light: 'bg-indigo-50 dark:bg-indigo-500/10',border: 'border-indigo-200 dark:border-indigo-500/20',text: 'text-indigo-600 dark:text-indigo-400',glow: 'rgba(129,140,248,0.25)' },
   technical:         { bg: 'bg-orange-500',  light: 'bg-orange-50 dark:bg-orange-500/10',border: 'border-orange-200 dark:border-orange-500/20',text: 'text-orange-600 dark:text-orange-400',glow: 'rgba(251,146,60,0.25)'  },
   features:          { bg: 'bg-mintcom-green',light: 'bg-mintcom-green/8 dark:bg-mintcom-green/10',border: 'border-mintcom-green/25 dark:border-mintcom-green/20',text: 'text-mintcom-green',glow: 'rgba(125,198,162,0.25)' },
 };
@@ -38,7 +38,7 @@ export const SupportCategoryPage = () => {
 
   const categoryConfig: Record<string, { title: string; description: string; icon: React.ElementType; color: string; bgColor: string }> = {
     'getting-started': { title: t('support.categories.gettingStarted'), description: t('support.categories.gettingStartedDesc'), icon: Zap,       color: 'text-blue-600',        bgColor: 'bg-blue-500'       },
-    billing:           { title: t('support.categories.billing'),        description: t('support.categories.billingDesc'),        icon: CreditCard, color: 'text-purple-600',      bgColor: 'bg-purple-500'     },
+    billing:           { title: t('support.categories.billing'),        description: t('support.categories.billingDesc'),        icon: CreditCard, color: 'text-indigo-600',      bgColor: 'bg-indigo-500'     },
     technical:         { title: t('support.categories.technical'),      description: t('support.categories.technicalDesc'),      icon: Settings,   color: 'text-orange-600',      bgColor: 'bg-orange-500'     },
     features:          { title: t('support.categories.features'),       description: t('support.categories.featuresDesc'),       icon: BookOpen,   color: 'text-mintcom-green',   bgColor: 'bg-mintcom-green'  },
   };

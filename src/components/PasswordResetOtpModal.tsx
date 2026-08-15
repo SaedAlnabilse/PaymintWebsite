@@ -381,8 +381,8 @@ export function PasswordResetOtpModal({
                         {step === 'newPassword' && (
                             <div className="space-y-6">
                                 <div className="text-center">
-                                    <div className="w-16 h-16 rounded-full bg-purple-500/10 flex items-center justify-center mx-auto mb-4">
-                                        <Key className="w-8 h-8 text-purple-500" />
+                                    <div className="w-16 h-16 rounded-full bg-blue-500/10 flex items-center justify-center mx-auto mb-4">
+                                        <Key className="w-8 h-8 text-blue-500" />
                                     </div>
                                     <h3 className="font-barlow text-xl font-bold text-gray-900 dark:text-white mb-2">
                                         {t('passwordReset.steps.newPasswordTitle')}

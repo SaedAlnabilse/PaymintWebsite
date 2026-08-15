@@ -5,7 +5,6 @@ import { motion } from 'framer-motion';
 import { Store, Save, CreditCard, Receipt, Trash2, AlertTriangle, DollarSign, Copy, Key, Shield, ShieldCheck } from 'lucide-react';
 import api, { extractErrorMessage } from '../../config/api';
 import { FiscalComplianceCard } from '../../components/FiscalComplianceCard';
-import { InvoicePreviewCard } from '../../components/InvoicePreviewCard';
 import toast from 'react-hot-toast';
 import { ConfirmModal } from '../../components/ConfirmModal';
 import { BusyOverlay } from '../../components/BusyOverlay';
@@ -934,7 +933,7 @@ export function SettingsPage() {
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white dark:bg-[#1E293B] border border-gray-200 dark:border-white/[0.03] p-8 space-y-10 rounded-2xl shadow-sm">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 pb-8 border-b border-gray-100 dark:border-white/5">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-500 shadow-sm">
+                <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 shadow-sm">
                   <Store size={20} />
                 </div>
                 <div>
@@ -1596,11 +1595,6 @@ export function SettingsPage() {
             <FiscalComplianceCard
               initial={fiscalInitial}
               onSaved={() => fetchSettings(false)}
-            />
-            <InvoicePreviewCard
-              establishmentName={currentEstablishment?.name}
-              currency={settings?.currency}
-              taxRate={typeof settings?.taxRate === 'number' ? settings.taxRate : undefined}
             />
           </div>
         )}

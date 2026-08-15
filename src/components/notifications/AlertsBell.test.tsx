@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useBackofficeAlerts } from '../../hooks/useBackofficeAlerts';
@@ -6,7 +6,6 @@ import { checkPermission } from '../../hooks/usePermissionGuard';
 import type { BackofficeAlert } from '../../services/backofficeAlertsApi';
 import { AlertsBell } from './AlertsBell';
 
-const navigateMock = vi.hoisted(() => vi.fn());
 const account = vi.hoisted(() => ({
   id: 'account-1',
   isSecondaryAdmin: true,
@@ -26,7 +25,6 @@ vi.mock('react-router-dom', async (importOriginal) => {
   const actual = await importOriginal<typeof import('react-router-dom')>();
   return {
     ...actual,
-    useNavigate: () => navigateMock,
     useParams: () => ({ brandId: 'brand-1', locationSlug: 'cafe-route' }),
   };
 });
@@ -60,49 +58,10 @@ vi.mock('react-i18next', () => ({
   }),
 }));
 
-vi.mock('react-hot-toast', () => ({
-  default: Object.assign(vi.fn(), { error: vi.fn() }),
-}));
-
-vi.mock('./AlertRow', () => ({
-  AlertRow: ({
-    alert,
-    onActivate,
-  }: {
-    alert: BackofficeAlert;
-    onActivate?: (alert: BackofficeAlert) => void;
-  }) => (
-    <button
-      type="button"
-      data-testid={`alert-${alert.id}`}
-      onClick={() => onActivate?.(alert)}
-    >
-      {alert.title}
-    </button>
-  ),
-}));
-
-const makeAlert = (
-  id: string,
-  overrides: Partial<BackofficeAlert> = {},
-): BackofficeAlert => ({
-  id,
-  type: 'STOCK_ALERT_RED',
-  alertKind: 'stock_critical',
-  severity: 'critical',
-  title: `Alert ${id}`,
-  message: 'Needs attention',
-  isRead: false,
-  isDismissible: true,
-  createdAt: '2026-07-26T10:00:00.000Z',
-  establishmentId: 'location-a',
-  ...overrides,
-});
-
 const createHookResult = (
   overrides: Record<string, unknown> = {},
 ) => ({
-  alerts: [],
+  alerts: [] as BackofficeAlert[],
   counts: null,
   total: 0,
   unreadCount: 0,
@@ -144,21 +103,14 @@ describe('AlertsBell', () => {
       notificationPermissions,
     );
     expect(container).toBeEmptyDOMElement();
-    expect(useBackofficeAlerts).toHaveBeenNthCalledWith(
-      1,
+    expect(useBackofficeAlerts).toHaveBeenCalledWith(
       expect.objectContaining({ enabled: false, mode: 'count' }),
-    );
-    expect(useBackofficeAlerts).toHaveBeenNthCalledWith(
-      2,
-      expect.objectContaining({ enabled: false, mode: 'feed' }),
     );
   });
 
-  it('caps the badge, lazily enables the preview, and closes on Escape', () => {
-    const countResult = createHookResult({ unreadCount: 120 });
-    const previewResult = createHookResult();
-    vi.mocked(useBackofficeAlerts).mockImplementation((options) =>
-      options.mode === 'count' ? countResult : previewResult,
+  it('caps the badge and links straight to the location notifications screen', () => {
+    vi.mocked(useBackofficeAlerts).mockReturnValue(
+      createHookResult({ unreadCount: 120 }),
     );
 
     render(
@@ -172,97 +124,38 @@ describe('AlertsBell', () => {
     );
 
     expect(screen.getByText('99+')).toBeInTheDocument();
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Notifications, 120 unread' }),
-    );
-    expect(screen.getByRole('dialog')).toBeInTheDocument();
-    expect(useBackofficeAlerts).toHaveBeenCalledWith(
-      expect.objectContaining({
-        enabled: true,
-        mode: 'feed',
-        pageSize: 5,
-        poll: false,
-      }),
-    );
-    expect(screen.getByRole('link', { name: 'View all' })).toHaveAttribute(
-      'href',
-      '/dashboard/cafe-route/notifications',
-    );
-
-    fireEvent.keyDown(document, { key: 'Escape' });
+    const link = screen.getByRole('link', {
+      name: 'Notifications, 120 unread',
+    });
+    expect(link).toHaveAttribute('href', '/dashboard/cafe-route/notifications');
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  it('opens beside a desktop sidebar using direction-aware logical positioning', () => {
+  it('links to the brand notifications screen', () => {
     vi.mocked(useBackofficeAlerts).mockReturnValue(createHookResult());
 
     render(
       <MemoryRouter>
-        <AlertsBell scope="owner" placement="sidebar" />
+        <AlertsBell scope="brand" />
       </MemoryRouter>,
     );
 
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Notifications, 0 unread' }),
-    );
-
-    expect(screen.getByRole('dialog')).toHaveClass('fixed', 'bottom-4');
-    expect(screen.getByRole('dialog')).toHaveStyle({ visibility: 'visible' });
-    expect(screen.getByRole('dialog')).not.toHaveClass('end-0');
+    expect(
+      screen.getByRole('link', { name: 'Notifications, 0 unread' }),
+    ).toHaveAttribute('href', '/brand/brand-1/notifications');
   });
 
-  it('navigates trial alerts without marking them read', () => {
-    const trial = makeAlert('trial', {
-      type: 'TRIAL_EXPIRING',
-      alertKind: 'billing',
-      isDismissible: false,
-    });
-    const countResult = createHookResult({ unreadCount: 1 });
-    const previewResult = createHookResult({ alerts: [trial], total: 1 });
-    vi.mocked(useBackofficeAlerts).mockImplementation((options) =>
-      options.mode === 'count' ? countResult : previewResult,
-    );
+  it('marks the bell active while the notifications screen is open', () => {
+    vi.mocked(useBackofficeAlerts).mockReturnValue(createHookResult());
 
     render(
-      <MemoryRouter>
+      <MemoryRouter initialEntries={['/owner/notifications']}>
         <AlertsBell scope="owner" />
       </MemoryRouter>,
     );
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Notifications, 1 unread' }),
-    );
-    fireEvent.click(screen.getByTestId('alert-trial'));
 
-    expect(previewResult.markRead).not.toHaveBeenCalled();
-    expect(navigateMock).toHaveBeenCalledWith('/owner/billing');
-  });
-
-  it('uses the supplied slug map for alert deep links and marks normal rows read', async () => {
-    const alert = makeAlert('stock');
-    const countResult = createHookResult({ unreadCount: 1 });
-    const previewResult = createHookResult({ alerts: [alert], total: 1 });
-    vi.mocked(useBackofficeAlerts).mockImplementation((options) =>
-      options.mode === 'count' ? countResult : previewResult,
-    );
-
-    render(
-      <MemoryRouter>
-        <AlertsBell
-          scope="owner"
-          locations={[
-            { id: 'location-a', name: 'Cafe', slug: 'mapped-cafe' },
-          ]}
-        />
-      </MemoryRouter>,
-    );
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Notifications, 1 unread' }),
-    );
-    fireEvent.click(screen.getByTestId('alert-stock'));
-
-    await waitFor(() => expect(previewResult.markRead).toHaveBeenCalledWith(alert));
-    expect(navigateMock).toHaveBeenCalledWith(
-      '/dashboard/mapped-cafe/products',
-    );
+    const link = screen.getByRole('link', { name: 'Notifications, 0 unread' });
+    expect(link).toHaveAttribute('aria-current', 'page');
+    expect(link).toHaveClass('text-mintcom-green');
   });
 });

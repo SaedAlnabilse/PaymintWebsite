@@ -534,23 +534,7 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
     };
   }, [modalOpen]);
   const [lastAdded, setLastAdded] = useState<string | null>(null);
-  const [shift, setShift] = useState<DemoShift>(() => ({
-    ...emptyShift(),
-    open: true,
-    openingCash: 150,
-    cashSales: 245.5,
-    cardSales: 412.75,
-    otherSales: 35,
-    orders: 18,
-    startedAt: Date.now() - 6 * 3600_000,
-    payIn: 100,
-    payOut: 45,
-    movements: [
-      { id: 'mov-1', type: 'in', amount: 100, reason: 'Cash drop', at: Date.now() - 3 * 3600_000 },
-      { id: 'mov-2', type: 'out', amount: 45, reason: 'Office supplies', at: Date.now() - 1.5 * 3600_000 },
-      { id: 'mov-3', type: 'in', amount: 50, reason: 'Bank deposit correction', at: Date.now() - 0.5 * 3600_000 },
-    ],
-  }));
+  const [shift, setShift] = useState<DemoShift>(() => emptyShift());
   const [, setFlash] = useState<string | null>(null);
   const [mobileCartOpen, setMobileCartOpen] = useState(false);
   /** When true, Dashboard auto-opens the Open Shift amount popup */

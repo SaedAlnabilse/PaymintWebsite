@@ -21,6 +21,7 @@ import {
     ExternalLink,
     RotateCcw
 } from 'lucide-react';
+import { BiIcon } from '../../components/ui/BiIcon';
 import api from '../../config/api';
 import { fetchAllPages } from '../../utils/fetchAllPages';
 import toast from 'react-hot-toast';
@@ -1328,7 +1329,7 @@ export function ProductsPage() {
                     <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2 sm:gap-3">
                             <div className="p-2 sm:p-2.5 rounded-xl bg-blue-500/10 text-blue-500 transition-transform duration-300">
-                                <Package size={18} className="sm:w-5 sm:h-5" />
+                                <BiIcon icon="bi-box-seam" size={19} />
                             </div>
                             <p className="dashboard-stat-title truncate">{t('products.stats.total')}</p>
                         </div>
@@ -1353,7 +1354,7 @@ export function ProductsPage() {
                     <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2 sm:gap-3">
                             <div className="p-2 sm:p-2.5 rounded-xl bg-[#ffc107]/10 text-[#ffc107] transition-transform duration-300">
-                                <AlertCircle size={18} className="sm:w-5 sm:h-5" />
+                                <BiIcon icon="bi-exclamation-triangle" size={19} />
                             </div>
                             <p className="dashboard-stat-title truncate">{t('products.stats.low')}</p>
                         </div>
@@ -1378,7 +1379,7 @@ export function ProductsPage() {
                     <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2 sm:gap-3">
                             <div className="p-2 sm:p-2.5 rounded-xl bg-[#D55263]/10 text-[#D55263] transition-transform duration-300">
-                                <AlertCircle size={18} className="sm:w-5 sm:h-5" />
+                                <BiIcon icon="bi-exclamation-octagon" size={19} />
                             </div>
                             <p className="dashboard-stat-title truncate">{t('products.stats.critical')}</p>
                         </div>
@@ -1403,7 +1404,7 @@ export function ProductsPage() {
                     <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2 sm:gap-3">
                             <div className="p-2 sm:p-2.5 rounded-xl bg-slate-500/10 text-slate-500 transition-transform duration-300">
-                                <Package size={18} className="sm:w-5 sm:h-5" />
+                                <BiIcon icon="bi-x-circle" size={19} />
                             </div>
                             <p className="dashboard-stat-title truncate">{t('products.stats.outOfStock')}</p>
                         </div>

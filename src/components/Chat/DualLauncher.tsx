@@ -121,7 +121,7 @@ export function DualLauncher({
               }}
               aria-pressed={isFAQOpen}
               className={`h-11 w-full flex items-center justify-center gap-2 px-3 rounded-xl font-bold text-sm transition-all ${isFAQOpen
-                  ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-md shadow-indigo-500/30'
+                  ? 'bg-gradient-to-r from-indigo-500 to-blue-600 text-white shadow-md shadow-indigo-500/30'
                   : 'text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-white/10'
                 }`}
             >

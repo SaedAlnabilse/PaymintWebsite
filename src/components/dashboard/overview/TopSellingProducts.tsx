@@ -97,14 +97,14 @@ export const TopSellingProducts = React.memo(function TopSellingProducts({
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className="p-3 rounded-xl bg-gray-50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5 flex items-center justify-between group/cat hover:bg-white dark:hover:bg-white/5 hover:border-purple-500/30 transition-all"
+                className="p-3 rounded-xl bg-gray-50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5 flex items-center justify-between group/cat hover:bg-white dark:hover:bg-white/5 hover:border-blue-500/30 transition-all"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-6 h-6 rounded-lg bg-white dark:bg-white/10 flex items-center justify-center text-xs font-black text-gray-500 group-hover/cat:text-purple-500 transition-colors border border-gray-100 dark:border-white/5">
+                  <div className="w-6 h-6 rounded-lg bg-white dark:bg-white/10 flex items-center justify-center text-xs font-black text-gray-500 group-hover/cat:text-blue-500 transition-colors border border-gray-100 dark:border-white/5">
                     {index + 1}
                   </div>
                   <div className="min-w-0">
-                    <p className="font-bold text-xs text-gray-900 dark:text-white group-hover/cat:text-purple-500 transition-colors truncate max-w-[120px]">{cat.name}</p>
+                    <p className="font-bold text-xs text-gray-900 dark:text-white group-hover/cat:text-blue-500 transition-colors truncate max-w-[120px]">{cat.name}</p>
                     <div className="text-xs text-gray-500 font-medium">
                       <StatValue value={cat.count || 0} isInteger={true} suffix={t('dashboard.stats.orders')} className="text-xs text-gray-500 inline-flex" />
                     </div>

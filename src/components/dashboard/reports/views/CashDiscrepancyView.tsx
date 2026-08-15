@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Scale, TrendingUp, TrendingDown, AlertCircle, User } from 'lucide-react';
+import { BiIcon } from '../../../ui/BiIcon';
 import { useCurrency } from '../../../../context/CurrencyContext';
 import { useTranslation } from 'react-i18next';
 import { getDateLocale } from '../../../../utils/dateLocale';
@@ -150,7 +151,7 @@ export const CashDiscrepancyView = React.memo(function CashDiscrepancyView({ shi
             <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
               stats.netVariance >= 0 ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'
             }`}>
-              <Scale size={20} />
+              <BiIcon icon="bi-plus-slash-minus" size={20} />
             </div>
             <span className="dashboard-stat-title">{t('orders.reports.cashGap.netVariance')}</span>
           </div>
@@ -173,7 +174,7 @@ export const CashDiscrepancyView = React.memo(function CashDiscrepancyView({ shi
         >
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
-              <TrendingUp size={20} />
+              <BiIcon icon="bi-arrow-up-circle" size={20} />
             </div>
             <span className="dashboard-stat-title">{t('orders.reports.cashGap.totalOver')}</span>
           </div>
@@ -196,7 +197,7 @@ export const CashDiscrepancyView = React.memo(function CashDiscrepancyView({ shi
         >
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 rounded-xl bg-red-500/10 text-red-500 flex items-center justify-center">
-              <TrendingDown size={20} />
+              <BiIcon icon="bi-arrow-down-circle" size={20} />
             </div>
             <span className="dashboard-stat-title">{t('orders.reports.cashGap.totalShort')}</span>
           </div>
@@ -219,7 +220,7 @@ export const CashDiscrepancyView = React.memo(function CashDiscrepancyView({ shi
         >
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 rounded-xl bg-mintcom-green/10 text-mintcom-green flex items-center justify-center">
-              <AlertCircle size={20} />
+              <BiIcon icon="bi-check2-circle" size={20} />
             </div>
             <span className="dashboard-stat-title">{t('orders.reports.cashGap.accuracyRate')}</span>
           </div>

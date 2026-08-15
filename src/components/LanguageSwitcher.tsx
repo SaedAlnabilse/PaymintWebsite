@@ -10,6 +10,8 @@ interface LanguageSwitcherProps {
   compact?: boolean;
   dropdownDirection?: 'down' | 'up' | 'right';
   showGlobeIcon?: boolean;
+  /** Renders the globe on its own, without the language code next to it. */
+  iconOnly?: boolean;
   label?: string;
   iconSize?: number;
 }
@@ -21,6 +23,7 @@ export const LanguageSwitcher = ({
   compact = false,
   dropdownDirection = 'down',
   showGlobeIcon = true,
+  iconOnly = false,
   label,
   iconSize = 16,
 }: LanguageSwitcherProps) => {
@@ -78,7 +81,7 @@ export const LanguageSwitcher = ({
         aria-label={t('common.aria.changeLanguage')}
       >
         {showGlobeIcon && <Globe size={iconSize} className="text-gray-500 dark:text-gray-400" />}
-        {label ? (
+        {iconOnly ? null : label ? (
           <span>{label}</span>
         ) : compact ? (
           <span className="text-xs font-black tracking-wider leading-none">{currentLanguage.shortName}</span>

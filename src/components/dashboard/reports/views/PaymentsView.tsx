@@ -1,4 +1,5 @@
-import { Wallet, CreditCard, PieChart as PieChartIcon, ChevronRight } from 'lucide-react';
+import { Wallet, CreditCard, ChevronRight } from 'lucide-react';
+import { BiIcon } from '../../../ui/BiIcon';
 import { useCurrency } from '../../../../context/CurrencyContext';
 import type { SalesSummary } from '../../../../types';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Label } from 'recharts';
@@ -120,7 +121,7 @@ export const PaymentsView = React.memo(function PaymentsView({ salesData, effect
         <div className="p-5 sm:p-6 border-b border-gray-100 dark:border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-mintcom-green/10 flex items-center justify-center text-mintcom-green shrink-0">
-              <PieChartIcon size={20} />
+              <BiIcon icon="bi-cash-stack" size={20} />
             </div>
             <div>
               <h3 className="text-lg font-bold text-gray-900 dark:text-white">

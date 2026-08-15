@@ -17,7 +17,7 @@ import { getLocalizedSupportArticleContent, SUPPORT_ARTICLE_RELATED } from '../.
 
 const catAccent: Record<string, { bg: string; light: string; border: string; text: string }> = {
   'getting-started': { bg: 'bg-blue-500',     light: 'bg-blue-50 dark:bg-blue-500/10',     border: 'border-blue-200 dark:border-blue-500/20',    text: 'text-blue-600 dark:text-blue-400'    },
-  billing:           { bg: 'bg-purple-500',   light: 'bg-purple-50 dark:bg-purple-500/10', border: 'border-purple-200 dark:border-purple-500/20', text: 'text-purple-600 dark:text-purple-400' },
+  billing:           { bg: 'bg-indigo-500',   light: 'bg-indigo-50 dark:bg-indigo-500/10', border: 'border-indigo-200 dark:border-indigo-500/20', text: 'text-indigo-600 dark:text-indigo-400' },
   technical:         { bg: 'bg-orange-500',   light: 'bg-orange-50 dark:bg-orange-500/10', border: 'border-orange-200 dark:border-orange-500/20', text: 'text-orange-600 dark:text-orange-400' },
   features:          { bg: 'bg-mintcom-green',light: 'bg-mintcom-green/8 dark:bg-mintcom-green/10',border: 'border-mintcom-green/25',text: 'text-mintcom-green' },
 };

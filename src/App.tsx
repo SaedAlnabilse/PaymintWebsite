@@ -156,6 +156,20 @@ function PageSuspense({ children }: { children: React.ReactNode }) {
   );
 }
 
+/**
+ * Wrapper for pages nested inside DashboardLayout.
+ * Uses the inline (non-full-screen) loader so the spinner lands in the same
+ * centered spot as the dashboard's own in-page loading states, instead of
+ * jumping around as different loaders (full-screen vs section) hand off.
+ */
+function DashboardPageSuspense({ children }: { children: React.ReactNode }) {
+  return (
+    <Suspense fallback={<LoadingFallback fullScreen={false} />}>
+      {children}
+    </Suspense>
+  );
+}
+
 /** Wrapper for layout components (shows loading while layout chunk loads) */
 function LayoutSuspense({ children }: { children: React.ReactNode }) {
   return (
@@ -774,121 +788,121 @@ const router = createBrowserRouter([
               {
                 index: true,
                 element: (
-                  <PageSuspense>
+                  <DashboardPageSuspense>
                     <DashboardPage />
-                  </PageSuspense>
+                  </DashboardPageSuspense>
                 ),
               },
               {
                 path: "notifications",
                 element: (
-                  <PageSuspense>
+                  <DashboardPageSuspense>
                     <NotificationsPage />
-                  </PageSuspense>
+                  </DashboardPageSuspense>
                 ),
               },
               {
                 path: "orders",
                 element: (
-                  <PageSuspense>
+                  <DashboardPageSuspense>
                     <OrdersPage />
-                  </PageSuspense>
+                  </DashboardPageSuspense>
                 ),
               },
               {
                 path: "products",
                 element: (
-                  <PageSuspense>
+                  <DashboardPageSuspense>
                     <ProductsPage />
-                  </PageSuspense>
+                  </DashboardPageSuspense>
                 ),
               },
               {
                 path: "categories",
                 element: (
-                  <PageSuspense>
+                  <DashboardPageSuspense>
                     <CategoriesPage />
-                  </PageSuspense>
+                  </DashboardPageSuspense>
                 ),
               },
               {
                 path: "staff",
                 element: (
-                  <PageSuspense>
+                  <DashboardPageSuspense>
                     <StaffPage />
-                  </PageSuspense>
+                  </DashboardPageSuspense>
                 ),
               },
               {
                 path: "customers",
                 element: (
-                  <PageSuspense>
+                  <DashboardPageSuspense>
                     <CustomersPage />
-                  </PageSuspense>
+                  </DashboardPageSuspense>
                 ),
               },
               {
                 path: "reports/:type?",
                 element: (
-                  <PageSuspense>
+                  <DashboardPageSuspense>
                     <ReportsPage />
-                  </PageSuspense>
+                  </DashboardPageSuspense>
                 ),
               },
               {
                 path: "discounts",
                 element: (
-                  <PageSuspense>
+                  <DashboardPageSuspense>
                     <DiscountsPage />
-                  </PageSuspense>
+                  </DashboardPageSuspense>
                 ),
               },
               {
                 path: "payment-methods",
                 element: (
-                  <PageSuspense>
+                  <DashboardPageSuspense>
                     <PaymentMethodsPage />
-                  </PageSuspense>
+                  </DashboardPageSuspense>
                 ),
               },
               {
                 path: "settings",
                 element: (
-                  <PageSuspense>
+                  <DashboardPageSuspense>
                     <SettingsPage />
-                  </PageSuspense>
+                  </DashboardPageSuspense>
                 ),
               },
               {
                 path: "loyalty",
                 element: (
-                  <PageSuspense>
+                  <DashboardPageSuspense>
                     <LoyaltyPage />
-                  </PageSuspense>
+                  </DashboardPageSuspense>
                 ),
               },
               {
                 path: "activity-logs",
                 element: (
-                  <PageSuspense>
+                  <DashboardPageSuspense>
                     <ActivityLogsPage />
-                  </PageSuspense>
+                  </DashboardPageSuspense>
                 ),
               },
               {
                 path: "addons",
                 element: (
-                  <PageSuspense>
+                  <DashboardPageSuspense>
                     <AddonsPage />
-                  </PageSuspense>
+                  </DashboardPageSuspense>
                 ),
               },
               {
                 path: "inventory",
                 element: (
-                  <PageSuspense>
+                  <DashboardPageSuspense>
                     <InventoryPage />
-                  </PageSuspense>
+                  </DashboardPageSuspense>
                 ),
               },
               {
@@ -898,25 +912,25 @@ const router = createBrowserRouter([
               {
                 path: "establishments",
                 element: (
-                  <PageSuspense>
+                  <DashboardPageSuspense>
                     <EstablishmentsPage />
-                  </PageSuspense>
+                  </DashboardPageSuspense>
                 ),
               },
               {
                 path: "admin-users",
                 element: (
-                  <PageSuspense>
+                  <DashboardPageSuspense>
                     <AdminUsersPage />
-                  </PageSuspense>
+                  </DashboardPageSuspense>
                 ),
               },
               {
                 path: "roles",
                 element: (
-                  <PageSuspense>
+                  <DashboardPageSuspense>
                     <CustomRolesPage />
-                  </PageSuspense>
+                  </DashboardPageSuspense>
                 ),
               },
             ],

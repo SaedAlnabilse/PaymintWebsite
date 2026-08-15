@@ -1,4 +1,5 @@
-import { Percent, Tag } from 'lucide-react';
+import { Tag } from 'lucide-react';
+import { BiIcon } from '../../../ui/BiIcon';
 import { useCurrency } from '../../../../context/CurrencyContext';
 import type { SalesSummary } from '../../../../types';
 import { motion } from 'framer-motion';
@@ -66,7 +67,7 @@ export const DiscountsView = React.memo(function DiscountsView({ salesData, isFe
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="p-4 sm:p-5 bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.03] flex items-center gap-4 transition-all duration-300">
           <div className="w-12 h-12 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500">
-            <Percent size={24} />
+            <BiIcon icon="bi-percent" size={24} />
           </div>
           <div>
             <p className="dashboard-stat-title">{t('orders.reports.discounts.totalDiscounted')}</p>
@@ -79,7 +80,7 @@ export const DiscountsView = React.memo(function DiscountsView({ salesData, isFe
         </div>
         <div className="p-4 sm:p-5 bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.03] flex items-center gap-4 transition-all duration-300">
           <div className="w-12 h-12 rounded-xl bg-mintcom-green/10 flex items-center justify-center text-mintcom-green">
-            <Tag size={24} />
+            <BiIcon icon="bi-tags" size={24} />
           </div>
           <div>
             <p className="dashboard-stat-title">{t('orders.reports.discounts.timesApplied')}</p>
@@ -97,7 +98,7 @@ export const DiscountsView = React.memo(function DiscountsView({ salesData, isFe
         <div className="p-6 border-b border-gray-100 dark:border-white/5">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-mintcom-green/10 flex items-center justify-center text-mintcom-green">
-              <Tag size={20} />
+              <BiIcon icon="bi-tags" size={20} />
             </div>
             <h3 className="text-lg font-bold text-gray-900 dark:text-white">{t('orders.reports.discounts.breakdown')}</h3>
           </div>
