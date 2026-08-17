@@ -21,6 +21,7 @@ import { getBusinessTypeIcon } from '../utils/businessTypeIcons';
 import api from '../config/api';
 import toast from 'react-hot-toast';
 import { formatInputPlaceholder } from '../utils/textCase';
+import { getPersonDisplayName } from '../utils/personName';
 
 interface EmployeeForMerging {
     id: string;
@@ -343,7 +344,7 @@ export function LinkLocationModal({
                                                                             <CheckCircle2 size={20} />
                                                                         </div>
                                                                         <div className="flex-1 min-w-0">
-                                                                            <h4 className="text-sm font-bold text-gray-900 dark:text-white truncate">{emp.firstName} {emp.lastName}</h4>
+                                                                            <h4 className="text-sm font-bold text-gray-900 dark:text-white truncate">{getPersonDisplayName(emp, t('common.unknown'))}</h4>
                                                                             <p className="text-[10px] font-medium text-gray-500 truncate">{emp.email}</p>
                                                                         </div>
                                                                         <span className={`px-2 py-1 rounded-lg border text-[10px] font-black tracking-widest ${getRoleBadgeColor(emp.role)}`}>

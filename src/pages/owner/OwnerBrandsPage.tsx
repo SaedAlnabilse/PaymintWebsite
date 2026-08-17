@@ -39,6 +39,7 @@ import { Pagination } from '../../components/ui';
 import { SectionLoader } from '../../components/LoadingState';
 import { StatValue } from '../../components/ui/StatValue';
 import { formatInputPlaceholder, formatInputLabel } from '../../utils/textCase';
+import { getPersonInitials, getPersonDisplayName } from '../../utils/personName';
 import { getPasswordSchema } from '../../utils/validation';
 import { biIcon } from '../../components/ui/BiIcon';
 
@@ -999,10 +1000,10 @@ export function OwnerBrandsPage() {
                                                                                 }`}
                                                                         >
                                                                             <div className={`w-11 h-11 rounded-2xl flex items-center justify-center text-[14px] font-sans font-bold transition-all ${isSelected ? 'bg-mintcom-green text-black' : 'bg-gray-100 dark:bg-white/5 text-gray-500'}`}>
-                                                                                {emp.firstName[0].toUpperCase()}{emp.lastName[0].toUpperCase()}
+                                                                                {getPersonInitials(emp)}
                                                                             </div>
                                                                             <div className="flex-1 min-w-0">
-                                                                                <p className="text-[15px] font-sans font-bold text-gray-900 dark:text-white truncate">{emp.firstName} {emp.lastName}</p>
+                                                                                <p className="text-[15px] font-sans font-bold text-gray-900 dark:text-white truncate">{getPersonDisplayName(emp, t('common.unknown'))}</p>
                                                                                 <span className={`inline-block mt-1 px-2 py-0.5 rounded-lg text-[10px] font-sans font-bold uppercase border ${getRoleBadgeColor(emp.role)}`}>
                                                                                     {emp.role}
                                                                                 </span>
