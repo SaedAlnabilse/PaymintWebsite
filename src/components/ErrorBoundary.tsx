@@ -1,5 +1,6 @@
 import React from 'react';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
+import { OfflineDinoScreen } from './OfflineDinoScreen';
 
 interface ErrorBoundaryProps {
   children: React.ReactNode;
@@ -52,6 +53,18 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
 
   render() {
     if (this.state.hasError) {
+      // If offline or dynamic module chunk load failed due to lost network connection
+      const isOfflineError =
+        (typeof navigator !== 'undefined' && !navigator.onLine) ||
+        (this.state.error?.message &&
+          /failed to fetch dynamically imported module|chunkloaderror|networkerror|fetch/i.test(
+            this.state.error.message
+          ));
+
+      if (isOfflineError) {
+        return <OfflineDinoScreen forceShow />;
+      }
+
       // Custom fallback UI
       if (this.props.fallback) {
         return this.props.fallback;

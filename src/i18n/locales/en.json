@@ -347,7 +347,10 @@
       "noSocialAccountTitle": "No Mintcom Account Yet",
       "noSocialAccountMessage": "We recognized your {{provider}} login, but there’s no Mintcom account linked to it. Create one in under a minute. Your business dashboard is waiting.",
       "noSocialAccountGoogle": "Google",
-      "noSocialAccountApple": "Apple"
+      "noSocialAccountApple": "Apple",
+      "rateLimitTitle": "Too Many Attempts",
+      "rateLimitMessage": "For your security, sign-in attempts have been temporarily limited due to multiple rapid attempts. Please wait 1 minute before trying again.",
+      "rateLimitClose": "I Understand"
     },
     "logout": {
       "loggingOut": "Log out...",
@@ -866,7 +869,7 @@
       "try": "Turkish Lira",
       "usd": "US Dollar"
     },
-    "dashboard": "Go to dashboard",
+    "dashboard": "Go to Dashboard",
     "datePeriods": {
       "all": "All Time",
       "custom": "Custom range",
@@ -4444,6 +4447,7 @@
       "disclaimerAction": "I Understand",
       "disclaimerDesc": "To create a brand, you must have at least 2 locations that are not already part of another brand. Currently, all your locations are already grouped.",
       "disclaimerNoLocations": "You currently don't have enough locations to form a brand. A brand requires at least 2 locations.",
+      "disclaimerNotEnoughLocations": "Not Enough Locations to Create a Brand",
       "disclaimerSubtitle": "All Your Locations Are Already Linked to Brands",
       "disclaimerTitle": "Unable to Create Brand",
       "failedToLoad": "Failed to load brands",
@@ -6805,11 +6809,11 @@
       "unknownLocation": "Unknown location"
     },
     "empty": {
-      "all": "No alerts",
-      "cash": "No cash alerts",
-      "stock": "No stock alerts",
-      "refunds": "No refund alerts",
-      "updates": "No update alerts",
+      "all": "No Alerts",
+      "cash": "No Cash Alerts",
+      "stock": "No Stock Alerts",
+      "refunds": "No Refund Alerts",
+      "updates": "No Update Alerts",
       "subtitle": "You're all caught up."
     },
     "showingOf": "Showing {{loaded}} of {{total}}",

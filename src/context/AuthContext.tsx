@@ -72,6 +72,7 @@ interface AuthResult {
   success: boolean;
   error?: string;
   code?: string;
+  statusCode?: number;
   message?: string;
   isSecondaryAdmin?: boolean;
   // True when the account has no establishments yet, so the user must be sent
@@ -326,6 +327,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return {
         success: false,
         code: getAuthErrorCode(error),
+        statusCode: error?.response?.status,
         error: getAuthErrorMessage(error, 'Invalid email or password'),
       };
     }

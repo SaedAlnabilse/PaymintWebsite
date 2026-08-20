@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Eye, EyeOff, ArrowLeft, Mail, Lock, X,
-  AlertTriangle, Send, ArrowRight, KeyRound, UserPlus,
+  AlertTriangle, Send, ArrowRight, KeyRound, UserPlus, ShieldAlert, Clock,
 } from 'lucide-react';
 import MintcomLeafIcon from '../assets/small-logo.svg';
 import toast from 'react-hot-toast';
@@ -31,6 +31,9 @@ const isWrongCredentialsError = (error?: string, code?: string) => {
   // Empty / generic failure after a form submit almost always means bad credentials.
   if (!error) return true;
   const normalized = error.toLowerCase();
+  if (normalized.includes('too many') || normalized.includes('throttler') || normalized.includes('rate limit')) {
+    return false;
+  }
   // Never surface password-strength rules on login — show the sign-in modal instead.
   if (
     normalized.includes('password must') ||
@@ -66,6 +69,7 @@ export function LoginPage() {
   const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [showWrongCredentialsModal, setShowWrongCredentialsModal] = useState(false);
   const [showNoAccountModal, setShowNoAccountModal] = useState(false);
+  const [showRateLimitModal, setShowRateLimitModal] = useState(false);
   const [socialProvider, setSocialProvider] = useState<SocialProvider>('google');
   const [unverifiedEmail, setUnverifiedEmail] = useState('');
   const [isResending, setIsResending] = useState(false);
@@ -74,7 +78,7 @@ export function LoginPage() {
   const { login, loginWithGoogle, loginWithApple, resendVerification } = useAuth();
 
   const anyAuthModalOpen =
-    showVerifyModal || showWrongCredentialsModal || showNoAccountModal;
+    showVerifyModal || showWrongCredentialsModal || showNoAccountModal || showRateLimitModal;
   useScrollLock(anyAuthModalOpen);
 
   const redirectTo = (location.state as { from?: string })?.from;
@@ -109,6 +113,12 @@ export function LoginPage() {
       } else if (result.code === 'ACCOUNT_NOT_FOUND') {
         setSocialProvider('google');
         setShowNoAccountModal(true);
+      } else if (
+        result.statusCode === 429 ||
+        result.error?.toLowerCase().includes('too many') ||
+        result.error?.toLowerCase().includes('throttler')
+      ) {
+        setShowRateLimitModal(true);
       } else {
         toast.error(result.error || t('auth.login.failed'));
       }
@@ -129,6 +139,12 @@ export function LoginPage() {
       } else if (result.code === 'ACCOUNT_NOT_FOUND') {
         setSocialProvider('apple');
         setShowNoAccountModal(true);
+      } else if (
+        result.statusCode === 429 ||
+        result.error?.toLowerCase().includes('too many') ||
+        result.error?.toLowerCase().includes('throttler')
+      ) {
+        setShowRateLimitModal(true);
       } else {
         toast.error(result.error || t('auth.login.failed'));
       }
@@ -152,6 +168,13 @@ export function LoginPage() {
         if (result.error === 'Email not verified') {
           setUnverifiedEmail(data.email);
           setShowVerifyModal(true);
+        } else if (
+          result.statusCode === 429 ||
+          result.error?.toLowerCase().includes('too many') ||
+          result.error?.toLowerCase().includes('throttler') ||
+          result.error?.toLowerCase().includes('rate limit')
+        ) {
+          setShowRateLimitModal(true);
         } else if (isWrongCredentialsError(result.error, result.code)) {
           setError('email', { type: 'manual' });
           setError('password', { type: 'manual' });
@@ -637,6 +660,81 @@ export function LoginPage() {
                 >
                   {t('common.close')}
                 </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Rate limit / Too many requests modal */}
+      <AnimatePresence>
+        {showRateLimitModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowRateLimitModal(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-md"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="rate-limit-title"
+              className="relative w-full max-w-md overflow-hidden rounded-3xl border border-gray-200 bg-white p-8 shadow-2xl dark:border-white/10 dark:bg-[#0e0e0e]"
+            >
+              <div
+                aria-hidden
+                className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-amber-400/15 blur-3xl"
+              />
+              <button
+                type="button"
+                onClick={() => setShowRateLimitModal(false)}
+                aria-label={t('auth.login.ariaCloseModal')}
+                className="absolute end-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-xl text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-white/10 dark:hover:text-white"
+              >
+                <X size={18} />
+              </button>
+
+              <div className="relative mb-6 text-center">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-100 dark:bg-amber-900/30">
+                  <Clock size={28} className="text-amber-600 dark:text-amber-400" />
+                </div>
+                <h3
+                  id="rate-limit-title"
+                  className="font-barlow text-2xl font-bold text-gray-900 dark:text-white"
+                >
+                  {t('auth.login.rateLimitTitle', { defaultValue: 'Too Many Attempts' })}
+                </h3>
+                <p className="mt-3 text-sm leading-relaxed text-gray-500 dark:text-gray-400">
+                  {t('auth.login.rateLimitMessage', {
+                    defaultValue:
+                      'For your security, sign-in attempts have been temporarily limited due to multiple rapid attempts. Please wait 1 minute before trying again.',
+                  })}
+                </p>
+              </div>
+
+              <div className="relative flex flex-col gap-3">
+                <motion.button
+                  whileHover={{ y: -1 }}
+                  whileTap={{ scale: 0.97 }}
+                  type="button"
+                  onClick={() => setShowRateLimitModal(false)}
+                  className="group relative inline-flex h-14 w-full items-center justify-center gap-2 overflow-hidden rounded-2xl bg-mintcom-green font-bold text-black shadow-[0_8px_24px_-8px_rgba(124,195,159,0.6)] transition-all"
+                >
+                  <span
+                    aria-hidden
+                    className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-700 group-hover:translate-x-full"
+                  />
+                  <Clock size={16} className="relative" />
+                  <span className="relative">
+                    {t('auth.login.rateLimitClose', { defaultValue: 'I Understand' })}
+                  </span>
+                </motion.button>
               </div>
             </motion.div>
           </div>

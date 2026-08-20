@@ -46,6 +46,7 @@ import {
   CalendarClock
 } from 'lucide-react';
 import MintcomLeafIcon from '../assets/small-logo.svg';
+import MintcomLeafIconWhite from '../assets/small-logo-white.svg';
 import api from '../config/api';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
@@ -1217,7 +1218,7 @@ export function OnboardingPage() {
                     </button>
                     {isAdditionalLocation && (
                       <button type="button" onClick={() => navigate('/owner')} className="text-gray-400 hover:text-mintcom-green hover:underline transition-colors flex items-center text-xs font-sans font-bold">
-                        {t('common.dashboard', { defaultValue: 'Go to dashboard' })}
+                        {t('common.dashboard', { defaultValue: 'Go to Dashboard' })}
                       </button>
                     )}
                   </div>
@@ -1488,7 +1489,7 @@ export function OnboardingPage() {
                     </button>
                     {isAdditionalLocation && (
                       <button type="button" onClick={() => navigate('/owner')} className="text-gray-400 hover:text-mintcom-green hover:underline transition-colors flex items-center text-xs font-sans font-bold">
-                        {t('common.dashboard', { defaultValue: 'Go to dashboard' })}
+                        {t('common.dashboard', { defaultValue: 'Go to Dashboard' })}
                       </button>
                     )}
                   </div>
@@ -1578,7 +1579,7 @@ export function OnboardingPage() {
                     </button>
                     {isAdditionalLocation && (
                       <button type="button" onClick={() => navigate('/owner')} className="text-gray-400 hover:text-mintcom-green hover:underline transition-colors flex items-center text-xs font-sans font-bold">
-                        {t('common.dashboard', { defaultValue: 'Go to dashboard' })}
+                        {t('common.dashboard', { defaultValue: 'Go to Dashboard' })}
                       </button>
                     )}
                   </div>
@@ -1828,7 +1829,7 @@ export function OnboardingPage() {
                     onClick={() => navigate('/owner')}
                     className="text-gray-400 hover:text-mintcom-green hover:underline transition-colors flex items-center text-xs font-sans font-bold"
                   >
-                    {t('common.dashboard', { defaultValue: 'Go to dashboard' })}
+                    {t('common.dashboard', { defaultValue: 'Go to Dashboard' })}
                   </button>
                 )}
               </div>
@@ -1947,10 +1948,14 @@ export function OnboardingPage() {
                         <div className="flex flex-col items-start">
                           {hasLocationDiscount && (
                             <>
-                              <span className="font-barlow text-lg font-bold text-gray-400 line-through decoration-2">
-                                {formatWholeNumber(primaryDisplayPrice)}{' '}
-                                <span className="text-xs font-sans no-underline">{selectedUnitLabel}</span>
-                              </span>
+                              <div className="flex items-end gap-2">
+                                <span className="font-barlow text-lg font-bold text-gray-400 line-through decoration-2">
+                                  {formatWholeNumber(primaryDisplayPrice)}
+                                </span>
+                                <span className="pb-0.5 text-xs font-sans font-bold text-gray-400">
+                                  {selectedUnitLabel}
+                                </span>
+                              </div>
                               <ChevronDown size={18} className="my-0.5 text-mintcom-green" />
                             </>
                           )}
@@ -2314,13 +2319,13 @@ export function OnboardingPage() {
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
                           transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
-                          className="relative w-16 h-16 lg:w-20 lg:h-20 bg-gradient-to-br from-mintcom-green to-emerald-400 rounded-3xl flex items-center justify-center shadow-2xl shadow-mintcom-green/40 ring-1 ring-white/25"
+                          className="relative w-16 h-16 lg:w-20 lg:h-20 overflow-hidden bg-gradient-to-br from-mintcom-green to-emerald-400 rounded-3xl flex items-center justify-center shadow-2xl shadow-mintcom-green/40 ring-1 ring-white/25"
                         >
-                          <span className="absolute inset-2 rounded-2xl bg-white/20 backdrop-blur-[2px]" aria-hidden />
+                          <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/30 via-white/5 to-transparent" aria-hidden />
                           <img
-                            src={MintcomLeafIcon}
+                            src={MintcomLeafIconWhite}
                             alt=""
-                            className="relative h-9 w-9 scale-x-[-1] object-contain brightness-0 invert drop-shadow-[0_2px_6px_rgba(0,0,0,0.18)] lg:h-11 lg:w-11"
+                            className="relative h-9 w-9 scale-x-[-1] object-contain drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)] lg:h-11 lg:w-11"
                           />
                         </motion.div>
                         <div>
@@ -2415,13 +2420,13 @@ export function OnboardingPage() {
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
                           transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
-                          className="relative w-16 h-16 lg:w-20 lg:h-20 bg-gradient-to-br from-mintcom-green to-emerald-400 rounded-3xl flex items-center justify-center shadow-2xl shadow-mintcom-green/40 ring-1 ring-white/25"
+                          className="relative w-16 h-16 lg:w-20 lg:h-20 overflow-hidden bg-gradient-to-br from-mintcom-green to-emerald-400 rounded-3xl flex items-center justify-center shadow-2xl shadow-mintcom-green/40 ring-1 ring-white/25"
                         >
-                          <span className="absolute inset-2 rounded-2xl bg-white/20 backdrop-blur-[2px]" aria-hidden />
+                          <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/30 via-white/5 to-transparent" aria-hidden />
                           <img
-                            src={MintcomLeafIcon}
+                            src={MintcomLeafIconWhite}
                             alt=""
-                            className="relative h-9 w-9 scale-x-[-1] object-contain brightness-0 invert drop-shadow-[0_2px_6px_rgba(0,0,0,0.18)] lg:h-11 lg:w-11"
+                            className="relative h-9 w-9 scale-x-[-1] object-contain drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)] lg:h-11 lg:w-11"
                           />
                         </motion.div>
                         <div>

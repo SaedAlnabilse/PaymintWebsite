@@ -1116,8 +1116,8 @@ export function OwnerBrandsPage() {
                                                 {t('owner.brands.disclaimerTitle')}
                                             </h2>
                                             <p className="text-[15px] font-sans font-medium text-gray-500">
-                                                {establishments.length < 2 
-                                                    ? t('owner.brands.disclaimerNoLocations')
+                                                {establishments.length < 2
+                                                    ? t('owner.brands.disclaimerNotEnoughLocations')
                                                     : t('owner.brands.disclaimerSubtitle')
                                                 }
                                             </p>
