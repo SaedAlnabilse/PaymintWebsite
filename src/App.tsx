@@ -11,6 +11,7 @@ import { CookieConsent } from './components/CookieConsent';
 import { FeedbackWidget } from './components/FeedbackWidget';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { PwaUpdatePrompt } from './components/PwaUpdatePrompt';
+import { OfflineDinoScreen } from './components/OfflineDinoScreen';
 import { ConsentReprompt } from './components/ConsentReprompt';
 import { env } from './config/env';
 import { usePreventNumberInputScroll } from './hooks/usePreventNumberInputScroll';
@@ -417,6 +418,10 @@ const router = createBrowserRouter([
       { path: "/multi-location", element: <Navigate to="/" replace /> },
       { path: "/why-mintcom", element: <Navigate to="/" replace /> },
       { path: "/faq", element: <Navigate to="/support" replace /> },
+      {
+        path: "/offline",
+        element: <OfflineDinoScreen forceShow />,
+      },
       {
         path: "/qa",
         element: (
@@ -970,6 +975,7 @@ function App() {
           <CurrencyProvider>
             <div id="global-blocking-overlay" />
             <RouterProvider router={router} />
+            <OfflineDinoScreen />
             <ConsentReprompt />
             <PwaUpdatePrompt />
             <Toaster

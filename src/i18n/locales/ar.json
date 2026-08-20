@@ -347,7 +347,10 @@
       "noSocialAccountTitle": "لا يوجد حساب Mintcom بعد",
       "noSocialAccountMessage": "تعرفنا على تسجيل دخول {{provider}}، لكن لا يوجد حساب Mintcom مرتبط به. أنشئ حساباً في أقل من دقيقة، ولوحة التحكم في انتظارك.",
       "noSocialAccountGoogle": "Google",
-      "noSocialAccountApple": "Apple"
+      "noSocialAccountApple": "Apple",
+      "rateLimitTitle": "محاولات كثيرة جداً",
+      "rateLimitMessage": "لحماية حسابك وأمان بياناتك، تم تقييد محاولات تسجيل الدخول مؤقتاً بسبب تكرار المحاولات السريعة. يرجى الانتظار دقيقة واحدة ثم المحاولة مجدداً.",
+      "rateLimitClose": "حسناً، فهمت"
     },
     "logout": {
       "loggingOut": "...جاري تسجيل الخروج",
@@ -4444,6 +4447,7 @@
       "disclaimerAction": "فهمت ذلك",
       "disclaimerDesc": "لإنشاء علامة تجارية، يجب أن يكون لديك موقعان على الأقل ليسا جزءًا من علامة تجارية أخرى بالفعل. حاليًا، جميع مواقعك مجمعة بالفعل.",
       "disclaimerNoLocations": "ليس لديك حاليًا ما يكفي من المواقع لتكوين علامة تجارية. تتطلب العلامة التجارية موقعين على الأقل.",
+      "disclaimerNotEnoughLocations": "لا توجد مواقع كافية لإنشاء علامة تجارية",
       "disclaimerSubtitle": "جميع مواقعك مرتبطة بالفعل بعلامات تجارية",
       "disclaimerTitle": "غير قادر على إنشاء علامة تجارية",
       "failedToLoad": "فشل تحميل العلامات التجارية",

@@ -569,7 +569,7 @@ export function BackofficeAlertsView({
                 onClick={() => setSelectedLocationId('all')}
                 className={`min-w-48 flex-1 basis-48 shrink-0 rounded-xl border px-3.5 py-2.5 text-sm font-bold transition ${
                   selectedLocationId === 'all'
-                    ? 'border-mintcom-green bg-mintcom-green/15 text-emerald-800 dark:text-mintcom-green'
+                    ? 'border-transparent bg-mintcom-green/15 text-emerald-800 dark:text-mintcom-green'
                     : 'border-gray-200 bg-white text-gray-600 hover:border-mintcom-green dark:border-white/10 dark:bg-black/20 dark:text-gray-300'
                 }`}
               >
@@ -589,7 +589,7 @@ export function BackofficeAlertsView({
                     onClick={() => setSelectedLocationId(location.id)}
                       className={`min-w-64 flex-1 basis-64 shrink-0 truncate rounded-xl border px-3.5 py-2.5 text-sm font-bold transition ${
                       selectedLocationId === location.id
-                        ? 'border-mintcom-green bg-mintcom-green/15 text-emerald-800 dark:text-mintcom-green'
+                        ? 'border-transparent bg-mintcom-green/15 text-emerald-800 dark:text-mintcom-green'
                         : 'border-gray-200 bg-white text-gray-600 hover:border-mintcom-green dark:border-white/10 dark:bg-black/20 dark:text-gray-300'
                     }`}
                   >

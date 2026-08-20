@@ -4431,6 +4431,7 @@
       "disclaimerAction": "我已了解",
       "disclaimerDesc": "创建品牌需要至少 2 家尚未归属其他品牌的门店。目前，您的所有门店均已分组。",
       "disclaimerNoLocations": "您目前的门店数量不足以创建品牌。品牌需要至少 2 家门店。",
+      "disclaimerNotEnoughLocations": "门店数量不足，无法创建品牌",
       "disclaimerSubtitle": "您的所有门店都已关联到品牌",
       "disclaimerTitle": "无法创建品牌",
       "failedToLoad": "加载品牌失败",
