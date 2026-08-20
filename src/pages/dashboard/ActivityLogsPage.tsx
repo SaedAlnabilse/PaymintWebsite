@@ -448,6 +448,7 @@ export function ActivityLogsPage() {
       user: getActorName(l),
       action: l.action,
       desc: l.description,
+      data: getMetadataSummary(l.metadata) || '',
     }));
 
     if (exportData.length === 0) {
@@ -464,6 +465,7 @@ export function ActivityLogsPage() {
         { key: 'user', label: t('activity.user') },
         { key: 'action', label: t('activity.action') },
         { key: 'desc', label: t('activity.details') },
+        { key: 'data', label: t('activity.data', { defaultValue: 'Data' }) },
       ],
       rows: exportData,
     });
