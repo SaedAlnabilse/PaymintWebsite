@@ -210,7 +210,9 @@ const buildPDF = async (title: string, sections: ExportSection[], meta?: ExportM
     import('jspdf-autotable'),
   ]);
   const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
-  doc.setCharSpace(0.5);
+  // No setCharSpace here: extra inter-character spacing was what made exported
+  // reports look loose and uneven (MINT-RPT-010). Readability comes from the
+  // font size and cell padding in the autoTable styles below instead.
   const marginX = 40;
   let cursorY = 48;
 
