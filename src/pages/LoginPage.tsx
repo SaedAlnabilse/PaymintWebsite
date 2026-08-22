@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Eye, EyeOff, ArrowLeft, Mail, Lock, X,
-  AlertTriangle, Send, ArrowRight, KeyRound, UserPlus, ShieldAlert, Clock,
+  AlertTriangle, Send, ArrowRight, KeyRound, UserPlus, Clock,
 } from 'lucide-react';
 import MintcomLeafIcon from '../assets/small-logo.svg';
 import toast from 'react-hot-toast';
