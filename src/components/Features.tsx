@@ -1,3 +1,6 @@
+import { modalSlideVariants as slideVariants } from "./landing/modalSlideVariants";
+import { SectionCarouselFooter } from "./landing/SectionCarouselFooter";
+import { LandingFeatureCard } from './landing/LandingFeatureCard';
 import { useModalKeyboardGuard } from '../hooks/useModalKeyboardGuard';
 import { useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
@@ -31,83 +34,10 @@ type WorkflowFeature = {
   id?: string;
 };
 
-const WorkflowFeatureCard = ({
-  feature,
-  index,
-  t,
-  onOpen,
-}: {
-  feature: WorkflowFeature;
-  index: number;
-  t: (...args: any[]) => any;
-  onOpen: (index: number) => void;
-}) => {
-  return (
-    <motion.div
-      role="button"
-      tabIndex={0}
-      aria-label={feature.title}
-      onClick={() => onOpen(index)}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onOpen(index);
-        }
-      }}
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ delay: (index % 4) * 0.08, duration: 0.5 }}
-      whileHover={{ y: -6 }}
-      className="group relative flex h-full min-h-[260px] cursor-pointer flex-col overflow-hidden rounded-2xl border border-transparent bg-white p-6 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.08)] transition-all duration-500 hover:border-mintcom-green/25 hover:shadow-[0_16px_40px_-14px_rgba(124,195,159,0.28)] focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:border-mintcom-green/30 active:outline-none active:ring-0 dark:border-transparent dark:bg-[#121212] dark:shadow-[0_8px_30px_-12px_rgba(0,0,0,0.45)] dark:hover:border-mintcom-green/20"
-    >
-      {/* Fixed header band so titles wrap like “Recipe & Cost Management” without changing card height */}
-      <div className="relative z-10 mb-4 flex min-h-[56px] items-center gap-4">
-        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-mintcom-green/10 shadow-inner transition-all duration-500 group-hover:rotate-3 group-hover:scale-110 group-hover:bg-mintcom-green dark:bg-mintcom-green/15">
-          <feature.icon size={22} className="text-mintcom-green transition-colors duration-500 group-hover:text-white" />
-        </div>
-        <h3 className="line-clamp-2 flex min-h-[2.5rem] items-center font-sans text-base font-bold leading-tight tracking-tight text-gray-900 transition-colors group-hover:text-mintcom-green dark:text-white">
-          {feature.title}
-        </h3>
-      </div>
 
-      <div className="relative z-10 flex min-h-0 flex-1 flex-col justify-between">
-        <p className="line-clamp-3 min-h-[3.75rem] font-sans text-sm font-medium leading-relaxed text-gray-600 dark:text-gray-400">
-          {feature.description}
-        </p>
-
-        <div className="mt-3">
-          <div className="mb-3 h-px w-full bg-gray-200 dark:bg-white/10" />
-          <span className="inline-flex items-center gap-1.5 font-sans text-xs font-bold tracking-wide text-mintcom-green transition-colors group-hover:text-mintcom-green/80">
-            {t('landing.features.readMore', 'Learn more')}
-            <ArrowUpRight
-              size={11}
-              className="text-mintcom-green opacity-0 transition-opacity group-hover:opacity-100"
-            />
-          </span>
-        </div>
-      </div>
-    </motion.div>
-  );
-};
 
 /** Same open/slide motion language as Why Mintcom FeatureModal */
-const slideVariants: Variants = {
-  enter: (direction: number) => ({
-    x: direction * 56,
-    opacity: 0,
-  }),
-  center: {
-    x: 0,
-    opacity: 1,
-    transition: { duration: 0.28, ease: [0.22, 1, 0.36, 1] },
-  },
-  exit: (direction: number) => ({
-    x: direction * -56,
-    opacity: 0,
-    transition: { duration: 0.22 },
-  }),
-};
+
 
 /** Shared preview frame for every Features modal card (incl. mobile) — same 3:2 as sales. */
 const FEATURE_PREVIEW_FRAME_CLASS = 'aspect-[3/2] w-full overflow-hidden';
@@ -316,43 +246,16 @@ const WorkflowFeatureModal = ({
           </AnimatePresence>
         </div>
 
-        <div className="relative z-10 mx-6 flex shrink-0 items-center justify-between gap-4 border-t border-gray-100 py-3.5 dark:border-white/10 md:mx-8 md:py-4">
-          <button
-            type="button"
-            onClick={onPrev}
-            aria-label={String(t('common.previous', 'Previous'))}
-            className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 font-sans text-sm font-bold text-gray-700 transition-colors hover:bg-gray-50 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
-          >
-            {isRtl ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-            <span className="hidden sm:inline">{t('common.previous', 'Previous')}</span>
-          </button>
-
-          <div className="no-scrollbar flex max-w-[55%] items-center gap-1.5 overflow-x-auto">
-            {features.map((_, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => onJumpTo(i)}
-                aria-label={`Go to ${i + 1}`}
-                className={`h-2 flex-shrink-0 rounded-full transition-all duration-300 ${
-                  i === activeIndex
-                    ? 'w-5 bg-mintcom-green'
-                    : 'w-2 bg-gray-300 hover:bg-gray-400 dark:bg-white/15 dark:hover:bg-white/25'
-                }`}
-              />
-            ))}
-          </div>
-
-          <button
-            type="button"
-            onClick={onNext}
-            aria-label={String(t('common.next', 'Next'))}
-            className="flex items-center gap-2 rounded-xl bg-mintcom-green px-4 py-2.5 font-sans text-sm font-bold text-black shadow-[0_4px_20px_-4px_rgba(125,198,162,0.5)] transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_28px_-4px_rgba(125,198,162,0.65)]"
-          >
-            <span className="hidden sm:inline">{t('common.next', 'Next')}</span>
-            {isRtl ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
-          </button>
-        </div>
+        <SectionCarouselFooter
+          totalCount={features.length}
+          activeIndex={activeIndex}
+          onPrev={onPrev}
+          onNext={onNext}
+          onJumpTo={onJumpTo}
+          isRtl={isRtl}
+          prevLabel={String(t("common.previous", "Previous"))}
+          nextLabel={String(t("common.next", "Next"))}
+        />
       </motion.div>
     </div>
   );
@@ -514,11 +417,13 @@ export const Features = () => {
 
         <div className="grid auto-rows-fr grid-cols-1 items-stretch gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6 xl:grid-cols-4">
           {workflowFeatures.map((feature, index) => (
-            <WorkflowFeatureCard
+            <LandingFeatureCard
               key={feature.id ?? index}
-              feature={feature}
+              title={feature.title}
+              description={feature.description}
+              icon={feature.icon}
               index={index}
-              t={t}
+              readMoreText={t("landing.features.readMore", "Learn more")}
               onOpen={handleOpen}
             />
           ))}

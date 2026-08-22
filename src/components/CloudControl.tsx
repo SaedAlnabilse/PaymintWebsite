@@ -1,3 +1,6 @@
+import { SplitText } from "./landing/SplitText";
+import { SectionCarouselFooter } from "./landing/SectionCarouselFooter";
+import { AppDownloadBadgeGroup } from "./landing/AppDownloadBadgeGroup";
 import { useModalKeyboardGuard } from '../hooks/useModalKeyboardGuard';
 import { useCallback, useEffect, useState } from 'react';
 import {
@@ -96,23 +99,7 @@ const scopeSlideVariants: Variants = {
   }),
 };
 
-const SplitText = ({ text, className = "" }: { text: string; className?: string }) => {
-  return (
-    <span className={className}>
-      {text.split(' ').map((word, i) => {
-        const isMintcom = word.toLowerCase().includes('mintcom');
-        return (
-          <span
-            key={i}
-            className={isMintcom ? 'text-mintcom-green' : (i % 2 === 0 ? 'text-gray-900 dark:text-white' : 'text-mintcom-green')}
-          >
-            {word}{' '}
-          </span>
-        );
-      })}
-    </span>
-  );
-};
+
 
 
 // ---------------------------------------------------------------------------
@@ -842,43 +829,16 @@ const ScopeDashboardModal = ({
           </AnimatePresence>
         </div>
 
-        <div className="relative z-10 mx-6 flex shrink-0 items-center justify-between gap-4 border-t border-gray-100 py-3.5 dark:border-white/10 md:mx-8 md:py-4">
-          <button
-            type="button"
-            onClick={onPrev}
-            aria-label={String(t('common.previous', 'Previous'))}
-            className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 font-sans text-sm font-bold text-gray-700 transition-colors hover:bg-gray-50 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
-          >
-            {isRtl ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-            <span className="hidden sm:inline">{t('common.previous', 'Previous')}</span>
-          </button>
-
-          <div className="no-scrollbar flex max-w-[55%] items-center gap-1.5 overflow-x-auto">
-            {dashboards.map((_, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => onJumpTo(i)}
-                aria-label={`Go to ${i + 1}`}
-                className={`h-2 flex-shrink-0 rounded-full transition-all duration-300 ${
-                  i === activeIndex
-                    ? 'w-5 bg-mintcom-green'
-                    : 'w-2 bg-gray-300 hover:bg-gray-400 dark:bg-white/15 dark:hover:bg-white/25'
-                }`}
-              />
-            ))}
-          </div>
-
-          <button
-            type="button"
-            onClick={onNext}
-            aria-label={String(t('common.next', 'Next'))}
-            className="flex items-center gap-2 rounded-xl bg-mintcom-green px-4 py-2.5 font-sans text-sm font-bold text-black shadow-[0_4px_20px_-4px_rgba(125,198,162,0.5)] transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_28px_-4px_rgba(125,198,162,0.65)]"
-          >
-            <span className="hidden sm:inline">{t('common.next', 'Next')}</span>
-            {isRtl ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
-          </button>
-        </div>
+        <SectionCarouselFooter
+          totalCount={dashboards.length}
+          activeIndex={activeIndex}
+          onPrev={onPrev}
+          onNext={onNext}
+          onJumpTo={onJumpTo}
+          isRtl={isRtl}
+          prevLabel={String(t("common.previous", "Previous"))}
+          nextLabel={String(t("common.next", "Next"))}
+        />
       </motion.div>
     </div>
   );
@@ -1653,83 +1613,21 @@ export const CloudControl = () => {
             </p>
 
             {/* Download CTA — compact, matching AdminControl style */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="mt-8 sm:mt-10 flex flex-col items-center sm:items-start gap-3 w-fit mx-auto sm:mx-0"
-            >
-              <p className="text-sm font-semibold uppercase tracking-widest text-gray-500 dark:text-gray-400">
-                {t('landing.admin.installApp')}
-              </p>
-              <div className="flex flex-wrap items-center gap-3">
-                {hasOwnerIosDownload ? (
-                  <a
-                    href={OWNER_IOS_DOWNLOAD_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={t('landing.admin.downloadOnAppStore')}
-                    className="block transition-all hover:opacity-90 hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-mintcom-green/60 rounded-[11px]"
-                  >
-                    <img
-                      src={AppStoreBadge}
-                      alt={t('landing.admin.downloadOnAppStore')}
-                      className="block h-[52px] w-auto object-contain"
-                      loading="lazy"
-                      decoding="async"
-                    />
-                  </a>
-                ) : (
-                  <button
-                    type="button"
-                    disabled
-                    aria-label={t('landing.cloudControl.scope.preview.ownerIosDownloadComingSoon', 'Owner iOS app download coming soon')}
-                    className="block opacity-50 cursor-not-allowed rounded-[11px]"
-                  >
-                    <img
-                      src={AppStoreBadge}
-                      alt={t('landing.admin.downloadOnAppStore')}
-                      className="block h-[52px] w-auto object-contain"
-                      loading="lazy"
-                      decoding="async"
-                    />
-                  </button>
-                )}
-                {hasOwnerAndroidDownload ? (
-                  <a
-                    href={OWNER_ANDROID_DOWNLOAD_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={t('landing.admin.getItOnGooglePlay')}
-                    className="block transition-all hover:opacity-90 hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-mintcom-green/60 rounded-[11px]"
-                  >
-                    <img
-                      src={GooglePlayBadge}
-                      alt={t('landing.admin.getItOnGooglePlay')}
-                      className="block h-[52px] w-auto object-contain"
-                      loading="lazy"
-                      decoding="async"
-                    />
-                  </a>
-                ) : (
-                  <button
-                    type="button"
-                    disabled
-                    aria-label={t('landing.cloudControl.scope.preview.ownerAndroidDownloadComingSoon', 'Owner Android app download coming soon')}
-                    className="block opacity-50 cursor-not-allowed rounded-[11px]"
-                  >
-                    <img
-                      src={GooglePlayBadge}
-                      alt={t('landing.admin.getItOnGooglePlay')}
-                      className="block h-[52px] w-auto object-contain"
-                      loading="lazy"
-                      decoding="async"
-                    />
-                  </button>
-                )}
-              </div>
-            </motion.div>
+            <AppDownloadBadgeGroup
+              label={t("landing.admin.installApp")}
+              hasIosDownload={hasOwnerIosDownload}
+              hasAndroidDownload={hasOwnerAndroidDownload}
+              iosAriaLabel={t("landing.admin.downloadOnAppStore")}
+              androidAriaLabel={t("landing.admin.getItOnGooglePlay")}
+              iosComingSoonLabel={t(
+                "landing.cloudControl.scope.preview.ownerIosDownloadComingSoon",
+                "Owner iOS app download coming soon",
+              )}
+              androidComingSoonLabel={t(
+                "landing.cloudControl.scope.preview.ownerAndroidDownloadComingSoon",
+                "Owner Android app download coming soon",
+              )}
+            />
           </motion.div>
 
           {/* Right: Laptop + Tablet visual */}

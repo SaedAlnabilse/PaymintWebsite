@@ -1,3 +1,4 @@
+import { SplitText } from "./landing/SplitText";
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -7,23 +8,7 @@ import { DEMO_VIDEO_POSTER_URL, HERO_VIDEO_URL, isNativeVideoUrl } from '../conf
 import heroImage from '../assets/mintcom-pos-hero.png';
 import { ONBOARDING_START_PATH } from '../utils/onboardingLaunch';
 
-const SplitText = ({ text, className = "" }: { text: string; className?: string }) => {
-  return (
-    <span className={className}>
-      {text.split(' ').map((word, i) => {
-        const isMintcom = word.toLowerCase().includes('mintcom');
-        return (
-          <span
-            key={i}
-            className={isMintcom ? 'text-mintcom-green' : (i % 2 === 0 ? 'text-gray-900 dark:text-white' : 'text-mintcom-green')}
-          >
-            {word}{' '}
-          </span>
-        );
-      })}
-    </span>
-  );
-};
+
 
 export const Hero = ({ isVideoOpen, setIsVideoOpen }: { isVideoOpen: boolean; setIsVideoOpen: (open: boolean) => void }) => {
   const { t } = useTranslation();

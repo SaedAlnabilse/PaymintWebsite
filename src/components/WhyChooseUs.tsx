@@ -1,3 +1,6 @@
+import { modalSlideVariants as slideVariants } from "./landing/modalSlideVariants";
+import { SectionCarouselFooter } from "./landing/SectionCarouselFooter";
+import { LandingFeatureCard } from './landing/LandingFeatureCard';
 import { useModalKeyboardGuard } from '../hooks/useModalKeyboardGuard';
 import { useState, useEffect, useRef, useCallback, Fragment } from 'react';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
@@ -61,89 +64,9 @@ type Feature = {
   highlights: string[];
 };
 
-const slideVariants: Variants = {
-  enter: (direction: number) => ({
-    x: direction * 56,
-    opacity: 0,
-  }),
-  center: {
-    x: 0,
-    opacity: 1,
-    transition: { duration: 0.28, ease: [0.22, 1, 0.36, 1] },
-  },
-  exit: (direction: number) => ({
-    x: direction * -56,
-    opacity: 0,
-    transition: { duration: 0.22 },
-  }),
-};
+
 
 /** Card chrome matches Features WorkflowFeatureCard — icon + title row, Learn more. */
-const FeatureCard = ({
-  feature,
-  index,
-  t,
-  onOpen,
-}: {
-  feature: Feature;
-  index: number;
-  t: (...args: any[]) => any;
-  onOpen: (index: number) => void;
-}) => {
-  const Icon = feature.icon;
-
-  return (
-    <motion.div
-      role="button"
-      tabIndex={0}
-      aria-label={feature.cardTitle}
-      onClick={() => onOpen(index)}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onOpen(index);
-        }
-      }}
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ delay: (index % 4) * 0.08, duration: 0.5 }}
-      whileHover={{ y: -6 }}
-      className="group relative flex h-full min-h-[248px] cursor-pointer flex-col overflow-hidden rounded-2xl border border-transparent bg-white p-6 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.08)] transition-all duration-500 hover:border-mintcom-green/25 hover:shadow-[0_16px_40px_-14px_rgba(124,195,159,0.28)] focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:border-mintcom-green/30 active:outline-none active:ring-0 dark:border-transparent dark:bg-[#121212] dark:shadow-[0_8px_30px_-12px_rgba(0,0,0,0.45)] dark:hover:border-mintcom-green/20"
-    >
-      {/* Icon + title row; body/CTA sit full-width so Learn more aligns with description text */}
-      <div className="relative z-10 mb-4 flex min-h-[56px] items-center gap-4">
-        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-mintcom-green/10 shadow-inner transition-all duration-500 group-hover:rotate-3 group-hover:scale-110 group-hover:bg-mintcom-green dark:bg-mintcom-green/15">
-          <Icon
-            size={22}
-            className="text-mintcom-green transition-colors duration-500 group-hover:text-white"
-          />
-        </div>
-        <h3 className="line-clamp-2 flex min-h-[2.5rem] items-center font-sans text-base font-bold leading-tight tracking-tight text-gray-900 transition-colors group-hover:text-mintcom-green dark:text-white">
-          {feature.cardTitle}
-        </h3>
-      </div>
-
-      <div className="relative z-10 flex min-h-0 flex-1 flex-col justify-between">
-        <p className="line-clamp-3 min-h-[3.75rem] font-sans text-sm font-medium leading-relaxed text-gray-600 dark:text-gray-400">
-          {feature.description}
-        </p>
-
-        <div className="mt-3">
-          {/* Thin divider between description and Learn more */}
-          <div className="mb-3 h-px w-full bg-gray-200 dark:bg-white/10" />
-          <span className="inline-flex items-center gap-1.5 font-sans text-xs font-bold tracking-wide text-mintcom-green transition-colors group-hover:text-mintcom-green/80">
-            {t('landing.features.readMore', 'Learn more')}
-            <ArrowUpRight
-              size={11}
-              className="text-mintcom-green opacity-0 transition-opacity group-hover:opacity-100"
-            />
-          </span>
-        </div>
-      </div>
-    </motion.div>
-  );
-};
 
 /**
  * Card 1 — fluid full-bleed modules. Fills the same 3:2 frame as sales/reports
@@ -522,41 +445,16 @@ const FeatureModal = ({
           </AnimatePresence>
         </div>
 
-        <div className="relative z-10 mx-6 flex shrink-0 items-center justify-between gap-4 border-t border-gray-100 py-3.5 dark:border-white/10 md:mx-8 md:py-4">
-          <button
-            type="button"
-            onClick={onPrev}
-            className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 font-sans text-sm font-bold text-gray-700 transition-colors hover:bg-gray-50 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
-          >
-            {isRtl ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-            <span className="hidden sm:inline">{t('common.previous', 'Previous')}</span>
-          </button>
-
-          <div className="no-scrollbar flex max-w-[55%] items-center gap-1.5 overflow-x-auto">
-            {features.map((_, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => onJumpTo(i)}
-                aria-label={`Go to ${i + 1}`}
-                className={`h-2 flex-shrink-0 rounded-full transition-all duration-300 ${
-                  i === activeIndex
-                    ? 'w-5 bg-mintcom-green'
-                    : 'w-2 bg-gray-300 hover:bg-gray-400 dark:bg-white/15 dark:hover:bg-white/25'
-                }`}
-              />
-            ))}
-          </div>
-
-          <button
-            type="button"
-            onClick={onNext}
-            className="flex items-center gap-2 rounded-xl bg-mintcom-green px-4 py-2.5 font-sans text-sm font-bold text-black shadow-[0_4px_20px_-4px_rgba(125,198,162,0.5)] transition-all hover:-translate-y-0.5"
-          >
-            <span className="hidden sm:inline">{t('common.next', 'Next')}</span>
-            {isRtl ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
-          </button>
-        </div>
+        <SectionCarouselFooter
+          totalCount={features.length}
+          activeIndex={activeIndex}
+          onPrev={onPrev}
+          onNext={onNext}
+          onJumpTo={onJumpTo}
+          isRtl={isRtl}
+          prevLabel={String(t("common.previous", "Previous"))}
+          nextLabel={String(t("common.next", "Next"))}
+        />
       </motion.div>
     </div>
   );
@@ -752,13 +650,15 @@ export const WhyChooseUs = () => {
         <div className="flex flex-col gap-16 lg:gap-24">
           <div className="grid grid-cols-1 items-stretch gap-5 md:grid-cols-2 md:gap-6 lg:grid-cols-4">
             {features.map((feature, index) => (
-              <FeatureCard
-                key={feature.id}
-                feature={feature}
-                index={index}
-                t={t}
-                onOpen={handleOpen}
-              />
+              <LandingFeatureCard
+              key={feature.id ?? index}
+              title={feature.cardTitle}
+              description={feature.description}
+              icon={feature.icon}
+              index={index}
+              readMoreText={t("landing.features.readMore", "Learn more")}
+              onOpen={handleOpen}
+            />
             ))}
           </div>
 

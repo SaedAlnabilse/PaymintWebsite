@@ -1,25 +1,10 @@
+import { SplitText } from "./landing/SplitText";
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tablet, Printer, X, CheckCircle2 } from 'lucide-react';
 
-const SplitText = ({ text, className = "" }: { text: string; className?: string }) => {
-  return (
-    <span className={className}>
-      {text.split(' ').map((word, i) => {
-        const isMintcom = word.toLowerCase().includes('mintcom');
-        return (
-          <span
-            key={i}
-            className={isMintcom ? 'text-mintcom-green' : (i % 2 === 0 ? 'text-gray-900 dark:text-white' : 'text-mintcom-green')}
-          >
-            {word}{' '}
-          </span>
-        );
-      })}
-    </span>
-  );
-};
+
 
 export const Hardware = () => {
   const { t } = useTranslation();
