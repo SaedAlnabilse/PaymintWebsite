@@ -53,4 +53,46 @@ if (typeof window !== 'undefined') {
     configurable: true,
     value: MockIntersectionObserver,
   });
+
+  // Mock HTMLCanvasElement for jsdom environments (CI runners without native canvas bindings)
+  if (!HTMLCanvasElement.prototype.getContext) {
+    HTMLCanvasElement.prototype.getContext = ((contextId: string) => {
+      if (contextId === '2d') {
+        return {
+          fillRect: () => {},
+          clearRect: () => {},
+          getImageData: (_x: number, _y: number, w: number, h: number) => ({
+            data: new Uint8ClampedArray(w * h * 4),
+          }),
+          putImageData: () => {},
+          createImageData: () => [],
+          setTransform: () => {},
+          drawImage: () => {},
+          save: () => {},
+          fillText: () => {},
+          restore: () => {},
+          beginPath: () => {},
+          moveTo: () => {},
+          lineTo: () => {},
+          closePath: () => {},
+          stroke: () => {},
+          translate: () => {},
+          scale: () => {},
+          rotate: () => {},
+          arc: () => {},
+          fill: () => {},
+          measureText: () => ({ width: 0 }),
+          transform: () => {},
+          rect: () => {},
+          clip: () => {},
+        } as unknown as CanvasRenderingContext2D;
+      }
+      return null;
+    }) as any;
+  }
+
+  if (!HTMLCanvasElement.prototype.toDataURL) {
+    HTMLCanvasElement.prototype.toDataURL = (() =>
+      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==') as any;
+  }
 }
