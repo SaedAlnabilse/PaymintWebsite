@@ -1,3 +1,4 @@
+import { useModalKeyboardGuard } from '../hooks/useModalKeyboardGuard';
 import { useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -459,27 +460,14 @@ export const Features = () => {
     });
   }, []);
 
-  useEffect(() => {
-    if (activeCard === null) return;
-
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') handleClose();
-      else if (e.key === 'ArrowRight') (isRtl ? handlePrev : handleNext)();
-      else if (e.key === 'ArrowLeft') (isRtl ? handleNext : handlePrev)();
-    };
-    window.addEventListener('keydown', onKey);
-
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-
-    window.dispatchEvent(new CustomEvent('mintcom-chat-widget-hide'));
-
-    return () => {
-      window.removeEventListener('keydown', onKey);
-      document.body.style.overflow = prevOverflow;
-      window.dispatchEvent(new CustomEvent('mintcom-chat-widget-show'));
-    };
-  }, [activeCard, handleClose, handleNext, handlePrev, isRtl]);
+  useModalKeyboardGuard({
+    isOpen: activeCard !== null,
+    onClose: handleClose,
+    onNext: handleNext,
+    onPrev: handlePrev,
+    isRtl,
+    hideChatWidget: true,
+  });
 
   return (
     <section

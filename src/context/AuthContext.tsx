@@ -268,6 +268,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const hydrateLoggedInAccount = async (
+    accountData: Account,
+    estList: Establishment[],
+    extraMessage?: string,
+  ): Promise<AuthResult> => {
+    setLoginSuccess(true);
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    localStorage.setItem('account', JSON.stringify(accountData));
+    setAccount(accountData);
+    const finalEstablishments = await loadRecoveryAwareEstablishments(
+      accountData,
+      estList,
+    );
+
+    setTimeout(() => {
+      setIsLoggingIn(false);
+      setLoginSuccess(false);
+    }, 500);
+
+    return {
+      success: true,
+      isSecondaryAdmin: !!accountData.isSecondaryAdmin,
+      requiresAccountRecovery: hasPendingAccountDeletion(accountData),
+      needsOnboarding:
+        !hasPendingAccountDeletion(accountData) &&
+        finalEstablishments.length === 0,
+      ...(extraMessage ? { message: extraMessage } : {}),
+    };
+  };
+
   const login = async (email: string, password: string): Promise<AuthResult> => {
     setIsLoggingIn(true);
     setLoginSuccess(false);
@@ -279,37 +310,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // The accessToken is now set as an HttpOnly cookie by the server
       // We only receive account and establishments data in the response body
       if (response.data.account) {
-        // 2. Success state
-        setLoginSuccess(true);
-
-        // Wait for success animation to play
-        await new Promise(resolve => setTimeout(resolve, 1500));
-
-        const { account: accountData, establishments: estList } = response.data;
-
-        // Save non-sensitive account data only. The server stores auth in an HttpOnly cookie.
-        localStorage.setItem('account', JSON.stringify(accountData));
-
-        setAccount(accountData);
-        const finalEstablishments = await loadRecoveryAwareEstablishments(
-          accountData,
-          estList,
+        return await hydrateLoggedInAccount(
+          response.data.account,
+          response.data.establishments,
         );
-
-        // Keep overlay on until navigation completes
-        setTimeout(() => {
-          setIsLoggingIn(false);
-          setLoginSuccess(false);
-        }, 500);
-
-        return {
-          success: true,
-          isSecondaryAdmin: !!accountData.isSecondaryAdmin,
-          requiresAccountRecovery: hasPendingAccountDeletion(accountData),
-          needsOnboarding:
-            !hasPendingAccountDeletion(accountData) &&
-            finalEstablishments.length === 0,
-        };
       }
 
       setIsLoggingIn(false);
@@ -352,38 +356,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (response.data.account) {
-        // Success state
-        setLoginSuccess(true);
-
-        // Wait for success animation to play
-        await new Promise(resolve => setTimeout(resolve, 1500));
-
-        const { account: accountData, establishments: estList } = response.data;
-
-        // Save non-sensitive account data only. The server stores auth in an HttpOnly cookie.
-        localStorage.setItem('account', JSON.stringify(accountData));
-
-        setAccount(accountData);
-        const finalEstablishments = await loadRecoveryAwareEstablishments(
-          accountData,
-          estList,
+        return await hydrateLoggedInAccount(
+          response.data.account,
+          response.data.establishments,
+          response.data.isNewUser ? 'Account created successfully!' : 'Welcome back!',
         );
-
-        // Keep overlay on until navigation completes
-        setTimeout(() => {
-          setIsLoggingIn(false);
-          setLoginSuccess(false);
-        }, 500);
-
-        return {
-          success: true,
-          isSecondaryAdmin: !!accountData.isSecondaryAdmin,
-          requiresAccountRecovery: hasPendingAccountDeletion(accountData),
-          needsOnboarding:
-            !hasPendingAccountDeletion(accountData) &&
-            finalEstablishments.length === 0,
-          message: response.data.isNewUser ? 'Account created successfully!' : 'Welcome back!'
-        };
       }
 
       setIsLoggingIn(false);
@@ -421,38 +398,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (response.data.account) {
-        // Success state
-        setLoginSuccess(true);
-
-        // Wait for success animation to play
-        await new Promise(resolve => setTimeout(resolve, 1500));
-
-        const { account: accountData, establishments: estList } = response.data;
-
-        // Save non-sensitive account data only. The server stores auth in an HttpOnly cookie.
-        localStorage.setItem('account', JSON.stringify(accountData));
-
-        setAccount(accountData);
-        const finalEstablishments = await loadRecoveryAwareEstablishments(
-          accountData,
-          estList,
+        return await hydrateLoggedInAccount(
+          response.data.account,
+          response.data.establishments,
+          response.data.isNewUser ? 'Account created successfully!' : 'Welcome back!',
         );
-
-        // Keep overlay on until navigation completes
-        setTimeout(() => {
-          setIsLoggingIn(false);
-          setLoginSuccess(false);
-        }, 500);
-
-        return {
-          success: true,
-          isSecondaryAdmin: !!accountData.isSecondaryAdmin,
-          requiresAccountRecovery: hasPendingAccountDeletion(accountData),
-          needsOnboarding:
-            !hasPendingAccountDeletion(accountData) &&
-            finalEstablishments.length === 0,
-          message: response.data.isNewUser ? 'Account created successfully!' : 'Welcome back!'
-        };
       }
 
       setIsLoggingIn(false);

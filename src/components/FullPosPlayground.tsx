@@ -1267,6 +1267,55 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
     );
   }
 
+  const sharedOrderPanelProps = {
+    orderNo,
+    cart,
+    orderType,
+    discountPct,
+    discountName,
+    orderDiscounts: [...ORDER_DISCOUNTS],
+    onApplyDiscount: applyOrderDiscount,
+    orderNote,
+    loyaltyName,
+    subtotal,
+    discount,
+    tax,
+    taxRate: taxRateEffective,
+    isTaxChanged,
+    onEditTax: canChangeTax ? () => cart.length && setTaxModalOpen(true) : undefined,
+    serviceChargeAmount,
+    serviceChargeLabel,
+    serviceChargeActive: showServiceChargeRow,
+    onEditServiceCharge: canOverrideServiceCharge ? () => setScModalOpen(true) : undefined,
+    serviceChargeEditDisabled: cart.length === 0,
+    total,
+    onShowNote: () => {
+      if (!cart.length) { ping('Add items first'); return; }
+      setNoteModalOpen(true);
+    },
+    onHold: openHoldModal,
+    onClear: requestClearOrder,
+    onLoyalty: () => {
+      if (!can('loyalty')) { ping('Loyalty · manager only'); return; }
+      setShowLoyalty(true);
+    },
+    onPrint: openPrintEstimate,
+    onChangeQty: changeQty,
+    onEditLine: openEditLine,
+    onUpdateLineDiscount: updateLineDiscount,
+    onUpdateLineNote: updateLineNote,
+    onPayCash: () => openPayment('cash'),
+    onPayCard: () => openPayment('card'),
+    onPayOther: () => openPayment('other'),
+    onPaySplit: openSplit,
+    canDiscount: can('discount'),
+    canHold: can('hold'),
+    canVoid: can('void_item'),
+    canLoyalty: can('loyalty'),
+    canSplit: can('split'),
+    canClear: can('void_item'),
+  };
+
   /* ─── Main POS app shell ─── */
   return (
     <div className="try-pos-root relative isolate flex h-full max-h-full flex-col overflow-hidden bg-cream-50 text-text-primary dark:bg-mintcom-dark dark:text-white">
@@ -1936,65 +1985,14 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
               </section>
 
               {/* Order pane */}
-              {!mobile && <OrderPanel
-                panelId="tour-order-panel"
-                payActionsId="tour-pay-actions"
-                className="flex h-full w-full max-w-[340px] flex-[1] overflow-hidden border-s border-gray-200 bg-white dark:border-mintcom-tertiary dark:bg-mintcom-surface"
-                orderNo={orderNo}
-                cart={cart}
-                orderType={orderType}
-                discountPct={discountPct}
-                discountName={discountName}
-                orderDiscounts={[...ORDER_DISCOUNTS]}
-                onApplyDiscount={applyOrderDiscount}
-                orderNote={orderNote}
-                loyaltyName={loyaltyName}
-                subtotal={subtotal}
-                discount={discount}
-                tax={tax}
-                taxRate={taxRateEffective}
-                isTaxChanged={isTaxChanged}
-                onEditTax={
-                  canChangeTax
-                    ? () => cart.length && setTaxModalOpen(true)
-                    : undefined
-                }
-                serviceChargeAmount={serviceChargeAmount}
-                serviceChargeLabel={serviceChargeLabel}
-                serviceChargeActive={showServiceChargeRow}
-                onEditServiceCharge={
-                  canOverrideServiceCharge
-                    ? () => setScModalOpen(true)
-                    : undefined
-                }
-                serviceChargeEditDisabled={cart.length === 0}
-                total={total}
-                onShowNote={() => {
-                  if (!cart.length) { ping('Add items first'); return; }
-                  setNoteModalOpen(true);
-                }}
-                onHold={openHoldModal}
-                onClear={requestClearOrder}
-                onLoyalty={() => {
-                  if (!can('loyalty')) { ping('Loyalty · manager only'); return; }
-                  setShowLoyalty(true);
-                }}
-                onPrint={openPrintEstimate}
-                onChangeQty={changeQty}
-                onEditLine={openEditLine}
-                onUpdateLineDiscount={updateLineDiscount}
-                onUpdateLineNote={updateLineNote}
-                onPayCash={() => openPayment('cash')}
-                onPayCard={() => openPayment('card')}
-                onPayOther={() => openPayment('other')}
-                onPaySplit={openSplit}
-                canDiscount={can('discount')}
-                canHold={can('hold')}
-                canVoid={can('void_item')}
-                canLoyalty={can('loyalty')}
-                canSplit={can('split')}
-                canClear={can('void_item')}
-              />}
+              {!mobile && (
+                <OrderPanel
+                  panelId="tour-order-panel"
+                  payActionsId="tour-pay-actions"
+                  className="flex h-full w-full max-w-[340px] flex-[1] overflow-hidden border-s border-gray-200 bg-white dark:border-mintcom-tertiary dark:bg-mintcom-surface"
+                  {...sharedOrderPanelProps}
+                />
+              )}
             </>
           )}
 
@@ -2453,63 +2451,7 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
                 </div>
                 <OrderPanel
                   className="flex min-h-0 flex-1"
-                  orderNo={orderNo}
-                  cart={cart}
-                  orderType={orderType}
-                  discountPct={discountPct}
-                  discountName={discountName}
-                  orderDiscounts={[...ORDER_DISCOUNTS]}
-                  onApplyDiscount={applyOrderDiscount}
-                  orderNote={orderNote}
-                  loyaltyName={loyaltyName}
-                  subtotal={subtotal}
-                  discount={discount}
-                  tax={tax}
-                  taxRate={taxRateEffective}
-                  isTaxChanged={isTaxChanged}
-                  onEditTax={
-                    canChangeTax
-                      ? () => cart.length && setTaxModalOpen(true)
-                      : undefined
-                  }
-                  serviceChargeAmount={serviceChargeAmount}
-                  serviceChargeLabel={serviceChargeLabel}
-                  serviceChargeActive={showServiceChargeRow}
-                  onEditServiceCharge={
-                    canOverrideServiceCharge
-                      ? () => setScModalOpen(true)
-                      : undefined
-                  }
-                  serviceChargeEditDisabled={cart.length === 0}
-                  total={total}
-                  onShowNote={() => {
-                    if (!cart.length) { ping('Add items first'); return; }
-                    setNoteModalOpen(true);
-                  }}
-                  onHold={openHoldModal}
-                  onClear={requestClearOrder}
-                  onLoyalty={() => {
-                    if (!can('loyalty')) {
-                      ping('Loyalty · manager only');
-                      return;
-                    }
-                    setShowLoyalty(true);
-                  }}
-                  onPrint={openPrintEstimate}
-                  onChangeQty={changeQty}
-                  onEditLine={openEditLine}
-                  onUpdateLineDiscount={updateLineDiscount}
-                  onUpdateLineNote={updateLineNote}
-                  onPayCash={() => openPayment('cash')}
-                  onPayCard={() => openPayment('card')}
-                  onPayOther={() => openPayment('other')}
-                  onPaySplit={openSplit}
-                  canDiscount={can('discount')}
-                  canHold={can('hold')}
-                  canVoid={can('void_item')}
-                  canLoyalty={can('loyalty')}
-                  canSplit={can('split')}
-                  canClear={can('void_item')}
+                  {...sharedOrderPanelProps}
                   compact
                 />
               </motion.div>

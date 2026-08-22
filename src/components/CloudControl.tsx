@@ -1,3 +1,4 @@
+import { useModalKeyboardGuard } from '../hooks/useModalKeyboardGuard';
 import { useCallback, useEffect, useState } from 'react';
 import {
   AnimatePresence,
@@ -1592,21 +1593,14 @@ export const CloudControl = () => {
     [activeCard],
   );
 
-  useEffect(() => {
-    if (activeCard === null) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') handleClose();
-      if (e.key === 'ArrowLeft') (isRtl ? handleNext : handlePrev)();
-      if (e.key === 'ArrowRight') (isRtl ? handlePrev : handleNext)();
-    };
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    window.addEventListener('keydown', onKey);
-    return () => {
-      window.removeEventListener('keydown', onKey);
-      document.body.style.overflow = prevOverflow;
-    };
-  }, [activeCard, handleClose, handleNext, handlePrev, isRtl]);
+  useModalKeyboardGuard({
+    isOpen: activeCard !== null,
+    onClose: handleClose,
+    onNext: handleNext,
+    onPrev: handlePrev,
+    isRtl,
+    hideChatWidget: false,
+  });
 
   return (
     <section
