@@ -19,8 +19,6 @@ import {
   BarChart2,
   TrendingUp,
   X,
-  ChevronLeft,
-  ChevronRight,
   ArrowUpRight,
   LayoutDashboard,
   Store,
@@ -57,8 +55,6 @@ import {
   MapPin,
   type LucideIcon,
 } from 'lucide-react';
-import AppStoreBadge from '../assets/app-store-badge.svg';
-import GooglePlayBadge from '../assets/google-play-badge.svg';
 import MintcomLeafIcon from '../assets/small-logo.svg';
 import MintcomLogoWhite from '../assets/white-green-full-logo.svg';
 import MintcomLogoDark from '../assets/green-full-logo.svg';

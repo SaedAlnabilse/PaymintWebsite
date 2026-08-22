@@ -3,7 +3,7 @@ import { SectionCarouselFooter } from "./landing/SectionCarouselFooter";
 import { LandingFeatureCard } from './landing/LandingFeatureCard';
 import { useModalKeyboardGuard } from '../hooks/useModalKeyboardGuard';
 import { useState, useEffect, useRef, useCallback, Fragment } from 'react';
-import { motion, AnimatePresence, type Variants } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import {
   ShieldCheck,
@@ -11,8 +11,6 @@ import {
   Settings,
   Store,
   Play,
-  ChevronLeft,
-  ChevronRight,
   X,
   Users,
   Check,
@@ -26,7 +24,6 @@ import {
   Home,
   ShoppingBag,
   ArrowRight,
-  ArrowUpRight,
   MapPin,
   Coffee,
   Briefcase,

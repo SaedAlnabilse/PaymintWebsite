@@ -35,8 +35,6 @@ import {
   Link2,
   SlidersHorizontal,
 } from 'lucide-react';
-import AppStoreBadge from '../assets/app-store-badge.svg';
-import GooglePlayBadge from '../assets/google-play-badge.svg';
 import { OWNER_ANDROID_DOWNLOAD_URL, OWNER_IOS_DOWNLOAD_URL } from '../config/downloads';
 import { useTheme } from '../context/ThemeContext';
 
