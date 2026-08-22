@@ -17,7 +17,8 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "deploy": "npm run build && npx wrangler deploy",
-    "check:duplication": "node scripts/check-duplication.cjs"
+    "check:duplication": "node scripts/check-duplication.cjs",
+    "typecheck": "tsc -b"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
