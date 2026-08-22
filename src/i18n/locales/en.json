@@ -5615,12 +5615,6 @@
       "currencyOwnerOnly": "Currency can only be changed from the Owner Portal.",
       "enterValidTax": "Please enter a valid numeric tax rate to proceed with the update.",
       "fixedAmount": "Fixed amount",
-      "holdOrderTableCountDesc": "How many table options (Table 1, Table 2...) to show in the hold order menu.",
-      "holdOrderTableCountErrorRange": "Table shortcut count must be between 0 and 99.",
-      "holdOrderTableCountMaxHint": "Maximum is {{max}} tables.",
-      "holdOrderTableCountLabel": "TABLE SHORTCUTS",
-      "holdOrderTableCountPlaceholder": "20",
-      "holdOrderTableCountTitle": "Number of Table Shortcuts",
       "serviceChargePercentHint": "Max {{max}}% · ATM style entry",
       "invalidInput": "Invalid Input",
       "invalidTaxMessage": "Tax rate must be between 0 and 100%",
@@ -5662,7 +5656,8 @@
       "profile": "Profile",
       "receipts": "Receipts",
       "sales": "Sales Setup",
-      "tax": "E-Invoicing"
+      "tax": "E-Invoicing",
+      "pos": "POS & Shifts"
     },
     "fiscal": {
       "title": "E-Invoicing & Tax Compliance",
@@ -5701,7 +5696,20 @@
         "print": "Print / Save PDF"
       }
     },
-    "title": "Settings"
+    "title": "Settings",
+    "pos": {
+      "title": "POS & Shifts",
+      "subtitle": "How registers and cash drawers behave at this location.",
+      "allowMultipleShiftsTitle": "Multiple Cash Drawers",
+      "allowMultipleShiftsDesc": "Allow multiple employees to open and operate independent cash shifts simultaneously at this location.",
+      "allowMultipleShiftsOffHint": "Turning this off closes any extra open drawers and keeps the most recently opened one.",
+      "holdOrderTableCountDesc": "How many table options (Table 1, Table 2...) to show in the hold order menu.",
+      "holdOrderTableCountErrorRange": "Table shortcut count must be between 0 and 99.",
+      "holdOrderTableCountMaxHint": "Maximum is {{max}} tables.",
+      "holdOrderTableCountLabel": "TABLE SHORTCUTS",
+      "holdOrderTableCountPlaceholder": "20",
+      "holdOrderTableCountTitle": "Number of Table Shortcuts"
+    }
   },
   "staff": {
     "actions": {

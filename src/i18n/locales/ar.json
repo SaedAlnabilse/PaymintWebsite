@@ -5615,11 +5615,6 @@
       "currencyOwnerOnly": "يمكن تغيير العملة فقط من بوابة المالك.",
       "enterValidTax": "يرجى إدخال معدل ضريبة عددي صالح للمتابعة في التحديث.",
       "fixedAmount": "مبلغ ثابت",
-      "holdOrderTableCountDesc": "عدد خيارات الطاولات (طاولة 1، طاولة 2...) في قائمة تعليق الطلب.",
-      "holdOrderTableCountErrorRange": "يجب أن يكون عدد اختصارات الطاولات بين 0 و 99.",
-      "holdOrderTableCountLabel": "اختصارات الطاولات",
-      "holdOrderTableCountPlaceholder": "20",
-      "holdOrderTableCountTitle": "عدد اختصارات الطاولات",
       "invalidInput": "إدخال غير صالح",
       "invalidTaxMessage": "يجب أن يكون معدل الضريبة بين 0 و 100%",
       "invalidTaxTitle": "معدل ضريبة غير صالح",
@@ -5645,7 +5640,6 @@
       "taxWarning": "تعديل هذا سيؤثر على المعاملات المستقبلية وحسابات صافي الإيرادات.",
       "title": "إعداد المبيعات",
       "update": "تحديث",
-      "holdOrderTableCountMaxHint": "الحد الأقصى {{max}} طاولة.",
       "serviceChargePercentHint": "الحد الأقصى {{max}}% · إدخال بنمط الصراف الآلي"
     },
     "salesManagement": {
@@ -5662,7 +5656,8 @@
       "profile": "الملف الشخصي",
       "receipts": "الإيصالات",
       "sales": "إعدادات المبيعات",
-      "tax": "الفوترة الإلكترونية"
+      "tax": "الفوترة الإلكترونية",
+      "pos": "نقاط البيع والورديات"
     },
     "fiscal": {
       "title": "الفوترة الإلكترونية والامتثال الضريبي",
@@ -5701,7 +5696,20 @@
         "print": "طباعة / حفظ PDF"
       }
     },
-    "title": "الإعدادات"
+    "title": "الإعدادات",
+    "pos": {
+      "title": "نقاط البيع والورديات",
+      "subtitle": "كيفية عمل أجهزة الكاشير وأدراج النقد في هذا الفرع.",
+      "allowMultipleShiftsTitle": "ورديات كاش متعددة",
+      "allowMultipleShiftsDesc": "السماح لعدة موظفين بفتح وإدارة ورديات كاش مستقلة في نفس الوقت في هذا الفرع.",
+      "allowMultipleShiftsOffHint": "إيقاف هذا الخيار يغلق أي أدراج نقد مفتوحة إضافية ويبقي آخر درج تم فتحه.",
+      "holdOrderTableCountDesc": "عدد خيارات الطاولات (طاولة 1، طاولة 2...) في قائمة تعليق الطلب.",
+      "holdOrderTableCountErrorRange": "يجب أن يكون عدد اختصارات الطاولات بين 0 و 99.",
+      "holdOrderTableCountLabel": "اختصارات الطاولات",
+      "holdOrderTableCountPlaceholder": "20",
+      "holdOrderTableCountTitle": "عدد اختصارات الطاولات",
+      "holdOrderTableCountMaxHint": "الحد الأقصى {{max}} طاولة."
+    }
   },
   "staff": {
     "actions": {
