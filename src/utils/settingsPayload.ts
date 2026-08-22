@@ -41,6 +41,7 @@ export const APP_SETTINGS_FORM_FIELDS = [
   'showTaxId',
   'showFarewellMessage',
   'holdOrderTableCount',
+  'allowMultipleShifts',
 ] as const;
 
 export const FORBIDDEN_APP_SETTINGS_UPDATE_KEYS = [
@@ -73,6 +74,7 @@ export type AppSettingsUpdatePayload = {
   serviceChargeAutoApply?: boolean;
   serviceChargeAllowCashierOverride?: boolean;
   holdOrderTableCount?: number;
+  allowMultipleShifts?: boolean;
   currency?: string;
   logo?: string | null;
   receiptLogo?: string | null;
@@ -313,6 +315,10 @@ export const buildAppSettingsUpdatePayload = (
     payload.holdOrderTableCount = normalizeHoldOrderTableCount(
       read(data, 'holdOrderTableCount'),
     );
+  }
+
+  if (shouldInclude('allowMultipleShifts')) {
+    payload.allowMultipleShifts = read(data, 'allowMultipleShifts') !== false;
   }
 
   const currency = optionalStringOrNull(data, 'currency', 12);

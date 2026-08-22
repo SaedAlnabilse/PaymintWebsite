@@ -112,7 +112,19 @@
     "syncError": "同步日志失败",
     "time": "时间",
     "title": "活动日志",
-    "user": "用户"
+    "user": "用户",
+    "allResources": "全部类型",
+    "filterByType": "资源类型",
+    "resources": {
+      "product": "商品",
+      "category": "分类",
+      "employee": "员工",
+      "discount": "折扣",
+      "payment_method": "支付方式",
+      "order": "订单",
+      "settings": "设置",
+      "attribute": "属性"
+    }
   },
   "adminUsers": {
     "aboutDesc": "管理员拥有后台和应用的完整访问权限。",
@@ -335,7 +347,10 @@
       "noSocialAccountTitle": "还没有 Mintcom 账户",
       "noSocialAccountMessage": "我们识别了您的 {{provider}} 登录，但尚未关联 Mintcom 账户。一分钟即可创建，您的业务后台在等您。",
       "noSocialAccountGoogle": "Google",
-      "noSocialAccountApple": "Apple"
+      "noSocialAccountApple": "Apple",
+      "rateLimitTitle": "尝试次数过多",
+      "rateLimitMessage": "为保障您的账户安全，由于短时间内多次尝试登录，登录功能已被暂时限制。请等待 1 分钟后重试。",
+      "rateLimitClose": "我知道了"
     },
     "logout": {
       "loggingOut": "正在退出登录…",
@@ -1683,6 +1698,7 @@
       "activeLocation": "当前门店",
       "activityLog": "活动日志",
       "addons": "加料",
+      "backToOwnerPortal": "返回业主后台",
       "billing": "账单",
       "cashGapReports": "现金差额报表",
       "categories": "分类",
@@ -5454,6 +5470,16 @@
         "button": "立即停止试用",
         "title": "停止试用",
         "warning": "结束“{{name}}”的试用。访问权限将被撤销，服务将停止。"
+      },
+      "deleteAccount": {
+        "button": "删除我的账户",
+        "title": "删除账户",
+        "warning": "您的账户将立即被锁定，并在 30 天后永久删除。"
+      },
+      "revokeBrandAccess": {
+        "button": "移除访问权限",
+        "title": "移除品牌访问权限",
+        "warning": "“{{name}}”将失去对该品牌下所有门店的访问权限。"
       }
     },
     "noMasterKeyDesc": "执行高影响操作前，您必须先为账户创建主访问密钥。",
@@ -5472,7 +5498,23 @@
       "title": "恢复门店"
     },
     "verificationFailed": "验证失败",
-    "verifying": "正在验证…"
+    "verifying": "正在验证…",
+    "stepUp": {
+      "appleHint": "请再次使用 Apple 登录，以确认是您本人操作。",
+      "challengeFailed": "无法开始验证，请重试。",
+      "codeLabel": "验证码",
+      "codePending": "请先获取验证码以继续。",
+      "codeSent": "我们已向 {{email}} 发送了 6 位验证码。",
+      "googleHint": "请再次使用 Google 登录，以确认是您本人操作。",
+      "otherWays": "其他验证方式",
+      "preparing": "正在准备验证…",
+      "resendCode": "发送新验证码",
+      "sendCode": "给我发送验证码",
+      "useApple": "使用 Apple 验证",
+      "useEmail": "改为向我发送邮件验证码",
+      "useGoogle": "使用 Google 验证",
+      "usePassword": "使用我的密码"
+    }
   },
   "settings": {
     "autosave": {
@@ -5573,11 +5615,6 @@
       "currencyOwnerOnly": "货币只能在业主后台更改。",
       "enterValidTax": "请输入有效的数字税率以继续更新。",
       "fixedAmount": "固定金额",
-      "holdOrderTableCountDesc": "挂单菜单中显示多少个桌台选项（1 号桌、2 号桌…）。",
-      "holdOrderTableCountErrorRange": "桌台快捷数量必须在 0 到 99 之间。",
-      "holdOrderTableCountLabel": "桌台快捷选项",
-      "holdOrderTableCountPlaceholder": "20",
-      "holdOrderTableCountTitle": "桌台快捷选项数量",
       "invalidInput": "输入无效",
       "invalidTaxMessage": "税率必须在 0 到 100% 之间",
       "invalidTaxTitle": "税率无效",
@@ -5603,7 +5640,6 @@
       "taxWarning": "修改此项将影响未来交易和净收入计算。",
       "title": "销售设置",
       "update": "更新",
-      "holdOrderTableCountMaxHint": "最多 {{max}} 张餐桌。",
       "serviceChargePercentHint": "最高 {{max}}% · ATM 式输入"
     },
     "salesManagement": {
@@ -5620,7 +5656,8 @@
       "profile": "资料",
       "receipts": "收据",
       "sales": "销售设置",
-      "tax": "电子发票"
+      "tax": "电子发票",
+      "pos": "POS 与班次"
     },
     "fiscal": {
       "title": "电子发票与税务合规",
@@ -5651,9 +5688,28 @@
       "fillRequired": "保存前请填写所有必填字段。",
       "disableTitle": "关闭电子发票？",
       "disableMessage": "新销售将不再上报税务机关，收据也将不再附带验证二维码。您的连接信息会保留，可随时重新开启。",
-      "disableConfirm": "关闭"
+      "disableConfirm": "关闭",
+      "preview": {
+        "yourEstablishment": "您的门店",
+        "title": "发票模板预览",
+        "subtitle": "这是您的电子发票的显示效果",
+        "print": "打印 / 保存 PDF"
+      }
     },
-    "title": "设置"
+    "title": "设置",
+    "pos": {
+      "title": "POS 与班次",
+      "subtitle": "本门店收银机和钱箱的运作方式。",
+      "allowMultipleShiftsTitle": "多个钱箱",
+      "allowMultipleShiftsDesc": "允许多名员工在本门店同时开启并独立管理各自的现金班次。",
+      "allowMultipleShiftsOffHint": "关闭此选项将关闭其他已开启的钱箱，仅保留最近开启的一个。",
+      "holdOrderTableCountDesc": "挂单菜单中显示多少个桌台选项（1 号桌、2 号桌…）。",
+      "holdOrderTableCountErrorRange": "桌台快捷数量必须在 0 到 99 之间。",
+      "holdOrderTableCountMaxHint": "最多 {{max}} 张餐桌。",
+      "holdOrderTableCountLabel": "桌台快捷选项",
+      "holdOrderTableCountPlaceholder": "20",
+      "holdOrderTableCountTitle": "桌台快捷选项数量"
+    }
   },
   "staff": {
     "actions": {
@@ -6548,6 +6604,69 @@
       "recentTitle": "最近通知",
       "empty": "没有最近通知",
       "loadFailed": "无法加载最近通知。"
+    },
+    "generated": {
+      "stockItemLow": {
+        "title": "库存不足提醒",
+        "message": "{{item}} 库存不足，仅剩 {{count}} 件"
+      },
+      "stockItemCritical": {
+        "title": "库存告急提醒",
+        "message": "{{item}} 仅剩 {{count}} 件"
+      },
+      "stockItemOut": {
+        "title": "缺货",
+        "message": "{{item}} 现已缺货"
+      },
+      "stockItemOutBackordered": {
+        "message": "{{item}} 已缺货（缺货补订：{{count}} 件）"
+      },
+      "stockMaterialLow": {
+        "title": "原材料库存不足",
+        "message": "{{material}} 库存不足，仅剩 {{count}} {{unit}}"
+      },
+      "stockMaterialOut": {
+        "title": "原材料缺货",
+        "message": "{{material}} 现已缺货"
+      },
+      "lowInventoryRealtime": {
+        "title": "库存不足提醒",
+        "message": "{{item}} 库存不足（仅剩 {{count}}）"
+      },
+      "refundItems": {
+        "title": "商品已退款",
+        "message": "订单 #{{orderNumber}} 中的 {{count}} 个商品行已退款。退款订单 #{{refundOrderNumber}}"
+      },
+      "refundOrder": {
+        "title": "订单已退款",
+        "message": "订单 #{{orderNumber}} 已退款。退款订单 #{{refundOrderNumber}}"
+      },
+      "trialExpiring": {
+        "title": "试用即将到期",
+        "message": "“{{establishment}}”的免费试用将在 {{hours}} 小时后到期。请立即订阅以继续使用 Mintcom 并保留您的全部数据。"
+      },
+      "trialExpired": {
+        "title": "试用已到期，账户已暂停",
+        "message": "“{{establishment}}”的免费试用已到期，您已被登出。请订阅以重新访问您的数据并继续使用 Mintcom。"
+      },
+      "supportReply": {
+        "title": "新的支持回复",
+        "message": "Mintcom 支持团队已回复工单 {{ticketNumber}}。请前往 支持 > 我的工单 查看答复。"
+      },
+      "supportStatusUpdate": {
+        "title": "支持工单已更新",
+        "message": "工单 {{ticketNumber}} 当前状态为{{status}}。请前往 支持 > 我的工单 查看详情。"
+      },
+      "supportStatusLabel": {
+        "open": "待处理",
+        "inProgress": "处理中",
+        "resolved": "已解决",
+        "closed": "已关闭"
+      },
+      "passwordHelpRequest": {
+        "title": "密码帮助请求",
+        "message": "{{staffName}}（@{{username}}）需要登录帮助。如需设置新密码，请前往“员工”页面（留空则保持当前密码不变），然后将新密码告知对方。"
+      }
     }
   },
   "menu": {

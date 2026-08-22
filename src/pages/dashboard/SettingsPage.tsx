@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { useBlocker, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Store, Save, CreditCard, Receipt, Trash2, AlertTriangle, DollarSign, Copy, Key, Shield, ShieldCheck } from 'lucide-react';
+import { Store, Save, CreditCard, Receipt, Trash2, AlertTriangle, DollarSign, Copy, Key, Shield, ShieldCheck, MonitorSmartphone } from 'lucide-react';
 import api, { extractErrorMessage } from '../../config/api';
 import { FiscalComplianceCard } from '../../components/FiscalComplianceCard';
 import toast from 'react-hot-toast';
@@ -93,6 +93,7 @@ interface AppSettings {
   showTaxId?: boolean;
   showFarewellMessage?: boolean;
   holdOrderTableCount?: number;
+  allowMultipleShifts?: boolean;
   // E-Invoicing & Tax Compliance (universal fiscal compliance)
   fiscalEnabled?: boolean;
   fiscalCountryCode?: string | null;
@@ -115,7 +116,7 @@ interface AppSettings {
 
 
 
-type SettingsTab = 'profile' | 'sales' | 'receipt' | 'einvoicing' | 'loyalty' | 'danger';
+type SettingsTab = 'profile' | 'sales' | 'pos' | 'receipt' | 'einvoicing' | 'loyalty' | 'danger';
 
 /** Older links used ?tab=tax — map them to the E-Invoicing tab. */
 const normalizeSettingsTab = (tab: string | null | undefined): SettingsTab | null => {
@@ -124,6 +125,7 @@ const normalizeSettingsTab = (tab: string | null | undefined): SettingsTab | nul
   if (
     tab === 'profile' ||
     tab === 'sales' ||
+    tab === 'pos' ||
     tab === 'receipt' ||
     tab === 'einvoicing' ||
     tab === 'loyalty' ||
@@ -184,6 +186,9 @@ export function SettingsPage() {
     const availableTabs = [
       { id: 'profile', label: t('settings.tabs.profile'), icon: Store, permission: 'manage_establishment_profile' },
       { id: 'sales', label: t('settings.tabs.sales'), icon: CreditCard, permission: 'manage_tax_currency' },
+      // POS & Shifts is floor-operations, not tax/currency — gate it on the
+      // register/terminal permission rather than manage_tax_currency.
+      { id: 'pos', label: t('settings.tabs.pos', { defaultValue: 'POS & Shifts' }), icon: MonitorSmartphone, permission: 'manage_pos_devices' },
       { id: 'receipt', label: t('settings.tabs.receipts'), icon: Receipt, permission: 'manage_receipt_settings' },
       { id: 'einvoicing', label: t('settings.tabs.tax', 'E-Invoicing'), icon: ShieldCheck, permission: 'manage_settings' },
       { id: 'danger', label: t('settings.tabs.danger'), icon: Trash2, isDanger: true, permission: 'delete_establishment' },
@@ -469,6 +474,7 @@ export function SettingsPage() {
         serviceChargeAllowCashierOverride: Boolean(data.serviceChargeAllowCashierOverride),
         showTaxId: Boolean(data.showTaxId),
         holdOrderTableCount: normalizeHoldOrderTableCount(data.holdOrderTableCount),
+        allowMultipleShifts: data.allowMultipleShifts !== false,
       };
 
       // Populate form with fetched data
@@ -1052,8 +1058,9 @@ export function SettingsPage() {
                 </div>
               </div>
 
-              {/* Row 1: Tax · Currency · Hold Order — aligned label / field / helper rows */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-5 items-stretch">
+              {/* Row 1: Tax · Currency — aligned label / field / helper rows.
+                  Table shortcuts moved to the POS & Shifts tab. */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5 items-stretch">
                 {/* Tax Rate — saved via main Save button */}
                 <div className="flex flex-col min-w-0">
                   <label className="label-strong font-sans block h-5 leading-5 mb-2 truncate">
@@ -1119,66 +1126,6 @@ export function SettingsPage() {
                         {t('nav.owner')}
                       </a>
                     </p>
-                  </div>
-                </div>
-
-                {/* Hold Order / Table Count */}
-                <div className="flex flex-col min-w-0">
-                  <label className="label-strong font-sans block h-5 leading-5 mb-2 truncate">
-                    {formatInputLabel(t('settings.sales.holdOrderTableCountTitle'), t('common.locale'))}
-                  </label>
-                  <div className="h-11 shrink-0">
-                    <input
-                      type="number"
-                      min="0"
-                      max={MAX_HOLD_ORDER_TABLE_COUNT}
-                      step="1"
-                      maxLength={MAX_HOLD_ORDER_TABLE_DIGITS}
-                      inputMode="numeric"
-                      onInput={(e: React.FormEvent<HTMLInputElement>) => {
-                        const target = e.target as HTMLInputElement;
-                        const onlyDigits = target.value.replace(/[^\d]/g, '').slice(0, MAX_HOLD_ORDER_TABLE_DIGITS);
-                        if (!onlyDigits) {
-                          target.value = '';
-                          return;
-                        }
-                        const parsed = parseInt(onlyDigits, 10);
-                        target.value = String(Math.min(parsed, MAX_HOLD_ORDER_TABLE_COUNT));
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === '-' || e.key === '.' || e.key === 'e' || e.key === 'E') {
-                          e.preventDefault();
-                        }
-                      }}
-                      {...register('holdOrderTableCount', {
-                        valueAsNumber: true,
-                        min: { value: 0, message: t('settings.sales.holdOrderTableCountErrorRange') },
-                        max: { value: MAX_HOLD_ORDER_TABLE_COUNT, message: t('settings.sales.holdOrderTableCountErrorRange') },
-                        setValueAs: (value) => normalizeHoldOrderTableCount(value, 10),
-                      })}
-                      className={`w-full h-11 px-3 box-border bg-white dark:bg-[#0F172A] border shadow-sm ${errors.holdOrderTableCount ? 'border-red-500 bg-red-500/5 focus:ring-red-500/20' : 'border-gray-200 dark:border-white/15 hover:border-gray-300 dark:hover:border-white/25 focus:ring-mintcom-green/25 focus:border-mintcom-green'} rounded-xl text-sm font-bold text-gray-900 dark:text-white caret-mintcom-green placeholder:text-gray-400 focus:outline-none focus:ring-2 transition-all`}
-                      placeholder={formatInputPlaceholder(t('settings.sales.holdOrderTableCountPlaceholder'), t('common.locale'))}
-                    />
-                  </div>
-                  <div className="mt-2 min-h-[2.75rem]">
-                    {errors.holdOrderTableCount ? (
-                      <p className="text-[11px] font-medium text-red-500 leading-snug flex items-start gap-1.5">
-                        <AlertTriangle size={12} className="mt-0.5 shrink-0" />
-                        {errors.holdOrderTableCount.message as string || t('settings.sales.holdOrderTableCountErrorRange')}
-                      </p>
-                    ) : (
-                      <div className="space-y-1">
-                        <p className="text-[11px] font-medium text-gray-400 leading-snug">
-                          {t('settings.sales.holdOrderTableCountDesc')}
-                        </p>
-                        <p className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 leading-snug">
-                          {t('settings.sales.holdOrderTableCountMaxHint', {
-                            defaultValue: `Maximum is ${MAX_HOLD_ORDER_TABLE_COUNT} tables.`,
-                            max: MAX_HOLD_ORDER_TABLE_COUNT,
-                          })}
-                        </p>
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>
@@ -1416,9 +1363,124 @@ export function SettingsPage() {
                   </div>
                 </div>
               </div>
+
             </motion.div>
           );
         })()}
+
+        {activeTab === 'pos' && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white dark:bg-[#1E293B] border border-gray-200 dark:border-white/[0.03] p-6 sm:p-8 space-y-8 rounded-2xl shadow-sm font-sans">
+            {/* Header */}
+            <div className="flex items-center gap-4 pb-6 border-b border-gray-100 dark:border-white/5">
+              <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 shadow-sm">
+                <MonitorSmartphone size={20} />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                  {t('settings.pos.title', { defaultValue: 'POS & Shifts' })}
+                </h3>
+                <p className="text-sm text-gray-500 font-medium">
+                  {t('settings.pos.subtitle', {
+                    defaultValue: 'How registers and cash drawers behave at this location.',
+                  })}
+                </p>
+              </div>
+            </div>
+
+            {/* Multiple Cash Drawers (Simultaneous Shifts) Toggle Card */}
+            <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-gray-50/80 dark:bg-white/[0.02] p-5 sm:p-6 shadow-sm">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <h4 className="text-base font-bold text-gray-900 dark:text-white">
+                    {t('settings.pos.allowMultipleShiftsTitle', { defaultValue: 'Multiple Cash Drawers' })}
+                  </h4>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 font-medium">
+                    {t('settings.pos.allowMultipleShiftsDesc', {
+                      defaultValue:
+                        'Allow multiple employees to open and operate independent cash shifts simultaneously at this location.',
+                    })}
+                  </p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-2 font-medium">
+                    {t('settings.pos.allowMultipleShiftsOffHint', {
+                      defaultValue:
+                        'Turning this off closes any extra open drawers and keeps the most recently opened one.',
+                    })}
+                  </p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                  <input
+                    type="checkbox"
+                    {...register('allowMultipleShifts')}
+                    className="sr-only peer"
+                  />
+                  <div className="h-7 w-12 rounded-full bg-slate-300/90 ring-1 ring-inset ring-slate-400/40 shadow-inner transition-all duration-200 peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-mintcom-green/50 peer-focus-visible:ring-offset-2 dark:bg-white/15 dark:ring-white/20 peer-checked:bg-mintcom-green peer-checked:ring-mintcom-green/40 peer-checked:shadow-[0_0_0_3px_rgba(125,198,162,0.22)] after:absolute after:left-0.5 after:top-0.5 after:h-6 after:w-6 after:rounded-full after:bg-white after:shadow-[0_1px_3px_rgba(0,0,0,0.18)] after:transition-all after:content-[''] peer-checked:after:translate-x-5" />
+                </label>
+              </div>
+            </div>
+
+            {/* Hold Order / Table Count */}
+            <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-gray-50/80 dark:bg-white/[0.02] p-5 sm:p-6 shadow-sm">
+              <div className="flex flex-col min-w-0 max-w-sm">
+                <label className="label-strong font-sans block h-5 leading-5 mb-2 truncate">
+                  {formatInputLabel(t('settings.pos.holdOrderTableCountTitle'), t('common.locale'))}
+                </label>
+                <div className="h-11 shrink-0">
+                  <input
+                    type="number"
+                    min="0"
+                    max={MAX_HOLD_ORDER_TABLE_COUNT}
+                    step="1"
+                    maxLength={MAX_HOLD_ORDER_TABLE_DIGITS}
+                    inputMode="numeric"
+                    onInput={(e: React.FormEvent<HTMLInputElement>) => {
+                      const target = e.target as HTMLInputElement;
+                      const onlyDigits = target.value.replace(/[^\d]/g, '').slice(0, MAX_HOLD_ORDER_TABLE_DIGITS);
+                      if (!onlyDigits) {
+                        target.value = '';
+                        return;
+                      }
+                      const parsed = parseInt(onlyDigits, 10);
+                      target.value = String(Math.min(parsed, MAX_HOLD_ORDER_TABLE_COUNT));
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === '-' || e.key === '.' || e.key === 'e' || e.key === 'E') {
+                        e.preventDefault();
+                      }
+                    }}
+                    {...register('holdOrderTableCount', {
+                      valueAsNumber: true,
+                      min: { value: 0, message: t('settings.pos.holdOrderTableCountErrorRange') },
+                      max: { value: MAX_HOLD_ORDER_TABLE_COUNT, message: t('settings.pos.holdOrderTableCountErrorRange') },
+                      setValueAs: (value) => normalizeHoldOrderTableCount(value, 10),
+                    })}
+                    className={`w-full h-11 px-3 box-border bg-white dark:bg-[#0F172A] border shadow-sm ${errors.holdOrderTableCount ? 'border-red-500 bg-red-500/5 focus:ring-red-500/20' : 'border-gray-200 dark:border-white/15 hover:border-gray-300 dark:hover:border-white/25 focus:ring-mintcom-green/25 focus:border-mintcom-green'} rounded-xl text-sm font-bold text-gray-900 dark:text-white caret-mintcom-green placeholder:text-gray-400 focus:outline-none focus:ring-2 transition-all`}
+                    placeholder={formatInputPlaceholder(t('settings.pos.holdOrderTableCountPlaceholder'), t('common.locale'))}
+                  />
+                </div>
+                <div className="mt-2 min-h-[2.75rem]">
+                  {errors.holdOrderTableCount ? (
+                    <p className="text-[11px] font-medium text-red-500 leading-snug flex items-start gap-1.5">
+                      <AlertTriangle size={12} className="mt-0.5 shrink-0" />
+                      {errors.holdOrderTableCount.message as string || t('settings.pos.holdOrderTableCountErrorRange')}
+                    </p>
+                  ) : (
+                    <div className="space-y-1">
+                      <p className="text-[11px] font-medium text-gray-400 leading-snug">
+                        {t('settings.pos.holdOrderTableCountDesc')}
+                      </p>
+                      <p className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 leading-snug">
+                        {t('settings.pos.holdOrderTableCountMaxHint', {
+                          defaultValue: `Maximum is ${MAX_HOLD_ORDER_TABLE_COUNT} tables.`,
+                          max: MAX_HOLD_ORDER_TABLE_COUNT,
+                        })}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
 
         {activeTab === 'receipt' && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white dark:bg-[#1E293B] border border-gray-200 dark:border-white/[0.03] p-8 space-y-8">
