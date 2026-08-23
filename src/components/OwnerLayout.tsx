@@ -338,7 +338,6 @@ export function OwnerLayout() {
                 isOpen={isLogoutModalOpen}
                 onClose={() => setIsLogoutModalOpen(false)}
                 onConfirm={confirmLogout}
-                title={t('common.confirmLogoutTitle')}
                 message={t('common.confirmLogout')}
                 confirmText={t('dashboard.menu.logout')}
                 cancelText={t('common.cancel')}

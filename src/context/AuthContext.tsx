@@ -87,7 +87,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const OWNER_SESSION_ACTIVE_CODE = 'OWNER_SESSION_ACTIVE';
 const OWNER_SESSION_ACTIVE_MESSAGE =
-  'Another device is already logged in to this owner account. Please log out from that device to continue here, or reset your password to sign out everywhere.';
+  'Another device is already logged in to this owner account. Please sign out from that device to continue here, or reset your password to sign out everywhere.';
 
 const getAuthErrorCode = (error: any): string | undefined => {
   const responseData = error?.response?.data;

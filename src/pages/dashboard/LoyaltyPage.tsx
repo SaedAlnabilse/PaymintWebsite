@@ -513,7 +513,7 @@ export function LoyaltyPage() {
                                     <div className="w-12 h-12 rounded-full bg-white dark:bg-white/5 border border-gray-200 dark:border-white/5 flex items-center justify-center mx-auto mb-4 text-mintcom-green shadow-sm">
                                         <Award size={24} />
                                     </div>
-                                    <p className="text-sm font-bold text-gray-500">{t('rewards.catalogEmpty')}</p>
+                                    <p className="text-sm font-bold text-gray-500">{t('rewards.catalogEmpty', { defaultValue: 'Catalog Empty' })}</p>
                                     <p className="text-xs font-medium text-gray-400 mt-1">{t('rewards.createTiers')}</p>
                                 </div>
                             ) : (

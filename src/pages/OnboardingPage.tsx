@@ -435,6 +435,15 @@ export function OnboardingPage() {
 
   // Tour Guide State for Step 5
   const [isTourOpen, setIsTourOpen] = useState(false);
+  const [copiedField, setCopiedField] = useState<'id' | 'password' | null>(null);
+  const [showStep5Password, setShowStep5Password] = useState(false);
+
+  const handleCopyField = (text: string, field: 'id' | 'password') => {
+    if (!text) return;
+    navigator.clipboard.writeText(text);
+    setCopiedField(field);
+    setTimeout(() => setCopiedField(null), 2000);
+  };
 
   const applyServerSession = useCallback((session: {
     phase: string;
@@ -1931,39 +1940,36 @@ export function OnboardingPage() {
 
                     {/* Total due */}
                     <div className="rounded-2xl border border-dashed border-mintcom-green/30 bg-mintcom-green/5 p-5 dark:border-mintcom-green/20 dark:bg-mintcom-green/5">
-                      <span className="mb-3 block text-sm font-sans leading-relaxed text-gray-600 dark:text-gray-300">
+                      <span className="mb-3 block text-sm font-sans font-medium leading-relaxed text-gray-600 dark:text-gray-300">
                         {t('onboarding.step2.totalDue')}
                       </span>
 
                       {isTrialFlow ? (
-                        <div className="flex items-end gap-2">
-                          <span className="font-barlow text-5xl font-extrabold leading-none text-gray-900 dark:text-white">
+                        <div className="flex items-baseline gap-2">
+                          <span className="font-barlow text-4xl sm:text-5xl font-black leading-none text-gray-900 dark:text-white tracking-tight">
                             {formatWholeNumber(0)}
                           </span>
-                          <span className="pb-1 text-sm font-sans font-bold text-gray-500">
+                          <span className="text-xs sm:text-sm font-sans font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                             {selectedUnitLabel}
                           </span>
                         </div>
                       ) : (
                         <div className="flex flex-col items-start">
                           {hasLocationDiscount && (
-                            <>
-                              <div className="flex items-end gap-2">
-                                <span className="font-barlow text-lg font-bold text-gray-400 line-through decoration-2">
-                                  {formatWholeNumber(primaryDisplayPrice)}
-                                </span>
-                                <span className="pb-0.5 text-xs font-sans font-bold text-gray-400">
-                                  {selectedUnitLabel}
-                                </span>
-                              </div>
-                              <ChevronDown size={18} className="my-0.5 text-mintcom-green" />
-                            </>
+                            <div className="mb-1.5 flex flex-wrap items-center gap-2">
+                              <span className="font-sans text-xs sm:text-sm font-bold text-gray-400 dark:text-gray-500 line-through decoration-2">
+                                {formatWholeNumber(primaryDisplayPrice)} {selectedUnitLabel}
+                              </span>
+                              <span className="inline-flex items-center rounded-full bg-mintcom-green/15 px-2 py-0.5 text-[10px] font-extrabold text-emerald-800 dark:text-mintcom-green">
+                                -{formatWholeNumber(primaryDisplayPrice - displayPrice)} {MINTCOM_PRICING.currency}
+                              </span>
+                            </div>
                           )}
-                          <div className="flex items-end gap-2">
-                            <span className="font-barlow text-5xl font-extrabold leading-none text-gray-900 dark:text-white">
+                          <div className="flex items-baseline gap-2">
+                            <span className="font-barlow text-4xl sm:text-5xl font-black leading-none text-gray-900 dark:text-white tracking-tight">
                               {formatWholeNumber(displayPrice)}
                             </span>
-                            <span className="pb-1 text-sm font-sans font-bold text-gray-500">
+                            <span className="text-xs sm:text-sm font-sans font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                               {selectedUnitLabel}
                             </span>
                           </div>
@@ -2000,16 +2006,16 @@ export function OnboardingPage() {
 
                       {hasLocationDiscount && (
                         <div className="mt-4 flex items-center gap-3 rounded-xl border border-mintcom-green/20 bg-mintcom-green/10 p-3">
-                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-mintcom-green/20">
-                            <Tags size={16} className="text-mintcom-green" />
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-mintcom-green/20 text-mintcom-green">
+                            <Tags size={16} />
                           </div>
                           <div className="leading-tight">
                             <p className="text-sm font-sans font-bold text-gray-900 dark:text-white">
-                              {t('onboarding.step2.addedLocation', { defaultValue: 'Added location' })}
+                              {t('onboarding.step2.addedLocation', { defaultValue: 'Added Location' })}
                             </p>
-                            <p className="text-xs font-sans text-gray-500">
+                            <p className="text-xs font-sans font-medium text-gray-500 dark:text-gray-400 mt-0.5">
                               {t('onboarding.step2.existingAccountBenefit', {
-                                defaultValue: 'Existing account benefit',
+                                defaultValue: 'Existing Account Benefit',
                               })}
                             </p>
                           </div>
@@ -2299,7 +2305,6 @@ export function OnboardingPage() {
             </motion.div>
           )}
 
-          {/* STEP 5: Launch Center - Redesigned */}
           {step === 5 && (
             <motion.div
               key="step5"
@@ -2310,145 +2315,76 @@ export function OnboardingPage() {
               {/* Top Hero Bar */}
               <div className="relative mb-6">
                 <div className="absolute -inset-1 bg-gradient-to-r from-mintcom-green/30 via-mintcom-green/10 to-transparent rounded-[2rem] blur-xl opacity-60" />
-                <div className="relative bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-white/10 rounded-3xl p-6 lg:p-8 overflow-hidden">
-                  <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
-                    {/* Welcome Message (Right in RTL, Left in LTR) */}
-                    {!isRTL ? (
-                      <div className="flex items-center gap-5">
-                        <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
-                          className="relative w-16 h-16 lg:w-20 lg:h-20 overflow-hidden bg-gradient-to-br from-mintcom-green to-emerald-400 rounded-3xl flex items-center justify-center shadow-2xl shadow-mintcom-green/40 ring-1 ring-white/25"
-                        >
-                          <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/30 via-white/5 to-transparent" aria-hidden />
-                          <img
-                            src={MintcomLeafIconWhite}
-                            alt=""
-                            className="relative h-9 w-9 scale-x-[-1] object-contain drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)] lg:h-11 lg:w-11"
-                          />
-                        </motion.div>
-                        <div>
-                          <motion.h2
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.3 }}
-                            className="text-2xl lg:text-3xl font-sans font-bold text-gray-900 dark:text-white"
-                          >
-                            {t('onboarding.step5.welcomeTitle')}
-                          </motion.h2>
-                          <motion.p
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.4 }}
-                            className="text-gray-500 dark:text-gray-400 mt-1"
-                          >
-                            <span className="text-mintcom-green font-sans font-bold">{formData.name}</span> {t('onboarding.step5.isReadyToGo')}
-                          </motion.p>
-                        </div>
-                      </div>
-                    ) : (
+                <div className="relative bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-white/10 rounded-3xl p-6 lg:p-8 overflow-hidden shadow-sm">
+                  <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+                    <div className="flex items-center gap-5">
                       <motion.div
-                        id="tour-open-portal"
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.5 }}
-                        className="relative"
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
+                        className="relative w-16 h-16 lg:w-20 lg:h-20 shrink-0 overflow-hidden bg-gradient-to-br from-mintcom-green to-emerald-400 rounded-3xl flex items-center justify-center shadow-xl shadow-mintcom-green/30 ring-1 ring-white/30"
                       >
-                        {/* Animated pulse ring */}
-                        <motion.div
-                          animate={{ scale: [1, 1.15, 1], opacity: [0.4, 0, 0.4] }}
-                          transition={{ duration: 2, repeat: Infinity }}
-                          className="absolute inset-0 bg-mintcom-green rounded-2xl"
+                        <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/30 via-white/5 to-transparent" aria-hidden />
+                        <img
+                          src={MintcomLeafIconWhite}
+                          alt=""
+                          className="relative h-9 w-9 object-contain drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)] lg:h-11 lg:w-11"
                         />
-
-                        <motion.button
-                          whileHover={{ scale: 1.03 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={() => {
-                            const newEstablishment = establishments.find(e => e.id === formData.establishmentId);
-                            if (newEstablishment) {
-                              setCurrentEstablishment(newEstablishment);
-                            }
-                            window.open(`/owner/establishments?highlight=${formData.establishmentId}&setup=1`, '_blank');
-                          }}
-                          className="relative flex items-center gap-3 bg-mintcom-green text-black px-8 py-4 rounded-2xl font-sans font-bold text-lg shadow-xl shadow-mintcom-green/30"
-                        >
-                          <Building2 size={24} />
-                          {t('onboarding.step5.openOwnerPortal')}
-                          <ExternalLink size={20} />
-                        </motion.button>
                       </motion.div>
-                    )}
-
-                    {/* Second element (Button in LTR, Welcome in RTL) */}
-                    {!isRTL ? (
-                      <motion.div
-                        id="tour-open-portal"
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.5 }}
-                        className="relative"
-                      >
-                        {/* Animated pulse ring */}
-                        <motion.div
-                          animate={{ scale: [1, 1.15, 1], opacity: [0.4, 0, 0.4] }}
-                          transition={{ duration: 2, repeat: Infinity }}
-                          className="absolute inset-0 bg-mintcom-green rounded-2xl"
-                        />
-
-                        <motion.button
-                          whileHover={{ scale: 1.03 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={() => {
-                            const newEstablishment = establishments.find(e => e.id === formData.establishmentId);
-                            if (newEstablishment) {
-                              setCurrentEstablishment(newEstablishment);
-                            }
-                            window.open(`/owner/establishments?highlight=${formData.establishmentId}&setup=1`, '_blank');
-                          }}
-                          className="relative flex items-center gap-3 bg-mintcom-green text-black px-8 py-4 rounded-2xl font-sans font-bold text-lg shadow-xl shadow-mintcom-green/30"
+                      <div>
+                        <motion.h2
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.3 }}
+                          className="text-2xl lg:text-3xl font-sans font-black tracking-tight text-gray-900 dark:text-white"
                         >
-                          <Building2 size={24} />
-                          {t('onboarding.step5.openOwnerPortal')}
-                          <ExternalLink size={20} />
-                        </motion.button>
-                      </motion.div>
-                    ) : (
-                      <div className="flex items-center gap-5">
+                          {t('onboarding.step5.welcomeTitle')}
+                        </motion.h2>
                         <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
-                          className="relative w-16 h-16 lg:w-20 lg:h-20 overflow-hidden bg-gradient-to-br from-mintcom-green to-emerald-400 rounded-3xl flex items-center justify-center shadow-2xl shadow-mintcom-green/40 ring-1 ring-white/25"
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.4 }}
+                          className="flex flex-wrap items-center gap-2 mt-1.5 text-sm text-gray-500 dark:text-gray-400"
                         >
-                          <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/30 via-white/5 to-transparent" aria-hidden />
-                          <img
-                            src={MintcomLeafIconWhite}
-                            alt=""
-                            className="relative h-9 w-9 scale-x-[-1] object-contain drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)] lg:h-11 lg:w-11"
-                          />
+                          <span className="inline-flex items-center rounded-lg bg-mintcom-green/15 px-2.5 py-0.5 font-sans font-bold text-emerald-800 dark:text-mintcom-green">
+                            {formData.name}
+                          </span>
+                          <span>{t('onboarding.step5.isReadyToGo')}</span>
                         </motion.div>
-                        <div>
-                          <motion.h2
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.3 }}
-                            className="text-2xl lg:text-3xl font-sans font-bold text-gray-900 dark:text-white"
-                          >
-                            {t('onboarding.step5.welcomeTitle')}
-                          </motion.h2>
-                          <motion.p
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.4 }}
-                            className="text-gray-500 dark:text-gray-400 mt-1"
-                          >
-                            <span className="text-mintcom-green font-sans font-bold">{formData.name}</span> {t('onboarding.step5.isReadyToGo')}
-                          </motion.p>
-                        </div>
                       </div>
-                    )}
+                    </div>
+
+                    <motion.div
+                      id="tour-open-portal"
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.5 }}
+                      className="relative shrink-0 w-full lg:w-auto"
+                    >
+                      {/* Animated pulse ring */}
+                      <motion.div
+                        animate={{ scale: [1, 1.12, 1], opacity: [0.35, 0, 0.35] }}
+                        transition={{ duration: 2.2, repeat: Infinity }}
+                        className="absolute inset-0 bg-mintcom-green rounded-2xl pointer-events-none"
+                      />
+
+                      <motion.button
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => {
+                          const newEstablishment = establishments.find(e => e.id === formData.establishmentId);
+                          if (newEstablishment) {
+                            setCurrentEstablishment(newEstablishment);
+                          }
+                          window.open(`/owner/establishments?highlight=${formData.establishmentId}&setup=1`, '_blank');
+                        }}
+                        className="relative w-full lg:w-auto flex items-center justify-center gap-3 bg-mintcom-green text-black px-7 py-3.5 rounded-2xl font-sans font-bold text-base shadow-xl shadow-mintcom-green/30 hover:bg-emerald-400 transition-colors"
+                      >
+                        <Building2 size={22} />
+                        <span>{t('onboarding.step5.openOwnerPortal')}</span>
+                        <ExternalLink size={18} />
+                      </motion.button>
+                    </motion.div>
                   </div>
                 </div>
               </div>
@@ -2456,7 +2392,7 @@ export function OnboardingPage() {
               {/* Main Content Grid */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-                {/* Left Column: Download Apps (5 cols) */}
+                {/* Left Column: Download Apps & Credentials (5 cols) */}
                 <div className="lg:col-span-5 space-y-4">
                   {/* POS App */}
                   <motion.div
@@ -2464,7 +2400,7 @@ export function OnboardingPage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.6 }}
-                    className="bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-white/10 rounded-2xl p-5"
+                    className="bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-white/10 rounded-2xl p-5 shadow-sm"
                   >
                     <div className="flex items-start gap-4">
                       <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-orange-500/10 shadow-sm transition-colors dark:bg-orange-500/20">
@@ -2483,7 +2419,7 @@ export function OnboardingPage() {
                               aria-label={t('common.getItOnGooglePlay')}
                               className="inline-flex shrink-0 transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-mintcom-green/40 rounded-md"
                             >
-                              <img src={GooglePlayBadge} alt={t('common.getItOnGooglePlay')} className="block h-[52px] w-auto object-contain" />
+                              <img src={GooglePlayBadge} alt={t('common.getItOnGooglePlay')} className="block h-[44px] w-auto object-contain" />
                             </a>
                           ) : (
                             <button
@@ -2492,7 +2428,7 @@ export function OnboardingPage() {
                               aria-label={t('common.androidDownloadComingSoon')}
                               className="inline-flex shrink-0 cursor-not-allowed opacity-50"
                             >
-                              <img src={GooglePlayBadge} alt={t('common.getItOnGooglePlay')} className="block h-[52px] w-auto object-contain" />
+                              <img src={GooglePlayBadge} alt={t('common.getItOnGooglePlay')} className="block h-[44px] w-auto object-contain" />
                             </button>
                           )}
                           {hasIosDownload ? (
@@ -2503,7 +2439,7 @@ export function OnboardingPage() {
                               aria-label={t('common.downloadOnAppStore')}
                               className="inline-flex shrink-0 transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-mintcom-green/40 rounded-md"
                             >
-                              <img src={AppStoreBadge} alt={t('common.downloadOnAppStore')} className="block h-[52px] w-auto object-contain" />
+                              <img src={AppStoreBadge} alt={t('common.downloadOnAppStore')} className="block h-[44px] w-auto object-contain" />
                             </a>
                           ) : (
                             <button
@@ -2512,7 +2448,7 @@ export function OnboardingPage() {
                               aria-label={t('common.iosDownloadComingSoon')}
                               className="inline-flex shrink-0 cursor-not-allowed opacity-50"
                             >
-                              <img src={AppStoreBadge} alt={t('common.downloadOnAppStore')} className="block h-[52px] w-auto object-contain" />
+                              <img src={AppStoreBadge} alt={t('common.downloadOnAppStore')} className="block h-[44px] w-auto object-contain" />
                             </button>
                           )}
                         </div>
@@ -2520,12 +2456,13 @@ export function OnboardingPage() {
                     </div>
                   </motion.div>
 
+                  {/* Owner App */}
                   <motion.div
                     id="tour-owner-app"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.7 }}
-                    className="bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-white/10 rounded-2xl p-5"
+                    className="bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-white/10 rounded-2xl p-5 shadow-sm"
                   >
                     <div className="flex items-start gap-4">
                       <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-blue-500/10 shadow-sm transition-colors dark:bg-blue-500/20">
@@ -2543,7 +2480,7 @@ export function OnboardingPage() {
                               aria-label={t('common.getItOnGooglePlay')}
                               className="inline-flex shrink-0 transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-mintcom-green/40 rounded-md"
                             >
-                              <img src={GooglePlayBadge} alt={t('common.getItOnGooglePlay')} className="block h-[52px] w-auto object-contain" />
+                              <img src={GooglePlayBadge} alt={t('common.getItOnGooglePlay')} className="block h-[44px] w-auto object-contain" />
                             </a>
                           ) : (
                             <button
@@ -2552,7 +2489,7 @@ export function OnboardingPage() {
                               aria-label={t('common.ownerAndroidDownloadComingSoon')}
                               className="inline-flex shrink-0 cursor-not-allowed opacity-50"
                             >
-                              <img src={GooglePlayBadge} alt={t('common.getItOnGooglePlay')} className="block h-[52px] w-auto object-contain" />
+                              <img src={GooglePlayBadge} alt={t('common.getItOnGooglePlay')} className="block h-[44px] w-auto object-contain" />
                             </button>
                           )}
                           {hasOwnerIosDownload ? (
@@ -2563,7 +2500,7 @@ export function OnboardingPage() {
                               aria-label={t('common.downloadOnAppStore')}
                               className="inline-flex shrink-0 transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-mintcom-green/40 rounded-md"
                             >
-                              <img src={AppStoreBadge} alt={t('common.downloadOnAppStore')} className="block h-[52px] w-auto object-contain" />
+                              <img src={AppStoreBadge} alt={t('common.downloadOnAppStore')} className="block h-[44px] w-auto object-contain" />
                             </a>
                           ) : (
                             <button
@@ -2572,7 +2509,7 @@ export function OnboardingPage() {
                               aria-label={t('common.ownerIosDownloadComingSoon')}
                               className="inline-flex shrink-0 cursor-not-allowed opacity-50"
                             >
-                              <img src={AppStoreBadge} alt={t('common.downloadOnAppStore')} className="block h-[52px] w-auto object-contain" />
+                              <img src={AppStoreBadge} alt={t('common.downloadOnAppStore')} className="block h-[44px] w-auto object-contain" />
                             </button>
                           )}
                         </div>
@@ -2580,18 +2517,17 @@ export function OnboardingPage() {
                     </div>
                   </motion.div>
 
-
-
-                  {/* Quick Stats */}                  <motion.div
+                  {/* Location Credentials */}
+                  <motion.div
                     id="tour-location-stats"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.8 }}
-                    className="bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-white/10 rounded-2xl p-4 text-gray-900 dark:text-white"
+                    className="bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-white/10 rounded-2xl p-5 shadow-sm text-gray-900 dark:text-white"
                   >
                     {/* Header */}
                     <div className="flex items-center gap-3 pb-3 border-b border-gray-100 dark:border-white/5 mb-3">
-                      <div className="w-10 h-10 bg-mintcom-green/20 rounded-xl flex items-center justify-center">
+                      <div className="w-10 h-10 bg-mintcom-green/15 rounded-xl flex items-center justify-center">
                         <Building2 size={20} className="text-mintcom-green" />
                       </div>
                       <div>
@@ -2601,22 +2537,76 @@ export function OnboardingPage() {
                     </div>
 
                     {/* Location ID Row */}
-                    <div className="flex items-center gap-3 py-2.5 border-b border-gray-100 dark:border-white/5">
-                      <Hash size={16} className="text-gray-400 dark:text-gray-500 flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs text-gray-400 dark:text-gray-500 mb-0.5">{t('onboarding.step5.locationId')}</p>
-                        <p className="font-mono text-gray-900 dark:text-white font-sans font-bold text-sm truncate">{formData.establishmentLoginId}</p>
+                    <div className="flex items-center justify-between gap-3 py-2.5 border-b border-gray-100 dark:border-white/5">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <Hash size={16} className="text-gray-400 dark:text-gray-500 shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-xs text-gray-400 dark:text-gray-500 mb-0.5">{t('onboarding.step5.locationId')}</p>
+                          <p className="font-mono text-gray-900 dark:text-white font-sans font-bold text-sm truncate">{formData.establishmentLoginId}</p>
+                        </div>
                       </div>
+                      <button
+                        type="button"
+                        onClick={() => handleCopyField(formData.establishmentLoginId, 'id')}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-bold text-gray-700 transition hover:bg-gray-100 dark:border-white/10 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10"
+                        title={t('common.copy')}
+                      >
+                        {copiedField === 'id' ? (
+                          <>
+                            <Check size={13} className="text-mintcom-green" />
+                            <span className="text-mintcom-green">{t('common.copied')}</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy size={13} />
+                            <span>{t('common.copy')}</span>
+                          </>
+                        )}
+                      </button>
                     </div>
 
                     {/* Password Row */}
-                    <div className="flex items-center gap-3 py-2.5">
-                      <Lock size={16} className="text-gray-400 dark:text-gray-500 flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs text-gray-400 dark:text-gray-500 mb-0.5">{t('onboarding.step5.password')}</p>
-                        <p className="text-gray-900 dark:text-white font-sans font-bold text-sm truncate font-mono tracking-wider">
-                          {'********'}
-                        </p>
+                    <div className="flex items-center justify-between gap-3 py-2.5">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <Lock size={16} className="text-gray-400 dark:text-gray-500 shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-xs text-gray-400 dark:text-gray-500 mb-0.5">{t('onboarding.step5.password')}</p>
+                          <p className="text-gray-900 dark:text-white font-sans font-bold text-sm truncate font-mono tracking-wider">
+                            {showStep5Password ? (formData.establishmentPassword || '••••••••') : '••••••••'}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        {formData.establishmentPassword && (
+                          <button
+                            type="button"
+                            onClick={() => setShowStep5Password(!showStep5Password)}
+                            className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-600 transition hover:bg-gray-100 dark:border-white/10 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10"
+                            title={showStep5Password ? 'Hide password' : 'Show password'}
+                          >
+                            {showStep5Password ? <EyeOff size={13} /> : <Eye size={13} />}
+                          </button>
+                        )}
+                        {formData.establishmentPassword && (
+                          <button
+                            type="button"
+                            onClick={() => handleCopyField(formData.establishmentPassword, 'password')}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-bold text-gray-700 transition hover:bg-gray-100 dark:border-white/10 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10"
+                            title={t('common.copy')}
+                          >
+                            {copiedField === 'password' ? (
+                              <>
+                                <Check size={13} className="text-mintcom-green" />
+                                <span className="text-mintcom-green">{t('common.copied')}</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy size={13} />
+                                <span>{t('common.copy')}</span>
+                              </>
+                            )}
+                          </button>
+                        )}
                       </div>
                     </div>
                   </motion.div>
@@ -2629,27 +2619,32 @@ export function OnboardingPage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.6 }}
-                    className="bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-white/10 rounded-2xl p-5 pr-3 h-full"
+                    className="bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-white/10 rounded-2xl p-5 shadow-sm h-full flex flex-col"
                   >
                     <div className="flex items-center gap-3 mb-5">
-                      <div className="w-10 h-10 bg-mintcom-green/10 rounded-lg flex items-center justify-center">
+                      <div className="w-10 h-10 bg-mintcom-green/15 rounded-xl flex items-center justify-center">
                         <BookOpen size={20} className="text-mintcom-green" />
                       </div>
-                      <h3 className="font-barlow text-lg font-bold text-gray-900 dark:text-white">{t('onboarding.step5.resourcesAndHelp')}</h3>
+                      <div>
+                        <h3 className="font-barlow text-lg font-bold text-gray-900 dark:text-white">{t('onboarding.step5.resourcesAndHelp')}</h3>
+                        <p className="text-xs text-gray-500">{t('onboarding.tour.resourcesDesc')}</p>
+                      </div>
                     </div>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pr-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                       {/* User Manual */}
                       <a
                         href={userManualDoc.path}
                         download={userManualDoc.filename}
-                        className="group p-4 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-xl hover:border-mintcom-green/50 hover:bg-mintcom-green/5 transition-all"
+                        className="group p-4 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-xl hover:border-mintcom-green/50 hover:bg-mintcom-green/5 transition-all flex flex-col justify-between"
                       >
                         <div className="w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                           <BookOpen size={20} className="text-blue-500" />
                         </div>
-                        <h4 className="font-barlow font-bold text-gray-900 dark:text-white text-sm">{t('onboarding.step5.userManual')}</h4>
-                        <p className="text-xs text-gray-500 mt-1">{t('onboarding.step5.completeGuide')}</p>
+                        <div>
+                          <h4 className="font-barlow font-bold text-gray-900 dark:text-white text-sm">{t('onboarding.step5.userManual')}</h4>
+                          <p className="text-xs text-gray-500 mt-1">{t('onboarding.step5.completeGuide')}</p>
+                        </div>
                       </a>
 
                       {/* Setup Manual */}
@@ -2658,13 +2653,15 @@ export function OnboardingPage() {
                         download={setupManualDoc.filename}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="group p-4 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-xl hover:border-mintcom-green/50 hover:bg-mintcom-green/5 transition-all"
+                        className="group p-4 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-xl hover:border-mintcom-green/50 hover:bg-mintcom-green/5 transition-all flex flex-col justify-between"
                       >
                         <div className="w-10 h-10 bg-amber-500/10 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                           <Settings size={20} className="text-amber-500" />
                         </div>
-                        <h4 className="font-barlow font-bold text-gray-900 dark:text-white text-sm">{t('onboarding.step5.setupManual')}</h4>
-                        <p className="text-xs text-gray-500 mt-1">{t('onboarding.step5.hardwareSetup')}</p>
+                        <div>
+                          <h4 className="font-barlow font-bold text-gray-900 dark:text-white text-sm">{t('onboarding.step5.setupManual')}</h4>
+                          <p className="text-xs text-gray-500 mt-1">{t('onboarding.step5.hardwareSetup')}</p>
+                        </div>
                       </a>
 
                       {/* Video Tutorial */}
@@ -2673,26 +2670,30 @@ export function OnboardingPage() {
                           href={ONBOARDING_VIDEO_URL}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="group p-4 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-xl hover:border-mintcom-green/50 hover:bg-mintcom-green/5 transition-all"
+                          className="group p-4 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-xl hover:border-mintcom-green/50 hover:bg-mintcom-green/5 transition-all flex flex-col justify-between"
                         >
                           <div className="w-10 h-10 bg-red-500/10 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                             <PlayCircle size={20} className="text-red-500" />
                           </div>
-                          <h4 className="font-barlow font-bold text-gray-900 dark:text-white text-sm">{t('onboarding.step5.videoGuide')}</h4>
-                          <p className="text-xs text-gray-500 mt-1">{t('onboarding.step5.quickStart')}</p>
+                          <div>
+                            <h4 className="font-barlow font-bold text-gray-900 dark:text-white text-sm">{t('onboarding.step5.videoGuide')}</h4>
+                            <p className="text-xs text-gray-500 mt-1">{t('onboarding.step5.quickStart')}</p>
+                          </div>
                         </a>
                       ) : (
                         <button
                           type="button"
                           disabled
                           aria-label={t('owner.account.videoGuideComingSoon')}
-                          className="group p-4 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-xl opacity-60 cursor-not-allowed text-left"
+                          className="group p-4 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-xl opacity-60 cursor-not-allowed text-left flex flex-col justify-between"
                         >
                           <div className="w-10 h-10 bg-red-500/10 rounded-lg flex items-center justify-center mb-3">
                             <PlayCircle size={20} className="text-red-500" />
                           </div>
-                          <h4 className="font-barlow font-bold text-gray-900 dark:text-white text-sm">{t('onboarding.step5.videoGuide')}</h4>
-                          <p className="text-xs text-gray-500 mt-1">{t('onboarding.step5.quickStart')}</p>
+                          <div>
+                            <h4 className="font-barlow font-bold text-gray-900 dark:text-white text-sm">{t('onboarding.step5.videoGuide')}</h4>
+                            <p className="text-xs text-gray-500 mt-1">{t('onboarding.step5.quickStart')}</p>
+                          </div>
                         </button>
                       )}
 
@@ -2701,13 +2702,15 @@ export function OnboardingPage() {
                         href="/qa"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="group p-4 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-xl hover:border-mintcom-green/50 hover:bg-mintcom-green/5 transition-all"
+                        className="group p-4 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-xl hover:border-mintcom-green/50 hover:bg-mintcom-green/5 transition-all flex flex-col justify-between"
                       >
                         <div className="w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                           <HelpCircle size={20} className="text-blue-500" />
                         </div>
-                        <h4 className="font-barlow font-bold text-gray-900 dark:text-white text-sm">{t('onboarding.step5.qaCenter')}</h4>
-                        <p className="text-xs text-gray-500 mt-1">{t('onboarding.step5.faqs')}</p>
+                        <div>
+                          <h4 className="font-barlow font-bold text-gray-900 dark:text-white text-sm">{t('onboarding.step5.qaCenter')}</h4>
+                          <p className="text-xs text-gray-500 mt-1">{t('onboarding.step5.faqs')}</p>
+                        </div>
                       </a>
 
                       {/* Privacy */}
@@ -2715,13 +2718,15 @@ export function OnboardingPage() {
                         href="/legal/privacy"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="group p-4 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-xl hover:border-mintcom-green/50 hover:bg-mintcom-green/5 transition-all"
+                        className="group p-4 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-xl hover:border-mintcom-green/50 hover:bg-mintcom-green/5 transition-all flex flex-col justify-between"
                       >
                         <div className="w-10 h-10 bg-mintcom-green/10 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                           <Shield size={20} className="text-mintcom-green" />
                         </div>
-                        <h4 className="font-barlow font-bold text-gray-900 dark:text-white text-sm">{t('onboarding.step5.privacy')}</h4>
-                        <p className="text-xs text-gray-500 mt-1">{t('onboarding.step5.dataProtection')}</p>
+                        <div>
+                          <h4 className="font-barlow font-bold text-gray-900 dark:text-white text-sm">{t('onboarding.step5.privacy')}</h4>
+                          <p className="text-xs text-gray-500 mt-1">{t('onboarding.step5.dataProtection')}</p>
+                        </div>
                       </a>
 
                       {/* Terms */}
@@ -2729,13 +2734,15 @@ export function OnboardingPage() {
                         href="/legal/terms"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="group p-4 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-xl hover:border-mintcom-green/50 hover:bg-mintcom-green/5 transition-all"
+                        className="group p-4 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-xl hover:border-mintcom-green/50 hover:bg-mintcom-green/5 transition-all flex flex-col justify-between"
                       >
                         <div className="w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                           <Scale size={20} className="text-blue-500" />
                         </div>
-                        <h4 className="font-barlow font-bold text-gray-900 dark:text-white text-sm">{t('onboarding.step5.terms')}</h4>
-                        <p className="text-xs text-gray-500 mt-1">{t('onboarding.step5.agreement')}</p>
+                        <div>
+                          <h4 className="font-barlow font-bold text-gray-900 dark:text-white text-sm">{t('onboarding.step5.terms')}</h4>
+                          <p className="text-xs text-gray-500 mt-1">{t('onboarding.step5.agreement')}</p>
+                        </div>
                       </a>
 
                       {/* About - spans 2 cols on sm */}
@@ -2743,13 +2750,15 @@ export function OnboardingPage() {
                         href="/about"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="group p-4 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-xl hover:border-mintcom-green/50 hover:bg-mintcom-green/5 transition-all col-span-2 sm:col-span-1"
+                        className="group p-4 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-xl hover:border-mintcom-green/50 hover:bg-mintcom-green/5 transition-all col-span-2 sm:col-span-1 flex flex-col justify-between"
                       >
                         <div className="w-10 h-10 bg-mintcom-green/10 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                           <Info size={20} className="text-mintcom-green" />
                         </div>
-                        <h4 className="font-barlow font-bold text-gray-900 dark:text-white text-sm">{t('onboarding.step5.aboutUs')}</h4>
-                        <p className="text-xs text-gray-500 mt-1">{t('onboarding.step5.ourStory')}</p>
+                        <div>
+                          <h4 className="font-barlow font-bold text-gray-900 dark:text-white text-sm">{t('onboarding.step5.aboutUs')}</h4>
+                          <p className="text-xs text-gray-500 mt-1">{t('onboarding.step5.ourStory')}</p>
+                        </div>
                       </a>
                     </div>
                   </motion.div>

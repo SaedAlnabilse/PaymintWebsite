@@ -77,7 +77,6 @@ const buildHistoryHtml = (
       <div class="statement-head">
         <div>
           <div class="brand">Mintcom</div>
-          <div class="sub">Point of Sale Solutions</div>
         </div>
         <div class="right">
           <div class="title">INVOICE HISTORY</div>
@@ -100,25 +99,22 @@ const buildHistoryHtml = (
           </tr>
         </tfoot>
       </table>
-      <p class="foot">Mintcom POS · Amman, Jordan · support@mintcompos.com</p>
+      <p class="foot">Mintcom POS · support@mintcompos.com</p>
     </div>
     <style>
-      .statement{max-width:900px;margin:0 auto;background:#fff;border-radius:16px;
-        box-shadow:0 4px 24px rgba(0,0,0,.08);overflow:hidden;color:#1f2937}
-      .statement-head{background:linear-gradient(135deg,#7dc6a2 0%,#5aab85 50%,#3d8f6b 100%);
-        color:#fff;padding:28px 32px;display:flex;justify-content:space-between;align-items:flex-start}
-      .brand{font-size:24px;font-weight:800;letter-spacing:-.5px}
-      .title{font-size:20px;font-weight:800;letter-spacing:-.5px}
-      .sub{font-size:11px;font-weight:500;opacity:.9;margin-top:2px}
-      table{width:100%;border-collapse:collapse;font-size:12px}
-      th{background:#f9fafb;text-transform:uppercase;font-size:10px;letter-spacing:1px;
-        color:#6b7280;padding:10px 14px;border-bottom:2px solid #e5e7eb;text-align:left}
-      td{padding:12px 14px;border-bottom:1px solid #f3f4f6;color:#374151}
-      tfoot td{font-weight:700;color:#1f2937;border-top:2px solid #1f2937;border-bottom:none}
+      .statement{max-width:840px;margin:0 auto;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:32px 36px;color:#111827;font-family:'Inter',sans-serif}
+      .statement-head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid #e5e7eb;padding-bottom:20px;margin-bottom:24px}
+      .brand{font-size:22px;font-weight:800;color:#111827;letter-spacing:-.5px}
+      .title{font-size:16px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#111827}
+      .sub{font-size:11px;font-weight:500;color:#6b7280;margin-top:2px}
+      table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:24px}
+      th{background:#f9fafb;text-transform:uppercase;font-size:10px;letter-spacing:.06em;color:#6b7280;padding:10px 12px;border-bottom:1px solid #e5e7eb;border-top:1px solid #e5e7eb;text-align:left}
+      td{padding:12px;border-bottom:1px solid #f3f4f6;color:#374151}
+      tfoot td{font-weight:700;color:#111827;border-top:1.5px solid #111827;border-bottom:none;padding-top:12px}
       .right{text-align:right}
-      .mono{font-variant-numeric:tabular-nums;font-weight:600;color:#1f2937}
-      .foot{text-align:center;font-size:11px;color:#9ca3af;padding:16px 32px;background:#f9fafb}
-      @media print{.statement{box-shadow:none;border-radius:0}}
+      .mono{font-variant-numeric:tabular-nums;font-weight:600;color:#111827}
+      .foot{text-align:center;font-size:10px;color:#9ca3af;padding-top:16px;border-top:1px solid #e5e7eb;margin:0}
+      @media print{.statement{border:none;padding:0}}
     </style>`;
 };
 
@@ -318,7 +314,7 @@ export function InvoiceHistoryModal({ establishment, fallbackSummary, onClose }:
                 <div className="flex items-center justify-between gap-4 border-b border-gray-100 px-5 py-4 dark:border-white/5">
                   <div className="min-w-0">
                     <h3 className="truncate text-lg font-bold text-gray-900 dark:text-white">
-                      {t('owner.billing.invoice.historyTitle', { defaultValue: 'Invoice history' })}
+                      {t('owner.billing.invoice.historyTitle', { defaultValue: 'Invoice History' })}
                     </h3>
                     <p className="truncate text-sm font-medium text-gray-500 dark:text-gray-400">
                       {establishment.name}
@@ -345,7 +341,7 @@ export function InvoiceHistoryModal({ establishment, fallbackSummary, onClose }:
                     >
                       <Download size={15} />
                       <span className="hidden sm:inline">
-                        {t('owner.billing.invoice.downloadHistory', { defaultValue: 'Download all' })}
+                        {t('owner.billing.invoice.downloadHistory', { defaultValue: 'Download All' })}
                       </span>
                     </button>
                     <button
@@ -356,7 +352,7 @@ export function InvoiceHistoryModal({ establishment, fallbackSummary, onClose }:
                     >
                       <Printer size={15} />
                       <span className="hidden sm:inline">
-                        {t('owner.billing.invoice.printHistory', { defaultValue: 'Print history' })}
+                        {t('owner.billing.invoice.printHistory', { defaultValue: 'Print History' })}
                       </span>
                     </button>
                     <button
@@ -394,7 +390,7 @@ export function InvoiceHistoryModal({ establishment, fallbackSummary, onClose }:
                     <div className="py-12 text-center">
                       <FileText size={32} className="mx-auto text-gray-300 dark:text-white/20" />
                       <p className="mt-3 text-sm font-bold text-gray-900 dark:text-white">
-                        {t('owner.billing.invoice.emptyTitle', { defaultValue: 'No invoices yet' })}
+                        {t('owner.billing.invoice.emptyTitle', { defaultValue: 'No Invoices Yet' })}
                       </p>
                       <p className="mx-auto mt-1 max-w-md text-xs font-medium text-gray-500 dark:text-gray-400">
                         {t('owner.billing.invoice.emptyBody', {
@@ -409,7 +405,7 @@ export function InvoiceHistoryModal({ establishment, fallbackSummary, onClose }:
                           className="mt-4 inline-flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-2 text-xs font-bold text-gray-600 transition hover:bg-gray-50 dark:border-white/10 dark:text-gray-300 dark:hover:bg-white/5"
                         >
                           <Eye size={14} />
-                          {t('owner.billing.invoice.viewSummary', { defaultValue: 'View subscription summary' })}
+                          {t('owner.billing.invoice.viewSummary', { defaultValue: 'View Subscription Summary' })}
                         </button>
                       )}
                     </div>

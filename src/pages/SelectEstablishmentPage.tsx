@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Store, Plus, LogOut, ChevronRight, CheckCircle2, Loader2, Crown, ArrowLeft, AlertTriangle } from 'lucide-react';
+import { Store, Plus, LogOut, ChevronRight, Loader2, Crown, ArrowLeft, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import type { Establishment } from '../types';
 import {
@@ -202,10 +202,9 @@ export function SelectEstablishmentPage() {
 
       {/* Footer Info */}
       <div className="p-12 text-center relative z-10">
-        <div className="inline-flex items-center gap-3 px-6 py-3 bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-100 dark:border-white/5 text-gray-400 text-xs font-sans font-bold shadow-sm">
-          <CheckCircle2 size={14} className="text-mintcom-green" />
-          Mintcom v2.0
-        </div>
+        <p className="text-xs text-gray-400 dark:text-gray-500 font-sans">
+          Mintcom
+        </p>
       </div>
 
       {/* Real-time Switching Overlay */}
@@ -246,7 +245,6 @@ export function SelectEstablishmentPage() {
         isOpen={isLogoutModalOpen}
         onClose={() => setIsLogoutModalOpen(false)}
         onConfirm={confirmLogout}
-        title={t('common.confirmLogoutTitle')}
         message={t('common.confirmLogout')}
         confirmText={t('common.logout')}
         cancelText={t('common.cancel')}

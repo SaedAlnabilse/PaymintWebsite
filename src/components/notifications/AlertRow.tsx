@@ -39,25 +39,22 @@ const ICONS: Record<AlertIconName, LucideIcon> = {
 
 const TONE_STYLES: Record<
   AlertSeverity,
-  { icon: string; iconBackground: string; pill: string; unread: string }
+  { icon: string; iconBackground: string; pill: string }
 > = {
   critical: {
     icon: 'text-red-600 dark:text-red-400',
     iconBackground: 'bg-red-50 dark:bg-red-500/10',
     pill: 'bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-300',
-    unread: 'bg-red-500',
   },
   warning: {
     icon: 'text-amber-600 dark:text-amber-400',
     iconBackground: 'bg-amber-50 dark:bg-amber-500/10',
     pill: 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300',
-    unread: 'bg-amber-500',
   },
   info: {
     icon: 'text-emerald-700 dark:text-mintcom-green',
     iconBackground: 'bg-emerald-50 dark:bg-mintcom-green/10',
     pill: 'bg-emerald-50 text-emerald-700 dark:bg-mintcom-green/10 dark:text-mintcom-green',
-    unread: 'bg-mintcom-green',
   },
 };
 
@@ -229,12 +226,7 @@ export function AlertRow({
         compact ? 'py-3' : ''
       }`}
     >
-      {!alert.isRead && (
-        <span
-          className={`absolute start-0 top-4 h-2 w-2 -translate-x-1/2 rounded-full rtl:translate-x-1/2 ${tone.unread}`}
-          aria-label={t('notifications.stats.unread')}
-        />
-      )}
+      {!alert.isRead && <span className="sr-only">{t('notifications.stats.unread')}</span>}
 
       <span
         className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${tone.iconBackground} ${tone.icon}`}

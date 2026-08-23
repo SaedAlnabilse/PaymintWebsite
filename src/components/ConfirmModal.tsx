@@ -1,14 +1,14 @@
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertTriangle, CheckCircle2, AlertCircle, X, Info } from 'lucide-react';
+import { X } from 'lucide-react';
 import { useScrollLock } from '../hooks/useScrollLock';
 
 interface ConfirmModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
-  title: string;
+  title?: string;
   message: string;
   confirmText?: string;
   cancelText?: string;
@@ -35,59 +35,19 @@ export function ConfirmModal({
 
   useScrollLock(isOpen);
 
-  const getTheme = () => {
+  const getButtonBg = () => {
     switch (type) {
       case 'danger':
-        return {
-          icon: AlertTriangle,
-          color: 'text-accent',
-          accentBar: 'bg-accent',
-          bgColor: 'bg-accent/10',
-          borderColor: 'border-accent/30',
-          buttonBg: 'bg-accent text-white',
-          glow: '',
-          iconRing: 'ring-accent/20'
-        };
+        return 'bg-mintcom-red hover:bg-red-600 text-white shadow-sm';
       case 'warning':
-        // Soft blue — caution without yellow or red (danger stays red).
-        return {
-          icon: AlertCircle,
-          color: 'text-blue-600 dark:text-blue-400',
-          accentBar: 'bg-blue-600',
-          bgColor: 'bg-blue-500/10',
-          borderColor: 'border-blue-500/25',
-          buttonBg: 'bg-blue-600 text-white hover:bg-blue-700',
-          glow: '',
-          iconRing: 'ring-blue-500/20'
-        };
       case 'info':
-        return {
-          icon: Info,
-          color: 'text-blue-500',
-          accentBar: 'bg-blue-500',
-          bgColor: 'bg-blue-500/10',
-          borderColor: 'border-blue-500/30',
-          buttonBg: 'bg-blue-500 text-white',
-          glow: '',
-          iconRing: 'ring-blue-500/20'
-        };
       case 'success':
       default:
-        return {
-          icon: CheckCircle2,
-          color: 'text-mintcom-green',
-          accentBar: 'bg-mintcom-green',
-          bgColor: 'bg-mintcom-green/10',
-          borderColor: 'border-mintcom-green/30',
-          buttonBg: 'bg-mintcom-green text-black',
-          glow: '',
-          iconRing: 'ring-mintcom-green/20'
-        };
+        return 'bg-mintcom-green hover:bg-[#5fa888] text-black shadow-sm';
     }
   };
 
-  const theme = getTheme();
-  const Icon = theme.icon;
+  const buttonBg = getButtonBg();
 
   return createPortal(
     <AnimatePresence mode="wait">
@@ -102,21 +62,17 @@ export function ConfirmModal({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/30 dark:bg-black/80 backdrop-blur-sm transition-colors duration-300"
+            className="fixed inset-0 bg-black/40 dark:bg-black/80 backdrop-blur-sm transition-colors duration-300"
           />
 
-          {/* Modal - slides up on mobile, scales on desktop */}
+          {/* Modal */}
           <motion.div
-            initial={{ opacity: 0, y: 100 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 100 }}
-            transition={{ type: "spring", duration: 0.4, bounce: 0.2 }}
-            className={`relative w-full sm:max-w-md overflow-hidden rounded-t-3xl sm:rounded-2xl bg-white dark:bg-[#1E293B] border border-gray-200 dark:border-white/5 ${theme.glow} transition-colors duration-300 z-10`}
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            transition={{ type: "spring", duration: 0.35, bounce: 0.15 }}
+            className="relative w-full sm:max-w-md overflow-hidden rounded-t-3xl sm:rounded-2xl bg-white dark:bg-[#1E293B] border border-gray-200 dark:border-white/10 shadow-2xl transition-colors duration-300 z-10"
           >
-
-            {/* Top Accent Bar */}
-            <div className={`absolute top-0 inset-x-0 h-1.5 ${theme.accentBar}`} />
-
             {/* Mobile drag handle */}
             <div className="sm:hidden flex justify-center pt-3">
               <div className="w-10 h-1 bg-gray-300 dark:bg-white/20 rounded-full" />
@@ -126,41 +82,39 @@ export function ConfirmModal({
             <button
               onClick={onClose}
               aria-label={t('common.closeModal')}
-              className="absolute top-4 sm:top-6 right-4 sm:right-6 p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-xl hover:bg-gray-100 dark:hover:bg-white/5 transition-all z-10 active:scale-90"
+              className="absolute top-4 sm:top-5 right-4 sm:right-5 p-2 min-w-[40px] min-h-[40px] flex items-center justify-center text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-xl hover:bg-gray-100 dark:hover:bg-white/5 transition-all z-10 active:scale-90"
             >
-              <X size={20} />
+              <X size={18} />
             </button>
 
             <div className="relative p-6 sm:p-8 pb-safe">
-              <div className="flex flex-col items-center text-center">
-                {/* Icon Container */}
-                <motion.div
-                  initial={{ scale: 0.5, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ delay: 0.1, type: "spring" }}
-                  className={`mb-5 sm:mb-6 p-4 sm:p-5 rounded-2xl ${theme.bgColor} ${theme.color} ring-1 ring-inset ${theme.iconRing} flex items-center justify-center`}
-                >
-                  <Icon size={32} className="sm:w-10 sm:h-10" strokeWidth={2.5} />
-                </motion.div>
-
+              <div className="flex flex-col items-center text-center pt-2">
                 {/* Content */}
                 <div className="space-y-2 sm:space-y-3">
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
-                    {title}
-                  </h3>
-                  <p className="text-sm font-bold text-gray-500 dark:text-gray-400 leading-relaxed max-w-sm mx-auto">
-                    {message}
-                  </p>
+                  {title ? (
+                    <>
+                      <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
+                        {title}
+                      </h3>
+                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400 leading-relaxed max-w-sm mx-auto">
+                        {message}
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white tracking-tight max-w-sm mx-auto">
+                      {message}
+                    </p>
+                  )}
                 </div>
               </div>
 
               {/* Actions */}
-              <div className={`mt-8 sm:mt-10 ${showCancel || onSecondary ? 'grid gap-3 sm:gap-4' : 'flex justify-center'} ${showCancel && !onSecondary ? 'grid-cols-2' : 'grid-cols-1'}`}>
+              <div className={`mt-8 sm:mt-9 ${showCancel || onSecondary ? 'grid gap-3' : 'flex justify-center'} ${showCancel && !onSecondary ? 'grid-cols-2' : 'grid-cols-1'}`}>
                 {showCancel && (
                   <button
                     type="button"
                     onClick={onClose}
-                    className="px-4 sm:px-6 py-3.5 sm:py-4 rounded-xl text-sm font-bold tracking-tight text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 border border-gray-200 dark:border-white/5 transition-all duration-200 active:scale-95 touch-target"
+                    className="px-4 sm:px-6 py-3 rounded-xl text-sm font-bold text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 border border-transparent transition-all duration-200 active:scale-95 touch-target"
                   >
                     {cancelText || t('common.cancel')}
                   </button>
@@ -172,7 +126,7 @@ export function ConfirmModal({
                       onSecondary();
                       onClose();
                     }}
-                    className="px-4 sm:px-6 py-3.5 sm:py-4 rounded-xl text-sm font-bold tracking-tight text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 transition-all duration-200 active:scale-95 touch-target"
+                    className="px-4 sm:px-6 py-3 rounded-xl text-sm font-bold text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 transition-all duration-200 active:scale-95 touch-target"
                   >
                     {secondaryText || t('common.continue', { defaultValue: 'Continue' })}
                   </button>
@@ -183,7 +137,7 @@ export function ConfirmModal({
                     onConfirm();
                     onClose();
                   }}
-                  className={`px-4 sm:px-6 py-3.5 sm:py-4 rounded-xl text-sm font-bold tracking-tight ${theme.buttonBg} transition-all duration-300 active:scale-95 hover:scale-[1.02] touch-target ${!showCancel && !onSecondary ? 'w-full' : ''}`}
+                  className={`px-4 sm:px-6 py-3 rounded-xl text-sm font-bold ${buttonBg} transition-all duration-200 active:scale-95 hover:brightness-105 touch-target ${!showCancel && !onSecondary ? 'w-full' : ''}`}
                 >
                   {confirmText || t('common.confirm')}
                 </button>

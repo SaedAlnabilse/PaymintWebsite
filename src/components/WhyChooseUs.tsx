@@ -305,7 +305,7 @@ const FeaturePreview = ({ id, isRtl }: { id: FeatureId; isRtl?: boolean }) => {
   }
 
   if (id === 'realUsers') {
-    return <FeaturePosScreenshot side fill forceLight className="h-full w-full" />;
+    return <FeaturePosScreenshot side fill className="h-full w-full" />;
   }
 
   if (id === 'security') {
@@ -400,7 +400,7 @@ const FeatureModal = ({
                   <div
                     className={`overflow-hidden rounded-2xl border border-gray-200/90 shadow-lg shadow-black/10 dark:border-white/10 dark:shadow-black/40 ${
                       feature.id === 'realUsers'
-                        ? 'bg-[#f6f3ec]'
+                        ? 'bg-[#f6f3ec] dark:bg-mintcom-dark'
                         : feature.id === 'security'
                           ? 'bg-gray-100 dark:bg-mintcom-dark'
                           : 'bg-white dark:bg-mintcom-dark'

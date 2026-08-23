@@ -3,10 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Search, Ticket, BookOpen, HelpCircle, CreditCard,
-  Settings, Zap, ChevronRight, ArrowRight, Clock,
-  Eye, FileText, Download, X, MessageSquare,
+  Search, Ticket, ChevronRight, ArrowRight, Clock,
+  Eye, Download, X, MessageSquare,
 } from 'lucide-react';
+import { BiIcon, biIcon } from '../../components/ui/BiIcon';
 import MintcomLeafIcon from '../../assets/small-logo.svg';
 import { Navbar } from '../../components/Navbar';
 import { Footer } from '../../components/Footer';
@@ -85,10 +85,10 @@ export const SupportPage = () => {
   }, []);
 
   const categories = [
-    { id: 'getting-started', icon: Zap,      title: t('support.categories.gettingStarted'), description: t('support.categories.gettingStartedDesc'), articles: 11 },
-    { id: 'billing',         icon: CreditCard,title: t('support.categories.billing'),        description: t('support.categories.billingDesc'),        articles: 11 },
-    { id: 'technical',       icon: Settings,  title: t('support.categories.technical'),      description: t('support.categories.technicalDesc'),      articles: 13 },
-    { id: 'features',        icon: BookOpen,  title: t('support.categories.features'),       description: t('support.categories.featuresDesc'),       articles: 13 },
+    { id: 'getting-started', icon: biIcon('bi-lightning-charge'), title: t('support.categories.gettingStarted'), description: t('support.categories.gettingStartedDesc'), articles: 11 },
+    { id: 'billing',         icon: biIcon('bi-credit-card'),      title: t('support.categories.billing'),        description: t('support.categories.billingDesc'),        articles: 11 },
+    { id: 'technical',       icon: biIcon('bi-gear'),             title: t('support.categories.technical'),      description: t('support.categories.technicalDesc'),      articles: 13 },
+    { id: 'features',        icon: biIcon('bi-book'),             title: t('support.categories.features'),       description: t('support.categories.featuresDesc'),       articles: 13 },
   ];
 
   const allArticles = [
@@ -264,7 +264,7 @@ export const SupportPage = () => {
                               className="group flex items-center gap-3 px-4 py-3 transition-colors hover:bg-gray-50 dark:hover:bg-white/5"
                               onClick={() => setIsSearchFocused(false)}>
                               <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-mintcom-green/10 text-mintcom-green">
-                                <BookOpen size={14} />
+                                <BiIcon icon="bi-book" size={14} />
                               </div>
                               <div className="min-w-0 flex-1">
                                 <p className="text-sm font-semibold text-gray-900 group-hover:text-mintcom-green dark:text-white">{article.title}</p>
@@ -310,7 +310,7 @@ export const SupportPage = () => {
               className="relative hidden lg:block"
             >
               {/* tall card */}
-              <div className="relative overflow-hidden rounded-3xl border border-gray-100 bg-white p-7 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.1)] dark:border-white/8 dark:bg-white/[0.04]">
+              <div className="relative select-none overflow-hidden rounded-3xl border border-gray-100 bg-white p-7 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.1)] dark:border-white/8 dark:bg-white/[0.04]">
                 <div className="mb-5 flex items-center justify-between">
                   <span className="text-xs font-bold uppercase tracking-widest text-gray-400">Help Topics</span>
                   <span className="rounded-full bg-mintcom-green/10 px-2.5 py-0.5 text-[11px] font-bold text-mintcom-green">4 categories</span>
@@ -330,14 +330,13 @@ export const SupportPage = () => {
                           <p className="text-sm font-semibold text-gray-900 dark:text-white">{cat.title}</p>
                           <p className="text-xs text-gray-400">{t('support.articles.count', { count: cat.articles })}</p>
                         </div>
-                        <ChevronRight size={14} className="text-gray-300" />
                       </motion.div>
                     );
                   })}
                 </div>
                 {/* bottom strip */}
                 <div className="mt-5 flex items-center gap-2 rounded-xl bg-mintcom-green/8 p-3 dark:bg-mintcom-green/10">
-                  <HelpCircle size={15} className="text-mintcom-green" />
+                  <BiIcon icon="bi-question-circle" size={15} className="text-mintcom-green" />
                   <p className="text-xs font-medium text-mintcom-green">48 articles ready to help</p>
                 </div>
               </div>
@@ -473,7 +472,7 @@ export const SupportPage = () => {
                       {/* accent bg blob */}
                       <div className={`pointer-events-none absolute -end-10 -top-10 h-32 w-32 rounded-full ${acc.iconBg} opacity-[0.06] blur-2xl transition-opacity group-hover:opacity-[0.12]`} />
                       <div className={`flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl ${acc.iconBg} text-white shadow-md transition-transform group-hover:scale-105`}>
-                        <BookOpen size={24} />
+                        <BiIcon icon="bi-book" size={24} />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="mb-1 flex items-center gap-2">
@@ -540,13 +539,13 @@ export const SupportPage = () => {
 
                 <div className="relative">
                   <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-mintcom-green/30 bg-white/60 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-mintcom-green dark:bg-white/5">
-                    <FileText size={10} />
+                    <BiIcon icon="bi-file-earmark-pdf" size={10} />
                     {t('support.manual.subtitle')}
                   </div>
 
                   {/* big PDF icon */}
                   <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-mintcom-green text-black shadow-[0_8px_24px_-8px_rgba(125,198,162,0.6)]">
-                    <FileText size={28} />
+                    <BiIcon icon="bi-file-earmark-pdf" size={28} />
                   </div>
 
                   <h3 className="font-magilio text-xl font-bold tracking-tight text-gray-900 dark:text-white md:text-2xl">

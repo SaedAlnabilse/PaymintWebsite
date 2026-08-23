@@ -1185,9 +1185,9 @@ export function AddonsPage() {
                     </p>
                   </div>
 
-                  <div className="flex items-center justify-between p-5 bg-gray-50 dark:bg-white/5 rounded-2xl border border-gray-200 dark:border-white/5">
-                    <div>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white tracking-tight">{t('attributes.form.availableLabel')}</p>
+                  <div className="flex items-center justify-between p-5 bg-gray-50 dark:bg-black/20 rounded-2xl border border-gray-200 dark:border-white/10">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-sm font-bold text-gray-900 dark:text-white tracking-tight">{t('attributes.form.availableLabel')}</span>
                       <QuickInfo text={t('attributes.form.availableTip')} />
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">

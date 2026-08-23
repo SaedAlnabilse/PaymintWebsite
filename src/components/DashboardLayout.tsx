@@ -8,11 +8,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useRealtime } from '../hooks/useRealtime';
 import { ThemeToggle } from './ThemeToggle';
-import { LanguageSwitcher } from './LanguageSwitcher';
 import { DeletionRestorationBanner } from './DeletionRestorationBanner';
 import { BottomNavigation } from './mobile/BottomNavigation';
 import { AlertsBell } from './notifications/AlertsBell';
-import { SetupGuideHelpMenu } from './dashboard/SetupGuideHelpMenu';
+import { SidebarPreferencesHelpMenu } from './layout/SidebarPreferencesHelpMenu';
 import { useTranslation } from 'react-i18next';
 import {
   LayoutDashboard,
@@ -537,6 +536,14 @@ export function DashboardLayout() {
   const prevSidebarOpen = useRef(sidebarOpen);
   const sidebarRef = useRef<HTMLElement>(null);
   const collapsedNavHideTimeoutRef = useRef<number | null>(null);
+  // The nav scrollbar is intentionally hidden, so when the list overflows we
+  // show a fade at the cut-off edge as the "there is more below" cue.
+  const [navOverflows, setNavOverflows] = useState(false);
+  const updateNavOverflow = useCallback(() => {
+    const el = sidebarNavRef.current;
+    if (!el) return;
+    setNavOverflows(el.scrollHeight > el.clientHeight + 4);
+  }, []);
   const [collapsedNavOverlay, setCollapsedNavOverlay] = useState<{
     type: 'group' | 'item';
     label: string;
@@ -658,6 +665,16 @@ export function DashboardLayout() {
   const toggleGroup = (label: string) => {
     setExpandedGroup(prev => prev === label ? null : label);
   };
+
+  // Re-check nav overflow whenever its content or size can change
+  useEffect(() => {
+    updateNavOverflow();
+  }, [updateNavOverflow, sidebarOpen, filteredMenu, expandedGroup, i18n.language, location.pathname]);
+
+  useEffect(() => {
+    window.addEventListener('resize', updateNavOverflow);
+    return () => window.removeEventListener('resize', updateNavOverflow);
+  }, [updateNavOverflow]);
 
   const handleSetupGuideReplay = useCallback(async () => {
     const allowed = await setupGuide.replay();
@@ -852,11 +869,15 @@ export function DashboardLayout() {
         ) : null}
 
         {/* Navigation */}
-        <nav
-          ref={sidebarNavRef}
-          className="flex-1 min-h-0 overflow-y-auto overflow-x-visible px-3 space-y-1.5 scrollbar-none pb-4 relative z-10"
-          onScroll={hideCollapsedNavOverlay}
-        >
+        <div className="relative flex-1 min-h-0 flex flex-col">
+          <nav
+            ref={sidebarNavRef}
+            className="flex-1 min-h-0 overflow-y-auto overflow-x-visible px-3 space-y-1.5 scrollbar-none pb-4 relative z-10"
+            onScroll={() => {
+              hideCollapsedNavOverlay();
+              updateNavOverflow();
+            }}
+          >
           {sidebarOpen && (
             <p className="px-3 py-2 text-xs font-semibold text-gray-500 tracking-normal">{t('dashboard.menu.mainMenu')}</p>
           )}
@@ -969,7 +990,15 @@ export function DashboardLayout() {
               );
             }
           })}
-        </nav>
+          </nav>
+
+          {navOverflows && (
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-10 bg-gradient-to-t from-white via-white/80 to-transparent dark:from-[#1E293B] dark:via-[#1E293B]/80"
+            />
+          )}
+        </div>
 
         {!sidebarOpen &&
           collapsedNavOverlay &&
@@ -1063,23 +1092,6 @@ export function DashboardLayout() {
                 </div>
               )}
 
-              <div className="flex justify-end">
-                <LanguageSwitcher
-                  dropdownDirection="up"
-                  className="w-full"
-                  buttonClassName="w-full justify-start gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-gray-500 dark:text-gray-400 hover:!bg-gray-100 dark:hover:!bg-white/5 hover:text-gray-900 dark:hover:text-white transition-all text-left !bg-transparent dark:!bg-transparent !border-transparent focus:outline-none focus:ring-0 focus:!bg-transparent focus:!border-transparent active:!bg-transparent active:!border-transparent"
-                  menuClassName="w-full min-w-0"
-                  iconSize={20}
-                />
-              </div>
-
-              <ThemeToggle
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white transition-all text-left"
-                showLabel={true}
-                dropdownDirection="up"
-                iconSize={20}
-              />
-
               <button
                 type="button"
                 onClick={() => setMobileAppModalOpen(true)}
@@ -1089,7 +1101,7 @@ export function DashboardLayout() {
                 <span>{t('dashboard.menu.getMobileApp')}</span>
               </button>
 
-              <SetupGuideHelpMenu
+              <SidebarPreferencesHelpMenu
                 canReplay={setupGuide.canReplay}
                 onReplay={handleSetupGuideReplay}
                 onOpenHelpCenter={openHelpCenter}
@@ -1113,18 +1125,6 @@ export function DashboardLayout() {
                   locations={dashboardLocations}
                 />
               )}
-              <div className="relative group">
-                <LanguageSwitcher
-                  iconOnly
-                  iconSize={24}
-                  dropdownDirection="right"
-                  buttonClassName="w-12 h-12 rounded-xl !px-0 !py-0 flex items-center justify-center gap-0 !bg-transparent dark:!bg-transparent !border-transparent text-gray-500 dark:text-gray-400 hover:!bg-gray-100 dark:hover:!bg-white/5 hover:text-gray-900 dark:hover:text-white"
-                />
-                <div className="absolute left-full rtl:left-auto rtl:right-full top-1/2 -translate-y-1/2 ml-2 rtl:ml-0 rtl:mr-2 px-3 py-1.5 bg-gray-900/90 backdrop-blur-md text-white text-xs font-sans font-medium tracking-normal rounded-lg opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all duration-300 pointer-events-none z-[80] whitespace-nowrap border border-white/10 shadow-xl translate-x-1 rtl:-translate-x-1 group-hover:translate-x-0 group-focus-within:translate-x-0">
-                  {t('common.aria.changeLanguage')}
-                </div>
-              </div>
-
               <button
                 type="button"
                 onClick={() => setMobileAppModalOpen(true)}
@@ -1136,23 +1136,12 @@ export function DashboardLayout() {
                 </div>
               </button>
 
-              <SetupGuideHelpMenu
+              <SidebarPreferencesHelpMenu
                 compact
                 canReplay={setupGuide.canReplay}
                 onReplay={handleSetupGuideReplay}
                 onOpenHelpCenter={openHelpCenter}
               />
-
-              <div className="relative group">
-                <ThemeToggle
-                  dropdownDirection="right"
-                  className="w-12 h-12 rounded-xl flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white transition-all"
-                  iconSize={24}
-                />
-                <div className="absolute left-full rtl:left-auto rtl:right-full top-1/2 -translate-y-1/2 ml-2 rtl:ml-0 rtl:mr-2 px-3 py-1.5 bg-gray-900/90 backdrop-blur-md text-white text-xs font-sans font-medium tracking-normal rounded-lg opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all duration-300 pointer-events-none z-[80] whitespace-nowrap border border-white/10 shadow-xl translate-x-1 rtl:-translate-x-1 group-hover:translate-x-0 group-focus-within:translate-x-0">
-                  {t('theme.switchTheme')}
-                </div>
-              </div>
 
               <button
                 type="button"
@@ -1331,7 +1320,7 @@ export function DashboardLayout() {
                 </button>
               )}
               <div className="mb-3">
-                <SetupGuideHelpMenu
+                <SidebarPreferencesHelpMenu
                   canReplay={setupGuide.canReplay}
                   onReplay={handleSetupGuideReplay}
                   onOpenHelpCenter={openHelpCenter}
@@ -1382,7 +1371,7 @@ export function DashboardLayout() {
         message={
           sessionConflict?.canKick
             ? `${conflictMessage} You can kick them out and continue here.`
-            : `${conflictMessage} Please log out here or ask them to exit first.`
+            : `${conflictMessage} Please sign out here or ask them to exit first.`
         }
         confirmText={
           sessionConflict?.canKick
@@ -1400,7 +1389,6 @@ export function DashboardLayout() {
         isOpen={isLogoutModalOpen}
         onClose={() => setIsLogoutModalOpen(false)}
         onConfirm={confirmLogout}
-        title={t('common.confirmLogoutTitle')}
         message={t('common.confirmLogout')}
         confirmText={t('dashboard.menu.logout')}
         cancelText={t('common.cancel')}

@@ -3,9 +3,10 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import {
-  ArrowLeft, Search, BookOpen, Clock, ChevronRight,
-  Zap, CreditCard, Settings, HelpCircle, Star, Eye, X, Ticket,
+  ArrowLeft, Search, Clock, ChevronRight,
+  Star, Eye, X, Ticket,
 } from 'lucide-react';
+import { BiIcon, biIcon } from '../../components/ui/BiIcon';
 import { Navbar } from '../../components/Navbar';
 import { Footer } from '../../components/Footer';
 import { LoginRequiredModal } from '../../components/LoginRequiredModal';
@@ -37,10 +38,10 @@ export const SupportCategoryPage = () => {
   };
 
   const categoryConfig: Record<string, { title: string; description: string; icon: React.ElementType; color: string; bgColor: string }> = {
-    'getting-started': { title: t('support.categories.gettingStarted'), description: t('support.categories.gettingStartedDesc'), icon: Zap,       color: 'text-blue-600',        bgColor: 'bg-blue-500'       },
-    billing:           { title: t('support.categories.billing'),        description: t('support.categories.billingDesc'),        icon: CreditCard, color: 'text-indigo-600',      bgColor: 'bg-indigo-500'     },
-    technical:         { title: t('support.categories.technical'),      description: t('support.categories.technicalDesc'),      icon: Settings,   color: 'text-orange-600',      bgColor: 'bg-orange-500'     },
-    features:          { title: t('support.categories.features'),       description: t('support.categories.featuresDesc'),       icon: BookOpen,   color: 'text-mintcom-green',   bgColor: 'bg-mintcom-green'  },
+    'getting-started': { title: t('support.categories.gettingStarted'), description: t('support.categories.gettingStartedDesc'), icon: biIcon('bi-lightning-charge'), color: 'text-blue-600',        bgColor: 'bg-blue-500'       },
+    billing:           { title: t('support.categories.billing'),        description: t('support.categories.billingDesc'),        icon: biIcon('bi-credit-card'),    color: 'text-indigo-600',      bgColor: 'bg-indigo-500'     },
+    technical:         { title: t('support.categories.technical'),      description: t('support.categories.technicalDesc'),      icon: biIcon('bi-gear'),           color: 'text-orange-600',      bgColor: 'bg-orange-500'     },
+    features:          { title: t('support.categories.features'),       description: t('support.categories.featuresDesc'),       icon: biIcon('bi-book'),           color: 'text-mintcom-green',   bgColor: 'bg-mintcom-green'  },
   };
 
   const articlesByCategory: Record<string, Array<{ id: string; title: string; excerpt: string; readTime: string; views: string; featured?: boolean }>> = {
@@ -166,7 +167,7 @@ export const SupportCategoryPage = () => {
               {/* stats pills */}
               <div className="flex flex-wrap gap-3 sm:flex-col sm:items-end">
                 <div className={`flex items-center gap-2 rounded-2xl border px-4 py-2.5 ${acc.light} ${acc.border}`}>
-                  <BookOpen size={14} className={acc.text} />
+                  <BiIcon icon="bi-book" size={14} className={acc.text} />
                   <span className={`text-sm font-bold ${acc.text}`}>{articles.length} {t('support.articles.allTitle')}</span>
                 </div>
                 <div className="flex items-center gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-2.5 dark:border-amber-500/20 dark:bg-amber-500/10">
@@ -228,7 +229,7 @@ export const SupportCategoryPage = () => {
                       <div className={`absolute inset-x-0 top-0 h-0.5 ${acc.bg} opacity-0 transition-opacity group-hover:opacity-100`} />
                       <div className="mb-4 flex items-start gap-4">
                         <div className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl ${acc.light} ${acc.border} border`}>
-                          <BookOpen size={18} className={acc.text} />
+                          <BiIcon icon="bi-book" size={18} className={acc.text} />
                         </div>
                         <div className="flex-1 min-w-0">
                           <h3 className={`font-barlow text-base font-bold leading-snug tracking-tight transition-colors group-hover:${acc.text}`}>
@@ -271,7 +272,7 @@ export const SupportCategoryPage = () => {
             {filtered.length === 0 ? (
               <div className="rounded-2xl border border-gray-200 bg-white p-16 text-center dark:border-white/10 dark:bg-white/[0.03]">
                 <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-100 dark:bg-white/10">
-                  <HelpCircle size={24} className="text-gray-400" />
+                  <BiIcon icon="bi-question-circle" size={24} className="text-gray-400" />
                 </div>
                 <h3 className="font-barlow mb-2 text-lg font-bold">{t('common.noResults')}</h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -287,7 +288,7 @@ export const SupportCategoryPage = () => {
                     <Link to={`/support/article/${article.id}`}
                       className={`group flex items-center gap-4 rounded-xl border bg-white px-5 py-4 transition-all duration-300 dark:bg-white/[0.025] border-gray-100 dark:border-white/8 hover:border-opacity-60 hover:shadow-sm dark:hover:border-white/15`}>
                       <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl ${acc.light} transition-transform group-hover:scale-105`}>
-                        <BookOpen size={15} className={acc.text} />
+                        <BiIcon icon="bi-book" size={15} className={acc.text} />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className={`text-sm font-semibold text-gray-900 transition-colors group-hover:${acc.text} dark:text-white truncate`}>

@@ -4,12 +4,35 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { Download, Printer, X } from 'lucide-react';
 
-/** Mintcom leaf SVG used in the invoice header. */
-const MintcomLeaf = () => (
-  <svg viewBox="111.25 441.72 196.55 196.55" xmlns="http://www.w3.org/2000/svg" style={{ width: 40, height: 40 }}>
+/** Official Mintcom logo SVG vector */
+const MintcomLogoSvg = ({ height = 28 }: { height?: number }) => (
+  <svg
+    viewBox="145 470 825 150"
+    xmlns="http://www.w3.org/2000/svg"
+    style={{ height, width: 'auto', display: 'block' }}
+    aria-label="Mintcom"
+  >
+    <defs>
+      <style>{`.m-logo-leaf{fill:#ace2bf}.m-logo-brand{fill:#7dc6a2}`}</style>
+    </defs>
     <g>
-      <path fill="#ffffff" d="m158.71,586.04c-3-4.29-6.72-11.05-8.58-16.8-5.84-18.07-7.45-46.74,19.85-68.44,11.59-9.21,25.99-14.64,40.63-17.07,20.24-3.36,41.28-.88,61.13-5.76-2.48,5.57-3.01,11.6-2.6,17.23.5,6.95,2.31,13.57,3,20.48,2.08,20.65-6.35,43.7-22.46,61.36-9.37,10.28-21.42,18.85-34.62,23.03-12.35,3.92-35.68,2.59-52.78-10.22" />
-      <path fill="#3d8f6b" d="m214.7,534.03c-6.02,7.01-12.31,14.01-18.35,20.54-.7.76-.42,1.9.56,2.16,18.75,5.09,37.13-.18,46.83-5.96-14.46,11.25-35.09,14.99-51.44,9.49-.57-.19-1.23-.02-1.66.43-4.72,5.01-9.15,9.61-13.02,13.55-.71.72-.49,1.84.43,2.17,18.02,6.31,36.42,1.88,46.15-3.42-13.72,9.83-34.94,11.5-50.3,6.26-.55-.19-1.2-.03-1.63.4-2.65,2.65-4.82,4.77-6.35,6.22,0,0-7.6,7.5-12.29,13.97-.54.74-1.63.94-2.27.36-1.28-1.14-2.49-2.36-3.6-3.65-.5-.58-.29-1.47.44-1.93,3.73-2.36,14.35-11.58,14.35-11.58,2.64-2.43,5.27-4.89,7.89-7.38.5-.48.6-1.18.24-1.71-8.84-13.2-8.55-31.39.91-45.4-4.49,9.23-6.84,25.96,2.31,41.4.46.77,1.63.84,2.34.17,4.99-4.82,9.94-9.72,14.83-14.69.43-.44.53-1.05.28-1.55-6.68-13.06-4.4-30.28,5.87-42.98-5.05,8.29-8.99,23.5-2.88,38.38.37.91,1.71,1.05,2.46.28,6.18-6.4,12.25-12.89,18.2-19.45.43-.47.49-1.12.17-1.61-6.05-9.32-5.76-22.25.91-32.45-3.12,6.57-4.78,18.19,1.08,28.87.46.83,1.74.87,2.43.1,6.87-7.7,13.55-15.48,20.01-23.3-5.05,7.93-12.24,17.25-20.2,26.78-.68.82-.3,1.98.74,2.14,14.85,2.37,28.47-2.97,35.4-8.04-10.25,9.68-26.06,14.03-39.25,10.91-.57-.13-1.18.06-1.57.51Z" />
+      <g>
+        <path className="m-logo-brand" d="m289.4,599.06v-80.38c0-2.26,1.83-4.09,4.09-4.09h16.55v11.75c7.19-8.89,15.88-13.34,26.04-13.34,11,0,18.94,4.45,23.82,13.34,7.41-8.89,15.98-13.34,25.72-13.34,12.91,0,21.38,4.87,25.4,14.61,1.48,3.17,2.22,9,2.22,17.47v53.99h-22.23v-48.27c0-8.68-.74-14.08-2.22-16.2-2.54-3.17-6.03-4.76-10.48-4.76-7.2,0-11.86,3.71-13.97,11.12-1.06,4.24-1.59,10.06-1.59,17.47v40.65h-22.55v-57.48c-.64-5.08-2.22-8.36-4.76-9.84-1.48-1.27-3.71-1.91-6.67-1.91-7.62,0-12.7,3.6-15.24,10.8-1.27,3.39-1.9,9.21-1.9,17.47v40.97h-22.23Z" />
+        <path className="m-logo-brand" d="m460.7,599.06v-84.47h20.64v12.7c6.99-9.53,15.98-14.29,26.99-14.29s18.84,3.07,23.5,9.21c3.81,4.66,5.72,12.81,5.72,24.45v52.4h-22.23v-43.19c0-7.41-.11-11.64-.32-12.7-.85-5.08-2.75-8.78-5.72-11.12-2.12-1.48-4.76-2.22-7.94-2.22-8.47,0-13.97,3.92-16.51,11.75-1.27,3.39-1.9,9.85-1.9,19.37v38.11h-22.23Z" />
+        <path className="m-logo-brand" d="m596.13,595.56c-5.71,2.33-11.65,3.51-17.79,3.51-8.25,0-14.18-2.44-17.79-7.32-1.47-2.11-2.54-4.96-3.17-8.57-.63-3.17-.84-8.47-.63-15.88v-36.84h-10.49v-17.79h10.49v-16.8h22.23v16.8h15.25v17.79h-15.25v41.92c.43,3.83,1.27,6.14,2.54,7,.84.84,2.11,1.27,3.81,1.27,2.13,0,5.09-.75,8.9-2.22l1.9,17.13Z" />
+        <path className="m-logo-brand" d="m715.16,593.98c-14.4-7.62-21.59-20.96-21.59-40.01,0-7.83,1.8-15.13,5.4-21.91,3.81-6.77,9-11.96,15.56-15.56,6.56-3.6,14.08-5.4,22.55-5.4,12.7,0,23.13,4.08,31.28,12.23,8.15,8.15,12.23,18.58,12.23,31.28s-4.02,23.29-12.07,31.76c-8.26,8.47-18.74,12.7-31.44,12.7-8.05,0-15.35-1.69-21.91-5.08Zm37.79-21.28c3.17-4.87,4.76-10.8,4.76-17.78s-1.59-13.12-4.76-17.78c-3.81-5.29-9.11-7.94-15.88-7.94s-12.07,2.65-15.88,7.94c-3.18,4.66-4.76,10.59-4.76,17.78s1.59,12.92,4.76,17.78c3.81,5.51,9.1,8.26,15.88,8.26s12.07-2.75,15.88-8.26Z" />
+        <path className="m-logo-brand" d="m790.11,599.06v-80.38c0-2.26,1.83-4.09,4.09-4.09h16.55v11.75c7.19-8.89,15.88-13.34,26.04-13.34,11,0,18.94,4.45,23.82,13.34,7.41-8.89,15.98-13.34,25.72-13.34,12.91,0,21.38,4.87,25.4,14.61,1.48,3.17,2.22,9,2.22,17.47v49.89c0,2.26-1.83,4.09-4.09,4.09h-18.14v-48.27c0-8.68-.74-14.08-2.22-16.2-2.54-3.17-6.03-4.76-10.48-4.76-7.2,0-11.86,3.71-13.97,11.12-1.06,4.24-1.59,10.06-1.59,17.47v40.65h-22.55v-57.48c-.64-5.08-2.22-8.36-4.76-9.84-1.48-1.27-3.71-1.91-6.67-1.91-7.62,0-12.7,3.6-15.24,10.8-1.27,3.39-1.9,9.21-1.9,17.47v40.97h-22.23Z" />
+        <path className="m-logo-brand" d="m645.08,599.06c-7.19,0-13.39-1.2-18.58-3.6-5.2-2.4-9.54-5.59-13.04-9.59-3.5-4-6.12-8.52-7.87-13.56-1.75-5.04-2.62-10.27-2.62-15.66v-2.85c0-5.59.9-10.96,2.7-16.11,1.8-5.14,4.47-9.72,8.02-13.71,3.55-4,7.94-7.14,13.19-9.44,5.24-2.3,11.26-3.45,18.06-3.45,7.39,0,13.94,1.42,19.63,4.27,5.69,2.85,10.24,6.82,13.64,11.91,2.54,3.82,4.25,8.08,5.11,12.79.46,2.54-1.45,4.89-4.03,4.89h-15.56c-1.78,0-3.41-1.14-3.9-2.85-.72-2.56-2.04-4.78-3.95-6.66-2.6-2.55-6.25-3.82-10.94-3.82-4,0-7.32,1-9.97,3-2.65,2-4.62,4.77-5.92,8.32-1.3,3.55-1.95,7.67-1.95,12.36,0,4.4.6,8.37,1.8,11.91,1.2,3.55,3.12,6.3,5.77,8.24,2.65,1.95,6.12,2.92,10.42,2.92,3.2,0,5.92-.57,8.17-1.72,2.25-1.15,4.02-2.75,5.32-4.79.79-1.24,1.41-2.6,1.87-4.08.55-1.77,2.1-3.04,3.95-3.04h15.57c2.56,0,4.46,2.33,4.03,4.85-.82,4.82-2.55,9.17-5.19,13.06-3.5,5.15-8.14,9.17-13.94,12.06-5.8,2.9-12.39,4.34-19.78,4.34Z" />
+        <g>
+          <rect className="m-logo-brand" x="425.7" y="514.59" width="22.55" height="84.47" rx="4.09" ry="4.09" />
+          <circle className="m-logo-brand" cx="436.97" cy="492.2" r="11.27" />
+        </g>
+        <g>
+          <path className="m-logo-brand" d="m176.11,585.77c-2.5-3.57-5.59-9.19-7.14-13.98-4.86-15.03-6.2-38.89,16.52-56.94,9.64-7.66,21.63-12.18,33.8-14.2,16.83-2.8,34.34-.73,50.85-4.79-2.07,4.64-2.51,9.65-2.17,14.33.42,5.79,1.92,11.29,2.5,17.04,1.73,17.18-5.29,36.35-18.69,51.05-7.79,8.55-17.82,15.68-28.8,19.16-10.27,3.26-29.69,2.16-43.91-8.5" />
+          <path className="m-logo-leaf" d="m222.69,542.5c-5.01,5.83-10.24,11.66-15.27,17.09-.59.63-.35,1.58.46,1.8,15.6,4.24,30.89-.15,38.96-4.96-12.03,9.36-29.19,12.47-42.79,7.89-.47-.16-1.03-.02-1.38.36-3.93,4.17-7.61,8-10.83,11.28-.59.6-.41,1.53.36,1.8,14.99,5.25,30.3,1.57,38.4-2.84-11.41,8.18-29.07,9.57-41.85,5.21-.46-.16-1-.02-1.36.33-2.21,2.2-4.01,3.96-5.28,5.17,0,0-6.32,6.24-10.23,11.62-.45.62-1.36.78-1.89.3-1.07-.95-2.07-1.96-2.99-3.03-.41-.48-.24-1.22.37-1.61,3.1-1.96,11.94-9.63,11.94-9.63,2.2-2.03,4.39-4.07,6.57-6.14.42-.4.5-.98.2-1.42-7.36-10.98-7.12-26.12.76-37.77-3.74,7.68-5.69,21.6,1.92,34.44.38.64,1.36.7,1.94.14,4.15-4.01,8.27-8.09,12.34-12.22.36-.36.44-.87.23-1.29-5.56-10.87-3.66-25.19,4.88-35.76-4.2,6.89-7.48,19.55-2.4,31.93.31.76,1.42.87,2.05.23,5.14-5.32,10.19-10.73,15.14-16.18.36-.39.41-.93.14-1.34-5.04-7.75-4.79-18.51.76-27-2.59,5.46-3.98,15.13.9,24.02.38.69,1.45.72,2.02.08,5.71-6.41,11.27-12.88,16.65-19.38-4.2,6.6-10.18,14.35-16.81,22.28-.57.68-.25,1.65.61,1.78,12.35,1.97,23.69-2.47,29.45-6.69-8.53,8.05-21.68,11.67-32.65,9.08-.47-.11-.98.05-1.31.42Z" />
+        </g>
+      </g>
+      <path className="m-logo-brand" d="m945.31,507.42v13.41h-1.36v-10.71l-4.78,10.71h-.99l-4.78-10.67v10.67h-1.36v-13.41h1.44l5.19,11.62,5.19-11.62h1.46Zm-15.42-.17v1.13h-3.77v12.46h-1.36v-12.46h-3.79v-1.13h8.92Z" />
     </g>
   </svg>
 );
@@ -120,16 +143,16 @@ const paymentStatusLabel = (data: SubscriptionInvoiceData) => {
   }
 };
 
-const labelStyle = {
+const metaLabelStyle = {
   fontSize: 10,
   fontWeight: 700,
   textTransform: 'uppercase' as const,
-  letterSpacing: 1.2,
-  color: '#7dc6a2',
-  marginBottom: 8,
+  letterSpacing: '0.08em',
+  color: '#6b7280',
+  marginBottom: 6,
 };
 
-/** The printable document itself: inline styles only, so print/download keep the design. */
+/** The printable document itself: formal, clean, paper-styled document. */
 export function SubscriptionInvoiceDocument({ data }: { data: SubscriptionInvoiceData }) {
   const { snapshot } = data;
   const isIssued = Boolean(data.number);
@@ -144,232 +167,383 @@ export function SubscriptionInvoiceDocument({ data }: { data: SubscriptionInvoic
         maxWidth: 720,
         margin: '0 auto',
         background: '#ffffff',
-        borderRadius: 16,
-        boxShadow: '0 4px 24px rgba(0,0,0,.08)',
-        overflow: 'hidden',
-        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-        color: '#1f2937',
+        border: '1px solid #e5e7eb',
+        borderRadius: 8,
+        padding: '36px 40px',
+        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+        color: '#111827',
         lineHeight: 1.5,
       }}
     >
-      {/* Header */}
-      <div style={{
-        background: 'linear-gradient(135deg, #7dc6a2 0%, #5aab85 50%, #3d8f6b 100%)',
-        color: '#fff',
-        padding: '32px 40px',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'flex-start',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <MintcomLeaf />
-          <div>
-            <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: -0.5 }}>Mintcom</div>
-            <div style={{ fontSize: 11, fontWeight: 500, opacity: 0.85, marginTop: 2 }}>Point of Sale Solutions</div>
-          </div>
+      {/* Formal Header: Logo on left, Document Title & ID on right */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          borderBottom: '1px solid #e5e7eb',
+          paddingBottom: 22,
+          marginBottom: 24,
+        }}
+      >
+        <div>
+          <MintcomLogoSvg height={30} />
         </div>
         <div style={{ textAlign: 'right' as const }}>
-          <div style={{ fontSize: isIssued ? 28 : 20, fontWeight: 800, letterSpacing: -0.5 }}>
-            {isIssued ? 'INVOICE' : 'SUBSCRIPTION SUMMARY'}
+          <div
+            style={{
+              fontSize: 18,
+              fontWeight: 700,
+              letterSpacing: '0.04em',
+              textTransform: 'uppercase' as const,
+              color: '#111827',
+            }}
+          >
+            {isIssued ? 'Invoice' : 'Subscription Summary'}
           </div>
           {isIssued ? (
-            <div style={{ fontSize: 13, fontWeight: 500, opacity: 0.9, marginTop: 4 }}>#{data.number}</div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', marginTop: 3 }}>
+              #{data.number}
+            </div>
           ) : (
-            <div style={{ fontSize: 11, fontWeight: 500, opacity: 0.9, marginTop: 4 }}>Not a tax document</div>
+            <div style={{ fontSize: 11, fontWeight: 500, color: '#9ca3af', marginTop: 3 }}>
+              Not a tax document
+            </div>
           )}
         </div>
       </div>
 
-      {/* Body */}
-      <div style={{ padding: '32px 40px' }}>
-        {!isIssued && (
-          <div style={{
-            background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 10,
-            padding: '12px 16px', marginBottom: 24, fontSize: 11, color: '#92400e', lineHeight: 1.7,
-          }}>
-            <strong style={{ fontWeight: 700 }}>No invoice has been issued for this location yet.</strong><br />
-            This page summarises the current subscription and its expected charge. A numbered
-            invoice is issued automatically the first time a payment settles.
-          </div>
-        )}
+      {/* Notice for unissued summary: simple, formal left-bordered note */}
+      {!isIssued && (
+        <div
+          style={{
+            background: '#f9fafb',
+            borderLeft: '3px solid #9ca3af',
+            borderRadius: 4,
+            padding: '10px 14px',
+            marginBottom: 24,
+            fontSize: 11,
+            color: '#4b5563',
+            lineHeight: 1.6,
+          }}
+        >
+          <strong style={{ color: '#111827', fontWeight: 600 }}>
+            No invoice has been issued for this location yet.
+          </strong>{' '}
+          This document summarizes the current subscription terms and expected charge. A numbered
+          invoice is issued automatically the first time a payment settles.
+        </div>
+      )}
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 24, marginBottom: 32 }}>
-          <div style={{ flex: 1 }}>
-            <h3 style={labelStyle}>From</h3>
-            <p style={{ fontSize: 12, color: '#4b5563', lineHeight: 1.7 }}>
-              <strong style={{ color: '#1f2937', fontWeight: 600 }}>{snapshot.seller.name}</strong><br />
-              {snapshot.seller.address}<br />
-              {snapshot.seller.email}
-            </p>
-          </div>
-          <div style={{ flex: 1 }}>
-            <h3 style={labelStyle}>Bill To</h3>
-            <p style={{ fontSize: 12, color: '#4b5563', lineHeight: 1.7 }}>
-              <strong style={{ color: '#1f2937', fontWeight: 600 }}>{snapshot.billTo.name}</strong><br />
-              {snapshot.billTo.reference || '—'}
-              {snapshot.billTo.accountEmail ? (
-                <>
-                  <br />
-                  {snapshot.billTo.accountEmail}
-                </>
-              ) : null}
-            </p>
-          </div>
-          <div style={{ flex: 1 }}>
-            <h3 style={labelStyle}>{isIssued ? 'Invoice Details' : 'Summary Details'}</h3>
-            <p style={{ fontSize: 12, color: '#4b5563', lineHeight: 1.7 }}>
-              <strong style={{ color: '#1f2937', fontWeight: 600 }}>Date:</strong> {formatDate(data.issueDate)}<br />
-              <strong style={{ color: '#1f2937', fontWeight: 600 }}>Currency:</strong> {data.currency}
-              {periodStart && periodEnd ? (
-                <>
-                  <br />
-                  <strong style={{ color: '#1f2937', fontWeight: 600 }}>Period:</strong> {periodStart} – {periodEnd}
-                </>
-              ) : null}
-              {!isIssued && nextBill ? (
-                <>
-                  <br />
-                  <strong style={{ color: '#1f2937', fontWeight: 600 }}>Next charge:</strong> {nextBill}
-                </>
-              ) : null}
-            </p>
+      {/* Metadata / Parties: 3 clean columns */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: 24,
+          marginBottom: 28,
+        }}
+      >
+        <div>
+          <div style={metaLabelStyle}>From</div>
+          <div style={{ fontSize: 12, color: '#374151', lineHeight: 1.6 }}>
+            <div style={{ fontWeight: 600, color: '#111827' }}>{snapshot.seller.name}</div>
+            {snapshot.seller.address ? <div>{snapshot.seller.address}</div> : null}
+            <div>{snapshot.seller.email}</div>
           </div>
         </div>
 
-        {/* Table */}
-        <table style={{ width: '100%', borderCollapse: 'collapse' as const, marginBottom: 28 }}>
-          <thead>
-            <tr>
-              {['Description', 'Unit Price', 'Qty', 'Amount'].map((header, index) => (
-                <th key={header} style={{
-                  background: '#f9fafb', fontSize: 10, fontWeight: 700,
-                  textTransform: 'uppercase' as const, letterSpacing: 1, color: '#6b7280',
-                  padding: '10px 14px', borderBottom: '2px solid #e5e7eb',
-                  textAlign: index === 3 ? 'right' as const : index === 2 ? 'center' as const : 'left' as const,
-                }}>{header}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {snapshot.lineItems.map((line, index) => (
-              <tr key={`${line.description}-${index}`}>
-                <td style={{ padding: 14, fontSize: 13, color: '#1f2937', fontWeight: 600, borderBottom: '1px solid #f3f4f6' }}>
-                  {line.description}
-                  {line.detail ? (
-                    <div style={{ fontSize: 11, color: '#9ca3af', fontWeight: 400, marginTop: 3 }}>{line.detail}</div>
-                  ) : null}
-                </td>
-                <td style={{ padding: 14, fontSize: 13, color: '#374151', borderBottom: '1px solid #f3f4f6' }}>
-                  {money(line.unitPrice, data.currency)}{line.quantity > 1 ? ' /mo' : ''}
-                </td>
-                <td style={{ padding: 14, fontSize: 13, color: '#374151', borderBottom: '1px solid #f3f4f6', textAlign: 'center' as const }}>
-                  {line.quantity === 1 ? '1 month' : `${line.quantity} months`}
-                </td>
-                <td style={{ padding: 14, fontSize: 13, color: '#374151', borderBottom: '1px solid #f3f4f6', textAlign: 'right' as const }}>
-                  {money(line.amount, data.currency)}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div>
+          <div style={metaLabelStyle}>Bill To</div>
+          <div style={{ fontSize: 12, color: '#374151', lineHeight: 1.6 }}>
+            <div style={{ fontWeight: 600, color: '#111827' }}>{snapshot.billTo.name}</div>
+            {snapshot.billTo.reference ? <div>{snapshot.billTo.reference}</div> : null}
+            {snapshot.billTo.accountEmail ? <div>{snapshot.billTo.accountEmail}</div> : null}
+          </div>
+        </div>
 
-        {/* Totals */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 32 }}>
-          <div style={{ width: 280 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 13, color: '#6b7280' }}>
-              <span style={{ fontWeight: 500 }}>Subtotal</span>
-              <span style={{ fontWeight: 600, color: '#374151' }}>{money(data.subtotal, data.currency)}</span>
+        <div>
+          <div style={metaLabelStyle}>{isIssued ? 'Invoice Details' : 'Summary Details'}</div>
+          <div style={{ fontSize: 12, color: '#374151', lineHeight: 1.6 }}>
+            <div>
+              <span style={{ color: '#6b7280' }}>Date: </span>
+              <span style={{ fontWeight: 500, color: '#111827' }}>{formatDate(data.issueDate)}</span>
             </div>
-            {data.discount > 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 13, color: '#6b7280' }}>
-                <span style={{ fontWeight: 500 }}>Yearly discount</span>
-                <span style={{ fontWeight: 600, color: '#059669' }}>−{money(data.discount, data.currency)}</span>
-              </div>
-            )}
-            {(data.taxAmount || 0) > 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 13, color: '#6b7280' }}>
-                <span style={{ fontWeight: 500 }}>Tax</span>
-                <span style={{ fontWeight: 600, color: '#374151' }}>{money(data.taxAmount || 0, data.currency)}</span>
-              </div>
-            )}
-            <div style={{
-              display: 'flex', justifyContent: 'space-between',
-              borderTop: '2px solid #1f2937', marginTop: 8, paddingTop: 12,
-              fontSize: 16, fontWeight: 800, color: '#1f2937',
-            }}>
-              <span>Total</span>
-              <span style={{ color: '#3d8f6b' }}>{money(data.total, data.currency)}</span>
+            <div>
+              <span style={{ color: '#6b7280' }}>Billing cycle: </span>
+              <span style={{ fontWeight: 500, color: '#111827', textTransform: 'capitalize' as const }}>
+                {snapshot.billingCycle}
+              </span>
             </div>
-          </div>
-        </div>
-
-        {/* Payment */}
-        <div style={{
-          background: 'linear-gradient(135deg, #f0fdf7 0%, #ecfdf5 100%)',
-          border: '1px solid #d1fae5', borderRadius: 12, padding: 20,
-          marginBottom: 32, display: 'flex', gap: 32,
-        }}>
-          <div style={{ flex: 1 }}>
-            <h4 style={{ ...labelStyle, color: '#059669' }}>Payment Method</h4>
-            <p style={{ fontSize: 11, color: '#374151', lineHeight: 1.8 }}>
-              {data.cardLast4 ? (
-                <>
-                  <strong style={{ fontWeight: 600 }}>{data.cardBrand || 'Card'}</strong><br />
-                  Card ending: •••• {data.cardLast4}
-                </>
-              ) : (
-                <strong style={{ fontWeight: 600 }}>No card on file</strong>
-              )}
-            </p>
-          </div>
-          <div style={{ flex: 1 }}>
-            <h4 style={{ ...labelStyle, color: '#059669' }}>Payment Status</h4>
-            <p style={{ fontSize: 11, color: '#374151', lineHeight: 1.8 }}>
-              <strong style={{ fontWeight: 600, color: '#059669' }}>
-                {paymentStatusLabel(data)}
-              </strong>
-              <br />
-              {snapshot.billingCycle === 'yearly' ? 'Billed yearly' : 'Billed monthly'}
-            </p>
-          </div>
-        </div>
-
-        {(data.taxAuthorityUuid || data.taxAuthorityQr) && (
-          <div style={{ marginBottom: 24 }}>
-            <h4 style={{ ...labelStyle, color: '#9ca3af' }}>Tax Authority</h4>
-            <p style={{ fontSize: 11, color: '#6b7280', lineHeight: 1.8, wordBreak: 'break-all' as const }}>
-              {data.taxAuthorityUuid ? <>UUID: {data.taxAuthorityUuid}<br /></> : null}
-              {data.taxAuthorityQr || null}
-            </p>
-          </div>
-        )}
-
-        <hr style={{ border: 'none', borderTop: '1px dashed #e5e7eb', margin: '24px 0' }} />
-
-        <div style={{ marginBottom: 24 }}>
-          <h4 style={{ ...labelStyle, color: '#9ca3af' }}>Terms</h4>
-          <p style={{ fontSize: 11, color: '#6b7280', lineHeight: 1.8 }}>
-            {snapshot.terms
-              || 'Charged automatically to the payment method above at the start of each billing period. Questions about this invoice: support@mintcompos.com'}
-            {snapshot.backfilled ? (
-              <>
-                <br />
-                This document was reconstructed from the payment ledger for a charge that
-                settled before numbered invoices were introduced.
-              </>
+            <div>
+              <span style={{ color: '#6b7280' }}>Currency: </span>
+              <span style={{ fontWeight: 500, color: '#111827' }}>{data.currency}</span>
+            </div>
+            {periodStart && periodEnd ? (
+              <div>
+                <span style={{ color: '#6b7280' }}>Period: </span>
+                <span style={{ fontWeight: 500, color: '#111827' }}>
+                  {periodStart} – {periodEnd}
+                </span>
+              </div>
             ) : null}
-          </p>
+            {!isIssued && nextBill ? (
+              <div>
+                <span style={{ color: '#6b7280' }}>Next charge: </span>
+                <span style={{ fontWeight: 500, color: '#111827' }}>{nextBill}</span>
+              </div>
+            ) : null}
+          </div>
         </div>
       </div>
 
-      {/* Footer */}
-      <div style={{ background: '#f9fafb', borderTop: '1px solid #e5e7eb', padding: '18px 40px', textAlign: 'center' as const }}>
-        <p style={{ fontSize: 11, color: '#9ca3af', lineHeight: 1.8 }}>
-          <strong>{snapshot.seller.name}</strong> · {snapshot.seller.address}<br />
-          <a href="https://mintcompos.com" style={{ color: '#7dc6a2', textDecoration: 'none', fontWeight: 600 }}>mintcompos.com</a>
-          {' · '}
-          <a href={`mailto:${snapshot.seller.email}`} style={{ color: '#7dc6a2', textDecoration: 'none', fontWeight: 600 }}>{snapshot.seller.email}</a>
+      {/* Formal Line Items Table */}
+      <table style={{ width: '100%', borderCollapse: 'collapse' as const, marginBottom: 24, fontSize: 12 }}>
+        <thead>
+          <tr style={{ borderTop: '1px solid #e5e7eb', borderBottom: '1.5px solid #e5e7eb', background: '#f9fafb' }}>
+            <th
+              style={{
+                padding: '10px 12px',
+                textAlign: 'left' as const,
+                fontSize: 10,
+                fontWeight: 700,
+                textTransform: 'uppercase' as const,
+                letterSpacing: '0.06em',
+                color: '#6b7280',
+              }}
+            >
+              Description
+            </th>
+            <th
+              style={{
+                padding: '10px 12px',
+                textAlign: 'center' as const,
+                fontSize: 10,
+                fontWeight: 700,
+                textTransform: 'uppercase' as const,
+                letterSpacing: '0.06em',
+                color: '#6b7280',
+              }}
+            >
+              Duration
+            </th>
+            <th
+              style={{
+                padding: '10px 12px',
+                textAlign: 'right' as const,
+                fontSize: 10,
+                fontWeight: 700,
+                textTransform: 'uppercase' as const,
+                letterSpacing: '0.06em',
+                color: '#6b7280',
+              }}
+            >
+              Rate
+            </th>
+            <th
+              style={{
+                padding: '10px 12px',
+                textAlign: 'right' as const,
+                fontSize: 10,
+                fontWeight: 700,
+                textTransform: 'uppercase' as const,
+                letterSpacing: '0.06em',
+                color: '#6b7280',
+              }}
+            >
+              Amount
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {snapshot.lineItems.map((line, index) => (
+            <tr key={`${line.description}-${index}`} style={{ borderBottom: '1px solid #f3f4f6' }}>
+              <td style={{ padding: '12px', color: '#111827', fontWeight: 600 }}>
+                {line.description}
+                {line.detail ? (
+                  <div style={{ fontSize: 11, color: '#6b7280', fontWeight: 400, marginTop: 2 }}>
+                    {line.detail}
+                  </div>
+                ) : null}
+              </td>
+              <td style={{ padding: '12px', color: '#374151', textAlign: 'center' as const, whiteSpace: 'nowrap' as const }}>
+                {line.quantity === 1 ? '1 month' : `${line.quantity} months`}
+              </td>
+              <td
+                style={{
+                  padding: '12px',
+                  color: '#374151',
+                  textAlign: 'right' as const,
+                  whiteSpace: 'nowrap' as const,
+                  fontVariantNumeric: 'tabular-nums',
+                }}
+              >
+                {money(line.unitPrice, data.currency)}
+                {line.quantity > 1 ? ' /mo' : ''}
+              </td>
+              <td
+                style={{
+                  padding: '12px',
+                  color: '#111827',
+                  fontWeight: 600,
+                  textAlign: 'right' as const,
+                  whiteSpace: 'nowrap' as const,
+                  fontVariantNumeric: 'tabular-nums',
+                }}
+              >
+                {money(line.amount, data.currency)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {/* Totals Summary */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 28 }}>
+        <div style={{ width: 250 }}>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              padding: '4px 0',
+              fontSize: 12,
+              color: '#4b5563',
+            }}
+          >
+            <span>Subtotal</span>
+            <span style={{ fontWeight: 500, color: '#111827', fontVariantNumeric: 'tabular-nums' }}>
+              {money(data.subtotal, data.currency)}
+            </span>
+          </div>
+          {data.discount > 0 && (
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                padding: '4px 0',
+                fontSize: 12,
+                color: '#4b5563',
+              }}
+            >
+              <span>Yearly discount</span>
+              <span style={{ fontWeight: 500, color: '#059669', fontVariantNumeric: 'tabular-nums' }}>
+                −{money(data.discount, data.currency)}
+              </span>
+            </div>
+          )}
+          {(data.taxAmount || 0) > 0 && (
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                padding: '4px 0',
+                fontSize: 12,
+                color: '#4b5563',
+              }}
+            >
+              <span>Tax</span>
+              <span style={{ fontWeight: 500, color: '#111827', fontVariantNumeric: 'tabular-nums' }}>
+                {money(data.taxAmount || 0, data.currency)}
+              </span>
+            </div>
+          )}
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              borderTop: '1.5px solid #111827',
+              marginTop: 6,
+              paddingTop: 8,
+              fontSize: 14,
+              fontWeight: 700,
+              color: '#111827',
+            }}
+          >
+            <span>Total</span>
+            <span style={{ fontVariantNumeric: 'tabular-nums' }}>{money(data.total, data.currency)}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Formal Payment Method & Status Block */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: 20,
+          padding: '12px 16px',
+          background: '#f9fafb',
+          border: '1px solid #f3f4f6',
+          borderRadius: 6,
+          marginBottom: 20,
+          fontSize: 11,
+        }}
+      >
+        <div>
+          <div style={metaLabelStyle}>Payment Method</div>
+          <div style={{ color: '#374151' }}>
+            {data.cardLast4 ? (
+              <span>
+                <strong style={{ fontWeight: 600, color: '#111827' }}>{data.cardBrand || 'Card'}</strong> ending in •••• {data.cardLast4}
+              </span>
+            ) : (
+              <span style={{ color: '#6b7280' }}>No card on file</span>
+            )}
+          </div>
+        </div>
+        <div>
+          <div style={metaLabelStyle}>Payment Status</div>
+          <div style={{ color: '#374151' }}>
+            <strong style={{ fontWeight: 600, color: '#111827' }}>{paymentStatusLabel(data)}</strong>
+            <span style={{ color: '#6b7280' }}>
+              {' '}· {snapshot.billingCycle === 'yearly' ? 'Billed yearly' : 'Billed monthly'}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Tax Authority (if present) */}
+      {(data.taxAuthorityUuid || data.taxAuthorityQr) && (
+        <div style={{ marginBottom: 16 }}>
+          <div style={metaLabelStyle}>Tax Authority</div>
+          <div style={{ fontSize: 11, color: '#6b7280', lineHeight: 1.6, wordBreak: 'break-all' as const }}>
+            {data.taxAuthorityUuid ? <div>UUID: {data.taxAuthorityUuid}</div> : null}
+            {data.taxAuthorityQr || null}
+          </div>
+        </div>
+      )}
+
+      {/* Terms & Notes */}
+      <div style={{ borderTop: '1px solid #f3f4f6', paddingTop: 14, marginTop: 14, fontSize: 11, color: '#6b7280', lineHeight: 1.6 }}>
+        <p style={{ margin: 0 }}>
+          {snapshot.terms ||
+            'Charged automatically to the payment method on file at the start of each billing period. Questions about this document: support@mintcompos.com'}
+          {snapshot.backfilled ? ' Reconstructed from the payment ledger.' : ''}
         </p>
+      </div>
+
+      {/* Formal Footer */}
+      <div
+        style={{
+          borderTop: '1px solid #e5e7eb',
+          paddingTop: 14,
+          marginTop: 18,
+          textAlign: 'center' as const,
+          fontSize: 10,
+          color: '#9ca3af',
+          lineHeight: 1.6,
+        }}
+      >
+        <span>{snapshot.seller.name}</span>
+        {snapshot.seller.address ? <span> · {snapshot.seller.address}</span> : null}
+        <span> · </span>
+        <a href="https://mintcompos.com" style={{ color: '#6b7280', textDecoration: 'none' }}>
+          mintcompos.com
+        </a>
+        <span> · </span>
+        <a href={`mailto:${snapshot.seller.email}`} style={{ color: '#6b7280', textDecoration: 'none' }}>
+          {snapshot.seller.email}
+        </a>
       </div>
     </div>
   );
@@ -380,8 +554,8 @@ export const buildStandaloneHtml = (bodyHtml: string, title: string, autoPrint: 
   '<!DOCTYPE html><html><head><meta charset="utf-8" />',
   `<title>${title}</title>`,
   '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">',
-  '<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:"Inter",sans-serif;background:#f3f4f6;padding:40px 20px}',
-  '@media print{body{background:#fff;padding:0}}</style></head><body>',
+  '<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:"Inter",sans-serif;background:#f9fafb;padding:32px 20px;color:#111827}',
+  '@media print{body{background:#fff;padding:0}#mintcom-subscription-invoice{border:none;border-radius:0;padding:0;max-width:100%}}</style></head><body>',
   bodyHtml,
   autoPrint ? '<script>setTimeout(function(){window.print()},300)</scr' + 'ipt>' : '',
   '</body></html>',
@@ -431,7 +605,7 @@ export function SubscriptionInvoiceModal({ data, onClose, leadingAction }: Subsc
   const documentTitle = data
     ? data.number
       ? `Invoice ${data.number}`
-      : `Subscription summary — ${data.snapshot.billTo.name}`
+      : `Subscription Summary — ${data.snapshot.billTo.name}`
     : '';
 
   const handlePrint = useCallback(() => {
@@ -476,8 +650,8 @@ export function SubscriptionInvoiceModal({ data, onClose, leadingAction }: Subsc
                 <div className="min-w-0">
                   <h3 className="truncate text-lg font-bold text-gray-900 dark:text-white">
                     {data.number
-                      ? t('owner.billing.invoice.title', { defaultValue: 'Subscription invoice' })
-                      : t('owner.billing.invoice.summaryTitle', { defaultValue: 'Subscription summary' })}
+                      ? t('owner.billing.invoice.title', { defaultValue: 'Subscription Invoice' })
+                      : t('owner.billing.invoice.summaryTitle', { defaultValue: 'Subscription Summary' })}
                   </h3>
                   <p className="truncate text-sm font-medium text-gray-500 dark:text-gray-400">
                     {data.snapshot.billTo.name}
@@ -517,7 +691,7 @@ export function SubscriptionInvoiceModal({ data, onClose, leadingAction }: Subsc
               </div>
             </div>
 
-            <div ref={documentRef} className="min-h-0 flex-1 overflow-y-auto bg-gray-50 p-4 dark:bg-black/20 sm:p-6">
+            <div ref={documentRef} className="min-h-0 flex-1 overflow-y-auto bg-gray-100/70 p-4 dark:bg-black/40 sm:p-6">
               <SubscriptionInvoiceDocument data={data} />
             </div>
           </motion.div>

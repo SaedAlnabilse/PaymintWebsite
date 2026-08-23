@@ -38,7 +38,7 @@ import { ONBOARDING_VIDEO_URL } from '../../config/downloads';
 import { CURRENCIES, useCurrency } from '../../context/CurrencyContext';
 import { useAuth } from '../../context/AuthContext';
 import { PasswordResetOtpModal } from '../../components/PasswordResetOtpModal';
-import { ConfirmModal } from '../../components/ConfirmModal';
+import { ChangeCurrencyModal } from '../../components/ChangeCurrencyModal';
 import { BusyOverlay } from '../../components/BusyOverlay';
 import toast from 'react-hot-toast';
 import { getBusinessTypeIcon } from '../../utils/businessTypeIcons';
@@ -238,13 +238,6 @@ export function OwnerAccountManagementPage() {
     }, [brandLoginRows, credSearch]);
 
     const hasAccessCredentials = locationLoginEstablishments.length > 0 || brands.length > 0;
-    /** One location, no brands — featured credential card instead of a sparse table. */
-    const isSingleLocationOnly =
-        locationLoginEstablishments.length === 1 && brands.length === 0;
-    /** One brand, no locations. */
-    const isSingleBrandOnly =
-        brands.length === 1 && locationLoginEstablishments.length === 0;
-    const isSingleCredential = isSingleLocationOnly || isSingleBrandOnly;
     const showCredTabs = locationLoginEstablishments.length > 0 && brands.length > 0;
 
     // Prefer the tab that has items; keep user choice when both exist.
@@ -847,7 +840,6 @@ export function OwnerAccountManagementPage() {
                                             </p>
                                         </div>
                                     </div>
-                                    {!isSingleCredential && (
                                     <div className="relative w-full lg:w-72 shrink-0">
                                         <Search className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none ${isRtl ? 'right-3' : 'left-3'}`} />
                                         <input
@@ -856,7 +848,7 @@ export function OwnerAccountManagementPage() {
                                             onChange={(e) => setCredSearch(e.target.value)}
                                             placeholder={formatInputPlaceholder(
                                                 t('owner.account.searchCredentials', {
-                                                    defaultValue: 'Search name or login ID…',
+                                                    defaultValue: 'Search name or Login ID…',
                                                 }),
                                                 t('common.locale'),
                                             )}
@@ -873,7 +865,6 @@ export function OwnerAccountManagementPage() {
                                             </button>
                                         )}
                                     </div>
-                                    )}
                                 </div>
 
                                 {/* Tabs (only when both types exist) + Staff */}
@@ -932,28 +923,31 @@ export function OwnerAccountManagementPage() {
                                     ) : (
                                         <div
                                             className={`inline-flex items-center gap-2 h-9 px-3 rounded-xl text-xs font-bold ${
-                                                isSingleBrandOnly || (brands.length > 0 && locationLoginEstablishments.length === 0)
+                                                brands.length > 0 && locationLoginEstablishments.length === 0
                                                     ? 'bg-blue-500/10 border border-blue-500/15 text-blue-600 dark:text-blue-400'
                                                     : 'bg-mintcom-green/10 border border-mintcom-green/15 text-mintcom-green'
                                             }`}
                                         >
-                                            {isSingleLocationOnly || locationLoginEstablishments.length > 0 ? (
+                                            {locationLoginEstablishments.length > 0 ? (
                                                 <Store size={14} className="shrink-0" />
                                             ) : (
                                                 <Building2 size={14} className="shrink-0" />
                                             )}
                                             <span>
-                                                {isSingleLocationOnly
-                                                    ? t('owner.account.singleLocationBadge', {
-                                                        defaultValue: '1 location',
-                                                    })
-                                                    : isSingleBrandOnly
-                                                        ? t('owner.account.singleBrandBadge', {
-                                                            defaultValue: '1 brand',
-                                                        })
-                                                        : locationLoginEstablishments.length > 0
-                                                            ? t('owner.account.locations', { defaultValue: 'Locations' })
-                                                            : t('owner.account.brands', { defaultValue: 'Brands' })}
+                                                {locationLoginEstablishments.length > 0
+                                                    ? t('owner.account.locations', { defaultValue: 'Locations' })
+                                                    : t('owner.account.brands', { defaultValue: 'Brands' })}
+                                            </span>
+                                            <span
+                                                className={`min-w-[1.25rem] h-5 px-1.5 rounded-md text-[10px] font-black flex items-center justify-center tabular-nums ${
+                                                    brands.length > 0 && locationLoginEstablishments.length === 0
+                                                        ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
+                                                        : 'bg-mintcom-green/10 text-mintcom-green'
+                                                }`}
+                                            >
+                                                {locationLoginEstablishments.length > 0
+                                                    ? locationLoginEstablishments.length
+                                                    : brands.length}
                                             </span>
                                         </div>
                                     )}
@@ -975,21 +969,19 @@ export function OwnerAccountManagementPage() {
                             </div>
 
                             {/* Column header — fixed outside scroll so nothing can appear above it */}
-                            {!isSingleCredential && (
-                                <div className="shrink-0 hidden sm:grid grid-cols-[minmax(0,1fr)_13.5rem_5.25rem] gap-0 table-header-row bg-gray-50 dark:bg-[#1E293B] border-b border-gray-200 dark:border-white/10">
-                                    <div className={`${isRtl ? 'text-right' : 'text-left'} font-semibold px-5 lg:px-6 py-3.5`}>
-                                        {credTab === 'locations'
-                                            ? t('owner.account.locations', { defaultValue: 'Locations' })
-                                            : t('owner.account.brands', { defaultValue: 'Brands' })}
-                                    </div>
-                                    <div className="text-center font-semibold px-2 py-3.5">
-                                        {t('owner.account.loginId', { defaultValue: 'Login ID' })}
-                                    </div>
-                                    <div className="text-center font-semibold px-1 py-3.5">
-                                        {t('common.actions', { defaultValue: 'Actions' })}
-                                    </div>
+                            <div className="shrink-0 hidden sm:grid grid-cols-[minmax(0,1fr)_13.5rem_5.25rem] gap-0 table-header-row bg-gray-50 dark:bg-[#1E293B] border-b border-gray-200 dark:border-white/10">
+                                <div className={`${isRtl ? 'text-right' : 'text-left'} font-semibold px-5 lg:px-6 py-3.5`}>
+                                    {credTab === 'locations'
+                                        ? t('owner.account.locations', { defaultValue: 'Locations' })
+                                        : t('owner.account.brands', { defaultValue: 'Brands' })}
                                 </div>
-                            )}
+                                <div className="text-center font-semibold px-2 py-3.5">
+                                    {t('owner.account.loginId', { defaultValue: 'Login ID' })}
+                                </div>
+                                <div className="text-center font-semibold px-1 py-3.5">
+                                    {t('common.actions', { defaultValue: 'Actions' })}
+                                </div>
+                            </div>
 
                             {/* Rows grow with page (locations-style); no internal table scroll when not viewport-fit */}
                             <div
@@ -1069,9 +1061,7 @@ export function OwnerAccountManagementPage() {
                                         };
                                     });
 
-                                    const allRows = isSingleCredential
-                                        ? (isSingleLocationOnly ? locationRows : brandRows)
-                                        : (credTab === 'locations' ? locationRows : brandRows);
+                                    const allRows = credTab === 'locations' ? locationRows : brandRows;
 
                                     if (allRows.length === 0) {
                                         return (
@@ -1085,113 +1075,7 @@ export function OwnerAccountManagementPage() {
                                         );
                                     }
 
-                                    // —— Single establishment / brand: hero credential card ——
-                                    if (isSingleCredential && allRows.length === 1) {
-                                        const row = allRows[0];
-                                        const RowIcon = row.icon;
-                                        const isBrand = row.kind === 'brand';
-                                        return (
-                                            <div className={`h-full flex flex-col justify-center p-5 sm:p-8 ${isRtl ? 'items-start' : 'items-center'}`}>
-                                                <div
-                                                    className={`w-full max-w-2xl rounded-2xl border border-gray-200 dark:border-white/[0.08] p-5 sm:p-6 shadow-sm bg-gradient-to-br from-gray-50/90 via-white ${
-                                                        isBrand
-                                                            ? 'to-blue-500/10 dark:from-white/[0.04] dark:via-white/[0.02] dark:to-blue-500/15'
-                                                            : 'to-mintcom-green/5 dark:from-white/[0.04] dark:via-white/[0.02] dark:to-mintcom-green/10'
-                                                    }`}
-                                                >
-                                                    <div className={`flex items-start gap-4 ${isRtl ? 'flex-row-reverse' : ''}`}>
-                                                        <div
-                                                            className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ring-1 ${
-                                                                isBrand
-                                                                    ? 'bg-blue-500/15 dark:bg-blue-500/20 ring-blue-500/20'
-                                                                    : 'bg-mintcom-green/15 dark:bg-mintcom-green/20 ring-mintcom-green/20'
-                                                            }`}
-                                                        >
-                                                            <RowIcon className={`w-7 h-7 ${isBrand ? 'text-blue-500' : 'text-mintcom-green'}`} />
-                                                        </div>
-                                                        <div className="min-w-0 flex-1">
-                                                            <div className={`flex flex-wrap items-center gap-2 ${isRtl ? 'flex-row-reverse justify-end' : ''}`}>
-                                                                <h3 className="text-lg font-black tracking-tight text-gray-900 dark:text-white truncate" title={row.name}>
-                                                                    {row.name}
-                                                                </h3>
-                                                                <span
-                                                                    className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-md border ${
-                                                                        row.isActive
-                                                                            ? isBrand
-                                                                                ? 'bg-blue-500/10 text-blue-600 border-blue-500/20'
-                                                                                : 'bg-mintcom-green/10 text-mintcom-green border-mintcom-green/20'
-                                                                            : 'bg-gray-100 dark:bg-white/5 text-gray-400 border-gray-200 dark:border-white/10'
-                                                                    }`}
-                                                                >
-                                                                    {row.statusLabel}
-                                                                </span>
-                                                            </div>
-                                                            {row.meta && (
-                                                                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mt-1">
-                                                                    {row.meta}
-                                                                </p>
-                                                            )}
-                                                            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mt-3 mb-1.5">
-                                                                {t('owner.account.loginId', { defaultValue: 'Login ID' })}
-                                                            </p>
-                                                            <div dir="ltr" className="flex items-center gap-2 h-12 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-black/20 px-3 shadow-inner">
-                                                                <code className="flex-1 min-w-0 text-sm font-mono font-black text-gray-900 dark:text-white truncate select-all text-left" title={row.loginId}>
-                                                                    {row.loginId || t('common.na')}
-                                                                </code>
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => copyToClipboard(row.loginId, row.copyKey)}
-                                                                    disabled={!row.loginId}
-                                                                    className="shrink-0 inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-xs font-bold text-gray-600 dark:text-gray-300 hover:text-mintcom-green hover:bg-mintcom-green/10 transition-colors disabled:opacity-40"
-                                                                    title={t('common.copy')}
-                                                                >
-                                                                    {copiedId === row.copyKey ? (
-                                                                        <>
-                                                                            <CheckCircle2 size={14} className="text-mintcom-green" />
-                                                                            {t('common.copied', { defaultValue: 'Copied' })}
-                                                                        </>
-                                                                    ) : (
-                                                                        <>
-                                                                            <Copy size={14} />
-                                                                            {t('common.copy')}
-                                                                        </>
-                                                                    )}
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div className={`mt-5 flex flex-col gap-2.5 ${isRtl ? 'sm:flex-row-reverse' : 'sm:flex-row'}`}>
-                                                        {row.onOpen && (
-                                                            <button
-                                                                type="button"
-                                                                onClick={row.onOpen}
-                                                                className={`flex-1 inline-flex items-center justify-center gap-2 h-11 px-4 rounded-xl text-sm font-black transition-all shadow-sm ${
-                                                                    isBrand
-                                                                        ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-500/20'
-                                                                        : 'bg-mintcom-green hover:bg-[#5fa888] text-black shadow-mintcom-green/20'
-                                                                }`}
-                                                            >
-                                                                <ExternalLink size={16} />
-                                                                {isBrand
-                                                                    ? t('owner.brands.viewDashboard', { defaultValue: 'View brand dashboard' })
-                                                                    : t('owner.brands.viewDashboard', { defaultValue: 'Open dashboard' })}
-                                                            </button>
-                                                        )}
-                                                        <button
-                                                            type="button"
-                                                            onClick={row.onReset}
-                                                            className={`inline-flex items-center justify-center gap-2 h-11 px-4 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.04] text-sm font-bold text-gray-700 dark:text-gray-200 hover:border-red-300 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all ${row.onOpen ? 'sm:flex-none' : 'flex-1'}`}
-                                                        >
-                                                            <Lock size={16} />
-                                                            {t('owner.account.resetPassword')}
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        );
-                                    }
-
-                                    // Paginate like locations table (10 per page)
+                                    // Paginate like locations table (3 per page)
                                     const totalPages = Math.max(1, Math.ceil(allRows.length / CRED_ITEMS_PER_PAGE));
                                     const page = Math.min(Math.max(1, credPage), totalPages);
                                     const pageStart = (page - 1) * CRED_ITEMS_PER_PAGE;
@@ -1343,28 +1227,26 @@ export function OwnerAccountManagementPage() {
                                             })}
                                     </p>
                                 </div>
-                                {!isSingleCredential && (
-                                    <Pagination
-                                        currentPage={credPage}
-                                        totalPages={Math.max(
-                                            1,
-                                            Math.ceil(
-                                                (credTab === 'locations'
-                                                    ? filteredLocationLogins.length
-                                                    : filteredBrandLogins.length) / CRED_ITEMS_PER_PAGE,
-                                            ),
-                                        )}
-                                        onPageChange={setCredPage}
-                                        variant="footer"
-                                        totalItems={
-                                            credTab === 'locations'
+                                <Pagination
+                                    currentPage={credPage}
+                                    totalPages={Math.max(
+                                        1,
+                                        Math.ceil(
+                                            (credTab === 'locations'
                                                 ? filteredLocationLogins.length
-                                                : filteredBrandLogins.length
-                                        }
-                                        itemsPerPage={CRED_ITEMS_PER_PAGE}
-                                        className={fit ? '!py-2.5 !px-4' : undefined}
-                                    />
-                                )}
+                                                : filteredBrandLogins.length) / CRED_ITEMS_PER_PAGE,
+                                        ),
+                                    )}
+                                    onPageChange={setCredPage}
+                                    variant="footer"
+                                    totalItems={
+                                        credTab === 'locations'
+                                            ? filteredLocationLogins.length
+                                            : filteredBrandLogins.length
+                                    }
+                                    itemsPerPage={CRED_ITEMS_PER_PAGE}
+                                    className={fit ? '!py-2.5 !px-4' : undefined}
+                                />
                             </div>
                         </motion.div>
             )}
@@ -1658,7 +1540,7 @@ export function OwnerAccountManagementPage() {
                                                 defaultValue: 'All locations and brands will be scheduled for removal',
                                             }),
                                             t('owner.account.dangerZoneBullet2', {
-                                                defaultValue: 'Staff access and login IDs stop working',
+                                                defaultValue: 'Staff access and Login IDs stop working',
                                             }),
                                             t('owner.account.dangerZoneBullet3', {
                                                 defaultValue: 'You can cancel during the grace period if offered',
@@ -1930,18 +1812,17 @@ export function OwnerAccountManagementPage() {
             </AnimatePresence>
 
             {/* Warning before changing the system currency for all locations. */}
-            <ConfirmModal
+            <ChangeCurrencyModal
                 isOpen={pendingCurrency !== null}
                 onClose={() => setPendingCurrency(null)}
                 onConfirm={() => {
-                    if (pendingCurrency) handleUpdateGlobalCurrency(pendingCurrency);
+                    const next = pendingCurrency;
                     setPendingCurrency(null);
+                    if (next) handleUpdateGlobalCurrency(next);
                 }}
-                title={t('settings.confirm.changeCurrencyTitle')}
-                message={t('settings.confirm.changeCurrencyMessage', { from: globalCurrency, to: pendingCurrency || '' })}
-                type="warning"
-                confirmText={t('common.continue', { defaultValue: 'Continue' })}
-                cancelText={t('common.cancel')}
+                fromCurrency={globalCurrency}
+                toCurrency={pendingCurrency || ''}
+                isSubmitting={isUpdatingCurrency}
             />
         </div>
     );

@@ -1568,7 +1568,7 @@ function HistoryCard({ item, onDelete }: { item: DemoHistory; onDelete: (id: str
   );
 }
 
-/* Section header pill (special = primary tinted with left border). */
+/* Section header pill (special = primary tinted highlight). */
 function SectionPill({
   title,
   special,
@@ -1583,7 +1583,7 @@ function SectionPill({
       <span
         className={`inline-flex items-center rounded-xl px-3 py-1.5 text-[13px] font-black uppercase tracking-wide ${
           special
-            ? 'border-s-4 border-mintcom-green bg-mintcom-green/[0.09] text-mintcom-green'
+            ? 'bg-mintcom-green/15 text-mintcom-green'
             : 'bg-cream-100 text-text-secondary dark:bg-mintcom-dark dark:text-mintcom-textSecondary'
         }`}
       >
@@ -1666,7 +1666,7 @@ export function DemoNotificationsScreen({
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <Pause size={40} className="mb-3 text-text-tertiary opacity-50" />
             <p className="text-sm font-bold text-text-secondary dark:text-mintcom-textSecondary">
-              {search ? 'No held orders found' : 'No held orders'}
+              {search ? 'No Held Orders Found' : 'No Held Orders'}
             </p>
           </div>
         ) : (
@@ -1685,7 +1685,7 @@ export function DemoNotificationsScreen({
         {alerts.length === 0 && !hasHistory ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <Bell size={44} className="mb-3 text-text-tertiary opacity-50" />
-            <p className="text-base font-bold text-text-primary dark:text-white">You have no notifications yet</p>
+            <p className="text-base font-bold text-text-primary dark:text-white">No Alerts Yet</p>
             <p className="mt-1 text-sm text-text-secondary dark:text-mintcom-textSecondary">You’re all caught up!</p>
           </div>
         ) : (

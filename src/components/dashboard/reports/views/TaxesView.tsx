@@ -1,4 +1,4 @@
-import { Scale } from 'lucide-react';
+import { Scale, Percent, FileEdit, History } from 'lucide-react';
 import { BiIcon } from '../../../ui/BiIcon';
 import { useCurrency } from '../../../../context/CurrencyContext';
 import type { SalesSummary } from '../../../../types';
@@ -53,7 +53,8 @@ export const TaxesView = React.memo(function TaxesView({ salesData }: TaxesViewP
     const getTaxTypeLabel = (taxType: TaxRowType) => {
       switch (taxType) {
         case 'current':
-          return t('orders.reports.taxes.currentTaxRate', { defaultValue: 'Current tax rate' });
+        case 'standard':
+          return t('orders.reports.taxes.standardTaxRate', { defaultValue: 'Standard tax rate' });
         case 'changed':
           return t('orders.reports.taxes.changedTaxRate', { defaultValue: 'Changed order tax rate' });
         case 'previous':
@@ -65,6 +66,7 @@ export const TaxesView = React.memo(function TaxesView({ salesData }: TaxesViewP
     const getTaxTypeDescription = (taxType: TaxRowType) => {
       switch (taxType) {
         case 'current':
+        case 'standard':
           return t('orders.reports.taxes.currentTaxDescription', { defaultValue: 'Used the current location tax setting' });
         case 'changed':
           return t('orders.reports.taxes.changedTaxDescription', { defaultValue: 'Edited in the order before payment' });
@@ -81,8 +83,8 @@ export const TaxesView = React.memo(function TaxesView({ salesData }: TaxesViewP
       const isChanged = Boolean(tax.isChanged);
       const taxType = getTaxType(tax, isChanged, rawRate);
       const baseName = getTaxTypeLabel(taxType);
-      const name = rateLabel ? `${baseName} ${rateLabel}` : (tax.name || tax.taxName || baseName);
-      const description = getTaxTypeDescription(taxType);
+      const name = tax.name || tax.taxName || baseName;
+      const description = tax.description || getTaxTypeDescription(taxType);
 
       return {
         ...tax,
@@ -175,16 +177,16 @@ export const TaxesView = React.memo(function TaxesView({ salesData }: TaxesViewP
 
         <div className="p-4 sm:p-5 bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.03] relative overflow-hidden flex flex-col transition-all duration-300">
           <div className="relative z-10">
-            <p className="dashboard-stat-title mb-1">{t('orders.reports.taxes.changedTaxOrders', { defaultValue: 'Changed-tax orders' })}</p>
+            <p className="dashboard-stat-title mb-1">{t('orders.reports.taxes.changedTaxOrders', { defaultValue: 'Changed-Tax Orders' })}</p>
             <StatValue value={changedOrders} isInteger={true} className="text-2xl" />
             <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mt-1">
               {changedRefunds > 0
                 ? t('orders.reports.taxes.changedTaxRefundsDesc', {
-                    defaultValue: '{{count}} refunds also affected changed-tax rows',
+                    defaultValue: '{{count}} Refunds Also Affected Changed-Tax Rows',
                     count: changedRefunds,
                   })
                 : t('orders.reports.taxes.changedTaxOrdersDesc', {
-                    defaultValue: 'POS tax edits in this period',
+                    defaultValue: 'POS Tax Edits in This Period',
                   })}
             </p>
           </div>
@@ -224,59 +226,41 @@ export const TaxesView = React.memo(function TaxesView({ salesData }: TaxesViewP
                     const contribution = totalTax > 0 ? (tax.collected / totalTax) * 100 : 0;
                     const contributionWidth = Math.max(0, Math.min(100, contribution));
                     const markerClass = tax.taxType === 'changed'
-                      ? 'bg-indigo-500/10 text-indigo-500'
+                      ? 'bg-indigo-500/10 text-indigo-500 dark:bg-indigo-500/20 dark:text-indigo-400'
                       : tax.taxType === 'previous'
-                        ? 'bg-gray-500/10 text-gray-500'
-                        : 'bg-orange-500/10 text-orange-500';
-                    const markerLetter = tax.taxType === 'changed'
-                      ? 'E'
+                        ? 'bg-gray-500/10 text-gray-500 dark:bg-gray-500/20 dark:text-gray-400'
+                        : 'bg-orange-500/10 text-orange-500 dark:bg-orange-500/20 dark:text-orange-400';
+                    const markerIcon = tax.taxType === 'changed'
+                      ? <FileEdit size={16} />
                       : tax.taxType === 'previous'
-                        ? 'P'
-                        : 'C';
-                    const badgeClass = tax.taxType === 'changed'
-                      ? 'bg-indigo-500/10 text-indigo-500'
-                      : tax.taxType === 'previous'
-                        ? 'bg-gray-500/10 text-gray-500'
-                        : 'bg-orange-500/10 text-orange-500';
-                    const badgeLabel = tax.taxType === 'current'
-                      ? t('orders.reports.taxes.current', { defaultValue: 'Current' })
-                      : tax.taxType === 'changed'
-                        ? t('orders.reports.taxes.changed', { defaultValue: 'Changed' })
-                        : tax.taxType === 'previous'
-                          ? t('orders.reports.taxes.previous', { defaultValue: 'Previous' })
-                          : '';
+                        ? <History size={16} />
+                        : <Percent size={16} />;
                     return (
                       <tr key={i} className="group hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
                         <td className="px-6 py-4 text-start">
                           <div className="flex items-center gap-3">
-                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold ${markerClass}`}>
-                              {markerLetter}
+                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 font-bold ${markerClass}`}>
+                              {markerIcon}
                             </div>
-                            <div className="flex flex-col">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="font-bold text-sm text-gray-900 dark:text-white">{tax.name}</span>
-                                {badgeLabel && (
-                                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wide ${badgeClass}`}>
-                                    {badgeLabel}
-                                  </span>
-                                )}
-                              </div>
-                              <span className="text-xs text-gray-400 font-bold">{tax.description}</span>
-                              <span className="flex items-center gap-1.5 text-xs text-gray-400 font-bold flex-wrap">
+                            <div className="flex flex-col min-w-0">
+                              <span className="font-bold text-sm text-gray-900 dark:text-white">{tax.name}</span>
+                              <div className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500 font-medium flex-wrap mt-0.5">
+                                <span>{tax.description}</span>
+                                <span className="text-gray-300 dark:text-gray-600">·</span>
                                 <span className="inline-flex items-center gap-1 whitespace-nowrap">
-                                  <StatValue value={tax.transactions} isInteger={true} className="text-xs text-gray-400 font-bold inline-flex" />
+                                  <StatValue value={tax.transactions} isInteger={true} className="text-xs text-gray-500 dark:text-gray-400 font-bold inline-flex" />
                                   {t('orders.reports.taxes.txns')}
                                 </span>
                                 {tax.refundCount > 0 && (
                                   <>
                                     <span className="text-gray-300 dark:text-gray-600">·</span>
-                                    <span className="inline-flex items-center gap-1 whitespace-nowrap">
-                                      <StatValue value={tax.refundCount} isInteger={true} className="text-xs text-gray-400 font-bold inline-flex" />
+                                    <span className="inline-flex items-center gap-1 whitespace-nowrap text-amber-600 dark:text-amber-400">
+                                      <StatValue value={tax.refundCount} isInteger={true} className="text-xs font-bold inline-flex" />
                                       {t('orders.reports.taxes.refunds', { defaultValue: 'refunds' })}
                                     </span>
                                   </>
                                 )}
-                              </span>
+                              </div>
                             </div>
                           </div>
                         </td>
@@ -308,12 +292,17 @@ export const TaxesView = React.memo(function TaxesView({ salesData }: TaxesViewP
                   <tr className="group hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
                     <td className="px-6 py-4 text-start">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-gray-100 dark:bg-white/5 text-gray-500 font-bold">
-                          {t('orders.reports.taxes.standardTax').charAt(0)}
+                        <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-orange-500/10 text-orange-500 dark:bg-orange-500/20 dark:text-orange-400 shrink-0 font-bold">
+                          <Percent size={16} />
                         </div>
-                        <div className="flex flex-col">
+                        <div className="flex flex-col min-w-0">
                           <span className="font-bold text-sm text-gray-900 dark:text-white">{t('orders.reports.taxes.standardTax')}</span>
-                          <StatValue value={salesData.totalOrders ?? 0} isInteger={true} className="text-xs text-gray-400 font-bold inline-flex" /> <span className="text-xs text-gray-400 font-bold">{t('orders.reports.taxes.txns')}</span>
+                          <div className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500 font-medium mt-0.5">
+                            <span className="inline-flex items-center gap-1 whitespace-nowrap">
+                              <StatValue value={salesData.totalOrders ?? 0} isInteger={true} className="text-xs text-gray-500 dark:text-gray-400 font-bold inline-flex" />
+                              {t('orders.reports.taxes.txns')}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </td>

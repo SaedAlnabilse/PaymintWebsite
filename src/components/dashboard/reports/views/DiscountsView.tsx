@@ -156,7 +156,7 @@ export const DiscountsView = React.memo(function DiscountsView({ salesData, isFe
                     <AnalyticsEmptyState
                       icon={Tag}
                       title={t('orders.reports.discounts.noData')}
-                      description={t('orders.reports.discounts.breakdown')}
+                      description={t('orders.reports.discounts.noDataDesc', { defaultValue: 'Discount breakdown will be shown here' })}
                       compact
                     />
                   </td>

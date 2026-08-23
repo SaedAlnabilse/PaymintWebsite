@@ -4,9 +4,10 @@ import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft, Clock, Eye, ThumbsUp, ThumbsDown, Share2,
-  Printer, BookOpen, ChevronRight, MessageSquare, CheckCircle2,
-  Zap, CreditCard, Settings, Calendar,
+  Printer, ChevronRight, MessageSquare, CheckCircle2,
+  Calendar,
 } from 'lucide-react';
+import { BiIcon, biIcon } from '../../components/ui/BiIcon';
 import { Navbar } from '../../components/Navbar';
 import { Footer } from '../../components/Footer';
 import { LoginRequiredModal } from '../../components/LoginRequiredModal';
@@ -23,11 +24,15 @@ const catAccent: Record<string, { bg: string; light: string; border: string; tex
 };
 
 const catIcon: Record<string, React.ElementType> = {
-  'getting-started': Zap,
-  billing:           CreditCard,
-  technical:         Settings,
-  features:          BookOpen,
+  'getting-started': biIcon('bi-lightning-charge'),
+  billing:           biIcon('bi-credit-card'),
+  technical:         biIcon('bi-gear'),
+  features:          biIcon('bi-book'),
 };
+
+/* Built once: `biIcon` mints a new component per call, so building the fallback
+   during render would remount the icon and reset its state on every pass. */
+const defaultCatIcon: React.ElementType = biIcon('bi-book');
 
 /* ── render a single content line ── */
 function ContentLine({ line, index }: { line: string; index: number }) {
@@ -202,7 +207,7 @@ export const ArticlePage = () => {
 
   const article = articleId ? allArticles[articleId] : null;
   const acc     = article ? catAccent[article.categoryId]  : null;
-  const CatIcon = article ? catIcon[article.categoryId]    : BookOpen;
+  const CatIcon = article ? catIcon[article.categoryId]    : defaultCatIcon;
   const related = article ? article.relatedArticles.map(id => allArticles[id]).filter(Boolean) : [];
   const { metrics, recordView, submitFeedback } = useSupportArticleMetrics(Object.keys(allArticles));
   const displayedViews = article ? getArticleViews(metrics, article.id, article.views) : '';
@@ -341,7 +346,7 @@ export const ArticlePage = () => {
                           <Link to={`/support/article/${rel.id}`}
                             className={`group flex h-full flex-col rounded-2xl border bg-white p-4 transition-all hover:shadow-sm dark:bg-white/[0.03] ${relAcc.border}`}>
                             <div className={`mb-3 flex h-9 w-9 items-center justify-center rounded-xl ${relAcc.light}`}>
-                              <BookOpen size={15} className={relAcc.text} />
+                              <BiIcon icon="bi-book" size={15} className={relAcc.text} />
                             </div>
                             <p className={`flex-1 text-sm font-semibold text-gray-900 transition-colors group-hover:${relAcc.text} dark:text-white line-clamp-2`}>
                               {rel.title}

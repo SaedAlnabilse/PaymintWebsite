@@ -1445,7 +1445,7 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
                 setSidebarExpanded(false);
                 setLogoutModalOpen(true);
               }}
-              title="Logout"
+              title="Sign Out"
               className={`flex h-14 items-center rounded-xl text-white transition-colors hover:bg-white/5 ${
                 sidebarExpanded
                   ? 'w-[198px] justify-start gap-3 px-4'
@@ -1456,7 +1456,7 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
                 <LogOut size={24} strokeWidth={1.75} />
               </span>
               {sidebarExpanded && (
-                <span className="text-[15px] font-semibold text-white">Logout</span>
+                <span className="text-[15px] font-semibold text-white">Sign Out</span>
               )}
             </button>
           </div>
@@ -1569,7 +1569,7 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
                     className="flex h-14 items-center gap-3 rounded-xl px-4 text-white hover:bg-white/5"
                   >
                     <LogOut size={24} strokeWidth={1.75} />
-                    <span className="text-[15px] font-semibold">Logout</span>
+                    <span className="text-[15px] font-semibold">Sign Out</span>
                   </button>
                 </div>
               </motion.nav>
@@ -2157,16 +2157,8 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
                 className="relative w-[min(90%,450px)] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-[0_4px_24px_rgba(0,0,0,0.18)] dark:border-white/10 dark:bg-mintcom-surface"
               >
                 <div className="flex flex-col items-center px-[30px] py-[30px]">
-                  {/* Red log-out icon tile — POS #D55263 */}
-                  <div
-                    className="mb-5 flex h-[60px] w-[60px] items-center justify-center rounded-xl text-white"
-                    style={{ backgroundColor: '#D55263' }}
-                  >
-                    <LogOut size={28} strokeWidth={2.25} />
-                  </div>
-
                   <h3 className="mb-5 text-center text-[22px] font-semibold leading-snug text-text-primary dark:text-white">
-                    Are you sure you want to log out?
+                    Are you sure you want to sign out?
                   </h3>
 
                   {/* Active shift warning — POS logout.activeShiftWarning */}
@@ -6319,18 +6311,18 @@ function SplitPaymentDemoModal({
                 className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/15 text-white hover:bg-white/25"
                 aria-label="Back"
               >
-                <ArrowLeft size={16} />
+                <ArrowLeft size={16} className="text-white" />
               </button>
             ) : (
               <span className="h-8 w-8 shrink-0" />
             )}
             <div className="flex min-w-0 flex-1 items-center justify-center gap-2">
-              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/90">
+              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-white">
                 Split Payment
               </p>
               {mode !== 'menu' && mode !== 'pay' && (
-                <span className="inline-flex max-w-[50%] items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-bold">
-                  {mode === 'amount' ? <DollarSign size={11} /> : <ShoppingBag size={11} />}
+                <span className="inline-flex max-w-[50%] items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-bold text-white">
+                  {mode === 'amount' ? <DollarSign size={11} className="text-white" /> : <ShoppingBag size={11} className="text-white" />}
                   {mode === 'amount' ? 'By Amount' : 'By Item'}
                 </span>
               )}
@@ -6341,26 +6333,26 @@ function SplitPaymentDemoModal({
               className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/15 text-white hover:bg-white/25"
               aria-label="Close"
             >
-              <X size={15} />
+              <X size={15} className="text-white" />
             </button>
           </div>
 
           <div className="relative mt-3 flex items-end justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-[11px] font-medium text-white/75">Total bill</p>
-              <p className="text-[22px] font-black leading-none tabular-nums tracking-tight">
+              <p className="text-[11px] font-medium text-white/80">Total bill</p>
+              <p className="text-[22px] font-black leading-none tabular-nums tracking-tight text-white">
                 {total.toFixed(2)}
-                <span className="ms-1 text-[11px] font-bold opacity-80">USD</span>
+                <span className="ms-1 text-[11px] font-bold text-white/90">USD</span>
               </p>
             </div>
             <div className="min-w-0 text-end">
-              <p className="text-[11px] font-medium text-white/75">
+              <p className="text-[11px] font-medium text-white/80">
                 {mode === 'menu' ? 'Items' : 'Remaining'}
               </p>
-              <p className="text-[22px] font-black leading-none tabular-nums tracking-tight">
+              <p className="text-[22px] font-black leading-none tabular-nums tracking-tight text-white">
                 {mode === 'menu' ? cart.length : remForHero.toFixed(2)}
                 {mode !== 'menu' && (
-                  <span className="ms-1 text-[11px] font-bold opacity-80">USD</span>
+                  <span className="ms-1 text-[11px] font-bold text-white/90">USD</span>
                 )}
               </p>
             </div>
@@ -6374,9 +6366,9 @@ function SplitPaymentDemoModal({
                   style={{ width: `${fraction * 100}%` }}
                 />
               </div>
-              <p className="mt-1 text-[10px] font-semibold text-white/90">
+              <p className="mt-1 text-[10px] font-semibold text-white">
                 {Math.round(fraction * 100)}%{' '}
-                <span className="font-medium text-white/65">allocated</span>
+                <span className="font-medium text-white/75">allocated</span>
               </p>
             </div>
           )}

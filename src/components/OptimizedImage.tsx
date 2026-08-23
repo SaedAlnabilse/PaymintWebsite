@@ -46,7 +46,7 @@ export function OptimizedImage({
   width,
   height,
   priority = false,
-  placeholderColor = '#f3f4f6',
+  placeholderColor = 'transparent',
   objectFit = 'cover',
   objectPosition = 'center',
   onClick,
@@ -183,9 +183,6 @@ export function AvatarImage({
   );
 }
 
-/**
- * Pre-built variant for product/thumbnail images
- */
 export function ThumbnailImage({
   src,
   alt,
@@ -199,15 +196,16 @@ export function ThumbnailImage({
   className?: string;
   onClick?: () => void;
 }) {
+  const isDefaultImage = !src || src.includes('default_product.png');
   return (
     <OptimizedImage
       src={src}
       alt={alt}
       width={size}
       height={size}
-      className={`rounded-lg ${className}`}
-      objectFit="cover"
-      placeholderColor="#f3f4f6"
+      className={`rounded-lg ${isDefaultImage ? 'p-1 object-contain' : ''} ${className}`}
+      objectFit={isDefaultImage ? 'contain' : 'cover'}
+      placeholderColor="transparent"
       onClick={onClick}
     />
   );

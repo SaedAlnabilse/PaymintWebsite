@@ -426,7 +426,7 @@ export function OwnerBillingPage() {
             snapshot: {
                 seller: {
                     name: 'Mintcom POS',
-                    address: 'Amman, Jordan',
+                    address: '',
                     email: 'support@mintcompos.com',
                 },
                 billTo: {

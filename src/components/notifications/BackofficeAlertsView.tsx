@@ -3,6 +3,7 @@ import { isToday, isYesterday } from 'date-fns';
 import {
   AlertCircle,
   BellOff,
+  Info,
   Loader2,
   RefreshCw,
   Search,
@@ -26,7 +27,6 @@ import {
   resolveAlertDeepLink,
   type AlertCategory,
 } from './alertPresentation';
-import { BiIcon } from '../ui/BiIcon';
 
 export interface BackofficeAlertLocation {
   id: string;
@@ -283,81 +283,12 @@ export function BackofficeAlertsView({
     return Array.from(groups.entries()).map(([key, group]) => ({ key, ...group }));
   }, [filteredAlerts, locale, t]);
 
-  const tabs: Array<{
-    id: AlertTab;
-    count: number;
-    activeClass: string;
-    inactiveClass: string;
-  }> = [
-    {
-      id: 'all',
-      count: stats.total,
-      activeClass: 'bg-slate-600 text-white',
-      inactiveClass: 'bg-slate-500/10 text-slate-700 dark:text-slate-300',
-    },
-    {
-      id: 'cash',
-      count: stats.cash,
-      activeClass: 'bg-blue-500 text-white',
-      inactiveClass: 'bg-blue-500/10 text-blue-700 dark:text-blue-400',
-    },
-    {
-      id: 'stock',
-      count: stats.stock,
-      activeClass: 'bg-amber-500 text-white',
-      inactiveClass: 'bg-amber-500/10 text-amber-700 dark:text-amber-300',
-    },
-    {
-      id: 'refunds',
-      count: stats.refunds,
-      activeClass: 'bg-red-500 text-white',
-      inactiveClass: 'bg-red-500/10 text-red-700 dark:text-red-300',
-    },
-    {
-      id: 'updates',
-      count: stats.updates,
-      activeClass: 'bg-mintcom-green text-emerald-950',
-      inactiveClass: 'bg-mintcom-green/10 text-emerald-800 dark:text-mintcom-green',
-    },
-  ];
-
-  const statCards = [
-    {
-      id: 'total',
-      value: stats.total,
-      icon: 'bi-bell',
-      tone: 'text-mintcom-green',
-      background: 'bg-mintcom-green/10',
-    },
-    {
-      id: 'cash',
-      value: stats.cash,
-      icon: 'bi-cash-coin',
-      tone: 'text-mintcom-green',
-      background: 'bg-mintcom-green/10',
-    },
-    {
-      id: 'stock',
-      value: stats.stock,
-      icon: 'bi-box-seam',
-      tone: 'text-mintcom-green',
-      background: 'bg-mintcom-green/10',
-    },
-    {
-      id: 'refunds',
-      value: stats.refunds,
-      icon: 'bi-arrow-counterclockwise',
-      // Refunds read red everywhere, matching the sales report.
-      tone: 'text-red-500',
-      background: 'bg-red-500/10',
-    },
-    {
-      id: 'updates',
-      value: stats.updates,
-      icon: 'bi-arrow-repeat',
-      tone: 'text-mintcom-green',
-      background: 'bg-mintcom-green/10',
-    },
+  const tabs: Array<{ id: AlertTab; count: number }> = [
+    { id: 'all', count: stats.total },
+    { id: 'cash', count: stats.cash },
+    { id: 'stock', count: stats.stock },
+    { id: 'refunds', count: stats.refunds },
+    { id: 'updates', count: stats.updates },
   ];
 
   const filteredServerTotal =
@@ -441,16 +372,9 @@ export function BackofficeAlertsView({
     <section className="mx-auto w-full max-w-7xl space-y-5 pb-10 sm:space-y-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-3xl">
-              {t('notifications.title')}
-            </h1>
-            {stats.unread > 0 && (
-              <span className="inline-flex min-h-7 items-center rounded-full bg-mintcom-green/15 px-3 py-1 text-xs font-black text-emerald-800 dark:text-mintcom-green">
-                {t('notifications.stats.unreadCount', { count: stats.unread })}
-              </span>
-            )}
-          </div>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-3xl">
+            {t('notifications.title')}
+          </h1>
           <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 sm:text-base">
             {feedTitle
               ? t(`notifications.subtitle.${scope}`, { name: feedTitle })
@@ -480,42 +404,17 @@ export function BackofficeAlertsView({
       </header>
 
       {trialAlertsPresent && (
-        <div className="flex gap-3 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800 dark:border-blue-500/20 dark:bg-blue-500/10 dark:text-blue-200">
-          <AlertCircle size={18} className="mt-0.5 shrink-0" />
-          <p>{t('notifications.trial.notice')}</p>
-        </div>
+        <p className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+          <Info size={15} className="shrink-0 text-gray-400" aria-hidden="true" />
+          {t('notifications.trial.notice')}
+        </p>
       )}
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        {statCards.map(({ id, value, icon, tone, background }) => (
-          <div
-            key={id}
-            className="relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-white/[0.03] dark:bg-[#1E293B] sm:p-5"
-          >
-            <div
-              className={`pointer-events-none absolute end-0 top-0 h-24 w-24 rounded-full opacity-0 blur-2xl ${background}`}
-              aria-hidden="true"
-            />
-            <div className="relative z-10">
-              <div className={`mb-3 flex h-10 w-10 items-center justify-center rounded-xl ${background} ${tone}`}>
-                <BiIcon icon={icon} size={20} />
-              </div>
-              <p className="dashboard-stat-title mb-1">
-                {t(`notifications.stats.${id}`)}
-              </p>
-              <p className="text-2xl font-black tracking-tight text-gray-900 dark:text-white">
-                {value.toLocaleString(locale)}
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="space-y-4 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-white/5 dark:bg-[#0D0D0D]">
-        <label className="relative block">
+      <div className="space-y-3">
+        <label className="relative block max-w-xl">
           <span className="sr-only">{t('notifications.filters.searchLabel')}</span>
           <Search
-            size={18}
+            size={17}
             className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-gray-400"
           />
           <input
@@ -523,12 +422,14 @@ export function BackofficeAlertsView({
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
             placeholder={t('notifications.filters.searchPlaceholder')}
-            className="h-11 w-full rounded-xl border border-gray-200 bg-gray-50 ps-10 pe-4 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-mintcom-green focus:ring-2 focus:ring-mintcom-green/20 dark:border-white/10 dark:bg-black/20 dark:text-white"
+            className="h-10 w-full rounded-xl border border-gray-200 bg-white ps-9 pe-4 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-mintcom-green focus:ring-2 focus:ring-mintcom-green/20 dark:border-white/10 dark:bg-black/20 dark:text-white"
           />
         </label>
 
-        <div className="w-full overflow-x-auto pb-1 scrollbar-none" role="tablist">
-          <div className="grid min-w-[40rem] grid-cols-5 gap-2">
+        <div
+          className="flex items-center gap-1 overflow-x-auto border-b border-gray-200 pb-px scrollbar-none dark:border-white/10"
+          role="tablist"
+        >
           {tabs.map((tab) => (
             <button
               key={tab.id}
@@ -536,69 +437,61 @@ export function BackofficeAlertsView({
               role="tab"
               aria-selected={activeTab === tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`inline-flex w-full items-center justify-center gap-2 rounded-xl px-3.5 py-2.5 text-sm font-bold transition-all duration-200 ${
+              className={`-mb-px inline-flex shrink-0 items-center gap-1.5 border-b-2 px-3 py-2.5 text-sm font-semibold transition-colors ${
                 activeTab === tab.id
-                  ? tab.activeClass
-                  : `${tab.inactiveClass} hover:brightness-95 dark:hover:brightness-110`
+                  ? 'border-mintcom-green text-gray-900 dark:text-white'
+                  : 'border-transparent text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200'
               }`}
             >
               {t(`notifications.tabs.${tab.id}`)}
               <span
-                className={`rounded-full px-1.5 py-0.5 text-[11px] ${
+                className={`rounded-full px-1.5 text-[11px] font-bold ${
                   activeTab === tab.id
-                    ? 'bg-white/20'
-                    : 'bg-white/80 text-gray-700 dark:bg-black/25 dark:text-white'
+                    ? 'bg-mintcom-green/15 text-emerald-700 dark:text-mintcom-green'
+                    : 'bg-gray-100 text-gray-500 dark:bg-white/10 dark:text-gray-400'
                 }`}
               >
                 {tab.count}
               </span>
             </button>
           ))}
-          </div>
         </div>
 
         {isMultiLocation && filterLocations.length > 0 && (
-          <div>
-            <p className="mb-2 text-xs font-black uppercase tracking-wide text-gray-500 dark:text-gray-400">
-              {t('notifications.filters.locationLabel')}
-            </p>
-            <div className="w-full overflow-x-auto pb-1 scrollbar-none">
-              <div className="flex min-w-full gap-2">
-              <button
-                type="button"
-                onClick={() => setSelectedLocationId('all')}
-                className={`min-w-48 flex-1 basis-48 shrink-0 rounded-xl border px-3.5 py-2.5 text-sm font-bold transition ${
-                  selectedLocationId === 'all'
-                    ? 'border-transparent bg-mintcom-green/15 text-emerald-800 dark:text-mintcom-green'
-                    : 'border-gray-200 bg-white text-gray-600 hover:border-mintcom-green dark:border-white/10 dark:bg-black/20 dark:text-gray-300'
-                }`}
-              >
-                {t('notifications.actions.allLocations')} · {statsFromCounts(counts)?.total || 0}
-              </button>
-              {filterLocations.map((location) => {
-                const locationCount =
-                  counts?.byEstablishment?.[location.id]?.total ??
-                  alerts.filter(
-                    (alert) =>
-                      (alert.establishmentId || alert.establishment?.id) === location.id,
-                  ).length;
-                return (
-                  <button
-                    key={location.id}
-                    type="button"
-                    onClick={() => setSelectedLocationId(location.id)}
-                      className={`min-w-64 flex-1 basis-64 shrink-0 truncate rounded-xl border px-3.5 py-2.5 text-sm font-bold transition ${
-                      selectedLocationId === location.id
-                        ? 'border-transparent bg-mintcom-green/15 text-emerald-800 dark:text-mintcom-green'
-                        : 'border-gray-200 bg-white text-gray-600 hover:border-mintcom-green dark:border-white/10 dark:bg-black/20 dark:text-gray-300'
-                    }`}
-                  >
-                    {location.name} · {locationCount}
-                  </button>
-                );
-              })}
-              </div>
-            </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setSelectedLocationId('all')}
+              className={`rounded-full border px-3.5 py-1.5 text-sm font-semibold transition ${
+                selectedLocationId === 'all'
+                  ? 'border-gray-900 bg-gray-900 text-white dark:border-white dark:bg-white dark:text-gray-900'
+                  : 'border-gray-200 bg-white text-gray-600 hover:border-gray-400 dark:border-white/10 dark:bg-black/20 dark:text-gray-300 dark:hover:border-white/30'
+              }`}
+            >
+              {t('notifications.actions.allLocations')}
+            </button>
+            {filterLocations.map((location) => {
+              const locationCount =
+                counts?.byEstablishment?.[location.id]?.total ??
+                alerts.filter(
+                  (alert) =>
+                    (alert.establishmentId || alert.establishment?.id) === location.id,
+                ).length;
+              return (
+                <button
+                  key={location.id}
+                  type="button"
+                  onClick={() => setSelectedLocationId(location.id)}
+                  className={`max-w-full truncate rounded-full border px-3.5 py-1.5 text-sm font-semibold transition ${
+                    selectedLocationId === location.id
+                      ? 'border-gray-900 bg-gray-900 text-white dark:border-white dark:bg-white dark:text-gray-900'
+                      : 'border-gray-200 bg-white text-gray-600 hover:border-gray-400 dark:border-white/10 dark:bg-black/20 dark:text-gray-300 dark:hover:border-white/30'
+                  }`}
+                >
+                  {location.name} · {locationCount}
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
@@ -658,9 +551,6 @@ export function BackofficeAlertsView({
                   {group.label}
                 </h2>
                 <span className="h-px flex-1 bg-gray-200 dark:bg-white/10" />
-                <span className="shrink-0 text-xs font-semibold text-gray-400">
-                  {t('notifications.daySummary', { count: group.alerts.length })}
-                </span>
               </div>
               <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/5 dark:bg-[#0D0D0D]">
                 {group.alerts.map((alert) => {

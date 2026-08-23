@@ -305,25 +305,25 @@ function PosDesignCanvas({ forceLight = false }: { forceLight?: boolean }) {
             </div>
           </div>
 
-          <div className="my-3 h-px bg-gray-200" />
+          <div className={d('my-3 h-px bg-gray-200', 'dark:bg-white/10')} />
 
           <div className="flex items-center gap-2.5">
             <span className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-xl bg-mintcom-green px-3.5 text-[11px] font-extrabold uppercase tracking-wide text-white shadow-md shadow-mintcom-green/30">
               Pay-in / Out
             </span>
-            <div className="flex h-11 min-w-0 flex-1 items-center overflow-hidden rounded-xl bg-gray-100">
+            <div className={d('flex h-11 min-w-0 flex-1 items-center overflow-hidden rounded-xl bg-gray-100', 'dark:bg-white/5 dark:border dark:border-white/10')}>
               <Search size={15} className="ms-3.5 shrink-0 text-gray-400" />
               <span className="min-w-0 flex-1 truncate px-2.5 text-[13px] font-medium text-gray-400">
                 Search menu…
               </span>
-              <span className="mx-0.5 h-[22px] w-px shrink-0 bg-gray-200" />
-              <span className="me-1 flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-1.5 text-[12px] font-semibold text-gray-500">
+              <span className={d('mx-0.5 h-[22px] w-px shrink-0 bg-gray-200', 'dark:bg-white/10')} />
+              <span className={d('me-1 flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-1.5 text-[12px] font-semibold text-gray-500', 'dark:text-gray-300')}>
                 <LayoutGrid size={13} />
                 Category
                 <ChevronDown size={13} className="opacity-70" />
               </span>
             </div>
-            <span className={d('flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-gray-100 text-mintcom-green', 'dark:border-white/10')}>
+            <span className={d('flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-gray-100 text-mintcom-green', 'dark:border-white/10 dark:bg-white/5')}>
               <SlidersHorizontal size={18} />
             </span>
           </div>
@@ -336,7 +336,7 @@ function PosDesignCanvas({ forceLight = false }: { forceLight?: boolean }) {
                 key={p.name}
                 className={d('relative flex min-h-0 flex-col overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm', 'dark:border-white/10 dark:bg-mintcom-surface')}
               >
-                <div className={d('relative flex h-[110px] w-full shrink-0 items-center justify-center overflow-hidden border-b border-gray-100 bg-[#F8FAF9]', 'dark:border-white/8 dark:bg-[#F3F4F6]')}>
+                <div className={d('relative flex h-[110px] w-full shrink-0 items-center justify-center overflow-hidden border-b border-gray-100 bg-[#F8FAF9]', 'dark:border-white/8 dark:bg-[#1a1a1a]')}>
                   <img
                     src={p.img}
                     alt=""
@@ -363,7 +363,7 @@ function PosDesignCanvas({ forceLight = false }: { forceLight?: boolean }) {
 
       {/* ── Order panel — mirrors try-pos OrderPanel ── */}
       <aside className={d('flex w-[300px] shrink-0 flex-col overflow-hidden border-s border-gray-200 bg-white', 'dark:border-white/10 dark:bg-mintcom-surface')}>
-        <div className="shrink-0 border-b border-[#f0f0f0] px-3.5 py-3">
+        <div className={d('shrink-0 border-b border-[#f0f0f0] px-3.5 py-3', 'dark:border-white/10')}>
           <div className="mb-2.5 flex items-stretch justify-between gap-2">
             {(
               [
@@ -398,7 +398,7 @@ function PosDesignCanvas({ forceLight = false }: { forceLight?: boolean }) {
               className={d('overflow-hidden rounded-xl border border-gray-200 bg-[#f6f3ec]', 'dark:border-white/10 dark:bg-mintcom-dark')}
             >
               <div className="flex w-full items-center gap-2 p-2.5">
-                <span className={d('flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-gray-100 bg-[#F8FAF9] shadow-sm', 'dark:border-white/10 dark:bg-[#F3F4F6]')}>
+                <span className={d('flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-gray-100 bg-[#F8FAF9] shadow-sm', 'dark:border-white/10 dark:bg-[#1a1a1a]')}>
                   <img
                     src={l.img}
                     alt=""
@@ -513,7 +513,7 @@ function Chip({
           ? 'border-mintcom-green/30 bg-mintcom-green/10 text-mintcom-green'
           : green
             ? d('border-gray-200 bg-white text-mintcom-green', 'dark:border-white/10 dark:bg-mintcom-surface')
-            : d('border-gray-200 bg-white text-gray-600', 'dark:border-white/10 dark:bg-mintcom-surface')
+            : d('border-gray-200 bg-white text-gray-600', 'dark:border-white/10 dark:bg-mintcom-surface dark:text-gray-300')
       }`}
     >
       {icon}

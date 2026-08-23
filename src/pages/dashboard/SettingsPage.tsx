@@ -7,6 +7,7 @@ import api, { extractErrorMessage } from '../../config/api';
 import { FiscalComplianceCard } from '../../components/FiscalComplianceCard';
 import toast from 'react-hot-toast';
 import { ConfirmModal } from '../../components/ConfirmModal';
+import { ChangeCurrencyModal } from '../../components/ChangeCurrencyModal';
 import { BusyOverlay } from '../../components/BusyOverlay';
 import { EstablishmentDeletionWizard, PendingDeletionBanner } from '../../components/EstablishmentDeletionWizard';
 import {
@@ -250,6 +251,7 @@ export function SettingsPage() {
   const [receiptLogoPreview, setReceiptLogoPreview] = useState<string | null>(null);
   const [selectedReceiptLogo, setSelectedReceiptLogo] = useState<File | null>(null);
   const [initialSettings, setInitialSettings] = useState<AppSettings | null>(null);
+  const [pendingCurrencyData, setPendingCurrencyData] = useState<AppSettings | null>(null);
 
   const [confirmConfig, setConfirmConfig] = useState<{
     isOpen: boolean;
@@ -537,11 +539,7 @@ export function SettingsPage() {
     const isCurrencyChanged = initialSettings && data.currency !== initialSettings.currency;
 
     if (isCurrencyChanged) {
-      triggerTwoStepConfirm(
-        t('settings.confirm.changeCurrencyTitle'),
-        t('settings.confirm.changeCurrencyMessage', { from: initialSettings?.currency, to: data.currency }),
-        () => saveSettings(data)
-      );
+      setPendingCurrencyData(data);
       return;
     }
 
@@ -1717,6 +1715,18 @@ export function SettingsPage() {
         type={confirmConfig.type}
         confirmText={confirmConfig.confirmText}
         showCancel={confirmConfig.showCancel}
+      />
+      <ChangeCurrencyModal
+        isOpen={pendingCurrencyData !== null}
+        onClose={() => setPendingCurrencyData(null)}
+        onConfirm={() => {
+          const data = pendingCurrencyData;
+          setPendingCurrencyData(null);
+          if (data) saveSettings(data);
+        }}
+        fromCurrency={initialSettings?.currency || ''}
+        toCurrency={pendingCurrencyData?.currency || ''}
+        isSubmitting={isSaving}
       />
       {showDeletionWizard && establishmentInfo && (
         <EstablishmentDeletionWizard establishmentId={establishmentInfo.id} establishmentName={establishmentInfo.name} onClose={() => setShowDeletionWizard(false)} onDeletionRequested={handleDeletionRequested} />

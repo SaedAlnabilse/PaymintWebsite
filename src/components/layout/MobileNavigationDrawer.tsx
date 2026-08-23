@@ -1,10 +1,9 @@
 import React from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { X, LogOut, type LucideIcon } from 'lucide-react';
-import { LanguageSwitcher } from '../LanguageSwitcher';
-import { ThemeToggle } from '../ThemeToggle';
+import { SidebarPreferencesHelpMenu } from './SidebarPreferencesHelpMenu';
 import MintcomLogoGreen from '../../assets/green-full-logo.svg';
 import MintcomLogoWhite from '../../assets/white-green-full-logo.svg';
 import type { Account } from '../../types';
@@ -34,6 +33,7 @@ export const MobileNavigationDrawer: React.FC<MobileNavigationDrawerProps> = ({
 }) => {
   const { t } = useTranslation();
   const location = useLocation();
+  const navigate = useNavigate();
 
   return (
     <AnimatePresence>
@@ -102,13 +102,8 @@ export const MobileNavigationDrawer: React.FC<MobileNavigationDrawerProps> = ({
 
           {/* Footer */}
           <div className="p-4 border-t border-gray-100 dark:border-white/5">
-            <div className="flex items-center gap-2 mb-3">
-              <LanguageSwitcher
-                compact
-                dropdownDirection="up"
-                buttonClassName="h-10 px-2.5"
-              />
-              <ThemeToggle dropdownDirection="up" />
+            <div className="mb-3">
+              <SidebarPreferencesHelpMenu onOpenHelpCenter={() => navigate('/support')} />
             </div>
 
             <div className="flex items-center gap-3">

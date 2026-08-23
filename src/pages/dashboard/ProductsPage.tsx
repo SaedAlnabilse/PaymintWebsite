@@ -1445,7 +1445,10 @@ export function ProductsPage() {
                     {viewMode === 'grid' ? (
                         <>
                             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                                {paginatedProducts.map((p) => (
+                                {paginatedProducts.map((p) => {
+                                    const hasCustomImage = Boolean(p.image && p.image.trim());
+                                    const imageSrc = hasCustomImage ? getProductImageUrl(p.image)! : '/default_product.png';
+                                    return (
                                     <div
                                         key={p.id || `prod-${p.name}`}
                                         className={`group bg-white dark:bg-[#1E293B] rounded-2xl border transition-all overflow-hidden flex flex-col cursor-pointer h-full ${
@@ -1455,20 +1458,58 @@ export function ProductsPage() {
                                         }`}
                                         onClick={() => handleEdit(p)}
                                     >
-                                        <div className="aspect-[4/3] bg-gray-50 dark:bg-black/20 relative overflow-hidden shrink-0">
+                                        <div className="aspect-[4/3] bg-gray-50 dark:bg-black/20 relative overflow-hidden shrink-0 flex items-center justify-center">
                                             <OptimizedImage
                                                 key={`${p.id}-${p.image || 'none'}`}
-                                                src={p.image ? getProductImageUrl(p.image)! : '/default_product.png'}
+                                                src={imageSrc}
                                                 alt={p.name || 'Default Product'}
-                                                className="w-full h-full group-hover:scale-110 transition-transform duration-500"
-                                                objectFit="cover"
+                                                className={`w-full h-full ${
+                                                    hasCustomImage
+                                                        ? 'group-hover:scale-110 transition-transform duration-500'
+                                                        : 'p-6 object-contain'
+                                                }`}
+                                                objectFit={hasCustomImage ? 'cover' : 'contain'}
+                                                placeholderColor="transparent"
                                             />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent transition-opacity duration-300 flex items-end justify-between p-3">
-                                                <button onClick={(e) => { e.stopPropagation(); handleEdit(p); }} aria-label={t('products.editProduct')} className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center bg-white rounded-lg text-gray-900 hover:bg-mintcom-green hover:text-black transition-colors shadow-sm"><Edit2 size={18} /></button>
+                                            {hasCustomImage && (
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent transition-opacity duration-300 pointer-events-none" />
+                                            )}
+                                            <div className="absolute inset-0 flex items-end justify-between p-3">
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); handleEdit(p); }}
+                                                    aria-label={t('products.editProduct')}
+                                                    className={`p-2.5 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-xl transition-all shadow-sm ${
+                                                        hasCustomImage
+                                                            ? 'bg-white text-gray-900 hover:bg-mintcom-green hover:text-black'
+                                                            : 'bg-white dark:bg-[#1E293B] border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-200 hover:bg-mintcom-green hover:text-black hover:border-mintcom-green'
+                                                    }`}
+                                                >
+                                                    <Edit2 size={16} />
+                                                </button>
                                                 {isProductActive(p) ? (
-                                                    <button onClick={(e) => { e.stopPropagation(); handleDelete(p.id, p.name); }} aria-label={p.willHardDelete ? t('products.delete.title') : t('common.archive', { defaultValue: 'Archive' })} className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center bg-white rounded-lg text-mintcom-red hover:bg-red-500 hover:text-white transition-colors shadow-sm">{p.willHardDelete ? <Trash2 size={18} /> : <Archive size={18} />}</button>
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); handleDelete(p.id, p.name); }}
+                                                        aria-label={p.willHardDelete ? t('products.delete.title') : t('common.archive', { defaultValue: 'Archive' })}
+                                                        className={`p-2.5 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-xl transition-all shadow-sm ${
+                                                            hasCustomImage
+                                                                ? 'bg-white text-mintcom-red hover:bg-red-500 hover:text-white'
+                                                                : 'bg-white dark:bg-[#1E293B] border border-gray-200 dark:border-white/10 text-mintcom-red hover:bg-red-500 hover:text-white hover:border-red-500'
+                                                        }`}
+                                                    >
+                                                        {p.willHardDelete ? <Trash2 size={16} /> : <Archive size={16} />}
+                                                    </button>
                                                 ) : (
-                                                    <button onClick={(e) => { e.stopPropagation(); handleReactivate(p); }} aria-label={t('common.reactivate', { defaultValue: 'Reactivate' })} className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center bg-white rounded-lg text-mintcom-green hover:bg-mintcom-green hover:text-black transition-colors shadow-sm"><RotateCcw size={18} /></button>
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); handleReactivate(p); }}
+                                                        aria-label={t('common.reactivate', { defaultValue: 'Reactivate' })}
+                                                        className={`p-2.5 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-xl transition-all shadow-sm ${
+                                                            hasCustomImage
+                                                                ? 'bg-white text-mintcom-green hover:bg-mintcom-green hover:text-black'
+                                                                : 'bg-white dark:bg-[#1E293B] border border-gray-200 dark:border-white/10 text-mintcom-green hover:bg-mintcom-green hover:text-black hover:border-mintcom-green'
+                                                        }`}
+                                                    >
+                                                        <RotateCcw size={16} />
+                                                    </button>
                                                 )}
                                             </div>
                                         </div>
@@ -1518,7 +1559,8 @@ export function ProductsPage() {
                                             </div>
                                         </div>
                                     </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                             <Pagination
                                 currentPage={currentPage}

@@ -506,32 +506,36 @@ export function PaymentMethodsPage() {
       </div>
 
       {/* Card Types Section */}
-      <section className="bg-white dark:bg-[#1E293B] rounded-[32px] border border-gray-200 dark:border-white/[0.03] p-8 sm:p-10 shadow-sm overflow-hidden relative">
+      <section className="bg-white dark:bg-[#1E293B] rounded-[32px] border border-gray-200 dark:border-white/[0.03] p-6 sm:p-8 shadow-sm overflow-hidden relative">
         <div className="absolute top-0 right-0 w-64 h-64 bg-mintcom-green/5 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none" />
         
-        <div className="flex items-start gap-5 mb-12 relative z-10">
-          <div className="w-14 h-14 rounded-2xl bg-mintcom-green/10 flex items-center justify-center text-mintcom-green shrink-0 border border-mintcom-green/20">
-            <CreditCard size={28} />
-          </div>
-          <div className="flex flex-col gap-1.5 flex-1">
-            <div className="flex items-center justify-between gap-4">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">{t('paymentMethods.cardBrands')}</h2>
-              <div className="flex flex-wrap items-center justify-end gap-3">
-                <div className="w-full sm:w-40">
-                  <SelectInput
-                    value={cardTypeStatusFilter === 'ALL' ? null : cardTypeStatusFilter}
-                    onChange={(value) => setCardTypeStatusFilter((value as StatusFilterValue) || 'ALL')}
-                    options={[
-                      { label: t('common.active', 'Active'), value: 'ACTIVE' },
-                      { label: t('common.inactive', 'Inactive'), value: 'INACTIVE' },
-                    ]}
-                    allOptionLabel={t('common.allStatuses', 'All Statuses')}
-                    placeholder={t('common.allStatuses', 'All Statuses')}
-                  />
-                </div>
-              </div>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8 relative z-10">
+          <div className="flex items-center gap-3.5 min-w-0">
+            <div className="w-11 h-11 rounded-xl bg-mintcom-green/10 flex items-center justify-center text-mintcom-green shrink-0 border border-mintcom-green/20">
+              <CreditCard size={22} />
             </div>
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 max-w-2xl">{t('paymentMethods.cardBrandsSubtitle')}</p>
+            <div className="min-w-0">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white tracking-tight leading-tight">
+                {t('paymentMethods.cardBrands')}
+              </h2>
+              <p className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 mt-0.5">
+                {t('paymentMethods.cardBrandsSubtitle')}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="w-full sm:w-40">
+              <SelectInput
+                value={cardTypeStatusFilter === 'ALL' ? null : cardTypeStatusFilter}
+                onChange={(value) => setCardTypeStatusFilter((value as StatusFilterValue) || 'ALL')}
+                options={[
+                  { label: t('common.active', 'Active'), value: 'ACTIVE' },
+                  { label: t('common.inactive', 'Inactive'), value: 'INACTIVE' },
+                ]}
+                allOptionLabel={t('common.allStatuses', 'All Statuses')}
+                placeholder={t('common.allStatuses', 'All Statuses')}
+              />
+            </div>
           </div>
         </div>
 
@@ -647,32 +651,36 @@ export function PaymentMethodsPage() {
       </section>
 
       {/* Main Section */}
-      <section className="bg-white dark:bg-[#1E293B] rounded-[32px] border border-gray-200 dark:border-white/[0.03] p-8 sm:p-10 shadow-sm overflow-hidden relative">
+      <section className="bg-white dark:bg-[#1E293B] rounded-[32px] border border-gray-200 dark:border-white/[0.03] p-6 sm:p-8 shadow-sm overflow-hidden relative">
         <div className="absolute top-0 right-0 w-64 h-64 bg-mintcom-green/5 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none" />
         
-        <div className="flex items-start gap-5 mb-12 relative z-10">
-          <div className="w-14 h-14 rounded-2xl bg-mintcom-green/10 flex items-center justify-center text-mintcom-green shrink-0 border border-mintcom-green/20">
-            <Wallet size={28} />
-          </div>
-          <div className="flex flex-col gap-1.5 flex-1">
-            <div className="flex items-center justify-between gap-4">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">{t('paymentMethods.paymentTypes')}</h2>
-              <div className="flex flex-wrap items-center justify-end gap-3">
-                <div className="w-full sm:w-40">
-                  <SelectInput
-                    value={paymentMethodStatusFilter === 'ALL' ? null : paymentMethodStatusFilter}
-                    onChange={(value) => setPaymentMethodStatusFilter((value as StatusFilterValue) || 'ALL')}
-                    options={[
-                      { label: t('common.active', 'Active'), value: 'ACTIVE' },
-                      { label: t('common.inactive', 'Inactive'), value: 'INACTIVE' },
-                    ]}
-                    allOptionLabel={t('common.allStatuses', 'All Statuses')}
-                    placeholder={t('common.allStatuses', 'All Statuses')}
-                  />
-                </div>
-              </div>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8 relative z-10">
+          <div className="flex items-center gap-3.5 min-w-0">
+            <div className="w-11 h-11 rounded-xl bg-mintcom-green/10 flex items-center justify-center text-mintcom-green shrink-0 border border-mintcom-green/20">
+              <Wallet size={22} />
             </div>
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 max-w-2xl">{t('paymentMethods.paymentTypesSubtitle')}</p>
+            <div className="min-w-0">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white tracking-tight leading-tight">
+                {t('paymentMethods.paymentTypes')}
+              </h2>
+              <p className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 mt-0.5">
+                {t('paymentMethods.paymentTypesSubtitle')}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="w-full sm:w-40">
+              <SelectInput
+                value={paymentMethodStatusFilter === 'ALL' ? null : paymentMethodStatusFilter}
+                onChange={(value) => setPaymentMethodStatusFilter((value as StatusFilterValue) || 'ALL')}
+                options={[
+                  { label: t('common.active', 'Active'), value: 'ACTIVE' },
+                  { label: t('common.inactive', 'Inactive'), value: 'INACTIVE' },
+                ]}
+                allOptionLabel={t('common.allStatuses', 'All Statuses')}
+                placeholder={t('common.allStatuses', 'All Statuses')}
+              />
+            </div>
           </div>
         </div>
 

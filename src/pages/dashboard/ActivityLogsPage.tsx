@@ -3,10 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { createPortal } from 'react-dom';
 import {
   Search,
-  History,
   X,
   Shield,
-  FileText,
   UserRound,
   Layers,
 } from 'lucide-react';
@@ -25,22 +23,16 @@ import { Pagination } from '../../components/ui';
 import { usePermissionGuard, checkPermission } from '../../hooks/usePermissionGuard';
 import { useAuth } from '../../context/AuthContext';
 import { formatInputPlaceholder } from '../../utils/textCase';
+import {
+  formatMetadataForExport,
+  getActionTranslationKey,
+  getActorName,
+  getMetadataEntries,
+} from '../../utils/activityLog';
+import type { ActivityLogEntry, MetadataFormatOptions } from '../../utils/activityLog';
+import { ActivityTimeline } from '../../components/dashboard/activity/ActivityTimeline';
 
-interface ActivityLog {
-  id: string;
-  userId: string;
-  performedBy?: {
-    username?: string;
-    name?: string;
-    firstName?: string;
-    lastName?: string;
-  };
-  action: string;
-  description: string;
-  metadata?: Record<string, any>;
-  ipAddress?: string;
-  timestamp: string;
-}
+type ActivityLog = ActivityLogEntry;
 
 interface ActivityStaffOption {
   id: string;
@@ -57,46 +49,70 @@ const USER_FILTER_ME = '__me__';
  */
 const USER_FILTER_OWNER = 'owner';
 
-const actionColors: Record<string, string> = {
-  // Inventory
-  'Added product': 'bg-mintcom-green/ text-mintcom-green border-mintcom-green/',
-  'Updated product': 'bg-blue-500/10 text-blue-500 border-blue-500/20',
-  'Deleted product': 'bg-mintcom-red/10 text-mintcom-red border-mintcom-red/20',
-  'Archived product': 'bg-mintcom-red/10 text-mintcom-red border-mintcom-red/20',
-  'Removed product image': 'bg-orange-500/10 text-orange-500 border-orange-500/20',
-  'Deleted all products': 'bg-mintcom-red/10 text-mintcom-red border-mintcom-red/20',
-  'Archived all products': 'bg-mintcom-red/10 text-mintcom-red border-mintcom-red/20',
-  'Added category': 'bg-mintcom-green/ text-mintcom-green border-mintcom-green/',
-  'Updated category': 'bg-blue-500/10 text-blue-500 border-blue-500/20',
-  'Deleted category': 'bg-mintcom-red/10 text-mintcom-red border-mintcom-red/20',
-  'Archived category': 'bg-mintcom-red/10 text-mintcom-red border-mintcom-red/20',
-  'Archived attribute group': 'bg-mintcom-red/10 text-mintcom-red border-mintcom-red/20',
-  'Archived sub-attribute': 'bg-mintcom-red/10 text-mintcom-red border-mintcom-red/20',
+/** Metadata fields shown inline before the rest collapse into "+N more". */
+const INLINE_METADATA_LIMIT = 3;
 
-  // Staff
-  'Added employee': 'bg-mintcom-green/10 text-mintcom-green border-mintcom-green/20',
-  'Updated employee': 'bg-blue-500/10 text-blue-500 border-blue-500/20',
-  'Deleted employee': 'bg-gray-500/10 text-gray-500 border-gray-500/20',
-  'Deactivated employee': 'bg-gray-500/10 text-gray-500 border-gray-500/20',
-
-  // Settings
-  'Updated restaurant name': 'bg-amber-500/10 text-amber-500 border-amber-500/20',
-  'Updated working hours': 'bg-amber-500/10 text-amber-500 border-amber-500/20',
-  'Updated farewell message': 'bg-amber-500/10 text-amber-500 border-amber-500/20',
-  'Updated restaurant logo': 'bg-amber-500/10 text-amber-500 border-amber-500/20',
-  'Updated tax rate': 'bg-amber-500/10 text-amber-500 border-amber-500/20',
-  'Updated loyalty program': 'bg-pink-500/10 text-pink-500 border-pink-500/20',
-
-  // Payments & Discounts
-  'Added discount': 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20',
-  'Updated discount': 'bg-blue-500/10 text-blue-500 border-blue-500/20',
-  'Deleted discount': 'bg-mintcom-red/10 text-mintcom-red border-mintcom-red/20',
-  'Deactivated discount': 'bg-mintcom-red/10 text-mintcom-red border-mintcom-red/20',
-  'Added payment method': 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20',
-  'Updated payment method': 'bg-blue-500/10 text-blue-500 border-blue-500/20',
-  'Deleted payment method': 'bg-mintcom-red/10 text-mintcom-red border-mintcom-red/20',
-  'Deactivated payment method': 'bg-mintcom-red/10 text-mintcom-red border-mintcom-red/20',
-};
+/** Backend action strings offered in the action filter, in menu order. */
+const FILTERABLE_ACTIONS = [
+  'Added product',
+  'Updated product',
+  'Deleted product',
+  'Archived product',
+  'Reactivated product',
+  'Removed product image',
+  'Archived all products',
+  'Added category',
+  'Updated category',
+  'Deleted category',
+  'Archived category',
+  'Added attribute group',
+  'Updated attribute group',
+  'Deleted attribute group',
+  'Archived attribute group',
+  'Reactivated attribute group',
+  'Added sub-attribute',
+  'Updated sub-attribute',
+  'Deleted sub-attribute',
+  'Archived sub-attribute',
+  'Reactivated sub-attribute',
+  'Added employee',
+  'Updated employee',
+  'Deactivated employee',
+  'Assigned employee to location',
+  'Updated employee assignment',
+  'Removed employee from location',
+  'Added custom role',
+  'Updated custom role',
+  'Deleted custom role',
+  'Signed in',
+  'Signed out',
+  'Added location',
+  'Updated location',
+  'Deleted location',
+  'Added brand',
+  'Updated brand',
+  'Deleted brand',
+  'Updated account profile',
+  'Changed account password',
+  'Updated restaurant name',
+  'Updated working hours',
+  'Updated farewell message',
+  'Updated restaurant logo',
+  'Updated tax rate',
+  'Updated loyalty program',
+  'Added discount',
+  'Updated discount',
+  'Deleted discount',
+  'Deactivated discount',
+  'Added payment method',
+  'Updated payment method',
+  'Deleted payment method',
+  'Deactivated payment method',
+  'Added card type',
+  'Updated card type',
+  'Deleted card type',
+  'Deactivated card type',
+];
 
 export function ActivityLogsPage() {
   const { t } = useTranslation();
@@ -210,6 +226,11 @@ export function ActivityLogsPage() {
     { label: t('activity.resources.order', { defaultValue: 'Orders' }), value: 'order' },
     { label: t('activity.resources.settings', { defaultValue: 'Settings' }), value: 'settings' },
     { label: t('activity.resources.attribute', { defaultValue: 'Attributes' }), value: 'attribute' },
+    { label: t('activity.resources.role', { defaultValue: 'Roles' }), value: 'role' },
+    { label: t('activity.resources.access', { defaultValue: 'Sign-ins' }), value: 'access' },
+    { label: t('activity.resources.location', { defaultValue: 'Locations' }), value: 'location' },
+    { label: t('activity.resources.brand', { defaultValue: 'Brands' }), value: 'brand' },
+    { label: t('activity.resources.account', { defaultValue: 'Account' }), value: 'account' },
   ], [t]);
 
   const hasActiveFilters = useMemo(
@@ -351,9 +372,19 @@ export function ActivityLogsPage() {
     return () => clearTimeout(timer);
   }, [fetchLogs]);
 
+  const dateLocale = t('common.locale') === 'ar' ? 'ar-EG' : 'en-US';
+
+  const metadataOptions: MetadataFormatOptions = useMemo(
+    () => ({
+      locale: dateLocale,
+      yesLabel: t('common.yes', { defaultValue: 'Yes' }),
+      noLabel: t('common.no', { defaultValue: 'No' }),
+    }),
+    [dateLocale, t],
+  );
+
   const formatDate = (dateString: string) => {
-    const locale = t('common.locale') === 'ar' ? 'ar-EG' : 'en-US';
-    return new Date(dateString).toLocaleString(locale, {
+    return new Date(dateString).toLocaleString(dateLocale, {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
@@ -362,93 +393,25 @@ export function ActivityLogsPage() {
     });
   };
 
-  const getActionKey = (action: string) => {
-    // Maps "Added product" -> "addProduct", "Updated restaurant name" -> "updateName"
-    const map: Record<string, string> = {
-      'Added product': 'addProduct',
-      'Updated product': 'updateProduct',
-      'Deleted product': 'deleteProduct',
-      'Archived product': 'archiveProduct',
-      'Removed product image': 'removeProductImage',
-      'Deleted all products': 'deleteProduct', // fallback
-      'Archived all products': 'archiveAllProducts',
-      'Added category': 'addCategory',
-      'Updated category': 'updateCategory',
-      'Deleted category': 'deleteCategory',
-      'Archived category': 'archiveCategory',
-      'Archived attribute group': 'archiveAttributeGroup',
-      'Archived sub-attribute': 'archiveSubAttribute',
-      'Added employee': 'addEmployee',
-      'Updated employee': 'updateEmployee',
-      'Deleted employee': 'deleteEmployee',
-      'Deactivated employee': 'deactivateEmployee',
-      'Updated restaurant name': 'updateName',
-      'Updated working hours': 'updateHours',
-      'Updated farewell message': 'updateMessage',
-      'Updated restaurant logo': 'updateLogo',
-      'Updated tax rate': 'updateTax',
-      'Updated loyalty program': 'updateLoyalty',
-      'Added discount': 'addDiscount',
-      'Updated discount': 'updateDiscount',
-      'Deleted discount': 'deleteDiscount',
-      'Deactivated discount': 'deactivateDiscount',
-      'Added payment method': 'addPayment',
-      'Updated payment method': 'updatePayment',
-      'Deleted payment method': 'deletePayment',
-      'Deactivated payment method': 'deactivatePayment',
-    };
-    return map[action] || action.toLowerCase().replace(/ /g, '_');
-  };
-
-  const getActionColor = (action: string) => {
-    return actionColors[action] || 'bg-gray-500/10 text-gray-500 border-gray-500/20';
-  };
-
   const getActionLabel = (action: string) => {
-    const translation = t(`activity.actions.${getActionKey(action)}`);
+    const translation = t(`activity.actions.${getActionTranslationKey(action)}`);
     return translation.includes('activity.actions.') ? action : translation;
   };
 
-  const getActorName = (log: ActivityLog) => {
-    const fullName =
-      `${log.performedBy?.firstName || ''} ${log.performedBy?.lastName || ''}`.trim();
-    return (
-      log.performedBy?.name?.trim() ||
-      fullName ||
-      log.performedBy?.username?.trim() ||
-      t('activity.owner')
-    );
-  };
-
-  const getActorInitial = (log: ActivityLog) => {
-    const actorName = getActorName(log);
-    return actorName?.charAt(0)?.toUpperCase() || 'A';
-  };
-
-  const getMetadataSummary = (metadata?: Record<string, any>) => {
-    if (!metadata || typeof metadata !== 'object') return null;
-    const entries = Object.entries(metadata).filter(
-      ([, v]) => v !== null && v !== undefined && v !== '',
-    );
-    if (entries.length === 0) return null;
-    return entries
-      .slice(0, 2)
-      .map(([k, v]) => {
-        const displayValue = typeof v === 'object' ? JSON.stringify(v) : String(v);
-        return `${k}: ${displayValue.length > 30 ? displayValue.slice(0, 30) + '…' : displayValue}`;
-      })
-      .join(', ')
-      + (entries.length > 2 ? ` (+${entries.length - 2})` : '');
-  };
+  const actionFilterOptions = useMemo(
+    // getActionLabel only reads `t`, so the list is stable per language.
+    () => FILTERABLE_ACTIONS.map((action) => ({ label: getActionLabel(action), value: action })),
+    [t],
+  );
 
   const handleExport = (format: ExportFormat) => {
     const logsToExport = Array.isArray(logs) ? logs : [];
     const exportData = logsToExport.map(l => ({
       time: formatDate(l.timestamp),
-      user: getActorName(l),
-      action: l.action,
+      user: getActorName(l, t('activity.owner')),
+      action: getActionLabel(l.action),
       desc: l.description,
-      data: getMetadataSummary(l.metadata) || '',
+      data: formatMetadataForExport(l.metadata, metadataOptions),
     }));
 
     if (exportData.length === 0) {
@@ -498,141 +461,121 @@ export function ActivityLogsPage() {
       </div>
 
       {/* Control Panel */}
-      <div className="bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/5 p-4 shadow-sm">
-        <div className="flex flex-col xl:flex-row items-start xl:items-center gap-4 w-full">
-          <div className="flex-1 w-full xl:w-auto relative group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input maxLength={255}
+      <div className="bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/5 p-4 sm:p-5 shadow-sm space-y-3">
+        {/* Top Controls: Search Bar + Date Range Group */}
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3">
+          {/* Search Bar - expands dynamically, never squished */}
+          <div className="flex-1 min-w-0 relative group">
+            <Search className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            <input
+              maxLength={255}
               type="text"
               value={searchQuery}
               onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
               placeholder={formatInputPlaceholder(t('activity.searchPlaceholder'), t('common.locale'))}
-              className="w-full pl-11 pr-11 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-sm font-bold text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-mintcom-green/20 focus:border-mintcom-green transition-all"
+              className="w-full h-12 ps-11 pe-11 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-sm font-bold text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-mintcom-green/20 focus:border-mintcom-green transition-all"
             />
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => { setSearchQuery(''); setPage(1); }}
                 aria-label={t('common.clearSearch', 'Clear search')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 inline-flex h-7 w-7 items-center justify-center rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
+                className="absolute end-2.5 top-1/2 -translate-y-1/2 inline-flex h-7 w-7 items-center justify-center rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
               >
                 <X size={12} strokeWidth={2.75} />
               </button>
             )}
           </div>
 
-          <div className="flex flex-col md:flex-row md:flex-wrap items-stretch md:items-center gap-3 w-full xl:w-auto">
-            {/* User / actor filter */}
-            <div className="w-full md:w-52">
+          {/* Date Filter Group */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            {/* Presets Dropdown */}
+            <div className="w-full sm:w-44 shrink-0 relative z-[50]">
               <SingleSelect
-                value={userFilter === 'all' ? null : userFilter}
+                value={activePreset === 'custom' ? null : activePreset}
                 onChange={(val) => {
-                  const next = val || 'all';
-                  if (next === USER_FILTER_ME && !myPerformedById) {
-                    toast.error(
-                      t('activity.meOnlyUnavailable', {
-                        defaultValue: 'Your login is not linked to a staff profile at this location.',
-                      }),
-                    );
-                  }
-                  setUserFilter(next);
+                  if (val) handlePresetChange(val);
+                }}
+                options={localizedDateOptions}
+                placeholder={formatInputPlaceholder(t('activity.customRange'), t('common.locale'))}
+                showAllOption={false}
+                allowClear={false}
+                className="w-full"
+                buttonClassName="!h-12 !rounded-xl"
+              />
+            </div>
+
+            {/* Custom Date Range Picker */}
+            <div className="w-full sm:w-auto shrink-0 relative z-[60]">
+              <DateRangePicker
+                startDate={dateRange.start}
+                endDate={dateRange.end}
+                onRangeChange={(start, end) => {
+                  setDateRange({ start, end });
+                  setActivePreset('custom');
                   setPage(1);
                 }}
-                options={userFilterOptions}
-                allOptionLabel={t('activity.allUsers', { defaultValue: 'All users' })}
-                placeholder={formatInputPlaceholder(
-                  t('activity.filterByUser', { defaultValue: 'Filter by user' }),
-                  t('common.locale'),
-                )}
+                onClear={() => handlePresetChange('today')}
+                isActive={activePreset === 'custom'}
+                align={t('common.locale') === 'ar' ? 'left' : 'right'}
               />
             </div>
+          </div>
+        </div>
 
-            {/* Action Filter */}
-            <div className="w-full md:w-56">
-              <SingleSelect
-                value={actionFilter === 'all' ? null : actionFilter}
-                onChange={(val) => { setActionFilter(val || 'all'); setPage(1); }}
-                options={[
-                  { label: getActionLabel('Added product'), value: 'Added product' },
-                  { label: getActionLabel('Updated product'), value: 'Updated product' },
-                  { label: getActionLabel('Deleted product'), value: 'Deleted product' },
-                  { label: getActionLabel('Archived product'), value: 'Archived product' },
-                  { label: getActionLabel('Removed product image'), value: 'Removed product image' },
-                  { label: getActionLabel('Deleted all products'), value: 'Deleted all products' },
-                  { label: getActionLabel('Archived all products'), value: 'Archived all products' },
-                  { label: getActionLabel('Added category'), value: 'Added category' },
-                  { label: getActionLabel('Updated category'), value: 'Updated category' },
-                  { label: getActionLabel('Deleted category'), value: 'Deleted category' },
-                  { label: getActionLabel('Archived category'), value: 'Archived category' },
-                  { label: getActionLabel('Archived attribute group'), value: 'Archived attribute group' },
-                  { label: getActionLabel('Archived sub-attribute'), value: 'Archived sub-attribute' },
-                  { label: getActionLabel('Added employee'), value: 'Added employee' },
-                  { label: getActionLabel('Updated employee'), value: 'Updated employee' },
-                  { label: getActionLabel('Deleted employee'), value: 'Deleted employee' },
-                  { label: getActionLabel('Deactivated employee'), value: 'Deactivated employee' },
-                  { label: getActionLabel('Updated restaurant name'), value: 'Updated restaurant name' },
-                  { label: getActionLabel('Updated working hours'), value: 'Updated working hours' },
-                  { label: getActionLabel('Updated farewell message'), value: 'Updated farewell message' },
-                  { label: getActionLabel('Updated restaurant logo'), value: 'Updated restaurant logo' },
-                  { label: getActionLabel('Updated tax rate'), value: 'Updated tax rate' },
-                  { label: getActionLabel('Updated loyalty program'), value: 'Updated loyalty program' },
-                  { label: getActionLabel('Added discount'), value: 'Added discount' },
-                  { label: getActionLabel('Updated discount'), value: 'Updated discount' },
-                  { label: getActionLabel('Deleted discount'), value: 'Deleted discount' },
-                  { label: getActionLabel('Deactivated discount'), value: 'Deactivated discount' },
-                  { label: getActionLabel('Added payment method'), value: 'Added payment method' },
-                  { label: getActionLabel('Updated payment method'), value: 'Updated payment method' },
-                  { label: getActionLabel('Deleted payment method'), value: 'Deleted payment method' },
-                  { label: getActionLabel('Deactivated payment method'), value: 'Deactivated payment method' },
-                ]}
-                allOptionLabel={t('activity.allActions')}
-                placeholder={formatInputPlaceholder(t('activity.allActions'), t('common.locale'))}
-              />
-            </div>
+        {/* Secondary Filter Row: Categorical Filters */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {/* User / actor filter */}
+          <div className="min-w-0 relative z-[40]">
+            <SingleSelect
+              value={userFilter === 'all' ? null : userFilter}
+              onChange={(val) => {
+                const next = val || 'all';
+                if (next === USER_FILTER_ME && !myPerformedById) {
+                  toast.error(
+                    t('activity.meOnlyUnavailable', {
+                      defaultValue: 'Your login is not linked to a staff profile at this location.',
+                    }),
+                  );
+                }
+                setUserFilter(next);
+                setPage(1);
+              }}
+              options={userFilterOptions}
+              allOptionLabel={t('activity.allUsers', { defaultValue: 'All users' })}
+              placeholder={formatInputPlaceholder(
+                t('activity.filterByUser', { defaultValue: 'Filter by user' }),
+                t('common.locale'),
+              )}
+              className="w-full"
+              buttonClassName="!h-12 !rounded-xl"
+            />
+          </div>
 
-            {/* Resource Type Filter */}
-            <div className="w-full md:w-48">
-              <SingleSelect
-                value={resourceFilter === 'all' ? null : resourceFilter}
-                onChange={(val) => { setResourceFilter(val || 'all'); setPage(1); }}
-                options={resourceFilterOptions}
-                allOptionLabel={t('activity.allResources', { defaultValue: 'All types' })}
-                placeholder={formatInputPlaceholder(t('activity.filterByType', { defaultValue: 'Resource type' }), t('common.locale'))}
-              />
-            </div>
+          {/* Action Filter */}
+          <div className="min-w-0 relative z-[30]">
+            <SingleSelect
+              value={actionFilter === 'all' ? null : actionFilter}
+              onChange={(val) => { setActionFilter(val || 'all'); setPage(1); }}
+              options={actionFilterOptions}
+              allOptionLabel={t('activity.allActions')}
+              placeholder={formatInputPlaceholder(t('activity.allActions'), t('common.locale'))}
+              className="w-full"
+              buttonClassName="!h-12 !rounded-xl"
+            />
+          </div>
 
-            {/* Date Filters Container - Split for visual feedback */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
-              {/* Presets Dropdown */}
-              <div className="w-full sm:w-40 rounded-2xl transition-all">
-                <SingleSelect
-                  value={activePreset === 'custom' ? null : activePreset}
-                  onChange={(val) => {
-                    if (val) handlePresetChange(val);
-                  }}
-                  options={localizedDateOptions}
-                  placeholder={formatInputPlaceholder(t('activity.customRange'), t('common.locale'))}
-                  showAllOption={false}
-                  allowClear={false}
-                />
-              </div>
-
-              {/* Custom Date Inputs Group */}
-              <div className="flex-none min-w-0 sm:min-w-[200px] sm:min-w-[240px] relative z-[60]">
-                <DateRangePicker
-                  startDate={dateRange.start}
-                  endDate={dateRange.end}
-                  onRangeChange={(start, end) => {
-                    setDateRange({ start, end });
-                    setActivePreset('custom');
-                    setPage(1);
-                  }}
-                  onClear={() => handlePresetChange('today')}
-                  isActive={activePreset === 'custom'}
-                  align="left"
-                />
-              </div>
-            </div>
+          {/* Resource Type Filter */}
+          <div className="min-w-0 sm:col-span-2 lg:col-span-1 relative z-[20]">
+            <SingleSelect
+              value={resourceFilter === 'all' ? null : resourceFilter}
+              onChange={(val) => { setResourceFilter(val || 'all'); setPage(1); }}
+              options={resourceFilterOptions}
+              allOptionLabel={t('activity.allResources', { defaultValue: 'All types' })}
+              placeholder={formatInputPlaceholder(t('activity.filterByType', { defaultValue: 'Resource type' }), t('common.locale'))}
+              className="w-full"
+              buttonClassName="!h-12 !rounded-xl"
+            />
           </div>
         </div>
 
@@ -711,199 +654,29 @@ export function ActivityLogsPage() {
         )}
       </div>
 
-      {/* Main Logs Area */}
-      <div className="bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/5 overflow-hidden shadow-sm flex flex-col min-h-[300px] lg:min-h-[250px] lg:min-h-[350px]">
-        {/* Mobile Card View */}
-        <div className="md:hidden divide-y divide-gray-100 dark:divide-white/5">
-            {isLoading ? (
-              <div className="py-32 text-center">
-                <div className="flex flex-col items-center gap-4">
-                  <div className="w-10 h-10 border-4 border-mintcom-green/10 border-t-mintcom-green rounded-full animate-spin" />
-                  <p className="label-strong font-sans">{t('activity.loading')}</p>
-                </div>
-              </div>
-            ) : logs.length === 0 ? (
-              <div className="py-32 text-center">
-                <div className="flex flex-col items-center gap-4">
-                  <div className="w-16 h-16 bg-gray-50 dark:bg-white/5 rounded-2xl flex items-center justify-center">
-                    <History size={24} className="text-gray-300" />
-                  </div>
-                  {searchQuery.trim() ? (
-                    <>
-                      <h3 className="text-lg font-bold text-gray-900 dark:text-white">{t('common.noResults')}</h3>
-                      <p className="text-sm font-bold text-gray-500">
-                        {t('common.noMatchingResults', {
-                          entity: 'logs',
-                          query: searchQuery.trim(),
-                          defaultValue: 'No {{entity}} matching "{{query}}"',
-                        })}
-                      </p>
-                    </>
-                  ) : (
-                    <p className="text-gray-500 font-bold text-xs tracking-widest">{t('activity.noLogs')}</p>
-                  )}
-                </div>
-              </div>
-            ) : (
-              Array.isArray(logs) && logs.map((log) => (
-                <div
-                  key={log.id}
-                  className="p-4 hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors"
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-mintcom-green/10 text-mintcom-green flex items-center justify-center font-black">
-                        {getActorInitial(log)}
-                      </div>
-                      <div>
-                        <p className="text-sm font-bold text-gray-900 dark:text-white tracking-tight truncate max-w-[150px]">{getActorName(log)}</p>
-                      </div>
-                    </div>
-                    <span className={`inline-flex px-2 py-0.5 rounded-lg text-[10px] font-black tracking-widest border ${getActionColor(log.action)}`}>
-                      {getActionLabel(log.action)}
-                    </span>
-                  </div>
+      {/* Main Logs Area — grouped timeline instead of a 5-column table, so the
+          description and the metadata each get their own line rather than being
+          squeezed (and cut mid-word) into one cramped row. */}
+      <div className="bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/5 overflow-hidden shadow-sm flex flex-col min-h-[350px]">
+        <ActivityTimeline
+          logs={logs}
+          isLoading={isLoading}
+          searchQuery={searchQuery}
+          dateLocale={dateLocale}
+          metadataOptions={metadataOptions}
+          getActionLabel={getActionLabel}
+          onSelect={setSelectedLog}
+        />
 
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-3">
-                    {log.description}
-                  </p>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex flex-col">
-                      <span className="text-xs font-bold text-gray-900 dark:text-white">
-                        {new Date(log.timestamp).toLocaleTimeString(t('common.locale') === 'ar' ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                      </span>
-                      <span className="text-[10px] font-bold text-gray-400">
-                        {new Date(log.timestamp).toLocaleDateString(t('common.locale') === 'ar' ? 'ar-EG' : 'en-US', { month: 'short', day: 'numeric' })}
-                      </span>
-                    </div>
-                    {log.metadata && (
-                      <button
-                        onClick={() => setSelectedLog(log)}
-                        className="p-2 rounded-lg bg-gray-50 dark:bg-white/5 text-gray-400 hover:text-mintcom-green transition-all"
-                      >
-                        <FileText size={16} />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))
-            )}
-        </div>
-
-        {/* Desktop Table View */}
-        <div className="hidden md:block overflow-x-auto flex-1">
-          <table className="w-full">
-            <thead className="bg-gray-50 dark:bg-white/[0.02]">
-              <tr className="border-b border-gray-200 dark:border-white/5">
-                <th className="px-8 py-4 text-start label-strong font-sans whitespace-nowrap">{t('activity.time')}</th>
-                <th className="px-8 py-4 text-start label-strong font-sans whitespace-nowrap">{t('activity.user')}</th>
-                <th className="px-8 py-4 text-start label-strong font-sans whitespace-nowrap">{t('activity.action')}</th>
-                <th className="px-8 py-4 text-start label-strong font-sans whitespace-nowrap">{t('activity.details')}</th>
-                <th className="px-8 py-4 text-end label-strong font-sans whitespace-nowrap">{t('activity.data')}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-white/5">
-                {isLoading ? (
-                  <tr>
-                    <td colSpan={5} className="py-32 text-center">
-                      <div className="flex flex-col items-center gap-4">
-                        <div className="w-10 h-10 border-4 border-mintcom-green/10 border-t-mintcom-green rounded-full animate-spin" />
-                        <p className="label-strong font-sans">{t('activity.loading')}</p>
-                      </div>
-                    </td>
-                  </tr>
-                ) : logs.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="py-32 text-center">
-                      <div className="flex flex-col items-center gap-4">
-                        <div className="w-16 h-16 bg-gray-50 dark:bg-white/5 rounded-2xl flex items-center justify-center">
-                          <History size={24} className="text-gray-300" />
-                        </div>
-                        {searchQuery.trim() ? (
-                    <>
-                      <h3 className="text-lg font-bold text-gray-900 dark:text-white">{t('common.noResults')}</h3>
-                      <p className="text-sm font-bold text-gray-500">
-                        {t('common.noMatchingResults', {
-                          entity: 'logs',
-                          query: searchQuery.trim(),
-                          defaultValue: 'No {{entity}} matching "{{query}}"',
-                        })}
-                      </p>
-                    </>
-                  ) : (
-                    <p className="text-gray-500 font-bold text-xs tracking-widest">{t('activity.noLogs')}</p>
-                  )}
-                      </div>
-                    </td>
-                  </tr>
-                ) : (
-                  Array.isArray(logs) && logs.map((log) => (
-                    <tr
-                      key={log.id}
-                      className="group hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors"
-                    >
-                      <td className="px-8 py-4 text-start">
-                        <div className="flex flex-col">
-                          <span className="text-sm font-bold text-gray-900 dark:text-white whitespace-nowrap">
-                            {new Date(log.timestamp).toLocaleTimeString(t('common.locale') === 'ar' ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                          </span>
-                          <span className="text-xs font-bold text-gray-400">
-                            {new Date(log.timestamp).toLocaleDateString(t('common.locale') === 'ar' ? 'ar-EG' : 'en-US', { month: 'short', day: 'numeric' })}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-8 py-4 text-start">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-mintcom-green/10 text-mintcom-green flex items-center justify-center font-black group-hover:scale-110 transition-transform shrink-0">
-                            {getActorInitial(log)}
-                          </div>
-                          <p className="text-sm font-bold text-gray-900 dark:text-white tracking-tight truncate max-w-[100px]">{getActorName(log)}</p>
-                        </div>
-                      </td>
-                      <td className="px-8 py-4 text-start">
-                        <span className={`inline-flex px-2 py-0.5 rounded-lg label-strong font-sans border ${getActionColor(log.action)}`}>
-                          {getActionLabel(log.action)}
-                        </span>
-                      </td>
-                      <td className="px-8 py-4 text-start">
-                        <p className="text-sm font-medium text-gray-600 dark:text-gray-300 max-w-sm line-clamp-1 group-hover:line-clamp-none transition-all text-start">
-                          {log.description}
-                        </p>
-                      </td>
-                      <td className="px-8 py-4 text-end">
-                        {log.metadata && Object.keys(log.metadata).length > 0 ? (
-                          <div className="flex items-center justify-end gap-2">
-                            <span className="text-xs text-gray-500 dark:text-gray-400 max-w-[200px] truncate text-end" title={getMetadataSummary(log.metadata) || ''}>
-                              {getMetadataSummary(log.metadata)}
-                            </span>
-                            <button
-                              onClick={() => setSelectedLog(log)}
-                              className="p-2 rounded-lg bg-gray-50 dark:bg-white/5 text-gray-400 hover:text-mintcom-green transition-all shrink-0"
-                            >
-                              <FileText size={16} />
-                            </button>
-                          </div>
-                        ) : (
-                          <span className="text-xs text-gray-300 dark:text-gray-600">—</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          <Pagination
-            currentPage={page}
-            totalPages={totalPages}
-            onPageChange={setPage}
-            totalItems={totalLogs}
-            itemsPerPage={10}
-            variant="footer"
-          />
-        </div>
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+          totalItems={totalLogs}
+          itemsPerPage={10}
+          variant="footer"
+        />
+      </div>
 
             {/* Detail Modal */}
         {selectedLog && createPortal(
@@ -938,15 +711,52 @@ export function ActivityLogsPage() {
                   </div>
                   <div>
                     <p className="label-strong font-sans mb-2">{t('activity.user')}</p>
-                    <p className="font-bold text-gray-900 dark:text-white">{getActorName(selectedLog)}</p>
+                    <p className="font-bold text-gray-900 dark:text-white">{getActorName(selectedLog, t('activity.owner'))}</p>
                   </div>
                 </div>
 
                 <div>
+                  <p className="label-strong font-sans mb-2">{t('activity.details')}</p>
+                  <p className="text-sm font-medium leading-relaxed text-gray-600 dark:text-gray-300 break-words">
+                    {selectedLog.description}
+                  </p>
+                </div>
+
+                <div>
                   <p className="label-strong font-sans mb-3">{t('activity.data')}</p>
-                  <pre className="bg-gray-50 dark:bg-black/40 p-6 rounded-[1.5rem] overflow-x-auto text-xs text-gray-700 dark:text-mintcom-green font-mono leading-relaxed border border-gray-200 dark:border-white/5">
-                    {JSON.stringify(selectedLog.metadata, null, 2)}
-                  </pre>
+                  {(() => {
+                    // Identifiers stay in this view (support needs them) but sort
+                    // last and render in mono so they read as references.
+                    const detailEntries = getMetadataEntries(selectedLog.metadata, metadataOptions);
+                    if (detailEntries.length === 0) {
+                      return (
+                        <p className="text-sm font-bold text-gray-400">{t('activity.noData')}</p>
+                      );
+                    }
+                    return (
+                      <dl className="rounded-2xl border border-gray-200 dark:border-white/5 divide-y divide-gray-100 dark:divide-white/5 overflow-hidden">
+                        {detailEntries.map((entry) => (
+                          <div
+                            key={entry.key}
+                            className="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4 px-5 py-3 bg-gray-50/60 dark:bg-white/[0.02]"
+                          >
+                            <dt className="text-[11px] font-black uppercase tracking-wider text-gray-400 self-center">
+                              {entry.label}
+                            </dt>
+                            <dd
+                              className={`sm:col-span-2 text-sm break-words ${
+                                entry.isIdentifier
+                                  ? 'font-mono text-xs text-gray-500 dark:text-gray-400'
+                                  : 'font-bold text-gray-900 dark:text-white'
+                              }`}
+                            >
+                              {entry.value}
+                            </dd>
+                          </div>
+                        ))}
+                      </dl>
+                    );
+                  })()}
                 </div>
               </div>
 
