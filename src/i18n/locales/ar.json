@@ -4999,7 +4999,11 @@
     "mobileApp": {
       "appStore": "متجر آبل",
       "description": "أدر عملك أثناء التنقل مع تطبيقنا.",
+      "downloadDescription": "احصل على تطبيق مينتكوم على أجهزة آيفون، آيباد أو أندرويد.",
+      "openingAppStore": "جاري التوجيه إلى App Store...",
+      "openingPlayStore": "جاري التوجيه إلى Google Play Store...",
       "playStore": "متجر جوجل بلاي",
+      "redirectNote": "إذا لم يتم توجيهك تلقائياً خلال ثوانٍ، اضغط أدناه:",
       "title": "تطبيق الجوال"
     },
     "overview": {

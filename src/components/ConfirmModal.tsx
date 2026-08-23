@@ -16,6 +16,7 @@ interface ConfirmModalProps {
   onSecondary?: () => void;
   type?: 'danger' | 'success' | 'warning' | 'info';
   showCancel?: boolean;
+  showClose?: boolean;
 }
 
 export function ConfirmModal({
@@ -29,7 +30,8 @@ export function ConfirmModal({
   secondaryText,
   onSecondary,
   type = 'success',
-  showCancel = true
+  showCancel = true,
+  showClose = false
 }: ConfirmModalProps) {
   const { t } = useTranslation();
 
@@ -79,13 +81,15 @@ export function ConfirmModal({
             </div>
 
             {/* Close Button */}
-            <button
-              onClick={onClose}
-              aria-label={t('common.closeModal')}
-              className="absolute top-4 sm:top-5 right-4 sm:right-5 p-2 min-w-[40px] min-h-[40px] flex items-center justify-center text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-xl hover:bg-gray-100 dark:hover:bg-white/5 transition-all z-10 active:scale-90"
-            >
-              <X size={18} />
-            </button>
+            {showClose && (
+              <button
+                onClick={onClose}
+                aria-label={t('common.closeModal')}
+                className="absolute top-4 sm:top-5 right-4 sm:right-5 p-2 min-w-[40px] min-h-[40px] flex items-center justify-center text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-xl hover:bg-gray-100 dark:hover:bg-white/5 transition-all z-10 active:scale-90"
+              >
+                <X size={18} />
+              </button>
+            )}
 
             <div className="relative p-6 sm:p-8 pb-safe">
               <div className="flex flex-col items-center text-center pt-2">

@@ -4999,7 +4999,11 @@
     "mobileApp": {
       "appStore": "App Store",
       "description": "Manage your business on the go with our mobile app.",
+      "downloadDescription": "Get the Mintcom mobile app on your iPhone, iPad, or Android device.",
+      "openingAppStore": "Redirecting to App Store...",
+      "openingPlayStore": "Redirecting to Google Play Store...",
       "playStore": "Play Store",
+      "redirectNote": "If you are not automatically redirected in a few seconds, click below:",
       "title": "Mobile App"
     },
     "overview": {

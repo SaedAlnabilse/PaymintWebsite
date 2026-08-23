@@ -4951,7 +4951,11 @@
     "mobileApp": {
       "appStore": "App Store",
       "description": "使用我们的移动应用随时随地管理您的业务。",
+      "downloadDescription": "在 iPhone、iPad 或 Android 设备上获取 Mintcom 移动应用。",
+      "openingAppStore": "正在跳转至 App Store...",
+      "openingPlayStore": "正在跳转至 Google Play 商店...",
       "playStore": "Play 商店",
+      "redirectNote": "如果您未在几秒钟内自动跳转，请点击下方：",
       "title": "移动应用"
     },
     "overview": {

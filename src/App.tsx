@@ -56,6 +56,7 @@ const QAPage = lazy(() => import('./pages/QAPage').then(m => ({ default: m.QAPag
 const PrivacyPolicyPage = lazy(() => import('./pages/PrivacyPolicyPage').then(m => ({ default: m.PrivacyPolicyPage })));
 const TermsPage = lazy(() => import('./pages/TermsPage').then(m => ({ default: m.TermsPage })));
 const ComingSoonPage = lazy(() => import('./pages/ComingSoonPage').then(m => ({ default: m.ComingSoonPage })));
+const AppDownloadRedirectPage = lazy(() => import('./pages/AppDownloadRedirectPage'));
 
 // ============================================================================
 // Lazy Imports - Support Pages
@@ -404,6 +405,18 @@ const router = createBrowserRouter([
             <AboutUsPage />
           </PageSuspense>
         ),
+      },
+      {
+        path: "/download-app",
+        element: (
+          <PageSuspense>
+            <AppDownloadRedirectPage />
+          </PageSuspense>
+        ),
+      },
+      {
+        path: "/app/download",
+        element: <Navigate to="/download-app" replace />,
       },
       {
         path: "/features",

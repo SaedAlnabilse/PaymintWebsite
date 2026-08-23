@@ -1399,6 +1399,7 @@ export function DashboardLayout() {
         onClose={() => setMobileAppModalOpen(false)}
         androidUrl={ANDROID_DOWNLOAD_URL}
         iosUrl={IOS_DOWNLOAD_URL}
+        appType="pos"
       />
     </div>
   );
