@@ -2,7 +2,7 @@ import { modalSlideVariants as slideVariants } from "./landing/modalSlideVariant
 import { SectionCarouselFooter } from "./landing/SectionCarouselFooter";
 import { LandingFeatureCard } from './landing/LandingFeatureCard';
 import { useModalKeyboardGuard } from '../hooks/useModalKeyboardGuard';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import {

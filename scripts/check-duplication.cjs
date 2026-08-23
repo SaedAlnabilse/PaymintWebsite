@@ -2,14 +2,18 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-// Baseline threshold for mintcom-website (3.51%)
-const MAX_THRESHOLD = parseFloat(process.env.JSCPD_MAX_THRESHOLD || '3.51');
+// Pinned so a jscpd release cannot silently change what the threshold means.
+const JSCPD_PKG = 'jscpd@5.0.16';
+
+// Ratchet threshold (fails if duplication percentage exceeds it).
+// Current: 3.19%. Lower this as duplication drops — never raise it.
+const MAX_THRESHOLD = parseFloat(process.env.JSCPD_MAX_THRESHOLD || '3.29');
 
 console.log(`Running jscpd duplication check for website (Max allowed: ${MAX_THRESHOLD}%)...`);
 const outputDir = path.join(__dirname, '../.jscpd-gate');
 
 try {
-  execSync(`npx --yes jscpd src/ --reporters json --output "${outputDir}" 2>/dev/null`, {
+  execSync(`npx --yes ${JSCPD_PKG} src/ --reporters json --output "${outputDir}" 2>/dev/null`, {
     cwd: path.join(__dirname, '..'),
     stdio: 'pipe',
   });

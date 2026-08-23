@@ -2,7 +2,7 @@ import { SplitText } from "./landing/SplitText";
 import { SectionCarouselFooter } from "./landing/SectionCarouselFooter";
 import { AppDownloadBadgeGroup } from "./landing/AppDownloadBadgeGroup";
 import { useModalKeyboardGuard } from '../hooks/useModalKeyboardGuard';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import {
   AnimatePresence,
   motion,

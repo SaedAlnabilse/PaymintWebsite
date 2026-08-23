@@ -33,8 +33,8 @@ jobs:
       - name: Validate Locales (encoding + key resolution)
         run: npm run validate:locales
 
-      - name: ESLint Check
-        run: npm run lint
+      - name: ESLint Check (zero-warning ceiling)
+        run: npm run lint:check
 
       - name: TypeCheck & Build
         run: npm run build
