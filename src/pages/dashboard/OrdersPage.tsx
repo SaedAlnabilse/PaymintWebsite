@@ -1373,13 +1373,9 @@ export function OrdersPage() {
         {[
           {
             label: t('orders.kpi.totalAmount'),
-            value: statusFilter === 'HELD'
-              ? heldOrders.reduce((acc, o) => acc + (o.total || 0), 0)
-              : completedOrderRevenue,
+            value: completedOrderRevenue,
             isCurrency: true,
-            sub: statusFilter === 'HELD'
-              ? t('orders.status.onHold')
-              : t('dashboard.stats.completedOrders', { defaultValue: 'Completed orders' }),
+            sub: t('dashboard.stats.completedOrders', { defaultValue: 'Completed orders' }),
             icon: biIcon('bi-wallet2'),
             color: 'text-mintcom-green',
             bg: 'bg-mintcom-green/10',
@@ -1388,13 +1384,9 @@ export function OrdersPage() {
           },
           {
             label: t('orders.kpi.totalOrders'),
-            value: statusFilter === 'HELD'
-              ? totalHeldCount
-              : completedOrderCount,
+            value: completedOrderCount,
             isCurrency: false,
-            sub: statusFilter === 'HELD'
-              ? t('orders.status.onHold')
-              : t('dashboard.stats.completedOrders', { defaultValue: 'Completed orders' }),
+            sub: t('dashboard.stats.completedOrders', { defaultValue: 'Completed orders' }),
             icon: biIcon('bi-receipt-cutoff'),
             color: 'text-mintcom-green',
             bg: 'bg-mintcom-green/10',
