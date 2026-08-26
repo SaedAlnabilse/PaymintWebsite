@@ -5630,7 +5630,7 @@
       "saved": "税率保存成功",
       "setDefault": "设为默认",
       "subtitle": "配置结账时应用的销售税率规则",
-      "title": "税率与规则",
+      "title": "税率",
       "emptyTitle": "No tax rates yet",
       "emptyDesc": "Create your first rate — e.g. Standard 16%, Reduced 8%, or Zero-rated 0%. One of them will be the default for new products.",
       "createFirst": "Create tax rate",

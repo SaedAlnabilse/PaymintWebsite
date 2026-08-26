@@ -166,7 +166,7 @@ export function TaxRatesManager() {
           </div>
           <div className="min-w-0">
             <h4 className="text-sm font-black tracking-tight text-gray-900 dark:text-white leading-none">
-              {t('settings.taxes.title', 'Tax Rates & Rules')}
+              {t('settings.taxes.title', 'Taxes')}
             </h4>
             <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 leading-none mt-1">
               {t('settings.taxes.subtitle', 'One default · assign any rate per product')}
