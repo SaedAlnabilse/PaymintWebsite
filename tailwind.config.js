@@ -20,6 +20,9 @@ export default {
         },
         mintcom: {
           green: '#7dc6a2',
+          // Brand green is only 2:1 on white, so link text on light backgrounds
+          // uses this darker tone (5:1). Keep `green` for dark mode and fills.
+          greenInk: '#2e7d5b',
           greenDark: '#5fa888',
           greenLight: '#ace2bf',
           greenTint: '#eef7ec',
@@ -75,7 +78,7 @@ export default {
       },
       fontFamily: {
         sans: ['Inter', 'Noto Sans Arabic', 'sans-serif'],
-        barlow: ['Barlow', 'system-ui', 'sans-serif'],
+        barlow: ['Inter', 'Noto Sans Arabic', 'sans-serif'],
         mintcom: ['Crimson Text', 'serif'],
         poppins: ['Poppins', 'sans-serif'],
         inter: ['Inter', 'sans-serif'],

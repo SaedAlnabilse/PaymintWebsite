@@ -2696,58 +2696,29 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
 
             {/* 4 compact KPI cards — POS Item Report (icon wells 42×42 r12) */}
             <div className="grid shrink-0 grid-cols-4 gap-2.5">
-              <button
-                type="button"
+              <StatCard
+                primary
+                label="Total Sales"
+                hint="Excludes tax & service/other charges"
+                value={money(itemReportStats.sales)}
+                icon={<TrendingUp size={18} strokeWidth={2.25} />}
                 onClick={() => setModal('totals')}
-                className="flex min-h-[72px] items-center gap-3 rounded-xl bg-mintcom-green p-3 text-start text-white shadow-sm"
-              >
-                <span className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-xl bg-white text-mintcom-green">
-                  <TrendingUp size={22} />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[11px] font-medium leading-snug text-white">Total Sales</p>
-                  <p className="text-[9px] font-medium leading-snug text-white/82">
-                    Excludes tax & service/other charges
-                  </p>
-                  <p className="mt-0.5 text-[15px] font-bold tabular-nums tracking-normal">
-                    {money(itemReportStats.sales)}
-                  </p>
-                </div>
-                <ChevronRight size={18} className="shrink-0 opacity-80" />
-              </button>
-              <div className="flex min-h-[72px] items-center gap-3 rounded-xl border border-gray-200 bg-white p-3 dark:border-white/10 dark:bg-mintcom-surface">
-                <span className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-xl bg-mintcom-green text-white">
-                  <ShoppingBag size={20} />
-                </span>
-                <div className="min-w-0">
-                  <p className="text-[11px] font-medium text-text-secondary">Total Quantity</p>
-                  <p className="text-[15px] font-bold tabular-nums tracking-normal text-text-primary dark:text-white">
-                    {itemReportStats.qty}
-                  </p>
-                </div>
-              </div>
-              <div className="flex min-h-[72px] items-center gap-3 rounded-xl border border-gray-200 bg-white p-3 dark:border-white/10 dark:bg-mintcom-surface">
-                <span className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-xl bg-mintcom-green text-white">
-                  <Receipt size={20} />
-                </span>
-                <div className="min-w-0">
-                  <p className="text-[11px] font-medium text-text-secondary">Total Orders</p>
-                  <p className="text-[15px] font-bold tabular-nums tracking-normal text-text-primary dark:text-white">
-                    {itemReportStats.orders}
-                  </p>
-                </div>
-              </div>
-              <div className="flex min-h-[72px] items-center gap-3 rounded-xl border border-gray-200 bg-white p-3 dark:border-white/10 dark:bg-mintcom-surface">
-                <span className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-xl bg-mintcom-green text-white">
-                  <Undo2 size={20} />
-                </span>
-                <div className="min-w-0">
-                  <p className="text-[11px] font-medium text-text-secondary">Total Refunds</p>
-                  <p className="text-[15px] font-bold tabular-nums tracking-normal text-text-primary dark:text-white">
-                    {money(itemReportStats.refunds)}
-                  </p>
-                </div>
-              </div>
+              />
+              <StatCard
+                label="Total Quantity"
+                value={itemReportStats.qty}
+                icon={<ShoppingBag size={18} />}
+              />
+              <StatCard
+                label="Total Orders"
+                value={itemReportStats.orders}
+                icon={<Receipt size={18} />}
+              />
+              <StatCard
+                label="Total Refunds"
+                value={money(itemReportStats.refunds)}
+                icon={<Undo2 size={16} />}
+              />
             </div>
 
             {/* Related Orders (left) | Item Breakdown (right) — only lists scroll */}
@@ -3973,8 +3944,8 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
             }
           >
             <div className="space-y-3">
-              <label className="block text-[12px] font-bold uppercase tracking-wide text-text-tertiary">
-                Start date
+              <label className="block text-[12px] font-bold tracking-wide text-text-tertiary">
+                Start Date
                 <input
                   type="date"
                   value={dayKey(dateRange.start.getTime())}
@@ -3990,8 +3961,8 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
                   className="mt-1.5 w-full rounded-xl border border-gray-200 bg-white px-3 py-3 text-[14px] font-semibold outline-none focus:border-mintcom-green dark:border-white/10 dark:bg-mintcom-dark dark:text-white"
                 />
               </label>
-              <label className="block text-[12px] font-bold uppercase tracking-wide text-text-tertiary">
-                End date
+              <label className="block text-[12px] font-bold tracking-wide text-text-tertiary">
+                End Date
                 <input
                   type="date"
                   value={dayKey(dateRange.end.getTime())}
@@ -4047,8 +4018,8 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
             }
           >
             <div className="space-y-3">
-              <label className="block text-[12px] font-bold uppercase tracking-wide text-text-tertiary">
-                Start time
+              <label className="block text-[12px] font-bold tracking-wide text-text-tertiary">
+                Start Time
                 <input
                   type="time"
                   value={`${String(timeStart.getHours()).padStart(2, '0')}:${String(timeStart.getMinutes()).padStart(2, '0')}`}
@@ -4062,8 +4033,8 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
                   className="mt-1.5 w-full rounded-xl border border-gray-200 bg-white px-3 py-3 text-[14px] font-semibold outline-none focus:border-mintcom-green dark:border-white/10 dark:bg-mintcom-dark dark:text-white"
                 />
               </label>
-              <label className="block text-[12px] font-bold uppercase tracking-wide text-text-tertiary">
-                End time
+              <label className="block text-[12px] font-bold tracking-wide text-text-tertiary">
+                End Time
                 <input
                   type="time"
                   value={`${String(timeEnd.getHours()).padStart(2, '0')}:${String(timeEnd.getMinutes()).padStart(2, '0')}`}

@@ -65,27 +65,10 @@ describe('Validation Schemas', () => {
         lastName: 'Doe',
         email: 'john.doe@example.com',
         password: 'Password123!',
-        confirmPassword: 'Password123!',
         agreeToTerms: true,
       };
       const result = signUpSchema.safeParse(validData);
       expect(result.success).toBe(true);
-    });
-
-    it('should fail if passwords do not match', () => {
-      const invalidData = {
-        firstName: 'John',
-        lastName: 'Doe',
-        email: 'john.doe@example.com',
-        password: 'Password123!',
-        confirmPassword: 'DifferentPassword123!',
-        agreeToTerms: true,
-      };
-      const result = signUpSchema.safeParse(invalidData);
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error.issues.find(i => i.path.includes('confirmPassword'))?.message).toBe('auth.validation.passwordsDoNotMatch');
-      }
     });
 
     it('should reject names that are only whitespace', () => {
@@ -94,7 +77,6 @@ describe('Validation Schemas', () => {
         lastName: '  ',
         email: ' john.doe@example.com ',
         password: 'Password123!',
-        confirmPassword: 'Password123!',
         agreeToTerms: true,
       };
       const result = signUpSchema.safeParse(invalidData);

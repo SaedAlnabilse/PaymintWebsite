@@ -358,6 +358,8 @@ export const DashboardPage = () => {
         totalPayIn: summaryData.totalPayIn,
         totalPayOut: summaryData.totalPayOut,
         paymentMethodBreakdown: summaryData.paymentMethodBreakdown,
+        cardTypeBreakdown: summaryData.cardTypeBreakdown,
+        otherPaymentBreakdown: summaryData.otherPaymentBreakdown,
         categoryBreakdown: processedCategories.length > 0 ? processedCategories : (summaryData.categoryBreakdown || []),
         dailyBreakdown: summaryData.dailyBreakdown,
       }));
@@ -643,7 +645,7 @@ export const DashboardPage = () => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
-            className="max-w-7xl mx-auto space-y-6 sm:space-y-8 pb-24 sm:pb-10 font-sans"
+            className="space-y-6 sm:space-y-8 pb-24 sm:pb-10 font-sans"
             dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}
           >
             {/* Header */}
@@ -784,6 +786,8 @@ export const DashboardPage = () => {
               />
               <PaymentMethodsBreakdown 
                 paymentMethodBreakdown={stats?.paymentMethodBreakdown || []}
+                cardTypeBreakdown={stats?.cardTypeBreakdown || []}
+                otherPaymentBreakdown={stats?.otherPaymentBreakdown || []}
                 viewMode={viewMode}
               />
             </div>

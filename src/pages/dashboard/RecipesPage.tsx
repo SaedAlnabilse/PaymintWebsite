@@ -580,7 +580,7 @@ export function RecipesPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 pb-10 font-sans">
+    <div className="space-y-8 pb-10 font-sans">
       {/* Full-screen blocker while data loads, so no second action can be
           stacked on an in-flight request. */}
       <BusyOverlay visible={isLoading} />

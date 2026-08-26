@@ -408,11 +408,9 @@ export function BrandLayout() {
                 </div>
 
                 {/* Content Landscape */}
-                <main className="flex-1 relative bg-gray-50 dark:bg-mintcom-dark overflow-hidden">
-                    <div ref={mainContentRef} className="h-full overflow-y-auto relative z-10 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-white/10">
-                        <div className="p-4 md:p-6 lg:p-8 max-w-[1920px] mx-auto">
-                            <Outlet context={{ brand }} />
-                        </div>
+                <main className="flex-1 relative bg-gray-50 dark:bg-mintcom-dark overflow-hidden flex flex-col">
+                    <div ref={mainContentRef} className="flex-1 overflow-y-auto relative z-10 custom-scrollbar p-4 lg:px-10 lg:pt-8 lg:pb-6 pb-24 w-full">
+                        <Outlet context={{ brand }} />
                     </div>
                 </main>
             </div>

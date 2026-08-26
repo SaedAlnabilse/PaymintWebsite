@@ -180,12 +180,12 @@ export const ItemsView = React.memo(function ItemsView({
     setHistoryScope('all');
   }, [itemReportTab, startDate, endDate]);
 
-  const formatCurrency = (value: number, align: 'start' | 'end' = 'end') => (
+  const formatCurrency = (value: number, align: 'start' | 'end' | 'center' = 'center') => (
     <StatValue
       value={value}
       currency={currencySymbol}
       className="text-sm font-bold"
-      containerClassName={align === 'end' ? 'justify-end w-full' : 'justify-start w-full'}
+      containerClassName={align === 'end' ? 'justify-end w-full' : align === 'center' ? 'justify-center w-full' : 'justify-start w-full'}
     />
   );
 
@@ -514,19 +514,19 @@ export const ItemsView = React.memo(function ItemsView({
                   </div>
                 </th>
                 <th
-                  className={`px-8 py-5 text-end label-strong font-sans cursor-pointer select-none transition-colors group ${sortConfig?.key === 'quantity' ? 'text-mintcom-green' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
+                  className={`px-8 py-5 text-center label-strong font-sans cursor-pointer select-none transition-colors group ${sortConfig?.key === 'quantity' ? 'text-mintcom-green' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
                   onClick={() => requestSort('quantity')}
                 >
-                  <div className="flex items-center justify-end gap-2">
+                  <div className="flex items-center justify-center gap-2">
                     {t('orders.reports.items.unitsSold')}
                     <ArrowUpDown size={14} className={`transition-all ${sortConfig?.key === 'quantity' ? 'opacity-100 scale-110' : 'opacity-20 group-hover:opacity-100'}`} />
                   </div>
                 </th>
                 <th
-                  className={`px-8 py-5 text-end label-strong font-sans cursor-pointer select-none transition-colors group ${sortConfig?.key === 'revenue' ? 'text-mintcom-green' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
+                  className={`px-8 py-5 text-center label-strong font-sans cursor-pointer select-none transition-colors group ${sortConfig?.key === 'revenue' ? 'text-mintcom-green' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
                   onClick={() => requestSort('revenue')}
                 >
-                  <div className="flex items-center justify-end gap-2">
+                  <div className="flex items-center justify-center gap-2">
                     {t('orders.reports.items.grossRevenue')}
                     <ArrowUpDown size={14} className={`transition-all ${sortConfig?.key === 'revenue' ? 'opacity-100 scale-110' : 'opacity-20 group-hover:opacity-100'}`} />
                   </div>
@@ -638,16 +638,16 @@ export const ItemsView = React.memo(function ItemsView({
                             </div>
                           </div>
                         </td>
-                        <td className="px-8 py-5 text-end font-bold text-gray-700 dark:text-gray-300">
+                        <td className="px-8 py-5 text-center font-bold text-gray-700 dark:text-gray-300">
                           <StatValue 
                             value={item.quantity} 
                             isInteger={true}
                             className="text-sm"
-                            containerClassName="justify-end w-full"
+                            containerClassName="justify-center w-full"
                           />
                         </td>
-                        <td className="px-8 py-5 text-end font-bold text-mintcom-green">
-                          {formatCurrency((item.totalSales || item.revenue) || 0)}
+                        <td className="px-8 py-5 text-center font-bold text-mintcom-green">
+                          {formatCurrency((item.totalSales || item.revenue) || 0, 'center')}
                         </td>
                       </motion.tr>
                     );
@@ -938,8 +938,8 @@ export const ItemsView = React.memo(function ItemsView({
                     <thead className="bg-gray-50/50 dark:bg-white/[0.01] sticky top-0 z-10 backdrop-blur-md">
                       <tr className="border-b border-gray-100 dark:border-white/5">
                         <th className="px-8 py-4 text-start label-strong font-sans">{t('orders.reports.items.productName')}</th>
-                        <th className="px-8 py-4 text-end label-strong font-sans">{t('orders.reports.items.unitsSold')}</th>
-                        <th className="px-8 py-4 text-end label-strong font-sans">{t('orders.reports.items.grossRevenue')}</th>
+                        <th className="px-8 py-4 text-center label-strong font-sans">{t('orders.reports.items.unitsSold')}</th>
+                        <th className="px-8 py-4 text-center label-strong font-sans">{t('orders.reports.items.grossRevenue')}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100 dark:divide-white/5">
@@ -962,16 +962,16 @@ export const ItemsView = React.memo(function ItemsView({
                                 <span className="font-bold text-gray-900 dark:text-white text-sm">{stripNameMarkers(item.itemName || item.name || '') || t('common.unknown')}</span>
                               </div>
                             </td>
-                            <td className="px-8 py-5 text-end font-bold text-gray-700 dark:text-gray-300">
+                            <td className="px-8 py-5 text-center font-bold text-gray-700 dark:text-gray-300">
                                <StatValue
                                 value={item.quantity}
                                 isInteger={true}
                                 className="text-sm"
-                                containerClassName="justify-end w-full"
+                                containerClassName="justify-center w-full"
                               />
                             </td>
-                            <td className="px-8 py-5 text-end font-bold text-mintcom-green">
-                              {formatCurrency((item.totalSales || item.revenue) || 0)}
+                            <td className="px-8 py-5 text-center font-bold text-mintcom-green">
+                              {formatCurrency((item.totalSales || item.revenue) || 0, 'center')}
                             </td>
                           </tr>
                         ))
@@ -992,27 +992,27 @@ export const ItemsView = React.memo(function ItemsView({
                 </div>
 
                 {/* Footer */}
-                <div className="px-8 py-6 border-t border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.02] flex items-center justify-between gap-4">
-                  <div className="flex items-stretch gap-5 min-w-0">
-                    <div className="flex flex-col justify-between gap-1 min-w-0">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 leading-none">
+                <div className="px-8 py-5 border-t border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.02] flex items-center justify-between gap-6">
+                  <div className="flex items-center gap-6 sm:gap-8 min-w-0">
+                    <div className="flex flex-col gap-1 min-w-0">
+                      <p className="text-xs sm:text-sm font-semibold text-gray-500 dark:text-gray-400">
                         {t('orders.reports.items.totalItems')}
                       </p>
                       <StatValue
                         value={filteredBreakdown.reduce((acc, curr) => acc + curr.quantity, 0)}
                         isInteger={true}
-                        className="text-lg font-black text-gray-900 dark:text-white leading-none"
+                        className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white"
                       />
                     </div>
-                    <div className="w-px self-stretch bg-gray-200 dark:bg-white/10" />
-                    <div className="flex flex-col justify-between gap-1 min-w-0">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 leading-none">
+                    <div className="w-px h-10 bg-gray-200 dark:bg-white/10" />
+                    <div className="flex flex-col gap-1 min-w-0">
+                      <p className="text-xs sm:text-sm font-semibold text-gray-500 dark:text-gray-400">
                         {t('orders.reports.items.totalRevenue')}
                       </p>
                       <StatValue
                         value={filteredBreakdown.reduce((acc, curr) => acc + (curr.totalSales || curr.revenue || 0), 0)}
                         currency={currencySymbol}
-                        className="text-lg font-black text-mintcom-green leading-none"
+                        className="text-xl sm:text-2xl font-bold text-mintcom-green"
                       />
                     </div>
                   </div>

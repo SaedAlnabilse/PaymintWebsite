@@ -228,7 +228,7 @@ export const SupportAdminPage = () => {
     <>
       <Navbar />
       <main className="min-h-screen bg-gray-50 pt-28 pb-16 dark:bg-[#0a0a0a]">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="w-full px-4 sm:px-6 lg:px-10">
           <div className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <div className="mb-3 inline-flex items-center gap-2 rounded-xl border border-mintcom-green/25 bg-mintcom-green/10 px-3 py-1.5 text-xs font-bold text-mintcom-green">

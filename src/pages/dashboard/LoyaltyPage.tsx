@@ -230,14 +230,8 @@ export function LoyaltyPage() {
                 try {
                     await safeUpdateLoyaltyConfig(updatedConfig);
                     setRewards(updatedRewards);
-                    setConfirmConfig({
-                        isOpen: true,
-                        title: t('rewards.messages.rewardDeleted'),
-                        message: t('loyalty.messages.rewardDeletedMessage', 'Loyalty Pattern Deleted Successfully'),
-                        type: 'success',
-                        confirmText: t('common.done'),                        showCancel: false,
-                        onConfirm: () => setConfirmConfig(prev => ({ ...prev, isOpen: false }))
-                    });
+                    setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+                    toast.success(t('rewards.messages.rewardDeleted', { defaultValue: 'Reward deleted successfully' }));
                 } catch (err) {
                     toast.error((err as ApiError).response?.data?.message || t('rewards.errors.deleteFailed'));
                 }
@@ -264,15 +258,7 @@ export function LoyaltyPage() {
         });
 
         if (hasDuplicatePattern) {
-            setConfirmConfig({
-                isOpen: true,
-                title: t('common.warning'),
-                message: t('rewards.messages.duplicate'),
-                type: 'warning',
-                confirmText: t('common.ok'),
-                showCancel: false,
-                onConfirm: () => setConfirmConfig(prev => ({ ...prev, isOpen: false }))
-            });
+            toast.error(t('rewards.messages.duplicate'));
             return;
         }
 
@@ -310,15 +296,11 @@ export function LoyaltyPage() {
             setRewards(updatedRewards);
             setShowRewardModal(false);
             setEditingReward(null);
-            setConfirmConfig({
-                isOpen: true,
-                title: editingReward ? t('rewards.messages.rewardUpdated') : t('rewards.messages.rewardAdded'),
-                message: editingReward ? t('loyalty.messages.rewardUpdatedMessage', 'Loyalty Pattern Updated Successfully') : t('loyalty.messages.rewardAddedMessage', 'Loyalty Pattern Added Successfully'),
-                type: 'success',
-                confirmText: t('common.done'),
-                showCancel: false,
-                onConfirm: () => setConfirmConfig(prev => ({ ...prev, isOpen: false }))
-            });
+            toast.success(
+                editingReward
+                    ? t('rewards.messages.rewardUpdated', { defaultValue: 'Reward updated successfully' })
+                    : t('rewards.messages.rewardAdded', { defaultValue: 'Reward added successfully' })
+            );
         } catch (err) {
             toast.error((err as ApiError).response?.data?.message || t('rewards.errors.saveFailed'));
         }
@@ -392,7 +374,7 @@ export function LoyaltyPage() {
     }
 
     return (
-        <div className="max-w-7xl mx-auto space-y-8 pb-10" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
+        <div className="space-y-8 pb-10" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
             {/* Full-screen blocker while data loads, so no second action can
                 be stacked on an in-flight request. */}
             <BusyOverlay visible={isLoading} />

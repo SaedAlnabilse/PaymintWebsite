@@ -23,14 +23,14 @@ const CurrencyAmount = ({ amount, className = "", size = "text-2xl", color = "te
   );
 };
 
-const FormatCurrency = ({ value }: { value: number }) => {
+const FormatCurrency = ({ value, className = "text-sm", containerClassName = "justify-end w-full" }: { value: number; className?: string; containerClassName?: string }) => {
   const { currencySymbol } = useCurrency();
   return (
     <StatValue 
       value={value} 
       currency={currencySymbol} 
-      className="text-sm"
-      containerClassName="justify-end w-full"
+      className={className}
+      containerClassName={containerClassName}
     />
   );
 };
@@ -117,9 +117,12 @@ export const ShiftsView = React.memo(function ShiftsView({ shifts }: ShiftsViewP
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-white/5">
               {paginatedShifts.length > 0 ? (
-                paginatedShifts.map((shift: any) => (
+                paginatedShifts.map((shift: any, idx: number) => (
                   <motion.tr
                     key={shift.id}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: idx * 0.05 }}
                     className="group hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors"
                   >
                     <td className="px-5 py-5 text-start">
@@ -135,7 +138,7 @@ export const ShiftsView = React.memo(function ShiftsView({ shifts }: ShiftsViewP
                         <span className="text-xs font-bold text-gray-900 dark:text-white">
                           {format(new Date(shift.startTime), 'MMM d, HH:mm', { locale: getDateLocale(t('common.locale')) })}
                         </span>
-                        <span className="text-xs font-medium text-gray-500">
+                        <span className="text-xs font-bold text-gray-900 dark:text-white">
                           {t('common.to')} {shift.endTime ? format(new Date(shift.endTime), 'HH:mm', { locale: getDateLocale(t('common.locale')) }) : t('orders.reports.shifts.present')}
                         </span>
                       </div>
@@ -150,58 +153,37 @@ export const ShiftsView = React.memo(function ShiftsView({ shifts }: ShiftsViewP
                       {shift.status === 'CLOSED' ? (
                         shift.closingBalance !== null && shift.closingBalance !== undefined
                           ? <FormatCurrency value={shift.closingBalance} />
-                          : <span className="text-gray-400">-</span>
+                          : <span className="text-gray-400 font-normal">-</span>
                       ) : (
-                        <span className="label-strong font-sans">{t('orders.reports.shifts.active')}</span>
+                        <span className="text-xs font-bold text-mintcom-green">{t('orders.reports.shifts.currentlyActive', { defaultValue: 'Currently Active' })}</span>
                       )}
                     </td>
                     <td className="px-5 py-5 text-end">
                       {shift.status === 'CLOSED' && shift.discrepancy !== null && shift.discrepancy !== undefined ? (
                         <div className="flex justify-end">
-                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-black tracking-wider border ${shift.discrepancy > 0.001
-                            ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
-                            : shift.discrepancy < -0.001
-                              ? 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20'
-                              : 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20'
-                            }`}>
-                            <CurrencyAmount
-                              amount={shift.discrepancy}
-                              size="text-xs"
-                              color={shift.discrepancy > 0.001 ? 'text-amber-600 dark:text-amber-400' : shift.discrepancy < -0.001 ? 'text-red-600 dark:text-red-400' : 'text-blue-600 dark:text-blue-400'}
-                              containerClassName="inline-flex"
-                            />
-                            <span className="uppercase">
-                              {shift.discrepancy > 0.001 ? t('orders.reports.shifts.over') : shift.discrepancy < -0.001 ? t('orders.reports.shifts.short') : t('orders.reports.cashGap.isBalanced')}
-                            </span>
-                          </span>
+                          <FormatCurrency
+                            value={shift.discrepancy}
+                            className="text-sm font-bold text-gray-900 dark:text-white"
+                          />
                         </div>
                       ) : (
-                        <span className="label-strong font-sans text-gray-400">-</span>
+                        <span className="text-gray-400 font-normal">-</span>
                       )}
                     </td>
                     <td className="px-5 py-5 text-end">
-                      <div className="inline-flex flex-col items-end gap-1.5">
-                        <span className={`px-2.5 py-1 rounded-lg label-strong font-sans border transition-all ${shift.status === 'OPEN'
-                          ? 'bg-mintcom-green/10 text-mintcom-green border-mintcom-green/20'
-                          : 'bg-gray-100 dark:bg-white/5 text-gray-500 border-gray-200 dark:border-white/10'
-                          }`}>
-                          {shift.status === 'OPEN' ? t('orders.reports.shifts.active') : t('orders.status.completed')}
+                      {shift.status === 'OPEN' ? (
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-mintcom-green/10 text-mintcom-green border border-mintcom-green/20">
+                          {t('orders.reports.shifts.currentlyActive', { defaultValue: 'Currently Active' })}
                         </span>
-                        {/* Show how a closed shift was closed so owners can tell an
-                            automatic close (logout / inactivity / user-switch) from a
-                            manual cash-out. */}
-                        {shift.status === 'CLOSED' && (
-                          shift.autoClose ? (
-                            <span className="px-2 py-0.5 rounded-md text-[10px] label-strong font-sans border bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20">
-                              {t('orders.reports.shifts.autoClosed')}
-                            </span>
-                          ) : (
-                            <span className="px-2 py-0.5 rounded-md text-[10px] label-strong font-sans border bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20">
-                              {t('orders.reports.shifts.manualClose')}
-                            </span>
-                          )
-                        )}
-                      </div>
+                      ) : shift.autoClose ? (
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                          {t('orders.reports.shifts.autoClosed', { defaultValue: 'Auto-closed' })}
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-gray-100 dark:bg-white/5 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-white/10">
+                          {t('orders.reports.shifts.manualClose', { defaultValue: 'Cashed out' })}
+                        </span>
+                      )}
                     </td>
                   </motion.tr>
                 ))

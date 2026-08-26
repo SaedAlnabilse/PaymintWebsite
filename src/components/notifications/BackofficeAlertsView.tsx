@@ -369,7 +369,7 @@ export function BackofficeAlertsView({
   const emptyKey = `notifications.empty.${activeTab}`;
 
   return (
-    <section className="mx-auto w-full max-w-7xl space-y-5 pb-10 sm:space-y-6">
+    <section className="w-full space-y-5 pb-10 sm:space-y-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
           <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-3xl">

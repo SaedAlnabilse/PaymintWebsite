@@ -18,7 +18,7 @@ const DESIGN_W = 1100;
 const DESIGN_H = 720;
 const DESIGN_ASPECT = DESIGN_W / DESIGN_H;
 
-const MAX_FRAME_W = 1280;
+const MAX_FRAME_W = 2560;
 
 /** Outer metal ring (matches padding: 2.5 on the chrome shell). */
 const METAL_PAD = 2.5;

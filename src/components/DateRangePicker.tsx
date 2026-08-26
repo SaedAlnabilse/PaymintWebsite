@@ -15,6 +15,7 @@ interface DateRangePickerProps {
     placeholder?: string;
     minDate?: string;
     maxDate?: string;
+    allowFutureDates?: boolean;
     align?: 'left' | 'right' | 'center';
     buttonClassName?: string;
 }
@@ -31,12 +32,27 @@ export function DateRangePicker({
     placeholder,
     minDate,
     maxDate,
+    allowFutureDates = false,
     align = 'center',
     buttonClassName = ''
 }: DateRangePickerProps) {
     const { t } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
-    const [currentMonth, setCurrentMonth] = useState(() => startDate ? parseISO(startDate) : new Date());
+
+    // Stop at today's date by default unless allowFutureDates is true or a specific maxDate is provided
+    const todayStr = format(new Date(), 'yyyy-MM-dd');
+    const effectiveMaxDate = maxDate !== undefined ? maxDate : (allowFutureDates ? undefined : todayStr);
+
+    const [currentMonth, setCurrentMonth] = useState(() => {
+        if (startDate) {
+            const parsed = parseISO(startDate);
+            if (effectiveMaxDate && startDate > effectiveMaxDate) {
+                return parseISO(effectiveMaxDate);
+            }
+            return parsed;
+        }
+        return new Date();
+    });
     const [selectionState, setSelectionState] = useState<SelectionState>('start');
     const [tempStartDate, setTempStartDate] = useState<string>(startDate);
     const [tempEndDate, setTempEndDate] = useState<string>(endDate);
@@ -45,13 +61,16 @@ export function DateRangePicker({
 
     useEffect(() => {
         if (startDate) {
-            setCurrentMonth(parseISO(startDate));
+            const targetMonth = (effectiveMaxDate && startDate > effectiveMaxDate)
+                ? parseISO(effectiveMaxDate)
+                : parseISO(startDate);
+            setCurrentMonth(targetMonth);
             setTempStartDate(startDate);
         }
         if (endDate) {
             setTempEndDate(endDate);
         }
-    }, [startDate, endDate]);
+    }, [startDate, endDate, effectiveMaxDate]);
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -67,10 +86,17 @@ export function DateRangePicker({
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [startDate, endDate]);
 
+    const isNextDisabled = Boolean(
+        effectiveMaxDate && format(startOfMonth(addMonths(currentMonth, 1)), 'yyyy-MM-dd') > effectiveMaxDate
+    );
+    const isPrevDisabled = Boolean(
+        minDate && format(endOfMonth(subMonths(currentMonth, 1)), 'yyyy-MM-dd') < minDate
+    );
+
     const handleDateClick = (day: Date) => {
         const dateStr = format(day, 'yyyy-MM-dd');
         if (minDate && dateStr < minDate) return;
-        if (maxDate && dateStr > maxDate) return;
+        if (effectiveMaxDate && dateStr > effectiveMaxDate) return;
 
         if (selectionState === 'start') {
             setTempStartDate(dateStr);
@@ -93,8 +119,15 @@ export function DateRangePicker({
         }
     };
 
-    const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
-    const prevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
+    const nextMonth = () => {
+        if (isNextDisabled) return;
+        setCurrentMonth(addMonths(currentMonth, 1));
+    };
+
+    const prevMonth = () => {
+        if (isPrevDisabled) return;
+        setCurrentMonth(subMonths(currentMonth, 1));
+    };
 
     const isInRange = (day: Date) => {
         if (!tempStartDate) return false;
@@ -135,9 +168,15 @@ export function DateRangePicker({
         return (
             <div className="flex items-center justify-between mb-4 px-1">
                 <button
+                    type="button"
                     onClick={prevMonth}
+                    disabled={isPrevDisabled}
                     aria-label={t('common.aria.previousMonth')}
-                    className="p-2 min-w-[36px] min-h-[36px] flex items-center justify-center bg-mintcom-green text-white rounded-lg hover:bg-mintcom-green/90 transition-colors"
+                    className={`p-2 min-w-[36px] min-h-[36px] flex items-center justify-center rounded-lg transition-colors ${
+                        isPrevDisabled
+                            ? 'opacity-40 cursor-not-allowed bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-gray-500'
+                            : 'bg-mintcom-green text-white hover:bg-mintcom-green/90'
+                    }`}
                 >
                     <ChevronLeft size={18} className={t('common.locale') === 'ar' ? 'rotate-180' : ''} />
                 </button>
@@ -145,9 +184,15 @@ export function DateRangePicker({
                     {format(currentMonth, 'MMMM yyyy', { locale: getDateLocale(t('common.locale')) })}
                 </span>
                 <button
+                    type="button"
                     onClick={nextMonth}
+                    disabled={isNextDisabled}
                     aria-label={t('common.aria.nextMonth')}
-                    className="p-2 min-w-[36px] min-h-[36px] flex items-center justify-center bg-mintcom-green text-white rounded-lg hover:bg-mintcom-green/90 transition-colors"
+                    className={`p-2 min-w-[36px] min-h-[36px] flex items-center justify-center rounded-lg transition-colors ${
+                        isNextDisabled
+                            ? 'opacity-40 cursor-not-allowed bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-gray-500'
+                            : 'bg-mintcom-green text-white hover:bg-mintcom-green/90'
+                    }`}
                 >
                     <ChevronRight size={18} className={t('common.locale') === 'ar' ? 'rotate-180' : ''} />
                 </button>
@@ -193,25 +238,27 @@ export function DateRangePicker({
                 const cloneDay = day;
                 const isCurrentMonth = isSameMonth(day, monthStart);
                 const formattedDay = format(day, 'yyyy-MM-dd');
-                const isDisabled = (minDate && formattedDay < minDate) || (maxDate && formattedDay > maxDate);
+                const isFuture = Boolean(effectiveMaxDate && formattedDay > effectiveMaxDate);
+                const isPastMin = Boolean(minDate && formattedDay < minDate);
+                const isDisabled = isPastMin || isFuture;
 
-                const inRange = isInRange(day);
-                const rangeStart = isRangeStart(day);
-                const rangeEnd = isRangeEnd(day);
+                const inRange = !isDisabled && isInRange(day);
+                const rangeStart = !isDisabled && isRangeStart(day);
+                const rangeEnd = !isDisabled && isRangeEnd(day);
                 const isToday = isSameDay(day, new Date());
 
                 // Determine cell styling
-                const cellClass = 'relative py-2 text-center text-sm transition-all duration-150 cursor-pointer ';
+                const cellClass = 'relative py-2 text-center text-sm transition-all duration-150 ';
                 let bgClass = '';
                 let textClass = '';
                 let roundedClass = '';
 
                 if (!isCurrentMonth) {
-                    textClass = 'text-gray-300 dark:text-gray-600';
+                    textClass = 'text-gray-300 dark:text-gray-600 cursor-default';
                 } else if (isDisabled) {
-                    textClass = 'text-gray-300 dark:text-gray-600 cursor-not-allowed';
+                    textClass = 'text-gray-300 dark:text-gray-600 cursor-not-allowed select-none opacity-40';
                 } else {
-                    textClass = 'text-gray-700 dark:text-gray-200';
+                    textClass = 'text-gray-700 dark:text-gray-200 cursor-pointer';
                 }
 
                 // Range styling
@@ -221,7 +268,7 @@ export function DateRangePicker({
 
                 if (rangeStart || rangeEnd) {
                     bgClass = 'bg-mintcom-green';
-                    textClass = 'text-white font-bold';
+                    textClass = 'text-white font-bold cursor-pointer';
                 }
 
                 // Rounded corners for range
@@ -234,7 +281,7 @@ export function DateRangePicker({
                 }
 
                 // Today indicator
-                if (isToday && !rangeStart && !rangeEnd) {
+                if (isToday && !rangeStart && !rangeEnd && !isDisabled) {
                     textClass += ' font-bold';
                 }
 
@@ -296,7 +343,7 @@ export function DateRangePicker({
                 className={`
                     flex items-center gap-3 w-full h-12 px-4 text-sm font-bold rounded-xl border transition-all shadow-sm
                     ${(isOpen || isActive)
-                        ? 'border-mintcom-green ring-2 ring-mintcom-green bg-mintcom-green/5 text-mintcom-green shadow-lg shadow-mintcom-green/10'
+                        ? 'border-mintcom-green bg-mintcom-green/5 text-mintcom-green'
                         : 'border-gray-200 dark:border-white/10 bg-white dark:bg-[#1E293B] text-gray-900 dark:text-white hover:border-mintcom-green/50'
                     }
                     ${buttonClassName}
@@ -321,16 +368,18 @@ export function DateRangePicker({
 
                         <div className="mt-4 pt-3 border-t border-gray-100 dark:border-white/5 flex justify-center">
                             <button
+                                type="button"
                                 onClick={() => {
                                     if (onClear) {
                                         onClear();
                                     } else {
                                         const today = new Date();
-                                        const todayStr = format(today, 'yyyy-MM-dd');
-                                        setTempStartDate(todayStr);
-                                        setTempEndDate(todayStr);
-                                        onRangeChange(todayStr, todayStr);
-                                        setCurrentMonth(today);
+                                        const todayFormatted = format(today, 'yyyy-MM-dd');
+                                        const targetDate = effectiveMaxDate && todayFormatted > effectiveMaxDate ? effectiveMaxDate : todayFormatted;
+                                        setTempStartDate(targetDate);
+                                        setTempEndDate(targetDate);
+                                        onRangeChange(targetDate, targetDate);
+                                        setCurrentMonth(parseISO(targetDate));
                                     }
                                     setIsOpen(false);
                                     setSelectionState('start');

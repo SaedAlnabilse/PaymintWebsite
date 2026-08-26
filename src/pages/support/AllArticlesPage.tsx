@@ -96,7 +96,7 @@ export const AllArticlesPage = () => {
     <div dir={isRtl ? 'rtl' : 'ltr'} className="min-h-screen bg-white font-sans text-gray-900 dark:bg-[#050505] dark:text-white">
       <Navbar />
       <main className="pt-32 pb-24">
-        <div className="container mx-auto max-w-[1280px] px-6 md:px-10">
+        <div className="w-full px-6 md:px-10 lg:px-16">
 
           {/* Header */}
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mb-12">

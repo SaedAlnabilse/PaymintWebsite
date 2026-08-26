@@ -242,7 +242,7 @@ export const TicketsPage = () => {
       <div className="min-h-screen bg-white font-sans text-gray-900 dark:bg-[#050505] dark:text-white">
         <Navbar />
         <main className="pt-28 pb-20">
-          <div className="container mx-auto max-w-[1280px] px-6 md:px-10">
+          <div className="w-full px-6 md:px-10 lg:px-16">
             <SurfaceLoader message={t('common.loading')} className="max-w-4xl mx-auto" />
           </div>
         </main>
@@ -261,7 +261,7 @@ export const TicketsPage = () => {
       <Navbar />
 
       <main className="pt-28 pb-20">
-        <div className="container mx-auto max-w-6xl px-6 md:px-10">
+        <div className="w-full px-6 md:px-10 lg:px-16">
           {/* ──── Header ──── */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
             <div>

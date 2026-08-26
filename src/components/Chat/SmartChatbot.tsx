@@ -22,6 +22,7 @@ import {
   User,
   Users,
   Wallet,
+  X,
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -366,26 +367,36 @@ export function SmartChatbot({ isOpen, onClose }: SmartChatbotProps) {
           dir={isRTL ? 'rtl' : 'ltr'}
           className={`fixed bottom-[100px] ${isRTL ? 'left-[30px]' : 'right-[30px]'} z-[950] flex h-[600px] max-h-[calc(100vh-150px)] w-[400px] max-w-[calc(100vw-60px)] flex-col overflow-hidden rounded-3xl border border-gray-200/50 bg-white shadow-2xl dark:border-white/10 dark:bg-[#0F172A]`}
         >
-          <div className="relative overflow-hidden bg-gradient-to-r from-[#7dc6a2] to-[#5BA882] px-5 py-4">
-            <div className="absolute inset-0 overflow-hidden">
+          <div className="relative overflow-hidden bg-gradient-to-r from-[#7dc6a2] to-[#5BA882] px-5 py-4 flex items-center justify-between gap-3">
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
               <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-white/10 blur-xl" />
               <div className="absolute -bottom-8 -left-8 h-32 w-32 rounded-full bg-black/5 blur-xl" />
             </div>
 
-            <div className="relative flex items-center gap-3">
-              <div className="relative">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 ring-1 ring-white/30 backdrop-blur-[2px]">
-                  <img src={MintcomLeafIcon} alt="" className="h-8 w-8 scale-x-[-1] object-contain brightness-0 invert drop-shadow-md" />
-                </div>
+            <div className="relative z-10 flex items-center gap-3.5 min-w-0">
+              <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-white/20 ring-1 ring-white/30 backdrop-blur-[2px] shadow-sm">
+                <img src={MintcomLeafIcon} alt="Minto" className="h-6 w-6 scale-x-[-1] object-contain brightness-0 invert drop-shadow-sm" />
               </div>
-              <div>
-                <h3 className="text-lg font-bold tracking-tight text-white">{t('chat.botName')}</h3>
-                <p className="text-xs font-medium text-white/80">{t('chat.assistantTitle')}</p>
-                {pageContext.title !== 'Mintcom' && pageContext.title !== 'مينتكوم' && (
-                  <p className="mt-0.5 text-[11px] font-medium text-white/80">{pageContext.title}</p>
-                )}
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-base font-bold tracking-tight text-white leading-tight">{t('chat.botName')}</h3>
+                  {pageContext.title && pageContext.title !== 'Mintcom' && pageContext.title !== 'مينتكوم' && (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-white/20 text-[10px] font-semibold text-white tracking-wide backdrop-blur-sm border border-white/20 truncate">
+                      {pageContext.title}
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs font-medium text-white/85 leading-tight mt-0.5">{t('chat.assistantTitle')}</p>
               </div>
             </div>
+
+            <button
+              onClick={onClose}
+              className="relative z-10 p-2 rounded-xl text-white/80 hover:text-white hover:bg-white/15 transition-all active:scale-95 flex-shrink-0"
+              aria-label={t('common.close', 'Close')}
+            >
+              <X size={18} />
+            </button>
           </div>
 
           <div className="custom-scrollbar flex-1 space-y-4 overflow-y-auto p-4">

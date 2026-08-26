@@ -1,4 +1,4 @@
-import { Wallet, CreditCard, ChevronRight } from 'lucide-react';
+import { ChevronRight, CreditCard } from 'lucide-react';
 import { BiIcon } from '../../../ui/BiIcon';
 import { useCurrency } from '../../../../context/CurrencyContext';
 import type { SalesSummary } from '../../../../types';
@@ -7,6 +7,7 @@ import { useTheme } from '../../../../context/ThemeContext';
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { motion } from 'framer-motion';
 import { AnalyticsEmptyState } from '../AnalyticsEmptyState';
 import { StatValue } from '../../../../components/ui/StatValue';
 import { formatPaymentBrandName } from '../../../../utils/paymentCard';
@@ -263,7 +264,10 @@ export const PaymentsView = React.memo(function PaymentsView({ salesData, effect
 
                       return (
                         <React.Fragment key={i}>
-                          <tr
+                          <motion.tr
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: i * 0.05 }}
                             className={`group transition-colors ${hasDetails ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-white/[0.02]' : ''} ${isExpanded ? 'bg-gray-50 dark:bg-white/[0.02]' : ''}`}
                             onClick={() => {
                               if (hasDetails) {
@@ -273,12 +277,10 @@ export const PaymentsView = React.memo(function PaymentsView({ salesData, effect
                           >
                             <td className="px-5 py-3.5 text-start">
                               <div className="flex items-center gap-3">
-                                <div
-                                  className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                                  style={{ color: COLORS[i % COLORS.length], backgroundColor: `${COLORS[i % COLORS.length]}20` }}
-                                >
-                                  {isCard ? <CreditCard size={16} /> : <Wallet size={16} />}
-                                </div>
+                                <span
+                                  className="w-3 h-3 rounded-full shrink-0 shadow-sm"
+                                  style={{ backgroundColor: COLORS[i % COLORS.length] }}
+                                />
                                 <div className="flex items-center gap-2">
                                   <span className="font-bold text-sm text-gray-900 dark:text-white">{getMethodName(item.name)}</span>
                                   {hasDetails && (
@@ -298,7 +300,7 @@ export const PaymentsView = React.memo(function PaymentsView({ salesData, effect
                                 <StatValue value={percentage} isPercentage={true} className="text-xs font-bold text-gray-500" />
                               </div>
                             </td>
-                          </tr>
+                          </motion.tr>
 
                           {isExpanded && isCard && salesData.cardTypeBreakdown?.map((card: any, ci: number) => (
                             <tr key={`card-${ci}`} className="bg-gray-50/50 dark:bg-white/[0.01]">

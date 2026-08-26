@@ -248,7 +248,7 @@ export const ArticlePage = () => {
 
       {/* ── Article header — clean neutral ── */}
       <div className="border-b border-gray-100 bg-white pt-20 dark:border-white/8 dark:bg-[#0d0d0d]">
-        <div className="container mx-auto max-w-[1280px] px-6 md:px-10 pb-10 pt-8">
+        <div className="w-full px-6 md:px-10 lg:px-16 pb-10 pt-8">
           {/* breadcrumb */}
           <div className="mb-5 flex flex-wrap items-center gap-1.5 text-xs font-semibold text-gray-400 dark:text-gray-500">
             <Link to="/support" className="hover:text-mintcom-green transition-colors">{t('support.hero.badge')}</Link>
@@ -281,7 +281,7 @@ export const ArticlePage = () => {
 
       {/* ── Body: article + sidebar ── */}
       <main className="bg-gray-50 pb-24 dark:bg-[#0a0a0a]">
-        <div className="container mx-auto max-w-[1280px] px-6 md:px-10">
+        <div className="w-full px-6 md:px-10 lg:px-16">
           <div className="grid gap-8 pt-10 lg:grid-cols-[1fr_280px] xl:grid-cols-[1fr_300px]">
 
             {/* ── Article content ── */}

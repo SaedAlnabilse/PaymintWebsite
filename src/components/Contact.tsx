@@ -44,8 +44,8 @@ export const Contact = () => {
 
   return (
     <section id="contact" className="py-16 lg:py-20 bg-white dark:bg-[#0f0f0f] relative overflow-hidden transition-colors duration-300" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
-      <div className="container mx-auto px-6 md:px-10 lg:px-16 max-w-[1280px] relative z-10">
-        <div className="max-w-6xl mx-auto">
+      <div className="w-full px-6 md:px-10 lg:px-16 relative z-10">
+        <div className="w-full mx-auto">
           <div className="flex flex-col lg:flex-row items-stretch bg-gray-50 dark:bg-[#121212] rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden shadow-2xl shadow-gray-200/50 dark:shadow-none">
 
             {/* Contact Info Sidebar — neutral dark to match landing (#0f0f0f / #121212) */}

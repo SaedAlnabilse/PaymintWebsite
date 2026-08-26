@@ -53,15 +53,15 @@ export const Hero = ({ isVideoOpen, setIsVideoOpen }: { isVideoOpen: boolean; se
         />
       </div>
 
-      <div className="relative z-10 mx-auto w-full max-w-[1280px] px-5 md:px-8 lg:px-10">
-        <div className="flex flex-col items-start gap-8 lg:flex-row lg:items-center lg:gap-10 xl:gap-12">
+      <div className="relative z-10 mx-auto w-full px-5 md:px-8 lg:px-12 xl:px-16">
+        <div className="flex flex-col items-start gap-8 lg:flex-row lg:items-center lg:gap-12 xl:gap-16">
 
-          {/* Text Content — reserve real width so the title never clips */}
+          {/* Text Content */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className="w-full min-w-0 shrink-0 text-start lg:w-[40%] lg:max-w-xl"
+            className="w-full min-w-0 shrink-0 text-start lg:w-[45%] xl:w-[42%]"
           >
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -142,7 +142,7 @@ export const Hero = ({ isVideoOpen, setIsVideoOpen }: { isVideoOpen: boolean; se
             className="relative mt-2 flex w-full min-w-0 flex-1 justify-center sm:mt-8 lg:mt-16 lg:justify-end"
           >
             <motion.div
-              className="relative w-full max-w-[320px] sm:max-w-[380px] md:max-w-[440px] lg:max-w-[500px] xl:max-w-[540px]"
+              className="relative w-full max-w-[340px] sm:max-w-[420px] md:max-w-[500px] lg:max-w-[620px] xl:max-w-[760px]"
               animate={{ y: [0, -6, 0] }}
               transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
             >

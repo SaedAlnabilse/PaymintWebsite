@@ -530,7 +530,7 @@ export function OwnerBillingPage() {
     })();
 
     return (
-        <div className="max-w-7xl mx-auto space-y-8 pb-10">
+        <div className="space-y-8 pb-10">
             {/* Full-screen blocker while data loads, so no second action can
                 be stacked on an in-flight request. */}
             <BusyOverlay visible={isLoading} />

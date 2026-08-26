@@ -59,7 +59,7 @@ export const PricingPage = () => {
       </section>
 
       <section className="px-6 pb-20">
-        <div className="mx-auto max-w-5xl">
+        <div className="mx-auto w-full">
           <div className="mb-8 flex justify-center gap-2">
             <button
               type="button"
@@ -133,7 +133,7 @@ export const PricingPage = () => {
       </section>
 
       <section className="bg-gray-50 px-6 py-20 dark:bg-[#1E293B]/50">
-        <div className="mx-auto max-w-3xl">
+        <div className="mx-auto w-full">
           <h2 className="mb-8 text-center font-magilio text-2xl font-bold sm:text-3xl">{t('pages.pricing.faqTitle')}</h2>
           <div className="space-y-3">
             {FAQ_KEYS.map((id) => {

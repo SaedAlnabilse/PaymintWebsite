@@ -76,6 +76,14 @@ export function DualLauncher({
     }
   }, [storageKey]);
 
+  // The tooltip floats over the page, so retire it on its own instead of letting it
+  // sit on top of form controls until the visitor closes it.
+  useEffect(() => {
+    if (!showTooltip) return;
+    const timer = window.setTimeout(() => setShowTooltip(false), 8000);
+    return () => window.clearTimeout(timer);
+  }, [showTooltip]);
+
   const dismissTooltip = (e?: React.MouseEvent) => {
     e?.stopPropagation();
     setShowTooltip(false);
@@ -87,14 +95,14 @@ export function DualLauncher({
   // If ANY panel is open, show the unified switcher bar
   if (isAnyOpen) {
     return (
-      <div className={`fixed bottom-6 ${isRTL ? 'left-6' : 'right-6'} z-[900]`} dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className={`fixed bottom-6 ${isRTL ? 'left-6' : 'right-6'} z-[900] max-w-[calc(100vw-48px)]`} dir={isRTL ? 'rtl' : 'ltr'}>
         <motion.div
           id="mintcom-launcher-switcher"
           initial={{ opacity: 0, y: 10, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 10, scale: 0.95 }}
           transition={{ type: "spring", stiffness: 320, damping: 26 }}
-          className={`w-[min(${switcherWidth},calc(100vw-20px))] flex items-center gap-2 p-1.5 bg-white/95 dark:bg-[#0F172A]/95 backdrop-blur-xl rounded-xl shadow-[0_10px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_10px_32px_rgba(0,0,0,0.4)] border border-gray-200/60 dark:border-white/10`}
+          className={`w-[min(${switcherWidth},calc(100vw-48px))] max-w-[calc(100vw-48px)] flex items-center gap-2 p-1.5 bg-white/95 dark:bg-[#0F172A]/95 backdrop-blur-xl rounded-xl shadow-[0_10px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_10px_32px_rgba(0,0,0,0.4)] border border-gray-200/60 dark:border-white/10`}
         >
           <div className={`grid ${shouldShowTasksLauncher ? 'grid-cols-3' : 'grid-cols-2'} gap-1 flex-1 p-1 rounded-xl bg-gray-100/80 dark:bg-white/5`}>
             {/* Ask AI Tab */}

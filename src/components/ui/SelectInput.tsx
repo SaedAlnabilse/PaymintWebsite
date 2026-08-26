@@ -21,17 +21,21 @@ interface SelectInputProps {
   allOptionLabel?: string;
   showAllOption?: boolean;
   disabled?: boolean;
+  searchable?: boolean;
+  showSearch?: boolean;
+  buttonClassName?: string;
 }
 
 export function SelectInput({
   className = "",
+  buttonClassName = "",
   ...props
 }: SelectInputProps) {
   return (
     <SingleSelect
       {...props}
       className={`w-full ${className}`}
-      buttonClassName="!h-12 !rounded-xl !bg-white dark:!bg-[#1E293B] !border-gray-200 dark:!border-white/10 !text-sm !font-normal shadow-sm hover:!border-mintcom-green/50 transition-all"
+      buttonClassName={`!h-12 !rounded-xl !bg-white dark:!bg-[#1E293B] !border-gray-200 dark:!border-white/10 !text-sm !font-normal shadow-sm hover:!border-mintcom-green/50 transition-all ${buttonClassName}`}
     />
   );
 }

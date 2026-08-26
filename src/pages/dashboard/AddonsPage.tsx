@@ -637,7 +637,7 @@ export function AddonsPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 pb-10 font-sans">
+    <div className="space-y-8 pb-10 font-sans">
       {/* Full-screen blocker while data loads, so no second action can be
           stacked on an in-flight request. */}
       <BusyOverlay visible={isLoading} />
@@ -713,9 +713,10 @@ export function AddonsPage() {
           )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="space-y-2">
-            <p className="text-xs font-medium text-gray-400 dark:text-gray-500 tracking-widest px-1">{t('common.status.label', 'Status')}</p>
+        <div className="flex flex-wrap lg:flex-nowrap items-end gap-3.5">
+          {/* Status Filter */}
+          <div className="w-full sm:w-36 lg:w-36 shrink-0 space-y-1.5">
+            <p className="text-xs font-medium text-gray-400 dark:text-gray-500 tracking-widest px-1 h-4 flex items-center">{t('common.status.label', 'Status')}</p>
             <SelectInput
               value={filterStatus === 'ALL' ? null : filterStatus}
               onChange={(value) => {
@@ -728,18 +729,21 @@ export function AddonsPage() {
               ]}
               allOptionLabel={t('common.allStatuses', 'All Statuses')}
               placeholder={t('common.allStatuses', 'All Statuses')}
+              searchable={false}
+              buttonClassName="!h-[42px] !rounded-xl !text-xs sm:!text-sm !font-medium"
             />
           </div>
 
           {/* Selection Filter */}
-          <div className="space-y-2">
-            <p className="text-xs font-medium text-gray-400 dark:text-gray-500 tracking-widest px-1">{t('attributes.filters.selection')}</p>
-            <div className="flex bg-gray-50 dark:bg-white/5 p-1 rounded-xl border border-gray-200 dark:border-white/10">
+          <div className="flex-1 min-w-[170px] space-y-1.5">
+            <p className="text-xs font-medium text-gray-400 dark:text-gray-500 tracking-widest px-1 h-4 flex items-center">{t('attributes.filters.selection')}</p>
+            <div className="h-[42px] flex items-center bg-gray-50 dark:bg-white/5 p-1 rounded-xl border border-gray-200 dark:border-white/10">
               {['ALL', 'SINGLE_SELECT', 'MULTI_SELECT'].map((f) => (
                 <button
                   key={f}
+                  type="button"
                   onClick={() => { setFilterSelection(f); setPage(1); }}
-                  className={`flex-1 py-2 text-xs font-medium tracking-tight rounded-lg transition-all ${filterSelection === f ? 'bg-white dark:bg-white/10 text-mintcom-green shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                  className={`flex-1 h-full flex items-center justify-center text-xs font-medium tracking-tight rounded-lg transition-all ${filterSelection === f ? 'bg-white dark:bg-white/10 text-mintcom-green shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
                 >
                   {f === 'SINGLE_SELECT' ? t('attributes.filters.single') : f === 'MULTI_SELECT' ? t('attributes.filters.multi') : t('attributes.filters.all')}
                 </button>
@@ -748,14 +752,15 @@ export function AddonsPage() {
           </div>
 
           {/* Requirement Filter */}
-          <div className="space-y-2">
-            <p className="text-xs font-medium text-gray-400 dark:text-gray-500 tracking-widest px-1">{t('attributes.filters.required')}</p>
-            <div className="flex bg-gray-50 dark:bg-white/5 p-1 rounded-xl border border-gray-200 dark:border-white/10">
+          <div className="flex-1 min-w-[170px] space-y-1.5">
+            <p className="text-xs font-medium text-gray-400 dark:text-gray-500 tracking-widest px-1 h-4 flex items-center">{t('attributes.filters.required')}</p>
+            <div className="h-[42px] flex items-center bg-gray-50 dark:bg-white/5 p-1 rounded-xl border border-gray-200 dark:border-white/10">
               {['ALL', 'MANDATORY', 'OPTIONAL'].map((f) => (
                 <button
                   key={f}
+                  type="button"
                   onClick={() => { setFilterRequirement(f); setPage(1); }}
-                  className={`flex-1 py-2 text-xs font-medium tracking-tight rounded-lg transition-all ${filterRequirement === f ? 'bg-white dark:bg-white/10 text-mintcom-green shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                  className={`flex-1 h-full flex items-center justify-center text-xs font-medium tracking-tight rounded-lg transition-all ${filterRequirement === f ? 'bg-white dark:bg-white/10 text-mintcom-green shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
                 >
                   {f === 'MANDATORY' ? t('attributes.filters.mandatory') : f === 'OPTIONAL' ? t('attributes.filters.optional') : t('attributes.filters.all')}
                 </button>
@@ -764,38 +769,41 @@ export function AddonsPage() {
           </div>
 
           {/* Pricing Model */}
-          <div className="space-y-2">
-            <p className="text-xs font-medium text-gray-400 dark:text-gray-500 tracking-widest px-1">{t('attributes.filters.price')}</p>
-            <div className="flex bg-gray-50 dark:bg-white/5 p-1 rounded-xl border border-gray-200 dark:border-white/10">
+          <div className="flex-1 min-w-[150px] space-y-1.5">
+            <p className="text-xs font-medium text-gray-400 dark:text-gray-500 tracking-widest px-1 h-4 flex items-center">{t('attributes.filters.price')}</p>
+            <div className="h-[42px] flex items-center bg-gray-50 dark:bg-white/5 p-1 rounded-xl border border-gray-200 dark:border-white/10">
               {['ALL', 'FREE', 'PAID'].map((f) => (
                 <button
                   key={f}
+                  type="button"
                   onClick={() => handleQuickFilter(f as any)}
-                  className={`flex-1 py-2 text-xs font-medium tracking-tight rounded-lg transition-all ${filterPricing === f ? 'bg-white dark:bg-white/10 text-mintcom-green shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                  className={`flex-1 h-full flex items-center justify-center text-xs font-medium tracking-tight rounded-lg transition-all ${filterPricing === f ? 'bg-white dark:bg-white/10 text-mintcom-green shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
                 >
                   {f === 'FREE' ? t('attributes.filters.free') : f === 'PAID' ? t('attributes.filters.paid') : t('attributes.filters.all')}
                 </button>
               ))}
             </div>
           </div>
-        </div>
 
-        {/* Reset Action */}
-        <div className="mt-2 flex justify-end">
-          <button
-            onClick={() => {
-              setFilterSelection('ALL');
-              setFilterRequirement('ALL');
-              setFilterPricing('ALL');
-              setFilterStatus('ACTIVE');
-              setSearchQuery('');
-              setPage(1);
-            }}
-            className="flex items-center gap-2 px-4 py-2 text-xs font-bold text-gray-500 hover:text-mintcom-red bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl transition-all active:scale-95 group"
-          >
-            <RotateCcw size={14} className="group-hover:rotate-[-120deg] transition-transform duration-300" />
-            <span>{t('attributes.filters.reset')}</span>
-          </button>
+          {/* Reset Action */}
+          <div className="w-full sm:w-auto shrink-0 flex flex-col justify-end space-y-1.5">
+            <div className="hidden lg:block h-4" />
+            <button
+              type="button"
+              onClick={() => {
+                setFilterSelection('ALL');
+                setFilterRequirement('ALL');
+                setFilterPricing('ALL');
+                setFilterStatus('ACTIVE');
+                setSearchQuery('');
+                setPage(1);
+              }}
+              className="h-[42px] flex items-center justify-center gap-2 px-3.5 text-xs font-bold text-gray-500 hover:text-mintcom-red bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl transition-all active:scale-95 group whitespace-nowrap"
+            >
+              <RotateCcw size={14} className="group-hover:rotate-[-120deg] transition-transform duration-300" />
+              <span>{t('attributes.filters.reset')}</span>
+            </button>
+          </div>
         </div>
       </div>
 

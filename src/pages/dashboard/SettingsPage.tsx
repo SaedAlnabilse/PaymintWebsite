@@ -22,6 +22,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useRealtime } from '../../hooks/useRealtime';
 import { DataChangeEventTypes } from '../../services/realtimeService';
 import { SectionLoader } from '../../components/LoadingState';
+import { TaxRatesManager } from '../../components/settings/TaxRatesManager';
 import { CURRENCIES } from '../../data/globalLocaleOptions';
 import { formatInputPlaceholder, formatInputLabel } from '../../utils/textCase';
 import {
@@ -854,7 +855,7 @@ export function SettingsPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 pb-10 font-sans">
+    <div className="space-y-8 pb-10 font-sans">
       {/* Full-screen blocker while settings load or save, so no second action
           can be stacked on an in-flight request. */}
       <BusyOverlay visible={isLoading || isSaving} />
@@ -1056,44 +1057,15 @@ export function SettingsPage() {
                 </div>
               </div>
 
-              {/* Row 1: Tax · Currency — aligned label / field / helper rows.
-                  Table shortcuts moved to the POS & Shifts tab. */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5 items-stretch">
-                {/* Tax Rate — saved via main Save button */}
-                <div className="flex flex-col min-w-0">
-                  <label className="label-strong font-sans block h-5 leading-5 mb-2 truncate">
-                    {formatInputLabel(t('settings.sales.taxRate'), t('common.locale'))}
-                  </label>
-                  <div className="relative group h-11 shrink-0">
-                    <input type="hidden" {...taxRateField} />
-                    <input
-                      type="text"
-                      inputMode="decimal"
-                      value={watch('taxRate') === 0 ? '' : watch('taxRate').toFixed(2)}
-                      maxLength={MAX_TAX_RATE_INPUT_DIGITS}
-                      onChange={(e) => {
-                        const val = e.target.value.replace(/\D/g, '').slice(0, MAX_TAX_RATE_INPUT_DIGITS);
-                        const numericValue = Math.min(MAX_TAX_RATE_PERCENT, parseInt(val || '0', 10) / 100);
-                        setValue('taxRate', numericValue, { shouldDirty: true, shouldValidate: true });
-                        if (errors.taxRate) clearErrors('taxRate');
-                      }}
-                      className={`w-full h-11 px-3 box-border bg-white dark:bg-[#0F172A] border shadow-sm ${errors.taxRate ? 'border-red-500 bg-red-500/5 focus:ring-red-500/20' : 'border-gray-200 dark:border-white/15 hover:border-gray-300 dark:hover:border-white/25 focus:ring-mintcom-green/25 focus:border-mintcom-green'} rounded-xl text-sm font-bold text-gray-900 dark:text-white caret-mintcom-green focus:outline-none focus:ring-2 transition-all ${isRTL ? 'pl-9' : 'pr-9'}`}
-                    />
-                    <div className={`absolute ${isRTL ? 'left-3' : 'right-3'} top-1/2 -translate-y-1/2 font-bold text-sm text-gray-500 dark:text-gray-400 group-focus-within:text-mintcom-green pointer-events-none`}>%</div>
-                  </div>
-                  <div className="mt-2 min-h-[2.75rem]">
-                    {errors.taxRate ? (
-                      <p className="text-[11px] font-medium text-red-500 leading-snug flex items-start gap-1.5">
-                        <AlertTriangle size={12} className="mt-0.5 shrink-0" />
-                        {errors.taxRate.message as string || t('settings.sales.taxErrorGeneric')}
-                      </p>
-                    ) : (
-                      <p className="text-[11px] font-medium text-gray-400 leading-snug">
-                        {t('settings.sales.taxWarning')}
-                      </p>
-                    )}
-                  </div>
-                </div>
+              {/* Tax rates — single source of truth: the table below.
+                  The default tax (starred row) is the rate applied to new
+                  products; its value is changeable in the table so there is
+                  only one place to edit taxes. */}
+              {/* Tax rates — single source of truth: the default row in the table below is applied to new products */}
+              <div>
+                <input type="hidden" {...taxRateField} />
+                <TaxRatesManager />
+              </div>
 
                 {/* Currency */}
                 <div className="flex flex-col min-w-0">
@@ -1126,7 +1098,6 @@ export function SettingsPage() {
                     </p>
                   </div>
                 </div>
-              </div>
 
               {/* Service Charge — separate card; fields always visible, disabled when off */}
               <div

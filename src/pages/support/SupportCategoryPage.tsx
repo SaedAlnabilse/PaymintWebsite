@@ -140,7 +140,7 @@ export const SupportCategoryPage = () => {
           <div className={`absolute -top-32 start-1/2 h-[500px] w-[500px] -translate-x-1/2 rounded-full ${acc.bg} opacity-[0.08] blur-[120px]`} />
         </div>
 
-        <div className="container relative z-10 mx-auto max-w-[1280px] px-6 md:px-10">
+        <div className="relative z-10 w-full px-6 md:px-10 lg:px-16">
           {/* back link */}
           <motion.div initial={{ opacity: 0, x: isRtl ? 10 : -10 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.4 }}>
             <Link to="/support"
@@ -207,7 +207,7 @@ export const SupportCategoryPage = () => {
 
       {/* ── Content ── */}
       <main className="bg-gray-50 pb-24 dark:bg-[#0a0a0a]">
-        <div className="container mx-auto max-w-[1280px] px-6 md:px-10">
+        <div className="w-full px-6 md:px-10 lg:px-16">
 
           {/* Featured articles — 2-col cards */}
           {featured.length > 0 && !searchQuery && (

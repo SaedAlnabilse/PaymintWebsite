@@ -1136,7 +1136,7 @@ export function ProductsPage() {
     if (isLoading) return <LoadingFallback message={t('products.messages.loading')} />;
 
     return (
-        <div className="max-w-7xl mx-auto space-y-8 pb-10 font-sans" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
+        <div className="space-y-8 pb-10 font-sans" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
             <div ref={topRef} className="scroll-mt-24" />
             {/* Full-screen blocker while a user-triggered load is in flight —
                 background/realtime refreshes stay silent. */}
@@ -1204,6 +1204,7 @@ export function ProductsPage() {
                             ]}
                             allOptionLabel={t('common.allStatuses', 'All Statuses')}
                             placeholder={t('common.allStatuses', 'All Statuses')}
+                            searchable={false}
                         />
                     </div>
                     <div className="relative w-full sm:w-auto sm:flex-initial sm:min-w-[200px]" ref={categoryDropdownRef}>

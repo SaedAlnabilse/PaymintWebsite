@@ -96,7 +96,7 @@ export const IndustriesPage = () => {
       </section>
 
       <section className="bg-gray-50 px-6 py-20 dark:bg-[#1E293B]/50">
-        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 md:grid-cols-2">
+        <div className="mx-auto grid w-full grid-cols-1 gap-8 md:grid-cols-2">
           {INDUSTRIES.map((item, index) => {
             const points = t(item.pointsKey, { returnObjects: true });
             const pointList = Array.isArray(points) ? (points as string[]) : [];
@@ -131,7 +131,7 @@ export const IndustriesPage = () => {
       </section>
 
       <section className="px-6 py-20">
-        <div className="mx-auto max-w-3xl text-center">
+        <div className="mx-auto w-full text-center">
           <h2 className="mb-3 font-magilio text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl">
             {t('pages.industries.ctaTitle')}
           </h2>

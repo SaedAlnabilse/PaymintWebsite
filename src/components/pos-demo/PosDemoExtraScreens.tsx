@@ -1596,7 +1596,7 @@ function SectionPill({
 
 function ColumnHeader({ title }: { title: string }) {
   return (
-    <p className="mb-3 px-1 text-sm font-bold uppercase tracking-[0.12em] text-text-secondary dark:text-mintcom-textSecondary">
+    <p className="mb-3 text-sm font-bold uppercase tracking-[0.12em] text-text-secondary dark:text-mintcom-textSecondary">
       {title}
     </p>
   );

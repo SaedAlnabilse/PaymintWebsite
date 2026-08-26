@@ -676,12 +676,12 @@ export function CsvImportModal({
 
                                 {/* Error Details */}
                                 {importResult.errors.length > 0 && (
-                                    <div className="p-4 rounded-xl bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-500/20">
-                                        <p className="text-xs font-bold text-red-600 dark:text-red-400 mb-2">{t('csv.errorDetails')}</p>
+                                    <div className="p-4 rounded-xl bg-mintcom-red border border-mintcom-red">
+                                        <p className="text-xs font-bold text-white mb-2">{t('csv.errorDetails')}</p>
                                         <ul className="space-y-1 max-h-40 overflow-y-auto custom-scrollbar">
                                             {importResult.errors.map((err, i) => (
-                                                <li key={i} className="text-[11px] text-red-500 dark:text-red-400 flex items-start gap-1.5">
-                                                    <span className="w-1 h-1 rounded-full bg-red-400 mt-1.5 shrink-0" />
+                                                <li key={i} className="text-[11px] text-white flex items-start gap-1.5">
+                                                    <span className="w-1 h-1 rounded-full bg-white/80 mt-1.5 shrink-0" />
                                                     {err}
                                                 </li>
                                             ))}

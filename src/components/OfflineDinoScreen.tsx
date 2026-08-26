@@ -344,7 +344,6 @@ interface OfflineDinoScreenProps {
 
 export function OfflineDinoScreen({ forceShow = false }: OfflineDinoScreenProps = {}) {
   const { isOffline, isChecking, checkConnection } = useNetworkStatus();
-  const [bypassed, setBypassed] = useState(false);
   const [soundMuted, setSoundMuted] = useState(false);
   const audioRef = useRef<RetroAudio>(new RetroAudio());
 
@@ -461,7 +460,7 @@ export function OfflineDinoScreen({ forceShow = false }: OfflineDinoScreenProps 
 
   // Keyboard controls
   useEffect(() => {
-    if (!isOffline && bypassed) return;
+    if (!isOffline && !forceShow) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code === 'Space' || e.code === 'ArrowUp') {
@@ -489,7 +488,7 @@ export function OfflineDinoScreen({ forceShow = false }: OfflineDinoScreenProps 
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [isOffline, bypassed, handleJump]);
+  }, [isOffline, forceShow, handleJump]);
 
   // Main Canvas Render Loop
   useEffect(() => {
@@ -772,7 +771,6 @@ export function OfflineDinoScreen({ forceShow = false }: OfflineDinoScreenProps 
         if (window.location.pathname === '/offline') {
           window.location.href = '/';
         } else {
-          setBypassed(true);
           window.location.reload();
         }
       }, 1000);
@@ -784,8 +782,8 @@ export function OfflineDinoScreen({ forceShow = false }: OfflineDinoScreenProps 
     }
   };
 
-  // Only render if offline (or forced) and not bypassed
-  if ((!isOffline && !forceShow) || (bypassed && !forceShow)) {
+  // Only render if offline (or forced)
+  if (!isOffline && !forceShow) {
     return null;
   }
 
@@ -895,7 +893,7 @@ export function OfflineDinoScreen({ forceShow = false }: OfflineDinoScreenProps 
             </div>
           )}
 
-          {/* Action Bar (Check Connection, Reconnect, Continue) */}
+          {/* Action Bar (Check Connection, Reconnect) */}
           <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-gray-800/80 w-full">
             <button
               onClick={handleCheckConnection}
@@ -913,15 +911,6 @@ export function OfflineDinoScreen({ forceShow = false }: OfflineDinoScreenProps 
                   Check Connection
                 </>
               )}
-            </button>
-
-            <button
-              onClick={() => setBypassed(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-medium rounded-md text-gray-400 hover:text-gray-200 hover:bg-gray-800/60 transition-colors"
-              title="Dismiss offline screen and browse cached content"
-            >
-              <WifiOff className="w-3.5 h-3.5" />
-              Use Cached Version
             </button>
           </div>
 

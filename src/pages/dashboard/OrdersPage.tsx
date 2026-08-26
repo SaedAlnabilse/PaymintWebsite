@@ -1126,7 +1126,7 @@ export function OrdersPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 pb-24 sm:pb-10">
+    <div className="space-y-6 sm:space-y-8 pb-24 sm:pb-10">
       {/* Full-screen blocker while a user-triggered load (filters, search,
           pagination, date range) is in flight — realtime refreshes stay silent. */}
       <BusyOverlay visible={isLoading} />
@@ -1173,6 +1173,7 @@ export function OrdersPage() {
                 ]}
                 placeholder={formatInputPlaceholder(t('orders.checkShift'), t('common.locale'))}
                 showAllOption={false}
+                searchable={false}
                 buttonClassName="!bg-white dark:!bg-white/5 !text-gray-900 dark:!text-white !border-gray-200 dark:!border-white/10 hover:!bg-gray-50 dark:hover:!bg-white/10 !h-auto !py-2.5 sm:!py-3 !rounded-xl"
               />
             </div>
@@ -1185,7 +1186,7 @@ export function OrdersPage() {
       </div>
 
       {/* Unified Filter Control Deck */}
-      <div className="bg-white dark:bg-[#1E293B] rounded-2xl sm:rounded-[24px] border border-gray-100 dark:border-white/5 p-2 shadow-sm">
+      <div className="bg-white dark:bg-[#1E293B] rounded-2xl sm:rounded-[24px] border border-gray-200 dark:border-white/5 p-2 shadow-sm">
         {/* Even responsive grid so controls align in tidy rows/columns */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 items-stretch [&>*]:min-w-0">
 
@@ -1208,6 +1209,7 @@ export function OrdersPage() {
               onChange={(val) => setQuickDate(val || 'today')}
               options={getDateRangeOptions()}
               showAllOption={false}
+              searchable={false}
               placeholder={formatInputPlaceholder(t('orders.period') || 'Period', t('common.locale'))}
               className="w-full h-full"
             />
@@ -1251,6 +1253,7 @@ export function OrdersPage() {
               ]}
               showAllOption={true}
               allOptionLabel={t('orders.status.all')}
+              searchable={false}
               placeholder={formatInputPlaceholder(t('orders.table.status') || 'Status', t('common.locale'))}
               className="w-full h-full"
             />
@@ -1266,6 +1269,7 @@ export function OrdersPage() {
               options={paymentOptions}
               showAllOption={true}
               allOptionLabel={t('orders.payment.all')}
+              searchable={false}
               className="w-full h-full"
             />
           </div>
@@ -1283,6 +1287,7 @@ export function OrdersPage() {
               ]}
               showAllOption={true}
               allOptionLabel={t('orders.filters.serviceChargeAll', { defaultValue: 'All orders' })}
+              searchable={false}
               className="w-full h-full"
             />
           </div>
@@ -1301,7 +1306,7 @@ export function OrdersPage() {
               showAllOption={true}
               className="w-full h-full"
               buttonClassName={`!h-full !min-h-[48px] !rounded-xl !px-4 !text-xs sm:!text-sm !font-bold border transition-all ${selectedEmployeeId
-                ? '!bg-mintcom-green/5 !border-mintcom-green !text-mintcom-green ring-2 ring-mintcom-green shadow-lg shadow-mintcom-green/10'
+                ? '!bg-mintcom-green/5 !border-mintcom-green !text-mintcom-green'
                 : '!bg-white dark:!bg-[#1E293B] !border-gray-200 dark:!border-white/10 hover:!bg-gray-50 dark:hover:!bg-white/10'
                 }`}
             />
@@ -1319,9 +1324,10 @@ export function OrdersPage() {
               allOptionLabel={t('common.allShifts', { defaultValue: 'All Shifts' })}
               showAllOption={true}
               disabled={!selectedEmployeeId}
+              searchable={false}
               className="w-full h-full"
               buttonClassName={`!h-full !min-h-[48px] !rounded-xl !px-4 !text-xs sm:!text-sm !font-bold border transition-all ${selectedShiftId
-                ? '!bg-mintcom-green/5 !border-mintcom-green !text-mintcom-green ring-2 ring-mintcom-green shadow-lg shadow-mintcom-green/10'
+                ? '!bg-mintcom-green/5 !border-mintcom-green !text-mintcom-green'
                 : '!bg-white dark:!bg-[#1E293B] !border-gray-200 dark:!border-white/10 hover:!bg-gray-50 dark:hover:!bg-white/10'
                 }`}
             />

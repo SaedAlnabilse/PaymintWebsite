@@ -167,7 +167,7 @@ export function OwnerOverviewPage() {
     };
 
     return (
-        <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 pb-10">
+        <div className="space-y-6 sm:space-y-8 pb-10">
             {/* Full-screen blocker while a filter-triggered load is in flight,
                 so filters can't be stacked on an in-flight request. */}
             <BusyOverlay visible={isLoading} />
@@ -189,6 +189,7 @@ export function OwnerOverviewPage() {
                                     onChange={(val) => setQuickDate((val || 'today') as DatePeriod)}
                                     options={localizedDateOptions}
                                     showAllOption={false}
+                                    searchable={false}
                                     placeholder={formatInputPlaceholder(t('owner.overview.selectPeriod'), t('common.locale'))}
                                     className="w-full"
                                     buttonClassName={`!bg-gray-50 dark:!bg-white/5 !border-transparent hover:!bg-gray-100 dark:hover:!bg-white/10 !rounded-xl !p-2.5 !h-full !text-xs !font-bold !justify-center xl:!justify-between ${selectedDateRange !== 'custom' ? '!text-mintcom-green' : ''}`}
@@ -218,7 +219,7 @@ export function OwnerOverviewPage() {
 
                                 <div className={`w-full md:w-auto md:min-w-[180px] relative z-[55]`}>
                                     <div className={`flex flex-col justify-center px-3 h-12 rounded-xl border transition-all shadow-sm ${startTime !== '00:00' || endTime !== '23:59'
-                                        ? 'bg-mintcom-green/5 border-mintcom-green ring-2 ring-mintcom-green shadow-lg shadow-mintcom-green/10'
+                                        ? 'bg-mintcom-green/5 border-mintcom-green'
                                         : 'bg-white dark:bg-[#1E293B] border-gray-200 dark:border-white/10 hover:border-mintcom-green/50'
                                         }`}>
                                         <div className="flex items-center gap-2 justify-center md:justify-between relative">

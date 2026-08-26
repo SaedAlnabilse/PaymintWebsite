@@ -2,7 +2,10 @@ import {
   TrendingUp,
   Wallet,
   Activity,
-  ExternalLink
+  ExternalLink,
+  CreditCard,
+  ChevronRight,
+  Layers,
 } from 'lucide-react';
 import { biIcon } from '../../../ui/BiIcon';
 import { motion } from 'framer-motion';
@@ -15,12 +18,52 @@ import { useCurrency } from '../../../../context/CurrencyContext';
 import { useTheme } from '../../../../context/ThemeContext';
 import type { SalesSummary } from '../../../../types';
 import { useNavigate, useParams } from 'react-router-dom';
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { AnalyticsEmptyState } from '../AnalyticsEmptyState';
 import { StatValue } from '../../../../components/ui/StatValue';
 import { formatPaymentBrandName } from '../../../../utils/paymentCard';
 
-const COLORS = ['#7dc6a2', '#3b82f6', '#f59e0b', '#D55263', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
+const COLORS = [
+  '#7dc6a2',
+  '#3b82f6',
+  '#f59e0b',
+  '#D55263',
+  '#8b5cf6',
+  '#ec4899',
+  '#14b8a6',
+  '#06b6d4',
+  '#6366f1',
+  '#f97316',
+  '#84cc16',
+  '#a855f7',
+];
+
+const isCardMethod = (name: string) => {
+  const n = String(name).toUpperCase();
+  return (
+    n === 'CARD' ||
+    n === 'CARDS' ||
+    n.includes('VISA') ||
+    n.includes('MASTER') ||
+    n.includes('AMEX') ||
+    n.includes('MADA') ||
+    n.includes('CREDIT') ||
+    n.includes('DEBIT') ||
+    n.includes('MEEZA') ||
+    n.includes('DISCOVER') ||
+    n.includes('JCB') ||
+    n.includes('UNIONPAY')
+  );
+};
+
+const isCashMethod = (name: string) => {
+  const n = String(name).toUpperCase();
+  return n === 'CASH' || n === 'MONEY';
+};
+
+const isOtherMethod = (name: string) => {
+  return !isCashMethod(name) && !isCardMethod(name);
+};
 
 /** Evenly spaced, rounded Y-axis ticks so the scale isn't just 0 and max. */
 function buildYAxisScale(minValue: number, maxValue: number, tickCount = 5) {
@@ -98,7 +141,9 @@ export const SalesView = React.memo(function SalesView({ salesData, selectedDate
     salesData.netSalesBeforeTaxAndServiceCharge ?? (grossSales - taxCollected - serviceChargeCollected),
     0,
   );
-  const paymentMethodBreakdown = (salesData.paymentMethodBreakdown || [])
+  const [salesPaymentTab, setSalesPaymentTab] = useState<'all' | 'cards' | 'others'>('all');
+
+  const rawPaymentMethodBreakdown = useMemo(() => (salesData.paymentMethodBreakdown || [])
     .map((item: any) => {
       const value = Number(item.value ?? item.amount ?? item.total ?? 0);
       const safeValue = Number.isFinite(value) ? value : 0;
@@ -107,22 +152,50 @@ export const SalesView = React.memo(function SalesView({ salesData, selectedDate
         value: safeValue,
         chartValue: Math.abs(safeValue),
       };
-    });
-  const paymentMethodTotal = paymentMethodBreakdown.reduce((sum, item) => sum + Math.max(item.value, 0), 0);
-  const hasPaymentData = paymentMethodTotal > 0.005;
+    }), [salesData.paymentMethodBreakdown]);
+
+  const cardsData = useMemo(() => {
+    if (salesData.cardTypeBreakdown && salesData.cardTypeBreakdown.length > 0) {
+      return salesData.cardTypeBreakdown
+        .map((item: any) => ({
+          ...item,
+          value: Number(item.value ?? item.amount ?? 0),
+          chartValue: Math.abs(Number(item.value ?? item.amount ?? 0)),
+        }))
+        .filter((item: any) => item.value > 0);
+    }
+    return rawPaymentMethodBreakdown.filter((r: any) => isCardMethod(r.name));
+  }, [salesData.cardTypeBreakdown, rawPaymentMethodBreakdown]);
+
+  const othersData = useMemo(() => {
+    if (salesData.otherPaymentBreakdown && salesData.otherPaymentBreakdown.length > 0) {
+      return salesData.otherPaymentBreakdown
+        .map((item: any) => ({
+          ...item,
+          value: Number(item.value ?? item.amount ?? 0),
+          chartValue: Math.abs(Number(item.value ?? item.amount ?? 0)),
+        }))
+        .filter((item: any) => item.value > 0);
+    }
+    return rawPaymentMethodBreakdown.filter((r: any) => isOtherMethod(r.name));
+  }, [salesData.otherPaymentBreakdown, rawPaymentMethodBreakdown]);
+
+  const currentPaymentData = useMemo(() => {
+    if (salesPaymentTab === 'cards') return cardsData;
+    if (salesPaymentTab === 'others') return othersData;
+    return rawPaymentMethodBreakdown;
+  }, [salesPaymentTab, cardsData, othersData, rawPaymentMethodBreakdown]);
+
+  const currentPaymentTotal = useMemo(
+    () => currentPaymentData.reduce((sum: number, item: any) => sum + Math.max(item.value, 0), 0),
+    [currentPaymentData]
+  );
+  const hasPaymentData = currentPaymentTotal > 0.005;
   // Recharts hides zero-value slices — use a single gray ring when empty.
   const emptyFill = isDark ? '#334155' : '#e5e7eb';
   const pieData = hasPaymentData
-    ? paymentMethodBreakdown
+    ? currentPaymentData
     : [{ name: '__empty__', value: 0, chartValue: 1 }];
-  const legendRows =
-    paymentMethodBreakdown.length > 0
-      ? paymentMethodBreakdown.slice(0, 3)
-      : [
-          { name: 'CASH', value: 0, chartValue: 0 },
-          { name: 'CARD', value: 0, chartValue: 0 },
-          { name: 'OTHER', value: 0, chartValue: 0 },
-        ];
 
   return (
     <div className="space-y-8" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
@@ -527,26 +600,81 @@ export const SalesView = React.memo(function SalesView({ salesData, selectedDate
             </div>
             <button
               onClick={() => navigate(`/dashboard/${locationSlug}/reports/payments`)}
-              className="text-xs font-bold text-mintcom-green hover:underline tracking-wide"
+              className="text-xs font-bold text-mintcom-green hover:underline tracking-wide shrink-0"
             >
               {t('orders.reports.sales.viewAll')}
             </button>
           </div>
-          <div className="flex-1 flex flex-col justify-center">
-            <div className="h-[180px] w-full" dir="ltr">
+
+          {/* Clickable Filter Tabs */}
+          <div className="flex items-center gap-1 p-1 bg-gray-100/80 dark:bg-white/5 rounded-xl mb-3">
+            <button
+              type="button"
+              onClick={() => setSalesPaymentTab('all')}
+              className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                salesPaymentTab === 'all'
+                  ? 'bg-white dark:bg-[#0F172A] text-gray-900 dark:text-white shadow-sm'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+              }`}
+            >
+              <Layers size={13} className="shrink-0" />
+              <span>{t('orders.payment.all', { defaultValue: 'All' })}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setSalesPaymentTab('cards')}
+              className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                salesPaymentTab === 'cards'
+                  ? 'bg-white dark:bg-[#0F172A] text-gray-900 dark:text-white shadow-sm'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+              }`}
+            >
+              <CreditCard size={13} className="shrink-0" />
+              <span>{t('orders.payment.allCards', { defaultValue: 'Cards' })}</span>
+              {cardsData.length > 0 && (
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold leading-none ${
+                  salesPaymentTab === 'cards' ? 'bg-mintcom-green/15 text-mintcom-green' : 'bg-gray-200/70 dark:bg-white/10 text-gray-500'
+                }`}>
+                  {cardsData.length}
+                </span>
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => setSalesPaymentTab('others')}
+              className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                salesPaymentTab === 'others'
+                  ? 'bg-white dark:bg-[#0F172A] text-gray-900 dark:text-white shadow-sm'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+              }`}
+            >
+              <Wallet size={13} className="shrink-0" />
+              <span>{t('orders.payment.allOther', { defaultValue: 'Others' })}</span>
+              {othersData.length > 0 && (
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold leading-none ${
+                  salesPaymentTab === 'others' ? 'bg-mintcom-green/15 text-mintcom-green' : 'bg-gray-200/70 dark:bg-white/10 text-gray-500'
+                }`}>
+                  {othersData.length}
+                </span>
+              )}
+            </button>
+          </div>
+
+          <div className="flex-1 flex flex-col justify-center min-h-0">
+            <div className="h-[150px] w-full" dir="ltr">
               <ResponsiveContainer
                 width="100%"
                 height="100%"
                 minWidth={1}
                 minHeight={1}
-                initialDimension={{ width: 320, height: 180 }}
+                initialDimension={{ width: 320, height: 150 }}
               >
                 <PieChart>
                   <Pie
                     data={pieData}
-                    innerRadius={50}
-                    outerRadius={80}
-                    paddingAngle={hasPaymentData ? 4 : 0}
+                    innerRadius={45}
+                    outerRadius={70}
+                    paddingAngle={hasPaymentData && pieData.length > 1 ? 4 : 0}
                     dataKey="chartValue"
                     animationDuration={hasPaymentData ? 1500 : 0}
                     stroke="none"
@@ -575,13 +703,15 @@ export const SalesView = React.memo(function SalesView({ salesData, selectedDate
                       }}
                       formatter={(val: any, _name: any, entry: any) => {
                         const signedValue = Number(entry?.payload?.value ?? val);
-                        return (
+                        return [
                           <StatValue
+                            key="val"
                             value={signedValue}
                             currency={currencySymbol}
                             className="text-sm font-bold"
-                          />
-                        );
+                          />,
+                          getMethodName(String(entry?.payload?.name ?? '')),
+                        ];
                       }}
                       position={{ y: -10 }}
                     />
@@ -589,26 +719,54 @@ export const SalesView = React.memo(function SalesView({ salesData, selectedDate
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            <div className="space-y-2 mt-4">
-              {legendRows.map((item, i) => {
-                const percentage = paymentMethodTotal > 0 ? item.value / paymentMethodTotal : 0;
 
-                return (
-                  <div key={`${item.name}-${i}`} className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="w-2 h-2 rounded-full"
-                        style={{ backgroundColor: hasPaymentData ? COLORS[i % COLORS.length] : emptyFill }}
-                      />
-                      <span className="sentence-case-text text-sm font-bold text-gray-700 dark:text-gray-300">{getMethodName(item.name)}</span>
+            {/* Scrollable Legend (never stretches the card) */}
+            <div className="max-h-[145px] overflow-y-auto custom-scrollbar space-y-1 mt-2 pr-1">
+              {currentPaymentData.length > 0 ? (
+                currentPaymentData.map((item: any, i: number) => {
+                  const percentage = currentPaymentTotal > 0 ? (Math.max(Number(item.value) || 0, 0) / currentPaymentTotal) : 0;
+                  const isCard = salesPaymentTab === 'all' && (item.name.toUpperCase() === 'CARD' || item.name.toUpperCase() === 'CARDS');
+                  const isOther = salesPaymentTab === 'all' && (item.name.toUpperCase() === 'OTHER' || item.name.toUpperCase() === 'OTHERS');
+                  const isClickable = isCard || isOther;
+
+                  return (
+                    <div
+                      key={`${item.name}-${i}`}
+                      onClick={() => {
+                        if (isCard && cardsData.length > 0) setSalesPaymentTab('cards');
+                        if (isOther && othersData.length > 0) setSalesPaymentTab('others');
+                      }}
+                      className={`flex items-center justify-between gap-2.5 p-2 rounded-xl transition-all ${
+                        isClickable
+                          ? 'cursor-pointer hover:bg-mintcom-green/5 dark:hover:bg-white/5 active:scale-[0.99] group/item'
+                          : 'hover:bg-gray-50 dark:hover:bg-white/5'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div
+                          className="w-2.5 h-2.5 rounded-full shrink-0"
+                          style={{ backgroundColor: hasPaymentData ? COLORS[i % COLORS.length] : emptyFill }}
+                        />
+                        <span className="sentence-case-text text-sm font-bold text-gray-700 dark:text-gray-300 truncate">{getMethodName(item.name)}</span>
+                        {isClickable && (
+                          <ChevronRight
+                            size={13}
+                            className="text-gray-400 opacity-0 group-hover/item:opacity-100 transition-opacity shrink-0"
+                          />
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="text-sm font-bold text-gray-900 dark:text-white"><FormatCurrency value={item.value} /></span>
+                        <StatValue value={percentage} isPercentage={true} className="text-xs font-bold text-gray-500 min-w-[36px] text-end" />
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-gray-900 dark:text-white"><FormatCurrency value={item.value} /></span>
-                      <StatValue value={percentage} isPercentage={true} className="text-xs font-bold text-gray-500 min-w-[36px] text-end" />
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              ) : (
+                <div className="py-4 text-center text-xs text-gray-400 font-medium">
+                  {t('common.noData', { defaultValue: 'No payment data available' })}
+                </div>
+              )}
             </div>
           </div>
         </div>

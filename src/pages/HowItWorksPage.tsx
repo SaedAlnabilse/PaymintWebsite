@@ -51,7 +51,7 @@ export const HowItWorksPage = () => {
       </section>
 
       <section className="px-6 pb-16">
-        <div className="mx-auto max-w-3xl space-y-6">
+        <div className="mx-auto w-full space-y-6">
           {STEPS.map((step, index) => (
             <motion.div
               key={step.titleKey}
@@ -82,7 +82,7 @@ export const HowItWorksPage = () => {
       </section>
 
       <section className="bg-gray-50 px-6 py-20 dark:bg-[#1E293B]/50">
-        <div className="mx-auto max-w-3xl rounded-3xl border border-mintcom-green/20 bg-white p-10 text-center dark:bg-[#0F172A]">
+        <div className="mx-auto w-full rounded-3xl border border-mintcom-green/20 bg-white p-10 text-center dark:bg-[#0F172A]">
           <h2 className="mb-3 font-magilio text-2xl font-bold sm:text-3xl">{t('pages.howItWorks.ctaTitle')}</h2>
           <p className="mb-8 text-sm font-medium text-gray-600 dark:text-gray-300">{t('pages.howItWorks.ctaDesc')}</p>
           <div className="flex flex-wrap items-center justify-center gap-3">

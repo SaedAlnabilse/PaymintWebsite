@@ -1194,35 +1194,33 @@ export function DashboardLayout() {
         <main
           data-setup-guide-focus-fallback
           tabIndex={-1}
-          className="flex-1 relative bg-gray-50 dark:bg-mintcom-dark overflow-hidden"
+          className="flex-1 relative bg-gray-50 dark:bg-mintcom-dark overflow-hidden flex flex-col"
         >
-          <div ref={mainContentRef} className="h-full overflow-y-auto relative z-10 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-white/10">
-            <div className="p-4 md:p-6 lg:p-8 pb-24 max-w-[1920px] mx-auto">
-              {isDashboardContentLocked ? (
-                <CenteredOverlay>
-                  {sessionConflict ? (
-                    <div className="w-full max-w-sm text-center pointer-events-auto">
-                      <div className="mx-auto mb-5 h-12 w-12 rounded-2xl bg-mintcom-green/10 border border-mintcom-green/20 flex items-center justify-center">
-                        <Shield size={24} className="text-mintcom-green" />
-                      </div>
-                      <h2 className="text-lg font-black text-gray-900 dark:text-white">
-                        {t('dashboard.session.inUseTitle', { defaultValue: 'Dashboard in use' })}
-                      </h2>
-                      <p className="mt-2 text-sm font-bold text-gray-500 dark:text-gray-400 leading-relaxed">
-                        {conflictMessage}
-                      </p>
+          <div ref={mainContentRef} className="flex-1 overflow-y-auto relative z-10 custom-scrollbar p-4 lg:px-10 lg:pt-8 lg:pb-6 pb-24 w-full">
+            {isDashboardContentLocked ? (
+              <CenteredOverlay>
+                {sessionConflict ? (
+                  <div className="w-full max-w-sm text-center pointer-events-auto">
+                    <div className="mx-auto mb-5 h-12 w-12 rounded-2xl bg-mintcom-green/10 border border-mintcom-green/20 flex items-center justify-center">
+                      <Shield size={24} className="text-mintcom-green" />
                     </div>
-                  ) : (
-                    <SectionLoader
-                      message={t('dashboard.session.securingTitle', { defaultValue: 'Securing Dashboard' })}
-                      minHeightClassName=""
-                    />
-                  )}
-                </CenteredOverlay>
-              ) : (
-                <Outlet context={{ sidebarOpen, setupGuide }} />
-              )}
-            </div>
+                    <h2 className="text-lg font-black text-gray-900 dark:text-white">
+                      {t('dashboard.session.inUseTitle', { defaultValue: 'Dashboard in use' })}
+                    </h2>
+                    <p className="mt-2 text-sm font-bold text-gray-500 dark:text-gray-400 leading-relaxed">
+                      {conflictMessage}
+                    </p>
+                  </div>
+                ) : (
+                  <SectionLoader
+                    message={t('dashboard.session.securingTitle', { defaultValue: 'Securing Dashboard' })}
+                    minHeightClassName=""
+                  />
+                )}
+              </CenteredOverlay>
+            ) : (
+              <Outlet context={{ sidebarOpen, setupGuide }} />
+            )}
           </div>
         </main>
       </div>

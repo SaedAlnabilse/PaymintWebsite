@@ -193,7 +193,7 @@ export const SupportPage = () => {
           />
         </div>
 
-        <div className="container relative z-10 mx-auto max-w-[1280px] px-6 md:px-10">
+        <div className="relative z-10 w-full px-6 md:px-10 lg:px-16">
           <div className="grid items-center gap-12 lg:grid-cols-[1fr_420px] xl:grid-cols-[1fr_460px]">
 
             {/* ── Left: copy ── */}
@@ -364,7 +364,7 @@ export const SupportPage = () => {
           CATEGORIES — large horizontal cards with progress bar
          ══════════════════════════════════════════════════════════════ */}
       <section className="bg-gray-50 py-16 dark:bg-[#0a0a0a]">
-        <div className="container mx-auto max-w-[1280px] px-6 md:px-10">
+        <div className="w-full px-6 md:px-10 lg:px-16">
 
           <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
             className="mb-10 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
@@ -442,7 +442,7 @@ export const SupportPage = () => {
           POPULAR ARTICLES + MANUAL — two-column layout
          ══════════════════════════════════════════════════════════════ */}
       <section className="py-16">
-        <div className="container mx-auto max-w-[1280px] px-6 md:px-10">
+        <div className="w-full px-6 md:px-10 lg:px-16">
           <div className="grid gap-8 lg:grid-cols-[1fr_340px] xl:grid-cols-[1fr_380px]">
 
             {/* ── Articles list ── */}

@@ -1,4 +1,4 @@
-import { Activity, Info, TrendingUp, Wallet } from 'lucide-react';
+import { Activity, TrendingUp, Wallet } from 'lucide-react';
 import { biIcon } from '../../../ui/BiIcon';
 import { useCurrency } from '../../../../context/CurrencyContext';
 import type { PeakHour } from '../../../../types';
@@ -423,19 +423,19 @@ export const PeakHoursView = React.memo(function PeakHoursView({ peakHours }: Pe
                   <div className="flex items-center justify-between gap-3 mb-2">
                     <div className="min-w-0">
                       <p className="text-sm font-black text-gray-900 dark:text-white truncate">
-                        <span className={isPeak ? 'text-orange-500' : 'text-gray-400'}>{index + 1}.</span>{' '}
+                        <span className={isPeak ? 'text-orange-500 font-black' : 'text-gray-500 dark:text-gray-400 font-bold'}>{index + 1}.</span>{' '}
                         {row.hourLabel}
                       </p>
-                      <p className="text-xs font-bold text-gray-400">
+                      <p className="text-xs font-semibold text-gray-600 dark:text-gray-300">
                         {row.count.toLocaleString(locale)} {t('orders.reports.peakHours.orders')}
                         {isFilled && totalOrders > 0 && (
-                          <span className="text-gray-300 dark:text-gray-600">
+                          <span className="text-gray-500 dark:text-gray-400 font-medium">
                             {' '}· {Math.round((row.count / totalOrders) * 100)}%
                           </span>
                         )}
                       </p>
                     </div>
-                    <StatValue value={row.total} currency={currencySymbol} className="text-sm text-orange-500" />
+                    <StatValue value={row.total} currency={currencySymbol} className="text-sm font-bold text-orange-500" />
                   </div>
                   <div className="h-1.5 rounded-full bg-gray-100 dark:bg-white/10 overflow-hidden">
                     <div
@@ -506,19 +506,6 @@ export const PeakHoursView = React.memo(function PeakHoursView({ peakHours }: Pe
               </div>
             );
           })}
-        </div>
-      </div>
-
-      {/* How to read this report */}
-      <div className="bg-mintcom-green/5 dark:bg-mintcom-green/5 border border-mintcom-green/20 dark:border-mintcom-green/10 rounded-xl p-4 flex items-start gap-3">
-        <Info size={20} className="text-mintcom-green flex-shrink-0 mt-0.5" />
-        <div>
-          <p className="text-sm font-bold text-mintcom-green">
-            {t('orders.reports.peakHours.understandingTitle')}
-          </p>
-          <p className="text-xs text-mintcom-green/80 dark:text-mintcom-green/70 mt-1 leading-relaxed">
-            {t('orders.reports.peakHours.understandingDesc')}
-          </p>
         </div>
       </div>
     </div>

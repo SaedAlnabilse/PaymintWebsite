@@ -56,6 +56,9 @@ export function BrandLocationsPage() {
 
     const [locations, setLocations] = useState<LocationStats[]>([]);
     const [statsData, setStatsData] = useState<any>(null);
+    // Currency the brand aggregates are reported in (from the API, derived from
+    // the brand's locations) — the totals column is not USD.
+    const [baseCurrency, setBaseCurrency] = useState<string>('USD');
     const [brandName, setBrandName] = useState('');
     const [isLoading, setIsLoading] = useState(true);
     const initialDateRange = useMemo(() => calculateDateRange('this_week'), []);
@@ -154,6 +157,9 @@ export function BrandLocationsPage() {
 
             setBrandName(brandResponse.data?.name || t('brand.dashboard.title'));
             setStatsData(statsResponse.data?.stats);
+            setBaseCurrency(
+                ((statsResponse.data as any)?.baseCurrency || 'USD').toUpperCase(),
+            );
 
             const establishmentsData = brandResponse.data?.establishments || [];
             const locationPerformance = statsResponse.data?.locationPerformance || [];
@@ -326,7 +332,7 @@ export function BrandLocationsPage() {
     }
 
     return (
-        <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 pb-10">
+        <div className="space-y-6 sm:space-y-8 pb-10">
             {/* Header */}
             <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 relative z-50">
                 <div>
@@ -350,6 +356,7 @@ export function BrandLocationsPage() {
                                     onChange={(val) => setQuickDate(val as DateRangePreset || 'today')}
                                     options={localizedDateOptions}
                                     showAllOption={false}
+                                    searchable={false}
                                     placeholder={formatInputPlaceholder(t('owner.overview.selectPeriod'), t('common.locale'))}
                                     className="w-full"
                                     buttonClassName={`!bg-gray-50 dark:!bg-white/5 !border-transparent hover:!bg-gray-100 dark:hover:!bg-white/10 !rounded-xl !p-2.5 !h-full !text-xs !font-bold ${selectedDateRange !== 'custom' ? '!text-mintcom-green' : ''}`}
@@ -382,7 +389,7 @@ export function BrandLocationsPage() {
 
                                         <div className="flex-none w-auto min-w-[155px] sm:min-w-[180px] relative z-[55]">
                                             <div className={`flex flex-col justify-center px-3 h-12 rounded-xl border transition-all shadow-sm ${isTimeFiltered
-                                                ? 'bg-mintcom-green/5 border-mintcom-green ring-2 ring-mintcom-green shadow-lg shadow-mintcom-green/10'
+                                                ? 'bg-mintcom-green/5 border-mintcom-green'
                                                 : 'bg-white dark:bg-[#1E293B] border-gray-200 dark:border-white/10 hover:border-mintcom-green/50'
                                                 }`}>
                                                 <div className="flex items-center gap-2 justify-between relative">
@@ -437,7 +444,7 @@ export function BrandLocationsPage() {
                             <p className="dashboard-stat-title mb-1">{stat.label}</p>
                             <StatValue 
                                 value={stat.value} 
-                                currency={stat.label === t('brand.dashboard.totalRevenue') ? 'USD' : null}
+                                currency={stat.label === t('brand.dashboard.totalRevenue') ? baseCurrency : null}
                                 className="text-2xl"
                                 isInteger={stat.label !== t('brand.dashboard.totalRevenue')}
                             />
@@ -630,7 +637,7 @@ export function BrandLocationsPage() {
                                         <div className="col-span-2 flex items-center justify-center">
                                             <StatValue 
                                                 value={loc.totalRevenue || 0} 
-                                                currency="USD"
+                                                currency={baseCurrency}
                                                 className="text-sm"
                                             />
                                         </div>

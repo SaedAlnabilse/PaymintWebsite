@@ -37,13 +37,9 @@ export const getSignUpSchema = (t: TFunction) => {
     lastName: z.string().trim().min(2, t('auth.validation.lastNameMin')),
     email: z.string().trim().email(t('auth.validation.emailInvalid')),
     password: getPasswordSchema(t),
-    confirmPassword: z.string(),
     agreeToTerms: z.boolean().refine(val => val === true, {
       message: t('auth.validation.termsRequired'),
     }),
-  }).refine((data) => data.password === data.confirmPassword, {
-    message: t('auth.validation.passwordsDoNotMatch'),
-    path: ['confirmPassword'],
   });
 };
 

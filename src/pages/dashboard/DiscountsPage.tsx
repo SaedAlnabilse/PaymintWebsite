@@ -1,8 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { Plus, Percent, DollarSign, Trash2, Edit2, Tag, ShieldAlert, Grid3X3, List, ArrowUpDown, RotateCcw } from 'lucide-react';
-import { BiIcon } from '../../components/ui/BiIcon';
+import { BiIcon, biIcon } from '../../components/ui/BiIcon';
 import api from '../../config/api';
 import { useCurrency } from '../../context/CurrencyContext';
 import toast from 'react-hot-toast';
@@ -338,7 +339,7 @@ export function DiscountsPage() {
   }, [discounts]);
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 pb-10" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
+    <div className="space-y-8 pb-10" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
       {/* Full-screen blocker while a user-triggered load is in flight —
           realtime refreshes stay silent. */}
       <BusyOverlay visible={isLoading} />
@@ -367,6 +368,36 @@ export function DiscountsPage() {
         </div>
       </div>
 
+      {/* Stats Cards */}
+      <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-3 scrollbar-none snap-x snap-mandatory">
+        {[
+          { label: t('discounts.allDiscounts', 'All Discounts'), value: stats.total, icon: biIcon('bi-percent'), color: 'text-mintcom-green', bg: 'bg-mintcom-green/10' },
+          { label: t('common.active', 'Active'), value: stats.active, icon: biIcon('bi-check-circle'), color: 'text-mintcom-green', bg: 'bg-mintcom-green/10' },
+          { label: t('discounts.form.managerOnly', 'Manager Only'), value: stats.adminOnly, icon: biIcon('bi-shield-lock'), color: 'text-mintcom-green', bg: 'bg-mintcom-green/10' },
+        ].map((stat, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.1 }}
+            className="flex-shrink-0 w-[160px] sm:w-auto snap-start group relative p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#1E293B] border border-gray-200 dark:border-white/[0.03] transition-all duration-300 overflow-hidden"
+          >
+            <div className={`absolute top-0 right-0 w-24 h-24 rounded-full blur-2xl opacity-0 transition-opacity duration-500 pointer-events-none ${stat.bg}`} />
+            <div className="relative z-10 flex items-center gap-4">
+              <div className={`p-3 rounded-xl ${stat.bg} ${stat.color} transition-transform duration-300`}>
+                <stat.icon size={20} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="dashboard-stat-title mb-1 truncate">{stat.label}</p>
+                <div className="flex flex-col">
+                  <StatValue value={stat.value} isInteger={true} className="text-2xl" />
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
       {/* Search and View Toggle */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="relative flex-1 sm:max-w-md">
@@ -388,6 +419,7 @@ export function DiscountsPage() {
               ]}
               allOptionLabel={t('common.allStatuses', 'All Statuses')}
               placeholder={t('common.allStatuses', 'All Statuses')}
+              searchable={false}
             />
           </div>
 
@@ -410,33 +442,6 @@ export function DiscountsPage() {
           </div>
         </div>
       </div>
-
-      {/* Summary Stats */}
-      {!isLoading && filteredDiscounts.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="group relative bg-white dark:bg-[#1E293B] border border-gray-200 dark:border-white/[0.03] rounded-2xl p-4 sm:p-5 flex items-center justify-between transition-all duration-300 overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-mintcom-green/5 rounded-full blur-3xl opacity-0 transition-opacity duration-500 pointer-events-none" />
-            <div className="relative z-10">
-              <p className="dashboard-stat-title mb-1 truncate">{t('discounts.allDiscounts', 'All Discounts')}</p>
-              <StatValue value={stats.total} isInteger={true} className="text-2xl mt-1" />
-            </div>
-            <div className="w-12 h-12 bg-mintcom-green/10 rounded-2xl flex items-center justify-center relative z-10 transition-transform">
-              <BiIcon icon="bi-percent" size={24} className="text-mintcom-green" />
-            </div>
-          </div>
-
-          <div className="group relative bg-white dark:bg-[#1E293B] border border-gray-200 dark:border-white/[0.03] rounded-2xl p-4 sm:p-5 flex items-center justify-between transition-all duration-300 overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-mintcom-green/5 rounded-full blur-3xl opacity-0 transition-opacity duration-500 pointer-events-none" />
-            <div className="relative z-10">
-              <p className="dashboard-stat-title mb-1 truncate">{t('discounts.form.managerOnly')}</p>
-              <StatValue value={stats.adminOnly} isInteger={true} className="text-2xl text-amber-600 dark:text-yellow-400 mt-1" />
-            </div>
-            <div className="w-12 h-12 bg-mintcom-green/10 rounded-2xl flex items-center justify-center relative z-10 transition-transform">
-              <BiIcon icon="bi-shield-lock" size={24} className="text-mintcom-green" />
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Discounts Content */}
       {isLoading ? (
@@ -522,7 +527,7 @@ export function DiscountsPage() {
                     <div className="relative z-10">
                       <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1 truncate group-hover:text-mintcom-green transition-colors" title={discount.name}>{discount.name}</h3>
                       <div className="flex items-center justify-between gap-3 mb-4">
-                        <p className="text-3xl font-black text-mintcom-green tracking-tight">{formatValue(discount)}</p>
+                        <p className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">{formatValue(discount)}</p>
                         <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-black tracking-wide ${
                           discount.isActive
                             ? 'bg-mintcom-green/10 text-mintcom-green'
@@ -619,7 +624,7 @@ export function DiscountsPage() {
                             </div>
                           </td>
                           <td className="px-6 py-4 text-end">
-                            <span className="text-lg font-black text-mintcom-green">{formatValue(discount)}</span>
+                            <span className="text-sm sm:text-base font-bold text-gray-900 dark:text-white">{formatValue(discount)}</span>
                           </td>
                           <td className="px-6 py-4 text-center">
                             <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-black tracking-wide ${

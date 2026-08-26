@@ -13,10 +13,12 @@ describe('OfflineDinoScreen', () => {
     expect(screen.getByText(/ERR_INTERNET_DISCONNECTED/i)).toBeInTheDocument();
   });
 
-  it('allows clicking check connection button', () => {
+  it('allows clicking check connection button and does not render cached version button', () => {
     render(<OfflineDinoScreen forceShow />);
     const checkBtn = screen.getByRole('button', { name: /Check Connection/i });
     expect(checkBtn).toBeInTheDocument();
     fireEvent.click(checkBtn);
+
+    expect(screen.queryByText(/Use Cached Version/i)).not.toBeInTheDocument();
   });
 });

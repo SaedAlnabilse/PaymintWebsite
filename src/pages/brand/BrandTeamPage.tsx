@@ -336,7 +336,7 @@ export default function BrandTeamPage() {
     }
 
     return (
-        <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 pb-10">
+        <div className="space-y-6 sm:space-y-8 pb-10">
             {/* Header */}
             <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
                 <div>

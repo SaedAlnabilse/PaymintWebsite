@@ -17,6 +17,8 @@ export function CustomTimePicker({ value, onChange, className = '', showIcon = f
     const { t } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
+    const selectedHourRef = useRef<HTMLDivElement>(null);
+    const selectedMinuteRef = useRef<HTMLDivElement>(null);
 
     // Parse 24h string to 12h components
     const parseTime = (timeStr: string) => {
@@ -38,6 +40,35 @@ export function CustomTimePicker({ value, onChange, className = '', showIcon = f
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
+
+    // Bring the highlighted values into view on open so the green selection
+    // stays comfortably inside the popup instead of hugging its clipped edges.
+    // Scrolling is confined to the picker columns — unlike scrollIntoView(),
+    // this can never move the outer page or a modal container.
+    useEffect(() => {
+        if (!isOpen) return;
+        const frame = requestAnimationFrame(() => {
+            [selectedHourRef.current, selectedMinuteRef.current].forEach((item) => {
+                const column = item?.closest('[data-scroll-column]') as HTMLElement | null;
+                if (!item || !column) return;
+
+                const header = column.firstElementChild as HTMLElement | null;
+                const headerHeight = header ? header.offsetHeight : 0;
+                const columnRect = column.getBoundingClientRect();
+                const itemRect = item.getBoundingClientRect();
+
+                // Mirror block: 'nearest' — only scroll when out of view.
+                let delta = 0;
+                if (itemRect.top < columnRect.top + headerHeight) {
+                    delta = itemRect.top - (columnRect.top + headerHeight);
+                } else if (itemRect.bottom > columnRect.bottom) {
+                    delta = itemRect.bottom - columnRect.bottom;
+                }
+                column.scrollTop += delta;
+            });
+        });
+        return () => cancelAnimationFrame(frame);
+    }, [isOpen]);
 
     const updateTime = (newHour: number, newMinute: number, newPeriod: string) => {
         let h = newHour;
@@ -79,50 +110,56 @@ export function CustomTimePicker({ value, onChange, className = '', showIcon = f
                         transition={{ duration: 0.1 }}
                         style={{ opacity: 1 }}
                         onClick={(e) => e.stopPropagation()}
-                        className={`absolute top-full ${align === 'right' ? 'right-0' : 'left-0'} mt-2 z-[9999] !bg-white dark:!bg-[#0F172A] !bg-opacity-100 !opacity-100 !backdrop-blur-none border border-gray-100 dark:border-white/10 rounded-2xl shadow-2xl w-[200px] p-2 flex gap-1 h-[200px] overflow-hidden`}
+                        className={`absolute top-full ${align === 'right' ? 'right-0' : 'left-0'} mt-2 z-[9999] !bg-white dark:!bg-[#0F172A] !bg-opacity-100 !opacity-100 !backdrop-blur-none border border-gray-100 dark:border-white/10 rounded-xl shadow-2xl w-[176px] p-1.5 flex gap-1 h-[190px] overflow-hidden`}
                     >
                         {/* Hours */}
-                        <div className="flex-1 overflow-y-auto scrollbar-none hover:scrollbar-thin">
-                            <div className="text-[10px] !bg-gray-50 dark:!bg-[#0F172A] !bg-opacity-100 text-center py-1 font-bold sticky top-0 z-10 text-gray-500 border-b border-gray-100 dark:border-white/5">{t('common.time.hourAbbr')}</div>
-                            {hours.map(h => (
-                                <div
-                                    key={h}
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        updateTime(h, minute, period);
-                                    }}
-                                    className={`
-                    text-center py-1.5 text-sm cursor-pointer rounded-md transition-colors
-                    ${h === hour ? 'bg-[#7dc6a2] text-white font-bold' : 'hover:bg-gray-100 dark:hover:bg-white/10 text-gray-700 dark:text-gray-200'}
+                        <div data-scroll-column className="flex-1 overflow-y-auto scrollbar-none hover:scrollbar-thin pb-1">
+                            <div className="text-[9px] !bg-gray-50 dark:!bg-[#0F172A] !bg-opacity-100 text-center py-[3px] font-bold sticky top-0 z-10 text-gray-500 border-b border-gray-100 dark:border-white/5">{t('common.time.hourAbbr')}</div>
+                            <div className="px-0.5">
+                                {hours.map(h => (
+                                    <div
+                                        key={h}
+                                        ref={h === hour ? selectedHourRef : undefined}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            updateTime(h, minute, period);
+                                        }}
+                                        className={`
+                    text-center py-[3px] text-xs cursor-pointer rounded-md transition-colors
+                    ${h === hour ? 'bg-mintcom-green text-white font-bold' : 'hover:bg-gray-100 dark:hover:bg-white/10 text-gray-700 dark:text-gray-200'}
                   `}
-                                >
-                                    {h.toLocaleString(t('common.locale'))}
-                                </div>
-                            ))}
+                                    >
+                                        {h.toLocaleString(t('common.locale'))}
+                                    </div>
+                                ))}
+                            </div>
                         </div>
 
                         {/* Minutes */}
-                        <div className="flex-1 overflow-y-auto scrollbar-none hover:scrollbar-thin border-l border-r border-gray-100 dark:border-white/5">
-                            <div className="text-[10px] !bg-gray-50 dark:!bg-[#0F172A] !bg-opacity-100 text-center py-1 font-bold sticky top-0 z-10 text-gray-500 border-b border-gray-100 dark:border-white/5">{t('common.time.minuteAbbr')}</div>
-                            {minutes.map(m => (
-                                <div
-                                    key={m}
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        updateTime(hour, m, period);
-                                    }}
-                                    className={`
-                    text-center py-1.5 text-sm cursor-pointer rounded-md transition-colors
-                    ${m === minute ? 'bg-[#7dc6a2] text-white font-bold' : 'hover:bg-gray-100 dark:hover:bg-white/10 text-gray-700 dark:text-gray-200'}
+                        <div data-scroll-column className="flex-1 overflow-y-auto scrollbar-none hover:scrollbar-thin border-l border-r border-gray-100 dark:border-white/5 pb-1">
+                            <div className="text-[9px] !bg-gray-50 dark:!bg-[#0F172A] !bg-opacity-100 text-center py-[3px] font-bold sticky top-0 z-10 text-gray-500 border-b border-gray-100 dark:border-white/5">{t('common.time.minuteAbbr')}</div>
+                            <div className="px-0.5">
+                                {minutes.map(m => (
+                                    <div
+                                        key={m}
+                                        ref={m === minute ? selectedMinuteRef : undefined}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            updateTime(hour, m, period);
+                                        }}
+                                        className={`
+                    text-center py-[3px] text-xs cursor-pointer rounded-md transition-colors
+                    ${m === minute ? 'bg-mintcom-green text-white font-bold' : 'hover:bg-gray-100 dark:hover:bg-white/10 text-gray-700 dark:text-gray-200'}
                   `}
-                                >
-                                    {m.toLocaleString(t('common.locale'), { minimumIntegerDigits: 2 })}
-                                </div>
-                            ))}
+                                    >
+                                        {m.toLocaleString(t('common.locale'), { minimumIntegerDigits: 2 })}
+                                    </div>
+                                ))}
+                            </div>
                         </div>
 
                         {/* AM/PM */}
-                        <div className="w-[50px] flex flex-col justify-center gap-1">
+                        <div className="w-[42px] flex flex-col justify-center gap-1 px-0.5">
                             {['AM', 'PM'].map(p => (
                                 <div
                                     key={p}
@@ -131,8 +168,8 @@ export function CustomTimePicker({ value, onChange, className = '', showIcon = f
                                         updateTime(hour, minute, p);
                                     }}
                                     className={`
-                     text-center py-2 text-xs font-bold cursor-pointer rounded-md transition-colors
-                     ${p === period ? 'bg-[#7dc6a2] text-white' : 'bg-gray-50 dark:bg-white/5 text-gray-500 hover:bg-gray-100 dark:hover:bg-white/10'}
+                     text-center py-1.5 text-[11px] font-bold cursor-pointer rounded-md transition-colors
+                     ${p === period ? 'bg-mintcom-green text-white' : 'bg-gray-50 dark:bg-white/5 text-gray-500 hover:bg-gray-100 dark:hover:bg-white/10'}
                    `}
                                 >
                                     {p === 'AM' ? t('common.time.am') : t('common.time.pm')}

@@ -136,10 +136,11 @@ export function DemoProductFormModal({
   const cost = costCents / 100;
   const taxShare = useMemo(() => {
     if (taxRate <= 0) return 0;
-    // Tax included in settlement price
-    return price - price / (1 + taxRate / 100);
+    const rate = taxRate / 100;
+    // Inclusive: tax is extracted from the shelf price.
+    return price - price / (1 + rate);
   }, [price, taxRate]);
-  const netCapital = price - cost - taxShare;
+  const netCapital = price - cost;
 
   if (!open) return null;
 

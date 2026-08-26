@@ -196,6 +196,15 @@ export function formatInputLabel(value: string | null | undefined, locale = 'en'
   return toTitleCase(value, locale);
 }
 
+// Sample emails and URLs are literal values, so leave their casing untouched.
+const LITERAL_PLACEHOLDER_PATTERN = /^\s*(?:[^\s@]+@[^\s@]+\.[^\s@]+|(?:https?:\/\/|www\.)\S+)\s*$/i;
+
 export function formatInputPlaceholder(value: string | null | undefined, locale = 'en'): string {
-  return toSentenceCase(value || '', locale);
+  const placeholder = value || '';
+
+  if (LITERAL_PLACEHOLDER_PATTERN.test(placeholder)) {
+    return placeholder;
+  }
+
+  return toSentenceCase(placeholder, locale);
 }

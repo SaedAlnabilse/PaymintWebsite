@@ -46,6 +46,24 @@ interface Product {
   lowStockThresholdRed?: number;
   type?: 'ITEM' | 'ADDON';
   category?: Category;
+  /** Multi-tax: assigned server-side to the default tax when omitted. */
+  taxId?: string | null;
+  tax?: {
+    id: string;
+    name: string;
+    rate: number; // fraction (0.16)
+    isDefault: boolean;
+    taxCategory?: string;
+  } | null;
+}
+
+interface TaxOption {
+  id: string;
+  name: string;
+  rate: number; // fraction (0.16 = 16%)
+  isDefault: boolean;
+  isActive: boolean;
+  taxCategory?: string;
 }
 
 interface Category {
@@ -154,6 +172,7 @@ export function ProductFormModal({
   const [imageSource, setImageSource] = useState<ProductImageSource>(null);
   const [generatedImageSignature, setGeneratedImageSignature] = useState<string | null>(null);
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+  const [showTaxDropdown, setShowTaxDropdown] = useState(false);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [generationElapsedMs, setGenerationElapsedMs] = useState(0);
   const [imageQuota, setImageQuota] = useState<ImageGenerationQuota | null>(null);
@@ -161,8 +180,10 @@ export function ProductFormModal({
   const [isImageDeleted, setIsImageDeleted] = useState(false);
   const categoryRef = useRef<HTMLDivElement>(null);
   const addonsRef = useRef<HTMLDivElement>(null);
+  const taxRef = useRef<HTMLDivElement>(null);
   const categoryTriggerRef = useRef<HTMLButtonElement>(null);
   const addonsTriggerRef = useRef<HTMLButtonElement>(null);
+  const taxTriggerRef = useRef<HTMLButtonElement>(null);
   const imageGenerationStartedAtRef = useRef<number | null>(null);
 
   // New states for FE parity
@@ -171,6 +192,7 @@ export function ProductFormModal({
   const [showAddonsDropdown, setShowAddonsDropdown] = useState(false);
   const [categorySearchQuery, setCategorySearchQuery] = useState('');
   const [addonsSearchQuery, setAddonsSearchQuery] = useState('');
+  const [taxSearchQuery, setTaxSearchQuery] = useState('');
 
   // Local Category Creation State
   const [localCategories, setLocalCategories] = useState<Category[]>([]);
@@ -247,6 +269,9 @@ export function ProductFormModal({
   const [showAddonsWarning, setShowAddonsWarning] = useState(false);
   const [taxRate, setTaxRate] = useState<number>(0);
   const [currencySymbol, setCurrencySymbol] = useState('JOD');
+  // Multi-tax (plan §3.2)
+  const [taxes, setTaxes] = useState<TaxOption[]>([]);
+  const [selectedTaxId, setSelectedTaxId] = useState<string>('');
 
   const toFiniteNumber = (value: unknown, fallback = 0) => {
     const numericValue = typeof value === 'number' ? value : Number(value);
@@ -596,13 +621,18 @@ export function ProductFormModal({
 
     const fetchAddonsAndSettings = async () => {
       try {
-        const [attrRes, settingsRes] = await Promise.all([
+        const [attrRes, settingsRes, taxesRes] = await Promise.all([
           api.get('/api/attributes'),
-          api.get('/app-settings')
+          api.get('/app-settings'),
+          api.get('/api/taxes').catch(() => ({ data: [] })),
         ]);
         setAttributes(attrRes.data || []);
         setTaxRate(toFiniteNumber(settingsRes.data?.taxRate, 0));
         setCurrencySymbol(settingsRes.data?.currency?.toUpperCase() || 'JOD');
+        const taxList: TaxOption[] = Array.isArray(taxesRes.data)
+          ? taxesRes.data
+          : [];
+        setTaxes(taxList);
       } catch (error) {
         console.error('Failed to fetch settings/addons:', error);
       }
@@ -695,6 +725,26 @@ export function ProductFormModal({
     setCategorySearchQuery('');
     setAddonsSearchQuery('');
   }, [isOpen, initialData, categories, defaultCategoryId]);
+
+  // Multi-tax selection (plan §3.2): pre-select the item's saved tax, else
+  // the establishment default. Falls forward when a saved tax is inactive.
+  useEffect(() => {
+    if (!isOpen || taxes.length === 0) return;
+    const saved = selectedTaxId
+      ? taxes.find((t) => t.id === selectedTaxId)
+      : undefined;
+    if (saved && saved.isActive) return;
+    const preferredId = !selectedTaxId ? initialData?.taxId || '' : '';
+    const preferred = preferredId
+      ? taxes.find((t) => t.id === preferredId && t.isActive)
+      : undefined;
+    const fallback =
+      taxes.find((t) => t.isDefault && t.isActive) ||
+      taxes.find((t) => t.isActive) ||
+      taxes[0];
+    setSelectedTaxId(preferred?.id || fallback?.id || '');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [taxes, initialData?.taxId, isOpen]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -796,9 +846,15 @@ export function ProductFormModal({
       formData.append('image', selectedImage);
     }
 
-    formData.append('attributeIds', JSON.stringify(selectedAttributeIds));
+  formData.append('attributeIds', JSON.stringify(selectedAttributeIds));
 
-    await onSubmit(formData);
+  // Multi-tax (plan §3.2): only send when a tax is explicitly chosen —
+  // omitted → server assigns/keeps the establishment default.
+  if (selectedTaxId) {
+    formData.append('taxId', selectedTaxId);
+  }
+
+  await onSubmit(formData);
   };
 
   useEffect(() => {
@@ -834,6 +890,50 @@ export function ProductFormModal({
     }
   }, [showCategoryDropdown]);
 
+  useEffect(() => {
+    if (showTaxDropdown) {
+      setTimeout(() => {
+        taxRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 50);
+    }
+  }, [showTaxDropdown]);
+
+  useEffect(() => {
+    if (!showTaxDropdown) {
+      setTaxSearchQuery('');
+    }
+  }, [showTaxDropdown]);
+
+  // Click-outside: close tax dropdown like category/addons
+  useEffect(() => {
+    if (!showTaxDropdown) return;
+    const onDown = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (
+        taxRef.current &&
+        !taxRef.current.contains(target) &&
+        taxTriggerRef.current &&
+        !taxTriggerRef.current.contains(target)
+      ) {
+        setShowTaxDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [showTaxDropdown]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowTaxDropdown(false);
+        setShowCategoryDropdown(false);
+        setShowAddonsDropdown(false);
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, []);
+
   const activeCategories = localCategories.filter(cat => !isInactiveCategory(cat));
 
   const filteredCategories = activeCategories.filter(cat =>
@@ -844,12 +944,37 @@ export function ProductFormModal({
     attr.name.toLowerCase().includes(addonsSearchQuery.toLowerCase())
   );
 
+  const activeTaxes = taxes.filter((t) => t.isActive);
+  const filteredTaxes = activeTaxes.filter((t) =>
+    t.name.toLowerCase().includes(taxSearchQuery.toLowerCase())
+  );
+
   const totalRetailPrice = toFiniteNumber(parseFloat(price), 0);
-  const normalizedTaxRate = toFiniteNumber(taxRate, 0);
-  const effectiveTaxRate = normalizedTaxRate < 1 ? normalizedTaxRate : normalizedTaxRate / 100;
+  // Multi-tax: the selected item tax drives the preview; falls back to the
+  // legacy establishment rate when no taxes exist yet.
+  const selectedTax = taxes.find((t) => t.id === selectedTaxId) || null;
+  const normalizedTaxRate = selectedTax
+    ? toFiniteNumber(selectedTax.rate, 0)
+    : toFiniteNumber(taxRate, 0);
+  const effectiveTaxRate =
+    normalizedTaxRate < 1 ? normalizedTaxRate : normalizedTaxRate / 100;
   const displayTaxRatePercent = effectiveTaxRate * 100;
-  const netPrice = totalRetailPrice / (1 + effectiveTaxRate);
-  const taxAmount = totalRetailPrice - netPrice;
+  // Fallback so the Tax picker is never hidden: when the multi-tax table is
+  // still empty, surface the legacy single rate as a virtual option.
+  const effectiveActiveTaxes = activeTaxes.length > 0
+    ? activeTaxes
+    : taxRate > 0
+      ? [{ id: '__legacy__', name: 'Standard Tax', rate: taxRate, isDefault: true, isActive: true } as (typeof activeTaxes)[number]]
+      : activeTaxes;
+  const effectiveFilteredTaxes = effectiveActiveTaxes.filter((t) =>
+    t.name.toLowerCase().includes(taxSearchQuery.toLowerCase())
+  );
+  const effectiveSelectedTax = effectiveActiveTaxes.find((t) => t.id === selectedTaxId) || selectedTax || effectiveActiveTaxes.find((t) => t.isDefault) || effectiveActiveTaxes[0] || null;
+  // Always inclusive: shelf price contains tax, extract it.
+  const taxAmount = effectiveTaxRate > 0
+    ? totalRetailPrice - totalRetailPrice / (1 + effectiveTaxRate)
+    : 0;
+  const netPrice = totalRetailPrice - taxAmount;
   const popupLabelBaseClass = 'text-xs font-semibold text-gray-400 dark:text-gray-500 tracking-widest uppercase block mb-2';
   const previewImage = imagePreview;
   const generationElapsedLabel = `${(generationElapsedMs / 1000).toFixed(2)}s`;
@@ -1135,7 +1260,7 @@ export function ProductFormModal({
                     {/* Retail Price (Total) */}
                     <div className="space-y-2">
                       <label className={`${popupLabelBaseClass} block flex items-center gap-1`}>
-                        {t('products.form.priceLabel')} <span className="text-mintcom-red">*</span>
+                        Sales price (incl. tax) <span className="text-mintcom-red">*</span>
                         <QuickInfo text="Shown for customers." />
                       </label>
                       <div>
@@ -1167,12 +1292,107 @@ export function ProductFormModal({
                     </div>
                   </div>
 
-                  {/* Tax Breakdown (FE Style Calculation) */}
+                  {/* Tax — mirrors the Category selector above */}
+                  <div className="relative space-y-2" ref={taxRef}>
+                      <label className={`${popupLabelBaseClass} block flex items-center gap-1`}>
+                        {t('products.form.taxLabel', { defaultValue: 'Tax' })}
+                        <QuickInfo text={t('products.form.taxHint', { defaultValue: 'The tax rate applied to this product at checkout.' })} />
+                      </label>
+                      <button
+                        ref={taxTriggerRef}
+                        type="button"
+                        onClick={() => {
+                          setShowTaxDropdown(!showTaxDropdown);
+                          setShowCategoryDropdown(false);
+                          setShowAddonsDropdown(false);
+                        }}
+                        className="w-full bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-2xl px-5 py-4 text-left flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-mintcom-green/20 transition-all shadow-sm group-hover:border-mintcom-green/50"
+                      >
+                        <span className={effectiveSelectedTax ? 'text-sm font-bold text-gray-900 dark:text-white' : 'text-sm font-bold text-gray-400'}>
+                          {effectiveSelectedTax
+                            ? `${(effectiveSelectedTax.rate * 100).toLocaleString(t('common.locale'), { maximumFractionDigits: 2 })}% — ${effectiveSelectedTax.name}${effectiveSelectedTax.isDefault ? ` (${t('common.default', { defaultValue: 'Default' })})` : ''}`
+                            : t('products.form.selectTax', { defaultValue: 'Select tax rate' })}
+                        </span>
+                        <ChevronDown size={20} className={`text-gray-400 transition-transform duration-300 ${showTaxDropdown ? 'rotate-180 text-mintcom-green' : ''}`} />
+                      </button>
+
+                      <AnimatePresence>
+                        {showTaxDropdown && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            className="absolute top-full left-0 right-0 mt-3 bg-white dark:bg-[#1E293B] border border-gray-200 dark:border-white/10 rounded-2xl z-[60] max-h-80 flex flex-col shadow-2xl overflow-hidden"
+                          >
+                            <div className="bg-white dark:bg-[#1E293B] p-3 border-b border-gray-100 dark:border-white/5 z-10 shrink-0">
+                              <div className="relative">
+                                <input
+                                  maxLength={255}
+                                  type="text"
+                                  value={taxSearchQuery}
+                                  onChange={(e) => setTaxSearchQuery(e.target.value)}
+                                  placeholder={formatInputPlaceholder(t('products.form.filterTaxes', { defaultValue: 'Filter taxes…' }), t('common.locale'))}
+                                  className="w-full pl-9 pr-11 py-2.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-bold text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none transition-all"
+                                  onClick={(e) => e.stopPropagation()}
+                                />
+                                {taxSearchQuery && (
+                                  <button
+                                    type="button"
+                                    onClick={() => setTaxSearchQuery('')}
+                                    aria-label={t('common.clearSearch', 'Clear search')}
+                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 inline-flex h-7 w-7 items-center justify-center rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
+                                  >
+                                    <X size={12} strokeWidth={2.75} />
+                                  </button>
+                                )}
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                              </div>
+                            </div>
+
+                            <div className="overflow-y-auto custom-scrollbar flex-1">
+                              {effectiveFilteredTaxes.length === 0 && (
+                                <div className="p-8 text-center border-b border-gray-100 dark:border-white/5">
+                                  <p className="text-xs font-bold text-gray-400">{t('products.messages.noMatches')}</p>
+                                </div>
+                              )}
+                              {effectiveFilteredTaxes.map((tax) => (
+                                <button
+                                  key={tax.id}
+                                  type="button"
+                                  onClick={() => {
+                                    if (tax.id === '__legacy__') { setShowTaxDropdown(false); return; }
+                                    setSelectedTaxId(tax.id);
+                                    setShowTaxDropdown(false);
+                                  }}
+                                  className="w-full px-5 py-4 text-left hover:bg-gray-50 dark:hover:bg-white/[0.02] flex items-center justify-between group transition-colors border-b border-gray-100 dark:border-white/5 last:border-none"
+                                >
+                                  <span className="flex items-center gap-2 min-w-0">
+                                    <span className={`text-xs font-bold truncate ${selectedTaxId === tax.id ? 'text-mintcom-green' : 'text-gray-700 dark:text-gray-300'}`}>
+                                      {tax.name}
+                                      {tax.isDefault && (
+                                        <span className="ml-1.5 inline-flex items-center rounded-full bg-mintcom-green/10 px-1.5 py-0.5 text-[10px] font-black tracking-wide text-mintcom-green align-middle">
+                                          {t('common.default', { defaultValue: 'Default' })}
+                                        </span>
+                                      )}
+                                    </span>
+                                  </span>
+                                  <span className="flex items-center gap-2 shrink-0">
+                                    <span className={`text-xs font-black ${selectedTaxId === tax.id ? 'text-mintcom-green' : 'text-gray-500'}`}>
+                                      {(tax.rate * 100).toLocaleString(t('common.locale'), { maximumFractionDigits: 2 })}%
+                                    </span>
+                                    {selectedTaxId === tax.id && <Check size={18} className="text-mintcom-green" strokeWidth={3} />}
+                                  </span>
+                                </button>
+                              ))}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
                   <div className="grid grid-cols-3 gap-3">
                     <div className="bg-gray-50 dark:bg-white/5 rounded-2xl p-4 border border-gray-100 dark:border-white/5 shadow-sm">
                       <div className="flex items-center mb-1.5 gap-1">
-                        <p className="text-xs font-bold text-gray-500 tracking-widest leading-tight">{t('products.stats.taxRate')}</p>
-                        <QuickInfo text="Already decided from settings." />
+                        <p className="text-xs font-bold text-gray-500 tracking-widest leading-tight">{selectedTax ? selectedTax.name : 'Tax rate'}</p>
                       </div>
                       <div className="flex items-baseline gap-1">
                         <p className="text-gray-900 dark:text-white font-bold text-lg">
@@ -1182,14 +1402,14 @@ export function ProductFormModal({
                       </div>
                     </div>
                     <div className="bg-mintcom-green/5 rounded-2xl p-4 border border-mintcom-green/20 shadow-sm">
-                      <p className="text-xs font-bold text-mintcom-green tracking-widest mb-1.5 leading-tight">{t('products.stats.tax')}</p>
+                      <p className="text-xs font-bold text-mintcom-green tracking-widest mb-1.5 leading-tight">Tax included</p>
                       <div className="flex items-baseline gap-1">
                         <p className="text-mintcom-green font-bold text-lg">{taxAmount.toLocaleString(t('common.locale'), { minimumFractionDigits: 3, maximumFractionDigits: 3 })}</p>
                         <p className="text-[8px] text-mintcom-green/60 font-black">{currencySymbol}</p>
                       </div>
                     </div>
                     <div className="bg-mintcom-green/10 rounded-2xl p-4 border border-mintcom-green/30 shadow-sm">
-                      <p className="text-xs font-bold text-mintcom-green tracking-widest mb-1.5 leading-tight">{t('products.stats.net')}</p>
+                      <p className="text-xs font-bold text-mintcom-green tracking-widest mb-1.5 leading-tight">Net (excl. tax)</p>
                       <div className="flex items-baseline gap-1">
                         <p className="text-mintcom-green font-bold text-lg">{netPrice.toLocaleString(t('common.locale'), { minimumFractionDigits: 3, maximumFractionDigits: 3 })}</p>
                         <p className="text-[8px] text-mintcom-green/60 font-black">{currencySymbol}</p>
@@ -1263,6 +1483,7 @@ export function ProductFormModal({
                     onClick={() => {
                       setShowCategoryDropdown(!showCategoryDropdown);
                       setShowAddonsDropdown(false);
+                      setShowTaxDropdown(false);
                     }}
                     className={`w-full bg-gray-50 dark:bg-black/20 border ${errors.category ? 'border-mintcom-red ring-2 ring-mintcom-red/20' : 'border-gray-200 dark:border-white/10'} rounded-2xl px-5 py-4 text-left flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-mintcom-green/20 transition-all shadow-sm group-hover:border-mintcom-green/50`}
                   >
@@ -1419,6 +1640,7 @@ export function ProductFormModal({
                       if (attributes.length === 0) return;
                       setShowAddonsDropdown(!showAddonsDropdown);
                       setShowCategoryDropdown(false);
+                      setShowTaxDropdown(false);
                     }}
                     className={`w-full bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-2xl px-5 py-4 text-left flex min-w-0 items-center justify-between gap-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-mintcom-green/20 transition-all shadow-sm ${attributes.length === 0 ? 'opacity-50 cursor-not-allowed' : 'group-hover:border-mintcom-green/50'}`}
                   >

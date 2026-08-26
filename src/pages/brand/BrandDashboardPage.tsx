@@ -181,6 +181,9 @@ export function BrandDashboardPage() {
     const [endTime, setEndTime] = useState<string>('23:59');
     const [revenueData, setRevenueData] = useState<RevenueDataPoint[]>([]);
     const [categoryBreakdown, setCategoryBreakdown] = useState<CategoryDataPoint[]>([]);
+    // Currency the API aggregated brand figures in (the account's working
+    // currency, derived from its locations) — never assume USD.
+    const [baseCurrency, setBaseCurrency] = useState<string>('USD');
     const [isRefreshing, setIsRefreshing] = useState(false);
 
     const hasMixedCurrencies = useMemo(() => {
@@ -232,6 +235,7 @@ export function BrandDashboardPage() {
                     t('common.unknown', { defaultValue: 'Unknown' }),
                 ),
             );
+            setBaseCurrency((data.baseCurrency || 'USD').toUpperCase());
             setBrandName(data.brandName || brand?.name || t('brand.dashboard.title'));
         } catch (error) {
             console.error('Failed to fetch brand dashboard data:', error);
@@ -269,7 +273,7 @@ export function BrandDashboardPage() {
 
     const formatCurrency = (value: number) => {
         const locale = t('common.locale') === 'ar' ? 'ar-EG' : 'en-US';
-        return formatCompactCurrencyCode(value, 'USD', locale);
+        return formatCompactCurrencyCode(value, baseCurrency, locale);
     };
 
     // Compact number without the currency code for axis ticks — "38.0M USD"
@@ -293,7 +297,7 @@ export function BrandDashboardPage() {
     }
 
     return (
-        <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 pb-10 relative">
+        <div className="space-y-6 sm:space-y-8 pb-10 relative">
             {/* Premium Glow effect for top brand */}
             {isTopBrand && (
                 <div className="absolute -top-24 -left-24 w-96 h-96 bg-mintcom-green/10 rounded-full blur-[120px] pointer-events-none" />
@@ -320,7 +324,7 @@ export function BrandDashboardPage() {
                                 <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-white/20" />
                                 <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-bold">
                                     <Globe size={13} />
-                                    <span>{t('brand.dashboard.standardizedInUSD')}</span>
+                                    <span>{t('brand.dashboard.standardizedIn', { currency: baseCurrency })}</span>
                                 </div>
                             </>
                         )}
@@ -339,6 +343,7 @@ export function BrandDashboardPage() {
                                     onChange={(val) => setQuickDate(val as DateRangePreset || 'today')}
                                     options={localizedDateOptions}
                                     showAllOption={false}
+                                    searchable={false}
                                     placeholder={formatInputPlaceholder(t('owner.overview.selectPeriod'), t('common.locale'))}
                                     className="w-full"
                                     buttonClassName={`!bg-gray-50 dark:!bg-white/5 !border-transparent hover:!bg-gray-100 dark:hover:!bg-white/10 !rounded-xl !p-2.5 !h-full !text-xs !font-bold ${selectedDateRange !== 'custom' ? '!text-mintcom-green' : ''}`}
@@ -376,7 +381,7 @@ export function BrandDashboardPage() {
                                         {/* Time Input Group */}
                                         <div className={`flex-none w-auto min-w-[155px] sm:min-w-[180px] relative z-[55]`}>
                                             <div className={`flex flex-col justify-center px-3 h-12 rounded-xl border transition-all shadow-sm ${isTimeFiltered
-                                                ? 'bg-mintcom-green/5 border-mintcom-green ring-2 ring-mintcom-green shadow-lg shadow-mintcom-green/10'
+                                                ? 'bg-mintcom-green/5 border-mintcom-green'
                                                 : 'bg-white dark:bg-[#1E293B] border-gray-200 dark:border-white/10 hover:border-mintcom-green/50'
                                                 }`}>
                                                 <div className="flex items-center gap-2 justify-between relative">
@@ -477,7 +482,7 @@ export function BrandDashboardPage() {
                             <p className="dashboard-stat-title mb-1">{stat.label}</p>
                             <StatValue 
                                 value={stat.value} 
-                                currency={stat.isCurrency ? 'USD' : null}
+                                currency={stat.isCurrency ? baseCurrency : null}
                                 className="text-2xl"
                                 isInteger={!stat.isCurrency}
                             />
@@ -553,10 +558,10 @@ export function BrandDashboardPage() {
                                 <div className="text-right">
                                     <StatValue 
                                         value={loc.revenue} 
-                                        currency="USD"
+                                        currency={baseCurrency}
                                         className="text-lg"
                                     />
-                                    {loc.currency && loc.currency !== 'USD' && loc.originalRevenue !== undefined && (
+                                    {loc.currency && loc.currency !== baseCurrency && loc.originalRevenue !== undefined && (
                                         <p className="text-[11px] text-amber-600 dark:text-amber-400 font-bold mt-0.5">
                                             {t('brand.dashboard.localRevenue')}: {formatLocalCurrency(loc.originalRevenue, loc.currency)}
                                         </p>

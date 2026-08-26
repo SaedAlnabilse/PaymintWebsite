@@ -104,7 +104,7 @@ export function EstablishmentsPage() {
   }, [searchQuery]);
 
   return (
-    <div className="max-w-7xl mx-auto space-y-10 pb-16" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
+    <div className="space-y-10 pb-16" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
       {/* Header */}
       <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-[#1E293B] p-8 border border-gray-200 dark:border-white/5 shadow-sm">
         <div className="absolute top-0 right-0 w-96 h-96 bg-mintcom-green/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />

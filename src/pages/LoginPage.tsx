@@ -231,7 +231,7 @@ export function LoginPage() {
   return (
     <div
       dir={isRtl ? 'rtl' : 'ltr'}
-      className="relative flex min-h-screen items-center justify-center bg-white px-6 py-12 transition-colors duration-300 dark:bg-[#050505]"
+      className="relative flex min-h-screen items-center justify-center bg-white px-6 pb-12 pt-24 transition-colors duration-300 dark:bg-[#050505] md:py-12"
     >
       <Helmet>
         <title>{t('metadata.login.title')}</title>
@@ -247,7 +247,7 @@ export function LoginPage() {
         {/* Faint grid */}
         <div
           aria-hidden
-          className="absolute inset-0 opacity-[0.04] dark:opacity-[0.06]"
+          className="absolute inset-0 opacity-[0.04] dark:hidden"
           style={{
             backgroundImage: 'linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)',
             backgroundSize: '48px 48px',
@@ -274,7 +274,7 @@ export function LoginPage() {
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-        className="relative z-10 w-full max-w-md"
+        className="relative z-10 w-full max-w-md xl:max-w-lg 2xl:max-w-xl"
       >
         {/* Back link */}
         <a
@@ -287,16 +287,16 @@ export function LoginPage() {
 
         {/* Heading */}
         <div className="mb-8">
-          <h1 className="font-magilio text-3xl font-bold tracking-tight text-gray-900 dark:text-white md:text-4xl">
+          <h1 className="font-magilio text-3xl font-bold tracking-tight text-gray-900 dark:text-white md:text-4xl 2xl:text-5xl">
             {t('auth.login.title')}
           </h1>
-          <p className="mt-2 text-sm font-medium text-gray-500 dark:text-gray-400">
+          <p className="mt-2 text-sm font-medium text-gray-500 dark:text-gray-400 2xl:text-base">
             {t('auth.login.subtitle')}
           </p>
         </div>
 
         {/* Glass card */}
-        <div className="relative overflow-hidden rounded-3xl border border-gray-200/70 bg-white/90 p-8 shadow-[0_4px_15px_-6px_rgba(0,0,0,0.06)] backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.03] dark:shadow-none">
+        <div className="relative overflow-hidden rounded-3xl border border-gray-200/70 bg-white/90 p-8 shadow-[0_4px_15px_-6px_rgba(0,0,0,0.06)] backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.03] dark:shadow-none 2xl:p-10">
           <div aria-hidden className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-mintcom-green/10 blur-3xl" />
 
           <div className="relative">
@@ -357,7 +357,7 @@ export function LoginPage() {
                   </label>
                   <Link
                     to="/forgot-password"
-                    className="text-[12px] font-bold text-mintcom-green hover:underline"
+                    className="text-[12px] font-bold text-mintcom-greenInk hover:underline dark:text-mintcom-green"
                   >
                     {t('auth.login.forgotPassword')}
                   </Link>
@@ -402,21 +402,21 @@ export function LoginPage() {
               {/* Submit */}
               <motion.button
                 whileHover={{ y: -1 }}
-                whileTap={{ scale: 0.97 }}
+                whileTap={{ scale: 0.98 }}
                 type="submit"
                 disabled={isSubmitting}
-                className="group relative inline-flex h-14 w-full items-center justify-center gap-2 overflow-hidden rounded-2xl bg-mintcom-green font-bold text-black shadow-[0_8px_24px_-8px_rgba(124,195,159,0.6)] transition-shadow hover:shadow-[0_12px_32px_-8px_rgba(124,195,159,0.7)] disabled:opacity-60"
+                className="group relative inline-flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-mintcom-green font-bold text-black shadow-md shadow-mintcom-green/20 transition-all hover:bg-mintcom-green/90 disabled:opacity-60"
+                style={{ borderRadius: 12, backgroundColor: '#7dc6a2' }}
               >
-                <span aria-hidden className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
-                <span className="relative">{isSubmitting ? t('auth.login.loggingIn') : t('auth.login.loginButton')}</span>
-                <ArrowRight size={16} className={`relative transition-transform ${isRtl ? 'rotate-180 group-hover:-translate-x-0.5' : 'group-hover:translate-x-0.5'}`} />
+                <span className="relative font-bold text-black">{isSubmitting ? t('auth.login.loggingIn') : t('auth.login.loginButton')}</span>
+                <ArrowRight size={16} className={`text-black transition-transform ${isRtl ? 'rotate-180 group-hover:-translate-x-1' : 'group-hover:translate-x-1'}`} />
               </motion.button>
             </form>
 
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 {t('auth.login.noAccount')}{' '}
-                <Link to="/signup" className="font-bold text-mintcom-green hover:underline">
+                <Link to="/signup" className="font-bold text-mintcom-greenInk hover:underline dark:text-mintcom-green">
                   {t('auth.login.signUp')}
                 </Link>
               </p>

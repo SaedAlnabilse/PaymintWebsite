@@ -323,7 +323,7 @@ export function AuthDivider() {
   return (
     <div className="my-6 flex items-center gap-4">
       <div className="h-px flex-1 bg-gradient-to-r from-transparent to-gray-200 dark:to-white/10" />
-      <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-gray-400 dark:text-gray-500">
+      <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-gray-500 dark:text-gray-400">
         {t('common.or')}
       </span>
       <div className="h-px flex-1 bg-gradient-to-l from-transparent to-gray-200 dark:to-white/10" />

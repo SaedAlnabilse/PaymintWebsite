@@ -427,7 +427,7 @@ export function FiscalComplianceCard({ initial, disabled, onSaved }: FiscalCompl
                           ? 'bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/20'
                           : testResult?.ok
                             ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20'
-                            : 'bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/20'
+                            : 'bg-mintcom-red border-mintcom-red'
                       }`}
                     >
                       {testing ? (
@@ -440,7 +440,7 @@ export function FiscalComplianceCard({ initial, disabled, onSaved }: FiscalCompl
                       ) : (
                         <>
                           <span className={`w-2.5 h-2.5 rounded-full ${testResult?.ok ? 'bg-emerald-500' : 'bg-red-500'}`} />
-                          <span className={`text-sm font-semibold ${testResult?.ok ? 'text-emerald-700 dark:text-emerald-300' : 'text-red-700 dark:text-red-300'}`}>
+                          <span className={`text-sm font-semibold ${testResult?.ok ? 'text-emerald-700 dark:text-emerald-300' : 'text-white'}`}>
                             {testResult?.message ||
                               (testResult?.ok
                                 ? t('settings.fiscal.connected', 'Connected')

@@ -174,8 +174,7 @@ export const StatValue: React.FC<StatValueProps> = ({
   }, [className, length]);
 
   const amountFontPx = getTextSizePx(fontSizeClass);
-  const currencyFontPx = Math.max(8, Math.round(amountFontPx * 0.45));
-  const currencyLiftPx = Math.max(2, Math.round(amountFontPx * 0.15));
+  const currencyFontPx = Math.max(11, Math.round(amountFontPx * 0.75));
 
   // Truncation logic for extreme safety (e.g. 100 quadrillion)
   const isTruncated = length > 22;
@@ -247,7 +246,7 @@ export const StatValue: React.FC<StatValueProps> = ({
   return (
     <div
       ref={containerRef}
-      className={`relative inline-flex max-w-full min-w-0 items-baseline gap-1.5 ${containerClassName}`}
+      className={`relative inline-flex max-w-full min-w-0 items-baseline gap-1 ${containerClassName}`}
       aria-label={shouldShowTooltip ? fullDisplay : undefined}
       onMouseEnter={showTooltip}
       onMouseLeave={hideTooltip}
@@ -263,8 +262,8 @@ export const StatValue: React.FC<StatValueProps> = ({
       
       {currency && (
         <span
-          className="self-end font-black uppercase text-gray-400 select-none dark:text-gray-500"
-          style={{ fontSize: currencyFontPx, marginBottom: currencyLiftPx }}
+          className="font-bold uppercase opacity-80 select-none text-current"
+          style={{ fontSize: currencyFontPx }}
         >
           {currency}
         </span>

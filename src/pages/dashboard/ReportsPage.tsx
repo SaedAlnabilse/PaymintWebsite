@@ -657,7 +657,7 @@ export function ReportsPage() {
   const busy = isLoading || isFetching;
 
   return (
-    <div className="relative max-w-7xl mx-auto space-y-8 pb-10" aria-busy={busy}>
+    <div className="relative space-y-8 pb-10" aria-busy={busy}>
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
         <div>
@@ -784,10 +784,11 @@ export function ReportsPage() {
                 onChange={(val) => setQuickDate(val || 'today')}
                 options={localizedDateOptions}
                 showAllOption={false}
+                searchable={false}
                 placeholder={formatInputPlaceholder(t('owner.overview.selectPeriod'), t('common.locale'))}
                 className="w-full h-full"
                 buttonClassName={`!h-12 !rounded-xl !px-4 !text-xs sm:!text-sm !font-bold border transition-all ${selectedDateRange !== 'custom'
-                  ? '!bg-mintcom-green/5 !border-mintcom-green !text-mintcom-green ring-2 ring-mintcom-green shadow-lg shadow-mintcom-green/10'
+                  ? '!bg-mintcom-green/5 !border-mintcom-green !text-mintcom-green'
                   : '!bg-white dark:!bg-[#1E293B] !border-gray-200 dark:!border-white/10 hover:!bg-gray-50 dark:hover:!bg-white/10'
                   }`}
               />
@@ -816,7 +817,7 @@ export function ReportsPage() {
               return (
                 <div className={`flex-none w-auto min-w-[155px] sm:min-w-[180px] relative z-[55]`}>
                   <div className={`flex flex-col justify-center px-3 h-12 rounded-xl border transition-all shadow-sm ${isTimeFiltered
-                    ? 'bg-mintcom-green/5 border-mintcom-green ring-2 ring-mintcom-green shadow-lg shadow-mintcom-green/10'
+                    ? 'bg-mintcom-green/5 border-mintcom-green'
                     : 'bg-white dark:bg-[#1E293B] border-gray-200 dark:border-white/10 hover:border-mintcom-green/50'
                     }`}>
                     <div className="flex items-center gap-2 justify-between relative">
@@ -856,7 +857,7 @@ export function ReportsPage() {
                 placeholder={formatInputPlaceholder(t('common.allStaff'), t('common.locale'))}
                 className="w-full h-full"
                 buttonClassName={`!h-12 !rounded-xl !px-4 !text-xs sm:!text-sm !font-bold border transition-all ${selectedEmployeeId
-                  ? '!bg-mintcom-green/5 !border-mintcom-green !text-mintcom-green ring-2 ring-mintcom-green shadow-lg shadow-mintcom-green/10'
+                  ? '!bg-mintcom-green/5 !border-mintcom-green !text-mintcom-green'
                   : '!bg-gray-50 dark:!bg-white/5 !border-transparent hover:!bg-gray-100 dark:hover:!bg-white/10'
                   }`}
               />
@@ -869,9 +870,10 @@ export function ReportsPage() {
                 onChange={setSelectedShiftId}
                 options={employeeShifts}
                 placeholder={formatInputPlaceholder(t('common.selectShift'), t('common.locale'))}
+                searchable={false}
                 className="w-full h-full"
                 buttonClassName={`!h-12 !rounded-xl !px-4 !text-xs sm:!text-sm !font-bold border transition-all ${selectedShiftId
-                  ? '!bg-mintcom-green/5 !border-mintcom-green !text-mintcom-green ring-2 ring-mintcom-green shadow-lg shadow-mintcom-green/10'
+                  ? '!bg-mintcom-green/5 !border-mintcom-green !text-mintcom-green'
                   : '!bg-gray-50 dark:!bg-white/5 !border-transparent hover:!bg-gray-100 dark:hover:!bg-white/10'
                   }`}
               />

@@ -614,7 +614,7 @@ export const WhyChooseUs = () => {
       <div className="absolute end-0 top-0 -z-10 h-[600px] w-[600px] rounded-full bg-mintcom-green/5 blur-[120px]" />
       <div className="absolute bottom-0 start-0 -z-10 h-[400px] w-[400px] rounded-full bg-mintcom-green/3 blur-[100px]" />
 
-      <div className="container mx-auto max-w-[1280px] px-6 md:px-10 lg:px-16">
+      <div className="w-full px-6 md:px-10 lg:px-16">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -666,7 +666,7 @@ export const WhyChooseUs = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-100px' }}
             transition={{ duration: 0.7 }}
-            className="mx-auto w-full max-w-7xl"
+            className="mx-auto w-full"
           >
             <div className="group relative aspect-video w-full overflow-hidden rounded-2xl border border-gray-200 bg-gray-900 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] dark:border-white/10">
               {isVideoVisible && demoIsNative ? (

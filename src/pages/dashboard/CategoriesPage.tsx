@@ -562,7 +562,7 @@ export function CategoriesPage() {
   const ViewingIcon = viewingCategory ? (ICON_MAP[viewingCategory.icon || 'tag'] || Tag) : Tag;
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 pb-10 font-sans" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
+    <div className="space-y-6 sm:space-y-8 pb-10 font-sans" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
       {/* Full-screen blocker while a user-triggered load is in flight —
           background/realtime refreshes stay silent. */}
       <BusyOverlay visible={isLoading} />
@@ -659,6 +659,7 @@ export function CategoriesPage() {
               ]}
               allOptionLabel={t('common.allStatuses', 'All Statuses')}
               placeholder={t('common.allStatuses', 'All Statuses')}
+              searchable={false}
             />
           </div>
 

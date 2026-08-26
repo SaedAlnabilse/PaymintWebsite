@@ -174,7 +174,7 @@ export const NewTicketPage = () => {
       <div className="min-h-screen bg-white font-sans text-gray-900 dark:bg-[#050505] dark:text-white">
         <Navbar />
         <main className="pt-28 pb-20">
-          <div className="container mx-auto max-w-[1280px] px-6 md:px-10">
+          <div className="w-full px-6 md:px-10 lg:px-16">
             <div className="max-w-3xl mx-auto">
               <div className="rounded-3xl border border-gray-100 bg-white dark:border-white/10 dark:bg-white/[0.03] p-10 text-center">
                 <Loader2 size={28} className="animate-spin mx-auto mb-3 text-mintcom-green" />
@@ -197,7 +197,7 @@ export const NewTicketPage = () => {
       <Navbar />
 
       <main className="pt-28 pb-20">
-        <div className="container mx-auto max-w-[1280px] px-6 md:px-10">
+        <div className="w-full px-6 md:px-10 lg:px-16">
           <div className="max-w-3xl mx-auto">
             {/* Header */}
             <div className="mb-8">

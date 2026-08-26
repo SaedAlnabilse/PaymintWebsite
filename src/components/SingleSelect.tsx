@@ -25,6 +25,8 @@ interface SingleSelectProps {
     allowClear?: boolean;
     scrollIntoViewOnOpen?: boolean; // Only scroll into view when inside modals/popups
     disabled?: boolean;
+    searchable?: boolean;
+    showSearch?: boolean;
 }
 
 export function SingleSelect({
@@ -39,6 +41,8 @@ export function SingleSelect({
     allowClear = true,
     scrollIntoViewOnOpen = false,
     disabled = false,
+    searchable,
+    showSearch,
     className = ''
 }: SingleSelectProps) {
     const { t } = useTranslation();
@@ -49,6 +53,8 @@ export function SingleSelect({
     const dropdownRef = useRef<HTMLDivElement>(null);
     const optionsListRef = useRef<HTMLDivElement>(null);
     const searchInputRef = useRef<HTMLInputElement>(null);
+
+    const isSearchable = showSearch ?? searchable ?? (options.length > 7);
 
     const effectivePlaceholder = formatInputPlaceholder(placeholder || t('common.all'), t('common.locale'));
     const effectiveAllLabel = formatInputLabel(allOptionLabel || t('common.all'), t('common.locale'));
@@ -117,9 +123,12 @@ export function SingleSelect({
             window.addEventListener('scroll', scrollWrapper, true);
             window.addEventListener('resize', scrollWrapper);
 
-            const timer = setTimeout(() => {
-                searchInputRef.current?.focus();
-            }, 100);
+            let timer: ReturnType<typeof setTimeout> | undefined;
+            if (isSearchable) {
+                timer = setTimeout(() => {
+                    searchInputRef.current?.focus();
+                }, 100);
+            }
 
             if (scrollIntoViewOnOpen && containerRef.current) {
                 setTimeout(() => {
@@ -128,13 +137,13 @@ export function SingleSelect({
             }
 
             return () => {
-                clearTimeout(timer);
+                if (timer) clearTimeout(timer);
                 document.removeEventListener('mousedown', clickOutsideWrapper);
                 window.removeEventListener('scroll', scrollWrapper, true);
                 window.removeEventListener('resize', scrollWrapper);
             };
         }
-    }, [isOpen, scrollIntoViewOnOpen, clickOutsideWrapper, scrollWrapper]);
+    }, [isOpen, scrollIntoViewOnOpen, clickOutsideWrapper, scrollWrapper, isSearchable]);
 
     const toggleOpen = () => {
         if (disabled) return;
@@ -158,9 +167,9 @@ export function SingleSelect({
     const selectedOption = options.find(o => o.value === value);
     const isFilterActive = value !== null;
 
-    const filteredOptions = options.filter(opt =>
-        opt.label.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filteredOptions = isSearchable && searchQuery
+        ? options.filter(opt => opt.label.toLowerCase().includes(searchQuery.toLowerCase()))
+        : options;
 
     useEffect(() => {
         if (!isOpen) return;
@@ -186,29 +195,31 @@ export function SingleSelect({
                     className={`bg-white/95 dark:bg-[#1E293B]/95 backdrop-blur-xl border border-gray-100 dark:border-white/[0.08] rounded-2xl shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] overflow-hidden max-h-80 overflow-y-auto custom-scrollbar ring-1 ring-black/5 flex flex-col`}
                 >
                     {/* Search Bar */}
-                    <div className="p-2 border-b border-gray-50 dark:border-white/5 sticky top-0 bg-white/95 dark:bg-[#1E293B]/95 backdrop-blur-xl z-10">
-                        <div className="relative flex items-center">
-                            <Search size={14} className="absolute left-3 text-gray-400" />
-                            <input maxLength={255}
-                                ref={searchInputRef}
-                                type="text"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder={formatInputPlaceholder(t('common.searchPlaceholder'), t('common.locale'))}
-                                className="w-full pl-9 pr-9 py-2 bg-gray-50 dark:bg-white/5 border-none rounded-lg text-sm font-normal text-gray-700 dark:text-gray-300 placeholder-gray-400 outline-none transition-all"
-                            />
-                            {searchQuery && (
-                                <button
-                                    type="button"
-                                    onClick={() => setSearchQuery('')}
-                                    aria-label={t('common.clearSearch', 'Clear search')}
-                                    className="absolute right-1.5 inline-flex h-6 w-6 items-center justify-center rounded-md border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/10 transition-colors"
-                                >
-                                    <X size={12} strokeWidth={2.75} />
-                                </button>
-                            )}
+                    {isSearchable && (
+                        <div className="p-2 border-b border-gray-50 dark:border-white/5 sticky top-0 bg-white/95 dark:bg-[#1E293B]/95 backdrop-blur-xl z-10">
+                            <div className="relative flex items-center">
+                                <Search size={14} className="absolute left-3 text-gray-400" />
+                                <input maxLength={255}
+                                    ref={searchInputRef}
+                                    type="text"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    placeholder={formatInputPlaceholder(t('common.searchPlaceholder'), t('common.locale'))}
+                                    className="w-full pl-9 pr-9 py-2 bg-gray-50 dark:bg-white/5 border-none rounded-lg text-sm font-normal text-gray-700 dark:text-gray-300 placeholder-gray-400 outline-none transition-all"
+                                />
+                                {searchQuery && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setSearchQuery('')}
+                                        aria-label={t('common.clearSearch', 'Clear search')}
+                                        className="absolute right-1.5 inline-flex h-6 w-6 items-center justify-center rounded-md border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/10 transition-colors"
+                                    >
+                                        <X size={12} strokeWidth={2.75} />
+                                    </button>
+                                )}
+                            </div>
                         </div>
-                    </div>
+                    )}
 
                     <div ref={optionsListRef} className="flex-1 overflow-y-auto custom-scrollbar">
                         {/* "All" Option */}

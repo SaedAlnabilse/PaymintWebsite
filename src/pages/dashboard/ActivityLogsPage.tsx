@@ -435,7 +435,7 @@ export function ActivityLogsPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 pb-10" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
+    <div className="space-y-8 pb-10" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
       {/* Full-screen blocker while logs load, so filters/pagination can't be
           stacked on top of an in-flight request. */}
       <BusyOverlay visible={isLoading} />
@@ -500,6 +500,7 @@ export function ActivityLogsPage() {
                 placeholder={formatInputPlaceholder(t('activity.customRange'), t('common.locale'))}
                 showAllOption={false}
                 allowClear={false}
+                searchable={false}
                 className="w-full"
                 buttonClassName="!h-12 !rounded-xl"
               />
@@ -560,6 +561,7 @@ export function ActivityLogsPage() {
               options={actionFilterOptions}
               allOptionLabel={t('activity.allActions')}
               placeholder={formatInputPlaceholder(t('activity.allActions'), t('common.locale'))}
+              searchable={false}
               className="w-full"
               buttonClassName="!h-12 !rounded-xl"
             />
@@ -573,6 +575,7 @@ export function ActivityLogsPage() {
               options={resourceFilterOptions}
               allOptionLabel={t('activity.allResources', { defaultValue: 'All types' })}
               placeholder={formatInputPlaceholder(t('activity.filterByType', { defaultValue: 'Resource type' }), t('common.locale'))}
+              searchable={false}
               className="w-full"
               buttonClassName="!h-12 !rounded-xl"
             />

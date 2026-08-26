@@ -95,19 +95,13 @@ export function MobileAppModal({
                     </p>
                   </div>
                   <p className="text-base font-bold text-gray-900 dark:text-white leading-tight">
-                    {t('brand.name')} {t('common.app')}
-                  </p>
-                  <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                    {t('dashboard.menu.getMobileApp')}
+                    {t('dashboard.menu.downloadAdminPortal', 'Download Mintcom Admin Portal')}
                   </p>
                 </div>
               </div>
 
-              {/* Text & Badges */}
+              {/* Badges */}
               <div className="text-center">
-                <p className="text-base font-bold text-gray-900 dark:text-white leading-tight mb-4">
-                  <span className="text-mintcom-green">{t('brand.name')} {t('common.app')}</span>
-                </p>
                 <div className="flex flex-row items-center justify-center gap-3">
                   {hasIosDownload ? (
                     <a

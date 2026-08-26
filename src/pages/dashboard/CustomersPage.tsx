@@ -1,21 +1,13 @@
 import { useAuth } from '../../context/AuthContext';
 import { useState, useEffect, useRef } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import {
   Plus,
-  Minus,
   User,
-  Phone,
-  Mail,
-  MapPin,
   Trash2,
   Edit2,
   Award,
-  X,
   MoreVertical,
   Eye
 } from 'lucide-react';
@@ -32,10 +24,12 @@ import { ExportMenu } from '../../components/ExportMenu';
 import { SearchInput, Pagination } from '../../components/ui';
 import { usePermissionGuard } from '../../hooks/usePermissionGuard';
 import { useCurrency } from '../../context/CurrencyContext';
-import { formatInputPlaceholder, formatInputLabel } from '../../utils/textCase';
+import { formatInputPlaceholder } from '../../utils/textCase';
 import { StatValue } from '../../components/ui/StatValue';
 import { useRealtime } from '../../hooks/useRealtime';
 import { DataChangeEventTypes } from '../../services/realtimeService';
+import { CustomerModal } from '../../components/forms/CustomerModal';
+import type { Customer, CustomerFormData } from '../../components/forms/CustomerModal';
 
 interface ApiError {
   response?: {
@@ -47,56 +41,6 @@ interface ApiError {
   };
 }
 
-const CUSTOMER_FIELD_LIMITS = {
-  name: 50,
-  phone: 20,
-  email: 80,
-  address: 120,
-} as const;
-
-// Max magnitude for a single manual loyalty-points adjustment. Mirrors the
-// backend LOYALTY_LIMITS.MAX_ADJUSTMENT guard.
-const MAX_POINTS_ADJUSTMENT = 1000000;
-
-const createCustomerSchema = (requiredMessage: string, invalidEmailMessage: string) => z.object({
-  // Name is mandatory; phone is optional.
-  name: z.string().trim().min(1, requiredMessage).max(CUSTOMER_FIELD_LIMITS.name),
-  phone: z.string().max(CUSTOMER_FIELD_LIMITS.phone).optional().or(z.literal('')),
-  email: z.string().email(invalidEmailMessage).max(CUSTOMER_FIELD_LIMITS.email).optional().or(z.literal('')),
-  address: z.string().max(CUSTOMER_FIELD_LIMITS.address).optional().or(z.literal('')),
-});
-
-type CustomerFormData = {
-  name: string;
-  phone?: string;
-  email?: string;
-  address?: string;
-};
-
-interface Customer {
-  id: string;
-  name: string;
-  phone: string;
-  email?: string;
-  points: number;
-  tier: string;
-  totalSpent: number;
-  totalVisits: number;
-  address?: string;
-}
-
-function FieldStatusBadge({ tone, text }: { tone: 'required' | 'optional'; text: string }) {
-  const toneClasses = tone === 'required'
-    ? 'bg-mintcom-green/10 text-mintcom-green border-mintcom-green/20'
-    : 'bg-gray-100 text-gray-500 border-gray-200 dark:bg-white/5 dark:text-gray-300 dark:border-white/10';
-
-  return (
-    <span style={{ borderRadius: '12px' }} className={`inline-flex items-center rounded-[12px] border px-3.5 py-2 text-[11px] font-semibold leading-none ${toneClasses}`}>
-      {text}
-    </span>
-  );
-}
-
 interface CustomerStats {
   totalCustomers: number;
   totalPoints: number;
@@ -105,11 +49,11 @@ interface CustomerStats {
 
 interface TableActionMenuProps {
   customer: Customer;
-  onViewProfile: (customer: Customer) => void;
+  onOpenCustomer: (customer: Customer, tab?: 'profile' | 'loyalty') => void;
   onDelete: (customer: Customer) => void;
 }
 
-function TableActionMenu({ customer, onViewProfile, onDelete }: TableActionMenuProps) {
+function TableActionMenu({ customer, onOpenCustomer, onDelete }: TableActionMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const { t } = useTranslation();
@@ -120,7 +64,7 @@ function TableActionMenu({ customer, onViewProfile, onDelete }: TableActionMenuP
         ref={triggerRef}
         onClick={() => setIsOpen(!isOpen)}
         aria-label={t('common.moreActions')}
-        className={`p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl border transition-all ${
+        className={`p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl border transition-all cursor-pointer ${
           isOpen 
             ? 'bg-mintcom-green text-black border-mintcom-green' 
             : 'bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10'
@@ -138,20 +82,30 @@ function TableActionMenu({ customer, onViewProfile, onDelete }: TableActionMenuP
         <div className="py-1">
           <button
             onClick={() => {
-              onViewProfile(customer);
+              onOpenCustomer(customer, 'profile');
               setIsOpen(false);
             }}
-            className="w-full flex items-center gap-3 px-4 py-3 text-xs font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors text-left"
+            className="w-full flex items-center gap-3 px-4 py-3 text-xs font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors text-left cursor-pointer"
           >
             <Eye size={14} className="text-mintcom-green" />
             {t('customers.messages.viewProfile')}
           </button>
           <button
             onClick={() => {
+              onOpenCustomer(customer, 'loyalty');
+              setIsOpen(false);
+            }}
+            className="w-full flex items-center gap-3 px-4 py-3 text-xs font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors text-left cursor-pointer"
+          >
+            <Award size={14} className="text-amber-500" />
+            {t('customers.details.managePoints', { defaultValue: 'Manage Loyalty Points' })}
+          </button>
+          <button
+            onClick={() => {
               onDelete(customer);
               setIsOpen(false);
             }}
-            className="w-full flex items-center gap-3 px-4 py-3 text-xs font-bold text-mintcom-red hover:bg-mintcom-red/10 transition-colors text-left border-t border-gray-100 dark:border-white/5"
+            className="w-full flex items-center gap-3 px-4 py-3 text-xs font-bold text-mintcom-red hover:bg-mintcom-red/10 transition-colors text-left border-t border-gray-100 dark:border-white/5 cursor-pointer"
           >
             <Trash2 size={14} />
             {t('customers.messages.removeCustomer')}
@@ -164,10 +118,6 @@ function TableActionMenu({ customer, onViewProfile, onDelete }: TableActionMenuP
 
 export function CustomersPage() {
   const { t } = useTranslation();
-  const customerSchema = createCustomerSchema(
-    t('customers.errors.nameRequired', { defaultValue: 'Name is required' }),
-    t('customers.errors.invalidEmail'),
-  );
   const { currentEstablishment } = useAuth();
   usePermissionGuard();
   const { onRefresh } = useRealtime({
@@ -178,15 +128,19 @@ export function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [showModal, setShowModal] = useState(false);
-  const [showPointsModal, setShowPointsModal] = useState(false);
-  const [showDetailModal, setShowDetailModal] = useState(false);
+
+  // Unified modal state
+  const [customerModalConfig, setCustomerModalConfig] = useState<{
+    isOpen: boolean;
+    customer: Customer | null;
+    initialTab: 'profile' | 'loyalty';
+  }>({
+    isOpen: false,
+    customer: null,
+    initialTab: 'profile',
+  });
+
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
-  const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [pointsAction, setPointsAction] = useState<'add' | 'deduct'>('add');
-  const [pointsAmount, setPointsAmount] = useState<number>(0);
-  const [pointsError, setPointsError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [stats, setStats] = useState<CustomerStats>({
@@ -209,10 +163,6 @@ export function CustomersPage() {
     title: '',
     message: '',
     onConfirm: () => { },
-  });
-
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<CustomerFormData>({
-    resolver: zodResolver(customerSchema),
   });
 
   // `silent` skips the blocking loading state — used for realtime background
@@ -276,8 +226,7 @@ export function CustomersPage() {
     setPage(1);
   }, [searchQuery]);
 
-  const handleSaveCustomer = async (data: CustomerFormData) => {
-    setIsSubmitting(true);
+  const handleSaveCustomer = async (data: CustomerFormData, customerId?: string) => {
     try {
       const payload = {
         name: data.name?.trim(),
@@ -286,19 +235,44 @@ export function CustomersPage() {
         address: data.address?.trim() || undefined,
       };
 
-      if (editingCustomer) {
-        await api.patch(`/customers/${editingCustomer.id}`, payload);
+      if (customerId) {
+        await api.patch(`/customers/${customerId}`, payload);
         toast.success(t('customers.messages.updated'));
       } else {
         await api.post('/customers', payload);
         toast.success(t('customers.messages.created'));
       }
-      setShowModal(false);
+      setCustomerModalConfig({ isOpen: false, customer: null, initialTab: 'profile' });
       fetchCustomers();
     } catch (err) {
       toast.error((err as ApiError).response?.data?.message || t('customers.messages.errorSaving'));
-    } finally {
-      setIsSubmitting(false);
+      throw err;
+    }
+  };
+
+  const handleAdjustPoints = async (customerId: string, amount: number, action: 'add' | 'deduct') => {
+    try {
+      const pointsDiff = action === 'add' ? amount : -amount;
+      const res = await api.post(`/customers/${customerId}/points`, {
+        points: pointsDiff,
+      });
+      toast.success(t('customers.messages.pointsAdjusted'));
+      fetchCustomers(true);
+
+      const newPoints =
+        res.data?.points ??
+        (customerModalConfig.customer ? customerModalConfig.customer.points + pointsDiff : undefined);
+
+      if (typeof newPoints === 'number') {
+        setCustomerModalConfig((prev) =>
+          prev.customer ? { ...prev, customer: { ...prev.customer, points: newPoints } } : prev
+        );
+      }
+      return newPoints;
+    } catch (err) {
+      const msg = (err as ApiError).response?.data?.message || t('common.error');
+      toast.error(msg);
+      throw new Error(msg);
     }
   };
 
@@ -311,6 +285,7 @@ export function CustomersPage() {
       type: 'danger',
       confirmText: t('common.continue'),
       onConfirm: () => {
+        setCustomerModalConfig({ isOpen: false, customer: null, initialTab: 'profile' });
         setShowSecurityModal(true);
       }
     });
@@ -322,14 +297,15 @@ export function CustomersPage() {
   };
 
   const handleAnonymizeCustomer = async () => {
-    if (!selectedCustomer) return;
+    const target = selectedCustomer || customerModalConfig.customer;
+    if (!target) return;
 
     try {
-      await api.post(`/customers/${selectedCustomer.id}/anonymize`, {
+      await api.post(`/customers/${target.id}/anonymize`, {
         reason: 'Customer removed from management UI',
       });
       toast.success(t('customers.messages.anonymized'));
-      setShowDetailModal(false);
+      setCustomerModalConfig({ isOpen: false, customer: null, initialTab: 'profile' });
       fetchCustomers();
     } catch (err) {
       toast.error((err as ApiError).response?.data?.message || t('customers.messages.anonymizeFailed'));
@@ -342,11 +318,12 @@ export function CustomersPage() {
       return false;
     }
 
+    const target = selectedCustomer || customerModalConfig.customer;
     setShowSecurityModal(false);
     setConfirmConfig({
       isOpen: true,
       title: t('customers.messages.anonymizeCustomer'),
-      message: t('customers.messages.anonymizeConfirm', { name: selectedCustomer?.name || '' }),
+      message: t('customers.messages.anonymizeConfirm', { name: target?.name || '' }),
       type: 'warning',
       confirmText: t('common.anonymize'),
       onConfirm: handleAnonymizeCustomer,
@@ -354,59 +331,14 @@ export function CustomersPage() {
     return true;
   };
 
-  const handlePointsUpdate = async () => {
-    if (!selectedCustomer || pointsAmount <= 0) return;
-    setPointsError(null);
-
-    if (pointsAmount > MAX_POINTS_ADJUSTMENT) {
-      setPointsError(t('customers.messages.maxPoints', { max: MAX_POINTS_ADJUSTMENT.toLocaleString() }));
-      return;
-    }
-
-    if (pointsAction === 'deduct' && pointsAmount > selectedCustomer.points) {
-      setPointsError(t('customers.messages.insufficientPoints', { points: selectedCustomer.points }));
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      await api.post(`/customers/${selectedCustomer.id}/points`, {
-        points: pointsAction === 'add' ? pointsAmount : -pointsAmount,
-      });
-      toast.success(t('customers.messages.pointsAdjusted'));
-      setShowPointsModal(false);
-      setPointsAmount(0);
-      fetchCustomers();
-    } catch (err) {
-      setPointsError((err as ApiError).response?.data?.message || t('common.error'));
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const openEditModal = (customer: Customer) => {
-    setEditingCustomer(customer);
-    reset({
-      name: customer.name,
-      phone: customer.phone,
-      email: customer.email || '',
-      address: customer.address || '',
-    });
-    setShowModal(true);
-  };
-
   const handleExport = async (format: ExportFormat) => {
     try {
       toast.loading(`${t('common.export')}...`, { id: 'export' });
-      // Page through every customer so the export isn't truncated at a fixed cap.
-      // The endpoint caps `limit` at 100, so request that and advance by page;
-      // stop on an empty page or once we've collected every row `total` reports
-      // (never on a short page — that can just mean the server capped the size).
       const PAGE_SIZE = 100;
       const allCustomers: Customer[] = [];
-      for (let page = 1; page < 1000; page++) {
+      for (let p = 1; p < 1000; p++) {
         const response = await api.get('/customers', {
-          params: { page, limit: PAGE_SIZE, search: searchQuery },
+          params: { page: p, limit: PAGE_SIZE, search: searchQuery },
         });
         const batch: Customer[] = response.data.customers || [];
         allCustomers.push(...batch);
@@ -449,7 +381,7 @@ export function CustomersPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 pb-24 sm:pb-10" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
+    <div className="space-y-6 sm:space-y-8 pb-24 sm:pb-10" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
       {/* Full-screen blocker while a user-triggered load (search, pagination)
           is in flight — realtime refreshes stay silent. */}
       <BusyOverlay visible={isLoading} />
@@ -470,8 +402,8 @@ export function CustomersPage() {
         <div className="flex items-center gap-2 sm:gap-3">
           <ExportMenu onExport={handleExport} className="hidden sm:flex" />
           <button
-            onClick={() => { setEditingCustomer(null); reset({ name: '', phone: '', email: '', address: '' }); setShowModal(true); }}
-            className="flex items-center gap-2 px-3 sm:px-5 py-2.5 sm:py-3 rounded-xl bg-mintcom-green text-black font-bold text-sm hover:bg-[#5fa888] transition-all shadow-sm touch-target"
+            onClick={() => setCustomerModalConfig({ isOpen: true, customer: null, initialTab: 'profile' })}
+            className="flex items-center gap-2 px-3 sm:px-5 py-2.5 sm:py-3 rounded-xl bg-mintcom-green text-black font-bold text-sm hover:bg-[#5fa888] transition-all shadow-sm touch-target cursor-pointer"
           >
             <Plus size={18} />
             <span className="hidden xs:inline">{t('customers.addCustomer')}</span>
@@ -567,8 +499,8 @@ export function CustomersPage() {
                       <td className="px-6 py-4 text-start">
                         <button
                           type="button"
-                          onClick={() => { setSelectedCustomer(customer); setShowDetailModal(true); }}
-                          className="flex items-center gap-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-mintcom-green/40"
+                          onClick={() => setCustomerModalConfig({ isOpen: true, customer, initialTab: 'profile' })}
+                          className="flex items-center gap-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-mintcom-green/40 cursor-pointer"
                           aria-label={t('customers.messages.viewProfile')}
                         >
                           <div className="w-10 h-10 rounded-full bg-mintcom-green/10 text-mintcom-green flex items-center justify-center font-bold text-sm shrink-0">
@@ -581,10 +513,15 @@ export function CustomersPage() {
                       </td>
                       <td className="px-6 py-4 text-start text-sm text-gray-500 dark:text-gray-400 font-medium">{customer.phone || '—'}</td>
                       <td className="px-6 py-4 text-end">
-                        <div className="inline-flex items-center gap-1 justify-end">
-                          <span className="text-sm font-bold text-gray-900 dark:text-white">{customer.points.toLocaleString()}</span>
+                        <button
+                          type="button"
+                          onClick={() => setCustomerModalConfig({ isOpen: true, customer, initialTab: 'loyalty' })}
+                          className="inline-flex items-center gap-1 justify-end group/points hover:opacity-80 transition-opacity cursor-pointer"
+                          title={t('customers.details.managePoints', { defaultValue: 'Manage Loyalty Points' })}
+                        >
+                          <span className="text-sm font-bold text-gray-900 dark:text-white group-hover/points:text-mintcom-green transition-colors">{customer.points.toLocaleString()}</span>
                           <span className="text-[10px] font-bold text-gray-400">{t('customers.details.points')}</span>
-                        </div>
+                        </button>
                       </td>
                       <td className="px-6 py-4 text-end">
                         <p className="text-sm font-bold text-gray-900 dark:text-white">{formatAmount(customer.totalSpent)}</p>
@@ -593,15 +530,15 @@ export function CustomersPage() {
                       <td className="px-6 py-4 text-end">
                         <div className="flex items-center justify-end gap-2">
                           <button
-                            onClick={() => openEditModal(customer)}
-                            className="p-2.5 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/5 text-gray-600 dark:text-gray-400 hover:bg-mintcom-green hover:text-black hover:border-mintcom-green transition-all"
+                            onClick={() => setCustomerModalConfig({ isOpen: true, customer, initialTab: 'profile' })}
+                            className="p-2.5 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/5 text-gray-600 dark:text-gray-400 hover:bg-mintcom-green hover:text-black hover:border-mintcom-green transition-all cursor-pointer"
                             aria-label="Edit"
                           >
                             <Edit2 size={16} />
                           </button>
                           <TableActionMenu
                             customer={customer}
-                            onViewProfile={(c) => { setSelectedCustomer(c); setShowDetailModal(true); }}
+                            onOpenCustomer={(c, tab) => setCustomerModalConfig({ isOpen: true, customer: c, initialTab: tab || 'profile' })}
                             onDelete={handleDeleteCustomer}
                           />
                         </div>
@@ -623,352 +560,18 @@ export function CustomersPage() {
         )}
       </div>
 
-      {/* Customer Form Modal */}
-      <AnimatePresence>
-        {showModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowModal(false)}
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-lg bg-white dark:bg-[#1E293B] rounded-3xl shadow-2xl overflow-hidden border border-gray-200 dark:border-white/10"
-            >
-              <div className="p-6 border-b border-gray-100 dark:border-white/5 flex items-center justify-between bg-gray-50/50 dark:bg-white/[0.02]">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-mintcom-green/10 text-mintcom-green flex items-center justify-center">
-                    {editingCustomer ? <Edit2 size={20} /> : <Plus size={20} />}
-                  </div>
-                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                    {editingCustomer ? t('customers.messages.editCustomer') : t('customers.addCustomer')}
-                  </h2>
-                </div>
-                <button
-                  onClick={() => setShowModal(false)}
-                  className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-xl transition-colors"
-                >
-                  <X size={20} className="text-gray-400" />
-                </button>
-              </div>
-
-              <form onSubmit={handleSubmit(handleSaveCustomer)} className="p-6 space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between gap-2 px-1">
-                      <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                        {formatInputLabel(t('common.name', { defaultValue: 'Name' }), t('common.locale'))}
-                      </label>
-                      <FieldStatusBadge tone="required" text={t('common.required', { defaultValue: 'Required' })} />
-                    </div>
-                    <div className="relative">
-                      <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                      <input maxLength={CUSTOMER_FIELD_LIMITS.name}
-                        {...register('name')}
-                        placeholder={t('customers.form.namePlaceholder')}
-                        className="w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl text-sm font-medium focus:ring-2 focus:ring-mintcom-green/20 focus:border-mintcom-green outline-none transition-all"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between gap-2 px-1">
-                      <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                        {formatInputLabel(t('customers.form.phone'), t('common.locale'))}
-                      </label>
-                      <FieldStatusBadge tone="optional" text={t('common.optional', { defaultValue: 'Optional' })} />
-                    </div>
-                    <div className="relative">
-                      <Phone size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                      <input maxLength={CUSTOMER_FIELD_LIMITS.phone}
-                        {...register('phone')}
-                        placeholder={t('customers.form.phonePlaceholder')}
-                        className="w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl text-sm font-medium focus:ring-2 focus:ring-mintcom-green/20 focus:border-mintcom-green outline-none transition-all"
-                      />
-                    </div>
-                  </div>
-                </div>
-                {errors.name && <p className="text-[10px] font-bold text-mintcom-red px-1">{errors.name.message}</p>}
-
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between gap-2 px-1">
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                      {formatInputLabel(t('customers.form.email'), t('common.locale'))}
-                    </label>
-                    <FieldStatusBadge tone="optional" text={t('customers.form.optional')} />
-                  </div>
-                  <div className="relative">
-                    <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input maxLength={CUSTOMER_FIELD_LIMITS.email}
-                      {...register('email')}
-                      type="email"
-                      placeholder={t('customers.form.emailPlaceholder')}
-                      className="w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl text-sm font-medium focus:ring-2 focus:ring-mintcom-green/20 focus:border-mintcom-green outline-none transition-all"
-                    />
-                  </div>
-                  {errors.email && <p className="text-[10px] font-bold text-mintcom-red px-1">{errors.email.message}</p>}
-                </div>
-
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between gap-2 px-1">
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                      {formatInputLabel(t('customers.form.address'), t('common.locale'))}
-                    </label>
-                    <FieldStatusBadge tone="optional" text={t('customers.form.optional')} />
-                  </div>
-                  <div className="relative">
-                    <MapPin size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input maxLength={CUSTOMER_FIELD_LIMITS.address}
-                      {...register('address')}
-                      placeholder={t('customers.form.addressPlaceholder')}
-                      className="w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl text-sm font-medium focus:ring-2 focus:ring-mintcom-green/20 focus:border-mintcom-green outline-none transition-all"
-                    />
-                  </div>
-                </div>
-
-                <div className="pt-4 flex items-center justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowModal(false)}
-                    className="px-5 py-3 text-sm font-semibold text-gray-600 hover:bg-gray-100 dark:hover:bg-white/10 rounded-xl transition-colors"
-                  >
-                    {t('common.cancel')}
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="py-3 px-6 bg-mintcom-green text-black font-semibold text-sm rounded-xl hover:bg-[#5fa888] disabled:opacity-50 transition-all"
-                  >
-                    {isSubmitting ? t('common.saving') : editingCustomer ? t('customers.messages.updateCustomer') : t('customers.messages.saveCustomer')}
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* Customer Detail Modal */}
-      <AnimatePresence>
-        {showDetailModal && selectedCustomer && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowDetailModal(false)}
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-2xl bg-white dark:bg-[#1E293B] rounded-3xl shadow-2xl overflow-hidden border border-gray-200 dark:border-white/10"
-            >
-              <div className="p-6 border-b border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.02] flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                  <User size={20} className="text-mintcom-green" />
-                  {t('customers.messages.customerProfile')}
-                </h2>
-                <button
-                  onClick={() => setShowDetailModal(false)}
-                  className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-xl transition-colors"
-                >
-                  <X size={20} className="text-gray-400" />
-                </button>
-              </div>
-
-              <div className="p-6 space-y-6">
-                {/* Profile Header */}
-                <div className="flex items-center gap-4 p-4 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5">
-                  <div className="w-12 h-12 rounded-full bg-mintcom-green/10 text-mintcom-green flex items-center justify-center shrink-0">
-                    <User size={22} />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white truncate">{selectedCustomer.name}</h3>
-                  </div>
-                  <div className="flex gap-2 shrink-0">
-                    <button
-                      onClick={() => { setShowDetailModal(false); openEditModal(selectedCustomer); }}
-                      className="p-3 rounded-xl bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:text-mintcom-green transition-all"
-                    >
-                      <Edit2 size={18} />
-                    </button>
-                    <button
-                      onClick={() => { setShowDetailModal(false); handleDeleteCustomer(selectedCustomer); }}
-                      className="p-3 rounded-xl bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:text-mintcom-red transition-all"
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Stats — compact inline row */}
-                <div className="flex flex-wrap items-center gap-x-6 gap-y-2 px-1">
-                  <div>
-                    <p className="text-[11px] font-medium text-gray-400">{t('customers.details.points')}</p>
-                    <StatValue value={selectedCustomer.points} isInteger={true} className="text-lg font-bold text-gray-900 dark:text-white" />
-                  </div>
-                  <span className="h-8 w-px bg-gray-100 dark:bg-white/10" aria-hidden="true" />
-                  <div>
-                    <p className="text-[11px] font-medium text-gray-400">{t('customers.details.spent')}</p>
-                    <StatValue value={selectedCustomer.totalSpent} currency={currencySymbol} className="text-lg font-bold text-gray-900 dark:text-white" />
-                  </div>
-                  <span className="h-8 w-px bg-gray-100 dark:bg-white/10" aria-hidden="true" />
-                  <div>
-                    <p className="text-[11px] font-medium text-gray-400">{t('customers.details.visits')}</p>
-                    <StatValue value={selectedCustomer.totalVisits} isInteger={true} className="text-lg font-bold text-gray-900 dark:text-white" />
-                  </div>
-                </div>
-
-                {/* Contact Info */}
-                <div className="space-y-3">
-                  <h4 className="text-xs font-semibold text-gray-400">{t('customers.details.contact')}</h4>
-                  {[
-                    { icon: Phone, value: selectedCustomer.phone },
-                    { icon: Mail, value: selectedCustomer.email },
-                    { icon: MapPin, value: selectedCustomer.address },
-                  ]
-                    .filter((row) => Boolean(row.value))
-                    .map((row, index) => (
-                      <div key={index} className="flex items-center gap-3 text-sm text-gray-500">
-                        <row.icon size={16} className="text-mintcom-green shrink-0" />
-                        <span className="font-medium">{row.value}</span>
-                      </div>
-                    ))}
-                </div>
-
-                {/* Points Quick Action */}
-                <div className="pt-2 border-t border-gray-100 dark:border-white/5">
-                  <button
-                    onClick={() => { setShowDetailModal(false); setShowPointsModal(true); }}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-mintcom-green/10 hover:bg-mintcom-green/20 border border-mintcom-green/20 transition-all"
-                  >
-                    <Award size={16} className="text-mintcom-green" />
-                    <span className="text-sm font-semibold text-gray-900 dark:text-white">{t('customers.details.managePoints')}</span>
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* Points Adjustment Modal */}
-      <AnimatePresence>
-        {showPointsModal && selectedCustomer && (
-          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowPointsModal(false)}
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-md bg-white dark:bg-[#1E293B] rounded-3xl shadow-2xl overflow-hidden border border-gray-200 dark:border-white/10"
-            >
-              <div className="p-6 border-b border-gray-100 dark:border-white/5 flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white">{t('customers.details.adjustPoints')}</h2>
-                <button
-                  onClick={() => setShowPointsModal(false)}
-                  className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-xl transition-colors"
-                >
-                  <X size={20} className="text-gray-400" />
-                </button>
-              </div>
-
-              <div className="p-6 space-y-6">
-                <div className="flex items-center gap-3 p-4 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5">
-                  <div className="w-10 h-10 rounded-full bg-mintcom-green/10 text-mintcom-green flex items-center justify-center font-bold">
-                    {selectedCustomer.name.charAt(0).toUpperCase()}
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-gray-900 dark:text-white">{selectedCustomer.name}</p>
-                    <p className="text-xs font-medium text-gray-500">{t('customers.details.currentBalance')}: <span className="text-mintcom-green font-bold">{selectedCustomer.points.toLocaleString()}</span></p>
-                  </div>
-                </div>
-
-                <div className="flex p-1.5 bg-gray-100 dark:bg-white/5 rounded-2xl gap-1.5">
-                  <button
-                    onClick={() => setPointsAction('add')}
-                    className={`flex-1 py-3 rounded-xl text-sm font-black transition-all ${
-                      pointsAction === 'add' 
-                        ? 'bg-mintcom-green text-black shadow-sm' 
-                        : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
-                    }`}
-                  >
-                    <Plus size={16} className="inline mr-2" />
-                    {t('customers.details.add')}
-                  </button>
-                  <button
-                    onClick={() => setPointsAction('deduct')}
-                    className={`flex-1 py-3 rounded-xl text-sm font-black transition-all ${
-                      pointsAction === 'deduct' 
-                        ? 'bg-mintcom-red text-white shadow-sm' 
-                        : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
-                    }`}
-                  >
-                    <Minus size={16} className="inline mr-2" />
-                    {t('customers.details.deduct')}
-                  </button>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider px-1">
-                    {t('customers.details.pointsAmount')}
-                    <span className="ml-1 normal-case font-medium text-gray-400">
-                      ({t('customers.details.maxPointsHint', { max: MAX_POINTS_ADJUSTMENT.toLocaleString() })})
-                    </span>
-                  </label>
-                  <div className="relative">
-                    <Award size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input
-                      maxLength={255}
-                      type="number"
-                      min={1}
-                      max={MAX_POINTS_ADJUSTMENT}
-                      value={pointsAmount || ''}
-                      onChange={(e) => {
-                        const next = Math.min(parseInt(e.target.value) || 0, MAX_POINTS_ADJUSTMENT);
-                        setPointsAmount(next);
-                        if (pointsError) setPointsError(null);
-                      }}
-                      className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl text-lg font-black focus:ring-2 focus:ring-mintcom-green/20 focus:border-mintcom-green outline-none transition-all"
-                      placeholder="0"
-                    />
-                  </div>
-                  {pointsError && <p className="text-xs font-bold text-mintcom-red px-1">{pointsError}</p>}
-                </div>
-
-                <button
-                  onClick={handlePointsUpdate}
-                  disabled={isSubmitting || pointsAmount <= 0}
-                  className={`w-full py-4 rounded-2xl font-black text-sm transition-all shadow-lg ${
-                    pointsAction === 'add'
-                      ? 'bg-mintcom-green text-black hover:bg-[#5fa888] shadow-mintcom-green/20'
-                      : 'bg-mintcom-red text-white hover:bg-red-600 shadow-red-500/20'
-                  } disabled:opacity-50`}
-                >
-                  {isSubmitting 
-                    ? t('common.saving') 
-                    : pointsAction === 'add' 
-                      ? t('customers.details.addPoints') 
-                      : t('customers.details.deductPoints')}
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+      {/* Unified Creative All-in-One Customer Modal */}
+      <CustomerModal
+        isOpen={customerModalConfig.isOpen}
+        onClose={() => setCustomerModalConfig({ isOpen: false, customer: null, initialTab: 'profile' })}
+        customer={customerModalConfig.customer}
+        initialTab={customerModalConfig.initialTab}
+        onSaveCustomer={handleSaveCustomer}
+        onAdjustPoints={handleAdjustPoints}
+        onDeleteCustomer={handleDeleteCustomer}
+        currencySymbol={currencySymbol}
+        formatAmount={formatAmount}
+      />
 
       {/* Security and Confirmation Modals */}
       <ConfirmModal

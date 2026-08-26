@@ -4,6 +4,7 @@ import { useCurrency } from '../../../../context/CurrencyContext';
 import type { SalesSummary } from '../../../../types';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { motion } from 'framer-motion';
 import { AnalyticsEmptyState } from '../AnalyticsEmptyState';
 import { StatValue } from '../../../../components/ui/StatValue';
 
@@ -236,7 +237,13 @@ export const TaxesView = React.memo(function TaxesView({ salesData }: TaxesViewP
                         ? <History size={16} />
                         : <Percent size={16} />;
                     return (
-                      <tr key={i} className="group hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
+                      <motion.tr 
+                        key={tax.name || i}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: i * 0.05 }}
+                        className="group hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors"
+                      >
                         <td className="px-6 py-4 text-start">
                           <div className="flex items-center gap-3">
                             <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 font-bold ${markerClass}`}>
@@ -274,22 +281,32 @@ export const TaxesView = React.memo(function TaxesView({ salesData }: TaxesViewP
                         <td className="px-6 py-4 text-end font-bold text-gray-900 dark:text-white">
                           {formatCurrency(tax.taxableAmount)}
                         </td>
-                        <td className="px-6 py-4 text-end font-bold text-orange-500">
+                        <td className="px-6 py-4 text-end font-black text-orange-500">
                           {formatCurrency(tax.collected)}
                         </td>
                         <td className="px-6 py-4 text-end">
-                          <div className="inline-flex items-center gap-2 w-[100px] justify-end">
+                          <div className="inline-flex items-center gap-2 w-[120px] justify-end">
                             <div className="flex-1 h-1.5 bg-gray-100 dark:bg-white/10 rounded-full overflow-hidden">
                               <div className="h-full bg-orange-500 rounded-full" style={{ width: `${contributionWidth}%` }} />
                             </div>
+                            <StatValue
+                              value={contribution}
+                              isPercentage={true}
+                              isAlreadyPercent={true}
+                              className="text-xs font-bold text-gray-500 min-w-[40px] text-end"
+                            />
                           </div>
                         </td>
-                      </tr>
+                      </motion.tr>
                     );
                   })
                 ) : hasTaxActivity ? (
                   // Default Fallback Row if no granular data
-                  <tr className="group hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
+                  <motion.tr 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="group hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors"
+                  >
                     <td className="px-6 py-4 text-start">
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-orange-500/10 text-orange-500 dark:bg-orange-500/20 dark:text-orange-400 shrink-0 font-bold">
@@ -316,13 +333,19 @@ export const TaxesView = React.memo(function TaxesView({ salesData }: TaxesViewP
                       {formatCurrency(totalTax)}
                     </td>
                     <td className="px-6 py-4 text-end">
-                      <div className="inline-flex items-center gap-2 w-[100px] justify-end">
+                      <div className="inline-flex items-center gap-2 w-[120px] justify-end">
                         <div className="flex-1 h-1.5 bg-gray-100 dark:bg-white/10 rounded-full overflow-hidden">
                           <div className="h-full bg-orange-500 rounded-full" style={{ width: `100%` }} />
                         </div>
+                        <StatValue
+                          value={100}
+                          isPercentage={true}
+                          isAlreadyPercent={true}
+                          className="text-xs font-bold text-gray-500 min-w-[40px] text-end"
+                        />
                       </div>
                     </td>
-                  </tr>
+                  </motion.tr>
                 ) : (
                   <tr>
                     <td colSpan={5} className="px-6 py-14">

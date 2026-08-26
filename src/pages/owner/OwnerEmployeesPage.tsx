@@ -528,6 +528,7 @@ export function OwnerEmployeesPage() {
                             ]}
                             allOptionLabel={t('common.allStatuses', 'All Statuses')}
                             placeholder={t('common.allStatuses', 'All Statuses')}
+                            searchable={false}
                         />
                     </div>
                     <div className="w-full sm:w-48">
@@ -540,6 +541,7 @@ export function OwnerEmployeesPage() {
                             ]}
                             allOptionLabel={t('owner.employees.allRoles')}
                             placeholder={formatInputPlaceholder(t('owner.employees.allRoles'), t('common.locale'))}
+                            searchable={false}
                         />
                     </div>
                     <div id="tour-view-toggle" className="flex items-center bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/10 p-1 h-12">

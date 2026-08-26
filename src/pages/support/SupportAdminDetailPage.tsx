@@ -307,7 +307,7 @@ export const SupportAdminDetailPage = () => {
         <>
             <Navbar />
             <div className="min-h-screen bg-gray-50 dark:bg-[#0a0a0a] pt-28 pb-16">
-                <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
+                <div className="w-full px-4 sm:px-6 lg:px-10">
 
                     {/* ── Back + Header ──────────────────────────────────────────── */}
                     <Link

@@ -205,7 +205,7 @@ export function AccountRecoveryPage() {
             {providerError && (
               <div
                 role="alert"
-                className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300"
+                className="rounded-2xl border border-mintcom-red bg-mintcom-red p-4 text-sm font-bold text-white"
               >
                 {providerError}
               </div>

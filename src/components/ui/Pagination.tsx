@@ -70,6 +70,17 @@ export function Pagination({
         return pages;
     };
 
+    const handlePageChange = (newPage: number) => {
+        onPageChange(newPage);
+        if (typeof window !== 'undefined') {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            const mainContainer = document.querySelector('main > div.overflow-y-auto') || document.querySelector('main');
+            if (mainContainer) {
+                mainContainer.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+    };
+
     const pageNumbers = getPageNumbers();
 
     // Calculate showing range
@@ -84,20 +95,20 @@ export function Pagination({
         <div className={`${baseStyles} ${className}`}>
             <div className="flex items-center gap-3">
                 <p className="text-sm text-gray-400 flex items-center font-normal">
-                    <span className="mr-1.5">{t('common.page')}</span>
-                    <span className="text-gray-700 dark:text-gray-200">{currentPage.toLocaleString(t('common.locale'))}</span>
-                    <span className="lowercase mx-1.5 text-[10px] opacity-70">{t('common.of')}</span>
-                    <span className="text-gray-700 dark:text-gray-200">{totalPages.toLocaleString(t('common.locale'))}</span>
+                    <span className="mr-1.5">{t('common.pages', { defaultValue: 'Pages' })}</span>
+                    <span className="text-gray-700 dark:text-gray-200 font-semibold">{currentPage.toLocaleString(t('common.locale'))}</span>
+                    <span className="mx-1 text-gray-400 font-light">/</span>
+                    <span className="text-gray-700 dark:text-gray-200 font-semibold">{totalPages.toLocaleString(t('common.locale'))}</span>
                 </p>
                 {totalItems !== undefined && variant === 'default' && (
                     <p className="text-xs font-medium text-gray-400">
-                        ({t('common.showing')} {startItem.toLocaleString(t('common.locale'))}-{endItem.toLocaleString(t('common.locale'))} {t('common.of')} {totalItems.toLocaleString(t('common.locale'))})
+                        ({t('common.showing')} {startItem.toLocaleString(t('common.locale'))}-{endItem.toLocaleString(t('common.locale'))} / {totalItems.toLocaleString(t('common.locale'))})
                     </p>
                 )}
             </div>
             <div className="flex items-center gap-2">
                 <button
-                    onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+                    onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
                     disabled={currentPage === 1}
                     className="p-3 rounded-xl bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-500 hover:text-mintcom-green disabled:opacity-30 transition-all shadow-sm"
                     title={t('common.previous')}
@@ -116,7 +127,7 @@ export function Pagination({
                         ) : (
                             <button
                                 key={pageNum}
-                                onClick={() => onPageChange(pageNum)}
+                                onClick={() => handlePageChange(pageNum)}
                                 className={`w-10 h-10 rounded-xl text-xs font-medium transition-all ${currentPage === pageNum
                                     ? 'bg-mintcom-green text-black shadow-lg shadow-mintcom-green/20'
                                     : 'bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-400 hover:text-gray-900 dark:hover:text-white shadow-sm'
@@ -128,7 +139,7 @@ export function Pagination({
                     ))}
                 </div>
                 <button
-                    onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+                    onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
                     disabled={currentPage === totalPages}
                     className="p-3 rounded-xl bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-500 hover:text-mintcom-green disabled:opacity-30 transition-all shadow-sm"
                     title={t('common.next')}

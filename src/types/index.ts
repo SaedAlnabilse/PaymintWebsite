@@ -268,6 +268,8 @@ export interface DashboardStats {
   totalPayIn: number;
   totalPayOut: number;
   paymentMethodBreakdown: { name: string; value: number }[];
+  cardTypeBreakdown?: { name: string; value: number }[];
+  otherPaymentBreakdown?: { name: string; value: number }[];
   categoryBreakdown: { name: string; value: number; count?: number }[];
   dailyBreakdown: { date: string; revenue: number }[];
 }

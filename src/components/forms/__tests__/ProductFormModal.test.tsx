@@ -106,6 +106,10 @@ describe('ProductFormModal image generation', () => {
         return Promise.resolve({ data: { taxRate: 0, currency: 'JOD' } }) as any;
       }
 
+      if (url === '/api/taxes') {
+        return Promise.resolve({ data: [] }) as any;
+      }
+
       return Promise.resolve({ data: {} }) as any;
     });
   });

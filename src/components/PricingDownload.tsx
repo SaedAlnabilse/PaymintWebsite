@@ -69,7 +69,7 @@ export const PricingDownload = () => {
                 <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-mintcom-green/5 rounded-full blur-[120px]" />
             </div>
 
-            <div className="container mx-auto px-6 md:px-10 lg:px-16 max-w-[1280px] relative z-10" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
+            <div className="w-full px-6 md:px-10 lg:px-16 relative z-10" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -84,7 +84,7 @@ export const PricingDownload = () => {
                     </p>
                 </motion.div>
 
-                <div className="flex flex-col items-center justify-center max-w-6xl mx-auto">
+                <div className="flex flex-col items-center justify-center w-full mx-auto">
                     {/* Pricing Card */}
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95 }}

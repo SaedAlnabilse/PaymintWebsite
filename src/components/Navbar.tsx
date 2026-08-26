@@ -69,7 +69,7 @@ export const Navbar = () => {
           width: isScrolled ? '92%' : '95%',
         }}
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-        className="relative max-w-[1200px] w-full"
+        className="relative w-full"
       >
         {/* Animated gradient border */}
         <div

@@ -486,7 +486,7 @@ export function PaymentMethodsPage() {
       : t('common.noResults', 'No results');
 
   return (
-    <div className="max-w-7xl mx-auto space-y-10 pb-16" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
+    <div className="space-y-10 pb-16" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
       {/* Full-screen blocker while a user-triggered load is in flight —
           realtime refreshes stay silent. */}
       <BusyOverlay visible={isLoading} />
@@ -534,18 +534,19 @@ export function PaymentMethodsPage() {
                 ]}
                 allOptionLabel={t('common.allStatuses', 'All Statuses')}
                 placeholder={t('common.allStatuses', 'All Statuses')}
+                searchable={false}
               />
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 relative z-10">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3.5 sm:gap-4 relative z-10">
           {cardTypes.length === 0 ? (
-            <div className="col-span-full py-20 text-center bg-gray-50/50 dark:bg-white/[0.01] rounded-[24px] border border-dashed border-gray-200 dark:border-white/5">
+            <div className="col-span-full py-16 text-center bg-gray-50/50 dark:bg-white/[0.01] rounded-2xl border border-dashed border-gray-200 dark:border-white/5">
               <p className="text-gray-400 font-black tracking-[0.2em] text-xs uppercase">{t('paymentMethods.noCardBrands')}</p>
             </div>
           ) : visibleCardTypes.length === 0 ? (
-            <div className="col-span-full py-20 text-center bg-gray-50/50 dark:bg-white/[0.01] rounded-[24px] border border-dashed border-gray-200 dark:border-white/5">
+            <div className="col-span-full py-16 text-center bg-gray-50/50 dark:bg-white/[0.01] rounded-2xl border border-dashed border-gray-200 dark:border-white/5">
               <p className="text-gray-400 font-black tracking-[0.2em] text-xs uppercase">{cardTypesEmptyLabel}</p>
             </div>
           ) : (
@@ -553,19 +554,19 @@ export function PaymentMethodsPage() {
               <motion.div
                 layout
                 key={card.id}
-                className={`group relative bg-white dark:bg-white/[0.02] rounded-[24px] border border-gray-100 dark:border-white/5 transition-all duration-500 flex flex-col overflow-hidden ${
-                  card.isActive === false ? 'opacity-60' : 'hover:shadow-xl hover:shadow-black/5 hover:-translate-y-1'
+                className={`group relative bg-white dark:bg-white/[0.02] rounded-2xl border border-gray-100 dark:border-white/5 transition-all duration-300 flex flex-col overflow-hidden ${
+                  card.isActive === false ? 'opacity-60' : 'hover:shadow-lg hover:shadow-black/5 hover:-translate-y-0.5'
                 }`}
               >
                 {/* Image/Icon Container */}
-                <div className="aspect-[4/3] flex items-center justify-center p-8 bg-gray-50/50 dark:bg-black/20 relative group-hover:bg-white dark:group-hover:bg-black/40 transition-colors duration-500">
-                  <div className="relative w-20 h-20 flex items-center justify-center transition-transform duration-500 group-hover:scale-110">
+                <div className="h-24 sm:h-28 flex items-center justify-center p-3 sm:p-4 bg-gray-50/50 dark:bg-black/20 relative group-hover:bg-white dark:group-hover:bg-black/40 transition-colors duration-300">
+                  <div className="relative w-full h-full max-w-[120px] max-h-[48px] sm:max-h-[56px] flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
                     {(() => {
                       const displayUrl = resolveCardLogoUrl(card);
                       // Plain <img> always at full opacity — OptimizedImage left
                       // Visa/MC tiles blank until a hard refresh.
                       if (!displayUrl) {
-                        return <CreditCard size={40} className="text-gray-300 dark:text-gray-600" />;
+                        return <CreditCard size={28} className="text-gray-300 dark:text-gray-600" />;
                       }
                       return (
                         <img
@@ -592,10 +593,12 @@ export function PaymentMethodsPage() {
                 </div>
 
                 {/* Info & Actions */}
-                <div className="p-5 flex flex-col gap-4 border-t border-gray-100 dark:border-white/5">
-                  <div className="flex items-start justify-between gap-3">
-                    <h3 className="text-base font-bold text-gray-900 dark:text-white truncate px-1">{formatPaymentBrandName(card.name)}</h3>
-                    <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-black tracking-wide ${
+                <div className="p-3 sm:p-3.5 flex flex-col gap-2.5 border-t border-gray-100 dark:border-white/5">
+                  <div className="flex items-center justify-between gap-1.5 min-w-0">
+                    <h3 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white truncate" title={formatPaymentBrandName(card.name)}>
+                      {formatPaymentBrandName(card.name)}
+                    </h3>
+                    <span className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-bold shrink-0 ${
                       card.isActive === false
                         ? 'bg-mintcom-red/10 text-mintcom-red'
                         : 'bg-mintcom-green/10 text-mintcom-green'
@@ -604,28 +607,28 @@ export function PaymentMethodsPage() {
                     </span>
                   </div>
                   
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5">
                     <button
                       onClick={() => { setEditingCard(card); setNewCardName(card.name); setCardImagePreview(resolveCardLogoUrl(card)); setSelectedCardImage(null); setShowCardModal(true); setCardErrors({}); }}
-                      className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-gray-50 dark:bg-white/5 text-gray-500 hover:text-mintcom-green hover:bg-mintcom-green/10 border border-gray-100 dark:border-white/5 transition-all font-bold text-xs active:scale-95"
+                      className="flex-1 flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg bg-gray-50 dark:bg-white/5 text-gray-600 dark:text-gray-300 hover:text-mintcom-green hover:bg-mintcom-green/10 border border-gray-100 dark:border-white/5 transition-all font-bold text-[11px] active:scale-95"
                     >
-                      <Edit2 size={16} /> {t('common.edit')}
+                      <Edit2 size={13} /> {t('common.edit')}
                     </button>
                     {card.isActive === false ? (
                       <button
                         onClick={() => reactivateCardType(card.id)}
-                        className="p-3 rounded-xl bg-gray-50 dark:bg-white/5 text-gray-400 hover:text-mintcom-green hover:bg-mintcom-green/10 border border-gray-100 dark:border-white/5 transition-all active:scale-90"
+                        className="p-1.5 rounded-lg bg-gray-50 dark:bg-white/5 text-gray-400 hover:text-mintcom-green hover:bg-mintcom-green/10 border border-gray-100 dark:border-white/5 transition-all active:scale-90 shrink-0"
                         title={t('common.reactivate', { defaultValue: 'Reactivate' })}
                       >
-                        <RotateCcw size={18} />
+                        <RotateCcw size={14} />
                       </button>
                     ) : (
                       <button
                         onClick={() => handleDeleteCardType(card.id, card.name)}
-                        className="p-3 rounded-xl bg-gray-50 dark:bg-white/5 text-gray-400 hover:text-red-500 hover:bg-red-500/10 border border-gray-100 dark:border-white/5 transition-all active:scale-90"
+                        className="p-1.5 rounded-lg bg-gray-50 dark:bg-white/5 text-gray-400 hover:text-red-500 hover:bg-red-500/10 border border-gray-100 dark:border-white/5 transition-all active:scale-90 shrink-0"
                         title={t('common.deactivate')}
                       >
-                        <Trash2 size={18} />
+                        <Trash2 size={14} />
                       </button>
                     )}
                   </div>
@@ -639,12 +642,12 @@ export function PaymentMethodsPage() {
             <motion.button
               layout
               onClick={openCreateCardTypeModal}
-              className="group relative aspect-square sm:aspect-auto sm:min-h-[220px] bg-gray-50/50 dark:bg-white/[0.01] border-2 border-dashed border-gray-200 dark:border-white/[0.05] rounded-[24px] p-6 cursor-pointer hover:border-mintcom-green/50 hover:bg-white dark:hover:bg-white/[0.02] transition-all flex flex-col items-center justify-center gap-4"
+              className="group relative min-h-[145px] sm:min-h-[160px] bg-gray-50/50 dark:bg-white/[0.01] border-2 border-dashed border-gray-200 dark:border-white/[0.05] rounded-2xl p-3 sm:p-4 cursor-pointer hover:border-mintcom-green/50 hover:bg-white dark:hover:bg-white/[0.02] transition-all flex flex-col items-center justify-center gap-2.5"
             >
-              <div className="w-14 h-14 bg-white dark:bg-white/5 rounded-2xl flex items-center justify-center border border-gray-200 dark:border-white/10 group-hover:bg-mintcom-green/10 group-hover:border-mintcom-green transition-all shadow-sm">
-                <Plus size={24} className="text-gray-400 group-hover:text-mintcom-green transition-colors" />
+              <div className="w-10 h-10 bg-white dark:bg-white/5 rounded-xl flex items-center justify-center border border-gray-200 dark:border-white/10 group-hover:bg-mintcom-green/10 group-hover:border-mintcom-green transition-all shadow-sm">
+                <Plus size={20} className="text-gray-400 group-hover:text-mintcom-green transition-colors" />
               </div>
-              <span className="text-sm font-bold text-gray-500 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">{t('paymentMethods.addBrand')}</span>
+              <span className="text-xs font-bold text-gray-500 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white transition-colors text-center px-1">{t('paymentMethods.addBrand')}</span>
             </motion.button>
           )}
         </div>
@@ -679,31 +682,32 @@ export function PaymentMethodsPage() {
                 ]}
                 allOptionLabel={t('common.allStatuses', 'All Statuses')}
                 placeholder={t('common.allStatuses', 'All Statuses')}
+                searchable={false}
               />
             </div>
           </div>
         </div>
 
         {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 relative z-10">
-            {[1, 2, 3, 4].map(i => (
-              <div key={i} className="aspect-[4/5] rounded-[24px] bg-gray-100 dark:bg-white/5 animate-pulse" />
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3.5 sm:gap-4 relative z-10">
+            {[1, 2, 3, 4, 5, 6].map(i => (
+              <div key={i} className="min-h-[145px] sm:min-h-[160px] rounded-2xl bg-gray-100 dark:bg-white/5 animate-pulse" />
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 relative z-10">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3.5 sm:gap-4 relative z-10">
             {visiblePaymentMethods.map((method) => (
               <motion.div
                 layout
                 key={method.id}
-                className={`group relative bg-white dark:bg-white/[0.02] rounded-[24px] border transition-all duration-500 flex flex-col overflow-hidden ${method.isActive
-                  ? 'border-gray-100 dark:border-white/5 hover:shadow-xl hover:shadow-black/5 hover:-translate-y-1'
+                className={`group relative bg-white dark:bg-white/[0.02] rounded-2xl border transition-all duration-300 flex flex-col overflow-hidden ${method.isActive
+                  ? 'border-gray-100 dark:border-white/5 hover:shadow-lg hover:shadow-black/5 hover:-translate-y-0.5'
                   : 'border-gray-100 dark:border-white/5 opacity-50 grayscale'
                   }`}
               >
                 {/* Icon Container */}
-                <div className="aspect-[4/3] flex items-center justify-center p-8 bg-gray-50/50 dark:bg-black/20 relative group-hover:bg-white dark:group-hover:bg-black/40 transition-colors duration-500">
-                  <div className="w-20 h-20 flex items-center justify-center transition-transform duration-500 group-hover:scale-110">
+                <div className="h-24 sm:h-28 flex items-center justify-center p-3 sm:p-4 bg-gray-50/50 dark:bg-black/20 relative group-hover:bg-white dark:group-hover:bg-black/40 transition-colors duration-300">
+                  <div className="relative w-full h-full max-w-[120px] max-h-[48px] sm:max-h-[56px] flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
                     {getImageUrl(method.imageUrl || method.logo) || getFallbackLogo(method.name) ? (
                       <OptimizedImage
                         src={getImageUrl(method.imageUrl || method.logo) || getFallbackLogo(method.name)!}
@@ -713,24 +717,24 @@ export function PaymentMethodsPage() {
                       />
                     ) : (
                       <div className="text-gray-400 dark:text-gray-500">
-                        {getMethodIcon(method.name, 48)}
+                        {getMethodIcon(method.name, 32)}
                       </div>
                     )}
                   </div>
                   {method.isDefault && (
-                    <div className="absolute top-4 left-4">
-                      <div className="px-2.5 py-1 rounded-lg bg-blue-500 text-white text-[10px] font-black tracking-widest uppercase flex items-center gap-1.5 shadow-lg shadow-blue-500/20">
-                        <Star size={10} fill="currentColor" /> {t('paymentMethods.system')}
+                    <div className="absolute top-2 left-2">
+                      <div className="px-1.5 py-0.5 rounded-md bg-blue-500 text-white text-[9px] font-black tracking-wider uppercase flex items-center gap-1 shadow-md shadow-blue-500/20">
+                        <Star size={9} fill="currentColor" /> {t('paymentMethods.system')}
                       </div>
                     </div>
                   )}
                 </div>
 
                 {/* Info & Actions */}
-                <div className="p-5 flex flex-col gap-4 border-t border-gray-100 dark:border-white/5">
-                  <div className="flex items-start justify-between gap-3">
-                    <h3 className="text-base font-bold text-gray-900 dark:text-white truncate px-1">{method.name}</h3>
-                    <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-black tracking-wide ${
+                <div className="p-3 sm:p-3.5 flex flex-col gap-2.5 border-t border-gray-100 dark:border-white/5">
+                  <div className="flex items-center justify-between gap-1.5 min-w-0">
+                    <h3 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white truncate" title={method.name}>{method.name}</h3>
+                    <span className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-bold shrink-0 ${
                       method.isActive
                         ? 'bg-mintcom-green/10 text-mintcom-green'
                         : 'bg-mintcom-red/10 text-mintcom-red'
@@ -739,19 +743,19 @@ export function PaymentMethodsPage() {
                     </span>
                   </div>
                   
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5">
                     {!method.isDefault ? (
                       <>
                         <button
                           onClick={() => { setEditingMethod(method); reset({ name: method.name, isActive: method.isActive }); setImagePreview(method.imageUrl || null); setShowModal(true); }}
-                          className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gray-50 dark:bg-white/5 text-gray-500 hover:text-mintcom-green hover:bg-mintcom-green/10 border border-gray-100 dark:border-white/5 transition-all font-bold text-xs"
+                          className="flex-1 flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg bg-gray-50 dark:bg-white/5 text-gray-600 dark:text-gray-300 hover:text-mintcom-green hover:bg-mintcom-green/10 border border-gray-100 dark:border-white/5 transition-all font-bold text-[11px] active:scale-95"
                         >
-                          <Edit2 size={14} /> {t('common.edit')}
+                          <Edit2 size={13} /> {t('common.edit')}
                         </button>
                         {method.isActive ? (
                           <button
                             onClick={() => handleDelete(method.id, method.name)}
-                            className="p-2.5 rounded-xl bg-gray-50 dark:bg-white/5 text-gray-400 hover:text-red-500 hover:bg-red-500/10 border border-gray-100 dark:border-white/5 transition-all"
+                            className="p-1.5 rounded-lg bg-gray-50 dark:bg-white/5 text-gray-400 hover:text-red-500 hover:bg-red-500/10 border border-gray-100 dark:border-white/5 transition-all active:scale-90 shrink-0"
                             title={t('common.deactivate')}
                           >
                             <Trash2 size={14} />
@@ -759,7 +763,7 @@ export function PaymentMethodsPage() {
                         ) : (
                           <button
                             onClick={() => reactivatePaymentMethod(method.id)}
-                            className="p-2.5 rounded-xl bg-gray-50 dark:bg-white/5 text-gray-400 hover:text-mintcom-green hover:bg-mintcom-green/10 border border-gray-100 dark:border-white/5 transition-all"
+                            className="p-1.5 rounded-lg bg-gray-50 dark:bg-white/5 text-gray-400 hover:text-mintcom-green hover:bg-mintcom-green/10 border border-gray-100 dark:border-white/5 transition-all active:scale-90 shrink-0"
                             title={t('common.reactivate', { defaultValue: 'Reactivate' })}
                           >
                             <RotateCcw size={14} />
@@ -767,7 +771,7 @@ export function PaymentMethodsPage() {
                         )}
                       </>
                     ) : (
-                      <div className="flex-1 py-2.5 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-100 dark:border-white/5">
+                      <div className="flex-1 py-1.5 text-center text-[9px] font-bold text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-white/5 rounded-lg border border-gray-100 dark:border-white/5">
                         {t('common.systemDefault', 'System Default')}
                       </div>
                     )}
@@ -781,12 +785,12 @@ export function PaymentMethodsPage() {
               <motion.button
                 layout
                 onClick={openCreatePaymentMethodModal}
-                className="group relative aspect-square sm:aspect-auto sm:min-h-[220px] bg-gray-50/50 dark:bg-white/[0.01] border-2 border-dashed border-gray-200 dark:border-white/[0.05] rounded-[24px] p-6 cursor-pointer hover:border-mintcom-green/50 hover:bg-white dark:hover:bg-white/[0.02] transition-all flex flex-col items-center justify-center gap-4"
+                className="group relative min-h-[145px] sm:min-h-[160px] bg-gray-50/50 dark:bg-white/[0.01] border-2 border-dashed border-gray-200 dark:border-white/[0.05] rounded-2xl p-3 sm:p-4 cursor-pointer hover:border-mintcom-green/50 hover:bg-white dark:hover:bg-white/[0.02] transition-all flex flex-col items-center justify-center gap-2.5"
               >
-                <div className="w-14 h-14 bg-white dark:bg-white/5 rounded-2xl flex items-center justify-center border border-gray-200 dark:border-white/10 group-hover:bg-mintcom-green/10 group-hover:border-mintcom-green transition-all shadow-sm">
-                  <Plus size={24} className="text-gray-400 group-hover:text-mintcom-green transition-colors" />
+                <div className="w-10 h-10 bg-white dark:bg-white/5 rounded-xl flex items-center justify-center border border-gray-200 dark:border-white/10 group-hover:bg-mintcom-green/10 group-hover:border-mintcom-green transition-all shadow-sm">
+                  <Plus size={20} className="text-gray-400 group-hover:text-mintcom-green transition-colors" />
                 </div>
-                <span className="text-sm font-bold text-gray-500 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">{t('paymentMethods.addPayment')}</span>
+                <span className="text-xs font-bold text-gray-500 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white transition-colors text-center px-1">{t('paymentMethods.addPayment')}</span>
               </motion.button>
             )}
           </div>

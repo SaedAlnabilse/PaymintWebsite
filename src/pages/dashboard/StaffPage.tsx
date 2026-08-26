@@ -472,7 +472,7 @@ export function StaffPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 pb-24 sm:pb-10" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
+    <div className="space-y-6 sm:space-y-8 pb-24 sm:pb-10" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
       {/* Full-screen blocker while a user-triggered load is in flight —
           realtime refreshes stay silent. */}
       <BusyOverlay visible={isLoading} />
@@ -556,6 +556,7 @@ export function StaffPage() {
               ]}
               allOptionLabel={t('common.allStatuses', 'All Statuses')}
               placeholder={t('common.allStatuses', 'All Statuses')}
+              searchable={false}
             />
           </div>
           <div className="w-full sm:w-48">
@@ -571,6 +572,7 @@ export function StaffPage() {
               ]}
               allOptionLabel={t('owner.employees.allRoles')}
               placeholder={formatInputPlaceholder(t('owner.employees.allRoles'), t('common.locale'))}
+              searchable={false}
             />
           </div>
         </div>

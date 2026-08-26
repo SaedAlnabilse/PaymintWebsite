@@ -1808,7 +1808,7 @@ export function EmployeeFormModal({
                     value={confirmPassword}
                     autoComplete="new-password"
                     onChange={(e) => { setConfirmPassword(e.target.value); if (errors.confirmPassword) setErrors({ ...errors, confirmPassword: '' }); }}
-                    placeholder={formatInputPlaceholder(t('staff.form.confirmPasswordPlaceholder'), t('common.locale'))}
+                    placeholder={formatInputPlaceholder(t('staff.form.confirmPasswordPlaceholder', { defaultValue: 'Enter Password' }), t('common.locale'))}
                     className={`w-full bg-gray-50 dark:bg-white/5 border ${errors.confirmPassword ? 'border-mintcom-red ring-2 ring-mintcom-red/20' : 'border-gray-200 dark:border-white/10'} rounded-xl px-4 py-3 pr-12 text-sm font-bold text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:border-mintcom-green focus:ring-1 focus:ring-mintcom-green transition-colors`}
                   />
                   <button

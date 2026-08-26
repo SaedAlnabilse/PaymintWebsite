@@ -152,7 +152,7 @@ export const SupportFeedbackPage = () => {
     <>
       <Navbar />
       <main className="min-h-screen bg-gray-50 pt-28 pb-16 dark:bg-[#0a0a0a]">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="w-full px-4 sm:px-6 lg:px-10">
           <div className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <Link to="/support/admin" className="mb-4 inline-flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-mintcom-green dark:text-gray-400">

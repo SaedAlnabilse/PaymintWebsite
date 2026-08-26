@@ -69,7 +69,7 @@ export const AboutUsPage = () => {
 
             {/* Our Value Proposition */}
             <div className="py-24 bg-gray-50 dark:bg-[#1E293B]/50 px-6">
-                <div className="max-w-6xl mx-auto">
+                <div className="w-full mx-auto">
                     <div className="text-center mb-16">
                         <h2 className="font-magilio text-3xl font-bold text-gray-900 dark:text-white mb-4">{t('about.values.title')}</h2>
                     </div>
@@ -99,7 +99,7 @@ export const AboutUsPage = () => {
 
             {/* Our Story */}
             <div className="py-24 px-6">
-                <div className="max-w-4xl mx-auto">
+                <div className="w-full mx-auto">
                     <motion.div
                         initial={{ opacity: 0, y: 30 }}
                         whileInView={{ opacity: 1, y: 0 }}

@@ -582,13 +582,13 @@ export function CustomRoleFormModal({
                     >
                       <div className="p-5 space-y-6">
                         {/* POS Defaults Info */}
-                        <div className="px-3 py-2.5 rounded-xl bg-mintcom-green/5 border border-mintcom-green/10 flex items-start gap-2.5">
-                          <div className="w-5 h-5 rounded-full bg-mintcom-green/10 text-mintcom-green flex items-center justify-center flex-shrink-0 mt-0.5">
-                            <Check size={12} strokeWidth={3} />
+                        <div className="p-3.5 sm:p-4 rounded-2xl bg-mintcom-green/5 border border-mintcom-green/15 flex items-start gap-3">
+                          <div className="w-6 h-6 rounded-full bg-mintcom-green/10 text-mintcom-green flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <Check size={14} strokeWidth={2.5} />
                           </div>
                           <div>
-                            <p className="text-[11px] font-black text-mintcom-green uppercase tracking-wider mb-0.5">{t('roles.form.includedByDefault')}</p>
-                            <p className="text-xs text-gray-600 dark:text-gray-400 font-medium leading-relaxed">
+                            <p className="text-sm font-bold text-mintcom-green mb-1">{t('roles.form.includedByDefault')}</p>
+                            <p className="text-sm text-gray-700 dark:text-gray-300 font-medium leading-relaxed">
                               {t('roles.pos.includedDefaults')}
                             </p>
                           </div>
@@ -729,13 +729,13 @@ export function CustomRoleFormModal({
                     >
                       <div className="p-5 space-y-3">
                         {/* Backoffice Defaults Info */}
-                        <div className="px-3 py-2.5 rounded-xl bg-mintcom-green/5 border border-mintcom-green/10 flex items-start gap-2.5 mb-4">
-                          <div className="w-5 h-5 rounded-full bg-mintcom-green/10 text-mintcom-green flex items-center justify-center flex-shrink-0 mt-0.5">
-                            <Check size={12} strokeWidth={3} />
+                        <div className="p-3.5 sm:p-4 rounded-2xl bg-mintcom-green/5 border border-mintcom-green/15 flex items-start gap-3 mb-4">
+                          <div className="w-6 h-6 rounded-full bg-mintcom-green/10 text-mintcom-green flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <Check size={14} strokeWidth={2.5} />
                           </div>
                           <div>
-                            <p className="text-[11px] font-black text-mintcom-green uppercase tracking-wider mb-0.5">{t('roles.form.includedByDefault')}</p>
-                            <p className="text-xs text-gray-600 dark:text-gray-400 font-medium leading-relaxed">
+                            <p className="text-sm font-bold text-mintcom-green mb-1">{t('roles.form.includedByDefault')}</p>
+                            <p className="text-sm text-gray-700 dark:text-gray-300 font-medium leading-relaxed">
                               {t('roles.backoffice.includedDefaults')}
                             </p>
                           </div>

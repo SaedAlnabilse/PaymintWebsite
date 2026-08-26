@@ -104,7 +104,7 @@ export function RestoreLocationModal({
                         {step === 1 ? (
                             <form onSubmit={handleNext} className="space-y-6">
                                 {errorMessage && (
-                                    <div role="alert" className="p-4 bg-red-50 dark:bg-red-500/10 rounded-2xl border border-red-200 dark:border-red-500/20 text-sm font-bold text-red-700 dark:text-red-300">
+                                    <div role="alert" className="p-4 bg-mintcom-red rounded-2xl border border-mintcom-red text-sm font-bold text-white">
                                         {errorMessage}
                                     </div>
                                 )}
@@ -170,7 +170,7 @@ export function RestoreLocationModal({
                         ) : (
                             <form onSubmit={handleSubmit} className="space-y-6">
                                 {errorMessage && (
-                                    <div role="alert" className="p-4 bg-red-50 dark:bg-red-500/10 rounded-2xl border border-red-200 dark:border-red-500/20 text-sm font-bold text-red-700 dark:text-red-300">
+                                    <div role="alert" className="p-4 bg-mintcom-red rounded-2xl border border-mintcom-red text-sm font-bold text-white">
                                         {errorMessage}
                                     </div>
                                 )}

@@ -44,7 +44,7 @@ export const MultiLocationPage = () => {
       </section>
 
       <section className="bg-gray-50 px-6 py-20 dark:bg-[#1E293B]/50">
-        <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 sm:grid-cols-2">
+        <div className="mx-auto grid w-full grid-cols-1 gap-6 sm:grid-cols-2">
           {CARDS.map((card, i) => (
             <motion.div
               key={card.titleKey}
@@ -65,7 +65,7 @@ export const MultiLocationPage = () => {
       </section>
 
       <section className="px-6 py-20">
-        <div className="mx-auto max-w-3xl rounded-3xl border border-mintcom-green/25 bg-gradient-to-br from-mintcom-green/10 to-transparent p-10 text-center">
+        <div className="mx-auto w-full rounded-3xl border border-mintcom-green/25 bg-gradient-to-br from-mintcom-green/10 to-transparent p-10 text-center">
           <h2 className="mb-3 font-magilio text-2xl font-bold sm:text-3xl">{t('pages.multi.priceTitle')}</h2>
           <p className="mb-2 text-sm font-medium text-gray-600 dark:text-gray-300">
             {t('pages.multi.priceBody', { price: extraMonthly })}

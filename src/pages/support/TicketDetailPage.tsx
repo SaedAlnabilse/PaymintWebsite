@@ -236,7 +236,7 @@ export const TicketDetailPage = () => {
       <div className="min-h-screen bg-white font-sans text-gray-900 dark:bg-[#050505] dark:text-white">
         <Navbar />
         <main className="pt-28 pb-20">
-          <div className="container mx-auto max-w-[1280px] px-6 md:px-10">
+          <div className="w-full px-6 md:px-10 lg:px-16">
             <SurfaceLoader message={t('common.loading')} className="max-w-4xl mx-auto" />
           </div>
         </main>
@@ -255,7 +255,7 @@ export const TicketDetailPage = () => {
       <div className="min-h-screen bg-white font-sans text-gray-900 dark:bg-[#050505] dark:text-white">
         <Navbar />
         <main className="pt-28 pb-20">
-          <div className="container mx-auto max-w-[1280px] px-6 md:px-10">
+          <div className="w-full px-6 md:px-10 lg:px-16">
             <SurfaceLoader
               message={t('support.tickets.loadingDetail', { defaultValue: 'Loading ticket...' })}
               className="max-w-4xl mx-auto"
@@ -273,7 +273,7 @@ export const TicketDetailPage = () => {
       <div className="min-h-screen bg-white font-sans text-gray-900 dark:bg-[#050505] dark:text-white">
         <Navbar />
         <main className="pt-28 pb-20">
-          <div className="container mx-auto max-w-[1280px] px-6 md:px-10">
+          <div className="w-full px-6 md:px-10 lg:px-16">
             <div className="max-w-4xl mx-auto rounded-3xl border border-red-100 bg-white dark:border-red-500/20 dark:bg-white/[0.03] p-16 text-center">
               <div className="w-20 h-20 bg-red-50 dark:bg-red-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <AlertCircle size={36} className="text-red-500" />
@@ -308,7 +308,7 @@ export const TicketDetailPage = () => {
       <div className="min-h-screen bg-white font-sans text-gray-900 dark:bg-[#050505] dark:text-white">
         <Navbar />
         <main className="pt-28 pb-20">
-          <div className="container mx-auto max-w-[1280px] px-6 md:px-10">
+          <div className="w-full px-6 md:px-10 lg:px-16">
             <div className="max-w-4xl mx-auto rounded-3xl border border-gray-100 bg-white dark:border-white/10 dark:bg-white/[0.03] p-16 text-center">
               <div className="w-20 h-20 bg-gray-100 dark:bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <Inbox size={36} className="text-gray-400" />
@@ -343,7 +343,7 @@ export const TicketDetailPage = () => {
       <Navbar />
 
       <main className="pt-28 pb-20">
-        <div className="container mx-auto max-w-5xl px-6 md:px-10">
+        <div className="w-full px-6 md:px-10 lg:px-16">
           {/* ──── Header ──── */}
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-4">

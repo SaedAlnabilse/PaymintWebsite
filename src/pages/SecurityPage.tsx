@@ -68,7 +68,7 @@ export const SecurityPage = () => {
       </section>
 
       <section className="bg-gray-50 px-6 py-20 dark:bg-[#1E293B]/50">
-        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mx-auto grid w-full grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {PILLARS.map((item, index) => (
             <motion.div
               key={item.titleKey}
@@ -89,7 +89,7 @@ export const SecurityPage = () => {
       </section>
 
       <section className="px-6 py-20">
-        <div className="mx-auto max-w-3xl space-y-6 text-center">
+        <div className="mx-auto w-full space-y-6 text-center">
           <h2 className="font-magilio text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl">
             {t('pages.security.trustTitle')}
           </h2>

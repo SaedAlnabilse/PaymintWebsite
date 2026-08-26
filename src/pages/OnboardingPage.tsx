@@ -43,7 +43,8 @@ import {
   Info,
   Globe,
   RefreshCw,
-  CalendarClock
+  CalendarClock,
+  LayoutDashboard
 } from 'lucide-react';
 import MintcomLeafIcon from '../assets/small-logo.svg';
 import MintcomLeafIconWhite from '../assets/small-logo-white.svg';
@@ -1213,26 +1214,31 @@ export function OnboardingPage() {
                       (TC-042). There is no previous step, so this exits the
                       wizard: to the owner portal when adding another location,
                       otherwise back to the site. */}
-                  <div className="flex justify-between items-center mb-6">
+                  <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-100 dark:border-white/5">
                     <button
                       type="button"
                       onClick={() =>
                         isAdditionalLocation ? navigate('/owner') : navigate('/')
                       }
-                      className="flex items-center gap-2 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors text-xs font-sans font-bold"
+                      className="inline-flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors"
                     >
-                      {!isRTL && <ArrowLeft size={14} />}
+                      {!isRTL && <ArrowLeft size={16} />}
                       {t('onboarding.back')}
-                      {isRTL && <ArrowLeft size={14} />}
+                      {isRTL && <ArrowLeft size={16} />}
                     </button>
                     {isAdditionalLocation && (
-                      <button type="button" onClick={() => navigate('/owner')} className="text-gray-400 hover:text-mintcom-green hover:underline transition-colors flex items-center text-xs font-sans font-bold">
+                      <button
+                        type="button"
+                        onClick={() => navigate('/owner')}
+                        className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-600 hover:text-mintcom-green dark:text-gray-300 dark:hover:text-mintcom-green transition-colors"
+                      >
+                        <LayoutDashboard size={16} />
                         {t('common.dashboard', { defaultValue: 'Go to Dashboard' })}
                       </button>
                     )}
                   </div>
                   <div className="flex justify-between items-start mb-2">
-                    <h2 className="font-magilio text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">{t('onboarding.step1.title')}</h2>
+                    <h2 className="font-sans text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">{t('onboarding.step1.title')}</h2>
                   </div>
                   <p className="text-sm font-sans text-gray-600 dark:text-gray-300">{t('onboarding.step1.subtitle')}</p>
                 </div>
@@ -1361,7 +1367,7 @@ export function OnboardingPage() {
                       <div className="pt-4 border-t border-gray-100 dark:border-white/5">
                         <div className="flex items-center gap-2 mb-4">
                           <Copy className="text-mintcom-green" size={20} />
-                          <h3 className="font-barlow text-base font-bold text-gray-900 dark:text-white">{t('onboarding.step1.quickSetup')}</h3>
+                          <h3 className="font-sans text-base font-bold text-gray-900 dark:text-white">{t('onboarding.step1.quickSetup')}</h3>
                         </div>
 
                         <div className="bg-gray-50 dark:bg-black/20 rounded-2xl p-5 border border-gray-100 dark:border-white/5">
@@ -1490,19 +1496,28 @@ export function OnboardingPage() {
             >
               <div className="bg-white dark:bg-white/5 rounded-[2.5rem] border border-gray-200 dark:border-white/10 p-8 lg:p-12 shadow-2xl shadow-gray-200/50 dark:shadow-none">
                 <div className="mb-10">
-                  <div className="flex justify-between items-center mb-6">
-                    <button onClick={() => goToStep(1)} className="flex items-center gap-2 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors text-xs font-sans font-bold">
-                      {!isRTL && <ArrowLeft size={14} />}
+                  <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-100 dark:border-white/5">
+                    <button
+                      type="button"
+                      onClick={() => goToStep(1)}
+                      className="inline-flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors"
+                    >
+                      {!isRTL && <ArrowLeft size={16} />}
                       {t('onboarding.back')}
-                      {isRTL && <ArrowLeft size={14} />}
+                      {isRTL && <ArrowLeft size={16} />}
                     </button>
                     {isAdditionalLocation && (
-                      <button type="button" onClick={() => navigate('/owner')} className="text-gray-400 hover:text-mintcom-green hover:underline transition-colors flex items-center text-xs font-sans font-bold">
+                      <button
+                        type="button"
+                        onClick={() => navigate('/owner')}
+                        className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-600 hover:text-mintcom-green dark:text-gray-300 dark:hover:text-mintcom-green transition-colors"
+                      >
+                        <LayoutDashboard size={16} />
                         {t('common.dashboard', { defaultValue: 'Go to Dashboard' })}
                       </button>
                     )}
                   </div>
-                  <h2 className="font-magilio text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tight mb-2">{t('onboarding.step3.title')}</h2>
+                  <h2 className="font-sans text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tight mb-2">{t('onboarding.step3.title')}</h2>
                   <p className="text-sm font-sans text-gray-600 dark:text-gray-300">{t('onboarding.step3.subtitle')}</p>
                   <div className="mt-4 p-3 bg-mintcom-green/10 text-mintcom-green text-sm rounded-xl font-sans border border-mintcom-green/20">
                     <p>✨ <strong>{t('onboarding.step3.uniqueAccess')}</strong> {t('onboarding.step3.uniqueAccessDesc')}</p>
@@ -1580,19 +1595,28 @@ export function OnboardingPage() {
             >
               <div className="bg-white dark:bg-white/5 rounded-[2.5rem] border border-gray-200 dark:border-white/10 p-8 lg:p-12 shadow-2xl shadow-gray-200/50 dark:shadow-none">
                 <div className="mb-10">
-                  <div className="flex justify-between items-center mb-6">
-                    <button onClick={() => goToStep(2)} className="flex items-center gap-2 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors text-xs font-sans font-bold">
-                      {!isRTL && <ArrowLeft size={14} />}
+                  <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-100 dark:border-white/5">
+                    <button
+                      type="button"
+                      onClick={() => goToStep(2)}
+                      className="inline-flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors"
+                    >
+                      {!isRTL && <ArrowLeft size={16} />}
                       {t('onboarding.back')}
-                      {isRTL && <ArrowLeft size={14} />}
+                      {isRTL && <ArrowLeft size={16} />}
                     </button>
                     {isAdditionalLocation && (
-                      <button type="button" onClick={() => navigate('/owner')} className="text-gray-400 hover:text-mintcom-green hover:underline transition-colors flex items-center text-xs font-sans font-bold">
+                      <button
+                        type="button"
+                        onClick={() => navigate('/owner')}
+                        className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-600 hover:text-mintcom-green dark:text-gray-300 dark:hover:text-mintcom-green transition-colors"
+                      >
+                        <LayoutDashboard size={16} />
                         {t('common.dashboard', { defaultValue: 'Go to Dashboard' })}
                       </button>
                     )}
                   </div>
-                  <h2 className="font-magilio text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tight mb-2">
+                  <h2 className="font-sans text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tight mb-2">
                     {isAdditionalLocation
                       ? t('onboarding.step4.lockedTitle', { defaultValue: 'Owner Login Ready' })
                       : t('onboarding.step4.title')}
@@ -1820,24 +1844,25 @@ export function OnboardingPage() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="max-w-5xl w-full"
+              className="w-full max-w-6xl px-4"
             >
-              <div className="mb-4 flex justify-between items-center px-1">
+              <div className="mb-6 flex justify-between items-center px-2">
                 <button
                   type="button"
                   onClick={() => goToStep(3)}
-                  className="flex items-center gap-2 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors text-xs font-sans font-bold"
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors"
                 >
-                  {!isRTL && <ArrowLeft size={14} />}
+                  {!isRTL && <ArrowLeft size={16} />}
                   {t('onboarding.back')}
-                  {isRTL && <ArrowLeft size={14} />}
+                  {isRTL && <ArrowLeft size={16} />}
                 </button>
                 {isAdditionalLocation && (
                   <button
                     type="button"
                     onClick={() => navigate('/owner')}
-                    className="text-gray-400 hover:text-mintcom-green hover:underline transition-colors flex items-center text-xs font-sans font-bold"
+                    className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-600 hover:text-mintcom-green dark:text-gray-300 dark:hover:text-mintcom-green transition-colors"
                   >
+                    <LayoutDashboard size={16} />
                     {t('common.dashboard', { defaultValue: 'Go to Dashboard' })}
                   </button>
                 )}
@@ -1864,7 +1889,7 @@ export function OnboardingPage() {
                           />
                         </div>
                         <div className="min-w-0">
-                          <h2 className="font-magilio text-xl font-bold text-gray-900 dark:text-white sm:text-2xl">
+                          <h2 className="font-sans text-xl font-bold text-gray-900 dark:text-white sm:text-2xl">
                             {isTrialFlow
                               ? t('onboarding.step2.trialTitle')
                               : t('onboarding.step2.activateTitle')}
@@ -1946,7 +1971,7 @@ export function OnboardingPage() {
 
                       {isTrialFlow ? (
                         <div className="flex items-baseline gap-2">
-                          <span className="font-barlow text-4xl sm:text-5xl font-black leading-none text-gray-900 dark:text-white tracking-tight">
+                          <span className="font-sans text-4xl sm:text-5xl font-black leading-none text-gray-900 dark:text-white tracking-tight">
                             {formatWholeNumber(0)}
                           </span>
                           <span className="text-xs sm:text-sm font-sans font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
@@ -1966,7 +1991,7 @@ export function OnboardingPage() {
                             </div>
                           )}
                           <div className="flex items-baseline gap-2">
-                            <span className="font-barlow text-4xl sm:text-5xl font-black leading-none text-gray-900 dark:text-white tracking-tight">
+                            <span className="font-sans text-4xl sm:text-5xl font-black leading-none text-gray-900 dark:text-white tracking-tight">
                               {formatWholeNumber(displayPrice)}
                             </span>
                             <span className="text-xs sm:text-sm font-sans font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
@@ -2060,7 +2085,7 @@ export function OnboardingPage() {
                           })}
                         </span>
                       </div>
-                      <h3 className="font-magilio text-xl font-bold text-gray-900 dark:text-white sm:text-2xl">
+                      <h3 className="font-sans text-xl font-bold text-gray-900 dark:text-white sm:text-2xl">
                         {t('onboarding.step2.paymentDetails', {
                           defaultValue: 'Payment Details',
                         })}
@@ -2182,7 +2207,7 @@ export function OnboardingPage() {
                         <div className="grid grid-cols-1 gap-x-3 gap-y-1 sm:grid-cols-2 sm:items-start">
                           <EmbeddedCardField
                             label={t('paymentMethods.modal.expiry', {
-                              defaultValue: 'Expiry date',
+                            defaultValue: 'Expiry date',
                             })}
                             error={form4.formState.errors.expiryDate?.message as string | undefined}
                           >
@@ -2310,7 +2335,7 @@ export function OnboardingPage() {
               key="step5"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="w-full max-w-5xl px-4"
+              className="w-full max-w-6xl px-4"
             >
               {/* Top Hero Bar */}
               <div className="relative mb-6">
@@ -2407,7 +2432,7 @@ export function OnboardingPage() {
                         <Tablet size={28} className="text-orange-600 dark:text-orange-400" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <h3 className="font-barlow text-lg font-bold text-gray-900 dark:text-white">{t('onboarding.step5.posApp')}</h3>
+                        <h3 className="font-sans text-lg font-bold text-gray-900 dark:text-white">{t('onboarding.step5.posApp')}</h3>
                         <p className="mt-0.5 text-sm leading-snug text-gray-500 dark:text-gray-400">{t('onboarding.step5.posAppDesc')}</p>
                         <div className="mt-3 flex flex-wrap items-center gap-2.5">
                           {hasAndroidDownload ? (
@@ -2469,7 +2494,7 @@ export function OnboardingPage() {
                         <Smartphone size={28} className="text-blue-600 dark:text-blue-400" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <h3 className="font-barlow text-lg font-bold text-gray-900 dark:text-white">{t('onboarding.step5.ownerApp')}</h3>
+                        <h3 className="font-sans text-lg font-bold text-gray-900 dark:text-white">{t('onboarding.step5.ownerApp')}</h3>
                         <p className="mt-0.5 text-sm leading-snug text-gray-500 dark:text-gray-400">{t('onboarding.step5.ownerAppDesc')}</p>
                         <div className="mt-3 flex flex-wrap items-center gap-2.5">
                           {hasOwnerAndroidDownload ? (
@@ -2531,7 +2556,7 @@ export function OnboardingPage() {
                         <Building2 size={20} className="text-mintcom-green" />
                       </div>
                       <div>
-                        <h3 className="font-barlow font-bold text-gray-900 dark:text-white text-sm">{t('onboarding.step5.locationReady')}</h3>
+                        <h3 className="font-sans font-bold text-gray-900 dark:text-white text-sm">{t('onboarding.step5.locationReady')}</h3>
                         <p className="text-xs text-gray-500">{t('onboarding.step5.setupComplete')}</p>
                       </div>
                     </div>
@@ -2626,7 +2651,7 @@ export function OnboardingPage() {
                         <BookOpen size={20} className="text-mintcom-green" />
                       </div>
                       <div>
-                        <h3 className="font-barlow text-lg font-bold text-gray-900 dark:text-white">{t('onboarding.step5.resourcesAndHelp')}</h3>
+                        <h3 className="font-sans text-lg font-bold text-gray-900 dark:text-white">{t('onboarding.step5.resourcesAndHelp')}</h3>
                         <p className="text-xs text-gray-500">{t('onboarding.tour.resourcesDesc')}</p>
                       </div>
                     </div>
@@ -2642,7 +2667,7 @@ export function OnboardingPage() {
                           <BookOpen size={20} className="text-blue-500" />
                         </div>
                         <div>
-                          <h4 className="font-barlow font-bold text-gray-900 dark:text-white text-sm">{t('onboarding.step5.userManual')}</h4>
+                          <h4 className="font-sans font-bold text-gray-900 dark:text-white text-sm">{t('onboarding.step5.userManual')}</h4>
                           <p className="text-xs text-gray-500 mt-1">{t('onboarding.step5.completeGuide')}</p>
                         </div>
                       </a>
@@ -2659,7 +2684,7 @@ export function OnboardingPage() {
                           <Settings size={20} className="text-amber-500" />
                         </div>
                         <div>
-                          <h4 className="font-barlow font-bold text-gray-900 dark:text-white text-sm">{t('onboarding.step5.setupManual')}</h4>
+                          <h4 className="font-sans font-bold text-gray-900 dark:text-white text-sm">{t('onboarding.step5.setupManual')}</h4>
                           <p className="text-xs text-gray-500 mt-1">{t('onboarding.step5.hardwareSetup')}</p>
                         </div>
                       </a>
@@ -2676,7 +2701,7 @@ export function OnboardingPage() {
                             <PlayCircle size={20} className="text-red-500" />
                           </div>
                           <div>
-                            <h4 className="font-barlow font-bold text-gray-900 dark:text-white text-sm">{t('onboarding.step5.videoGuide')}</h4>
+                            <h4 className="font-sans font-bold text-gray-900 dark:text-white text-sm">{t('onboarding.step5.videoGuide')}</h4>
                             <p className="text-xs text-gray-500 mt-1">{t('onboarding.step5.quickStart')}</p>
                           </div>
                         </a>
@@ -2691,7 +2716,7 @@ export function OnboardingPage() {
                             <PlayCircle size={20} className="text-red-500" />
                           </div>
                           <div>
-                            <h4 className="font-barlow font-bold text-gray-900 dark:text-white text-sm">{t('onboarding.step5.videoGuide')}</h4>
+                            <h4 className="font-sans font-bold text-gray-900 dark:text-white text-sm">{t('onboarding.step5.videoGuide')}</h4>
                             <p className="text-xs text-gray-500 mt-1">{t('onboarding.step5.quickStart')}</p>
                           </div>
                         </button>
@@ -2708,7 +2733,7 @@ export function OnboardingPage() {
                           <HelpCircle size={20} className="text-blue-500" />
                         </div>
                         <div>
-                          <h4 className="font-barlow font-bold text-gray-900 dark:text-white text-sm">{t('onboarding.step5.qaCenter')}</h4>
+                          <h4 className="font-sans font-bold text-gray-900 dark:text-white text-sm">{t('onboarding.step5.qaCenter')}</h4>
                           <p className="text-xs text-gray-500 mt-1">{t('onboarding.step5.faqs')}</p>
                         </div>
                       </a>
@@ -2724,7 +2749,7 @@ export function OnboardingPage() {
                           <Shield size={20} className="text-mintcom-green" />
                         </div>
                         <div>
-                          <h4 className="font-barlow font-bold text-gray-900 dark:text-white text-sm">{t('onboarding.step5.privacy')}</h4>
+                          <h4 className="font-sans font-bold text-gray-900 dark:text-white text-sm">{t('onboarding.step5.privacy')}</h4>
                           <p className="text-xs text-gray-500 mt-1">{t('onboarding.step5.dataProtection')}</p>
                         </div>
                       </a>
@@ -2740,7 +2765,7 @@ export function OnboardingPage() {
                           <Scale size={20} className="text-blue-500" />
                         </div>
                         <div>
-                          <h4 className="font-barlow font-bold text-gray-900 dark:text-white text-sm">{t('onboarding.step5.terms')}</h4>
+                          <h4 className="font-sans font-bold text-gray-900 dark:text-white text-sm">{t('onboarding.step5.terms')}</h4>
                           <p className="text-xs text-gray-500 mt-1">{t('onboarding.step5.agreement')}</p>
                         </div>
                       </a>
@@ -2756,7 +2781,7 @@ export function OnboardingPage() {
                           <Info size={20} className="text-mintcom-green" />
                         </div>
                         <div>
-                          <h4 className="font-barlow font-bold text-gray-900 dark:text-white text-sm">{t('onboarding.step5.aboutUs')}</h4>
+                          <h4 className="font-sans font-bold text-gray-900 dark:text-white text-sm">{t('onboarding.step5.aboutUs')}</h4>
                           <p className="text-xs text-gray-500 mt-1">{t('onboarding.step5.ourStory')}</p>
                         </div>
                       </a>

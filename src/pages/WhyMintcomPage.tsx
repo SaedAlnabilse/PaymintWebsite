@@ -52,7 +52,7 @@ export const WhyMintcomPage = () => {
       </section>
 
       <section className="px-6 pb-8">
-        <div className="mx-auto max-w-4xl space-y-4">
+        <div className="mx-auto w-full space-y-4">
           {REASONS.map((item, index) => (
             <motion.div
               key={item.titleKey}
@@ -75,7 +75,7 @@ export const WhyMintcomPage = () => {
       </section>
 
       <section className="px-6 py-20">
-        <div className="mx-auto max-w-3xl text-center">
+        <div className="mx-auto w-full text-center">
           <h2 className="mb-3 font-magilio text-2xl font-bold sm:text-3xl">{t('pages.why.ctaTitle')}</h2>
           <p className="mb-8 text-sm font-medium text-gray-600 dark:text-gray-300">{t('pages.why.ctaDesc')}</p>
           <div className="flex flex-wrap items-center justify-center gap-3">

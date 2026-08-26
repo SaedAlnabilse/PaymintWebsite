@@ -200,11 +200,6 @@ export const DashboardStatsCards = React.memo(function DashboardStatsCards({ sta
 
   return (
     <div id="tour-kpi-cards" className="space-y-3">
-      <div className="flex items-center gap-2">
-        <span className="px-2.5 py-1 rounded-lg bg-mintcom-green/10 text-mintcom-green text-xs font-bold tracking-wide border border-mintcom-green/20">
-          {t('dashboard.stats.overview')}
-        </span>
-      </div>
       {/* Mobile: horizontal scroll, Desktop: grid */}
       <div className="flex overflow-x-auto scrollbar-none gap-3 pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 sm:gap-4 sm:overflow-visible">
         {statCards.map((stat: any, index) => (

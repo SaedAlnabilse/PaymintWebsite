@@ -660,19 +660,19 @@ function ReportStatCard({
       <div className={`min-w-0 flex-1 pe-4 ${chevron ? 'pe-5' : ''}`}>
         <p
           className={`text-[11px] font-medium leading-snug ${
-            primary ? 'text-white' : 'text-gray-500'
+            primary ? '!text-white' : 'text-gray-500'
           }`}
         >
           {label}
         </p>
         {hint && (
-          <p className={`text-[8px] font-medium leading-snug ${primary ? 'text-white/82' : 'text-gray-400'}`}>
+          <p className={`text-[8px] font-medium leading-snug ${primary ? '!text-white/85' : 'text-gray-400'}`}>
             {hint}
           </p>
         )}
         <p
           className={`mt-0.5 text-[14px] font-bold tabular-nums leading-tight ${
-            primary ? 'text-white' : 'text-gray-900 dark:text-white'
+            primary ? '!text-white' : 'text-gray-900 dark:text-white'
           }`}
         >
           {value}
@@ -681,7 +681,7 @@ function ReportStatCard({
       {chevron && (
         <ChevronRight
           size={16}
-          className={`mb-0.5 shrink-0 self-end ${primary ? 'text-white' : 'text-gray-400'}`}
+          className={`mb-0.5 shrink-0 self-end ${primary ? '!text-white' : 'text-gray-400'}`}
         />
       )}
     </div>

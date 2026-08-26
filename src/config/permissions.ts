@@ -196,6 +196,10 @@ export function hasPermission(
   if (userPermissions.includes('*') || userPermissions.includes('ALL')) return true;
 
   const userNormalized = new Set(normalizePermissions(userPermissions));
+  // Any user with sales/POS access ('pos') is allowed to delete/void items in the cart
+  if (userNormalized.has('pos')) {
+    userNormalized.add('void_items');
+  }
   const requiredNormalized = normalizePermissions(requiredPermissions);
 
   return requiredNormalized.some((p) => userNormalized.has(p));
