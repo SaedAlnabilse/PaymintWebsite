@@ -238,6 +238,7 @@ export function OrdersPage() {
   const isInitialMount = useRef(true);
   const actionMenuTriggerRef = useRef<HTMLButtonElement | null>(null);
   const fetchRequestIdRef = useRef(0);
+  const activeNonSilentRequestsRef = useRef(0);
   const realtimeRefreshTimeoutRef = useRef<number | null>(null);
   const HELD_ORDERS_PREVIEW_COUNT = 4;
   const selectedEmployeeName = useMemo(
@@ -586,9 +587,12 @@ export function OrdersPage() {
   // doesn't flash on every incoming order event.
   const fetchOrders = useCallback(async (silent = false) => {
     const requestId = ++fetchRequestIdRef.current;
+    if (!silent) {
+      activeNonSilentRequestsRef.current += 1;
+      setIsLoading(true);
+    }
 
     try {
-      if (!silent) setIsLoading(true);
       const effectiveStatusFilter =
         !canUsePosFeatures && statusFilter === 'HELD' ? 'all' : statusFilter;
 
@@ -822,7 +826,10 @@ export function OrdersPage() {
       console.error('Orders fetch error:', err);
       setError((err as ApiError).response?.data?.message || t('orders.messages.loadFailed'));
     } finally {
-      if (requestId === fetchRequestIdRef.current && !silent) {
+      if (!silent) {
+        activeNonSilentRequestsRef.current = Math.max(0, activeNonSilentRequestsRef.current - 1);
+      }
+      if (activeNonSilentRequestsRef.current === 0 || requestId === fetchRequestIdRef.current) {
         setIsLoading(false);
       }
     }
@@ -1058,6 +1065,21 @@ export function OrdersPage() {
       setRefundLoadingId(current => (current === order.id ? null : current));
     }
   }, [canCancelReceipts, loadOrderDetails, t]);
+
+  const handleRefundSuccess = useCallback(async (_updatedOrder?: any) => {
+    // Silently refresh the orders table so BusyOverlay doesn't block the user
+    void fetchOrders(true);
+
+    // If order detail modal is currently open, refresh its data too
+    if (selectedOrder) {
+      try {
+        const refreshed = await loadOrderDetails(selectedOrder);
+        setSelectedOrder(refreshed);
+      } catch (err) {
+        console.warn('Failed to refresh order details after refund:', err);
+      }
+    }
+  }, [fetchOrders, selectedOrder, loadOrderDetails]);
 
   const getStatusStyle = (status: string) => {
     switch (status) {
@@ -1827,7 +1849,7 @@ export function OrdersPage() {
         <OrderDetailModal
           order={selectedOrder}
           onClose={() => setSelectedOrder(null)}
-          onRefundSuccess={() => fetchOrders()}
+          onRefundSuccess={handleRefundSuccess}
           canRefund={canCancelReceipts}
           canRestock={canRestockRefundItems}
         />
@@ -1838,7 +1860,7 @@ export function OrdersPage() {
           order={selectedRefundOrder}
           isOpen={Boolean(selectedRefundOrder)}
           onClose={() => setSelectedRefundOrder(null)}
-          onRefundSuccess={() => fetchOrders()}
+          onRefundSuccess={handleRefundSuccess}
           canRefund={canCancelReceipts}
           canRestock={canRestockRefundItems}
         />

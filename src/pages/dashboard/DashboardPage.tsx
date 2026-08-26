@@ -631,7 +631,7 @@ export const DashboardPage = () => {
     <>
       {/* Full-screen blocker while a user-triggered load (view-mode switch)
           is in flight — background/realtime refreshes stay silent. */}
-      <BusyOverlay visible={isLoading && !!stats} />
+      <BusyOverlay visible={isLoading && !!stats} message={t('dashboard.processing')} />
       <AnimatePresence mode="wait">
         {isLoading && !stats ? (
           <motion.div key="loader" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>

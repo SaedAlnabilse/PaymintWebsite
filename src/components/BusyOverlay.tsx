@@ -33,7 +33,7 @@ export function BusyOverlay({ visible, message }: BusyOverlayProps) {
     >
       <div className="flex flex-col items-center">
         <div className="w-12 h-12 border-4 border-mintcom-green/10 border-t-mintcom-green rounded-full animate-spin mb-3" />
-        <p className="label-strong font-sans">{message || t('dashboard.processing')}</p>
+        <p className="label-strong font-sans">{message || t('common.processing', { defaultValue: 'Processing...' })}</p>
       </div>
     </div>,
     document.body

@@ -54,9 +54,9 @@ export function ReceiptsReport({ startDate, endDate, employeeId }: ReceiptsRepor
         fetchOrders();
     }, [page]);
 
-    const fetchOrders = async () => {
+    const fetchOrders = async (silent = false) => {
         try {
-            setIsLoading(true);
+            if (!silent) setIsLoading(true);
 
             if (statusFilter === 'HELD') {
                 const response = await api.get('/api/held-orders');
@@ -73,7 +73,6 @@ export function ReceiptsReport({ startDate, endDate, employeeId }: ReceiptsRepor
                 }));
                 setOrders(heldOrders);
                 setTotalPages(1);
-                setIsLoading(false);
                 return;
             }
 
@@ -95,7 +94,7 @@ export function ReceiptsReport({ startDate, endDate, employeeId }: ReceiptsRepor
         } catch (err) {
             console.error('Failed to fetch receipts', err);
         } finally {
-            setIsLoading(false);
+            if (!silent) setIsLoading(false);
         }
     };
 
@@ -369,7 +368,9 @@ export function ReceiptsReport({ startDate, endDate, employeeId }: ReceiptsRepor
                 <OrderDetailModal
                     order={selectedOrder}
                     onClose={() => setSelectedOrder(null)}
-                    onRefundSuccess={() => fetchOrders()}
+                    onRefundSuccess={() => {
+                        void fetchOrders(true);
+                    }}
                 />
             )}
         </div>
