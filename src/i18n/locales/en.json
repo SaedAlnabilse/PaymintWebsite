@@ -3949,7 +3949,25 @@
         "underExpected": "Less Cash Than Expected",
         "understandingDesc": "Variance is calculated as: (closing balance - opening balance) - total sales. Positive values indicate cash over, negative values indicate cash short. Regular small variances are normal, but large or frequent discrepancies may indicate training needs.",
         "understandingTitle": "Understanding Cash Gap Reports",
-        "variance": "Variance"
+        "variance": "Variance",
+        "counted": "Counted",
+        "countType": "Count",
+        "notCounted": "Not counted",
+        "neverCounted": "Not counted",
+        "notVerified": "Unverified",
+        "drawerMovements": "Pay In / Out",
+        "closeReason": "Close Reason",
+        "uncountedTitle": "{{count}} shifts closed without a cash count",
+        "uncountedDesc": "The POS closed these drawers on its own (logout, inactivity or user switch) and recorded the expected amount as counted. Their variance is unknown, so they are excluded from the figures above.",
+        "excludesUncounted": "{{count}} uncounted shifts excluded",
+        "closeReasons": {
+          "MANUAL": "manual cash-out",
+          "INACTIVITY_TIMEOUT": "inactivity timeout",
+          "GRACE_PERIOD_EXPIRED": "grace period expired",
+          "USER_SWITCH": "user switch",
+          "LOGOUT": "logout",
+          "SINGLE_SHIFT_MODE_ENABLED": "single-drawer mode enabled"
+        }
       },
       "discounts": {
         "breakdown": "Discount Breakdown",
@@ -4089,13 +4107,17 @@
       },
       "shifts": {
         "active": "Active",
-        "currentlyActive": "Currently Active",
         "activeShifts": "{{count}} active shifts",
         "audited": "Audited",
         "autoClosed": "Auto-closed",
-        "manualClose": "Cashed out",
         "cashVariance": "Cash Variance",
         "closing": "Closing",
+        "currentlyActive": "Currently Active",
+        "duration": "Duration",
+        "durationHoursMinutes": "{{hours}}h {{minutes}}m",
+        "durationMinutes": "{{minutes}}m",
+        "durationUnderMinute": "<1m",
+        "manualClose": "Cashed out",
         "noActivity": "No shift activity found",
         "noActivityDesc": "There are no shifts recorded for the selected time period.",
         "opening": "Opening",
@@ -4109,7 +4131,14 @@
         "time": "Time",
         "title": "Shifts Report",
         "totalOverShort": "Total Over/Short",
-        "variance": "Variance"
+        "variance": "Variance",
+        "expectedCash": "Expected Cash",
+        "inCash": "in cash",
+        "cashSales": "Cash Sales",
+        "timeOnTill": "Time on the till",
+        "ordersCount": "{{count}} orders",
+        "salesPerHour": "Sales per Hour",
+        "acrossAllShifts": "Across all shifts in range"
       },
       "staff": {
         "avgOrder": "Avg Order",

@@ -201,6 +201,20 @@ export interface Shift {
   variance?: number;
   openingBalance: number;
   closingBalance?: number | null;
+  // Cash reconciliation figures from /reports/shifts. expectedBalance is what
+  // the drawer should hold (opening + cash sales + pay-in - pay-out); the rest
+  // let the UI recompute it if an older payload omits it.
+  cashSales?: number;
+  cardSales?: number;
+  totalPayIn?: number;
+  totalPayOut?: number;
+  expectedBalance?: number;
+  expectedCash?: number;
+  // autoClose = the POS closed this drawer itself, so closingBalance was set
+  // to expectedBalance and its 0.00 variance is not a real count.
+  autoClose?: boolean;
+  manualCashOut?: boolean;
+  closeReason?: string | null;
   status: 'OPEN' | 'CLOSED';
   user?: {
     username: string;

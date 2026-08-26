@@ -41,6 +41,7 @@ import { SalesView } from '../../components/dashboard/reports/views/SalesView';
 import { ItemsView } from '../../components/dashboard/reports/views/ItemsView';
 import { StaffView } from '../../components/dashboard/reports/views/StaffView';
 import { ShiftsView } from '../../components/dashboard/reports/views/ShiftsView';
+import { formatShiftDuration } from '../../utils/shiftDuration';
 import { PeakHoursView } from '../../components/dashboard/reports/views/PeakHoursView';
 import { PaymentsView } from '../../components/dashboard/reports/views/PaymentsView';
 import { DiscountsView } from '../../components/dashboard/reports/views/DiscountsView';
@@ -501,19 +502,54 @@ export function ReportsPage() {
     const start = new Date(s.startTime);
     const end = s.endTime ? new Date(s.endTime) : new Date();
     const hoursWorked = ((end.getTime() - start.getTime()) / (1000 * 60 * 60)).toLocaleString(localeTag, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    // Decimal hours round a short shift down to "0.0"; ship the readable
+    // h/m duration alongside it so exports match what the table shows.
+    const duration = formatShiftDuration(t, s.startTime, s.endTime);
     const variance = s.discrepancy ?? s.variance ?? 0;
-    const cashOverShort = s.endTime
-      ? (variance > 0.001 ? `+${money(variance)} ${t('dashboard.stats.over')}` : variance < -0.001 ? `${money(variance)} ${t('dashboard.stats.short')}` : money(0))
-      : t('dashboard.shiftStatus.live');
+    // A drawer the POS closed by itself was balanced to the expected amount,
+    // so its 0.00 is not a verified count. Never export it as one.
+    const counted = !s.autoClose;
+    const cashOverShort = !s.endTime
+      ? t('dashboard.shiftStatus.live')
+      : !counted
+        ? t('orders.reports.cashGap.notVerified', { defaultValue: 'Unverified' })
+        : (variance > 0.001 ? `+${money(variance)} ${t('dashboard.stats.over')}` : variance < -0.001 ? `${money(variance)} ${t('dashboard.stats.short')}` : money(0));
+    const durationMs = end.getTime() - start.getTime();
     return {
       username: s.user?.username || t('common.pos'),
       period: `${start.toLocaleString(localeTag)} - ${s.endTime ? end.toLocaleString(localeTag) : t('dashboard.shiftStatus.live')}`,
       hoursWorked,
+      duration,
       opening: money(s.openingBalance),
       sales: money(s.totalSales),
       orders: num(s.orderCount),
       refunds: money(s.totalRefunds),
-      closing: s.closingBalance !== null && s.closingBalance !== undefined ? money(s.closingBalance) : t('dashboard.shiftStatus.live'),
+      cashSales: money(Number(s.cashSales || 0)),
+      expected: money(
+        s.expectedBalance ??
+        s.expectedCash ??
+        (Number(s.openingBalance || 0) + Number(s.cashSales || 0) + Number(s.totalPayIn || 0) - Number(s.totalPayOut || 0)),
+      ),
+      closing: !counted
+        ? t('orders.reports.cashGap.neverCounted', { defaultValue: 'Not counted' })
+        : s.closingBalance !== null && s.closingBalance !== undefined
+          ? money(s.closingBalance)
+          : t('dashboard.shiftStatus.live'),
+      payIn: money(Number(s.totalPayIn || 0)),
+      payOut: money(Number(s.totalPayOut || 0)),
+      salesPerHour: durationMs >= 5 * 60 * 1000
+        ? money(Number(s.totalSales || 0) / (durationMs / 3_600_000))
+        : '-',
+      countType: !s.endTime
+        ? t('dashboard.shiftStatus.live')
+        : counted
+          ? t('orders.reports.shifts.manualClose')
+          : t('orders.reports.shifts.autoClosed'),
+      closeReason: s.closeReason
+        ? t(`orders.reports.cashGap.closeReasons.${s.closeReason}`, {
+          defaultValue: String(s.closeReason).replace(/_/g, ' ').toLowerCase(),
+        })
+        : '',
       cashOverShort,
       status: s.status,
     };
@@ -600,6 +636,8 @@ export function ReportsPage() {
           rows: (peakHours || []).map(p => ({ hour: p.hour, total: money(p.total), count: num(p.count) })),
         };
       }
+      // Shifts export mirrors the on-screen report: work session + trading.
+      // The drawer reconciliation columns belong to cash-discrepancy below.
       case 'staff-sales':
       case 'shifts': {
         return {
@@ -607,12 +645,13 @@ export function ReportsPage() {
             { key: 'username', label: t('orders.table.staff') },
             { key: 'period', label: t('orders.reports.shifts.time') },
             { key: 'hoursWorked', label: t('orders.reports.sales.hours') },
-            { key: 'opening', label: `${t('orders.reports.shifts.opening')} (${currencySymbol})` },
-            { key: 'sales', label: `${t('orders.reports.shifts.sales')} (${currencySymbol})` },
+            { key: 'duration', label: t('orders.reports.shifts.duration', { defaultValue: 'Duration' }) },
             { key: 'orders', label: t('orders.exportFields.orderNumber') },
-            { key: 'closing', label: `${t('orders.reports.shifts.closing')} (${currencySymbol})` },
-            { key: 'cashOverShort', label: t('orders.reports.shifts.variance') },
-            { key: 'status', label: t('orders.reports.shifts.status') },
+            { key: 'sales', label: `${t('orders.reports.shifts.sales')} (${currencySymbol})` },
+            { key: 'cashSales', label: `${t('orders.reports.shifts.cashSales', { defaultValue: 'Cash Sales' })} (${currencySymbol})` },
+            { key: 'refunds', label: `${t('orders.reports.sales.refunds')} (${currencySymbol})` },
+            { key: 'salesPerHour', label: `${t('orders.reports.shifts.salesPerHour', { defaultValue: 'Sales per Hour' })} (${currencySymbol})` },
+            { key: 'countType', label: t('orders.reports.shifts.status') },
           ],
           rows: shiftRows(),
         };
@@ -623,12 +662,17 @@ export function ReportsPage() {
             { key: 'username', label: t('orders.table.staff') },
             { key: 'period', label: t('orders.reports.shifts.time') },
             { key: 'opening', label: `${t('orders.reports.shifts.opening')} (${currencySymbol})` },
-            { key: 'sales', label: `${t('orders.reports.shifts.sales')} (${currencySymbol})` },
-            { key: 'closing', label: `${t('orders.reports.shifts.closing')} (${currencySymbol})` },
+            { key: 'cashSales', label: `${t('orders.reports.shifts.cashSales', { defaultValue: 'Cash Sales' })} (${currencySymbol})` },
+            { key: 'payIn', label: `${t('orders.reports.sales.payIn')} (${currencySymbol})` },
+            { key: 'payOut', label: `${t('orders.reports.sales.payOut')} (${currencySymbol})` },
+            { key: 'expected', label: `${t('orders.reports.shifts.expectedCash', { defaultValue: 'Expected Cash' })} (${currencySymbol})` },
+            { key: 'closing', label: `${t('orders.reports.cashGap.counted', { defaultValue: 'Counted' })} (${currencySymbol})` },
             { key: 'cashOverShort', label: t('orders.reports.shifts.variance') },
-            { key: 'status', label: t('orders.reports.shifts.status') },
+            { key: 'countType', label: t('orders.reports.cashGap.countType', { defaultValue: 'Count' }) },
+            { key: 'closeReason', label: t('orders.reports.cashGap.closeReason', { defaultValue: 'Close Reason' }) },
           ],
-          rows: shiftRows(),
+          // Only closed shifts can be reconciled; an open drawer has no count.
+          rows: shiftRows().filter(row => row.status === 'CLOSED'),
         };
       }
       default:

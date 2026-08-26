@@ -3896,7 +3896,25 @@
         "underExpected": "现金少于预期",
         "understandingDesc": "差额计算方式为：（收班余额 - 开班余额）- 总销售额。正值表示现金溢余，负值表示现金短缺。经常性的小额差额属于正常，但较大或频繁的差额可能说明需要加强培训。",
         "understandingTitle": "读懂现金差额报表",
-        "variance": "差额"
+        "variance": "差额",
+        "counted": "已清点",
+        "countType": "清点",
+        "notCounted": "未清点",
+        "neverCounted": "未清点",
+        "notVerified": "未核实",
+        "drawerMovements": "存入 / 取出",
+        "closeReason": "关闭原因",
+        "uncountedTitle": "{{count}} 个班次在未清点现金的情况下关闭",
+        "uncountedDesc": "POS 自行关闭了这些钱箱（登出、闲置或切换用户），并将预计金额记为已清点。其差额未知，因此不计入上方数据。",
+        "excludesUncounted": "已排除 {{count}} 个未清点班次",
+        "closeReasons": {
+          "MANUAL": "手动交班",
+          "INACTIVITY_TIMEOUT": "闲置超时",
+          "GRACE_PERIOD_EXPIRED": "宽限期结束",
+          "USER_SWITCH": "切换用户",
+          "LOGOUT": "登出",
+          "SINGLE_SHIFT_MODE_ENABLED": "启用单钱箱模式"
+        }
       },
       "discounts": {
         "breakdown": "折扣明细",
@@ -4036,13 +4054,17 @@
       },
       "shifts": {
         "active": "启用中",
-        "currentlyActive": "当前活跃",
         "activeShifts": "{{count}} 个进行中的班次",
         "audited": "已审核",
         "autoClosed": "自动收班",
-        "manualClose": "已清点",
         "cashVariance": "现金差额",
         "closing": "收班",
+        "currentlyActive": "当前活跃",
+        "duration": "时长",
+        "durationHoursMinutes": "{{hours}}小时{{minutes}}分钟",
+        "durationMinutes": "{{minutes}}分钟",
+        "durationUnderMinute": "不到1分钟",
+        "manualClose": "已清点",
         "noActivity": "未找到班次活动",
         "noActivityDesc": "所选时间段内没有班次记录。",
         "opening": "开班",
@@ -4056,7 +4078,14 @@
         "time": "时间",
         "title": "班次报表",
         "totalOverShort": "溢余/短缺合计",
-        "variance": "差额"
+        "variance": "差额",
+        "expectedCash": "预计现金",
+        "inCash": "现金",
+        "cashSales": "现金销售",
+        "timeOnTill": "收银台时长",
+        "ordersCount": "{{count}} 笔订单",
+        "salesPerHour": "每小时销售额",
+        "acrossAllShifts": "该时间段内所有班次"
       },
       "staff": {
         "avgOrder": "平均订单",

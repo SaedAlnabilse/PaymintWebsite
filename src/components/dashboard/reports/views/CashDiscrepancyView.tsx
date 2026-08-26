@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Scale, TrendingUp, TrendingDown, AlertCircle, User } from 'lucide-react';
+import { Scale, TrendingUp, TrendingDown, AlertCircle, User, HelpCircle } from 'lucide-react';
 import { BiIcon } from '../../../ui/BiIcon';
 import { useCurrency } from '../../../../context/CurrencyContext';
 import { useTranslation } from 'react-i18next';
@@ -20,7 +20,7 @@ export const CashDiscrepancyView = React.memo(function CashDiscrepancyView({ shi
   const { t } = useTranslation();
   const { currencySymbol } = useCurrency();
   const [currentPage, setCurrentPage] = useState(1);
-  const [statusFilter, setStatusFilter] = useState<'all' | 'short' | 'over' | 'balanced'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'short' | 'over' | 'balanced' | 'uncounted'>('all');
   const itemsPerPage = 10;
 
   const formatCurrency = (
@@ -42,6 +42,11 @@ export const CashDiscrepancyView = React.memo(function CashDiscrepancyView({ shi
     />
   );
   const toNumber = (value: unknown) => Number(value || 0);
+  const formatAmount = (value: number) =>
+    value.toLocaleString(t('common.locale'), {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
   const getCashSales = (shift: any) =>
     toNumber(shift.cashSales ?? shift.totalCashSales ?? shift.cashPayments ?? 0);
   const getExpectedBalance = (shift: any) =>
@@ -68,25 +73,45 @@ export const CashDiscrepancyView = React.memo(function CashDiscrepancyView({ shi
     return shifts.filter((s: any) => s.status === 'CLOSED');
   }, [shifts]);
 
+  /**
+   * An auto-closed shift was never counted by a human: the API closes it with
+   * closingBalance = expectedBalance, so its variance is 0.00 by construction.
+   * Treating those as "balanced" would inflate the accuracy rate and hide the
+   * real exposure, so every statistic below is computed over counted shifts
+   * only, and the uncounted ones are reported separately.
+   */
+  const isCounted = (shift: any) => !shift.autoClose;
+  const countedShifts = useMemo(() => closedShifts.filter(isCounted), [closedShifts]);
+  const uncountedShifts = useMemo(
+    () => closedShifts.filter((s: any) => !isCounted(s)),
+    [closedShifts],
+  );
+
   // Calculate statistics
   const stats = useMemo(() => {
-    const totalOver = closedShifts.reduce((acc: number, shift: any) => {
+    const totalOver = countedShifts.reduce((acc: number, shift: any) => {
       const disc = getDiscrepancy(shift);
       return disc > 0 ? acc + disc : acc;
     }, 0);
 
-    const totalShort = closedShifts.reduce((acc: number, shift: any) => {
+    const totalShort = countedShifts.reduce((acc: number, shift: any) => {
       const disc = getDiscrepancy(shift);
       return disc < 0 ? acc + Math.abs(disc) : acc;
     }, 0);
 
     const netVariance = totalOver - totalShort;
-    const overCount = closedShifts.filter((s: any) => getDiscrepancy(s) > 0.001).length;
-    const shortCount = closedShifts.filter((s: any) => getDiscrepancy(s) < -0.001).length;
-    const balancedCount = closedShifts.filter((s: any) => {
+    const overCount = countedShifts.filter((s: any) => getDiscrepancy(s) > 0.001).length;
+    const shortCount = countedShifts.filter((s: any) => getDiscrepancy(s) < -0.001).length;
+    const balancedCount = countedShifts.filter((s: any) => {
       const disc = getDiscrepancy(s);
       return disc >= -0.001 && disc <= 0.001;
     }).length;
+
+    // Cash that closed the day without anyone verifying it.
+    const unverifiedCash = uncountedShifts.reduce(
+      (acc: number, shift: any) => acc + getExpectedBalance(shift),
+      0,
+    );
 
     return {
       totalOver,
@@ -95,13 +120,19 @@ export const CashDiscrepancyView = React.memo(function CashDiscrepancyView({ shi
       overCount,
       shortCount,
       balancedCount,
-      totalShifts: closedShifts.length
+      uncountedCount: uncountedShifts.length,
+      unverifiedCash,
+      totalShifts: countedShifts.length
     };
-  }, [closedShifts]);
+  }, [countedShifts, uncountedShifts]);
 
   // Filter shifts based on status filter
   const filteredShifts = useMemo(() => {
     return closedShifts.filter((s: any) => {
+      if (statusFilter === 'uncounted') return !isCounted(s);
+      // A drawer nobody counted has no meaningful over/short verdict, so it is
+      // excluded from those buckets instead of masquerading as balanced.
+      if (!isCounted(s)) return statusFilter === 'all';
       const discrepancy = getDiscrepancy(s);
       if (statusFilter === 'over') return discrepancy > 0.001;
       if (statusFilter === 'short') return discrepancy < -0.001;
@@ -119,7 +150,7 @@ export const CashDiscrepancyView = React.memo(function CashDiscrepancyView({ shi
     });
   }, [filteredShifts]);
 
-  const handleStatusFilterChange = (filter: 'all' | 'short' | 'over' | 'balanced') => {
+  const handleStatusFilterChange = (filter: 'all' | 'short' | 'over' | 'balanced' | 'uncounted') => {
     setStatusFilter(filter);
     setCurrentPage(1);
   };
@@ -232,8 +263,55 @@ export const CashDiscrepancyView = React.memo(function CashDiscrepancyView({ shi
           <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mt-1">
             {t('orders.reports.cashGap.shiftsBalanced', { count: stats.balancedCount, total: stats.totalShifts })}
           </p>
+          {/* Auto-closed drawers are excluded above, so say so — otherwise the
+              rate reads as "97% accurate" when most tills were never counted. */}
+          {stats.uncountedCount > 0 && (
+            <p className="text-[11px] font-bold text-amber-600 dark:text-amber-400 mt-1">
+              {t('orders.reports.cashGap.excludesUncounted', {
+                count: stats.uncountedCount,
+                defaultValue: '{{count}} uncounted shifts excluded',
+              })}
+            </p>
+          )}
         </motion.div>
       </div>
+
+      {/* The blind spot: a shift the POS closed by itself was balanced to the
+          expected amount, so it can never show a variance. Owners need to know
+          how much cash went unverified, not just where the gaps were found. */}
+      {stats.uncountedCount > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-amber-50 dark:bg-amber-500/5 border border-amber-200 dark:border-amber-500/20 rounded-2xl p-4 sm:p-5 flex items-start gap-4"
+        >
+          <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0">
+            <HelpCircle size={20} />
+          </div>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-baseline gap-x-2">
+              <h3 className="text-sm font-black text-amber-700 dark:text-amber-400">
+                {t('orders.reports.cashGap.uncountedTitle', {
+                  count: stats.uncountedCount,
+                  defaultValue: '{{count}} shifts closed without a cash count',
+                })}
+              </h3>
+              <StatValue
+                value={stats.unverifiedCash}
+                currency={currencySymbol}
+                className="text-sm text-amber-700 dark:text-amber-400"
+                containerClassName="inline-flex"
+              />
+            </div>
+            <p className="text-xs font-medium text-amber-700/80 dark:text-amber-400/80 mt-1">
+              {t('orders.reports.cashGap.uncountedDesc', {
+                defaultValue:
+                  'The POS closed these drawers on its own (logout, inactivity or user switch) and recorded the expected amount as counted. Their variance is unknown, so they are excluded from the figures above.',
+              })}
+            </p>
+          </div>
+        </motion.div>
+      )}
 
       {/* Discrepancy Breakdown Chart */}
       <div className="bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.03] p-6 shadow-sm">
@@ -313,6 +391,7 @@ export const CashDiscrepancyView = React.memo(function CashDiscrepancyView({ shi
             { id: 'over', label: t('orders.reports.cashGap.over'), icon: TrendingUp, color: 'amber' },
             { id: 'short', label: t('orders.reports.cashGap.short'), icon: TrendingDown, color: 'red' },
             { id: 'balanced', label: t('orders.reports.cashGap.balanced'), icon: Scale, color: 'blue' },
+            { id: 'uncounted', label: t('orders.reports.cashGap.notCounted', { defaultValue: 'Not counted' }), icon: HelpCircle, color: 'amber' },
           ].map((filter) => {
             const isSelected = statusFilter === filter.id;
             return (
@@ -336,7 +415,15 @@ export const CashDiscrepancyView = React.memo(function CashDiscrepancyView({ shi
                 <span className={`ml-1 px-1.5 py-0.5 rounded-lg text-[10px] ${
                   isSelected ? 'bg-black/10 dark:bg-white/20' : 'bg-gray-100 dark:bg-white/10'
                 }`}>
-                  {filter.id === 'all' ? closedShifts.length : filter.id === 'over' ? stats.overCount : filter.id === 'short' ? stats.shortCount : stats.balancedCount}
+                  {filter.id === 'all'
+                    ? closedShifts.length
+                    : filter.id === 'over'
+                      ? stats.overCount
+                      : filter.id === 'short'
+                        ? stats.shortCount
+                        : filter.id === 'uncounted'
+                          ? stats.uncountedCount
+                          : stats.balancedCount}
                 </span>
               </button>
             );
@@ -360,11 +447,12 @@ export const CashDiscrepancyView = React.memo(function CashDiscrepancyView({ shi
                     <th className="px-5 py-4 text-start label-strong font-sans whitespace-nowrap">{t('orders.reports.cashGap.staff')}</th>
                     <th className="px-5 py-4 text-start label-strong font-sans whitespace-nowrap">{t('orders.reports.cashGap.period')}</th>
                     <th className="px-5 py-4 text-end label-strong font-sans whitespace-nowrap">{t('orders.reports.cashGap.opening')}</th>
-                    <th className="px-5 py-4 text-end label-strong font-sans whitespace-nowrap">{t('orders.reports.cashGap.sales')}</th>
-                    <th className="px-5 py-4 text-end label-strong font-sans whitespace-nowrap">{t('orders.reports.cashGap.closing')}</th>
-                    <th className="px-5 py-4 text-end label-strong font-sans whitespace-nowrap">{t('orders.reports.cashGap.expected')}</th>
+                    <th className="px-5 py-4 text-end label-strong font-sans whitespace-nowrap">{t('orders.reports.shifts.cashSales', { defaultValue: 'Cash Sales' })}</th>
+                    <th className="px-5 py-4 text-end label-strong font-sans whitespace-nowrap">{t('orders.reports.cashGap.drawerMovements', { defaultValue: 'Pay In / Out' })}</th>
+                    <th className="px-5 py-4 text-end label-strong font-sans whitespace-nowrap">{t('orders.reports.shifts.expectedCash', { defaultValue: 'Expected Cash' })}</th>
+                    <th className="px-5 py-4 text-end label-strong font-sans whitespace-nowrap">{t('orders.reports.cashGap.counted', { defaultValue: 'Counted' })}</th>
                     <th className="px-5 py-4 text-end label-strong font-sans whitespace-nowrap">{t('orders.reports.cashGap.variance')}</th>
-                    <th className="px-5 py-4 text-end label-strong font-sans whitespace-nowrap">{t('orders.reports.cashGap.status')}</th>
+                    <th className="px-5 py-4 text-end label-strong font-sans whitespace-nowrap">{t('orders.reports.cashGap.countType', { defaultValue: 'Count' })}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-white/5">
@@ -372,8 +460,11 @@ export const CashDiscrepancyView = React.memo(function CashDiscrepancyView({ shi
                     const discrepancy = getDiscrepancy(shift);
                     const expected = getExpectedBalance(shift);
                     const cashSales = getCashSales(shift);
-                    const isOver = discrepancy > 0.001;
-                    const isShort = discrepancy < -0.001;
+                    const payIn = toNumber(shift.totalPayIn);
+                    const payOut = toNumber(shift.totalPayOut);
+                    const counted = isCounted(shift);
+                    const isOver = counted && discrepancy > 0.001;
+                    const isShort = counted && discrepancy < -0.001;
                     return (
                       <motion.tr
                         key={shift.id}
@@ -415,44 +506,88 @@ export const CashDiscrepancyView = React.memo(function CashDiscrepancyView({ shi
                           />
                         </td>
                         <td className="px-5 py-4 text-end">
-                          {formatCurrency(getClosingBalance(shift), 'text-sm font-bold text-gray-900 dark:text-white', 'end')}
+                          {/* Pay-ins and pay-outs move real cash in and out of
+                              the drawer mid-shift and are invisible everywhere
+                              else in the reports. */}
+                          {payIn < 0.001 && payOut < 0.001 ? (
+                            <span className="text-sm text-gray-400 font-normal">-</span>
+                          ) : (
+                            <div className="flex flex-col items-end gap-0.5">
+                              {payIn > 0.001 && (
+                                <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+                                  +{formatAmount(payIn)} {t('orders.reports.sales.payIn')}
+                                </span>
+                              )}
+                              {payOut > 0.001 && (
+                                <span className="text-xs font-bold text-red-600 dark:text-red-400 whitespace-nowrap">
+                                  -{formatAmount(payOut)} {t('orders.reports.sales.payOut')}
+                                </span>
+                              )}
+                            </div>
+                          )}
                         </td>
                         <td className="px-5 py-4 text-end">
                           {formatCurrency(expected, 'text-sm font-medium text-gray-500', 'end')}
                         </td>
                         <td className="px-5 py-4 text-end">
-                          <div className="flex justify-end">
-                            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-black tracking-wider border ${
-                              isOver
-                                ? 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20'
-                                : isShort
-                                  ? 'bg-red-100 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20'
-                                  : 'bg-gray-100 text-gray-700 border-gray-200 dark:bg-white/10 dark:text-gray-300 dark:border-white/10'
-                            }`}>
-                              {isOver ? <TrendingUp size={12} className="shrink-0" /> : isShort ? <TrendingDown size={12} className="shrink-0" /> : <Scale size={12} className="shrink-0" />}
-                              <StatValue
-                                value={isShort || isOver ? discrepancy : 0}
-                                currency={currencySymbol}
-                                className="text-xs"
-                                containerClassName="inline-flex"
-                              />
-                            </span>
-                          </div>
+                          {counted
+                            ? formatCurrency(getClosingBalance(shift), 'text-sm font-bold text-gray-900 dark:text-white', 'end')
+                            : (
+                              <span className="text-xs font-bold text-gray-400 dark:text-gray-500 whitespace-nowrap">
+                                {t('orders.reports.cashGap.neverCounted', { defaultValue: 'Not counted' })}
+                              </span>
+                            )}
                         </td>
                         <td className="px-5 py-4 text-end">
                           <div className="flex justify-end">
+                            {/* An uncounted drawer has no verdict to give. Showing
+                                0.00 here would be a lie the POS invented when it
+                                closed the shift at the expected amount. */}
+                            {!counted ? (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-black tracking-wider border border-dashed bg-transparent text-gray-500 border-gray-300 dark:text-gray-400 dark:border-white/20">
+                                <HelpCircle size={12} className="shrink-0" />
+                                {t('orders.reports.cashGap.notVerified', { defaultValue: 'Unverified' })}
+                              </span>
+                            ) : (
+                              <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-black tracking-wider border ${
+                                isOver
+                                  ? 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20'
+                                  : isShort
+                                    ? 'bg-red-100 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20'
+                                    : 'bg-gray-100 text-gray-700 border-gray-200 dark:bg-white/10 dark:text-gray-300 dark:border-white/10'
+                              }`}>
+                                {isOver ? <TrendingUp size={12} className="shrink-0" /> : isShort ? <TrendingDown size={12} className="shrink-0" /> : <Scale size={12} className="shrink-0" />}
+                                <StatValue
+                                  value={isShort || isOver ? discrepancy : 0}
+                                  currency={currencySymbol}
+                                  className="text-xs"
+                                  containerClassName="inline-flex"
+                                />
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-5 py-4 text-end">
+                          <div className="flex flex-col items-end gap-1">
                             <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${
-                              isOver
-                                ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                                : isShort
-                                  ? 'bg-red-500/10 text-red-600 dark:text-red-400'
-                                  : 'bg-gray-500/10 text-gray-600 dark:text-gray-300'
+                              counted
+                                ? 'bg-mintcom-green/10 text-mintcom-green'
+                                : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
                             }`}>
-                              <span className={`w-1.5 h-1.5 rounded-full ${
-                                isOver ? 'bg-amber-500' : isShort ? 'bg-red-500' : 'bg-gray-400'
-                              }`} />
-                              {isOver ? t('orders.reports.cashGap.over') : isShort ? t('orders.reports.cashGap.short') : t('orders.reports.cashGap.isBalanced')}
+                              <span className={`w-1.5 h-1.5 rounded-full ${counted ? 'bg-mintcom-green' : 'bg-amber-500'}`} />
+                              {counted
+                                ? t('orders.reports.shifts.manualClose', { defaultValue: 'Cashed out' })
+                                : t('orders.reports.shifts.autoClosed', { defaultValue: 'Auto-closed' })}
                             </span>
+                            {/* Why the POS closed it for them — inactivity,
+                                logout, user switch — is the actionable part. */}
+                            {!counted && shift.closeReason && (
+                              <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 whitespace-nowrap">
+                                {t(`orders.reports.cashGap.closeReasons.${shift.closeReason}`, {
+                                  defaultValue: String(shift.closeReason).replace(/_/g, ' ').toLowerCase(),
+                                })}
+                              </span>
+                            )}
                           </div>
                         </td>
                       </motion.tr>

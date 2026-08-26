@@ -3949,7 +3949,25 @@
         "underExpected": "نقد أقل من المتوقع",
         "understandingDesc": "يتم حساب الفارق كـ: (رصيد الإغلاق - رصيد الافتتاح) - إجمالي المبيعات. تشير القيم الموجبة إلى زيادة نقدية، والقيم السالبة تشير إلى نقص نقدي. الفروقات الصغيرة المنتظمة طبيعية، لكن الفروقات الكبيرة أو المتكررة قد تشير إلى الحاجة للتدريب.",
         "understandingTitle": "فهم تقارير فجوة النقد",
-        "variance": "الفارق"
+        "variance": "الفارق",
+        "counted": "المعدود",
+        "countType": "العد",
+        "notCounted": "غير معدود",
+        "neverCounted": "غير معدود",
+        "notVerified": "غير مؤكد",
+        "drawerMovements": "إيداع / سحب",
+        "closeReason": "سبب الإغلاق",
+        "uncountedTitle": "{{count}} ورديات أُغلقت بدون عد النقد",
+        "uncountedDesc": "أغلق نظام نقاط البيع هذه الأدراج تلقائياً (تسجيل خروج أو خمول أو تبديل مستخدم) وسجّل المبلغ المتوقع كأنه معدود. الفارق فيها غير معروف، لذلك استُثنيت من الأرقام أعلاه.",
+        "excludesUncounted": "تم استثناء {{count}} ورديات غير معدودة",
+        "closeReasons": {
+          "MANUAL": "إغلاق يدوي",
+          "INACTIVITY_TIMEOUT": "انتهاء مهلة الخمول",
+          "GRACE_PERIOD_EXPIRED": "انتهاء فترة السماح",
+          "USER_SWITCH": "تبديل المستخدم",
+          "LOGOUT": "تسجيل الخروج",
+          "SINGLE_SHIFT_MODE_ENABLED": "تفعيل وضع الدرج الواحد"
+        }
       },
       "discounts": {
         "breakdown": "تفاصيل الخصم",
@@ -4089,13 +4107,17 @@
       },
       "shifts": {
         "active": "نشط",
-        "currentlyActive": "نشط حالياً",
         "activeShifts": "{{count}} ورديات نشطة",
         "audited": "تم التدقيق",
         "autoClosed": "إغلاق تلقائي",
-        "manualClose": "جرد نقدي",
         "cashVariance": "فروقات النقد",
         "closing": "الإغلاق",
+        "currentlyActive": "نشط حالياً",
+        "duration": "المدة",
+        "durationHoursMinutes": "{{hours}} س {{minutes}} د",
+        "durationMinutes": "{{minutes}} د",
+        "durationUnderMinute": "أقل من دقيقة",
+        "manualClose": "جرد نقدي",
         "noActivity": "لم يتم العثور على نشاط ورديات",
         "noActivityDesc": "لا توجد ورديات مسجلة للفترة المختارة.",
         "opening": "الافتتاح",
@@ -4109,7 +4131,14 @@
         "time": "الوقت",
         "title": "تقرير الورديات",
         "totalOverShort": "إجمالي الزيادة/النقص",
-        "variance": "الفارق"
+        "variance": "الفارق",
+        "expectedCash": "النقد المتوقع",
+        "inCash": "نقداً",
+        "cashSales": "المبيعات النقدية",
+        "timeOnTill": "الوقت على الصندوق",
+        "ordersCount": "{{count}} طلبات",
+        "salesPerHour": "المبيعات لكل ساعة",
+        "acrossAllShifts": "عبر جميع الورديات في الفترة"
       },
       "staff": {
         "avgOrder": "متوسط الطلب",

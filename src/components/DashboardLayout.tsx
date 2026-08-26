@@ -56,8 +56,10 @@ import realtimeService from '../services/realtimeService';
 import {
   DASHBOARD_SESSION_KICKED_CODE,
   dashboardSessionService,
+  decrementDashboardTabCount,
   getDashboardClientId,
   getDashboardSessionErrorMessage,
+  incrementDashboardTabCount,
   isDashboardSessionConflict,
   isDashboardSessionEnded,
   type DashboardSession,
@@ -258,6 +260,8 @@ export function DashboardLayout() {
       return;
     }
 
+    incrementDashboardTabCount(establishmentId);
+
     const enterDashboard = async () => {
       try {
         const result = await dashboardSessionService.enter(establishmentId);
@@ -285,16 +289,19 @@ export function DashboardLayout() {
       cancelled = true;
       const sessionId = dashboardSessionRef.current?.id;
       dashboardSessionRef.current = null;
-      if (sessionId) {
-        dashboardSessionService.leave(sessionId).catch(() => undefined);
+      if (establishmentId) {
+        const remaining = decrementDashboardTabCount(establishmentId);
+        if (sessionId && remaining === 0) {
+          dashboardSessionService.leave(sessionId, establishmentId).catch(() => undefined);
+        }
       }
     };
-  }, [account, currentEstablishment?.id, forceDashboardLogout, navigate]);
+  }, [account?.id, currentEstablishment?.id, forceDashboardLogout, navigate]);
 
   useEffect(() => {
     const sessionId = dashboardSession?.id;
     const establishmentId = currentEstablishment?.id;
-    if (!sessionId) return;
+    if (!sessionId || !establishmentId || dashboardSession?.establishmentId !== establishmentId) return;
 
     let heartbeatInFlight = false;
 
@@ -302,7 +309,7 @@ export function DashboardLayout() {
       if (heartbeatInFlight) return;
       heartbeatInFlight = true;
       try {
-        const result = await dashboardSessionService.heartbeat(sessionId);
+        const result = await dashboardSessionService.heartbeat(sessionId, establishmentId);
         dashboardSessionRef.current = result.session;
         setDashboardSession(result.session);
       } catch (error: any) {
@@ -361,11 +368,13 @@ export function DashboardLayout() {
     };
   }, [
     dashboardSession?.id,
+    dashboardSession?.establishmentId,
     currentEstablishment?.id,
     forceDashboardLogout,
   ]);
 
   useEffect(() => {
+    const establishmentId = currentEstablishment?.id;
     const unsubscribe = realtimeService.onRaw<DashboardSessionKickPayload>(
       'dashboard-session:kicked',
       payload => {
@@ -374,7 +383,7 @@ export function DashboardLayout() {
 
         if (
           payload.sessionId === activeSession.id ||
-          payload.clientId === getDashboardClientId()
+          payload.clientId === getDashboardClientId(establishmentId)
         ) {
           void forceDashboardLogout(payload.message);
         }
@@ -382,19 +391,22 @@ export function DashboardLayout() {
     );
 
     return unsubscribe;
-  }, [forceDashboardLogout]);
+  }, [currentEstablishment?.id, forceDashboardLogout]);
 
   useEffect(() => {
     const handleBeforeUnload = () => {
       const activeSession = dashboardSessionRef.current;
       if (!activeSession) return;
 
-      const body = JSON.stringify({
-        sessionId: activeSession.id,
-        clientId: getDashboardClientId(),
-      });
-      const payload = new Blob([body], { type: 'application/json' });
-      navigator.sendBeacon?.('/api/dashboard-sessions/leave', payload);
+      const remaining = decrementDashboardTabCount(activeSession.establishmentId);
+      if (remaining === 0) {
+        const body = JSON.stringify({
+          sessionId: activeSession.id,
+          clientId: getDashboardClientId(activeSession.establishmentId),
+        });
+        const payload = new Blob([body], { type: 'application/json' });
+        navigator.sendBeacon?.('/api/dashboard-sessions/leave', payload);
+      }
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);

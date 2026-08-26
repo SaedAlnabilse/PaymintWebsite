@@ -53,14 +53,55 @@ const createClientId = () => {
   return `web-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 };
 
-export const getDashboardClientId = () => {
-  const existing = localStorage.getItem(CLIENT_ID_KEY);
-  if (existing) return existing;
+const TAB_COUNT_PREFIX = 'mintcom.dashboard.tabCount.';
 
-  const clientId = createClientId();
-  localStorage.setItem(CLIENT_ID_KEY, clientId);
-  return clientId;
+export const incrementDashboardTabCount = (establishmentId: string): number => {
+  try {
+    const key = `${TAB_COUNT_PREFIX}${establishmentId}`;
+    const count = parseInt(localStorage.getItem(key) || '0', 10) + 1;
+    localStorage.setItem(key, String(count));
+    return count;
+  } catch {
+    return 1;
+  }
 };
+
+export const decrementDashboardTabCount = (establishmentId: string): number => {
+  try {
+    const key = `${TAB_COUNT_PREFIX}${establishmentId}`;
+    const count = Math.max(0, parseInt(localStorage.getItem(key) || '1', 10) - 1);
+    if (count === 0) {
+      localStorage.removeItem(key);
+    } else {
+      localStorage.setItem(key, String(count));
+    }
+    return count;
+  } catch {
+    return 0;
+  }
+};
+
+export const getDashboardClientId = (establishmentId?: string) => {
+  const key = establishmentId
+    ? `${CLIENT_ID_KEY}.${establishmentId}`
+    : CLIENT_ID_KEY;
+
+  try {
+    if (typeof localStorage !== 'undefined') {
+      const existing = localStorage.getItem(key);
+      if (existing) return existing;
+
+      const clientId = createClientId();
+      localStorage.setItem(key, clientId);
+      return clientId;
+    }
+  } catch {
+    // ignore
+  }
+
+  return createClientId();
+};
+
 
 const isResponseCode = (error: any, code: string) =>
   error?.response?.data?.code === code;
@@ -86,7 +127,7 @@ export const dashboardSessionService = {
       '/api/dashboard-sessions/enter',
       {
         establishmentId,
-        clientId: getDashboardClientId(),
+        clientId: getDashboardClientId(establishmentId),
         sourceApp,
       },
     );
@@ -94,24 +135,24 @@ export const dashboardSessionService = {
     return response.data;
   },
 
-  async heartbeat(sessionId: string) {
+  async heartbeat(sessionId: string, establishmentId?: string) {
     const response = await api.post<DashboardSessionEnterResult>(
       '/api/dashboard-sessions/heartbeat',
       {
         sessionId,
-        clientId: getDashboardClientId(),
+        clientId: getDashboardClientId(establishmentId),
       },
     );
 
     return response.data;
   },
 
-  async leave(sessionId: string) {
+  async leave(sessionId: string, establishmentId?: string) {
     await api.post(
       '/api/dashboard-sessions/leave',
       {
         sessionId,
-        clientId: getDashboardClientId(),
+        clientId: getDashboardClientId(establishmentId),
       },
     );
   },
@@ -125,3 +166,4 @@ export const dashboardSessionService = {
     return response.data;
   },
 };
+

@@ -29,6 +29,8 @@ import { PortalDropdown } from '../../components/PortalDropdown';
 import { SectionLoader } from '../../components/LoadingState';
 import { formatInputPlaceholder } from '../../utils/textCase';
 import { retryTransientRequest } from '../../utils/retryTransientRequest';
+import { useRealtime } from '../../hooks/useRealtime';
+import { DataChangeEventTypes } from '../../services/realtimeService';
 import { StatValue } from '../../components/ui/StatValue';
 import { StepUpVerifier } from '../../components/StepUpVerifier';
 import { reauthHeaders } from '../../services/stepUp';
@@ -101,7 +103,14 @@ const isAdminEquivalentEmployee = (
 
 export function OwnerEmployeesPage() {
     const { t } = useTranslation();
-    const { establishments } = useAuth();
+    const { establishments, currentEstablishment } = useAuth();
+    // Account Status ("Clocked in/out") comes from hasActiveShift, which only
+    // changes when a shift opens/closes on POS. Subscribe so the column tracks
+    // the same realtime events that raise the "Shift started by ..." toast,
+    // instead of going stale until the page is refreshed.
+    const { onRefresh } = useRealtime({
+        establishmentId: currentEstablishment?.id || null,
+    });
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -155,6 +164,24 @@ export function OwnerEmployeesPage() {
     useEffect(() => {
         fetchEmployees();
     }, [fetchEmployees]);
+
+    useEffect(() => {
+        const employeeEvents = new Set<string>([
+            DataChangeEventTypes.SHIFT_STARTED,
+            DataChangeEventTypes.SHIFT_ENDED,
+            DataChangeEventTypes.STAFF_CREATED,
+            DataChangeEventTypes.STAFF_UPDATED,
+            DataChangeEventTypes.STAFF_DELETED,
+        ]);
+
+        return onRefresh((eventType) => {
+            if (employeeEvents.has(eventType)) {
+                // Background refresh: never flip the list back to the loader
+                // while the owner is reading it.
+                fetchEmployees(true);
+            }
+        });
+    }, [onRefresh, fetchEmployees]);
 
     useEffect(() => {
         if (!activeMenu) {
