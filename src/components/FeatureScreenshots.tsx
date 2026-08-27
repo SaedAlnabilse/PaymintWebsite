@@ -94,11 +94,11 @@ function PreviewSegment({
   options: { label: string; icon: ReactNode; on?: boolean; count?: number }[];
 }) {
   return (
-    <div className="relative flex shrink-0 rounded-lg bg-[#E8E8E8] p-0.5 dark:bg-white/10">
+    <div className="relative flex shrink-0 rounded-xl bg-[#E8E8E8] p-1 dark:bg-white/10">
       {options.map((option) => (
         <span
           key={option.label}
-          className={`relative z-10 flex flex-1 items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-[12px] font-semibold sm:text-[13px] ${
+          className={`relative z-10 flex flex-1 items-center justify-center gap-1.5 rounded-xl px-2 py-1.5 text-[12px] font-semibold sm:text-[13px] ${
             option.on ? 'bg-mintcom-green text-white shadow-sm' : 'text-gray-500 dark:text-gray-400'
           }`}
         >
@@ -108,7 +108,7 @@ function PreviewSegment({
           <span className="truncate">{option.label}</span>
           {typeof option.count === 'number' && (
             <span
-              className={`rounded-md px-1.5 py-px text-[10px] font-bold tabular-nums ${
+              className={`rounded-xl px-1.5 py-px text-[10px] font-bold tabular-nums ${
                 option.on
                   ? 'bg-white/30 text-white'
                   : 'bg-[#E5E7EB] text-gray-500 dark:bg-white/10 dark:text-gray-400'
@@ -985,26 +985,41 @@ function ProductionShot() {
       sub="View and update recipes and ingredients"
     >
       <div className="flex h-full min-h-0 w-full flex-col gap-2.5 overflow-hidden font-sans">
-        {/* Main tabs — Raw Materials | Recipes */}
+        {/* Unified 3-Pillar Tabs */}
         <PreviewSegment
           options={[
-            { label: 'Raw Materials', icon: <Package size={14} />, on: true },
-            { label: 'Recipes', icon: <BookOpen size={14} /> },
-          ]}
-        />
-
-        {/* Sub-tabs — Raw Materials | Prepared Items + counts */}
-        <PreviewSegment
-          options={[
-            { label: 'Raw Materials', icon: <Box size={14} />, on: true, count: 8 },
+            { label: 'Raw Materials', icon: <Box size={14} />, on: true, count: 11 },
             { label: 'Prepared Items', icon: <Layers size={14} />, count: 2 },
+            { label: 'Product Recipes', icon: <BookOpen size={14} />, count: 4 },
           ]}
         />
 
-        {/* Primary CTA */}
-        <span className="flex w-full shrink-0 items-center justify-center gap-1.5 rounded-lg bg-mintcom-green py-2 text-[13px] font-semibold text-white">
-          <Plus size={15} strokeWidth={2.5} /> Add Raw Material
-        </span>
+        {/* Toolbar: Search + Filter Pills + Action Button */}
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            <div className="relative min-w-0 flex-1">
+              <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+              <div className="w-full rounded-xl border border-[#E5E7EB] bg-white py-1.5 pl-8 pr-3 text-[12px] text-gray-400 dark:border-white/10 dark:bg-mintcom-surface">
+                Search materials...
+              </div>
+            </div>
+            <span className="flex shrink-0 items-center gap-1 rounded-xl bg-mintcom-green px-2.5 py-1.5 text-[12px] font-semibold text-white shadow-sm">
+              <Plus size={14} strokeWidth={2.5} /> Add Material
+            </span>
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            <span className="rounded-[12px] bg-mintcom-green px-2.5 py-1 text-[11px] font-semibold text-white shadow-sm">
+              All (11)
+            </span>
+            <span className="rounded-[12px] bg-[#F59E0B]/20 px-2.5 py-1 text-[11px] font-semibold text-[#D97706]">
+              Low Stock (2)
+            </span>
+            <span className="rounded-[12px] bg-gray-100 px-2.5 py-1 text-[11px] font-semibold text-gray-600 dark:bg-white/10 dark:text-gray-300">
+              Optimal (9)
+            </span>
+          </div>
+        </div>
 
         {/* Material card grid — POS Shell cards */}
         <div className="min-h-0 flex-1 overflow-hidden">
@@ -1015,58 +1030,58 @@ function ProductionShot() {
                 className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-[#E5E7EB] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)] dark:border-white/10 dark:bg-mintcom-dark dark:shadow-none"
               >
                 {/* Header */}
-                <div className="flex items-center justify-between gap-2 p-3.5 sm:p-[18px]">
+                <div className="flex items-center justify-between gap-2 p-3 sm:p-4">
                   <div className="min-w-0 flex-1">
-                    <div className="mb-0.5 flex flex-wrap items-center gap-2">
-                      <p className="truncate text-[14px] font-semibold leading-snug text-gray-900 dark:text-white sm:text-base">
+                    <div className="mb-0.5 flex flex-wrap items-center gap-1.5">
+                      <p className="truncate text-[13px] font-semibold leading-snug text-gray-900 dark:text-white sm:text-sm">
                         {m.name}
                       </p>
-                      <span className="rounded-full bg-[#7dc6a2]/20 px-2 py-[3px] text-[10px] font-extrabold leading-none text-[#5fa888]">
+                      <span className="rounded-xl bg-[#7dc6a2]/20 px-1.5 py-[2px] text-[9px] font-extrabold leading-none text-[#5fa888]">
                         Active
                       </span>
                     </div>
-                    <p className="text-[12px] text-gray-500 dark:text-gray-400 sm:text-[13px]">Unit: {m.unit}</p>
+                    <p className="text-[11px] text-gray-500 dark:text-gray-400">Unit: {m.unit}</p>
                   </div>
-                  <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#7dc6a2]/20 text-[#5fa888]">
-                      <Pencil size={16} />
+                  <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-[#7dc6a2]/20 text-[#5fa888]">
+                      <Pencil size={13} />
                     </span>
-                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#F59E0B]/20 text-[#D97706]">
-                      <Archive size={16} />
+                    <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-[#F59E0B]/20 text-[#D97706]">
+                      <Archive size={13} />
                     </span>
                   </div>
                 </div>
 
                 {/* Stock + cost */}
-                <div className="flex items-start justify-between gap-3 border-t border-[#E5E7EB] px-3.5 pb-2.5 pt-2.5 dark:border-white/10 sm:gap-6 sm:px-4 sm:pb-3 sm:pt-3">
+                <div className="flex items-start justify-between gap-2 border-t border-[#E5E7EB] px-3 pb-2 pt-2 dark:border-white/10 sm:px-4 sm:pb-2.5 sm:pt-2.5">
                   <div className="min-w-0 flex-1">
-                    <p className="mb-1 text-[11px] font-semibold text-gray-500 dark:text-gray-400">Current Stock</p>
-                    <div className="flex flex-wrap items-center gap-1.5">
+                    <p className="mb-0.5 text-[10px] font-semibold text-gray-500 dark:text-gray-400">Current Stock</p>
+                    <div className="flex flex-wrap items-center gap-1">
                       <span
-                        className={`text-[15px] font-bold tabular-nums leading-tight sm:text-lg ${
+                        className={`text-[14px] font-bold tabular-nums leading-tight sm:text-base ${
                           m.status === 'low' ? 'text-[#F59E0B]' : 'text-gray-900 dark:text-white'
                         }`}
                       >
                         {m.qty.toFixed(2)} {m.unit}
                       </span>
                       {m.status === 'low' && (
-                        <span className="rounded-xl bg-[#F59E0B]/20 px-2 py-0.5 text-[11px] font-semibold text-[#D97706]">
-                          Low Stock
+                        <span className="rounded-xl bg-[#F59E0B]/20 px-1.5 py-0.5 text-[9px] font-semibold text-[#D97706]">
+                          Low
                         </span>
                       )}
                     </div>
                   </div>
                   <div className="shrink-0 text-end">
-                    <p className="mb-1 text-[11px] font-semibold text-gray-500 dark:text-gray-400">Cost per Unit</p>
-                    <p className="text-[13px] font-semibold tabular-nums text-gray-900 dark:text-white sm:text-base">
+                    <p className="mb-0.5 text-[10px] font-semibold text-gray-500 dark:text-gray-400">Cost / Unit</p>
+                    <p className="text-[12px] font-semibold tabular-nums text-gray-900 dark:text-white sm:text-sm">
                       {mfgMoney(m.cost)}
                     </p>
                   </div>
                 </div>
 
                 {/* Restock CTA */}
-                <span className="mx-3 mb-3 mt-1 flex items-center justify-center gap-1.5 rounded-xl bg-mintcom-green py-2.5 text-sm font-semibold text-white sm:mt-2">
-                  <Plus size={18} /> Restock
+                <span className="mx-3 mb-2.5 mt-1 flex items-center justify-center gap-1.5 rounded-xl bg-mintcom-green py-1.5 text-[12px] font-semibold text-white shadow-sm">
+                  <Plus size={14} /> Restock
                 </span>
               </div>
             ))}

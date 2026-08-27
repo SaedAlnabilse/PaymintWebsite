@@ -177,7 +177,7 @@ const THEMES = [
   { id: 'dark', name: 'Dark Mode', colors: ['#000000', '#1F2937', '#7dc6a2', '#374151'], desc: 'Dark surfaces with mint accent' },
 ] as const;
 
-const MAX_HOLD_ORDER_TABLES = 300;
+const MAX_HOLD_ORDER_TABLES = 99;
 const MAX_EMPLOYEES = 50;
 
 /** Mirrors mintcom-pos EditEmployeeModal POS_PERMISSIONS */
@@ -1564,12 +1564,12 @@ export function DemoSettingsScreen({
                     <span className="text-[15px] font-medium text-text-primary dark:text-white">
                       Hold Order Table Count
                     </span>
-                    <InfoDot text="Number of predefined table shortcuts shown when holding an order. Maximum 300." />
+                    <InfoDot text="Number of predefined table shortcuts shown when holding an order. Maximum 99." />
                   </div>
                   <input
-                    value={String(tableCount)}
+                    value={tableCount === 0 ? '' : String(tableCount)}
                     onChange={(e) => {
-                      const clean = e.target.value.replace(/\D/g, '');
+                      const clean = e.target.value.replace(/\D/g, '').slice(0, 2);
                       if (!clean) {
                         setTableCount(0);
                         setHoldTableMaxError(false);
@@ -1587,6 +1587,7 @@ export function DemoSettingsScreen({
                       setHoldTableMaxError(false);
                       markDirty();
                     }}
+                    maxLength={2}
                     inputMode="numeric"
                     placeholder="e.g. 10"
                     className="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-3 text-[15px] font-medium outline-none focus:border-mintcom-green dark:border-white/10 dark:bg-mintcom-dark dark:text-white"

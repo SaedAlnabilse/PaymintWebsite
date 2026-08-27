@@ -10,16 +10,19 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
+  AlertTriangle,
   Archive,
   BookOpen,
   Box,
   Check,
+  CheckCircle2,
   ChevronDown,
   Layers,
   Package,
   Pencil,
   Plus,
   RotateCcw,
+  Search,
   Wrench,
   X,
 } from 'lucide-react';
@@ -81,6 +84,7 @@ type FinalRecipe = {
   menuItemId: string;
   menuItemName: string;
   menuEmoji: string;
+  menuItemType?: 'product' | 'addon';
   ingredients: Ingredient[];
   active: boolean;
 };
@@ -298,7 +302,7 @@ function FooterActions({
 function StatusPill({ active }: { active: boolean }) {
   return (
     <span
-      className={`rounded-full px-2 py-[3px] text-[10px] font-extrabold leading-none ${
+      className={`rounded-xl px-2 py-[3px] text-[10px] font-extrabold leading-none ${
         active
           ? 'bg-[#7dc6a2]/20 text-[#5fa888]'
           : 'bg-[#D55263]/15 text-[#D55263]'
@@ -435,7 +439,7 @@ function Segmented<T extends string>({
   options: { id: T; label: string; icon?: ReactNode; count?: number }[];
 }) {
   return (
-    <div className="relative flex rounded-lg bg-[#E8E8E8] p-0.5 dark:bg-white/10">
+    <div className="relative flex rounded-xl bg-[#E8E8E8] p-1 dark:bg-white/10">
       {options.map((o) => {
         const on = value === o.id;
         return (
@@ -443,7 +447,7 @@ function Segmented<T extends string>({
             key={o.id}
             type="button"
             onClick={() => onChange(o.id)}
-            className={`relative z-10 flex flex-1 items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-[12px] font-semibold transition-colors sm:text-[13px] ${
+            className={`relative z-10 flex flex-1 items-center justify-center gap-1.5 rounded-xl px-2 py-1.5 text-[12px] font-semibold transition-colors sm:text-[13px] ${
               on
                 ? 'bg-mintcom-green text-white shadow-sm'
                 : 'text-[#6B7280] dark:text-mintcom-textSecondary'
@@ -455,7 +459,7 @@ function Segmented<T extends string>({
             <span className="truncate">{o.label}</span>
             {typeof o.count === 'number' && (
               <span
-                className={`rounded-md px-1.5 py-px text-[10px] font-bold tabular-nums ${
+                className={`rounded-xl px-1.5 py-px text-[10px] font-bold tabular-nums ${
                   on
                     ? 'bg-white/30 text-white'
                     : 'bg-[#E5E7EB] text-[#6B7280] dark:bg-white/10 dark:text-mintcom-textSecondary'
@@ -472,7 +476,7 @@ function Segmented<T extends string>({
 }
 
 const primaryCtaCls =
-  'flex w-full items-center justify-center gap-1.5 rounded-lg bg-mintcom-green py-2 text-[13px] font-semibold text-white transition-opacity hover:opacity-95 active:opacity-90';
+  'flex w-full items-center justify-center gap-1.5 rounded-xl bg-mintcom-green py-2 text-[13px] font-semibold text-white transition-opacity hover:opacity-95 active:opacity-90';
 
 function Toast({ msg }: { msg: string | null }) {
   return (
@@ -499,10 +503,11 @@ function fmtQty(n: number) {
 /* ─── Main ──────────────────────────────────────────────────────────────── */
 
 export function DemoManufacturingPanel({ onActivity }: { onActivity?: (action: string, detail: string) => void }) {
-  const [mainTab, setMainTab] = useState<'inventory' | 'recipes'>('inventory');
-  const [invTab, setInvTab] = useState<'raw' | 'intermediate'>('raw');
-  const [recipeTab, setRecipeTab] = useState<'sub' | 'final'>('final');
+  const [mainTab, setMainTab] = useState<'raw' | 'intermediate' | 'recipes'>('raw');
   const [search, setSearch] = useState('');
+  const [rawFilter, setRawFilter] = useState<'all' | 'low' | 'out'>('all');
+  const [prepFilter, setPrepFilter] = useState<'all' | 'ready' | 'shortage'>('all');
+  const [finalFilter, setFinalFilter] = useState<'all' | 'products' | 'addons'>('all');
   const [toast, setToast] = useState<string | null>(null);
 
   const [rawMaterials, setRawMaterials] = useState(SEED_RAW);
@@ -549,30 +554,6 @@ export function DemoManufacturingPanel({ onActivity }: { onActivity?: (action: s
   };
 
   const q = search.trim().toLowerCase();
-
-  const filteredRaw = useMemo(
-    () =>
-      rawMaterials.filter(
-        (m) => !q || m.name.toLowerCase().includes(q) || m.unit.toLowerCase().includes(q),
-      ),
-    [rawMaterials, q],
-  );
-
-  const filteredSub = useMemo(
-    () =>
-      subRecipes.filter(
-        (r) => !q || r.name.toLowerCase().includes(q) || (r.description ?? '').toLowerCase().includes(q),
-      ),
-    [subRecipes, q],
-  );
-
-  const filteredFinal = useMemo(
-    () =>
-      finalRecipes.filter(
-        (r) => !q || r.menuItemName.toLowerCase().includes(q),
-      ),
-    [finalRecipes, q],
-  );
 
   const getAvailable = (ing: Ingredient): number => {
     if (ing.source === 'raw') {
@@ -880,12 +861,80 @@ export function DemoManufacturingPanel({ onActivity }: { onActivity?: (action: s
     setModal(null);
   };
 
-  const preparedCount = subRecipes.length;
-  const rawCount = rawMaterials.length;
+  const rawTotalValue = useMemo(
+    () => rawMaterials.reduce((sum, m) => sum + (m.active ? m.quantity * m.costPerUnit : 0), 0),
+    [rawMaterials],
+  );
+
+  const lowStockCount = useMemo(
+    () => rawMaterials.filter((m) => m.active && m.quantity > 0 && m.quantity <= m.lowStockThreshold).length,
+    [rawMaterials],
+  );
+
+  const outOfStockCount = useMemo(
+    () => rawMaterials.filter((m) => m.active && m.quantity <= 0).length,
+    [rawMaterials],
+  );
+
+  const readyToPrepCount = useMemo(
+    () => subRecipes.filter((r) => r.active && checkCanMake(r.ingredients, 1).ok).length,
+    [subRecipes, rawMaterials],
+  );
+
+  const shortagePrepCount = useMemo(
+    () => subRecipes.filter((r) => r.active && !checkCanMake(r.ingredients, 1).ok).length,
+    [subRecipes, rawMaterials],
+  );
+
+  const filteredRaw = useMemo(() => {
+    let list = rawMaterials.filter(
+      (m) => !q || m.name.toLowerCase().includes(q) || m.unit.toLowerCase().includes(q),
+    );
+    if (rawFilter === 'low') {
+      list = list.filter((m) => m.active && m.quantity > 0 && m.quantity <= m.lowStockThreshold);
+    } else if (rawFilter === 'out') {
+      list = list.filter((m) => m.active && m.quantity <= 0);
+    }
+    return list;
+  }, [rawMaterials, q, rawFilter]);
+
+  const filteredSub = useMemo(() => {
+    let list = subRecipes.filter(
+      (r) => !q || r.name.toLowerCase().includes(q) || (r.description ?? '').toLowerCase().includes(q),
+    );
+    if (prepFilter === 'ready') {
+      list = list.filter((r) => r.active && checkCanMake(r.ingredients, 1).ok);
+    } else if (prepFilter === 'shortage') {
+      list = list.filter((r) => r.active && !checkCanMake(r.ingredients, 1).ok);
+    }
+    return list;
+  }, [subRecipes, q, prepFilter]);
+
+  const productRecipesCount = useMemo(
+    () => finalRecipes.filter((r) => r.menuItemType !== 'addon').length,
+    [finalRecipes],
+  );
+
+  const addonRecipesCount = useMemo(
+    () => finalRecipes.filter((r) => r.menuItemType === 'addon').length,
+    [finalRecipes],
+  );
+
+  const filteredFinal = useMemo(() => {
+    let list = finalRecipes.filter(
+      (r) => !q || r.menuItemName.toLowerCase().includes(q),
+    );
+    if (finalFilter === 'products') {
+      list = list.filter((r) => r.menuItemType !== 'addon');
+    } else if (finalFilter === 'addons') {
+      list = list.filter((r) => r.menuItemType === 'addon');
+    }
+    return list;
+  }, [finalRecipes, q, finalFilter]);
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col gap-2.5">
-      {/* 1) Main tabs — POS ManufacturingScreen (package / book-open) */}
+      {/* 1) Unified 3-Pillar Tabs */}
       <Segmented
         value={mainTab}
         onChange={(v) => {
@@ -893,75 +942,311 @@ export function DemoManufacturingPanel({ onActivity }: { onActivity?: (action: s
           setSearch('');
         }}
         options={[
-          { id: 'inventory', label: 'Raw Materials', icon: <Package size={14} /> },
-          { id: 'recipes', label: 'Recipes', icon: <BookOpen size={14} /> },
+          {
+            id: 'raw',
+            label: 'Raw Materials',
+            icon: <Box size={14} />,
+            count: rawMaterials.length,
+          },
+          {
+            id: 'intermediate',
+            label: 'Prepared Items',
+            icon: <Layers size={14} />,
+            count: subRecipes.length,
+          },
+          {
+            id: 'recipes',
+            label: 'Product Recipes',
+            icon: <BookOpen size={14} />,
+            count: finalRecipes.length,
+          },
         ]}
       />
 
-      {/* 2) Sub-tabs — Inventory (box + layers) or Recipes (package + layers) + counts */}
-      {mainTab === 'inventory' && (
-        <Segmented
-          value={invTab}
-          onChange={(v) => {
-            setInvTab(v);
-            setSearch('');
-          }}
-          options={[
-            { id: 'raw', label: 'Raw Materials', icon: <Box size={14} />, count: rawCount },
-            {
-              id: 'intermediate',
-              label: 'Prepared Items',
-              icon: <Layers size={14} />,
-              count: preparedCount,
-            },
-          ]}
-        />
-      )}
-      {mainTab === 'recipes' && (
-        <Segmented
-          value={recipeTab}
-          onChange={(v) => {
-            setRecipeTab(v);
-            setSearch('');
-          }}
-          options={[
-            {
-              id: 'final',
-              label: 'Final Products',
-              icon: <Package size={14} />,
-              count: finalRecipes.length,
-            },
-            {
-              id: 'sub',
-              label: 'Prepared Items',
-              icon: <Layers size={14} />,
-              count: preparedCount,
-            },
-          ]}
-        />
-      )}
+      {/* 2) Action Toolbar: Search + Filter Chips + CTA */}
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-2">
+          {/* Search */}
+          <div className="relative min-w-0 flex-1">
+            <Search
+              size={15}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={
+                mainTab === 'raw'
+                  ? 'Search materials...'
+                  : mainTab === 'intermediate'
+                    ? 'Search prep items...'
+                    : 'Search product recipes...'
+              }
+              className="w-full rounded-xl border border-[#E5E7EB] bg-white py-1.5 pl-9 pr-3 text-[13px] text-gray-900 placeholder:text-gray-400 focus:border-mintcom-green focus:outline-none dark:border-white/10 dark:bg-mintcom-surface dark:text-white"
+            />
+          </div>
 
-      {/* 3) Full-width primary CTA under tabs (POS addButton) */}
-      {mainTab === 'inventory' && invTab === 'raw' && (
-        <button type="button" onClick={() => openMaterial()} className={primaryCtaCls}>
-          <Plus size={15} strokeWidth={2.5} /> Add Raw Material
-        </button>
-      )}
-      {mainTab === 'recipes' && (
-        <button
-          type="button"
-          onClick={() => (recipeTab === 'final' ? openFinalRecipe() : openSubRecipe())}
-          className={primaryCtaCls}
-        >
-          <Plus size={15} strokeWidth={2.5} />
-          {recipeTab === 'final' ? 'Add Product Recipe' : 'Add Preparation Recipe'}
-        </button>
-      )}
+          {mainTab === 'raw' && (
+            <button
+              type="button"
+              onClick={() => openMaterial()}
+              className="flex shrink-0 items-center gap-1.5 rounded-xl bg-mintcom-green px-3 py-1.5 text-[13px] font-semibold text-white hover:opacity-95 shadow-sm"
+            >
+              <Plus size={15} strokeWidth={2.5} /> Add Material
+            </button>
+          )}
 
-      {/* 4) Card grid / empty states */}
+          {mainTab === 'intermediate' && (
+            <button
+              type="button"
+              onClick={() => openSubRecipe()}
+              className="flex shrink-0 items-center gap-1.5 rounded-xl bg-mintcom-green px-3 py-1.5 text-[13px] font-semibold text-white hover:opacity-95 shadow-sm"
+            >
+              <Plus size={15} strokeWidth={2.5} /> Add Prep Recipe
+            </button>
+          )}
+
+          {mainTab === 'recipes' && (
+            <button
+              type="button"
+              onClick={() => openFinalRecipe()}
+              className="flex shrink-0 items-center gap-1.5 rounded-xl bg-mintcom-green px-3 py-1.5 text-[13px] font-semibold text-white hover:opacity-95 shadow-sm"
+            >
+              <Plus size={15} strokeWidth={2.5} /> Add Product Recipe
+            </button>
+          )}
+        </div>
+
+        {/* Filter Chips */}
+        <div className="flex flex-wrap items-center gap-2">
+          {mainTab === 'raw' && (
+            <>
+              <button
+                type="button"
+                onClick={() => setRawFilter('all')}
+                className={`rounded-[12px] px-3 py-1.5 text-[12px] font-semibold transition-colors ${
+                  rawFilter === 'all'
+                    ? 'bg-mintcom-green text-white shadow-sm'
+                    : 'bg-[#E5E7EB] text-gray-700 hover:bg-gray-200 dark:bg-white/10 dark:text-gray-300'
+                }`}
+              >
+                All ({rawMaterials.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setRawFilter('low')}
+                className={`rounded-[12px] px-3 py-1.5 text-[12px] font-semibold transition-colors ${
+                  rawFilter === 'low'
+                    ? 'bg-[#F59E0B] text-white shadow-sm'
+                    : 'bg-[#F59E0B]/15 text-[#D97706] hover:bg-[#F59E0B]/25'
+                }`}
+              >
+                Low Stock ({lowStockCount})
+              </button>
+              <button
+                type="button"
+                onClick={() => setRawFilter('out')}
+                className={`rounded-[12px] px-3 py-1.5 text-[12px] font-semibold transition-colors ${
+                  rawFilter === 'out'
+                    ? 'bg-[#D55263] text-white shadow-sm'
+                    : 'bg-[#D55263]/15 text-[#D55263] hover:bg-[#D55263]/25'
+                }`}
+              >
+                Out of Stock ({outOfStockCount})
+              </button>
+            </>
+          )}
+
+          {mainTab === 'intermediate' && (
+            <>
+              <button
+                type="button"
+                onClick={() => setPrepFilter('all')}
+                className={`rounded-[12px] px-3 py-1.5 text-[12px] font-semibold transition-colors ${
+                  prepFilter === 'all'
+                    ? 'bg-mintcom-green text-white shadow-sm'
+                    : 'bg-[#E5E7EB] text-gray-700 hover:bg-gray-200 dark:bg-white/10 dark:text-gray-300'
+                }`}
+              >
+                All ({subRecipes.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setPrepFilter('ready')}
+                className={`rounded-[12px] px-3 py-1.5 text-[12px] font-semibold transition-colors ${
+                  prepFilter === 'ready'
+                    ? 'bg-mintcom-green text-white shadow-sm'
+                    : 'bg-mintcom-green/15 text-mintcom-green hover:bg-mintcom-green/25'
+                }`}
+              >
+                Ready to Prep ({readyToPrepCount})
+              </button>
+              <button
+                type="button"
+                onClick={() => setPrepFilter('shortage')}
+                className={`rounded-[12px] px-3 py-1.5 text-[12px] font-semibold transition-colors ${
+                  prepFilter === 'shortage'
+                    ? 'bg-[#F59E0B] text-white shadow-sm'
+                    : 'bg-[#F59E0B]/15 text-[#D97706] hover:bg-[#F59E0B]/25'
+                }`}
+              >
+                Shortage ({shortagePrepCount})
+              </button>
+            </>
+          )}
+
+          {mainTab === 'recipes' && (
+            <>
+              <button
+                type="button"
+                onClick={() => setFinalFilter('all')}
+                className={`rounded-[12px] px-3 py-1.5 text-[12px] font-semibold transition-colors ${
+                  finalFilter === 'all'
+                    ? 'bg-mintcom-green text-white shadow-sm'
+                    : 'bg-[#E5E7EB] text-gray-700 hover:bg-gray-200 dark:bg-white/10 dark:text-gray-300'
+                }`}
+              >
+                All ({finalRecipes.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setFinalFilter('products')}
+                className={`rounded-[12px] px-3 py-1.5 text-[12px] font-semibold transition-colors ${
+                  finalFilter === 'products'
+                    ? 'bg-mintcom-green text-white shadow-sm'
+                    : 'bg-mintcom-green/15 text-mintcom-green hover:bg-mintcom-green/25'
+                }`}
+              >
+                Products ({productRecipesCount})
+              </button>
+              <button
+                type="button"
+                onClick={() => setFinalFilter('addons')}
+                className={`rounded-[12px] px-3 py-1.5 text-[12px] font-semibold transition-colors ${
+                  finalFilter === 'addons'
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'bg-blue-500/15 text-blue-600 hover:bg-blue-500/25 dark:text-blue-400'
+                }`}
+              >
+                Add-ons ({addonRecipesCount})
+              </button>
+            </>
+          )}
+        </div>
+
+        {/* 3) KPI Metric Strip */}
+        <div className="grid grid-cols-3 gap-2">
+          {mainTab === 'raw' && (
+            <>
+              <div className="flex items-center gap-2 rounded-xl border border-[#E5E7EB] bg-white p-2 dark:border-white/10 dark:bg-mintcom-surface">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-mintcom-green/10 text-mintcom-green">
+                  <Box size={14} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Materials</p>
+                  <p className="text-[13px] font-bold text-gray-900 dark:text-white">{rawMaterials.length} items</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 rounded-xl border border-[#E5E7EB] bg-white p-2 dark:border-white/10 dark:bg-mintcom-surface">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-[#F59E0B]/15 text-[#D97706]">
+                  <AlertTriangle size={14} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Stock Health</p>
+                  <p className={`text-[13px] font-bold ${lowStockCount + outOfStockCount > 0 ? 'text-[#D97706]' : 'text-mintcom-green'}`}>
+                    {lowStockCount + outOfStockCount > 0 ? `${lowStockCount + outOfStockCount} Alerts` : 'Optimal'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 rounded-xl border border-[#E5E7EB] bg-white p-2 dark:border-white/10 dark:bg-mintcom-surface">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-mintcom-green/10 text-mintcom-green">
+                  <CheckCircle2 size={14} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Total Value</p>
+                  <p className="text-[13px] font-bold text-mintcom-green">{money(rawTotalValue)}</p>
+                </div>
+              </div>
+            </>
+          )}
+
+          {mainTab === 'intermediate' && (
+            <>
+              <div className="flex items-center gap-2 rounded-xl border border-[#E5E7EB] bg-white p-2 dark:border-white/10 dark:bg-mintcom-surface">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400">
+                  <Layers size={14} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Prep Recipes</p>
+                  <p className="text-[13px] font-bold text-gray-900 dark:text-white">{subRecipes.length} items</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 rounded-xl border border-[#E5E7EB] bg-white p-2 dark:border-white/10 dark:bg-mintcom-surface">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-mintcom-green/10 text-mintcom-green">
+                  <CheckCircle2 size={14} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Ready to Prep</p>
+                  <p className="text-[13px] font-bold text-mintcom-green">{readyToPrepCount} items</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 rounded-xl border border-[#E5E7EB] bg-white p-2 dark:border-white/10 dark:bg-mintcom-surface">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-mintcom-green/10 text-mintcom-green">
+                  <Package size={14} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">In-Stock</p>
+                  <p className="text-[13px] font-bold text-gray-900 dark:text-white">{subRecipes.filter(r => r.quantity > 0).length} stocked</p>
+                </div>
+              </div>
+            </>
+          )}
+
+          {mainTab === 'recipes' && (
+            <>
+              <div className="flex items-center gap-2 rounded-xl border border-[#E5E7EB] bg-white p-2 dark:border-white/10 dark:bg-mintcom-surface">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-mintcom-green/10 text-mintcom-green">
+                  <BookOpen size={14} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Recipes</p>
+                  <p className="text-[13px] font-bold text-gray-900 dark:text-white">{finalRecipes.length} recipes</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 rounded-xl border border-[#E5E7EB] bg-white p-2 dark:border-white/10 dark:bg-mintcom-surface">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-mintcom-green/10 text-mintcom-green">
+                  <CheckCircle2 size={14} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Menu Linked</p>
+                  <p className="text-[13px] font-bold text-mintcom-green">{finalRecipes.length} mapped</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 rounded-xl border border-[#E5E7EB] bg-white p-2 dark:border-white/10 dark:bg-mintcom-surface">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-mintcom-green/10 text-mintcom-green">
+                  <RotateCcw size={14} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">POS Deduction</p>
+                  <p className="text-[13px] font-bold text-mintcom-green">Auto-Active</p>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* 4) Card Grid / Empty States */}
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-6">
-        {/* RAW MATERIALS — exact POS card structure */}
-        {mainTab === 'inventory' && invTab === 'raw' && (
+        {/* RAW MATERIALS */}
+        {mainTab === 'raw' && (
           <>
             {filteredRaw.length === 0 ? (
               <Empty
@@ -976,7 +1261,6 @@ export function DemoManufacturingPanel({ onActivity }: { onActivity?: (action: s
                   return (
                     <Shell key={m.id} className="overflow-hidden">
                       <div className="flex h-full flex-col">
-                        {/* cardHeader — padding 18 */}
                         <div className="flex items-center justify-between gap-2 p-[18px]">
                           <div className="min-w-0 flex-1">
                             <div className="mb-0.5 flex flex-wrap items-center gap-2">
@@ -1042,7 +1326,7 @@ export function DemoManufacturingPanel({ onActivity }: { onActivity?: (action: s
                           </div>
                         </div>
 
-                        {/* stockSection */}
+                        {/* Stock and cost info */}
                         <div className="flex items-start justify-between gap-6 border-t border-[#E5E7EB] px-4 pb-3 pt-3 dark:border-white/10">
                           <div className="min-w-0 flex-1">
                             <p className="mb-1 text-[11px] font-semibold text-[#6B7280]">
@@ -1083,14 +1367,14 @@ export function DemoManufacturingPanel({ onActivity }: { onActivity?: (action: s
                           </div>
                         </div>
 
-                        {/* restockButton — margin 12, py 10, text 14 */}
+                        {/* Restock Button */}
                         <button
                           type="button"
                           onClick={() => openRestock(m)}
                           disabled={!m.active}
                           className={`mx-3 mb-3 mt-2 flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-sm font-semibold ${
                             m.active
-                              ? 'bg-mintcom-green text-white hover:opacity-95'
+                              ? 'bg-mintcom-green text-white hover:opacity-95 shadow-sm'
                               : 'cursor-not-allowed bg-[#E5E7EB] text-[#9CA3AF]'
                           }`}
                         >
@@ -1105,14 +1389,14 @@ export function DemoManufacturingPanel({ onActivity }: { onActivity?: (action: s
           </>
         )}
 
-        {/* PREPARED ITEMS STOCK — POS renderIntermediateProductCard */}
-        {mainTab === 'inventory' && invTab === 'intermediate' && (
+        {/* PREPARED ITEMS */}
+        {mainTab === 'intermediate' && (
           <>
             {filteredSub.length === 0 ? (
               <Empty
                 icon={<Layers size={48} />}
                 title="No Prepared Items"
-                body="Create preparation recipes first in Recipe Management"
+                body="Create preparation recipes to produce intermediate ingredients"
               />
             ) : (
               <div className={cardGridCls}>
@@ -1130,22 +1414,54 @@ export function DemoManufacturingPanel({ onActivity }: { onActivity?: (action: s
                               </p>
                               <StatusPill active={r.active} />
                             </div>
-                            <p className="text-[13px] text-[#6B7280]">Prepared Items</p>
+                            <p className="text-[13px] text-[#6B7280]">Prepared Prep Item</p>
                           </div>
-                          {!r.active && (
-                            <ActionChip
-                              tone="mint"
-                              label="Reactivate"
-                              onClick={() => {
-                                setSubRecipes((list) =>
-                                  list.map((x) => (x.id === r.id ? { ...x, active: true } : x)),
-                                );
-                                ping('Item reactivated');
-                              }}
-                            >
-                              <RotateCcw size={16} />
-                            </ActionChip>
-                          )}
+                          <div className="flex shrink-0 items-center gap-2">
+                            {r.active ? (
+                              <>
+                                <ActionChip tone="mint" label="Edit" onClick={() => openSubRecipe(r)}>
+                                  <Pencil size={16} />
+                                </ActionChip>
+                                <ActionChip
+                                  tone="amber"
+                                  label="Archive"
+                                  onClick={() =>
+                                    setModal({
+                                      type: 'confirm',
+                                      title: `Archive "${r.name}"`,
+                                      body: `Archive "${r.name}"? It will become inactive instead of being deleted.`,
+                                      onConfirm: () => {
+                                        setSubRecipes((list) =>
+                                          list.map((x) =>
+                                            x.id === r.id ? { ...x, active: false } : x,
+                                          ),
+                                        );
+                                        setModal(null);
+                                        ping('Recipe archived');
+                                      },
+                                    })
+                                  }
+                                >
+                                  <Archive size={16} />
+                                </ActionChip>
+                              </>
+                            ) : (
+                              <ActionChip
+                                tone="mint"
+                                label="Reactivate"
+                                onClick={() => {
+                                  setSubRecipes((list) =>
+                                    list.map((x) =>
+                                      x.id === r.id ? { ...x, active: true } : x,
+                                    ),
+                                  );
+                                  ping('Recipe reactivated');
+                                }}
+                              >
+                                <RotateCcw size={16} />
+                              </ActionChip>
+                            )}
+                          </div>
                         </div>
 
                         <div className="flex items-start justify-between gap-6 border-t border-[#E5E7EB] px-4 pb-3 pt-3 dark:border-white/10">
@@ -1198,15 +1514,15 @@ export function DemoManufacturingPanel({ onActivity }: { onActivity?: (action: s
                             type="button"
                             disabled={!r.active}
                             onClick={() => openManufacture(r)}
-                            className={`mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-sm font-semibold text-white ${
+                            className={`mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-sm font-semibold text-white shadow-sm ${
                               canManufacture
-                                ? 'bg-mintcom-green'
+                                ? 'bg-mintcom-green hover:opacity-95'
                                 : r.active
-                                  ? 'bg-[#F59E0B]'
+                                  ? 'bg-[#F59E0B] hover:opacity-95'
                                   : 'cursor-not-allowed bg-[#E5E7EB] text-[#9CA3AF]'
                             }`}
                           >
-                            <Wrench size={18} /> Manufacture
+                            <Wrench size={18} /> Produce Batch
                           </button>
                         </div>
                       </div>
@@ -1218,119 +1534,8 @@ export function DemoManufacturingPanel({ onActivity }: { onActivity?: (action: s
           </>
         )}
 
-        {/* PREPARED ITEM RECIPES — POS recipe cards */}
-        {mainTab === 'recipes' && recipeTab === 'sub' && (
-          <>
-            {filteredSub.length === 0 ? (
-              <Empty
-                icon={<BookOpen size={48} />}
-                title="No Preparation Recipes"
-                body="Add recipes to prepare intermediate products from raw materials"
-              />
-            ) : (
-              <div className={cardGridCls}>
-                {filteredSub.map((r) => (
-                  <Shell
-                    key={r.id}
-                    className={`overflow-hidden ${!r.active ? 'border-[#94A3B8] opacity-75' : ''}`}
-                  >
-                    <div className="flex flex-col">
-                      <div className="flex items-start justify-between gap-2 p-[18px]">
-                        <button
-                          type="button"
-                          onClick={() => r.active && openSubRecipe(r)}
-                          className="min-w-0 flex-1 text-start"
-                        >
-                          <div className="mb-1 flex flex-wrap items-center gap-2">
-                            <p className="text-base font-semibold text-[#111827] dark:text-white">
-                              {r.name}
-                            </p>
-                            <StatusPill active={r.active} />
-                          </div>
-                          <p className="text-[13px] text-[#6B7280]">
-                            Yields: {fmtQty(r.yieldQty)} {r.yieldUnit}
-                          </p>
-                          <p
-                            className={`mt-0.5 text-[13px] font-semibold ${
-                              r.quantity > 0 ? 'text-mintcom-green' : 'text-[#D55263]'
-                            }`}
-                          >
-                            In Stock: {fmtQty(r.quantity)} {r.yieldUnit}
-                          </p>
-                        </button>
-                        <div className="flex shrink-0 items-center gap-2">
-                          {r.active ? (
-                            <>
-                              <ActionChip tone="mint" label="Edit" onClick={() => openSubRecipe(r)}>
-                                <Pencil size={16} />
-                              </ActionChip>
-                              <ActionChip
-                                tone="amber"
-                                label="Archive"
-                                onClick={() =>
-                                    setModal({
-                                      type: 'confirm',
-                                      title: `Archive "${r.name}"`,
-                                      body: `Archive "${r.name}"? It will become inactive instead of being deleted.`,
-                                    onConfirm: () => {
-                                      setSubRecipes((list) =>
-                                        list.map((x) =>
-                                          x.id === r.id ? { ...x, active: false } : x,
-                                        ),
-                                      );
-                                      setModal(null);
-                                      ping('Recipe archived');
-                                    },
-                                  })
-                                }
-                              >
-                                <Archive size={16} />
-                              </ActionChip>
-                            </>
-                          ) : (
-                            <ActionChip
-                              tone="mint"
-                              label="Reactivate"
-                              onClick={() => {
-                                setSubRecipes((list) =>
-                                  list.map((x) =>
-                                    x.id === r.id ? { ...x, active: true } : x,
-                                  ),
-                                );
-                                ping('Recipe reactivated');
-                              }}
-                            >
-                              <RotateCcw size={16} />
-                            </ActionChip>
-                          )}
-                        </div>
-                      </div>
-                      <div className="border-t border-[#E5E7EB] px-[18px] py-3 dark:border-white/10">
-                        <p className="mb-2 text-[11px] font-semibold text-[#6B7280]">Ingredients</p>
-                        {r.ingredients.map((ing) => (
-                          <div
-                            key={ing.ingredientId}
-                            className="mb-1 flex items-center justify-between gap-2"
-                          >
-                            <span className="truncate text-[13px] text-[#111827] dark:text-white">
-                              {ing.ingredientName}
-                            </span>
-                            <span className="shrink-0 text-[13px] tabular-nums text-[#6B7280]">
-                              {fmtQty(ing.quantity)} {ing.unit}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </Shell>
-                ))}
-              </div>
-            )}
-          </>
-        )}
-
-        {/* FINAL / MENU RECIPES */}
-        {mainTab === 'recipes' && recipeTab === 'final' && (
+        {/* PRODUCT RECIPES */}
+        {mainTab === 'recipes' && (
           <>
             {filteredFinal.length === 0 ? (
               <Empty
@@ -1354,10 +1559,13 @@ export function DemoManufacturingPanel({ onActivity }: { onActivity?: (action: s
                         >
                           <div className="mb-1 flex flex-wrap items-center gap-2">
                             <p className="text-base font-semibold text-[#111827] dark:text-white">
-                              {r.menuItemName}
+                              {r.menuEmoji} {r.menuItemName}
                             </p>
                             <StatusPill active={r.active} />
                           </div>
+                          <p className="text-[12px] text-[#6B7280]">
+                            {r.ingredients.length} {r.ingredients.length === 1 ? 'ingredient' : 'ingredients'}
+                          </p>
                         </button>
                         <div className="flex shrink-0 items-center gap-2">
                           {r.active ? (
@@ -1373,10 +1581,10 @@ export function DemoManufacturingPanel({ onActivity }: { onActivity?: (action: s
                                 tone="amber"
                                 label="Archive"
                                 onClick={() =>
-                                    setModal({
-                                      type: 'confirm',
-                                      title: `Archive "${r.menuItemName}"`,
-                                      body: `Archive "${r.menuItemName}"? It will become inactive instead of being deleted.`,
+                                  setModal({
+                                    type: 'confirm',
+                                    title: `Archive "${r.menuItemName}"`,
+                                    body: `Archive "${r.menuItemName}"? It will become inactive instead of being deleted.`,
                                     onConfirm: () => {
                                       setFinalRecipes((list) =>
                                         list.map((x) =>
@@ -1410,6 +1618,7 @@ export function DemoManufacturingPanel({ onActivity }: { onActivity?: (action: s
                           )}
                         </div>
                       </div>
+
                       <div className="border-t border-[#E5E7EB] px-[18px] py-3 dark:border-white/10">
                         <p className="mb-2 text-[11px] font-semibold text-[#6B7280]">Ingredients</p>
                         {r.ingredients.map((ing) => (
@@ -1658,7 +1867,7 @@ export function DemoManufacturingPanel({ onActivity }: { onActivity?: (action: s
                                 setDQty('');
                                 setModal({ type: 'restock', material: raw });
                               }}
-                              className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-mintcom-green px-2 py-1 text-[12px] font-semibold text-mintcom-green"
+                              className="inline-flex shrink-0 items-center gap-1 rounded-xl border border-mintcom-green px-2 py-1 text-[12px] font-semibold text-mintcom-green"
                             >
                               <Plus size={14} /> Restock
                             </button>
