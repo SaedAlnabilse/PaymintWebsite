@@ -53,7 +53,6 @@ interface Product {
     name: string;
     rate: number; // fraction (0.16)
     isDefault: boolean;
-    taxCategory?: string;
   } | null;
 }
 
@@ -62,8 +61,7 @@ interface TaxOption {
   name: string;
   rate: number; // fraction (0.16 = 16%)
   isDefault: boolean;
-  isActive: boolean;
-  taxCategory?: string;
+  isActive?: boolean;
 }
 
 interface Category {
@@ -1370,8 +1368,8 @@ export function ProductFormModal({
                                     <span className={`text-xs font-bold truncate ${selectedTaxId === tax.id ? 'text-mintcom-green' : 'text-gray-700 dark:text-gray-300'}`}>
                                       {tax.name}
                                       {tax.isDefault && (
-                                        <span className="ml-1.5 inline-flex items-center rounded-full bg-mintcom-green/10 px-1.5 py-0.5 text-[10px] font-black tracking-wide text-mintcom-green align-middle">
-                                          {t('common.default', { defaultValue: 'Default' })}
+                                        <span className="ml-1.5 text-[11px] font-medium text-gray-400 dark:text-gray-500 align-middle">
+                                          ({t('common.default', { defaultValue: 'Default' })})
                                         </span>
                                       )}
                                     </span>

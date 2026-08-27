@@ -630,7 +630,7 @@ export function DemoDashboardScreen({
   const [renderedAt] = useState(Date.now);
   const [shiftModal, setShiftModal] = useState<'open' | 'close' | null>(null);
   const [shiftStartedSuccess, setShiftStartedSuccess] = useState(false);
-  const [myOrdersOpen, setMyOrdersOpen] = useState(false);
+  const [todaysOrdersOpen, setTodaysOrdersOpen] = useState(false);
   const [closedReview, setClosedReview] = useState<{
     expected: number;
     actual: number;
@@ -749,7 +749,7 @@ export function DemoDashboardScreen({
                 <button
                   type="button"
                   id="tour-my-orders"
-                  onClick={() => setMyOrdersOpen(true)}
+                  onClick={() => setTodaysOrdersOpen(true)}
                   className="inline-flex items-center gap-1.5 rounded-xl border-[1.5px] border-mintcom-green bg-white px-3.5 py-2 text-[12px] font-bold text-mintcom-green dark:bg-transparent"
                 >
                   <List size={16} /> Today's Orders
@@ -1131,11 +1131,11 @@ export function DemoDashboardScreen({
         )}
       </AnimatePresence>
 
-      <DemoMyOrdersModal
-        open={myOrdersOpen}
+      <DemoTodaysOrdersModal
+        open={todaysOrdersOpen}
         sales={shift.sales}
         staffName={staff?.name}
-        onClose={() => setMyOrdersOpen(false)}
+        onClose={() => setTodaysOrdersOpen(false)}
       />
     </Fill>
   );
@@ -1773,8 +1773,8 @@ export { DemoSettingsScreen } from './PosDemoSettings';
 /* ─── Support — full POS ContactSupportScreen mirror ───────────────────── */
 export { DemoSupportScreen } from './PosDemoSupport';
 
-/* ─── My Orders modal — mirrors POS MyOrdersModal (list + detail + refund) ─── */
-export function DemoMyOrdersModal({
+/* ─── Today's Orders modal — mirrors POS TodaysOrdersModal (list + detail + refund) ─── */
+export function DemoTodaysOrdersModal({
   open,
   sales,
   staffName,
@@ -2134,3 +2134,5 @@ export function DemoMyOrdersModal({
     </>
   );
 }
+
+export const DemoMyOrdersModal = DemoTodaysOrdersModal;

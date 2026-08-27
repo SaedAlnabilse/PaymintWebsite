@@ -68,7 +68,10 @@ i18n
       caches: ['localStorage'],
     },
     saveMissing: import.meta.env?.DEV === true,
-    parseMissingKeyHandler: (key) => {
+    parseMissingKeyHandler: (key, defaultValue) => {
+      if (defaultValue && typeof defaultValue === 'string' && defaultValue !== key) {
+        return defaultValue;
+      }
       // Last-resort fallback so users never see a raw "a.b.c" key in production.
       // The `validate:locales` script catches missing keys at build time so this
       // path should normally not be hit. If it is, we humanize the leaf segment

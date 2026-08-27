@@ -1,4 +1,4 @@
-import { Scale, Percent, FileEdit, History } from 'lucide-react';
+import { Scale, Percent, FileEdit, History, Trash2 } from 'lucide-react';
 import { BiIcon } from '../../../ui/BiIcon';
 import { useCurrency } from '../../../../context/CurrencyContext';
 import type { SalesSummary } from '../../../../types';
@@ -22,7 +22,7 @@ const ratePct = (rate: number) => {
   return rate > 1 ? rate : rate * 100;
 };
 
-type TaxRowType = 'current' | 'changed' | 'previous' | 'standard';
+type TaxRowType = 'current' | 'changed' | 'previous' | 'standard' | 'deleted';
 
 export const TaxesView = React.memo(function TaxesView({ salesData }: TaxesViewProps) {
   const { t } = useTranslation();
@@ -35,24 +35,28 @@ export const TaxesView = React.memo(function TaxesView({ salesData }: TaxesViewP
       currentTaxRate > 0 && Math.abs(rate - currentTaxRate) < 0.01;
     const taxTypeSortRank: Record<TaxRowType, number> =
       currentTaxRate > 0
-        ? { current: 0, changed: 1, previous: 2, standard: 3 }
-        : { current: 0, standard: 0, changed: 1, previous: 2 };
+        ? { current: 0, changed: 1, previous: 2, standard: 3, deleted: 4 }
+        : { current: 0, standard: 0, changed: 1, previous: 2, deleted: 3 };
     const getTaxType = (tax: any, isChanged: boolean, rate: number): TaxRowType => {
       const explicitType = String(tax?.taxType ?? '').toLowerCase();
       if (
         explicitType === 'current' ||
         explicitType === 'changed' ||
         explicitType === 'previous' ||
-        explicitType === 'standard'
+        explicitType === 'standard' ||
+        explicitType === 'deleted'
       ) {
-        return explicitType;
+        return explicitType as TaxRowType;
       }
+      if (tax?.isDeleted) return 'deleted';
       if (isChanged) return 'changed';
       if (currentTaxRate > 0) return isCurrentRate(rate) ? 'current' : 'previous';
       return 'standard';
     };
     const getTaxTypeLabel = (taxType: TaxRowType) => {
       switch (taxType) {
+        case 'deleted':
+          return t('orders.reports.taxes.deletedTaxRate', { defaultValue: 'Deleted tax rate' });
         case 'current':
         case 'standard':
           return t('orders.reports.taxes.standardTaxRate', { defaultValue: 'Standard tax rate' });
@@ -66,6 +70,8 @@ export const TaxesView = React.memo(function TaxesView({ salesData }: TaxesViewP
     };
     const getTaxTypeDescription = (taxType: TaxRowType) => {
       switch (taxType) {
+        case 'deleted':
+          return t('orders.reports.taxes.deletedTaxDescription', { defaultValue: 'This tax rate was deleted but historical records are preserved' });
         case 'current':
         case 'standard':
           return t('orders.reports.taxes.currentTaxDescription', { defaultValue: 'Used the current location tax setting' });
@@ -82,6 +88,7 @@ export const TaxesView = React.memo(function TaxesView({ salesData }: TaxesViewP
       const rawRate = ratePct(toNumber(tax.rate ?? tax.taxRate));
       const rateLabel = tax.rateLabel || (rawRate > 0 ? `${Number(rawRate.toFixed(2))}%` : '');
       const isChanged = Boolean(tax.isChanged);
+      const isDeleted = Boolean(tax.isDeleted || String(tax.taxType).toLowerCase() === 'deleted');
       const taxType = getTaxType(tax, isChanged, rawRate);
       const baseName = getTaxTypeLabel(taxType);
       const name = tax.name || tax.taxName || baseName;
@@ -92,6 +99,7 @@ export const TaxesView = React.memo(function TaxesView({ salesData }: TaxesViewP
         name,
         description,
         taxType,
+        isDeleted,
         sortRank: taxTypeSortRank[taxType],
         ratePercent: rawRate,
         rateLabel,
@@ -226,16 +234,20 @@ export const TaxesView = React.memo(function TaxesView({ salesData }: TaxesViewP
                   taxBreakdown.map((tax, i: number) => {
                     const contribution = totalTax > 0 ? (tax.collected / totalTax) * 100 : 0;
                     const contributionWidth = Math.max(0, Math.min(100, contribution));
-                    const markerClass = tax.taxType === 'changed'
-                      ? 'bg-indigo-500/10 text-indigo-500 dark:bg-indigo-500/20 dark:text-indigo-400'
-                      : tax.taxType === 'previous'
-                        ? 'bg-gray-500/10 text-gray-500 dark:bg-gray-500/20 dark:text-gray-400'
-                        : 'bg-orange-500/10 text-orange-500 dark:bg-orange-500/20 dark:text-orange-400';
-                    const markerIcon = tax.taxType === 'changed'
-                      ? <FileEdit size={16} />
-                      : tax.taxType === 'previous'
-                        ? <History size={16} />
-                        : <Percent size={16} />;
+                    const markerClass = tax.isDeleted || tax.taxType === 'deleted'
+                      ? 'bg-rose-500/10 text-rose-500 dark:bg-rose-500/20 dark:text-rose-400'
+                      : tax.taxType === 'changed'
+                        ? 'bg-indigo-500/10 text-indigo-500 dark:bg-indigo-500/20 dark:text-indigo-400'
+                        : tax.taxType === 'previous'
+                          ? 'bg-gray-500/10 text-gray-500 dark:bg-gray-500/20 dark:text-gray-400'
+                          : 'bg-orange-500/10 text-orange-500 dark:bg-orange-500/20 dark:text-orange-400';
+                    const markerIcon = tax.isDeleted || tax.taxType === 'deleted'
+                      ? <Trash2 size={16} />
+                      : tax.taxType === 'changed'
+                        ? <FileEdit size={16} />
+                        : tax.taxType === 'previous'
+                          ? <History size={16} />
+                          : <Percent size={16} />;
                     return (
                       <motion.tr 
                         key={tax.name || i}
@@ -250,7 +262,14 @@ export const TaxesView = React.memo(function TaxesView({ salesData }: TaxesViewP
                               {markerIcon}
                             </div>
                             <div className="flex flex-col min-w-0">
-                              <span className="font-bold text-sm text-gray-900 dark:text-white">{tax.name}</span>
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-sm text-gray-900 dark:text-white">{tax.name}</span>
+                                {(tax.isDeleted || tax.taxType === 'deleted') && (
+                                  <span className="shrink-0 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 border border-rose-200 dark:border-rose-800/30">
+                                    {t('common.deleted', 'Deleted')}
+                                  </span>
+                                )}
+                              </div>
                               <div className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500 font-medium flex-wrap mt-0.5">
                                 <span>{tax.description}</span>
                                 <span className="text-gray-300 dark:text-gray-600">·</span>
