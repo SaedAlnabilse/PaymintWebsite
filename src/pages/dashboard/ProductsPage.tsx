@@ -22,7 +22,7 @@ import {
     RotateCcw
 } from 'lucide-react';
 import { BiIcon } from '../../components/ui/BiIcon';
-import api from '../../config/api';
+import api, { extractErrorMessage } from '../../config/api';
 import { fetchAllPages } from '../../utils/fetchAllPages';
 import toast from 'react-hot-toast';
 import { ConfirmModal } from '../../components/ConfirmModal';
@@ -593,7 +593,7 @@ export function ProductsPage() {
                                 await saveProduct(formData);
                             } catch (err) {
                                 console.error('Save error', err);
-                                toast.error(t('products.messages.saveFailed'));
+                                toast.error(extractErrorMessage(err) || t('products.messages.saveFailed'));
                             } finally {
                                 setIsSubmitting(false);
                             }
@@ -606,7 +606,9 @@ export function ProductsPage() {
             await saveProduct(formData);
         } catch (err) {
             console.error('Save error', err);
-            toast.error(t('products.messages.saveFailed'));
+            // Surface the API's reason (validation, duplicate name, tax, …) —
+            // a bare "Failed to save product" leaves nothing to act on.
+            toast.error(extractErrorMessage(err) || t('products.messages.saveFailed'));
         } finally {
             setIsSubmitting(false);
         }

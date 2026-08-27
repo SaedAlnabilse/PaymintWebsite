@@ -10,6 +10,15 @@ const IMAGE_DATA_URL_PATTERN = /^data:image\/[a-z0-9.+-]+[;,]/i;
 const OPAQUE_FIELD_PATTERN =
   /token|otp|code|secret|hash|signature|nonce|jwt|captcha|credential|refresh|challenge|verifier/i;
 
+// Structured values (JSON arrays/objects sent as strings, e.g. the product
+// form's `attributeIds`) must never be clipped: a truncated JSON string reaches
+// the API as malformed data and is rejected with a 400.
+const STRUCTURED_VALUE_PATTERN = /^\s*[[{]/;
+
+// Record identifiers are opaque, machine-generated, and never user-typed —
+// slicing one silently points the request at a different (or no) record.
+const IDENTIFIER_FIELD_PATTERN = /(?:^|\s)ids?$/;
+
 const ATTRIBUTE_MATCHERS: Array<[RegExp, TextInputLimitKey]> = [
   [/(refund|return).*reason|reason.*(refund|return)/, 'REFUND_REASON'],
   [/(cash|pay.?in|pay.?out|drawer|shift).*reason|reason.*(cash|pay.?in|pay.?out|drawer|shift)/, 'CASH_REASON'],
@@ -81,6 +90,14 @@ export function getLimitForField(fieldName?: string | null, inputType?: string |
   return TEXT_INPUT_LIMITS[getLimitKeyForField(fieldName, inputType)];
 }
 
+function normalizeFieldKey(key: string): string {
+  return key
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/[_-]+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
 function sanitizeStringValue(key: string, value: string): string {
   if (IMAGE_DATA_URL_PATTERN.test(value)) {
     return value;
@@ -88,6 +105,13 @@ function sanitizeStringValue(key: string, value: string): string {
 
   // Never truncate opaque security tokens/codes — they must reach the API intact.
   if (OPAQUE_FIELD_PATTERN.test(key)) {
+    return value;
+  }
+
+  // Same for serialized collections and record ids: truncating them corrupts
+  // the request instead of trimming user text (a clipped `attributeIds` array
+  // made every product with 3+ add-on groups fail to save with a 400).
+  if (STRUCTURED_VALUE_PATTERN.test(value) || IDENTIFIER_FIELD_PATTERN.test(normalizeFieldKey(key))) {
     return value;
   }
 

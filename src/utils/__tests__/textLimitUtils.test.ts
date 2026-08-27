@@ -32,6 +32,37 @@ describe('text limit utilities', () => {
     expect(payload.nested.taxIdNumber).toHaveLength(TEXT_INPUT_LIMITS.TAX_ID);
   });
 
+  it('does not truncate serialized id arrays or record ids', () => {
+    // A clipped attributeIds array reaches the API as malformed JSON and the
+    // whole product save fails with a 400.
+    const attributeIds = JSON.stringify([
+      'cmt35tjdy0002x6kbea8mrkg3',
+      'cmt35dtkp0004bs4jywkq7p5v',
+      'cmt35du0r0006bs4j84xnbe7x',
+    ]);
+    const taxId = 'cmt35dube0008bs4j2oddbauo';
+
+    const payload = sanitizeTextPayload({ attributeIds, taxId });
+
+    expect(payload.attributeIds).toBe(attributeIds);
+    expect(JSON.parse(payload.attributeIds)).toHaveLength(3);
+    expect(payload.taxId).toBe(taxId);
+  });
+
+  it('keeps product FormData fields intact through the request interceptor', () => {
+    const form = new FormData();
+    form.append('name', 'Grilled Chicken Sandwich');
+    form.append('attributeIds', JSON.stringify([
+      'cmt35tjdy0002x6kbea8mrkg3',
+      'cmt35dtkp0004bs4jywkq7p5v',
+      'cmt35du0r0006bs4j84xnbe7x',
+    ]));
+
+    const sanitized = sanitizeTextPayload(form);
+
+    expect(JSON.parse(String(sanitized.get('attributeIds')))).toHaveLength(3);
+  });
+
   it('does not truncate generated image data URLs', () => {
     const image = `data:image/png;base64,${'a'.repeat(500)}`;
     const payload = sanitizeTextPayload({ image });
