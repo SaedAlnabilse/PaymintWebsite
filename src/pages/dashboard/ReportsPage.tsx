@@ -171,14 +171,23 @@ export function ReportsPage() {
   }, [location.state]);
 
   const effectiveDateRange = useMemo(() => {
+    const start = new Date(`${startDate}T${startTime}`);
+    const end = new Date(`${endDate}T${endTime}`);
+
     if (selectedShiftId) {
       const shift = employeeShifts.find(s => s.value === selectedShiftId);
       if (shift) {
-        return { start: shift.startTime, end: shift.endTime || new Date().toISOString() };
+        // An open shift has no end yet. Bounding it with `new Date()` would
+        // freeze the window at the moment this memo last ran, so every order
+        // taken after that silently dropped out of the totals; the report
+        // window's own end keeps a live shift complete without drifting.
+        return {
+          start: shift.startTime,
+          end: shift.endTime || new Date(Math.max(end.getTime(), Date.now())).toISOString(),
+        };
       }
     }
-    const start = new Date(`${startDate}T${startTime}`);
-    const end = new Date(`${endDate}T${endTime}`);
+
     return { start: start.toISOString(), end: end.toISOString() };
   }, [selectedShiftId, employeeShifts, startDate, endDate, startTime, endTime]);
 
@@ -219,11 +228,15 @@ export function ReportsPage() {
         return;
       }
       try {
+        // Whole local days on purpose: the picker must keep every shift in the
+        // range selectable even when a time-of-day filter is narrower. Parse as
+        // local (`T00:00`) — `new Date('yyyy-MM-dd')` is UTC midnight, which
+        // shifts the day by one behind UTC.
         const res = await api.get('/reports/shifts', {
           params: {
             employeeId: selectedEmployeeId,
-            startDate: startOfDay(new Date(startDate)).toISOString(),
-            endDate: endOfDay(new Date(endDate)).toISOString(),
+            startDate: startOfDay(new Date(`${startDate}T00:00`)).toISOString(),
+            endDate: endOfDay(new Date(`${endDate}T00:00`)).toISOString(),
           }
         });
         const sortedShifts = (res.data || []).sort((a: any, b: any) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
@@ -293,6 +306,13 @@ export function ReportsPage() {
         commonParams.employeeId = selectedEmployeeId;
       }
 
+      // Shift-based reports resolve the selection by id. Order-based reports
+      // can't — orders carry no shift reference — so for those the shift stays
+      // expressed as the date window in `effectiveDateRange`.
+      const shiftScopedParams: Record<string, string> = selectedShiftId
+        ? { ...commonParams, shiftId: selectedShiftId }
+        : commonParams;
+
       switch (reportType) {
         case 'sales':
         case 'payments':
@@ -343,19 +363,19 @@ export function ReportsPage() {
           break;
         }
         case 'staff-sales': {
-          const staffSalesRes = await api.get('/reports/shifts', { params: { ...commonParams, limit: 50 } });
+          const staffSalesRes = await api.get('/reports/shifts', { params: { ...shiftScopedParams, limit: 50 } });
           if (isStale()) return;
           setShifts(normalizeShifts(staffSalesRes.data));
           break;
         }
         case 'shifts': {
-          const shiftsRes = await api.get('/reports/shifts', { params: { ...commonParams, limit: 100 } });
+          const shiftsRes = await api.get('/reports/shifts', { params: { ...shiftScopedParams, limit: 100 } });
           if (isStale()) return;
           setShifts(normalizeShifts(shiftsRes.data));
           break;
         }
         case 'cash-discrepancy': {
-          const shiftsRes = await api.get('/reports/shifts', { params: { ...commonParams, limit: 100 } });
+          const shiftsRes = await api.get('/reports/shifts', { params: { ...shiftScopedParams, limit: 100 } });
           if (isStale()) return;
           setShifts(normalizeShifts(shiftsRes.data));
           break;
@@ -963,7 +983,7 @@ export function ReportsPage() {
                 shifts={shifts}
                 selectedEmployeeId={selectedEmployeeId}
                 employees={employees}
-                employeeShifts={employeeShifts}
+                rangeEnd={effectiveDateRange.end}
               />
             )}
 

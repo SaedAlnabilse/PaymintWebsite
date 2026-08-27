@@ -24,7 +24,6 @@ import { getSignUpSchema, type SignUpFormData } from '../utils/validation';
 import { LanguageSwitcher } from '../components/LanguageSwitcher';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { launchFirstTimeOnboarding } from '../utils/onboardingLaunch';
-import { AuthShowcasePanel } from '../components/auth/AuthShowcasePanel';
 
 export function SignUpPage() {
   const { t } = useTranslation();
@@ -257,9 +256,9 @@ export function SignUpPage() {
         <div className="flex items-center gap-2 sm:gap-4">
           <Link
             to="/"
-            className="group inline-flex items-center gap-2 rounded-xl border border-gray-200/80 bg-white/80 px-3.5 py-2 text-xs font-bold text-gray-700 shadow-sm backdrop-blur-md transition-all duration-200 hover:border-gray-300 hover:bg-white hover:text-gray-900 dark:border-white/10 dark:bg-white/5 dark:text-gray-300 dark:hover:border-white/20 dark:hover:bg-white/10 dark:hover:text-white"
+            className="group inline-flex items-center gap-2 text-sm font-semibold text-gray-600 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
           >
-            <ArrowLeft size={15} className={`transition-transform duration-200 ${isRtl ? 'rotate-180 group-hover:translate-x-0.5' : 'group-hover:-translate-x-0.5'}`} />
+            <ArrowLeft size={16} className={`transition-transform duration-200 ${isRtl ? 'rotate-180 group-hover:translate-x-0.5' : 'group-hover:-translate-x-0.5'}`} />
             <span>{t('auth.signup.backButton', 'Back')}</span>
           </Link>
           <Link to="/" className="flex items-center" aria-label="Mintcom Home">
@@ -274,17 +273,21 @@ export function SignUpPage() {
         </div>
       </header>
 
-      <main className="relative z-20 grid w-full flex-1 grid-cols-1 content-center items-stretch gap-8 px-6 pb-16 pt-2 sm:px-8 md:px-10 lg:grid-cols-12 lg:gap-10 lg:px-16 xl:gap-12">
-
-        <div className="relative flex h-full flex-col justify-between overflow-hidden rounded-[24px] border border-gray-200/90 bg-white/90 p-7 shadow-xl shadow-gray-200/40 backdrop-blur-xl dark:border-white/10 dark:bg-[#0D121F]/80 dark:shadow-none sm:p-8 lg:col-span-7 xl:col-span-6 2xl:col-span-5 2xl:p-10">
+      <main className="relative z-20 flex w-full flex-1 items-center justify-center px-4 pb-16 pt-2 sm:px-6 md:px-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          className="relative w-full max-w-xl overflow-hidden rounded-[24px] border border-gray-200/90 bg-white/90 p-6 shadow-xl shadow-gray-200/40 backdrop-blur-xl dark:border-white/10 dark:bg-[#0D121F]/80 dark:shadow-none sm:p-8 md:p-10"
+        >
           <div aria-hidden className="pointer-events-none absolute -end-16 -top-16 h-40 w-40 rounded-full bg-mintcom-green/10 blur-3xl" />
 
           <div>
             <div className="mb-6">
-              <h1 className="font-magilio text-2xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-3xl 2xl:text-4xl">
+              <h1 className="font-magilio text-2xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-3xl">
                 {t('auth.signup.title', 'Create your account')}
               </h1>
-              <p className="mt-1.5 text-xs sm:text-sm 2xl:text-base font-medium leading-relaxed text-gray-600 dark:text-gray-300">
+              <p className="mt-1.5 text-xs sm:text-sm font-medium leading-relaxed text-gray-600 dark:text-gray-300">
                 {t('auth.signup.subtitle', 'Start managing your restaurant, cafe, or store with high-speed POS and Cloud analytics.')}
               </p>
             </div>
@@ -491,11 +494,7 @@ export function SignUpPage() {
               </div>
 
               <div className="space-y-3 pt-2">
-                <div className={`rounded-xl border p-3.5 transition-colors ${
-                  errors.agreeToTerms
-                    ? 'border-red-500/60 bg-red-50/40 dark:border-red-500/30 dark:bg-red-950/10'
-                    : 'border-gray-200/90 bg-gray-50/70 dark:border-white/10 dark:bg-white/[0.03]'
-                }`}>
+                <div>
                   <div className="flex items-start gap-3">
                     <input
                       id="agreeToTerms"
@@ -522,7 +521,7 @@ export function SignUpPage() {
                   )}
                 </div>
 
-                <div className="flex items-start gap-3 px-1">
+                <div className="flex items-start gap-3">
                   <input
                     id="subscribeToNews"
                     type="checkbox"
@@ -551,7 +550,7 @@ export function SignUpPage() {
             </form>
           </div>
 
-          <div className="mt-4 text-center">
+          <div className="mt-6 border-t border-gray-100/80 pt-4 text-center dark:border-white/5">
             <span className="text-xs text-gray-500 dark:text-gray-400">
               {t('auth.signup.haveAccount')}{' '}
             </span>
@@ -559,9 +558,7 @@ export function SignUpPage() {
               {t('auth.signup.goToLogin', 'Sign In')}
             </Link>
           </div>
-        </div>
-
-        <AuthShowcasePanel className="lg:col-span-5 xl:col-span-6 2xl:col-span-7" />
+        </motion.div>
       </main>
 
       <AnimatePresence>

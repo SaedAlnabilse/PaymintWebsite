@@ -1,7 +1,7 @@
 import { Users } from 'lucide-react';
 import { BiIcon } from '../../../ui/BiIcon';
 import { useCurrency } from '../../../../context/CurrencyContext';
-import type { Shift, ShiftOption } from '../../../../types';
+import type { Shift } from '../../../../types';
 import { motion } from 'framer-motion';
 import { useState, useMemo } from 'react';
 import { Pagination } from '../../../ui';
@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AnalyticsEmptyState } from '../AnalyticsEmptyState';
 import { StatValue } from '../../../../components/ui/StatValue';
+import { getShiftDurationMs } from '../../../../utils/shiftDuration';
 
 const CurrencyAmount = ({ amount, className = "", size = "text-2xl", color = "text-gray-900 dark:text-white" }: { amount: number, className?: string, size?: string, color?: string }) => {
   const { currencySymbol } = useCurrency();
@@ -34,14 +35,20 @@ const FormatCurrency = ({ value, className = "text-sm", containerClassName = "ju
   );
 };
 
+// A rate computed over a couple of minutes is noise, not performance: one 8.19
+// sale a minute into a shift is not "491/hr". Matches the floor the Shifts
+// report and the exports already use.
+const MIN_MS_FOR_RATE = 5 * 60_000;
+
 interface StaffViewProps {
   shifts: Shift[];
   selectedEmployeeId: string | null;
   employees: { label: string; value: string }[];
-  employeeShifts: ShiftOption[];
+  /** End of the active report window, ISO. Bounds still-open shifts. */
+  rangeEnd: string;
 }
 
-export const StaffView = React.memo(function StaffView({ shifts, selectedEmployeeId, employees, employeeShifts }: StaffViewProps) {
+export const StaffView = React.memo(function StaffView({ shifts, selectedEmployeeId, employees, rangeEnd }: StaffViewProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { locationSlug, slug } = useParams();
@@ -52,17 +59,40 @@ export const StaffView = React.memo(function StaffView({ shifts, selectedEmploye
   const selectedEmp = selectedEmployeeId ? employees.find(e => e.value === selectedEmployeeId) : null;
   const empName = selectedEmp?.label || '';
   const isSpecificEmployee = !!selectedEmployeeId;
-  const dataSource = isSpecificEmployee ? employeeShifts : shifts;
+  // Always summarise the shifts the page actually fetched for the active
+  // filters. The staff dropdown's own shift list is deliberately widened to
+  // whole days (so every shift stays pickable) and ignores the time-of-day and
+  // selected-shift filters — summing it here made the cards report the whole
+  // day whenever a staff member (or a single shift) was selected, while the
+  // leaderboard below stayed on the filtered data.
+  const dataSource = shifts;
+
+  // An open shift is measured against "now", so the figure has to keep ticking
+  // or it freezes at first paint.
+  const hasOpenShift = React.useMemo(() => shifts.some((s: any) => !s.endTime), [shifts]);
+  const [now, setNow] = useState(() => Date.now());
+  React.useEffect(() => {
+    if (!hasOpenShift) return;
+    const id = window.setInterval(() => setNow(Date.now()), 60_000);
+    return () => window.clearInterval(id);
+  }, [hasOpenShift]);
+
+  // "Now" never runs past the end of the window being reported on — otherwise a
+  // shift someone left open days ago contributes every hour since to a
+  // single-day report and craters the sales-per-hour figures. This mirrors the
+  // clamp the API applies to its own hours-worked total.
+  const openShiftCutoff = React.useMemo(() => {
+    const end = new Date(rangeEnd).getTime();
+    return Number.isFinite(end) ? Math.min(now, end) : now;
+  }, [now, rangeEnd]);
+
+  const shiftMs = React.useCallback(
+    (shift: any) => getShiftDurationMs(shift.startTime, shift.endTime, openShiftCutoff) ?? 0,
+    [openShiftCutoff],
+  );
 
   // Calculate stats
-  const totalHours = dataSource.reduce((acc: number, shift: any) => {
-    if (shift.startTime) {
-      const start = new Date(shift.startTime);
-      const end = shift.endTime ? new Date(shift.endTime) : new Date();
-      return acc + (end.getTime() - start.getTime()) / (1000 * 60 * 60);
-    }
-    return acc;
-  }, 0);
+  const totalHours = dataSource.reduce((acc: number, shift: any) => acc + shiftMs(shift) / 3_600_000, 0);
 
   const totalOrders = dataSource.reduce((acc: number, shift: any) => acc + (shift.orderCount || 0), 0);
   const totalSales = dataSource.reduce((acc: number, shift: any) => acc + (shift.totalSales || 0), 0);
@@ -91,6 +121,7 @@ export const StaffView = React.memo(function StaffView({ shifts, selectedEmploye
           totalShifts: 0,
           totalSales: 0,
           totalHours: 0,
+          totalMs: 0,
           avgTransaction: 0,
           transactionCount: 0,
         };
@@ -107,6 +138,7 @@ export const StaffView = React.memo(function StaffView({ shifts, selectedEmploye
           totalShifts: 0,
           totalSales: 0,
           totalHours: 0,
+          totalMs: 0,
           avgTransaction: 0,
           transactionCount: 0,
         };
@@ -114,15 +146,13 @@ export const StaffView = React.memo(function StaffView({ shifts, selectedEmploye
       acc[username].totalShifts += 1;
       acc[username].totalSales += Number(shift.totalSales || 0);
       acc[username].transactionCount += Number(shift.orderCount || 0);
-      if (shift.startTime) {
-        const start = new Date(shift.startTime);
-        const end = shift.endTime ? new Date(shift.endTime) : new Date();
-        acc[username].totalHours += Math.max((end.getTime() - start.getTime()) / (1000 * 60 * 60), 0);
-      }
+      const ms = shiftMs(shift);
+      acc[username].totalMs += ms;
+      acc[username].totalHours += ms / 3_600_000;
     });
 
     return acc;
-  }, [employees, shifts, t]);
+  }, [employees, shifts, t, shiftMs]);
 
   const sortedEmployees: any[] = useMemo(() => {
     const list = Object.values(employeeStats);
@@ -302,7 +332,11 @@ export const StaffView = React.memo(function StaffView({ shifts, selectedEmploye
                       const shareRatio = totalStoreSales > 0 ? (emp.totalSales / totalStoreSales) : 0;
                       const sharePercent = shareRatio * 100;
                       const avgTicket = emp.transactionCount > 0 ? emp.totalSales / emp.transactionCount : 0;
-                      const efficiency = emp.totalHours > 0 ? emp.totalSales / emp.totalHours : 0;
+                      // Below the floor there is no meaningful rate to show — a
+                      // few minutes on the till would read as hundreds per hour.
+                      const efficiency = emp.totalMs >= MIN_MS_FOR_RATE
+                        ? emp.totalSales / (emp.totalMs / 3_600_000)
+                        : null;
                       const globalIndex = (staffPage - 1) * itemsPerPage + idx;
                       const isTopRank = globalIndex === 0 && emp.totalSales > 0;
 
@@ -351,9 +385,13 @@ export const StaffView = React.memo(function StaffView({ shifts, selectedEmploye
                           </td>
                           <td className="px-4 py-4 text-center">
                             <div className="flex justify-center">
-                              <span className="inline-flex items-baseline gap-1.5 whitespace-nowrap text-xs font-bold text-gray-500">
-                                <FormatCurrency value={efficiency} /> <span className="whitespace-nowrap">/ {t('orders.reports.staff.perHour')}</span>
-                              </span>
+                              {efficiency === null ? (
+                                <span className="text-xs font-bold text-gray-400">-</span>
+                              ) : (
+                                <span className="inline-flex items-baseline gap-1.5 whitespace-nowrap text-xs font-bold text-gray-500">
+                                  <FormatCurrency value={efficiency} /> <span className="whitespace-nowrap">/ {t('orders.reports.staff.perHour')}</span>
+                                </span>
+                              )}
                             </div>
                           </td>
                         </motion.tr>

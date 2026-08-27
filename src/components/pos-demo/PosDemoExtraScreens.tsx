@@ -752,7 +752,7 @@ export function DemoDashboardScreen({
                   onClick={() => setMyOrdersOpen(true)}
                   className="inline-flex items-center gap-1.5 rounded-xl border-[1.5px] border-mintcom-green bg-white px-3.5 py-2 text-[12px] font-bold text-mintcom-green dark:bg-transparent"
                 >
-                  <List size={16} /> My Orders
+                  <List size={16} /> Today's Orders
                 </button>
                 {canCloseShift && (
                   <button
@@ -1863,7 +1863,7 @@ export function DemoMyOrdersModal({
             <div className="flex shrink-0 items-center justify-between border-b border-gray-100 px-4 py-3 dark:border-white/8">
               <div>
                 <h3 className="text-[16px] font-extrabold text-text-primary dark:text-white">
-                  My Orders
+                  Today's Orders
                 </h3>
                 <p className="text-[11px] text-text-secondary">
                   {staffName ? `${staffName} · this shift` : 'Sales from this shift'}

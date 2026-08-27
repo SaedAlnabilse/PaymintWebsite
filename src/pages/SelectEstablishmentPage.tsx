@@ -139,64 +139,72 @@ export function SelectEstablishmentPage() {
           </motion.div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 w-full px-4">
-          {establishments.map((est, index) => (
-            <motion.div
-              key={est.id}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: index * 0.05 }}
-              onMouseEnter={() => setHoveredId(est.id)}
-              onMouseLeave={() => setHoveredId(null)}
-              onClick={() => handleSelect(est)}
-              className="group relative bg-white dark:bg-[#1E293B] rounded-[2.5rem] border-2 border-gray-100 dark:border-white/[0.05] p-8 cursor-pointer hover:border-mintcom-green shadow-xl shadow-gray-200/50 dark:shadow-none transition-all flex flex-col items-center text-center"
-            >
-              <div className="w-20 h-20 bg-gray-50 dark:bg-white/[0.03] rounded-[1.5rem] flex items-center justify-center mb-6 border border-gray-100 dark:border-white/5 transition-transform duration-500 group-hover:scale-110 group-hover:bg-mintcom-green/10">
-                <Store size={32} className="text-gray-400 group-hover:text-mintcom-green transition-colors" />
-              </div>
+        <div className="w-full max-w-6xl mx-auto px-4 sm:px-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 justify-center">
+            {establishments.map((est, index) => (
+              <motion.div
+                key={est.id}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: index * 0.05 }}
+                onMouseEnter={() => setHoveredId(est.id)}
+                onMouseLeave={() => setHoveredId(null)}
+                onClick={() => handleSelect(est)}
+                className="group relative bg-white dark:bg-[#1E293B] rounded-[2rem] sm:rounded-[2.5rem] border-2 border-gray-100 dark:border-white/[0.05] p-7 sm:p-8 cursor-pointer hover:border-mintcom-green shadow-xl shadow-gray-200/50 dark:shadow-none transition-all flex flex-col justify-between items-center text-center min-h-[300px] sm:min-h-[320px] h-full"
+              >
+                <div className="w-full flex flex-col items-center">
+                  <div className="w-20 h-20 bg-gray-50 dark:bg-white/[0.03] rounded-[1.5rem] flex items-center justify-center mb-5 border border-gray-100 dark:border-white/5 transition-transform duration-500 group-hover:scale-110 group-hover:bg-mintcom-green/10">
+                    <Store size={32} className="text-gray-400 group-hover:text-mintcom-green transition-colors" />
+                  </div>
 
-              <h3 className="font-barlow text-base font-bold text-gray-900 dark:text-white mb-2 px-2 leading-tight text-center tracking-normal" dir="auto">{est.name}</h3>
+                  <h3 className="font-barlow text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-2 px-2 leading-tight text-center tracking-normal line-clamp-2" dir="auto">
+                    {est.name}
+                  </h3>
 
-              <div className="flex items-center gap-2.5 mb-8">
-                <span className="px-2.5 py-1 rounded-lg bg-gray-100 dark:bg-white/5 text-[10px] font-sans font-bold text-gray-500">
-                  {est.currency?.toUpperCase()}
-                </span>
-                {isManualEstablishmentDeletionPending(est) ? (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-red-50 text-[10px] font-sans font-bold text-red-600 border border-red-200 dark:bg-red-500/10 dark:border-red-500/20">
-                    <AlertTriangle size={11} />
-                    {t('settings.danger.pendingDeletion', { defaultValue: 'PENDING DELETION' })}
-                  </span>
-                ) : (
-                  <span className="px-2.5 py-1 rounded-lg bg-mintcom-green/10 text-[10px] font-sans font-bold text-mintcom-green border border-mintcom-green/20">
-                    {t(`common.status.${est.subscriptionStatus.toLowerCase()}`, { defaultValue: est.subscriptionStatus }).toUpperCase()}
-                  </span>
-                )}
-              </div>
+                  <div className="flex items-center gap-2 mb-6 flex-wrap justify-center">
+                    <span className="px-2.5 py-1 rounded-lg bg-gray-100 dark:bg-white/5 text-[10px] font-sans font-bold text-gray-500">
+                      {est.currency?.toUpperCase()}
+                    </span>
+                    {isManualEstablishmentDeletionPending(est) ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-red-50 text-[10px] font-sans font-bold text-red-600 border border-red-200 dark:bg-red-500/10 dark:border-red-500/20">
+                        <AlertTriangle size={11} />
+                        {t('settings.danger.pendingDeletion', { defaultValue: 'PENDING DELETION' })}
+                      </span>
+                    ) : (
+                      <span className="px-2.5 py-1 rounded-lg bg-mintcom-green/10 text-[10px] font-sans font-bold text-mintcom-green border border-mintcom-green/20">
+                        {t(`common.status.${est.subscriptionStatus.toLowerCase()}`, { defaultValue: est.subscriptionStatus }).toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+                </div>
 
-              <div className={`flex items-center gap-2 text-[13.5px] font-sans font-bold transition-all ${hoveredId === est.id ? 'text-mintcom-green' : 'text-gray-400'}`}>
-                {isManualEstablishmentDeletionPending(est)
-                  ? t('account.restoreAction', { defaultValue: 'Restore' })
-                  : t('dashboard.menu.overview').charAt(0).toUpperCase() + t('dashboard.menu.overview').slice(1).toLowerCase()}
-                <ChevronRight size={14} className={t('common.locale') === 'ar' ? 'rotate-180' : ''} />
-              </div>
-            </motion.div>
-          ))}
+                <div className={`flex items-center gap-2 text-[13.5px] font-sans font-bold transition-all pt-2 ${hoveredId === est.id ? 'text-mintcom-green' : 'text-gray-400'}`}>
+                  {isManualEstablishmentDeletionPending(est)
+                    ? t('account.restoreAction', { defaultValue: 'Restore' })
+                    : t('dashboard.menu.overview').charAt(0).toUpperCase() + t('dashboard.menu.overview').slice(1).toLowerCase()}
+                  <ChevronRight size={14} className={t('common.locale') === 'ar' ? 'rotate-180' : ''} />
+                </div>
+              </motion.div>
+            ))}
 
-          {/* Add New - Solid Design - Only show for owners */}
-          {!account?.isSecondaryAdmin && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: establishments.length * 0.05 }}
-              onClick={() => navigate('/onboarding')}
-              className="bg-gray-100/50 dark:bg-white/[0.02] border-2 border-dashed border-gray-300 dark:border-white/[0.1] rounded-[2.5rem] p-8 cursor-pointer hover:border-mintcom-green hover:bg-white dark:hover:bg-white/[0.05] transition-all flex flex-col items-center justify-center group min-h-[280px]"
-            >
-              <div className="w-16 h-16 bg-white dark:bg-white/5 rounded-full flex items-center justify-center mb-4 border border-gray-200 dark:border-white/10 group-hover:bg-mintcom-green/10 group-hover:border-mintcom-green transition-all">
-                <Plus size={28} className="text-gray-400 group-hover:text-mintcom-green transition-colors" />
-              </div>
-              <h3 className="font-barlow text-base font-bold text-gray-900 dark:text-white mb-2">{t('establishments.addLocation')}</h3>
-            </motion.div>
-          )}
+            {/* Add New - Solid Design - Only show for owners */}
+            {!account?.isSecondaryAdmin && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: establishments.length * 0.05 }}
+                onClick={() => navigate('/onboarding')}
+                className="bg-gray-100/50 dark:bg-white/[0.02] border-2 border-dashed border-gray-300 dark:border-white/[0.1] rounded-[2rem] sm:rounded-[2.5rem] p-7 sm:p-8 cursor-pointer hover:border-mintcom-green hover:bg-white dark:hover:bg-white/[0.05] transition-all flex flex-col items-center justify-center group min-h-[300px] sm:min-h-[320px] h-full text-center"
+              >
+                <div className="w-16 h-16 bg-white dark:bg-white/5 rounded-full flex items-center justify-center mb-4 border border-gray-200 dark:border-white/10 group-hover:bg-mintcom-green/10 group-hover:border-mintcom-green transition-all">
+                  <Plus size={28} className="text-gray-400 group-hover:text-mintcom-green transition-colors" />
+                </div>
+                <h3 className="font-barlow text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-2">
+                  {t('establishments.addLocation')}
+                </h3>
+              </motion.div>
+            )}
+          </div>
         </div>
       </div>
 

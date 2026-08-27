@@ -1871,9 +1871,10 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
         qty: number;
         sales: number;
         refunds: number;
+        refundQty: number;
       }
     >();
-    const cats = new Map<string, { name: string; qty: number; sales: number; refunds: number }>();
+    const cats = new Map<string, { name: string; qty: number; sales: number; refunds: number; refundQty: number }>();
     type ModRow = {
       name: string;
       qty: number;
@@ -1915,16 +1916,19 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
           qty: 0,
           sales: 0,
           refunds: 0,
+          refundQty: 0,
         };
         it.qty += left;
         it.sales += soldTotal;
         it.refunds += refTotal;
+        it.refundQty += refQ;
         items.set(l.name, it);
 
-        const c = cats.get(l.category) ?? { name: l.category, qty: 0, sales: 0, refunds: 0 };
+        const c = cats.get(l.category) ?? { name: l.category, qty: 0, sales: 0, refunds: 0, refundQty: 0 };
         c.qty += left;
         c.sales += soldTotal;
         c.refunds += refTotal;
+        c.refundQty += refQ;
         cats.set(l.category, c);
 
         // Bump matching catalog add-ons when line looks customized
@@ -1991,6 +1995,10 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
       refunds:
         itemMainTab === 'products'
           ? filteredItemBreakdown.reduce((s, i) => s + i.refunds, 0)
+          : 0,
+      refundQty:
+        itemMainTab === 'products'
+          ? filteredItemBreakdown.reduce((s, i) => s + i.refundQty, 0)
           : 0,
     };
   }, [itemMainTab, filteredItemBreakdown, filteredModifierBreakdown, summary.orders]);
@@ -2698,7 +2706,7 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
               )}
             </div>
 
-            {/* 4 compact KPI cards — POS Item Report (icon wells 42×42 r12) */}
+            {/* 6 compact KPI cards — POS Item Report (icon wells 42×42 r12) */}
             <div className="grid shrink-0 grid-cols-4 gap-2.5">
               <StatCard
                 primary
@@ -2714,7 +2722,7 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
                 icon={<ShoppingBag size={18} />}
               />
               <StatCard
-                label="Total Orders"
+                label="Net Orders"
                 value={itemReportStats.orders}
                 icon={<Receipt size={18} />}
               />
@@ -2855,7 +2863,9 @@ export function DemoReportsScreen({ shift }: { shift: DemoShift }) {
                                 </button>
                               )}
                             </div>
-                            <p className="text-[12px] text-text-tertiary">{row.qty} sold</p>
+                            <p className="text-[12px] text-text-tertiary">
+                              {row.qty} sold{row.refundQty > 0 ? ` · ${row.refundQty} refunded` : ''}
+                            </p>
                           </div>
                           <p className="text-[14px] font-semibold tabular-nums text-mintcom-green">
                             {money(row.sales)}

@@ -222,6 +222,12 @@ export const ItemsView = React.memo(function ItemsView({
         } else if (sortConfig.key === 'revenue') {
           aValue = a.totalSales || a.revenue;
           bValue = b.totalSales || b.revenue;
+        } else if (sortConfig.key === 'refundQuantity') {
+          aValue = a.refundQuantity || 0;
+          bValue = b.refundQuantity || 0;
+        } else if (sortConfig.key === 'totalRefunds') {
+          aValue = a.totalRefunds || 0;
+          bValue = b.totalRefunds || 0;
         }
 
         // Handle undefined values safely
@@ -531,6 +537,24 @@ export const ItemsView = React.memo(function ItemsView({
                     <ArrowUpDown size={14} className={`transition-all ${sortConfig?.key === 'revenue' ? 'opacity-100 scale-110' : 'opacity-20 group-hover:opacity-100'}`} />
                   </div>
                 </th>
+                <th
+                  className={`px-8 py-5 text-center label-strong font-sans cursor-pointer select-none transition-colors group ${sortConfig?.key === 'refundQuantity' ? 'text-mintcom-green' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
+                  onClick={() => requestSort('refundQuantity')}
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    {t('orders.reports.items.refundQty')}
+                    <ArrowUpDown size={14} className={`transition-all ${sortConfig?.key === 'refundQuantity' ? 'opacity-100 scale-110' : 'opacity-20 group-hover:opacity-100'}`} />
+                  </div>
+                </th>
+                <th
+                  className={`px-8 py-5 text-center label-strong font-sans cursor-pointer select-none transition-colors group ${sortConfig?.key === 'totalRefunds' ? 'text-mintcom-green' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
+                  onClick={() => requestSort('totalRefunds')}
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    {t('orders.reports.items.refunds')}
+                    <ArrowUpDown size={14} className={`transition-all ${sortConfig?.key === 'totalRefunds' ? 'opacity-100 scale-110' : 'opacity-20 group-hover:opacity-100'}`} />
+                  </div>
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-white/5">
@@ -634,7 +658,7 @@ export const ItemsView = React.memo(function ItemsView({
                                  >
                                    <History size={13} strokeWidth={2.5} />
                                  </button>
-                               )}
+                                )}
                             </div>
                           </div>
                         </td>
@@ -649,12 +673,23 @@ export const ItemsView = React.memo(function ItemsView({
                         <td className="px-8 py-5 text-center font-bold text-mintcom-green">
                           {formatCurrency((item.totalSales || item.revenue) || 0, 'center')}
                         </td>
+                        <td className="px-8 py-5 text-center font-bold text-gray-700 dark:text-gray-300">
+                          <StatValue 
+                            value={item.refundQuantity || 0} 
+                            isInteger={true}
+                            className={`text-sm ${(item.refundQuantity || 0) > 0 ? 'text-paymint-red' : ''}`}
+                            containerClassName="justify-center w-full"
+                          />
+                        </td>
+                        <td className={`px-8 py-5 text-center font-bold ${(item.totalRefunds || 0) > 0 ? 'text-paymint-red' : 'text-gray-400'}`}>
+                          {formatCurrency(item.totalRefunds || 0, 'center')}
+                        </td>
                       </motion.tr>
                     );
                   })
               ) : (
                 <tr>
-                  <td colSpan={3} className="py-32 text-center">
+                  <td colSpan={5} className="py-32 text-center">
                     <AnalyticsEmptyState
                       icon={ShoppingBag}
                       title={t('orders.reports.items.noData')}
@@ -940,6 +975,8 @@ export const ItemsView = React.memo(function ItemsView({
                         <th className="px-8 py-4 text-start label-strong font-sans">{t('orders.reports.items.productName')}</th>
                         <th className="px-8 py-4 text-center label-strong font-sans">{t('orders.reports.items.unitsSold')}</th>
                         <th className="px-8 py-4 text-center label-strong font-sans">{t('orders.reports.items.grossRevenue')}</th>
+                        <th className="px-8 py-4 text-center label-strong font-sans">{t('orders.reports.items.refundQty')}</th>
+                        <th className="px-8 py-4 text-center label-strong font-sans">{t('orders.reports.items.refunds')}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100 dark:divide-white/5">
@@ -947,6 +984,8 @@ export const ItemsView = React.memo(function ItemsView({
                         [...Array(5)].map((_, i) => (
                           <tr key={i} className="animate-pulse">
                             <td className="px-8 py-6"><div className="h-4 bg-gray-100 dark:bg-white/5 rounded w-2/3" /></td>
+                            <td className="px-8 py-6"><div className="h-4 bg-gray-100 dark:bg-white/5 rounded w-1/3 ml-auto" /></td>
+                            <td className="px-8 py-6"><div className="h-4 bg-gray-100 dark:bg-white/5 rounded w-1/3 ml-auto" /></td>
                             <td className="px-8 py-6"><div className="h-4 bg-gray-100 dark:bg-white/5 rounded w-1/3 ml-auto" /></td>
                             <td className="px-8 py-6"><div className="h-4 bg-gray-100 dark:bg-white/5 rounded w-1/3 ml-auto" /></td>
                           </tr>
@@ -973,11 +1012,22 @@ export const ItemsView = React.memo(function ItemsView({
                             <td className="px-8 py-5 text-center font-bold text-mintcom-green">
                               {formatCurrency((item.totalSales || item.revenue) || 0, 'center')}
                             </td>
+                            <td className="px-8 py-5 text-center font-bold text-gray-700 dark:text-gray-300">
+                              <StatValue 
+                                value={item.refundQuantity || 0} 
+                                isInteger={true}
+                                className={`text-sm ${(item.refundQuantity || 0) > 0 ? 'text-paymint-red' : ''}`}
+                                containerClassName="justify-center w-full"
+                              />
+                            </td>
+                            <td className={`px-8 py-5 text-center font-bold ${(item.totalRefunds || 0) > 0 ? 'text-paymint-red' : 'text-gray-400'}`}>
+                              {formatCurrency(item.totalRefunds || 0, 'center')}
+                            </td>
                           </tr>
                         ))
                       ) : (
                         <tr>
-                          <td colSpan={3} className="py-20 text-center">
+                          <td colSpan={5} className="py-20 text-center">
                             <AnalyticsEmptyState
                               icon={ShoppingBag}
                               title={t('orders.reports.items.noData')}

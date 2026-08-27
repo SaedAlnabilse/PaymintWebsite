@@ -1700,7 +1700,7 @@ function SimpleUiShot() {
             </div>
             <div className="flex flex-wrap items-center gap-1.5">
               <span className="inline-flex items-center gap-1.5 rounded-xl border-[1.5px] border-mintcom-green bg-white dark:bg-mintcom-surface px-3.5 py-2 text-[12px] font-bold text-mintcom-green">
-                <List size={16} /> My Orders
+                <List size={16} /> Today's Orders
               </span>
               <span className="inline-flex items-center gap-1.5 rounded-xl bg-[#D55263] px-3.5 py-2 text-[12px] font-bold text-white">
                 <LogOut size={16} /> Close Shift
