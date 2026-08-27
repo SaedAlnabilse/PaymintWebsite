@@ -228,6 +228,8 @@ export interface ItemReportBreakdown {
   name?: string;
   quantity: number;
   totalSales?: number;
+  totalRefunds?: number;
+  refundQuantity?: number;
   revenue?: number;
   [key: string]: string | number | boolean | string[] | null | undefined; // Allow backend lifecycle metadata
 }
