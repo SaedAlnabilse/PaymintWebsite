@@ -909,7 +909,11 @@ function PaymentReceiptModal({
               <div key={l.id} className="mb-2">
                 <div className="flex items-start justify-between gap-3">
                   <span className="min-w-0 flex-1 uppercase">
-                    {l.qty}x {l.name}
+                    {l.qty}x{' '}
+                    {(l.name || '')
+                      .replace(/\[\s*(?:history|deleted|archived)\s*\]/gi, '')
+                      .replace(/\s{2,}/g, ' ')
+                      .trim()}
                   </span>
                   <span className="shrink-0 tabular-nums">{receiptMoney(l.unitPrice * l.qty)}</span>
                 </div>

@@ -544,9 +544,14 @@ export const CashDiscrepancyView = React.memo(function CashDiscrepancyView({ shi
                                 0.00 here would be a lie the POS invented when it
                                 closed the shift at the expected amount. */}
                             {!counted ? (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-black tracking-wider border border-dashed bg-transparent text-gray-500 border-gray-300 dark:text-gray-400 dark:border-white/20">
-                                <HelpCircle size={12} className="shrink-0" />
-                                {t('orders.reports.cashGap.notVerified', { defaultValue: 'Unverified' })}
+                              // Quiet on purpose: the Count column next to it
+                              // says why, and a wall of identical warning chips
+                              // reads as noise rather than as information.
+                              <span
+                                className="text-sm font-bold text-gray-300 dark:text-gray-600"
+                                title={t('orders.reports.cashGap.notVerified', { defaultValue: 'Unverified' })}
+                              >
+                                —
                               </span>
                             ) : (
                               <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-black tracking-wider border ${

@@ -808,6 +808,8 @@
     }
   },
   "common": {
+    "unnamedLocation": "门店",
+    "unnamedBrand": "品牌",
     "export": "导出",
     "exportTo": {
       "xlsx": "导出为 Excel (.xlsx)",
@@ -1763,7 +1765,7 @@
       "settings": "设置",
       "shiftsReports": "班次报表",
       "switchLocation": "切换门店",
-      "system": "系统",
+      "system": "设置",
       "team": "团队",
       "teamManagement": "团队管理",
       "viewCustomerOrders": "查看顾客订单",
@@ -3909,11 +3911,14 @@
         "excludesUncounted": "已排除 {{count}} 个未清点班次",
         "closeReasons": {
           "MANUAL": "手动交班",
+          "MANUAL_LOGOUT": "登出时已交班",
+          "AUTO_LOGOUT": "登出但未交班",
           "INACTIVITY_TIMEOUT": "闲置超时",
           "GRACE_PERIOD_EXPIRED": "宽限期结束",
-          "USER_SWITCH": "切换用户",
-          "LOGOUT": "登出",
-          "SINGLE_SHIFT_MODE_ENABLED": "启用单钱箱模式"
+          "USER_SWITCH_AFTER_LOGIN": "其他用户登录",
+          "SINGLE_SHIFT_MODE_ENABLED": "启用单钱箱模式",
+          "SUBSCRIPTION_CANCELED": "订阅已取消",
+          "TRIAL_EXPIRED": "试用期结束"
         }
       },
       "discounts": {
@@ -4190,6 +4195,11 @@
   },
   "owner": {
     "account": {
+      "classicViewNotice": "您当前正在查看经典版账户设计",
+      "switchToRedesign": "切换到全新升级设计",
+      "redesignPreview": "全新升级设计",
+      "redesignTestingHint": "已启用测试视图。经典设计完整保留。",
+      "backToClassic": "切换回经典视图",
       "about": "关于",
       "accountRestored": "您的账户已成功恢复",
       "activeBlock": "生效限制",
@@ -4666,6 +4676,7 @@
       "whyMergeDesc": "将门店合并到一个品牌后，您可以统一管理、共享员工并查看统一报表。"
     },
     "overview": {
+      "openDashboard": "打开 POS 仪表盘",
       "activeHours": "营业时长",
       "activeLocations": "启用中的门店",
       "activeLocationsInfo": "当前有开班班次的门店。",

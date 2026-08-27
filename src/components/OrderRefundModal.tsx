@@ -89,7 +89,7 @@ const getRefundOrderItemId = (item: RefundOrderItem): string =>
   String(item?.id || item?.orderItemId || '');
 
 const getRefundItemName = (item: RefundOrderItem, fallback: string): string =>
-  item?.name || fallback;
+  (item?.name || fallback).replace(/\[\s*(?:history|deleted|archived)\s*\]/gi, '').replace(/\s{2,}/g, ' ').trim() || fallback;
 
 const getRefundItemSignature = (item: RefundOrderItem): string => {
   const itemId = String(item?.itemId || item?.item?.id || '');

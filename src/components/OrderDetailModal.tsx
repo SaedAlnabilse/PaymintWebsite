@@ -11,6 +11,12 @@ import { OrderRefundModal } from './OrderRefundModal';
 import { StatValue } from './ui/StatValue';
 import { formatPaymentBrandName } from '../utils/paymentCard';
 
+const stripNameMarkers = (raw: string) =>
+    (raw || '')
+        .replace(/\[\s*(?:history|deleted|archived)\s*\]/gi, '')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+
 export interface OrderItem {
     id: string;
     orderItemId?: string;
@@ -341,7 +347,7 @@ export function OrderDetailModal({ order, onClose, onRefundSuccess, canRefund = 
                                     {order.items?.map((item) => (
                                         <div key={item.id} className="px-3.5 py-3 flex items-start justify-between gap-3">
                                             <div className="min-w-0">
-                                                <p className="text-sm font-semibold text-gray-900 dark:text-white">{item.name}</p>
+                                                <p className="text-sm font-semibold text-gray-900 dark:text-white">{stripNameMarkers(item.name)}</p>
                                                 <p className="text-xs text-gray-500 mt-0.5">
                                                     {t('orders.details.qty')}: {item.quantity.toLocaleString(t('common.locale'))} × {formatCurrency(item.price || item.basePrice || 0)}
                                                 </p>

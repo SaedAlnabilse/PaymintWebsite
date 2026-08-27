@@ -861,6 +861,8 @@
     }
   },
   "common": {
+    "unnamedLocation": "الموقع",
+    "unnamedBrand": "العلامة التجارية",
     "export": "تصدير",
     "exportTo": {
       "xlsx": "تصدير إلى Excel ‏(.xlsx)",
@@ -1813,10 +1815,10 @@
       "salesByStaff": "المبيعات حسب الموظفين",
       "salesSummary": "ملخص المبيعات",
       "scanToDownload": "امسح لتحميل",
-      "settings": "إعدادات المنشأة",
+      "settings": "الإعدادات",
       "shiftsReports": "تقارير الورديات",
       "switchLocation": "تبديل الموقع",
-      "system": "النظام",
+      "system": "الإعدادات",
       "team": "الفريق",
       "teamManagement": "إدارة الفريق",
       "viewCustomerOrders": "عرض طلبات العملاء",
@@ -3962,11 +3964,14 @@
         "excludesUncounted": "تم استثناء {{count}} ورديات غير معدودة",
         "closeReasons": {
           "MANUAL": "إغلاق يدوي",
+          "MANUAL_LOGOUT": "تم تسليم النقد عند الخروج",
+          "AUTO_LOGOUT": "خروج بدون تسليم النقد",
           "INACTIVITY_TIMEOUT": "انتهاء مهلة الخمول",
           "GRACE_PERIOD_EXPIRED": "انتهاء فترة السماح",
-          "USER_SWITCH": "تبديل المستخدم",
-          "LOGOUT": "تسجيل الخروج",
-          "SINGLE_SHIFT_MODE_ENABLED": "تفعيل وضع الدرج الواحد"
+          "USER_SWITCH_AFTER_LOGIN": "تسجيل دخول مستخدم آخر",
+          "SINGLE_SHIFT_MODE_ENABLED": "تفعيل وضع الدرج الواحد",
+          "SUBSCRIPTION_CANCELED": "إلغاء الاشتراك",
+          "TRIAL_EXPIRED": "انتهاء الفترة التجريبية"
         }
       },
       "discounts": {
@@ -4243,6 +4248,11 @@
   },
   "owner": {
     "account": {
+      "classicViewNotice": "أنت تعرض حاليًا التصميم الكلاسيكي للحساب",
+      "switchToRedesign": "التبديل إلى التصميم الجديد المطور",
+      "redesignPreview": "التصميم الجديد المطور",
+      "redesignTestingHint": "وضع المعاينة التجريبي مفعّل. التصميم الكلاسيكي محفوظ بالكامل.",
+      "backToClassic": "الرجوع للتصميم الكلاسيكي",
       "about": "حول",
       "accountRestored": "تم استعادة الحساب بنجاح",
       "activeBlock": "الكتلة النشطة",
@@ -4719,6 +4729,7 @@
       "whyMergeDesc": "إدارة الموظفين والتقارير والإعدادات عبر المواقع من لوحة تحكم واحدة."
     },
     "overview": {
+      "openDashboard": "فتح لوحة نقاط البيع",
       "activeHours": "ساعات العمل",
       "activeLocations": "المواقع النشطة",
       "activeLocationsInfo": "المواقع التي بها وردية مفتوحة حالياً.",

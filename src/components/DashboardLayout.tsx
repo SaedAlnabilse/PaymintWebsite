@@ -24,6 +24,7 @@ import {
   Percent,
   CreditCard,
   Sliders,
+  Settings,
   Shield,
   History,
   LogOut,
@@ -464,11 +465,12 @@ export function DashboardLayout() {
         ],
       },
       {
-        label: t('dashboard.menu.system'),
-        icon: Sliders,
+        label: t('dashboard.menu.settings'),
+        icon: Settings,
         items: [
           { path: 'settings', label: t('dashboard.menu.establishmentSettings'), icon: Sliders },
-          { path: 'activity-logs', label: t('dashboard.menu.activityLog'), icon: History },        ],
+          { path: 'activity-logs', label: t('dashboard.menu.activityLog'), icon: History },
+        ],
       },
     ];
 

@@ -861,6 +861,8 @@
     }
   },
   "common": {
+    "unnamedLocation": "Location",
+    "unnamedBrand": "Brand",
     "export": "Export",
     "exportTo": {
       "xlsx": "Export to Excel (.xlsx)",
@@ -1816,7 +1818,7 @@
       "settings": "Settings",
       "shiftsReports": "Shifts Reports",
       "switchLocation": "Switch Location",
-      "system": "System",
+      "system": "Settings",
       "team": "Team",
       "teamManagement": "Team Management",
       "viewCustomerOrders": "View Customer Orders",
@@ -3962,11 +3964,14 @@
         "excludesUncounted": "{{count}} uncounted shifts excluded",
         "closeReasons": {
           "MANUAL": "manual cash-out",
+          "MANUAL_LOGOUT": "cashed out at logout",
+          "AUTO_LOGOUT": "logged out without cashing out",
           "INACTIVITY_TIMEOUT": "inactivity timeout",
           "GRACE_PERIOD_EXPIRED": "grace period expired",
-          "USER_SWITCH": "user switch",
-          "LOGOUT": "logout",
-          "SINGLE_SHIFT_MODE_ENABLED": "single-drawer mode enabled"
+          "USER_SWITCH_AFTER_LOGIN": "another user signed in",
+          "SINGLE_SHIFT_MODE_ENABLED": "single-drawer mode enabled",
+          "SUBSCRIPTION_CANCELED": "subscription canceled",
+          "TRIAL_EXPIRED": "trial expired"
         }
       },
       "discounts": {
@@ -4243,6 +4248,11 @@
   },
   "owner": {
     "account": {
+      "classicViewNotice": "You are currently viewing the Classic Account Design",
+      "switchToRedesign": "Switch to Executive Redesign",
+      "redesignPreview": "Executive Redesign",
+      "redesignTestingHint": "Testing view enabled. The classic design remains completely intact.",
+      "backToClassic": "Switch to Classic View",
       "about": "About",
       "accountRestored": "Your account has been restored successfully",
       "activeBlock": "Active block",
@@ -4719,6 +4729,7 @@
       "whyMergeDesc": "Merging locations into a brand lets you manage them together, share staff, and view unified reports."
     },
     "overview": {
+      "openDashboard": "Open POS Dashboard",
       "activeHours": "Active hours",
       "activeLocations": "Active Locations",
       "activeLocationsInfo": "Locations with a current shift opened.",
