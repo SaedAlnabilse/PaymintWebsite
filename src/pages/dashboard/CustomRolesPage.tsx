@@ -318,7 +318,7 @@ export function CustomRolesPage() {
   };
 
   return (
-    <div className="space-y-8 pb-10">
+    <div className="space-y-6 sm:space-y-8 pb-10 font-sans" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
       {/* Full-screen blocker while data loads, so no second action can be
           stacked on an in-flight request. */}
       <BusyOverlay visible={isLoading} />

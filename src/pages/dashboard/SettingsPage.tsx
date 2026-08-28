@@ -855,7 +855,7 @@ export function SettingsPage() {
   }
 
   return (
-    <div className="space-y-8 pb-10 font-sans">
+    <div className="space-y-6 sm:space-y-8 pb-10 font-sans" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
       {/* Full-screen blocker while settings load or save, so no second action
           can be stacked on an in-flight request. */}
       <BusyOverlay visible={isLoading || isSaving} />

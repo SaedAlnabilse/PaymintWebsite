@@ -505,7 +505,7 @@ export function SignUpPage() {
                       {...register('agreeToTerms')}
                       className="mt-0.5 h-4 w-4 cursor-pointer rounded border-gray-300 text-mintcom-green focus:ring-mintcom-green dark:border-white/20 dark:bg-white/5"
                     />
-                    <label htmlFor="agreeToTerms" className="cursor-pointer text-xs font-medium leading-relaxed text-gray-700 dark:text-gray-200">
+                    <label htmlFor="agreeToTerms" className="cursor-pointer text-sm font-medium leading-relaxed text-gray-600 dark:text-gray-300">
                       {t('landing.contact.termsAgree', 'I agree to the')}{' '}
                       <Link to="/legal/privacy" target="_blank" rel="noopener noreferrer" className="font-bold text-mintcom-greenInk hover:underline dark:text-mintcom-green">
                         {t('landing.contact.privacyPolicy', 'Privacy Policy')}
@@ -529,7 +529,7 @@ export function SignUpPage() {
                     onChange={(e) => setSubscribeToNews(e.target.checked)}
                     className="mt-0.5 h-4 w-4 cursor-pointer rounded border-gray-300 text-mintcom-green focus:ring-mintcom-green dark:border-white/20 dark:bg-white/5"
                   />
-                  <label htmlFor="subscribeToNews" className="cursor-pointer text-xs text-gray-500 dark:text-gray-400">
+                  <label htmlFor="subscribeToNews" className="cursor-pointer text-sm font-medium text-gray-600 dark:text-gray-300">
                     {t('auth.signup.subscribeToNews', 'Send me occasional product updates, features, and business tips.')}
                   </label>
                 </div>
@@ -541,6 +541,7 @@ export function SignUpPage() {
                 type="submit"
                 disabled={isSubmitting}
                 className="group relative mt-2 inline-flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-mintcom-green font-bold text-black shadow-md shadow-mintcom-green/20 transition-all hover:bg-mintcom-green/90 disabled:opacity-60"
+                style={{ borderRadius: 12, backgroundColor: '#7dc6a2' }}
               >
                 <span className="relative font-bold text-black">
                   {isSubmitting ? t('auth.signup.creatingAccount') : t('auth.signup.signUpButton')}
@@ -551,12 +552,12 @@ export function SignUpPage() {
           </div>
 
           <div className="mt-6 border-t border-gray-100/80 pt-4 text-center dark:border-white/5">
-            <span className="text-xs text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               {t('auth.signup.haveAccount')}{' '}
-            </span>
-            <Link to="/login" className="text-xs font-bold text-mintcom-greenInk hover:underline dark:text-mintcom-green">
-              {t('auth.signup.goToLogin', 'Sign In')}
-            </Link>
+              <Link to="/login" className="font-bold text-mintcom-greenInk hover:underline dark:text-mintcom-green">
+                {t('auth.signup.goToLogin', 'Sign In')}
+              </Link>
+            </p>
           </div>
         </motion.div>
       </main>

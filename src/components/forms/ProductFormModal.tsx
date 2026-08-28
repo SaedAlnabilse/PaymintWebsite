@@ -276,6 +276,63 @@ export function ProductFormModal({
     return Number.isFinite(numericValue) ? numericValue : fallback;
   };
 
+  const activeTaxes = useMemo(() => taxes.filter((t) => t.isActive), [taxes]);
+
+  const effectiveActiveTaxes = useMemo(() => {
+    if (activeTaxes.length > 0) return activeTaxes;
+    if ((initialData as any)?.tax) {
+      const savedTax = (initialData as any).tax;
+      const rawRate = Number(savedTax.rate || 0);
+      return [
+        {
+          id: initialData?.taxId || savedTax.id || '__initial_tax__',
+          name: savedTax.name || 'Tax',
+          rate: rawRate >= 1 ? rawRate / 100 : rawRate,
+          isDefault: true,
+          isActive: true,
+        } as TaxOption,
+      ];
+    }
+    if (taxRate > 0) {
+      return [
+        {
+          id: '__legacy__',
+          name: 'Standard Tax',
+          rate: taxRate,
+          isDefault: true,
+          isActive: true,
+        } as TaxOption,
+      ];
+    }
+    return [
+      {
+        id: '__default__',
+        name: 'Standard Tax',
+        rate: 0.16,
+        isDefault: true,
+        isActive: true,
+      } as TaxOption,
+    ];
+  }, [activeTaxes, initialData, taxRate]);
+
+  const selectedTax = useMemo(() => taxes.find((t) => t.id === selectedTaxId) || null, [taxes, selectedTaxId]);
+  const effectiveSelectedTax = useMemo(() => {
+    return (
+      effectiveActiveTaxes.find((t) => t.id === selectedTaxId) ||
+      selectedTax ||
+      effectiveActiveTaxes.find((t) => t.isDefault) ||
+      effectiveActiveTaxes[0] ||
+      null
+    );
+  }, [effectiveActiveTaxes, selectedTaxId, selectedTax]);
+
+  const normalizedTaxRate = effectiveSelectedTax
+    ? toFiniteNumber(effectiveSelectedTax.rate, 0)
+    : toFiniteNumber(taxRate, 0);
+  const effectiveTaxRate =
+    normalizedTaxRate < 1 ? normalizedTaxRate : normalizedTaxRate / 100;
+  const displayTaxRatePercent = effectiveTaxRate * 100;
+
   const formatATM = (val: string) => {
     const digits = val.replace(/\D/g, '');
     if (digits.length > 19) return null;
@@ -630,6 +687,18 @@ export function ProductFormModal({
         const taxList: TaxOption[] = Array.isArray(taxesRes.data)
           ? taxesRes.data
           : [];
+        const savedTax = (initialData as any)?.tax;
+        const savedId = initialData?.taxId || savedTax?.id;
+        if (savedTax && savedId && !taxList.some((t) => t.id === savedId)) {
+          const rawRate = Number(savedTax.rate || 0);
+          taxList.push({
+            id: savedId,
+            name: savedTax.name || 'Tax',
+            rate: rawRate >= 1 ? rawRate / 100 : rawRate,
+            isDefault: Boolean(savedTax.isDefault),
+            isActive: Boolean(savedTax.isActive !== false),
+          });
+        }
         setTaxes(taxList);
       } catch (error) {
         console.error('Failed to fetch settings/addons:', error);
@@ -727,22 +796,40 @@ export function ProductFormModal({
   // Multi-tax selection (plan §3.2): pre-select the item's saved tax, else
   // the establishment default. Falls forward when a saved tax is inactive.
   useEffect(() => {
-    if (!isOpen || taxes.length === 0) return;
+    if (!isOpen || effectiveActiveTaxes.length === 0) return;
     const saved = selectedTaxId
-      ? taxes.find((t) => t.id === selectedTaxId)
+      ? effectiveActiveTaxes.find((t) => t.id === selectedTaxId)
       : undefined;
     if (saved && saved.isActive) return;
-    const preferredId = !selectedTaxId ? initialData?.taxId || '' : '';
+    const preferredId = !selectedTaxId ? initialData?.taxId || (initialData as any)?.tax?.id || '' : '';
     const preferred = preferredId
-      ? taxes.find((t) => t.id === preferredId && t.isActive)
+      ? effectiveActiveTaxes.find((t) => t.id === preferredId && t.isActive)
       : undefined;
     const fallback =
-      taxes.find((t) => t.isDefault && t.isActive) ||
-      taxes.find((t) => t.isActive) ||
-      taxes[0];
+      effectiveActiveTaxes.find((t) => t.isDefault && t.isActive) ||
+      effectiveActiveTaxes.find((t) => t.isActive) ||
+      effectiveActiveTaxes[0];
     setSelectedTaxId(preferred?.id || fallback?.id || '');
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [taxes, initialData?.taxId, isOpen]);
+  }, [effectiveActiveTaxes, initialData, isOpen]);
+
+  // Live tax rate updates when taxes change in settings
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleTaxesUpdated = () => {
+      api.get('/api/taxes')
+        .then((res) => {
+          if (Array.isArray(res.data)) {
+            setTaxes(res.data);
+          }
+        })
+        .catch(() => {});
+    };
+    window.addEventListener('mintcom:taxes-updated', handleTaxesUpdated);
+    return () => {
+      window.removeEventListener('mintcom:taxes-updated', handleTaxesUpdated);
+    };
+  }, [isOpen]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -846,10 +933,16 @@ export function ProductFormModal({
 
   formData.append('attributeIds', JSON.stringify(selectedAttributeIds));
 
-  // Multi-tax (plan §3.2): only send when a tax is explicitly chosen —
-  // omitted → server assigns/keeps the establishment default.
-  if (selectedTaxId) {
-    formData.append('taxId', selectedTaxId);
+  // Multi-tax: evaluate selected tax id or fallback
+  const taxIdToSend =
+    selectedTaxId && selectedTaxId !== '__legacy__' && selectedTaxId !== '__default__' && selectedTaxId !== '__initial_tax__'
+      ? selectedTaxId
+      : effectiveSelectedTax && effectiveSelectedTax.id !== '__legacy__' && effectiveSelectedTax.id !== '__default__' && effectiveSelectedTax.id !== '__initial_tax__'
+        ? effectiveSelectedTax.id
+        : undefined;
+
+  if (taxIdToSend) {
+    formData.append('taxId', taxIdToSend);
   }
 
   await onSubmit(formData);
@@ -942,32 +1035,15 @@ export function ProductFormModal({
     attr.name.toLowerCase().includes(addonsSearchQuery.toLowerCase())
   );
 
-  const activeTaxes = taxes.filter((t) => t.isActive);
-  const filteredTaxes = activeTaxes.filter((t) =>
-    t.name.toLowerCase().includes(taxSearchQuery.toLowerCase())
+  const effectiveFilteredTaxes = useMemo(
+    () =>
+      effectiveActiveTaxes.filter((t) =>
+        t.name.toLowerCase().includes(taxSearchQuery.toLowerCase()),
+      ),
+    [effectiveActiveTaxes, taxSearchQuery],
   );
 
   const totalRetailPrice = toFiniteNumber(parseFloat(price), 0);
-  // Multi-tax: the selected item tax drives the preview; falls back to the
-  // legacy establishment rate when no taxes exist yet.
-  const selectedTax = taxes.find((t) => t.id === selectedTaxId) || null;
-  const normalizedTaxRate = selectedTax
-    ? toFiniteNumber(selectedTax.rate, 0)
-    : toFiniteNumber(taxRate, 0);
-  const effectiveTaxRate =
-    normalizedTaxRate < 1 ? normalizedTaxRate : normalizedTaxRate / 100;
-  const displayTaxRatePercent = effectiveTaxRate * 100;
-  // Fallback so the Tax picker is never hidden: when the multi-tax table is
-  // still empty, surface the legacy single rate as a virtual option.
-  const effectiveActiveTaxes = activeTaxes.length > 0
-    ? activeTaxes
-    : taxRate > 0
-      ? [{ id: '__legacy__', name: 'Standard Tax', rate: taxRate, isDefault: true, isActive: true } as (typeof activeTaxes)[number]]
-      : activeTaxes;
-  const effectiveFilteredTaxes = effectiveActiveTaxes.filter((t) =>
-    t.name.toLowerCase().includes(taxSearchQuery.toLowerCase())
-  );
-  const effectiveSelectedTax = effectiveActiveTaxes.find((t) => t.id === selectedTaxId) || selectedTax || effectiveActiveTaxes.find((t) => t.isDefault) || effectiveActiveTaxes[0] || null;
   // Always inclusive: shelf price contains tax, extract it.
   const taxAmount = effectiveTaxRate > 0
     ? totalRetailPrice - totalRetailPrice / (1 + effectiveTaxRate)

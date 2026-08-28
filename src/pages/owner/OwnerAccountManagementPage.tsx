@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { OwnerAccountRedesign } from './OwnerAccountRedesign';
 import {
     User,
     Mail,
@@ -104,7 +103,7 @@ const DELETE_REASON_OPTIONS = [
     { key: 'other', value: 'Other' },
 ] as const;
 
-function OwnerAccountClassic({ onSwitchToRedesign }: { onSwitchToRedesign?: () => void }) {
+export function OwnerAccountManagementPage() {
     const { t, i18n } = useTranslation();
     const isRtl = i18n.dir(i18n.language) === 'rtl';
     const { account, establishments, logout, updateAccount, updateEstablishmentsCurrency } = useAuth();
@@ -538,22 +537,6 @@ function OwnerAccountClassic({ onSwitchToRedesign }: { onSwitchToRedesign?: () =
                 be stacked on an in-flight request. */}
             <BusyOverlay visible={isLoading} />
 
-            {/* Design Testing Switcher Banner */}
-            <div className="flex items-center justify-between p-3.5 bg-gradient-to-r from-amber-500/10 to-amber-500/5 dark:from-amber-500/20 dark:to-transparent border border-amber-500/20 rounded-2xl">
-                <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-                    <span className="text-xs font-bold text-amber-700 dark:text-amber-300">
-                        {t('owner.account.classicViewNotice', { defaultValue: 'You are currently viewing the Classic Account Design' })}
-                    </span>
-                </div>
-                <button
-                    type="button"
-                    onClick={onSwitchToRedesign}
-                    className="px-3.5 py-1.5 bg-mintcom-green hover:bg-[#5fa888] text-black text-xs font-black rounded-xl shadow-sm transition-all"
-                >
-                    ✨ {t('owner.account.switchToRedesign', { defaultValue: 'Switch to Executive Redesign' })}
-                </button>
-            </div>
             {/* Header — compact in viewport-fit mode */}
             <motion.div
                 initial={{ opacity: 0, y: -20 }}
@@ -1844,28 +1827,5 @@ function OwnerAccountClassic({ onSwitchToRedesign }: { onSwitchToRedesign?: () =
             />
         </div>
     );
-}
-
-export function OwnerAccountManagementPage() {
-    const [designMode, setDesignMode] = useState<'v2' | 'classic'>(() => {
-        try {
-            return (localStorage.getItem('owner_account_design_mode') as 'v2' | 'classic') || 'v2';
-        } catch {
-            return 'v2';
-        }
-    });
-
-    const handleSetDesignMode = (mode: 'v2' | 'classic') => {
-        setDesignMode(mode);
-        try {
-            localStorage.setItem('owner_account_design_mode', mode);
-        } catch {}
-    };
-
-    if (designMode === 'classic') {
-        return <OwnerAccountClassic onSwitchToRedesign={() => handleSetDesignMode('v2')} />;
-    }
-
-    return <OwnerAccountRedesign onSwitchToClassic={() => handleSetDesignMode('classic')} />;
 }
 

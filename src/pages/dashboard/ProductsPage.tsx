@@ -28,7 +28,6 @@ import toast from 'react-hot-toast';
 import { ConfirmModal } from '../../components/ConfirmModal';
 import { ProductFormModal } from '../../components/forms/ProductFormModal';
 import { CsvImportModal, type CsvColumn, type ImportResult } from '../../components/CsvImportModal';
-import { LoadingFallback } from '../../components/LoadingFallback';
 import { SearchInput, SelectInput, Pagination } from '../../components/ui';
 import { StatValue } from '../../components/ui/StatValue';
 import { OptimizedImage, ThumbnailImage } from '../../components/OptimizedImage';
@@ -358,6 +357,16 @@ export function ProductsPage() {
     useEffect(() => {
         fetchData();
     }, [location.pathname]);
+
+    useEffect(() => {
+        const handleTaxesUpdated = () => {
+            fetchData(true);
+        };
+        window.addEventListener('mintcom:taxes-updated', handleTaxesUpdated);
+        return () => {
+            window.removeEventListener('mintcom:taxes-updated', handleTaxesUpdated);
+        };
+    }, []);
 
     const handleCreateNew = () => {
         setEditingProduct(null);
@@ -1135,11 +1144,8 @@ export function ProductsPage() {
         };
     }, [products, categories]);
 
-    if (isLoading) return <LoadingFallback message={t('products.messages.loading')} />;
-
     return (
-        <div className="space-y-8 pb-10 font-sans" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
-            <div ref={topRef} className="scroll-mt-24" />
+        <div ref={topRef} className="space-y-6 sm:space-y-8 pb-10 font-sans scroll-mt-24" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
             {/* Full-screen blocker while a user-triggered load is in flight —
                 background/realtime refreshes stay silent. */}
             <BusyOverlay visible={isLoading} />
@@ -1178,8 +1184,108 @@ export function ProductsPage() {
                 </div>
             </div>
 
+            {/* Stat Cards */}
+            <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 md:grid-cols-4 scrollbar-none snap-x snap-mandatory">
+                {/* Total Products */}
+                <button
+                    onClick={() => setStockFilter('all')}
+                    className={`group flex-shrink-0 w-[160px] sm:w-auto snap-start text-left bg-white dark:bg-[#1E293B] p-4 sm:p-5 rounded-2xl border transition-all duration-300 overflow-hidden ${stockFilter === 'all'
+                        ? 'border-blue-500/50 ring-1 ring-blue-500/30 bg-blue-500/[0.02]'
+                        : 'border-gray-200 dark:border-white/[0.03] hover:border-blue-300'
+                        }`}
+                >
+                    <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2 sm:gap-3">
+                            <div className="p-2 sm:p-2.5 rounded-xl bg-blue-500/10 text-blue-500 transition-transform duration-300">
+                                <BiIcon icon="bi-box-seam" size={19} />
+                            </div>
+                            <p className="dashboard-stat-title truncate">{t('products.stats.total')}</p>
+                        </div>
+                        <div className="w-8 h-8 rounded-lg bg-gray-50 dark:bg-white/5 flex items-center justify-center text-gray-400 group-hover:text-blue-500 transition-colors">
+                            <ExternalLink size={14} />
+                        </div>
+                    </div>
+                    <StatValue value={stats.total} isInteger={true} className={`text-2xl ${stockFilter === 'all' ? 'text-blue-500' : ''}`} />
+                    <p className="text-[13px] font-bold text-gray-500 dark:text-gray-400 mt-3 leading-relaxed">
+                        {t('products.stats.totalDesc')}
+                    </p>
+                </button>
 
+                {/* Low Stock (Yellow) */}
+                <button
+                    onClick={() => setStockFilter(stockFilter === 'yellow' ? 'all' : 'yellow')}
+                    className={`group flex-shrink-0 w-[160px] sm:w-auto snap-start text-left bg-white dark:bg-[#1E293B] p-4 sm:p-5 rounded-2xl border transition-all duration-300 overflow-hidden ${stockFilter === 'yellow'
+                        ? 'border-[#ffc107]/50 ring-1 ring-[#ffc107]/30 bg-[#ffc107]/5'
+                        : 'border-gray-200 dark:border-white/[0.03] hover:border-[#ffc107]/30'
+                        }`}
+                >
+                    <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2 sm:gap-3">
+                            <div className="p-2 sm:p-2.5 rounded-xl bg-[#ffc107]/10 text-[#ffc107] transition-transform duration-300">
+                                <BiIcon icon="bi-exclamation-triangle" size={19} />
+                            </div>
+                            <p className="dashboard-stat-title truncate">{t('products.stats.low')}</p>
+                        </div>
+                        <div className="w-8 h-8 rounded-lg bg-gray-50 dark:bg-white/5 flex items-center justify-center text-gray-400 group-hover:text-[#ffc107] transition-colors">
+                            <ExternalLink size={14} />
+                        </div>
+                    </div>
+                    <StatValue value={stats.yellowThreshold} isInteger={true} className="text-2xl text-[#ffc107]" />
+                    <p className="text-[13px] font-bold text-gray-500 dark:text-gray-400 mt-3 leading-relaxed">
+                        {t('products.stats.lowDesc')}
+                    </p>
+                </button>
 
+                {/* Critical (Red) */}
+                <button
+                    onClick={() => setStockFilter(stockFilter === 'red' ? 'all' : 'red')}
+                    className={`group flex-shrink-0 w-[160px] sm:w-auto snap-start text-left bg-white dark:bg-[#1E293B] p-4 sm:p-5 rounded-2xl border transition-all duration-300 overflow-hidden ${stockFilter === 'red'
+                        ? 'border-[#D55263]/50 ring-1 ring-[#D55263]/30 bg-[#D55263]/5'
+                        : 'border-gray-200 dark:border-white/[0.03] hover:border-[#D55263]/30'
+                        }`}
+                >
+                    <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2 sm:gap-3">
+                            <div className="p-2 sm:p-2.5 rounded-xl bg-[#D55263]/10 text-[#D55263] transition-transform duration-300">
+                                <BiIcon icon="bi-exclamation-octagon" size={19} />
+                            </div>
+                            <p className="dashboard-stat-title truncate">{t('products.stats.critical')}</p>
+                        </div>
+                        <div className="w-8 h-8 rounded-lg bg-gray-50 dark:bg-white/5 flex items-center justify-center text-gray-400 group-hover:text-[#D55263] transition-colors">
+                            <ExternalLink size={14} />
+                        </div>
+                    </div>
+                    <StatValue value={stats.redThreshold} isInteger={true} className="text-2xl text-[#D55263]" />
+                    <p className="text-[13px] font-bold text-gray-500 dark:text-gray-400 mt-3 leading-relaxed">
+                        {t('products.stats.criticalDesc')}
+                    </p>
+                </button>
+
+                {/* Out of Stock (Gray) */}
+                <button
+                    onClick={() => setStockFilter(stockFilter === 'out' ? 'all' : 'out')}
+                    className={`group flex-shrink-0 w-[160px] sm:w-auto snap-start text-left bg-white dark:bg-[#1E293B] p-4 sm:p-5 rounded-2xl border transition-all duration-300 overflow-hidden ${stockFilter === 'out'
+                        ? 'border-slate-500/50 ring-1 ring-slate-500/30 bg-slate-500/[0.02]'
+                        : 'border-gray-200 dark:border-white/[0.03] hover:border-slate-400'
+                        }`}
+                >
+                    <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2 sm:gap-3">
+                            <div className="p-2 sm:p-2.5 rounded-xl bg-slate-500/10 text-slate-500 transition-transform duration-300">
+                                <BiIcon icon="bi-x-circle" size={19} />
+                            </div>
+                            <p className="dashboard-stat-title truncate">{t('products.stats.outOfStock')}</p>
+                        </div>
+                        <div className="w-8 h-8 rounded-lg bg-gray-50 dark:bg-white/5 flex items-center justify-center text-gray-400 group-hover:text-slate-500 transition-colors">
+                            <ExternalLink size={14} />
+                        </div>
+                    </div>
+                    <StatValue value={stats.outOfStock} isInteger={true} className="text-2xl text-slate-500" />
+                    <p className="text-[13px] font-bold text-gray-500 dark:text-gray-400 mt-3 leading-relaxed">
+                        {t('products.stats.outOfStockDesc')}
+                    </p>
+                </button>
+            </div>
 
             {/* Filters */}
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
@@ -1318,108 +1424,6 @@ export function ProductsPage() {
                         </button>
                     </div>
                 </div>
-            </div>
-
-            <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 md:grid-cols-4 scrollbar-none snap-x snap-mandatory">
-                {/* Total Products */}
-                <button
-                    onClick={() => setStockFilter('all')}
-                    className={`group flex-shrink-0 w-[160px] sm:w-auto snap-start text-left bg-white dark:bg-[#1E293B] p-4 sm:p-5 rounded-2xl border transition-all duration-300 overflow-hidden ${stockFilter === 'all'
-                        ? 'border-blue-500/50 ring-1 ring-blue-500/30 bg-blue-500/[0.02]'
-                        : 'border-gray-200 dark:border-white/[0.03] hover:border-blue-300'
-                        }`}
-                >
-                    <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2 sm:gap-3">
-                            <div className="p-2 sm:p-2.5 rounded-xl bg-blue-500/10 text-blue-500 transition-transform duration-300">
-                                <BiIcon icon="bi-box-seam" size={19} />
-                            </div>
-                            <p className="dashboard-stat-title truncate">{t('products.stats.total')}</p>
-                        </div>
-                        <div className="w-8 h-8 rounded-lg bg-gray-50 dark:bg-white/5 flex items-center justify-center text-gray-400 group-hover:text-blue-500 transition-colors">
-                            <ExternalLink size={14} />
-                        </div>
-                    </div>
-                    <StatValue value={stats.total} isInteger={true} className={`text-2xl ${stockFilter === 'all' ? 'text-blue-500' : ''}`} />
-                    <p className="text-[13px] font-bold text-gray-500 dark:text-gray-400 mt-3 leading-relaxed">
-                        {t('products.stats.totalDesc')}
-                    </p>
-                </button>
-
-                {/* Low Stock (Yellow) */}
-                <button
-                    onClick={() => setStockFilter(stockFilter === 'yellow' ? 'all' : 'yellow')}
-                    className={`group flex-shrink-0 w-[160px] sm:w-auto snap-start text-left bg-white dark:bg-[#1E293B] p-4 sm:p-5 rounded-2xl border transition-all duration-300 overflow-hidden ${stockFilter === 'yellow'
-                        ? 'border-[#ffc107]/50 ring-1 ring-[#ffc107]/30 bg-[#ffc107]/5'
-                        : 'border-gray-200 dark:border-white/[0.03] hover:border-[#ffc107]/30'
-                        }`}
-                >
-                    <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2 sm:gap-3">
-                            <div className="p-2 sm:p-2.5 rounded-xl bg-[#ffc107]/10 text-[#ffc107] transition-transform duration-300">
-                                <BiIcon icon="bi-exclamation-triangle" size={19} />
-                            </div>
-                            <p className="dashboard-stat-title truncate">{t('products.stats.low')}</p>
-                        </div>
-                        <div className="w-8 h-8 rounded-lg bg-gray-50 dark:bg-white/5 flex items-center justify-center text-gray-400 group-hover:text-[#ffc107] transition-colors">
-                            <ExternalLink size={14} />
-                        </div>
-                    </div>
-                    <StatValue value={stats.yellowThreshold} isInteger={true} className="text-2xl text-[#ffc107]" />
-                    <p className="text-[13px] font-bold text-gray-500 dark:text-gray-400 mt-3 leading-relaxed">
-                        {t('products.stats.lowDesc')}
-                    </p>
-                </button>
-
-                {/* Critical (Red) */}
-                <button
-                    onClick={() => setStockFilter(stockFilter === 'red' ? 'all' : 'red')}
-                    className={`group flex-shrink-0 w-[160px] sm:w-auto snap-start text-left bg-white dark:bg-[#1E293B] p-4 sm:p-5 rounded-2xl border transition-all duration-300 overflow-hidden ${stockFilter === 'red'
-                        ? 'border-[#D55263]/50 ring-1 ring-[#D55263]/30 bg-[#D55263]/5'
-                        : 'border-gray-200 dark:border-white/[0.03] hover:border-[#D55263]/30'
-                        }`}
-                >
-                    <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2 sm:gap-3">
-                            <div className="p-2 sm:p-2.5 rounded-xl bg-[#D55263]/10 text-[#D55263] transition-transform duration-300">
-                                <BiIcon icon="bi-exclamation-octagon" size={19} />
-                            </div>
-                            <p className="dashboard-stat-title truncate">{t('products.stats.critical')}</p>
-                        </div>
-                        <div className="w-8 h-8 rounded-lg bg-gray-50 dark:bg-white/5 flex items-center justify-center text-gray-400 group-hover:text-[#D55263] transition-colors">
-                            <ExternalLink size={14} />
-                        </div>
-                    </div>
-                    <StatValue value={stats.redThreshold} isInteger={true} className="text-2xl text-[#D55263]" />
-                    <p className="text-[13px] font-bold text-gray-500 dark:text-gray-400 mt-3 leading-relaxed">
-                        {t('products.stats.criticalDesc')}
-                    </p>
-                </button>
-
-                {/* Out of Stock (Gray) */}
-                <button
-                    onClick={() => setStockFilter(stockFilter === 'out' ? 'all' : 'out')}
-                    className={`group flex-shrink-0 w-[160px] sm:w-auto snap-start text-left bg-white dark:bg-[#1E293B] p-4 sm:p-5 rounded-2xl border transition-all duration-300 overflow-hidden ${stockFilter === 'out'
-                        ? 'border-slate-500/50 ring-1 ring-slate-500/30 bg-slate-500/[0.02]'
-                        : 'border-gray-200 dark:border-white/[0.03] hover:border-slate-400'
-                        }`}
-                >
-                    <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2 sm:gap-3">
-                            <div className="p-2 sm:p-2.5 rounded-xl bg-slate-500/10 text-slate-500 transition-transform duration-300">
-                                <BiIcon icon="bi-x-circle" size={19} />
-                            </div>
-                            <p className="dashboard-stat-title truncate">{t('products.stats.outOfStock')}</p>
-                        </div>
-                        <div className="w-8 h-8 rounded-lg bg-gray-50 dark:bg-white/5 flex items-center justify-center text-gray-400 group-hover:text-slate-500 transition-colors">
-                            <ExternalLink size={14} />
-                        </div>
-                    </div>
-                    <StatValue value={stats.outOfStock} isInteger={true} className="text-2xl text-slate-500" />
-                    <p className="text-[13px] font-bold text-gray-500 dark:text-gray-400 mt-3 leading-relaxed">
-                        {t('products.stats.outOfStockDesc')}
-                    </p>
-                </button>
             </div>
 
 

@@ -85,6 +85,7 @@ export function TaxRatesManager() {
       toast.success(t('settings.taxes.saved', 'Tax rate saved'));
       setEditor(null);
       await load();
+      window.dispatchEvent(new Event('mintcom:taxes-updated'));
     } catch (error) {
       toast.error(extractErrorMessage(error));
     } finally {
@@ -118,6 +119,7 @@ export function TaxRatesManager() {
       toast.success(t('settings.taxes.deleted', 'Tax rate deleted successfully'));
       setDeleteTarget(null);
       await load();
+      window.dispatchEvent(new Event('mintcom:taxes-updated'));
     } catch (error) {
       toast.error(extractErrorMessage(error));
     } finally {

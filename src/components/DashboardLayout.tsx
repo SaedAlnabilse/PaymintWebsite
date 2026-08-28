@@ -41,7 +41,8 @@ import {
   PlusCircle,
   ShoppingBag,
   Clock,
-  FileText
+  FileText,
+  Boxes
 } from 'lucide-react';
 
 // Mintcom Logo imports
@@ -443,6 +444,7 @@ export function DashboardLayout() {
           { path: 'categories', label: t('dashboard.menu.categories'), icon: LayoutDashboard },
           { path: 'products', label: t('dashboard.menu.products'), icon: Package },
           { path: 'addons', label: t('dashboard.menu.addons'), icon: PlusCircle },
+          { path: 'stock', label: t('dashboard.menu.stockManagement', { defaultValue: 'Stock & Availability' }), icon: Boxes },
           { path: 'inventory', label: t('dashboard.menu.inventory'), icon: Package },
         ],
       },

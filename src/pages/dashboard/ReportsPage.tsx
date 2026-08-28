@@ -721,7 +721,7 @@ export function ReportsPage() {
   const busy = isLoading || isFetching;
 
   return (
-    <div className="relative space-y-8 pb-10" aria-busy={busy}>
+    <div className="relative space-y-6 sm:space-y-8 pb-10 font-sans" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'} aria-busy={busy}>
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
         <div>

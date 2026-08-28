@@ -486,7 +486,7 @@ export function PaymentMethodsPage() {
       : t('common.noResults', 'No results');
 
   return (
-    <div className="space-y-10 pb-16" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
+    <div className="space-y-6 sm:space-y-8 pb-10 font-sans" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
       {/* Full-screen blocker while a user-triggered load is in flight —
           realtime refreshes stay silent. */}
       <BusyOverlay visible={isLoading} />

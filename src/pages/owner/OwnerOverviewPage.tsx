@@ -167,7 +167,7 @@ export function OwnerOverviewPage() {
     };
 
     return (
-        <div className="space-y-6 sm:space-y-8 pb-10">
+        <div className="space-y-6 sm:space-y-8 pb-10 font-sans" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
             {/* Full-screen blocker while a filter-triggered load is in flight,
                 so filters can't be stacked on an in-flight request. */}
             <BusyOverlay visible={isLoading} />

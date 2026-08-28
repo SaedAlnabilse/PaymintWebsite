@@ -98,6 +98,8 @@ export const REQUIRED_PERMISSIONS: Record<string, string[]> = {
   'categories': ['manage_inventory'],
   'products': ['manage_inventory'],
   'addons': ['manage_inventory'],
+  'stock': ['manage_inventory', 'restock_items'],
+  'inventory': ['manage_inventory'],
   'materials': ['manage_inventory'],
   'recipes': ['manage_inventory'],
 

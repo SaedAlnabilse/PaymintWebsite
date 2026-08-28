@@ -122,6 +122,7 @@ const SettingsPage = lazy(() => import('./pages/dashboard/SettingsPage').then(m 
 const LoyaltyPage = lazy(() => import('./pages/dashboard/LoyaltyPage').then(m => ({ default: m.LoyaltyPage })));
 const ActivityLogsPage = lazy(() => import('./pages/dashboard/ActivityLogsPage').then(m => ({ default: m.ActivityLogsPage })));
 const AddonsPage = lazy(() => import('./pages/dashboard/AddonsPage').then(m => ({ default: m.AddonsPage })));
+const StockManagementPage = lazy(() => import('./pages/dashboard/StockManagementPage').then(m => ({ default: m.StockManagementPage })));
 const InventoryPage = lazy(() => import('./pages/dashboard/RecipesPage').then(m => ({ default: m.RecipesPage })));
 const EstablishmentsPage = lazy(() => import('./pages/dashboard/EstablishmentsPage').then(m => ({ default: m.EstablishmentsPage })));
 const AdminUsersPage = lazy(() => import('./pages/dashboard/AdminUsersPage').then(m => ({ default: m.AdminUsersPage })));
@@ -912,6 +913,14 @@ const router = createBrowserRouter([
                 element: (
                   <DashboardPageSuspense>
                     <AddonsPage />
+                  </DashboardPageSuspense>
+                ),
+              },
+              {
+                path: "stock",
+                element: (
+                  <DashboardPageSuspense>
+                    <StockManagementPage />
                   </DashboardPageSuspense>
                 ),
               },
