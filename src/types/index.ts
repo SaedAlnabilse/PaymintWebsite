@@ -128,19 +128,38 @@ export interface SalesSummary {
   netSalesBeforeTaxAndServiceCharge?: number;
   grossSalesIncludingTaxAndCharges?: number;
   grossProfit: number;
+  totalCost?: number;
   totalOrders: number;
+  averageOrderValue?: number;
   totalRefunds: number;
+  refundOrderCount?: number;
+  /**
+   * Gross sales with tax removed (service charge still included) — the
+   * "Total Sales (excl. tax)" figure reports and exports print beside Tax.
+   * Distinct from `netSalesBeforeTaxAndServiceCharge`, which also strips
+   * the service charge.
+   */
+  totalSalesExcludingTax?: number;
   totalHoursWorked: number;
   totalPayIn: number;
   totalPayOut: number;
   dailyBreakdown: Array<{
     date: string;
+    /** Gross revenue for the bucket (tax and service charge included). */
     revenue: number;
+    /** Tax collected in the bucket. */
+    tax?: number;
+    /** `revenue` with tax removed — the "excl. tax" figure exports print. */
+    netRevenue?: number;
     count: number;
+    refunds?: number;
+    refundCount?: number;
   }>;
   paymentMethodBreakdown: Array<{
     name: string;
     value: number;
+    /** Orders that used this method (an order can touch several on a split). */
+    count?: number;
   }>;
   discountBreakdown: Array<{
     name: string;
@@ -150,10 +169,12 @@ export interface SalesSummary {
   cardTypeBreakdown?: Array<{
     name: string;
     value: number;
+    count?: number;
   }>;
   otherPaymentBreakdown?: Array<{
     name: string;
     value: number;
+    count?: number;
   }>;
   currentTaxRate?: number;
   currentTaxRatePercent?: number;
@@ -186,6 +207,9 @@ export interface SalesSummary {
 export interface PeakHour {
   hour: number | string;
   total: number;
+  /** Tax inside `total`; `netTotal` is `total` with it removed. */
+  tax?: number;
+  netTotal?: number;
   count: number;
 }
 
@@ -194,6 +218,9 @@ export interface Shift {
   startTime: string;
   endTime?: string | null;
   totalSales: number;
+  /** Tax inside `totalSales`; `netSales` is `totalSales` with it removed. */
+  totalTax?: number;
+  netSales?: number;
   orderCount: number;
   totalDiscounts: number;
   totalRefunds: number;
@@ -228,6 +255,9 @@ export interface ItemReportBreakdown {
   name?: string;
   quantity: number;
   totalSales?: number;
+  /** Line-level tax for the row; `totalSales` is net of it. */
+  totalTax?: number;
+  totalSalesWithTax?: number;
   totalRefunds?: number;
   refundQuantity?: number;
   revenue?: number;
@@ -283,11 +313,12 @@ export interface DashboardStats {
   grossProfit: number;
   totalPayIn: number;
   totalPayOut: number;
-  paymentMethodBreakdown: { name: string; value: number }[];
-  cardTypeBreakdown?: { name: string; value: number }[];
-  otherPaymentBreakdown?: { name: string; value: number }[];
+  /** `count` = orders that used the method (a split order touches several). */
+  paymentMethodBreakdown: { name: string; value: number; count?: number }[];
+  cardTypeBreakdown?: { name: string; value: number; count?: number }[];
+  otherPaymentBreakdown?: { name: string; value: number; count?: number }[];
   categoryBreakdown: { name: string; value: number; count?: number }[];
-  dailyBreakdown: { date: string; revenue: number }[];
+  dailyBreakdown: { date: string; revenue: number; tax?: number; netRevenue?: number; count?: number }[];
 }
 
 export interface TopProduct {

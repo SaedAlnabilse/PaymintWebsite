@@ -10,26 +10,31 @@ const firstPresent = (...values: unknown[]) =>
 
 const toArray = <T = any>(value: unknown): T[] => (Array.isArray(value) ? value.filter(Boolean) as T[] : []);
 
-export const normalizePaymentMethodBreakdown = (value: unknown): { name: string; value: number }[] => {
+export const normalizePaymentMethodBreakdown = (value: unknown): { name: string; value: number; count: number }[] => {
   const requiredMethods = ['CASH', 'CARD', 'OTHER'];
   const totals = new Map<string, number>(requiredMethods.map((method) => [method, 0]));
+  const counts = new Map<string, number>(requiredMethods.map((method) => [method, 0]));
   const extraMethods: string[] = [];
 
   toArray(value).forEach((row: any) => {
     const method = String(firstPresent(row?.name, row?.method, 'Unknown')).toUpperCase();
     const amount = toNumber(firstPresent(row?.value, row?.amount, row?.total));
+    const count = toNumber(firstPresent(row?.count, row?.orders, row?.transactions));
 
     if (!totals.has(method)) {
       totals.set(method, 0);
+      counts.set(method, 0);
       extraMethods.push(method);
     }
 
     totals.set(method, (totals.get(method) || 0) + amount);
+    counts.set(method, (counts.get(method) || 0) + count);
   });
 
   return [...requiredMethods, ...extraMethods].map((method) => ({
     name: method,
     value: totals.get(method) || 0,
+    count: counts.get(method) || 0,
   }));
 };
 
@@ -83,11 +88,21 @@ export const normalizeSalesSummary = (payload: any): SalesSummary => {
     totalHoursWorked: toNumber(source.totalHoursWorked),
     totalPayIn: toNumber(source.totalPayIn),
     totalPayOut: toNumber(source.totalPayOut),
-    dailyBreakdown: toArray(source.dailyBreakdown).map((row: any) => ({
-      date: String(row?.date || ''),
-      revenue: toNumber(firstPresent(row?.revenue, row?.sales, row?.total, row?.amount)),
-      count: toNumber(firstPresent(row?.count, row?.orders, row?.transactions)),
-    })),
+    dailyBreakdown: toArray(source.dailyBreakdown).map((row: any) => {
+      const revenue = toNumber(firstPresent(row?.revenue, row?.sales, row?.total, row?.amount));
+      const tax = toNumber(firstPresent(row?.tax, row?.taxCollected));
+      return {
+        date: String(row?.date || ''),
+        revenue,
+        tax,
+        // Older API builds send revenue only; deriving net here keeps the
+        // exports' "excl. tax" column honest instead of blank.
+        netRevenue: toNumber(firstPresent(row?.netRevenue, revenue - tax)),
+        count: toNumber(firstPresent(row?.count, row?.orders, row?.transactions)),
+        refunds: toNumber(row?.refunds),
+        refundCount: toNumber(row?.refundCount),
+      };
+    }),
     paymentMethodBreakdown: normalizePaymentMethodBreakdown(source.paymentMethodBreakdown),
     discountBreakdown: toArray(source.discountBreakdown).map((row: any) => ({
       name: String(row?.name || row?.discountName || 'Unknown'),
@@ -171,10 +186,16 @@ export const normalizeItemReportData = (payload: any): ItemReportData => {
 };
 
 export const normalizePeakHours = (payload: unknown): PeakHour[] =>
-  toArray(payload).map((row: any) => ({
-    hour: row?.hour ?? 0,
-    total: toNumber(row?.total),
-    count: toNumber(row?.count),
-  }));
+  toArray(payload).map((row: any) => {
+    const total = toNumber(row?.total);
+    const tax = toNumber(row?.tax);
+    return {
+      hour: row?.hour ?? 0,
+      total,
+      tax,
+      netTotal: toNumber(firstPresent(row?.netTotal, total - tax)),
+      count: toNumber(row?.count),
+    };
+  });
 
 export const normalizeShifts = (payload: unknown): Shift[] => toArray(payload);

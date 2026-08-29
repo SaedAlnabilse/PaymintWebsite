@@ -10,7 +10,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AnalyticsEmptyState } from '../AnalyticsEmptyState';
 import { StatValue } from '../../../../components/ui/StatValue';
-import { getShiftDurationMs } from '../../../../utils/shiftDuration';
+import { clampNowToRangeEnd, formatDurationMs, getShiftDurationMs } from '../../../../utils/shiftDuration';
 
 const CurrencyAmount = ({ amount, className = "", size = "text-2xl", color = "text-gray-900 dark:text-white" }: { amount: number, className?: string, size?: string, color?: string }) => {
   const { currencySymbol } = useCurrency();
@@ -77,14 +77,10 @@ export const StaffView = React.memo(function StaffView({ shifts, selectedEmploye
     return () => window.clearInterval(id);
   }, [hasOpenShift]);
 
-  // "Now" never runs past the end of the window being reported on — otherwise a
-  // shift someone left open days ago contributes every hour since to a
-  // single-day report and craters the sales-per-hour figures. This mirrors the
-  // clamp the API applies to its own hours-worked total.
-  const openShiftCutoff = React.useMemo(() => {
-    const end = new Date(rangeEnd).getTime();
-    return Number.isFinite(end) ? Math.min(now, end) : now;
-  }, [now, rangeEnd]);
+  // Open shifts are measured against the same clamped cutoff the Shifts report
+  // uses — the two tabs read the same shifts, so their hours must agree to the
+  // minute.
+  const openShiftCutoff = React.useMemo(() => clampNowToRangeEnd(now, rangeEnd), [now, rangeEnd]);
 
   const shiftMs = React.useCallback(
     (shift: any) => getShiftDurationMs(shift.startTime, shift.endTime, openShiftCutoff) ?? 0,
@@ -92,7 +88,7 @@ export const StaffView = React.memo(function StaffView({ shifts, selectedEmploye
   );
 
   // Calculate stats
-  const totalHours = dataSource.reduce((acc: number, shift: any) => acc + shiftMs(shift) / 3_600_000, 0);
+  const totalMs = dataSource.reduce((acc: number, shift: any) => acc + shiftMs(shift), 0);
 
   const totalOrders = dataSource.reduce((acc: number, shift: any) => acc + (shift.orderCount || 0), 0);
   const totalSales = dataSource.reduce((acc: number, shift: any) => acc + (shift.totalSales || 0), 0);
@@ -202,11 +198,11 @@ export const StaffView = React.memo(function StaffView({ shifts, selectedEmploye
             <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 truncate" title={t('orders.reports.staff.totalHours')}>
               {t('orders.reports.staff.totalHours')}
             </p>
-            <StatValue 
-              value={totalHours} 
-              className="text-xl sm:text-2xl font-bold"
-              isInteger={false}
-            />
+            {/* Same "2h 15m" shape the Shifts report uses — decimal hours read
+                as a bare number and round a short shift down to "0.0". */}
+            <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
+              {formatDurationMs(t, totalMs)}
+            </p>
           </div>
 
           {/* Total Orders */}

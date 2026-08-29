@@ -4169,6 +4169,22 @@
         "totalTaxDesc": "税费总额",
         "txns": "笔数",
         "type": "类型"
+      },
+      "export": {
+        "metric": "指标",
+        "value": "数值",
+        "salesInclTax": "总销售额（含税）",
+        "salesExclTax": "总销售额（不含税）",
+        "revenueInclTax": "营业额（含税）",
+        "revenueExclTax": "营业额（不含税）",
+        "averageOrderValue": "平均订单金额",
+        "cost": "商品成本",
+        "profitMargin": "利润率",
+        "refundedOrders": "退款订单",
+        "shiftCount": "班次",
+        "staffCount": "员工",
+        "discountCount": "折扣",
+        "itemCount": "商品项"
       }
     },
     "searchPlaceholder": "搜索订单…",
@@ -4712,7 +4728,7 @@
       "total": "合计",
       "totalBrands": "品牌总数",
       "totalProfit": "总利润",
-      "totalProfitInfo": "总销售额减去按各商品设定成本计算的商品总成本。",
+      "totalProfitInfo": "不含税及其他费用的销售额，减去按各商品设定成本计算的商品总成本。",
       "totalRevenue": "总营收",
       "totalSales": "总销售额",
       "totalStaff": "员工总数",

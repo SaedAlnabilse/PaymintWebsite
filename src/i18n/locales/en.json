@@ -4271,6 +4271,22 @@
         "totalTaxDesc": "Total Tax Amount",
         "txns": "Txns",
         "type": "Type"
+      },
+      "export": {
+        "metric": "Metric",
+        "value": "Value",
+        "salesInclTax": "Total Sales (Incl. Tax)",
+        "salesExclTax": "Total Sales (Excl. Tax)",
+        "revenueInclTax": "Revenue (Incl. Tax)",
+        "revenueExclTax": "Revenue (Excl. Tax)",
+        "averageOrderValue": "Average Order Value",
+        "cost": "Cost of Goods",
+        "profitMargin": "Profit Margin",
+        "refundedOrders": "Refunded Orders",
+        "shiftCount": "Shifts",
+        "staffCount": "Staff",
+        "discountCount": "Discounts",
+        "itemCount": "Items"
       }
     },
     "searchPlaceholder": "Search orders...",
@@ -4818,7 +4834,7 @@
       "total": "Total",
       "totalBrands": "Total Brands",
       "totalProfit": "Total Profit",
-      "totalProfitInfo": "The total sales amount minus the total product costs based on the cost set for each item.",
+      "totalProfitInfo": "Sales excluding tax and other charges, minus the total product costs based on the cost set for each item.",
       "totalRevenue": "Total Revenue",
       "totalSales": "Total Sales",
       "totalSalesInfo": "Gross sales including tax and other service charges.",

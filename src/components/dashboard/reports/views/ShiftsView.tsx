@@ -10,7 +10,7 @@ import { getDateLocale } from '../../../../utils/dateLocale';
 import { Pagination } from '../../../ui';
 import { AnalyticsEmptyState } from '../AnalyticsEmptyState';
 import { StatValue } from '../../../../components/ui/StatValue';
-import { formatDurationMs, getShiftDurationMs } from '../../../../utils/shiftDuration';
+import { clampNowToRangeEnd, formatDurationMs, getShiftDurationMs } from '../../../../utils/shiftDuration';
 
 const CurrencyAmount = ({ amount, className = "", size = "text-2xl", color = "text-gray-900 dark:text-white", containerClassName = "" }: { amount: number, className?: string, size?: string, color?: string, containerClassName?: string }) => {
   const { currencySymbol } = useCurrency();
@@ -38,6 +38,8 @@ const FormatCurrency = ({ value, className = "text-sm", containerClassName = "ju
 
 interface ShiftsViewProps {
   shifts: Shift[];
+  /** End of the active report window, ISO. Bounds still-open shifts. */
+  rangeEnd: string;
 }
 
 /**
@@ -61,7 +63,7 @@ const toNumber = (value: unknown) => {
 // sale in one minute is not "491/hr"), so very short shifts show no rate.
 const MIN_MS_FOR_RATE = 5 * 60_000;
 
-export const ShiftsView = React.memo(function ShiftsView({ shifts }: ShiftsViewProps) {
+export const ShiftsView = React.memo(function ShiftsView({ shifts, rangeEnd }: ShiftsViewProps) {
   const { t } = useTranslation();
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -91,6 +93,11 @@ export const ShiftsView = React.memo(function ShiftsView({ shifts }: ShiftsViewP
     return () => window.clearInterval(id);
   }, [hasOpenShift]);
 
+  // ...but never past the end of the window being reported on, so a shift left
+  // open days ago doesn't pour every hour since into a single-day report. The
+  // Staff report clamps identically — same shifts, same hours.
+  const openShiftCutoff = React.useMemo(() => clampNowToRangeEnd(now, rangeEnd), [now, rangeEnd]);
+
   // Sort shifts: Active (OPEN) first, then by startTime newest to oldest
   const sortedShifts = React.useMemo(() => {
     return [...shifts].sort((a: any, b: any) => {
@@ -118,7 +125,7 @@ export const ShiftsView = React.memo(function ShiftsView({ shifts }: ShiftsViewP
     let sales = 0;
     let orders = 0;
     for (const shift of shifts as any[]) {
-      ms += getShiftDurationMs(shift.startTime, shift.endTime, now) ?? 0;
+      ms += getShiftDurationMs(shift.startTime, shift.endTime, openShiftCutoff) ?? 0;
       sales += toNumber(shift.totalSales);
       orders += toNumber(shift.orderCount);
     }
@@ -129,7 +136,7 @@ export const ShiftsView = React.memo(function ShiftsView({ shifts }: ShiftsViewP
       orders,
       salesPerHour: ms >= MIN_MS_FOR_RATE ? sales / hours : null,
     };
-  }, [shifts, now]);
+  }, [shifts, openShiftCutoff]);
 
   const activeShiftsCount = shifts.filter((s: any) => s.status === 'OPEN').length;
 
@@ -237,7 +244,7 @@ export const ShiftsView = React.memo(function ShiftsView({ shifts }: ShiftsViewP
                       <span className="text-xs font-bold text-gray-900 dark:text-white whitespace-nowrap">
                         {formatDurationMs(
                           t,
-                          getShiftDurationMs(shift.startTime, shift.endTime, now),
+                          getShiftDurationMs(shift.startTime, shift.endTime, openShiftCutoff),
                         )}
                       </span>
                     </td>
@@ -263,7 +270,7 @@ export const ShiftsView = React.memo(function ShiftsView({ shifts }: ShiftsViewP
                     </td>
                     <td className="px-5 py-5 text-end font-medium text-gray-500">
                       {(() => {
-                        const ms = getShiftDurationMs(shift.startTime, shift.endTime, now) ?? 0;
+                        const ms = getShiftDurationMs(shift.startTime, shift.endTime, openShiftCutoff) ?? 0;
                         if (ms < MIN_MS_FOR_RATE) {
                           return <span className="text-gray-400 font-normal">-</span>;
                         }

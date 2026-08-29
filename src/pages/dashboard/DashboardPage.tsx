@@ -561,11 +561,14 @@ export const DashboardPage = () => {
           { key: 'value', label: t('orders.reports.shifts.variance', { defaultValue: 'Value' }) },
         ],
         rows: [
-          { metric: cur(t('dashboard.stats.revenue')), value: money(stats.totalRevenue) },
-          { metric: t('dashboard.stats.orders', { defaultValue: 'Orders' }), value: numFmt(stats.totalOrders) },
-          { metric: cur(t('dashboard.stats.avgOrderValue', { defaultValue: 'Average Order Value' })), value: money(stats.averageOrderValue) },
-          { metric: cur(t('dashboard.stats.grossProfit', { defaultValue: 'Gross Profit' })), value: money(stats.grossProfit) },
+          { metric: cur(t('orders.reports.export.salesInclTax')), value: money(stats.totalRevenue) },
+          { metric: cur(t('orders.reports.export.salesExclTax')), value: money((stats.totalRevenue || 0) - (stats.taxCollected || 0)) },
           { metric: cur(t('dashboard.stats.tax', { defaultValue: 'Tax Collected' })), value: money(stats.taxCollected) },
+          { metric: cur(t('orders.reports.sales.serviceCharge')), value: money(stats.netServiceChargeCollected ?? stats.serviceChargeCollected ?? 0) },
+          { metric: cur(t('orders.reports.sales.netSales')), value: money(stats.netSalesBeforeTaxAndServiceCharge ?? ((stats.totalRevenue || 0) - (stats.taxCollected || 0) - (stats.netServiceChargeCollected ?? stats.serviceChargeCollected ?? 0))) },
+          { metric: t('dashboard.stats.orders', { defaultValue: 'Orders' }), value: numFmt(stats.totalOrders) },
+          { metric: cur(t('orders.reports.export.averageOrderValue')), value: money(stats.averageOrderValue) },
+          { metric: cur(t('dashboard.stats.grossProfit', { defaultValue: 'Gross Profit' })), value: money(stats.grossProfit) },
           { metric: cur(t('dashboard.stats.refunds', { defaultValue: 'Refunds' })), value: money(stats.totalRefunds) },
           { metric: cur(t('dashboard.stats.payIn', { defaultValue: 'Pay In' })), value: money(stats.totalPayIn) },
           { metric: cur(t('dashboard.stats.payOut', { defaultValue: 'Pay Out' })), value: money(stats.totalPayOut) },
@@ -578,9 +581,10 @@ export const DashboardPage = () => {
         name: t('dashboard.menu.paymentsReports'),
         columns: [
           { key: 'name', label: t('orders.exportFields.paymentMethod') },
+          { key: 'count', label: t('orders.reports.sales.numOrders') },
           { key: 'value', label: cur(t('dashboard.stats.revenue')) },
         ],
-        rows: stats.paymentMethodBreakdown.map(p => ({ name: p.name, value: money(p.value) })),
+        rows: stats.paymentMethodBreakdown.map(p => ({ name: p.name, count: numFmt(p.count || 0), value: money(p.value) })),
       });
     }
 
@@ -613,10 +617,18 @@ export const DashboardPage = () => {
         name: t('dashboard.stats.peakHours'),
         columns: [
           { key: 'hour', label: t('orders.reports.sales.hours') },
-          { key: 'total', label: cur(t('dashboard.stats.revenue')) },
-          { key: 'count', label: t('orders.exportFields.orderNumber') },
+          { key: 'count', label: t('orders.reports.sales.numOrders') },
+          { key: 'netTotal', label: cur(t('orders.reports.export.salesExclTax')) },
+          { key: 'tax', label: cur(t('orders.reports.sales.totalTax')) },
+          { key: 'total', label: cur(t('orders.reports.export.salesInclTax')) },
         ],
-        rows: peakHours.map(p => ({ hour: p.hour, total: money(p.total), count: numFmt(p.count) })),
+        rows: peakHours.map(p => ({
+          hour: p.hour,
+          count: numFmt(p.count),
+          netTotal: money(p.netTotal ?? (p.total - (p.tax ?? 0))),
+          tax: money(p.tax ?? 0),
+          total: money(p.total),
+        })),
       });
     }
 

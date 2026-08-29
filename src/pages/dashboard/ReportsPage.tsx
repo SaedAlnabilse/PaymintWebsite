@@ -41,7 +41,7 @@ import { SalesView } from '../../components/dashboard/reports/views/SalesView';
 import { ItemsView } from '../../components/dashboard/reports/views/ItemsView';
 import { StaffView } from '../../components/dashboard/reports/views/StaffView';
 import { ShiftsView } from '../../components/dashboard/reports/views/ShiftsView';
-import { formatShiftDuration } from '../../utils/shiftDuration';
+import { clampNowToRangeEnd, formatDurationMs, getShiftDurationMs } from '../../utils/shiftDuration';
 import { PeakHoursView } from '../../components/dashboard/reports/views/PeakHoursView';
 import { PaymentsView } from '../../components/dashboard/reports/views/PaymentsView';
 import { DiscountsView } from '../../components/dashboard/reports/views/DiscountsView';
@@ -520,11 +520,16 @@ export function ReportsPage() {
   // Map the current shift list into export rows (shared by staff-sales / shifts / cash-discrepancy).
   const shiftRows = () => shifts.map(s => {
     const start = new Date(s.startTime);
-    const end = s.endTime ? new Date(s.endTime) : new Date();
-    const hoursWorked = ((end.getTime() - start.getTime()) / (1000 * 60 * 60)).toLocaleString(localeTag, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    // Open shifts stop at the end of the reported window, exactly as the Staff
+    // and Shifts tables do — otherwise an export of last week's report counts
+    // every hour since for a drawer nobody ever closed.
+    const openShiftCutoff = clampNowToRangeEnd(Date.now(), effectiveDateRange.end);
+    const end = s.endTime ? new Date(s.endTime) : new Date(openShiftCutoff);
+    const durationMs = getShiftDurationMs(s.startTime, s.endTime, openShiftCutoff) ?? 0;
+    const hoursWorked = (durationMs / (1000 * 60 * 60)).toLocaleString(localeTag, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
     // Decimal hours round a short shift down to "0.0"; ship the readable
     // h/m duration alongside it so exports match what the table shows.
-    const duration = formatShiftDuration(t, s.startTime, s.endTime);
+    const duration = formatDurationMs(t, durationMs);
     const variance = s.discrepancy ?? s.variance ?? 0;
     // A drawer the POS closed by itself was balanced to the expected amount,
     // so its 0.00 is not a verified count. Never export it as one.
@@ -534,7 +539,6 @@ export function ReportsPage() {
       : !counted
         ? t('orders.reports.cashGap.notVerified', { defaultValue: 'Unverified' })
         : (variance > 0.001 ? `+${money(variance)} ${t('dashboard.stats.over')}` : variance < -0.001 ? `${money(variance)} ${t('dashboard.stats.short')}` : money(0));
-    const durationMs = end.getTime() - start.getTime();
     return {
       username: s.user?.username || t('common.pos'),
       period: `${start.toLocaleString(localeTag)} - ${s.endTime ? end.toLocaleString(localeTag) : t('dashboard.shiftStatus.live')}`,
@@ -542,6 +546,10 @@ export function ReportsPage() {
       duration,
       opening: money(s.openingBalance),
       sales: money(s.totalSales),
+      // `totalSales` is tendered (tax included); the API sends the tax that
+      // sits inside it so the export can show the pre-tax figure too.
+      tax: money(s.totalTax ?? 0),
+      netSales: money(s.netSales ?? (Number(s.totalSales || 0) - Number(s.totalTax || 0))),
       orders: num(s.orderCount),
       refunds: money(s.totalRefunds),
       cashSales: money(Number(s.cashSales || 0)),
@@ -575,30 +583,148 @@ export function ReportsPage() {
     };
   });
 
-  // Resolve the columns + rows (+ extra sections) for the active report.
-  const buildReport = (): { columns: ExportColumn[]; rows: any[]; sections?: ExportSection[] } => {
+  // Shared column labels so every export names the same figure identically.
+  const grossLabel = `${t('orders.reports.export.salesInclTax')} (${currencySymbol})`;
+  const netLabel = `${t('orders.reports.export.salesExclTax')} (${currencySymbol})`;
+  const taxLabel = `${t('orders.reports.sales.totalTax')} (${currencySymbol})`;
+  const ordersLabel = t('orders.reports.sales.numOrders');
+
+  /** A metric/value pair for the summary section that heads every export. */
+  type SummaryRow = { metric: string; value: string };
+  const summaryColumns: ExportColumn[] = [
+    { key: 'metric', label: t('orders.reports.export.metric') },
+    { key: 'value', label: t('orders.reports.export.value') },
+  ];
+  const metric = (label: string, value: string): SummaryRow => ({ metric: label, value });
+  const moneyMetric = (label: string, value: number) => metric(`${label} (${currencySymbol})`, money(value));
+  const percentMetric = (label: string, ratio: number) =>
+    metric(label, `${(ratio * 100).toLocaleString(localeTag, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`);
+
+  /**
+   * The sales/payments/taxes tabs all read the same historical summary, so they
+   * share one rich header block: gross, tax, net, profit, orders and cash
+   * movements. Exports used to carry none of this.
+   */
+  const salesSummaryRows = (): SummaryRow[] => {
+    const gross = salesData.totalRevenue ?? 0;
+    const tax = salesData.taxCollected ?? 0;
+    const serviceCharge = salesData.netServiceChargeCollected ?? salesData.serviceChargeCollected ?? 0;
+    const exclTax = salesData.totalSalesExcludingTax ?? (gross - tax);
+    const net = salesData.netSalesBeforeTaxAndServiceCharge ?? (gross - tax - serviceCharge);
+    const orders = salesData.totalOrders ?? 0;
+    const profit = salesData.grossProfit ?? 0;
+    const avgOrder = salesData.averageOrderValue ?? (orders > 0 ? gross / orders : 0);
+
+    const rows: SummaryRow[] = [
+      moneyMetric(t('orders.reports.export.salesInclTax'), gross),
+      moneyMetric(t('orders.reports.export.salesExclTax'), exclTax),
+      moneyMetric(t('orders.reports.sales.totalTax'), tax),
+      moneyMetric(t('orders.reports.sales.serviceCharge', { defaultValue: 'Service Charge' }), serviceCharge),
+      moneyMetric(t('orders.reports.sales.netSales'), net),
+      moneyMetric(t('orders.reports.sales.profit'), profit),
+      metric(ordersLabel, num(orders)),
+      moneyMetric(t('orders.reports.export.averageOrderValue'), avgOrder),
+      moneyMetric(t('orders.reports.sales.refunds'), salesData.totalRefunds ?? 0),
+    ];
+
+    if (salesData.refundOrderCount !== undefined) {
+      rows.push(metric(t('orders.reports.export.refundedOrders'), num(salesData.refundOrderCount)));
+    }
+    if (salesData.totalCost !== undefined) {
+      rows.push(moneyMetric(t('orders.reports.export.cost'), salesData.totalCost));
+    }
+    // Margin is only meaningful against a non-zero net; a 0/0 "0.0%" reads as
+    // a real loss-making figure rather than "nothing sold".
+    if (net > 0) {
+      rows.push(percentMetric(t('orders.reports.export.profitMargin'), profit / net));
+    }
+    rows.push(
+      moneyMetric(t('orders.reports.sales.payIn'), salesData.totalPayIn ?? 0),
+      moneyMetric(t('orders.reports.sales.payOut'), salesData.totalPayOut ?? 0),
+      metric(t('orders.reports.sales.hours'), num(salesData.totalHoursWorked ?? 0)),
+    );
+    return rows;
+  };
+
+  /**
+   * Header block for the shift-based reports. `predicate` narrows it to the
+   * same rows the table shows (cash reconciliation only lists closed drawers).
+   */
+  const shiftsSummaryRows = (predicate: (shift: Shift) => boolean = () => true): SummaryRow[] => {
+    const rows = shifts.filter(predicate);
+    const gross = rows.reduce((sum, s) => sum + Number(s.totalSales || 0), 0);
+    const tax = rows.reduce((sum, s) => sum + Number(s.totalTax || 0), 0);
+    const orders = rows.reduce((sum, s) => sum + Number(s.orderCount || 0), 0);
+    // Auto-closed drawers were balanced to the expected amount, so their 0.00
+    // is not a verified count and must not dilute the over/short total.
+    const counted = rows.filter(s => s.endTime && !s.autoClose);
+    const variance = counted.reduce((sum, s) => sum + Number(s.discrepancy ?? s.variance ?? 0), 0);
+
+    return [
+      metric(t('orders.reports.export.shiftCount'), num(rows.length)),
+      metric(t('orders.reports.export.staffCount'), num(new Set(rows.map(s => s.user?.username || '')).size)),
+      metric(ordersLabel, num(orders)),
+      moneyMetric(t('orders.reports.export.salesExclTax'), gross - tax),
+      moneyMetric(t('orders.reports.sales.totalTax'), tax),
+      moneyMetric(t('orders.reports.export.salesInclTax'), gross),
+      moneyMetric(t('orders.reports.shifts.cashSales', { defaultValue: 'Cash Sales' }), rows.reduce((sum, s) => sum + Number(s.cashSales || 0), 0)),
+      moneyMetric(t('orders.reports.sales.refunds'), rows.reduce((sum, s) => sum + Number(s.totalRefunds || 0), 0)),
+      moneyMetric(t('orders.reports.sales.payIn'), rows.reduce((sum, s) => sum + Number(s.totalPayIn || 0), 0)),
+      moneyMetric(t('orders.reports.sales.payOut'), rows.reduce((sum, s) => sum + Number(s.totalPayOut || 0), 0)),
+      moneyMetric(`${t('orders.reports.shifts.variance')} (${t('orders.reports.cashGap.counted', { defaultValue: 'Counted' })})`, variance),
+    ];
+  };
+
+  // Resolve the columns + rows (+ summary metrics) for the active report.
+  const buildReport = (): {
+    columns: ExportColumn[];
+    rows: any[];
+    summary?: SummaryRow[];
+    sections?: ExportSection[];
+  } => {
     switch (reportType) {
       case 'sales': {
         return {
+          summary: salesSummaryRows(),
           columns: [
             { key: 'date', label: t('orders.exportFields.date') },
-            { key: 'revenue', label: `${t('dashboard.stats.revenue')} (${currencySymbol})` },
-            { key: 'count', label: t('orders.exportFields.orderNumber') },
+            { key: 'count', label: ordersLabel },
+            { key: 'netRevenue', label: netLabel },
+            { key: 'tax', label: taxLabel },
+            { key: 'revenue', label: grossLabel },
           ],
-          rows: (salesData?.dailyBreakdown || []).map(d => ({ date: d.date, revenue: money(d.revenue), count: num(d.count) })),
+          rows: (salesData?.dailyBreakdown || []).map(d => {
+            const tax = d.tax ?? 0;
+            return {
+              date: d.date,
+              count: num(d.count),
+              netRevenue: money(d.netRevenue ?? (d.revenue - tax)),
+              tax: money(tax),
+              revenue: money(d.revenue),
+            };
+          }),
         };
       }
       case 'payments': {
+        // Tax can't be split across payment methods (one taxed order can be
+        // settled by several tenders), so the tax figures stay in the summary.
         return {
+          summary: salesSummaryRows(),
           columns: [
             { key: 'name', label: t('orders.exportFields.paymentMethod') },
+            { key: 'count', label: ordersLabel },
             { key: 'value', label: `${t('dashboard.stats.revenue')} (${currencySymbol})` },
           ],
-          rows: (salesData?.paymentMethodBreakdown || []).map(p => ({ name: p.name, value: money(p.value) })),
+          rows: (salesData?.paymentMethodBreakdown || []).map(p => ({
+            name: p.name,
+            count: num(p.count ?? 0),
+            value: money(p.value),
+          })),
         };
       }
       case 'taxes': {
         return {
+          summary: salesSummaryRows(),
           columns: [
             { key: 'name', label: t('orders.reports.taxes.tax') },
             { key: 'rate', label: t('orders.reports.taxes.rate') },
@@ -618,13 +744,22 @@ export function ReportsPage() {
         };
       }
       case 'discounts': {
+        const breakdown = salesData?.discountBreakdown || [];
         return {
+          summary: [
+            metric(t('orders.reports.export.discountCount'), num(breakdown.length)),
+            metric(ordersLabel, num(breakdown.reduce((sum, d) => sum + (d.count || 0), 0))),
+            moneyMetric(
+              t('orders.reports.shifts.variance', { defaultValue: 'Amount' }),
+              breakdown.reduce((sum, d) => sum + (d.value || 0), 0),
+            ),
+          ],
           columns: [
             { key: 'name', label: t('dashboard.menu.discountReports') },
-            { key: 'count', label: t('orders.exportFields.orderNumber') },
+            { key: 'count', label: ordersLabel },
             { key: 'value', label: `${t('orders.reports.shifts.variance', { defaultValue: 'Amount' })} (${currencySymbol})` },
           ],
-          rows: (salesData?.discountBreakdown || []).map(d => ({ name: d.name, count: num(d.count), value: money(d.value) })),
+          rows: breakdown.map(d => ({ name: d.name, count: num(d.count), value: money(d.value) })),
         };
       }
       case 'top-items': {
@@ -633,27 +768,74 @@ export function ReportsPage() {
           : itemReportTab === 'modifiers' || itemReportTab === 'attributes'
             ? t('dashboard.menu.salesByAddons')
             : t('orders.table.order');
+        const breakdown = itemReportData?.breakdown || [];
+        // `totalSales` on a line is already net of tax (tax is applied on top
+        // of the line price), so the tax column comes from the line snapshots.
+        const rows = breakdown.map(it => {
+          const net = Number(it.totalSales ?? it.revenue ?? 0);
+          const tax = Number(it.totalTax ?? 0);
+          return {
+            name: it.itemName || it.name || t('common.unknown'),
+            quantity: num(it.quantity),
+            totalSales: money(net),
+            tax: money(tax),
+            totalWithTax: money(it.totalSalesWithTax ?? (net + tax)),
+            _net: net,
+            _tax: tax,
+            _quantity: Number(it.quantity) || 0,
+          };
+        });
         return {
+          summary: [
+            metric(t('orders.reports.export.itemCount'), num(rows.length)),
+            metric(t('orders.reports.items.unitsSold'), num(rows.reduce((s, r) => s + r._quantity, 0))),
+            moneyMetric(t('orders.reports.export.salesExclTax'), rows.reduce((s, r) => s + r._net, 0)),
+            moneyMetric(t('orders.reports.sales.totalTax'), rows.reduce((s, r) => s + r._tax, 0)),
+            moneyMetric(t('orders.reports.export.salesInclTax'), rows.reduce((s, r) => s + r._net + r._tax, 0)),
+          ],
           columns: [
             { key: 'name', label: nameLabel },
             { key: 'quantity', label: t('orders.reports.items.unitsSold') },
-            { key: 'totalSales', label: `${t('orders.reports.items.grossRevenue')} (${currencySymbol})` },
+            { key: 'totalSales', label: netLabel },
+            { key: 'tax', label: taxLabel },
+            { key: 'totalWithTax', label: grossLabel },
           ],
-          rows: (itemReportData?.breakdown || []).map(it => ({
-            name: it.itemName || it.name || t('common.unknown'),
-            quantity: num(it.quantity),
-            totalSales: money((it.totalSales ?? it.revenue ?? 0) as number),
-          })),
+          rows,
         };
       }
       case 'peak-hours': {
+        const hours = peakHours || [];
+        const totalGross = hours.reduce((s, p) => s + (p.total || 0), 0);
+        const totalTax = hours.reduce((s, p) => s + (p.tax || 0), 0);
+        const busiest = hours.reduce<PeakHour | null>((best, p) => (!best || p.count > best.count ? p : best), null);
         return {
+          summary: [
+            metric(ordersLabel, num(hours.reduce((s, p) => s + (p.count || 0), 0))),
+            moneyMetric(t('orders.reports.export.salesExclTax'), totalGross - totalTax),
+            moneyMetric(t('orders.reports.sales.totalTax'), totalTax),
+            moneyMetric(t('orders.reports.export.salesInclTax'), totalGross),
+            metric(
+              t('orders.reports.peakHours.busiestHour'),
+              busiest && busiest.count > 0 ? `${busiest.hour} (${num(busiest.count)})` : '—',
+            ),
+          ],
           columns: [
             { key: 'hour', label: t('orders.reports.sales.hours') },
-            { key: 'total', label: `${t('dashboard.stats.revenue')} (${currencySymbol})` },
-            { key: 'count', label: t('orders.exportFields.orderNumber') },
+            { key: 'count', label: ordersLabel },
+            { key: 'netTotal', label: netLabel },
+            { key: 'tax', label: taxLabel },
+            { key: 'total', label: grossLabel },
           ],
-          rows: (peakHours || []).map(p => ({ hour: p.hour, total: money(p.total), count: num(p.count) })),
+          rows: hours.map(p => {
+            const tax = p.tax ?? 0;
+            return {
+              hour: p.hour,
+              count: num(p.count),
+              netTotal: money(p.netTotal ?? (p.total - tax)),
+              tax: money(tax),
+              total: money(p.total),
+            };
+          }),
         };
       }
       // Shifts export mirrors the on-screen report: work session + trading.
@@ -661,13 +843,16 @@ export function ReportsPage() {
       case 'staff-sales':
       case 'shifts': {
         return {
+          summary: shiftsSummaryRows(),
           columns: [
             { key: 'username', label: t('orders.table.staff') },
             { key: 'period', label: t('orders.reports.shifts.time') },
             { key: 'hoursWorked', label: t('orders.reports.sales.hours') },
             { key: 'duration', label: t('orders.reports.shifts.duration', { defaultValue: 'Duration' }) },
-            { key: 'orders', label: t('orders.exportFields.orderNumber') },
-            { key: 'sales', label: `${t('orders.reports.shifts.sales')} (${currencySymbol})` },
+            { key: 'orders', label: ordersLabel },
+            { key: 'netSales', label: netLabel },
+            { key: 'tax', label: taxLabel },
+            { key: 'sales', label: grossLabel },
             { key: 'cashSales', label: `${t('orders.reports.shifts.cashSales', { defaultValue: 'Cash Sales' })} (${currencySymbol})` },
             { key: 'refunds', label: `${t('orders.reports.sales.refunds')} (${currencySymbol})` },
             { key: 'salesPerHour', label: `${t('orders.reports.shifts.salesPerHour', { defaultValue: 'Sales per Hour' })} (${currencySymbol})` },
@@ -678,6 +863,7 @@ export function ReportsPage() {
       }
       case 'cash-discrepancy': {
         return {
+          summary: shiftsSummaryRows(shift => shift.status === 'CLOSED'),
           columns: [
             { key: 'username', label: t('orders.table.staff') },
             { key: 'period', label: t('orders.reports.shifts.time') },
@@ -701,7 +887,7 @@ export function ReportsPage() {
   };
 
   const handleExport = (format: ExportFormat) => {
-    const { columns, rows, sections } = buildReport();
+    const { columns, rows, sections, summary } = buildReport();
     const title = reportTitle();
     const meta = buildMeta();
     const filename = `report_${reportType}${reportType === 'top-items' ? `_${itemReportTab}` : ''}`;
@@ -714,6 +900,25 @@ export function ReportsPage() {
     if (sections && sections.length) {
       return exportSections(format, { filename, title, meta, sections });
     }
+
+    // Every export leads with a summary block of the report's headline figures,
+    // then the detail table.
+    if (summary && summary.length) {
+      return exportSections(format, {
+        filename,
+        title,
+        meta,
+        sections: [
+          {
+            name: t('dashboard.menu.salesSummary'),
+            columns: summaryColumns,
+            rows: summary,
+          },
+          { name: title, columns, rows },
+        ],
+      });
+    }
+
     return exportTable(format, { filename, title, meta, columns, rows });
   };
 
@@ -988,7 +1193,7 @@ export function ReportsPage() {
             )}
 
             {reportType === 'shifts' && (
-              <ShiftsView shifts={shifts} />
+              <ShiftsView shifts={shifts} rangeEnd={effectiveDateRange.end} />
             )}
 
             {reportType === 'cash-discrepancy' && (

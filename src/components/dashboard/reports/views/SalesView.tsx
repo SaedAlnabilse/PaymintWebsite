@@ -141,6 +141,11 @@ export const SalesView = React.memo(function SalesView({ salesData, selectedDate
     salesData.netSalesBeforeTaxAndServiceCharge ?? (grossSales - taxCollected - serviceChargeCollected),
     0,
   );
+  // Gross with tax removed but service charge kept — the figure that matches
+  // the "Total Sales (Excl. Tax)" column in the exports.
+  const salesExclTax = salesData.totalSalesExcludingTax ?? (grossSales - taxCollected);
+  const totalOrders = salesData.totalOrders ?? 0;
+  const averageOrderValue = salesData.averageOrderValue ?? (totalOrders > 0 ? grossSales / totalOrders : 0);
   const [salesPaymentTab, setSalesPaymentTab] = useState<'all' | 'cards' | 'others'>('all');
 
   const rawPaymentMethodBreakdown = useMemo(() => (salesData.paymentMethodBreakdown || [])
@@ -211,6 +216,24 @@ export const SalesView = React.memo(function SalesView({ salesData, selectedDate
             sub: t('orders.reports.sales.totalIncTax')
           },
           {
+            label: t('orders.reports.export.salesExclTax'),
+            amount: salesExclTax,
+            isCurrency: true,
+            icon: biIcon('bi-receipt'),
+            color: 'text-mintcom-green',
+            bg: 'bg-mintcom-green/10',
+            sub: t('orders.reports.sales.exclTax')
+          },
+          {
+            label: t('orders.reports.export.averageOrderValue'),
+            amount: averageOrderValue,
+            isCurrency: true,
+            icon: biIcon('bi-calculator'),
+            color: 'text-mintcom-green',
+            bg: 'bg-mintcom-green/10',
+            sub: t('orders.reports.sales.totalIncTax')
+          },
+          {
             label: t('orders.reports.sales.netSales'),
             amount: netSales,
             isCurrency: true,
@@ -253,7 +276,7 @@ export const SalesView = React.memo(function SalesView({ salesData, selectedDate
           {
             label: t('orders.reports.sales.numOrders'),
             labelClassName: 'capitalize-none',
-            value: (salesData.totalOrders ?? 0),
+            value: totalOrders,
             isCurrency: false,
             suffix: t('dashboard.stats.orders'),
             icon: biIcon('bi-receipt-cutoff'),

@@ -53,10 +53,19 @@ export const formatDurationMs = (t: TFunction, ms: number | null): string => {
     });
 };
 
-/** Convenience wrapper for the common "row of a shift table" case. */
-export const formatShiftDuration = (
-    t: TFunction,
-    startTime?: string | Date | null,
-    endTime?: string | Date | null,
-    now?: number,
-): string => formatDurationMs(t, getShiftDurationMs(startTime, endTime, now));
+/**
+ * "Now" for an open shift, never running past the end of the window being
+ * reported on. Without this a shift someone left open days ago contributes
+ * every hour since to a single-day report, inflating hours worked and
+ * cratering the sales-per-hour figures. Mirrors the clamp the API applies to
+ * its own hours-worked total.
+ *
+ * Every report that measures an open shift has to use the same cutoff, or two
+ * tabs over the same shifts disagree.
+ */
+export const clampNowToRangeEnd = (now: number, rangeEnd?: string | Date | null): number => {
+    if (!rangeEnd) return now;
+    const end = new Date(rangeEnd).getTime();
+    return Number.isFinite(end) ? Math.min(now, end) : now;
+};
+
