@@ -28,7 +28,8 @@ interface StaffMember {
   permissions?: string[];
   allowedDiscounts?: string[];
   establishmentIds?: string[];
-  customRoleId?: string;
+  // null is a real value on the wire: it detaches the role template.
+  customRoleId?: string | null;
   // Platform access control
   posAccess?: boolean;
   backofficeAccess?: boolean;
@@ -111,6 +112,8 @@ const normalizePermissionList = (values: unknown): string[] => {
 };
 
 const BACKOFFICE_DEFAULT_PERMISSION_IDS = ['dashboard', 'view_orders'] as const;
+/** What a plain employee starts with: new hires and Admin/template downgrades alike. */
+const DEFAULT_EMPLOYEE_POS_PERMISSIONS = ['pos', 'dashboard', 'discounts', 'refunds'] as const;
 const LEGACY_AUTO_BACKOFFICE_PERMISSION_IDS = ['dashboard', 'view_orders', 'view_reports'] as const;
 const LEGACY_AUTO_BACKOFFICE_PERMISSION_ID_SET = new Set<string>(LEGACY_AUTO_BACKOFFICE_PERMISSION_IDS);
 
@@ -226,6 +229,15 @@ export function EmployeeFormModal({
   // Custom Roles
   const [customRoles, setCustomRoles] = useState<CustomRole[]>([]);
   const [selectedCustomRoleId, setSelectedCustomRoleId] = useState<string>('');
+  // Whether the operator actually picked a role in this session. An edit that
+  // never touches the role picker must not send a role decision at all, so the
+  // backend keeps (or drops) the existing link on its own terms instead of the
+  // form re-asserting a role it only ever displayed.
+  const [rolePickerTouched, setRolePickerTouched] = useState(false);
+  // The built-in "Employee" role: an assignment that follows no template and
+  // carries its own permissions. Tracked separately because it is not implied
+  // by any other field - an employee with neither Admin nor a template has it.
+  const [builtInEmployeeRoleSelected, setBuiltInEmployeeRoleSelected] = useState(false);
   const [lastAppliedTemplate, setLastAppliedTemplate] = useState<CustomRole | null>(null);
   const [expandedRoleSections, setExpandedRoleSections] = useState<Set<string>>(new Set());
   const rolesButtonRef = useRef<HTMLButtonElement>(null);
@@ -423,11 +435,11 @@ export function EmployeeFormModal({
       if (!optionId) return t('staff.form.selectRole');
       if (optionId.startsWith('builtin:')) {
         const builtInRole = optionId.slice(8);
-        return builtInRole === 'ADMIN'
-          ? t('staff.form.adminRole')
-          : t(`staff.roles.${builtInRole.toLowerCase()}`, {
-              defaultValue: builtInRole.charAt(0) + builtInRole.slice(1).toLowerCase(),
-            });
+        if (builtInRole === 'ADMIN') return t('staff.form.adminRole');
+        if (builtInRole === 'USER') return t('staff.form.employeeRole');
+        return t(`staff.roles.${builtInRole.toLowerCase()}`, {
+          defaultValue: builtInRole.charAt(0) + builtInRole.slice(1).toLowerCase(),
+        });
       }
 
       const customRole = getRoleTemplateByOptionId(optionId);
@@ -672,6 +684,12 @@ export function EmployeeFormModal({
           ),
         );
         setSelectedCustomRoleId(initialData.customRoleId || '');
+        setRolePickerTouched(false);
+        setBuiltInEmployeeRoleSelected(
+          !initialData.customRoleId &&
+            initialData.role.toUpperCase() !== 'ADMIN' &&
+            !isOwnerMode,
+        );
         // Platform access control
         setPosAccess(initialData.posAccess !== false); // Default to true
         setBackofficeAccess(initialBackofficeAccess);
@@ -719,7 +737,7 @@ export function EmployeeFormModal({
         setRole('USER');
         setPassword('');
         setConfirmPassword('');
-        setPermissions(['pos', 'dashboard', 'discounts', 'refunds']);
+        setPermissions([...DEFAULT_EMPLOYEE_POS_PERMISSIONS]);
         setBackofficePermissions(
           buildEffectiveBackofficePermissions(
             [...BACKOFFICE_DEFAULT_PERMISSION_IDS],
@@ -729,6 +747,8 @@ export function EmployeeFormModal({
         setAllDiscountsSelected(true);
         setAllowedDiscounts([]);
         setSelectedCustomRoleId('');
+        setRolePickerTouched(false);
+        setBuiltInEmployeeRoleSelected(false);
         setLastAppliedTemplate(null);
         setAssignmentRoleIds({});
         setSameRoleForAllLocations(true);
@@ -784,6 +804,8 @@ export function EmployeeFormModal({
       return;
     }
 
+    setRolePickerTouched(true);
+
     if (roleSelectionTarget !== 'ALL') {
       setAssignmentRoleIds((prev) => ({
         ...prev,
@@ -798,6 +820,7 @@ export function EmployeeFormModal({
     const roleType =
       templateRole === 'ADMIN' && canAssignAdminRole ? 'ADMIN' : 'USER';
     setRole(roleType);
+    setBuiltInEmployeeRoleSelected(false);
 
     const filteredPosPermissions = sanitizeAssignablePosPermissions(
       normalizeAndFilterPermissions(
@@ -1027,8 +1050,9 @@ export function EmployeeFormModal({
       });
     }
 
-    // Validate role selection - must be ADMIN or have a custom role selected
-    if (!isOwnerMode && role !== 'ADMIN' && !selectedCustomRoleId) {
+    // Validate role selection - must be one of the built-in roles or a custom
+    // role template. An existing employee already carries a decision.
+    if (!isOwnerMode && role !== 'ADMIN' && !selectedCustomRoleId && !builtInEmployeeRoleSelected) {
       newErrors.role = t('staff.errors.roleRequired');
     }
 
@@ -1138,24 +1162,38 @@ export function EmployeeFormModal({
       };
     };
 
+    // Send a role decision only when one was actually made here. Picking the
+    // built-in Admin role has to clear the previous template explicitly (null),
+    // otherwise the assignment keeps resolving from the old role at login and
+    // the change reads back undone. Leaving the picker alone sends neither
+    // field: the form only ever displays a template's base role as Admin or
+    // Employee, so re-asserting it would look like a role change to the backend
+    // and would break a Cashier/Manager template on an unrelated edit.
+    const roleDecision =
+      rolePickerTouched || !initialData
+        ? {
+            role: role.toUpperCase(),
+            customRoleId:
+              selectedCustomRoleId &&
+              assignableCustomRoles.some((customRole) => customRole.id === selectedCustomRoleId)
+                ? selectedCustomRoleId
+                : null,
+          }
+        : {};
+
     const payload: Partial<StaffMember> & { password?: string } = {
       firstName,
       lastName,
       username,
       email: email || undefined,
       phone: phone || undefined,
-      role: role.toUpperCase(),
+      ...roleDecision,
       permissions: role === 'ADMIN'
         ? POS_PERMISSIONS.map(p => p.id)
         : Array.from(new Set([
             ...sanitizedPosPermissions,
             ...(posAccess ? ['pos', 'void_items'] : []),
           ])),
-      customRoleId:
-        selectedCustomRoleId &&
-        assignableCustomRoles.some((customRole) => customRole.id === selectedCustomRoleId)
-          ? selectedCustomRoleId
-          : undefined,
       allowedDiscounts: allDiscountsSelected ? [] : allowedDiscounts,
       ...(establishments && { establishmentIds: selectedEstablishmentIds }),
       ...(establishments && {
@@ -1392,8 +1430,10 @@ export function EmployeeFormModal({
                       }}
                       className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-left flex items-center justify-between transition-colors"
                     >
-                      <span className={`text-sm font-bold ${(selectedCustomRoleId || role === 'ADMIN') ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'}`}>
-                        {getRoleOptionLabel(getRoleOptionForTarget('ALL'))}
+                      <span className={`text-sm font-bold ${(selectedCustomRoleId || role === 'ADMIN' || builtInEmployeeRoleSelected) ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'}`}>
+                        {selectedCustomRoleId || role === 'ADMIN' || builtInEmployeeRoleSelected
+                          ? getRoleOptionLabel(getRoleOptionForTarget('ALL'))
+                          : t('staff.form.selectRole')}
                       </span>
                       <ChevronDown size={16} className={`text-gray-400 transition-transform ${activeDropdown === 'ROLE' ? 'rotate-180' : ''}`} />
                     </button>
@@ -1474,6 +1514,7 @@ export function EmployeeFormModal({
                               <button
                                 type="button"
                                 onClick={() => {
+                                  setRolePickerTouched(true);
                                   if (roleSelectionTarget !== 'ALL') {
                                     setAssignmentRoleIds((prev) => ({
                                       ...prev,
@@ -1484,6 +1525,7 @@ export function EmployeeFormModal({
                                   }
                                   setRole('ADMIN');
                                   setSelectedCustomRoleId('');
+                                  setBuiltInEmployeeRoleSelected(false);
                                   setLastAppliedTemplate(null);
                                   setPermissions(POS_PERMISSIONS.map(p => p.id));
                                   setBackofficePermissions(
@@ -1516,6 +1558,64 @@ export function EmployeeFormModal({
                                 {role === 'ADMIN' && <Check size={14} className="text-blue-500" />}
                               </button>
                             )}
+
+                            {/* Built-in Employee Option - an assignment that follows no
+                                role template, so the permissions picked below are the
+                                employee's own and survive future template edits. */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setRolePickerTouched(true);
+                                if (roleSelectionTarget !== 'ALL') {
+                                  setAssignmentRoleIds((prev) => ({
+                                    ...prev,
+                                    [roleSelectionTarget]: builtInRoleOptionId('USER'),
+                                  }));
+                                  setActiveDropdown(null);
+                                  return;
+                                }
+                                const leavingPresetRole = role === 'ADMIN' || !!selectedCustomRoleId;
+                                setRole('USER');
+                                setSelectedCustomRoleId('');
+                                setBuiltInEmployeeRoleSelected(true);
+                                setLastAppliedTemplate(null);
+                                // Coming down from Admin or off a template, start from the
+                                // standard employee rights instead of silently keeping the
+                                // wider set the previous role granted.
+                                if (leavingPresetRole) {
+                                  setPermissions(
+                                    sanitizeAssignablePosPermissions([...DEFAULT_EMPLOYEE_POS_PERMISSIONS]),
+                                  );
+                                  setBackofficePermissions(
+                                    buildEffectiveBackofficePermissions(
+                                      [...BACKOFFICE_DEFAULT_PERMISSION_IDS],
+                                      backofficeAccess,
+                                    ),
+                                  );
+                                }
+                                setActiveDropdown(null);
+                                if (sameRoleForAllLocations) {
+                                  setAssignmentRoleIds((prev) => {
+                                    const next = { ...prev };
+                                    selectedEstablishmentIds.forEach((establishmentId) => {
+                                      next[establishmentId] = builtInRoleOptionId('USER');
+                                    });
+                                    return next;
+                                  });
+                                }
+                              }}
+                              className={`w-full flex items-center justify-between p-3 rounded-lg text-left transition-colors ${role !== 'ADMIN' && !selectedCustomRoleId ? 'bg-mintcom-green/10' : 'hover:bg-gray-50 dark:hover:bg-white/5'}`}
+                            >
+                              <div>
+                                <span className={`text-xs font-bold ${role !== 'ADMIN' && !selectedCustomRoleId ? 'text-mintcom-green' : 'text-gray-700 dark:text-gray-300'}`}>
+                                  {t('staff.form.employeeRole')}
+                                </span>
+                                <p className="text-xs font-bold text-gray-500 mt-0.5">{t('staff.form.employeeDesc')}</p>
+                              </div>
+                              {role !== 'ADMIN' && !selectedCustomRoleId && (
+                                <Check size={14} className="text-mintcom-green" />
+                              )}
+                            </button>
 
                             {/* Global Roles Section - Accordion */}
                             {assignableCustomRoles.filter(r => r.isGlobal && isRoleVisibleForTarget(r, roleSelectionTarget)).length > 0 && (

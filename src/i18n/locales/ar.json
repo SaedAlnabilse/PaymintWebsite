@@ -5954,6 +5954,8 @@
       "accessLabel": "الوصول",
       "adminDesc": "جميع الصلاحيات مفعلة",
       "adminRole": "مسؤول (وصول كامل)",
+      "employeeRole": "موظف (صلاحيات مخصصة)",
+      "employeeDesc": "اختر الصلاحيات بنفسك بالأسفل",
       "allLocations": "جميع المواقع",
       "backofficePermissions": "صلاحيات المكتب الخلفي",
       "checkingUsername": "جاري التحقق من اسم المستخدم...",

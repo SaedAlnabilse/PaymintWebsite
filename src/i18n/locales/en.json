@@ -5954,6 +5954,8 @@
       "accessLabel": "Access",
       "adminDesc": "All permissions enabled",
       "adminRole": "Admin (Full Access)",
+      "employeeRole": "Employee (Custom Permissions)",
+      "employeeDesc": "Pick the permissions below yourself",
       "allLocations": "All locations",
       "backofficePermissions": "Back office permissions",
       "checkingUsername": "Checking username...",

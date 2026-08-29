@@ -5855,6 +5855,8 @@
       "accessLabel": "访问权限",
       "adminDesc": "已启用所有权限",
       "adminRole": "管理员（完整权限）",
+      "employeeRole": "员工（自定义权限）",
+      "employeeDesc": "在下方自行选择权限",
       "allLocations": "全部门店",
       "backofficePermissions": "后台权限",
       "checkingUsername": "正在检查用户名…",
