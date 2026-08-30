@@ -49,6 +49,7 @@ import { TaxesView } from '../../components/dashboard/reports/views/TaxesView';
 import { CashDiscrepancyView } from '../../components/dashboard/reports/views/CashDiscrepancyView';
 import { PayInPayOutLogModal } from '../../components/dashboard/reports/PayInPayOutLogModal';
 import { formatInputPlaceholder } from '../../utils/textCase';
+import { bucketHasActivity, formatBucketLabel } from '../../utils/reportBuckets';
 import { useRealtime } from '../../hooks/useRealtime';
 import { DataChangeEventTypes } from '../../services/realtimeService';
 
@@ -687,16 +688,24 @@ export function ReportsPage() {
         return {
           summary: salesSummaryRows(),
           columns: [
-            { key: 'date', label: t('orders.exportFields.date') },
+            {
+              key: 'date',
+              label:
+                salesData.granularity === 'month'
+                  ? t('orders.reports.export.month')
+                  : t('orders.exportFields.date'),
+            },
             { key: 'count', label: ordersLabel },
             { key: 'netRevenue', label: netLabel },
             { key: 'tax', label: taxLabel },
             { key: 'revenue', label: grossLabel },
           ],
-          rows: (salesData?.dailyBreakdown || []).map(d => {
+          rows: (salesData?.dailyBreakdown || []).filter(bucketHasActivity).map(d => {
             const tax = d.tax ?? 0;
             return {
-              date: d.date,
+              // Long ranges come back rolled up per month (keyed by the 1st),
+              // so print "Jul 2026" rather than a day that means nothing.
+              date: formatBucketLabel(d.date, salesData.granularity, localeTag),
               count: num(d.count),
               netRevenue: money(d.netRevenue ?? (d.revenue - tax)),
               tax: money(tax),
@@ -826,7 +835,7 @@ export function ReportsPage() {
             { key: 'tax', label: taxLabel },
             { key: 'total', label: grossLabel },
           ],
-          rows: hours.map(p => {
+          rows: hours.filter(bucketHasActivity).map(p => {
             const tax = p.tax ?? 0;
             return {
               hour: p.hour,

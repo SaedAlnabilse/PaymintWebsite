@@ -4184,7 +4184,8 @@
         "shiftCount": "班次",
         "staffCount": "员工",
         "discountCount": "折扣",
-        "itemCount": "商品项"
+        "itemCount": "商品项",
+        "month": "月份"
       }
     },
     "searchPlaceholder": "搜索订单…",

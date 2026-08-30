@@ -41,12 +41,71 @@ type SelectedRefundLine = {
   quantity: number;
 };
 
+export interface TaxInclusiveRefundParams {
+  grossRefund: number;
+  /** Rate fractions, e.g. 0.16 for 16%. */
+  taxRate?: number;
+  serviceRate?: number;
+  isServiceTaxable?: boolean;
+  asNegative?: boolean;
+}
+
+export interface RefundBreakdown {
+  gross: number;
+  subtotal: number;
+  serviceCharge: number;
+  tax: number;
+  total: number;
+}
+
 const roundCurrency = (value: number): number =>
   Number((Number.isFinite(value) ? value : 0).toFixed(2));
 
 const toNumber = (value: unknown): number => {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : 0;
+};
+
+/**
+ * Splits a tax-inclusive refund into its receipt components. Tax and service
+ * are rounded first; the subtotal is the balancing component so the displayed
+ * receipt always adds back to the gross refund exactly.
+ */
+export const calculateTaxInclusiveRefund = ({
+  grossRefund,
+  taxRate = 0.16,
+  serviceRate = 0,
+  isServiceTaxable = true,
+  asNegative = true,
+}: TaxInclusiveRefundParams): RefundBreakdown => {
+  const gross = Math.abs(toNumber(grossRefund));
+  if (gross === 0) {
+    return { gross: 0, subtotal: 0, serviceCharge: 0, tax: 0, total: 0 };
+  }
+
+  const normalizedTaxRate = Math.max(0, toNumber(taxRate));
+  const normalizedServiceRate = Math.max(0, toNumber(serviceRate));
+  const multiplier = isServiceTaxable
+    ? (1 + normalizedServiceRate) * (1 + normalizedTaxRate)
+    : 1 + normalizedServiceRate + normalizedTaxRate;
+  const rawSubtotal = gross / multiplier;
+  const rawServiceCharge = rawSubtotal * normalizedServiceRate;
+  const rawTax = isServiceTaxable
+    ? (rawSubtotal + rawServiceCharge) * normalizedTaxRate
+    : rawSubtotal * normalizedTaxRate;
+  const serviceCharge = roundCurrency(rawServiceCharge);
+  const tax = roundCurrency(rawTax);
+  const subtotal = roundCurrency(gross - serviceCharge - tax);
+  const total = roundCurrency(subtotal + serviceCharge + tax);
+  const sign = asNegative ? -1 : 1;
+
+  return {
+    gross: sign * gross,
+    subtotal: sign * subtotal,
+    serviceCharge: sign * serviceCharge,
+    tax: sign * tax,
+    total: sign * total,
+  };
 };
 
 export const getRefundOrderItemId = (item: RefundLineItem): string =>

@@ -4286,7 +4286,8 @@
         "shiftCount": "Shifts",
         "staffCount": "Staff",
         "discountCount": "Discounts",
-        "itemCount": "Items"
+        "itemCount": "Items",
+        "month": "Month"
       }
     },
     "searchPlaceholder": "Search orders...",

@@ -55,6 +55,7 @@ export const emptySalesSummary = (): SalesSummary => ({
   totalPayIn: 0,
   totalPayOut: 0,
   dailyBreakdown: [],
+  granularity: 'day',
   paymentMethodBreakdown: normalizePaymentMethodBreakdown([]),
   discountBreakdown: [],
   cardTypeBreakdown: [],
@@ -103,6 +104,14 @@ export const normalizeSalesSummary = (payload: any): SalesSummary => {
         refundCount: toNumber(row?.refundCount),
       };
     }),
+    // Older API builds omit this; infer hourly from the key shape so the
+    // labels stay right, otherwise fall back to daily as before.
+    granularity:
+      source.granularity === 'hour' || source.granularity === 'day' || source.granularity === 'month'
+        ? source.granularity
+        : toArray(source.dailyBreakdown).some((row: any) => String(row?.date || '').includes(':'))
+          ? 'hour'
+          : 'day',
     paymentMethodBreakdown: normalizePaymentMethodBreakdown(source.paymentMethodBreakdown),
     discountBreakdown: toArray(source.discountBreakdown).map((row: any) => ({
       name: String(row?.name || row?.discountName || 'Unknown'),

@@ -22,6 +22,7 @@ import React, { useState, useMemo } from 'react';
 import { AnalyticsEmptyState } from '../AnalyticsEmptyState';
 import { StatValue } from '../../../../components/ui/StatValue';
 import { formatPaymentBrandName } from '../../../../utils/paymentCard';
+import { formatBucketLabel } from '../../../../utils/reportBuckets';
 
 const COLORS = [
   '#7dc6a2',
@@ -397,6 +398,8 @@ export const SalesView = React.memo(function SalesView({ salesData, selectedDate
             <div className="flex h-full relative" dir="ltr">
               {(() => {
                 const isHourly = salesData.dailyBreakdown?.some((d: any) => d.date.includes(':'));
+                // Long ranges come back rolled up per month (keyed by the 1st).
+                const isMonthly = salesData.granularity === 'month';
                 let chartData = salesData.dailyBreakdown || [];
 
                 // Determine if we need daily aggregation (for week/month views)
@@ -540,6 +543,7 @@ export const SalesView = React.memo(function SalesView({ salesData, selectedDate
                                 const dateLocale = getDateLocale(t('common.locale'));
                                 if (needsDailyAggregation) return val;
                                 if (val.length === 5 && val.includes(':')) return val;
+                                if (isMonthly) return formatBucketLabel(val, 'month', t('common.locale'));
                                 const date = parseChartDate(val);
                                 return !isNaN(date.getTime()) ? (val.includes(':') ? format(date, 'HH:00', { locale: dateLocale }) : format(date, 'MMM d', { locale: dateLocale })) : val;
                               }}
@@ -567,7 +571,11 @@ export const SalesView = React.memo(function SalesView({ salesData, selectedDate
                                 }
                                 if (val.length === 5 && val.includes(':')) return val;
                                 const date = parseChartDate(val);
-                                return !isNaN(date.getTime()) ? format(date, 'MMM d, yyyy HH:mm', { locale: dateLocale }) : val;
+                                if (isNaN(date.getTime())) return val;
+                                // A month bucket covers the whole month, so a
+                                // day and clock time would both be fiction.
+                                if (isMonthly) return format(date, 'MMMM yyyy', { locale: dateLocale });
+                                return format(date, 'MMM d, yyyy HH:mm', { locale: dateLocale });
                               }}
                             />
                             {isHourly && !needsDailyAggregation ? (

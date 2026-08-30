@@ -155,6 +155,12 @@ export interface SalesSummary {
     refunds?: number;
     refundCount?: number;
   }>;
+  /**
+   * Bucket size of `dailyBreakdown`: hourly for a day or less, daily up to a
+   * quarter, monthly beyond that. Month buckets are keyed by the first of the
+   * month, so labels must consult this rather than assume a calendar day.
+   */
+  granularity?: 'hour' | 'day' | 'month';
   paymentMethodBreakdown: Array<{
     name: string;
     value: number;

@@ -143,8 +143,18 @@ export function StockManagementPage() {
   const [bulkConfirmState, setBulkConfirmState] = useState<{
     targetAvailable: boolean;
     count: number;
-    attrGroup?: Attribute;
+    attrGroup: Attribute;
   } | null>(null);
+
+  // Collapsed state for Add-on Groups (all expanded by default)
+  const [collapsedGroupIds, setCollapsedGroupIds] = useState<Record<string, boolean>>({});
+
+  const toggleGroupCollapse = (groupId: string) => {
+    setCollapsedGroupIds((prev) => ({
+      ...prev,
+      [groupId]: !prev[groupId],
+    }));
+  };
 
   // Initial Fetch & Realtime
   const fetchData = useCallback(async (quiet = false) => {
@@ -260,13 +270,18 @@ export function StockManagementPage() {
     };
   }, [trackedItemsList, getProductStockLevel]);
 
+  // Non-empty modifier groups (groups that actually have add-on options)
+  const nonEmptyAttributes = useMemo(() => {
+    return attributes.filter((attr) => (attr.subAttributes || []).length > 0);
+  }, [attributes]);
+
   // Add-on Stats
   const addonStats = useMemo(() => {
     let total = 0;
     let available = 0;
     let unavailable = 0;
 
-    attributes.forEach((attr) => {
+    nonEmptyAttributes.forEach((attr) => {
       (attr.subAttributes || []).forEach((sa) => {
         total++;
         if (sa.isAvailable) available++;
@@ -275,12 +290,12 @@ export function StockManagementPage() {
     });
 
     return {
-      groupsCount: attributes.length,
+      groupsCount: nonEmptyAttributes.length,
       total,
       available,
       unavailable,
     };
-  }, [attributes]);
+  }, [nonEmptyAttributes]);
 
   // Filtered Stock Items for Display
   const filteredStockItems = useMemo(() => {
@@ -300,10 +315,9 @@ export function StockManagementPage() {
           return false;
         }
 
-        // Status Filter
+        // Status Filter (evaluated on current saved stock so items do not disappear while typing/adjusting)
         if (stockStatusFilter !== 'ALL') {
-          const draftVal = parseInt(editingStock[item.id] ?? String(item.availableStock ?? 0), 10);
-          const level = getProductStockLevel(item, isNaN(draftVal) ? item.availableStock : draftVal);
+          const level = getProductStockLevel(item, item.availableStock ?? 0);
           if (stockStatusFilter === 'IN_STOCK' && level !== 'in_stock') return false;
           if (stockStatusFilter === 'LOW_STOCK' && level !== 'low') return false;
           if (stockStatusFilter === 'OUT_OF_STOCK' && level !== 'out') return false;
@@ -316,8 +330,8 @@ export function StockManagementPage() {
           return sortOrder === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
         }
         if (sortKey === 'stock') {
-          const aStock = parseInt(editingStock[a.id] ?? String(a.availableStock ?? 0), 10) || 0;
-          const bStock = parseInt(editingStock[b.id] ?? String(b.availableStock ?? 0), 10) || 0;
+          const aStock = a.availableStock ?? 0;
+          const bStock = b.availableStock ?? 0;
           return sortOrder === 'asc' ? aStock - bStock : bStock - aStock;
         }
         if (sortKey === 'category') {
@@ -327,7 +341,7 @@ export function StockManagementPage() {
         }
         return 0;
       });
-  }, [trackedItemsList, searchQuery, categoryMap, selectedCategoryId, stockStatusFilter, editingStock, getProductStockLevel, sortKey, sortOrder]);
+  }, [trackedItemsList, searchQuery, categoryMap, selectedCategoryId, stockStatusFilter, getProductStockLevel, sortKey, sortOrder]);
 
   // Paginated Stock Items
   const totalStockPages = Math.max(1, Math.ceil(filteredStockItems.length / itemsPerPage));
@@ -336,9 +350,9 @@ export function StockManagementPage() {
     return filteredStockItems.slice(start, start + itemsPerPage);
   }, [filteredStockItems, stockPage, itemsPerPage]);
 
-  // Filtered Add-on Groups for Availability Tab
+  // Filtered Add-on Groups for Availability Tab (never includes empty groups)
   const filteredGroupedAttributes = useMemo(() => {
-    return attributes
+    return nonEmptyAttributes
       .filter((attr) => {
         if (selectedAddonGroupId !== 'ALL' && attr.id !== selectedAddonGroupId) {
           return false;
@@ -369,30 +383,10 @@ export function StockManagementPage() {
         };
       })
       .filter((attr) => {
-        if (searchQuery.trim()) {
-          const q = searchQuery.toLowerCase();
-          return attr.name.toLowerCase().includes(q) || attr.filteredSubs.length > 0;
-        }
-        if (addonStatusFilter !== 'ALL') {
-          return attr.filteredSubs.length > 0;
-        }
-        return true;
+        // Only show groups that have options matching current filter
+        return attr.filteredSubs.length > 0;
       });
-  }, [attributes, selectedAddonGroupId, addonStatusFilter, searchQuery]);
-
-  // Flat filtered list for total counts
-  const filteredAddonOptions = useMemo(() => {
-    return filteredGroupedAttributes.flatMap((group) =>
-      group.filteredSubs.map((sa) => ({
-        id: sa.id,
-        name: sa.name,
-        price: sa.price,
-        isAvailable: sa.isAvailable,
-        attributeId: group.id,
-        attributeName: group.name,
-      }))
-    );
-  }, [filteredGroupedAttributes]);
+  }, [nonEmptyAttributes, selectedAddonGroupId, addonStatusFilter, searchQuery]);
 
   // Stock Edit Handlers
   const handleStockInputChange = (itemId: string, value: string) => {
@@ -602,46 +596,6 @@ export function StockManagementPage() {
     }
   };
 
-  // Execute Bulk Toggle Displayed Filtered Modifier Options
-  const handleBulkToggleDisplayed = async (targetAvailable: boolean) => {
-    const itemsToToggle = filteredAddonOptions.filter((opt) => opt.isAvailable !== targetAvailable);
-    if (itemsToToggle.length === 0) return;
-
-    setBulkUpdatingAttrId('BULK_ALL');
-
-    // Optimistic UI update
-    setAttributes((prev) =>
-      prev.map((attr) => ({
-        ...attr,
-        subAttributes: (attr.subAttributes || []).map((sa) => {
-          const matches = itemsToToggle.some((t) => t.id === sa.id);
-          return matches ? { ...sa, isAvailable: targetAvailable } : sa;
-        }),
-      }))
-    );
-
-    try {
-      for (const opt of itemsToToggle) {
-        await api.patch(`/api/attributes/sub-attributes/${opt.id}`, {
-          name: opt.name,
-          price: opt.price,
-          isAvailable: targetAvailable,
-        });
-      }
-      toast.success(
-        targetAvailable
-          ? t('stockManagement.bulkAddonsEnabled', { defaultValue: 'All selected modifier options marked as available' })
-          : t('stockManagement.bulkAddonsDisabled', { defaultValue: 'All selected modifier options marked as unavailable' })
-      );
-    } catch (error) {
-      console.error('Error bulk updating modifiers:', error);
-      fetchData(true);
-      toast.error(extractErrorMessage(error) || t('stockManagement.errorBulkUpdating', { defaultValue: 'Failed to update some items' }));
-    } finally {
-      setBulkUpdatingAttrId(null);
-    }
-  };
-
   // Prompt confirmation for Bulk Group Toggle
   const promptBulkToggleGroup = (attr: Attribute, targetAvailable: boolean) => {
     const subsToUpdate = (attr.subAttributes || []).filter((sa) => sa.isAvailable !== targetAvailable);
@@ -653,24 +607,10 @@ export function StockManagementPage() {
     });
   };
 
-  // Prompt confirmation for Bulk Displayed Toggle
-  const promptBulkToggleDisplayed = (targetAvailable: boolean) => {
-    const itemsToToggle = filteredAddonOptions.filter((opt) => opt.isAvailable !== targetAvailable);
-    if (itemsToToggle.length === 0) return;
-    setBulkConfirmState({
-      targetAvailable,
-      count: itemsToToggle.length,
-    });
-  };
-
   // Execute Bulk Action after modal confirmation
   const handleConfirmBulkAction = () => {
     if (!bulkConfirmState) return;
-    if (bulkConfirmState.attrGroup) {
-      void handleBulkToggleGroup(bulkConfirmState.attrGroup, bulkConfirmState.targetAvailable);
-    } else {
-      void handleBulkToggleDisplayed(bulkConfirmState.targetAvailable);
-    }
+    void handleBulkToggleGroup(bulkConfirmState.attrGroup, bulkConfirmState.targetAvailable);
     setBulkConfirmState(null);
   };
 
@@ -1083,7 +1023,7 @@ export function StockManagementPage() {
                 onChange={(val) => {
                   setSelectedAddonGroupId(val || 'ALL');
                 }}
-                options={attributes.map((a) => ({ label: a.name, value: a.id }))}
+                options={nonEmptyAttributes.map((a) => ({ label: a.name, value: a.id }))}
                 allOptionLabel={t('stockManagement.allModifierGroups', { defaultValue: 'All Modifier Groups' })}
                 placeholder={t('stockManagement.allModifierGroups', { defaultValue: 'All Modifier Groups' })}
                 showAllOption={true}
@@ -1113,43 +1053,21 @@ export function StockManagementPage() {
               />
             </div>
           ) : (
-            <div className="flex flex-col sm:flex-row items-center gap-3">
-              <div className="w-full sm:w-56">
-                <SelectInput
-                  value={addonStatusFilter === 'ALL' ? null : addonStatusFilter}
-                  onChange={(val) => {
-                    setAddonStatusFilter((val as AddonStatusFilter) || 'ALL');
-                  }}
-                  options={[
-                    { label: `${t('stockManagement.available', { defaultValue: 'Available' })} (${addonStats.available})`, value: 'AVAILABLE' },
-                    { label: `${t('stockManagement.unavailable', { defaultValue: 'Unavailable' })} (${addonStats.unavailable})`, value: 'UNAVAILABLE' },
-                  ]}
-                  allOptionLabel={`${t('stockManagement.allAddonStatuses', { defaultValue: 'All Add-on Statuses' })} (${addonStats.total})`}
-                  placeholder={t('stockManagement.allAddonStatuses', { defaultValue: 'All Add-on Statuses' })}
-                  showAllOption={true}
-                  searchable={false}
-                />
-              </div>
-
-              {/* Quick Bulk Toggle for Addons */}
-              <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
-                <button
-                  type="button"
-                  onClick={() => promptBulkToggleDisplayed(true)}
-                  disabled={bulkUpdatingAttrId !== null || filteredAddonOptions.every((o) => o.isAvailable)}
-                  className="h-12 flex-1 sm:flex-none px-4 rounded-xl text-xs font-bold bg-mintcom-green/15 text-[#1b6140] dark:text-mintcom-green border border-mintcom-green/30 hover:bg-mintcom-green/25 transition-colors disabled:opacity-40 whitespace-nowrap"
-                >
-                  {t('stockManagement.enableAll', { defaultValue: 'Enable All' })}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => promptBulkToggleDisplayed(false)}
-                  disabled={bulkUpdatingAttrId !== null || filteredAddonOptions.every((o) => !o.isAvailable)}
-                  className="h-12 flex-1 sm:flex-none px-4 rounded-xl text-xs font-bold bg-[#D55263]/15 text-[#b83749] dark:text-[#D55263] border border-[#D55263]/30 hover:bg-[#D55263]/25 transition-colors disabled:opacity-40 whitespace-nowrap"
-                >
-                  {t('stockManagement.disableAll', { defaultValue: 'Disable All' })}
-                </button>
-              </div>
+            <div className="w-full lg:w-60">
+              <SelectInput
+                value={addonStatusFilter === 'ALL' ? null : addonStatusFilter}
+                onChange={(val) => {
+                  setAddonStatusFilter((val as AddonStatusFilter) || 'ALL');
+                }}
+                options={[
+                  { label: `${t('stockManagement.available', { defaultValue: 'Available' })} (${addonStats.available})`, value: 'AVAILABLE' },
+                  { label: `${t('stockManagement.unavailable', { defaultValue: 'Unavailable' })} (${addonStats.unavailable})`, value: 'UNAVAILABLE' },
+                ]}
+                allOptionLabel={`${t('stockManagement.allAddonStatuses', { defaultValue: 'All Add-on Statuses' })} (${addonStats.total})`}
+                placeholder={t('stockManagement.allAddonStatuses', { defaultValue: 'All Add-on Statuses' })}
+                showAllOption={true}
+                searchable={false}
+              />
             </div>
           )}
         </div>
@@ -1428,162 +1346,232 @@ export function StockManagementPage() {
       {/* TAB 2: ADD-ONS & MODIFIERS AVAILABILITY */}
       {activeTab === 'availability' && (
         <div className="space-y-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm text-slate-600 dark:text-slate-300">
-                <thead className="bg-slate-50 dark:bg-slate-800/60 text-xs uppercase font-semibold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
-                  <tr>
-                    <th className="px-6 py-4">{t('stockManagement.addonOption', { defaultValue: 'Modifier / Option' })}</th>
-                    <th className="px-6 py-4 text-center">{t('stockManagement.extraPrice', { defaultValue: 'Extra Price' })}</th>
-                    <th className="px-6 py-4 text-center">{t('stockManagement.status', { defaultValue: 'Status' })}</th>
-                    <th className="px-6 py-4 text-right">{t('stockManagement.availabilityToggle', { defaultValue: 'Availability' })}</th>
-                  </tr>
-                </thead>
-
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
-                  {isLoading ? (
-                    <tr>
-                      <td colSpan={4} className="text-center py-12 text-slate-400">
-                        <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-emerald-500" />
-                        <p>{t('stockManagement.loadingAddons', { defaultValue: 'Loading modifier options...' })}</p>
-                      </td>
-                    </tr>
-                  ) : filteredGroupedAttributes.length === 0 ? (
-                    <tr>
-                      <td colSpan={4} className="text-center py-12 text-slate-400">
-                        <PlusSquare className="w-10 h-10 mx-auto mb-2 opacity-40" />
-                        <p className="font-medium text-slate-600 dark:text-slate-300">
-                          {t('stockManagement.noAddonGroupsFound', { defaultValue: 'No modifier groups or options match your filter criteria' })}
-                        </p>
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredGroupedAttributes.map((group) => {
-                      const isGroupAllAvailable = group.totalCount > 0 && group.availableCount === group.totalCount;
-                      const isGroupAllUnavailable = group.totalCount > 0 && group.availableCount === 0;
-                      const isUpdatingGroup = bulkUpdatingAttrId === group.id;
-
-                      return (
-                        <React.Fragment key={group.id}>
-                          {/* GROUP SECTION HEADER WITH MASTER TOGGLE */}
-                          <tr className="bg-slate-50/90 dark:bg-slate-800/70 border-t-2 border-slate-200/80 dark:border-slate-700">
-                            <td colSpan={3} className="px-6 py-3.5">
-                              <div className="flex items-center gap-3">
-                                <div className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/40">
-                                  <Layers className="w-4 h-4" />
-                                </div>
-                                <div>
-                                  <span className="text-sm font-bold text-slate-900 dark:text-white">
-                                    {group.name}
-                                  </span>
-                                  <span className="ml-2.5 text-xs px-2.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold">
-                                    {group.availableCount}/{group.totalCount} {t('stockManagement.available', { defaultValue: 'Available' })}
-                                  </span>
-                                </div>
-                              </div>
-                            </td>
-                            <td className="px-6 py-3.5 text-right">
-                              <div className="inline-flex items-center gap-2.5">
-                                <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold">
-                                  {t('stockManagement.turnAllGroup', { defaultValue: 'All Group:' })}
-                                </span>
-                                <button
-                                  type="button"
-                                  onClick={() => promptBulkToggleGroup(group, !isGroupAllAvailable)}
-                                  disabled={isUpdatingGroup}
-                                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-50 ${
-                                    isGroupAllAvailable
-                                      ? 'bg-mintcom-green'
-                                      : isGroupAllUnavailable
-                                      ? 'bg-slate-300 dark:bg-slate-700'
-                                      : 'bg-amber-400 dark:bg-amber-500'
-                                  }`}
-                                  title={isGroupAllAvailable ? 'Turn off all options in this group' : 'Turn on all options in this group'}
-                                >
-                                  <span
-                                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
-                                      isGroupAllAvailable ? 'translate-x-5' : 'translate-x-0'
-                                    }`}
-                                  />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-
-                          {/* OPTION ROWS */}
-                          {group.filteredSubs.map((opt) => {
-                            const isSavingThis = savingSubAttrId === opt.id;
-                            return (
-                              <tr
-                                key={opt.id}
-                                className={`hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors ${
-                                  !opt.isAvailable ? 'bg-rose-50/20 dark:bg-rose-950/10' : ''
-                                }`}
-                              >
-                                {/* Option Name */}
-                                <td className="px-6 py-4 pl-12">
-                                  <span className={`font-semibold text-slate-900 dark:text-white ${!opt.isAvailable ? 'line-through text-slate-400 dark:text-slate-500' : ''}`}>
-                                    {opt.name}
-                                  </span>
-                                </td>
-
-                                {/* Extra Price */}
-                                <td className="px-6 py-4 text-center">
-                                  {opt.price > 0 ? (
-                                    <span className="font-medium text-slate-900 dark:text-white">
-                                      +{formatAmount(opt.price)}
-                                    </span>
-                                  ) : (
-                                    <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                                      {t('stockManagement.free', { defaultValue: 'Free' })}
-                                    </span>
-                                  )}
-                                </td>
-
-                                {/* Status Badge */}
-                                <td className="px-6 py-4 text-center">
-                                  {opt.isAvailable ? (
-                                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-mintcom-green/15 text-[#1b6140] dark:text-mintcom-green border border-mintcom-green/30">
-                                      <CheckCircle2 className="w-3.5 h-3.5 text-mintcom-green" />
-                                      {t('stockManagement.available', { defaultValue: 'Available' })}
-                                    </span>
-                                  ) : (
-                                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-[#D55263]/15 text-[#b83749] dark:text-[#D55263] border border-[#D55263]/30">
-                                      <XCircle className="w-3.5 h-3.5 text-[#D55263]" />
-                                      {t('stockManagement.unavailable', { defaultValue: 'Unavailable' })}
-                                    </span>
-                                  )}
-                                </td>
-
-                                {/* Action Toggle Switch */}
-                                <td className="px-6 py-4 text-right">
-                                  <button
-                                    type="button"
-                                    onClick={() => handleToggleSubAttributeAvailability(opt, group.id)}
-                                    disabled={isSavingThis}
-                                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-50 ${
-                                      opt.isAvailable ? 'bg-mintcom-green' : 'bg-slate-300 dark:bg-slate-700'
-                                    }`}
-                                    title={opt.isAvailable ? 'Click to make unavailable' : 'Click to make available'}
-                                  >
-                                    <span
-                                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
-                                        opt.isAvailable ? 'translate-x-5' : 'translate-x-0'
-                                      }`}
-                                    />
-                                  </button>
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </React.Fragment>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
+          {isLoading ? (
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-12 text-center text-slate-400">
+              <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-emerald-500" />
+              <p>{t('stockManagement.loadingAddons', { defaultValue: 'Loading modifier options...' })}</p>
             </div>
-          </div>
+          ) : filteredGroupedAttributes.length === 0 ? (
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-12 text-center text-slate-400">
+              <PlusSquare className="w-10 h-10 mx-auto mb-2 opacity-40" />
+              <p className="font-medium text-slate-600 dark:text-slate-300">
+                {t('stockManagement.noAddonGroupsFound', { defaultValue: 'No modifier groups or options match your filter criteria' })}
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4">
+              {filteredGroupedAttributes.map((group) => {
+                const isGroupAllAvailable = group.totalCount > 0 && group.availableCount === group.totalCount;
+                const isGroupAllUnavailable = group.totalCount > 0 && group.availableCount === 0;
+                const isUpdatingGroup = bulkUpdatingAttrId === group.id;
+                const isCollapsed = Boolean(collapsedGroupIds[group.id]);
+
+                return (
+                  <div
+                    key={group.id}
+                    className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden transition-all duration-200 hover:border-slate-300 dark:hover:border-slate-700"
+                  >
+                    {/* GROUP HEADER */}
+                    <div className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/70 dark:bg-slate-800/40 border-b border-slate-200/80 dark:border-slate-800">
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        <div className="p-2.5 rounded-xl bg-mintcom-green/10 text-mintcom-green border border-mintcom-green/20 shrink-0">
+                          <Layers className="w-5 h-5" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2.5 flex-wrap">
+                            <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight truncate">
+                              {group.name}
+                            </h3>
+                            {group.inputType && (
+                              <span className="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-200/70 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                                {group.inputType === 'SINGLE_SELECT'
+                                  ? t('attributes.list.singleChoice', { defaultValue: 'Single Choice' })
+                                  : t('attributes.list.multipleChoice', { defaultValue: 'Multiple Choice' })}
+                              </span>
+                            )}
+                            {group.isRequired && (
+                              <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-amber-500/15 text-amber-700 dark:text-[#f8b30a] border border-amber-500/30">
+                                {t('attributes.list.mandatory', { defaultValue: 'Required' })}
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Availability Progress Indicator */}
+                          <div className="flex items-center gap-2.5 mt-1.5 flex-wrap">
+                            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                              {group.availableCount} / {group.totalCount} {t('stockManagement.available', { defaultValue: 'Available' })}
+                            </span>
+                            <div className="w-20 h-1.5 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+                              <div
+                                className={`h-full rounded-full transition-all duration-300 ${
+                                  group.availableCount === group.totalCount
+                                    ? 'bg-mintcom-green'
+                                    : group.availableCount === 0
+                                    ? 'bg-rose-500'
+                                    : 'bg-amber-400'
+                                }`}
+                                style={{ width: `${group.totalCount > 0 ? (group.availableCount / group.totalCount) * 100 : 0}%` }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* GROUP HEADER ACTIONS */}
+                      <div className="flex items-center gap-3 shrink-0 self-end sm:self-center">
+                        {/* Group Master Switch */}
+                        <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700 shadow-2xs">
+                          <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 select-none">
+                            {isGroupAllAvailable
+                              ? t('common.active', { defaultValue: 'Active' })
+                              : isGroupAllUnavailable
+                              ? t('common.inactive', { defaultValue: 'Inactive' })
+                              : t('stockManagement.turnAllGroup', { defaultValue: 'All Group:' })}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => promptBulkToggleGroup(group, !isGroupAllAvailable)}
+                            disabled={isUpdatingGroup}
+                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-50 ${
+                              isGroupAllAvailable
+                                ? 'bg-mintcom-green'
+                                : isGroupAllUnavailable
+                                ? 'bg-slate-300 dark:bg-slate-700'
+                                : 'bg-amber-400 dark:bg-amber-500'
+                            }`}
+                            title={isGroupAllAvailable ? 'Turn off all options in this group' : 'Turn on all options in this group'}
+                          >
+                            {isUpdatingGroup ? (
+                              <span className="absolute inset-0 flex items-center justify-center">
+                                <RefreshCw className="w-3 h-3 text-white animate-spin" />
+                              </span>
+                            ) : (
+                              <span
+                                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                                  isGroupAllAvailable ? 'translate-x-5' : 'translate-x-0'
+                                }`}
+                              />
+                            )}
+                          </button>
+                        </div>
+
+                        {/* Collapse / Expand Button */}
+                        <button
+                          type="button"
+                          onClick={() => toggleGroupCollapse(group.id)}
+                          className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors"
+                          title={isCollapsed ? 'Expand options' : 'Collapse options'}
+                        >
+                          <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isCollapsed ? '-rotate-90' : ''}`} />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* GROUP OPTIONS TABLE / LIST */}
+                    {!isCollapsed && (
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left text-sm text-slate-600 dark:text-slate-300">
+                          <thead className="bg-slate-50/50 dark:bg-slate-800/20 text-xs uppercase font-semibold text-slate-400 border-b border-slate-100 dark:border-slate-800">
+                            <tr>
+                              <th className="px-6 py-3 font-semibold">{t('stockManagement.addonOption', { defaultValue: 'Modifier / Option' })}</th>
+                              <th className="px-6 py-3 text-center font-semibold">{t('stockManagement.extraPrice', { defaultValue: 'Extra Price' })}</th>
+                              <th className="px-6 py-3 text-center font-semibold">{t('stockManagement.status', { defaultValue: 'Status' })}</th>
+                              <th className="px-6 py-3 text-right font-semibold">{t('stockManagement.availabilityToggle', { defaultValue: 'Availability' })}</th>
+                            </tr>
+                          </thead>
+
+                          <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+                            {group.filteredSubs.map((opt) => {
+                              const isSavingThis = savingSubAttrId === opt.id;
+                              return (
+                                <tr
+                                  key={opt.id}
+                                  className={`hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors ${
+                                    !opt.isAvailable ? 'bg-rose-50/10 dark:bg-rose-950/5' : ''
+                                  }`}
+                                >
+                                  {/* Option Name with Status Indicator Dot */}
+                                  <td className="px-6 py-3.5">
+                                    <div className="flex items-center gap-3">
+                                      <span
+                                        className={`w-2 h-2 rounded-full shrink-0 ${
+                                          opt.isAvailable ? 'bg-mintcom-green shadow-[0_0_8px_rgba(27,97,64,0.35)]' : 'bg-slate-300 dark:bg-slate-600'
+                                        }`}
+                                      />
+                                      <span
+                                        className={`font-semibold text-slate-900 dark:text-white ${
+                                          !opt.isAvailable ? 'text-slate-400 dark:text-slate-500' : ''
+                                        }`}
+                                      >
+                                        {opt.name}
+                                      </span>
+                                    </div>
+                                  </td>
+
+                                  {/* Extra Price */}
+                                  <td className="px-6 py-3.5 text-center">
+                                    {opt.price > 0 ? (
+                                      <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200/60 dark:border-slate-700">
+                                        +{formatAmount(opt.price)}
+                                      </span>
+                                    ) : (
+                                      <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-mintcom-green/10 text-mintcom-green border border-mintcom-green/20">
+                                        {t('stockManagement.free', { defaultValue: 'Free' })}
+                                      </span>
+                                    )}
+                                  </td>
+
+                                  {/* Status Badge */}
+                                  <td className="px-6 py-3.5 text-center">
+                                    {opt.isAvailable ? (
+                                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-mintcom-green/15 text-[#1b6140] dark:text-mintcom-green border border-mintcom-green/30">
+                                        <CheckCircle2 className="w-3.5 h-3.5 text-mintcom-green" />
+                                        <span>{t('stockManagement.available', { defaultValue: 'Available' })}</span>
+                                      </span>
+                                    ) : (
+                                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-[#D55263]/15 text-[#b83749] dark:text-[#D55263] border border-[#D55263]/30">
+                                        <XCircle className="w-3.5 h-3.5 text-[#D55263]" />
+                                        <span>{t('stockManagement.unavailable', { defaultValue: 'Unavailable' })}</span>
+                                      </span>
+                                    )}
+                                  </td>
+
+                                  {/* Toggle Switch */}
+                                  <td className="px-6 py-3.5 text-right">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleToggleSubAttributeAvailability(opt, group.id)}
+                                      disabled={isSavingThis}
+                                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-50 ${
+                                        opt.isAvailable ? 'bg-mintcom-green' : 'bg-slate-300 dark:bg-slate-700'
+                                      }`}
+                                      title={opt.isAvailable ? 'Click to make unavailable' : 'Click to make available'}
+                                    >
+                                      {isSavingThis ? (
+                                        <span className="absolute inset-0 flex items-center justify-center">
+                                          <RefreshCw className="w-3 h-3 text-white animate-spin" />
+                                        </span>
+                                      ) : (
+                                        <span
+                                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                                            opt.isAvailable ? 'translate-x-5' : 'translate-x-0'
+                                          }`}
+                                        />
+                                      )}
+                                    </button>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 
@@ -1662,7 +1650,7 @@ export function StockManagementPage() {
         onClose={() => setConfirmDiscardOpen(false)}
       />
 
-      {/* Bulk Addons Availability Confirm Modal */}
+      {/* Group Modifier Options Availability Confirm Modal */}
       <ConfirmModal
         isOpen={bulkConfirmState !== null}
         title={
@@ -1671,27 +1659,17 @@ export function StockManagementPage() {
             : t('stockManagement.confirmDisableTitle', { defaultValue: 'Disable Modifier Options?' })
         }
         message={
-          bulkConfirmState?.attrGroup
-            ? (bulkConfirmState.targetAvailable
-                ? t('stockManagement.confirmEnableGroupMessage', {
-                    defaultValue: 'Are you sure you want to mark all {{count}} options in "{{groupName}}" as available? They will become available for customers to order immediately.',
-                    count: bulkConfirmState.count,
-                    groupName: bulkConfirmState.attrGroup.name,
-                  })
-                : t('stockManagement.confirmDisableGroupMessage', {
-                    defaultValue: 'Are you sure you want to mark all {{count}} options in "{{groupName}}" as unavailable? These options will be blocked from ordering across all POS terminals.',
-                    count: bulkConfirmState.count,
-                    groupName: bulkConfirmState.attrGroup.name,
-                  }))
-            : (bulkConfirmState?.targetAvailable
-                ? t('stockManagement.confirmEnableAllMessage', {
-                    defaultValue: 'Are you sure you want to mark all {{count}} modifier options as available? They will become available for customers to order immediately across all POS terminals.',
-                    count: bulkConfirmState?.count ?? 0,
-                  })
-                : t('stockManagement.confirmDisableAllMessage', {
-                    defaultValue: 'Are you sure you want to mark all {{count}} modifier options as unavailable? These options will be blocked from ordering across all POS terminals.',
-                    count: bulkConfirmState?.count ?? 0,
-                  }))
+          bulkConfirmState?.targetAvailable
+            ? t('stockManagement.confirmEnableGroupMessage', {
+                defaultValue: 'Are you sure you want to mark all {{count}} options in "{{groupName}}" as available? They will become available for customers to order immediately.',
+                count: bulkConfirmState.count,
+                groupName: bulkConfirmState.attrGroup.name,
+              })
+            : t('stockManagement.confirmDisableGroupMessage', {
+                defaultValue: 'Are you sure you want to mark all {{count}} options in "{{groupName}}" as unavailable? These options will be blocked from ordering across all POS terminals.',
+                count: bulkConfirmState?.count ?? 0,
+                groupName: bulkConfirmState?.attrGroup.name ?? '',
+              })
         }
         confirmText={
           bulkConfirmState?.targetAvailable

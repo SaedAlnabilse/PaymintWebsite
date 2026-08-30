@@ -4286,7 +4286,8 @@
         "shiftCount": "الورديات",
         "staffCount": "الموظفون",
         "discountCount": "الخصومات",
-        "itemCount": "الأصناف"
+        "itemCount": "الأصناف",
+        "month": "الشهر"
       }
     },
     "searchPlaceholder": "البحث في الطلبات...",

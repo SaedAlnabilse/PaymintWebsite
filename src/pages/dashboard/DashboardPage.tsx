@@ -622,7 +622,11 @@ export const DashboardPage = () => {
           { key: 'tax', label: cur(t('orders.reports.sales.totalTax')) },
           { key: 'total', label: cur(t('orders.reports.export.salesInclTax')) },
         ],
-        rows: peakHours.map(p => ({
+        // Drop the hours the venue was closed — the API returns all 24 so the
+        // chart has a full axis, but a table of zeros helps nobody.
+        rows: peakHours
+          .filter(p => (p.count || 0) !== 0 || Math.abs(p.total || 0) >= 0.005)
+          .map(p => ({
           hour: p.hour,
           count: numFmt(p.count),
           netTotal: money(p.netTotal ?? (p.total - (p.tax ?? 0))),
