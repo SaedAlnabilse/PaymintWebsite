@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   X, Trash2, Tag, Coffee, IceCream, Pizza, ShoppingBag, Gift, Star, Heart,
   Utensils, CupSoda, Martini, UtensilsCrossed, Cake, Croissant, Cookie,
-  Sandwich, Drumstick, Fish, Apple, Carrot
+  Sandwich, Drumstick, Fish, Apple, Carrot, Soup, Beer, Wine, Flame
 } from 'lucide-react';
 import { QuickInfo } from '../QuickInfo';
 import { useScrollLock } from '../../hooks/useScrollLock';
@@ -15,10 +15,12 @@ import { TEXT_INPUT_LIMITS } from '../../config/textLimits';
 // Mapping main app icons (MaterialCommunityIcons) to Lucide equivalents
 export const ICON_MAP: Record<string, React.ElementType> = {
   'food': Utensils,
+  'silverware-fork-knife': Utensils,
   'coffee': Coffee,
   'cup': CupSoda,
   'glass-cocktail': Martini,
   'food-fork-drink': UtensilsCrossed,
+  'silverware': UtensilsCrossed,
   'cake': Cake,
   'bread-slice': Croissant,
   'ice-cream': IceCream,
@@ -34,9 +36,39 @@ export const ICON_MAP: Record<string, React.ElementType> = {
   'heart': Heart,
   'gift': Gift,
   'shopping': ShoppingBag,
+  'noodles': Soup,
+  'beer': Beer,
+  'glass-wine': Wine,
+  'wine': Wine,
+  'fire': Flame,
 };
 
-export const ICONS = Object.keys(ICON_MAP);
+export const ICONS = [
+  'food',
+  'coffee',
+  'cup',
+  'glass-cocktail',
+  'food-fork-drink',
+  'cake',
+  'bread-slice',
+  'ice-cream',
+  'cookie',
+  'pizza',
+  'hamburger',
+  'food-drumstick',
+  'fish',
+  'fruit-watermelon',
+  'carrot',
+  'tag',
+  'star',
+  'heart',
+  'gift',
+  'shopping',
+  'noodles',
+  'beer',
+  'glass-wine',
+  'fire',
+];
 
 interface Category {
   id: string;
@@ -182,7 +214,7 @@ export function CategoryFormModal({
                   {t('categories.form.iconLabel')}
                   <QuickInfo text={t('categories.form.iconTip')} />
                 </label>
-                <div className="grid grid-cols-5 gap-3">
+                <div className="grid grid-cols-6 gap-2.5">
                   {ICONS.map(icon => {
                     const IconComp = ICON_MAP[icon];
                     const isSelected = selectedIcon === icon;

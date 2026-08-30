@@ -29,6 +29,10 @@ import {
   Bluetooth,
   Wifi,
   Briefcase,
+  Beer,
+  Wine,
+  Soup,
+  Flame,
   Smartphone,
   Monitor,
   AlertTriangle,
@@ -106,6 +110,11 @@ const CATEGORY_ICONS: { key: string; Icon: typeof Coffee }[] = [
   { key: 'heart', Icon: Heart },
   { key: 'gift', Icon: Gift },
   { key: 'shopping', Icon: ShoppingBag },
+  { key: 'noodles', Icon: Soup },
+  { key: 'beer', Icon: Beer },
+  { key: 'glass-wine', Icon: Wine },
+  { key: 'wine', Icon: Wine },
+  { key: 'fire', Icon: Flame },
 ];
 const CATEGORY_ICON_MAP: Record<string, typeof Coffee> = Object.fromEntries(
   CATEGORY_ICONS.map((c) => [c.key, c.Icon]),

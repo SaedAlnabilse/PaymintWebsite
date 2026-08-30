@@ -340,6 +340,17 @@ export function OrderRefundModal({
     }
   }, [canRefundByItem, refundableItems, selectedRefundLines.length]);
 
+const generateClientRequestId = (): string => {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = Math.floor(Math.random() * 16);
+    const v = c === 'x' ? r : (r % 4) + 8;
+    return v.toString(16);
+  });
+};
+
   const submitRefundWithReason = async () => {
     if (!canRefund) {
       setRefundReasonError(t('orders.messages.noRefundPermission'));
@@ -373,18 +384,27 @@ export function OrderRefundModal({
     setRefundReasonError('');
 
     try {
+      const clientRequestId = generateClientRequestId();
+      const disposition = restockItems ? 'RESTOCKED' : 'NOT_RESTOCKED';
+
       const response = isItemRefund
         ? await api.post(`/api/orders/${order.id}/refund-items`, {
+            clientRequestId,
             refundReason: trimmedReason,
             restockItems,
+            disposition,
             items: selectedRefundLines.map(line => ({
               orderItemId: line.orderItemId,
               quantity: line.quantity,
+              disposition,
+              restock: restockItems,
             })),
           })
         : await api.post(`/api/orders/${order.id}/refund`, {
+            clientRequestId,
             refundReason: trimmedReason,
             restockItems,
+            disposition,
           });
 
       const fallbackAmount = isItemRefund
