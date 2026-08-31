@@ -422,10 +422,10 @@ export function getRelatedSuggestions(
 
 export function getGreetingMessage(pageContext: ResolvedChatbotPageContext, useArabic: boolean): string {
   if (useArabic) {
-    return `أهلاً، أنا مينتو. ${pageContext.welcomeMessage} ما الذي تريد إنجازه الآن؟`;
+    return `أهلاً، أنا Mintcom AI. ${pageContext.welcomeMessage} ما الذي تريد إنجازه الآن؟`;
   }
 
-  return `Hi, I'm Minto. ${pageContext.welcomeMessage} What would you like to do right now?`;
+  return `Hi, I'm Mintcom AI. ${pageContext.welcomeMessage} What would you like to do right now?`;
 }
 
 export function getSmallTalkResponse(pageContext: ResolvedChatbotPageContext, useArabic: boolean): string {

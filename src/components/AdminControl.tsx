@@ -1329,7 +1329,7 @@ export const AdminControl = () => {
     >
       <div className="absolute top-[20%] left-[-10%] w-[500px] h-[500px] bg-blue-500/5 rounded-full blur-[100px] -z-10" />
 
-      <div className="w-full px-6 md:px-10 lg:px-16">
+      <div className="mx-auto w-full max-w-7xl px-5 sm:px-6 lg:px-8">
         <div className="flex flex-col-reverse lg:flex-row items-center gap-12 lg:gap-16">
           {/* Phones showcase — animation is timer-based, not scroll-linked */}
           <div

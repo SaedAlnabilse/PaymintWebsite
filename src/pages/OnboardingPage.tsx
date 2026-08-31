@@ -1330,18 +1330,20 @@ export function OnboardingPage() {
                         )}
                       </div>
                       {!isCurrencyLocked && (
-                        <p className="text-[10px] font-sans text-gray-500 mt-1.5 mx-1 flex items-center gap-1.5">
-                          <Info size={12} className="flex-shrink-0" />
-                          {t('onboarding.step1.currencyLinkedToCountry', {
-                            defaultValue: 'Currency is set from the selected country. You can change it if needed.',
-                          })}
+                        <p className="text-xs font-sans text-gray-500 dark:text-gray-400 mt-1.5 mx-1 flex items-center gap-1.5">
+                          <Info size={14} className="flex-shrink-0" />
+                          <span>
+                            {t('onboarding.step1.currencyLinkedToCountry', {
+                              defaultValue: 'Currency is set from the selected country. You can change it if needed.',
+                            })}
+                          </span>
                         </p>
                       )}
                       {isCurrencyLocked && (
-                        <p className="text-[10px] font-sans text-amber-600 mt-1.5 mx-1 flex items-center gap-1.5 bg-amber-500/5 p-2 rounded-lg border border-amber-500/10">
-                          <Info size={12} className="flex-shrink-0" />
-                          {t('onboarding.step1.currencyLockedNote')}
-                        </p>
+                        <div className="text-xs font-sans text-amber-800 dark:text-amber-300 mt-2 mx-1 flex items-start gap-2 bg-amber-50 dark:bg-amber-500/10 p-3 rounded-xl border border-amber-200 dark:border-amber-500/20 leading-relaxed">
+                          <Info size={16} className="flex-shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+                          <span>{t('onboarding.step1.currencyLockedNote')}</span>
+                        </div>
                       )}
                       {form1.formState.errors.currency && <p className="text-mintcom-red text-xs font-sans text-gray-500 mt-1 mx-1">{form1.formState.errors.currency.message as string}</p>}
                     </div>
@@ -2180,7 +2182,7 @@ export function OnboardingPage() {
                       <div className="space-y-1">
                         <EmbeddedCardField
                           label={t('paymentMethods.modal.cardNumber', {
-                            defaultValue: 'Card number',
+                            defaultValue: 'Card Number',
                           })}
                           error={form4.formState.errors.cardNumber?.message as string | undefined}
                         >
@@ -2207,7 +2209,7 @@ export function OnboardingPage() {
                         <div className="grid grid-cols-1 gap-x-3 gap-y-1 sm:grid-cols-2 sm:items-start">
                           <EmbeddedCardField
                             label={t('paymentMethods.modal.expiry', {
-                            defaultValue: 'Expiry date',
+                              defaultValue: 'Expiry Date',
                             })}
                             error={form4.formState.errors.expiryDate?.message as string | undefined}
                           >
@@ -2232,10 +2234,10 @@ export function OnboardingPage() {
 
                           <EmbeddedCardField
                             label={
-                              <>
+                              <span className="flex items-center">
                                 {t('paymentMethods.modal.cvv', { defaultValue: 'CVV' })}
-                                <Info size={12} className="shrink-0 text-gray-400" aria-hidden />
-                              </>
+                                <QuickInfo text={t('paymentMethods.modal.cvvTip', { defaultValue: '3 or 4-digit security code on the back of your card (or front for Amex).' })} />
+                              </span>
                             }
                             error={form4.formState.errors.cvv?.message as string | undefined}
                           >
@@ -2265,7 +2267,7 @@ export function OnboardingPage() {
 
                         <EmbeddedCardField
                           label={t('paymentMethods.modal.cardholder', {
-                            defaultValue: 'Cardholder name',
+                            defaultValue: 'Cardholder Name',
                           })}
                           error={form4.formState.errors.cardName?.message as string | undefined}
                         >

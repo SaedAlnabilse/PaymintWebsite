@@ -533,7 +533,8 @@ export function FiscalComplianceCard({ initial, disabled, onSaved }: FiscalCompl
                 <button
                   type="button"
                   onClick={() => { setPickerOpen(false); setSearch(''); }}
-                  className="w-9 h-9 rounded-lg bg-gray-100 dark:bg-white/5 flex items-center justify-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                  aria-label={t('common.close', 'Close')}
+                  className="p-2 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all hover:bg-gray-100 dark:hover:bg-white/10 rounded-xl border border-gray-200 dark:border-white/5 shadow-sm active:scale-90"
                 >
                   <X size={18} />
                 </button>

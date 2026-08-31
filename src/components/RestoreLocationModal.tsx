@@ -95,9 +95,10 @@ export function RestoreLocationModal({
                             <button
                                 onClick={() => !isRestoring && onClose()}
                                 disabled={isRestoring}
-                                className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+                                aria-label={t('common.close', { defaultValue: 'Close' })}
+                                className="p-2 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all hover:bg-gray-100 dark:hover:bg-white/10 rounded-xl border border-gray-200 dark:border-white/5 shadow-sm active:scale-90 disabled:opacity-50"
                             >
-                                <X size={20} />
+                                <X size={18} />
                             </button>
                         </div>
 

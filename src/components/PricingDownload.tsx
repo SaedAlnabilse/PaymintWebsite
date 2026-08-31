@@ -69,7 +69,7 @@ export const PricingDownload = () => {
                 <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-mintcom-green/5 rounded-full blur-[120px]" />
             </div>
 
-            <div className="w-full px-6 md:px-10 lg:px-16 relative z-10" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
+            <div className="mx-auto w-full max-w-7xl px-5 sm:px-6 lg:px-8 relative z-10" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}

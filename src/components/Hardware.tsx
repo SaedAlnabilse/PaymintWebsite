@@ -136,7 +136,7 @@ export const Hardware = () => {
         {/* Background Decor */}
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-mintcom-green/5 rounded-full blur-[120px] -z-10" />
 
-        <div className="w-full px-6 md:px-10 lg:px-16">
+        <div className="mx-auto w-full max-w-7xl px-5 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}

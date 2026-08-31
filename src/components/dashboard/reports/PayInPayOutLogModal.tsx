@@ -127,7 +127,8 @@ export const PayInPayOutLogModal: React.FC<PayInPayOutLogModalProps> = ({
                             </div>
                             <button
                                 onClick={onClose}
-                                className="w-8 h-8 rounded-lg bg-gray-50 dark:bg-white/5 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-white/10 transition-all text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                                aria-label={t('common.close', { defaultValue: 'Close' })}
+                                className="p-2 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all hover:bg-gray-100 dark:hover:bg-white/10 rounded-xl border border-gray-200 dark:border-white/5 shadow-sm active:scale-90"
                             >
                                 <X size={18} />
                             </button>

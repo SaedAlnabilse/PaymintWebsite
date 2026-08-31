@@ -720,8 +720,8 @@
       "reports": "Reports",
       "tips": "Tips"
     },
-    "assistantTitle": "Your Mintcom Assistant",
-    "botName": "Minto",
+    "assistantTitle": "Let us help you ...",
+    "botName": "Mintcom AI",
     "fallback": [
       "I'm sorry, I didn't quite catch that. Could you try rephrasing your question?",
       "I'm still learning and I'm not sure how to answer that yet. Would you like to check our FAQs?",
@@ -747,7 +747,7 @@
     },
     "greetings": [
       "Hello! How can I help you today?",
-      "Hi there! I'm Minto, your Mintcom assistant. What's on your mind?",
+      "Hi there! I'm Mintcom AI, your assistant. What's on your mind?",
       "Welcome to Mintcom! Feel free to ask me anything about managing your business."
     ],
     "inputPlaceholder": "Ask me anything...",
@@ -3818,7 +3818,7 @@
       "aboutUs": "About Us",
       "agreement": "Agreement",
       "appStore": "App Store",
-      "chatBotDesc": "Meet Minto, your 24/7 AI assistant ready to help you with anything.",
+      "chatBotDesc": "Meet Mintcom AI, your 24/7 AI assistant ready to help you with anything.",
       "chatBotTitle": "AI Support Assistant",
       "completeGuide": "Complete Guide",
       "currency": "Currency",
@@ -3850,7 +3850,7 @@
       "welcomeTitle": "Welcome to Mintcom!"
     },
     "tour": {
-      "chatBotDesc": "Minto is always here to answer your questions and guide you through the system.",
+      "chatBotDesc": "Mintcom AI is always here to answer your questions and guide you through the system.",
       "chatBotTitle": "Meet Your AI Assistant",
       "locationStatsDesc": "Your unique Location ID and settings.",
       "locationStatsTitle": "Location Details",
@@ -4224,8 +4224,13 @@
       },
       "subtitle": "Analyze Your Sales Data",
       "taxes": {
+        "allSalesTaxed": "100% Taxed",
+        "auditGuideTitle": "How to use this audit check",
+        "auditGuideWhat": "Tracks zero-tax items, tax-exempt customers (e.g. charities, diplomats), and manual 0% POS tax edits.",
+        "auditGuideWhy": "Use this figure for your tax declaration (Exempt Sales) and to ensure staff did not accidentally sell taxable items with zero tax.",
         "auditSummary": "Tax Audit Summary",
-        "auditSummaryDesc": "Quick checks for tax-free sales and POS tax edits",
+        "auditSummaryDesc": "Quick checks for tax-free sales and compliance",
+        "auditTag": "Compliance",
         "avgRate": "Avg. Rate",
         "avgRateDesc": "Average Tax Percentage",
         "changed": "Changed",
@@ -4246,6 +4251,7 @@
         "exemptions": "Exemptions",
         "exemptionsDesc": "Tax-free Sales",
         "govEntities": "Gov. Entities",
+        "hasExemptSales": "Exempt Sales",
         "netTax": "Net tax",
         "noChangedTax": "No POS tax-rate edits were recorded in this period.",
         "noData": "No tax data for this period",
@@ -4586,10 +4592,10 @@
       "yearlyCost": "Yearly Cost",
       "yearlyPlan": "Yearly Plan",
       "add_card_for_location": "New card will be used for {{name}}",
-      "add_new_card": "Add new card",
+      "add_new_card": "Add New Card",
       "card_added_and_assigned": "Card added and assigned to this location",
       "cardholder": "Cardholder",
-      "change_card": "Change card",
+      "change_card": "Change Card",
       "saved_card": "Saved",
       "invoice": {
         "action": "Invoices",
@@ -4867,6 +4873,7 @@
       "failedToSave": "Failed to save role",
       "global": "Global",
       "loading": "Loading roles...",
+      "name": "Role",
       "newRole": "New Role",
       "noRoles": "No Roles Found",
       "noRolesDesc": "Create a role here to share it across all your locations.",
@@ -4896,7 +4903,8 @@
       "scope": "Scope",
       "searchPlaceholder": "Search roles...",
       "subtitle": "Define and Assign Roles That Apply Across All Locations",
-      "title": "Global Roles"
+      "title": "Global Roles",
+      "type": "Type"
     },
     "staff": {
       "access": "Access",
@@ -5049,14 +5057,15 @@
       "updated": "Payment method updated"
     },
     "modal": {
-      "addCard": "Add card",
+      "addCard": "Add Card",
       "brand": "Brand",
-      "cardholder": "Cardholder name",
+      "cardholder": "Cardholder Name",
       "cardholderPlaceholder": "Name as it appears on card",
-      "cardLast4": "Card last 4",
-      "cardNumber": "Card number",
+      "cardLast4": "Card Last 4",
+      "cardNumber": "Card Number",
       "cvv": "CVV",
-      "encrypted": "256-bit SSL encrypted",
+      "cvvTip": "3 or 4-digit security code on the back of your card (or front for Amex)",
+      "encrypted": "256-Bit SSL Encrypted",
       "errors": {
         "correctErrors": "Please correct the errors below",
         "invalidCard": "Enter the last 4 digits only",
@@ -5064,10 +5073,10 @@
         "invalidCvv": "Enter a valid CVV",
         "invalidExpiry": "Invalid expiry date"
       },
-      "expiry": "Expiry date",
+      "expiry": "Expiry Date",
       "expiryPlaceholder": "MM/YY",
       "saveForFuture": "Save card for future purchases",
-      "secureVault": "Add card",
+      "secureVault": "Add Card",
       "subtitle": "Secure - 256-Bit Encrypted",
       "termsAndConditions": "Terms and Conditions",
       "title": "Add Payment Card"

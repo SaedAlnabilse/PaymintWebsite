@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { Plus, CreditCard, DollarSign, Trash2, AlertCircle, Calendar, CheckCircle2, XCircle, Zap, MoreVertical, Eye, ArrowUpDown, RotateCcw, Check, FileText } from 'lucide-react';
+import { Plus, CreditCard, DollarSign, Trash2, AlertCircle, Calendar, CheckCircle2, XCircle, Zap, MoreVertical, Eye, ArrowUpDown, RotateCcw, Check, FileText, X } from 'lucide-react';
 
 import api from '../../config/api';
 import { AddPaymentMethodModal } from '../../components/AddPaymentMethodModal';
@@ -939,7 +939,7 @@ export function OwnerBillingPage() {
                                                                 className="w-full px-4 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 tracking-wide transition-colors flex items-center gap-2"
                                                             >
                                                                 <CreditCard size={14} />
-                                                                {t('owner.billing.change_card', { defaultValue: 'Change card' })}
+                                                                {t('owner.billing.change_card', { defaultValue: 'Change Card' })}
                                                             </button>
                                                         )}
                                                         {est.subscriptionStatus === 'TRIAL' && !est.cancelAtPeriodEnd && (
@@ -1046,7 +1046,7 @@ export function OwnerBillingPage() {
                                         <div>
                                             <h3 className="text-lg font-bold text-gray-900 dark:text-white">
                                                 {t('owner.billing.change_card', {
-                                                    defaultValue: 'Change card',
+                                                    defaultValue: 'Change Card',
                                                 })}
                                             </h3>
                                             <p className="mt-1 text-sm font-medium text-gray-500 dark:text-gray-400">
@@ -1057,9 +1057,10 @@ export function OwnerBillingPage() {
                                             type="button"
                                             disabled={isAssigningCard}
                                             onClick={() => setCardAssignmentEstablishment(null)}
-                                            className="rounded-lg p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50 dark:hover:bg-white/5 dark:hover:text-white"
+                                            aria-label={t('common.close', { defaultValue: 'Close' })}
+                                            className="p-2 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all hover:bg-gray-100 dark:hover:bg-white/10 rounded-xl border border-gray-200 dark:border-white/5 shadow-sm active:scale-90 disabled:opacity-50"
                                         >
-                                            <XCircle size={18} />
+                                            <X size={18} />
                                         </button>
                                     </div>
 

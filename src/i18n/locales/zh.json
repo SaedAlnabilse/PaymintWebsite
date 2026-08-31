@@ -667,8 +667,8 @@
       "reports": "报表",
       "tips": "小费"
     },
-    "assistantTitle": "您的 Mintcom 助手",
-    "botName": "Minto",
+    "assistantTitle": "让我们来协助您...",
+    "botName": "Mintcom AI",
     "fallback": [
       "抱歉，我没有听明白。您能换个说法再问一次吗？",
       "我还在学习中，暂时不知道如何回答这个问题。要不要看看我们的常见问题？",
@@ -694,7 +694,7 @@
     },
     "greetings": [
       "您好！今天有什么可以帮您？",
-      "您好！我是 Minto，您的 Mintcom 助手。有什么想了解的吗？",
+      "您好！我是 Mintcom AI，您的智能助手。有什么想了解的吗？",
       "欢迎来到 Mintcom！关于业务管理的任何问题都可以问我。"
     ],
     "inputPlaceholder": "有问题尽管问…",
@@ -3718,7 +3718,7 @@
       "aboutUs": "关于我们",
       "agreement": "协议",
       "appStore": "App Store",
-      "chatBotDesc": "认识 Minto，您的全天候 AI 助手，随时为您提供帮助。",
+      "chatBotDesc": "认识 Mintcom AI，您的全天候 AI 助手，随时为您提供帮助。",
       "chatBotTitle": "AI 支持助手",
       "completeGuide": "完整指南",
       "currency": "货币",
@@ -3750,7 +3750,7 @@
       "welcomeTitle": "欢迎来到 Mintcom！"
     },
     "tour": {
-      "chatBotDesc": "Minto 随时为您解答问题，引导您使用系统。",
+      "chatBotDesc": "Mintcom AI 随时为您解答问题，引导您使用系统。",
       "chatBotTitle": "认识您的 AI 助手",
       "locationStatsDesc": "您的唯一门店 ID 和设置。",
       "locationStatsTitle": "门店信息",
@@ -4124,8 +4124,13 @@
       },
       "subtitle": "分析您的销售数据",
       "taxes": {
+        "allSalesTaxed": "100% 计税",
+        "auditGuideTitle": "如何使用此审计核对",
+        "auditGuideWhat": "追踪零税率商品、免税客户（如慈善机构、外交人员）以及 POS 端手动的 0% 税率修改。",
+        "auditGuideWhy": "用于税务申报（免税销售额），并帮助核实是否有员工误将应税商品以零税率售出。",
         "auditSummary": "税务审计摘要",
-        "auditSummaryDesc": "快速核查免税销售和 POS 税率修改",
+        "auditSummaryDesc": "快速核查免税销售与合规情况",
+        "auditTag": "合规",
         "avgRate": "平均税率",
         "avgRateDesc": "平均税率百分比",
         "changed": "已更改",
@@ -4144,6 +4149,7 @@
         "exemptions": "免税项",
         "exemptionsDesc": "免税销售",
         "govEntities": "政府机构",
+        "hasExemptSales": "包含免税",
         "netTax": "净税额",
         "noChangedTax": "此时间段内没有 POS 税率修改记录。",
         "noData": "此时间段暂无税务数据",
@@ -4765,6 +4771,7 @@
       "failedToSave": "保存角色失败",
       "global": "全局",
       "loading": "正在加载角色…",
+      "name": "角色",
       "newRole": "新建角色",
       "noRoles": "未找到角色",
       "noRolesDesc": "在此创建角色，即可在您的所有门店中共享。",
@@ -4794,7 +4801,8 @@
       "scope": "范围",
       "searchPlaceholder": "搜索角色…",
       "subtitle": "定义并分配适用于所有门店的角色",
-      "title": "全局角色"
+      "title": "全局角色",
+      "type": "类型"
     },
     "staff": {
       "access": "访问权限",
@@ -4954,6 +4962,7 @@
       "cardLast4": "卡号后 4 位",
       "cardNumber": "卡号",
       "cvv": "CVV",
+      "cvvTip": "银行卡背面的 3 位或 4 位安全码（Amex 卡在正面）",
       "encrypted": "256 位 SSL 加密",
       "errors": {
         "correctErrors": "请更正以下错误",

@@ -1041,20 +1041,20 @@ Supports: Epson TM series, Star TSP series, Bluetooth thermal printers.`,
 
 // Friendly greeting responses - varied and warm
 export const GREETINGS = [
-  "Hey there! 👋 I'm Minto, your Mintcom assistant. What can I help you with today?",
-  "Hi! Welcome! I'm Minto, here to help you get the most out of Mintcom. What's on your mind?",
-  "Hello! 👋 Great to see you! I'm Minto - ask me anything about Mintcom!",
-  "Hey! I'm Minto, your friendly Mintcom guide. How can I make your day easier?",
-  "Hi there! 😊 I'm Minto. Whether it's products, orders, or settings - I've got you covered!",
+  "Hey there! 👋 I'm Mintcom AI, your assistant. What can I help you with today?",
+  "Hi! Welcome! I'm Mintcom AI, here to help you get the most out of Mintcom. What's on your mind?",
+  "Hello! 👋 Great to see you! I'm Mintcom AI - ask me anything about Mintcom!",
+  "Hey! I'm Mintcom AI, your friendly Mintcom guide. How can I make your day easier?",
+  "Hi there! 😊 I'm Mintcom AI. Whether it's products, orders, or settings - I've got you covered!",
 ];
 
 // Arabic greeting responses
 export const GREETINGS_AR = [
-  "أهلاً! 👋 أنا مينتو، مساعد مينتكوم. كيف يمكنني مساعدتك اليوم؟",
-  "مرحباً! أهلاً وسهلاً! أنا مينتو، هنا لمساعدتك في كل ما يخص مينتكوم. ماذا تحتاج؟",
-  "مرحباً! 👋 سعيد برؤيتك! أنا مينتو - اسألني أي شيء عن مينتكوم!",
-  "أهلاً! أنا مينتو، دليلك في مينتكوم. كيف أستطيع مساعدتك؟",
-  "مرحباً! 😊 أنا مينتو. سواء كان عن المنتجات أو الطلبات أو الإعدادات - أنا جاهز!",
+  "أهلاً! 👋 أنا Mintcom AI، مساعدك في مينتكوم. كيف يمكنني مساعدتك اليوم؟",
+  "مرحباً! أهلاً وسهلاً! أنا Mintcom AI، هنا لمساعدتك في كل ما يخص مينتكوم. ماذا تحتاج؟",
+  "مرحباً! 👋 سعيد برؤيتك! أنا Mintcom AI - اسألني أي شيء عن مينتكوم!",
+  "أهلاً! أنا Mintcom AI، دليلك في مينتكوم. كيف أستطيع مساعدتك؟",
+  "مرحباً! 😊 أنا Mintcom AI. سواء كان عن المنتجات أو الطلبات أو الإعدادات - أنا جاهز!",
 ];
 
 // Fallback responses when no match - encouraging and helpful

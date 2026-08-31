@@ -76,9 +76,9 @@ export function RoleDeleteResolutionModal({
               onClick={onClose}
               disabled={isSubmitting}
               aria-label={t('common.closeModal')}
-              className="absolute top-4 right-4 p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-xl hover:bg-gray-100 dark:hover:bg-white/5 transition-all disabled:opacity-50"
+              className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all hover:bg-gray-100 dark:hover:bg-white/10 rounded-xl border border-gray-200 dark:border-white/5 shadow-sm active:scale-90 disabled:opacity-50"
             >
-              <X size={20} />
+              <X size={18} />
             </button>
 
             <div className="p-6 sm:p-8 pb-safe">

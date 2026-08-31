@@ -374,8 +374,8 @@ export function SmartChatbot({ isOpen, onClose }: SmartChatbotProps) {
             </div>
 
             <div className="relative z-10 flex items-center gap-3.5 min-w-0">
-              <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-white/20 ring-1 ring-white/30 backdrop-blur-[2px] shadow-sm">
-                <img src={MintcomLeafIcon} alt="Minto" className="h-6 w-6 scale-x-[-1] object-contain brightness-0 invert drop-shadow-sm" />
+              <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-white shadow-md shadow-emerald-950/15 ring-1 ring-white/60 dark:bg-white">
+                <img src={MintcomLeafIcon} alt="Mintcom AI" className="h-6 w-6 object-contain drop-shadow-[0_1px_2px_rgba(0,0,0,0.06)]" />
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
@@ -386,7 +386,10 @@ export function SmartChatbot({ isOpen, onClose }: SmartChatbotProps) {
                     </span>
                   )}
                 </div>
-                <p className="text-xs font-medium text-white/85 leading-tight mt-0.5">{t('chat.assistantTitle')}</p>
+                <p className="text-xs font-medium text-white/90 leading-tight mt-0.5 flex items-center gap-1.5">
+                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-200 animate-pulse shrink-0" />
+                  <span className="truncate">{t('chat.assistantTitle')}</span>
+                </p>
               </div>
             </div>
 
@@ -415,7 +418,9 @@ export function SmartChatbot({ isOpen, onClose }: SmartChatbotProps) {
                         <User size={16} className="text-gray-600 dark:text-gray-300" />
                       </div>
                     ) : (
-                      <img src={MintcomLeafIcon} alt="" className="h-7 w-7 scale-x-[-1] object-contain" />
+                      <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-gray-200/70 dark:bg-slate-800 dark:ring-white/10">
+                        <img src={MintcomLeafIcon} alt="Mintcom AI" className="h-5 w-5 object-contain" />
+                      </div>
                     )}
                   </div>
 
@@ -473,8 +478,8 @@ export function SmartChatbot({ isOpen, onClose }: SmartChatbotProps) {
             {isTyping && (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex justify-start">
                 <div className="flex gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center">
-                    <img src={MintcomLeafIcon} alt="" className="h-7 w-7 scale-x-[-1] object-contain" />
+                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-gray-200/70 dark:bg-slate-800 dark:ring-white/10">
+                    <img src={MintcomLeafIcon} alt="Mintcom AI" className="h-5 w-5 object-contain" />
                   </div>
                   <div className="rounded-2xl rounded-tl-sm bg-gray-100 px-4 py-3 dark:bg-white/5">
                     <div className="flex gap-1">

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
+import { X } from 'lucide-react';
 import { communityApi } from '../../services/communityApi';
 
 const REASONS = ['SPAM', 'ABUSE', 'OFF_TOPIC', 'HARASSMENT', 'ILLEGAL', 'OTHER'] as const;
@@ -62,9 +63,19 @@ export function ReportModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       <div className="relative w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">
-          {t('community.moderation.reportTitle', { defaultValue: 'Report content' })}
-        </h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-gray-900">
+            {t('community.moderation.reportTitle', { defaultValue: 'Report content' })}
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={t('common.close', { defaultValue: 'Close' })}
+            className="p-2 text-gray-400 hover:text-gray-900 transition-all hover:bg-gray-100 rounded-xl border border-gray-200 shadow-sm active:scale-90"
+          >
+            <X size={18} />
+          </button>
+        </div>
 
         <label className="block text-sm font-medium text-gray-700 mb-1">
           {t('community.moderation.reason', { defaultValue: 'Reason' })}

@@ -59,17 +59,17 @@ export const Navbar = () => {
   return (
     <nav
       dir={isRtl ? 'rtl' : 'ltr'}
-      className="fixed inset-x-0 top-0 z-50 flex items-start justify-center"
+      className="fixed inset-x-0 top-0 z-50 flex items-start justify-center px-4 sm:px-6 lg:px-8"
     >
       {/* Floating capsule container */}
       <motion.div
         initial={false}
         animate={{
           marginTop: isScrolled ? 12 : 16,
-          width: isScrolled ? '92%' : '95%',
+          width: isScrolled ? '96%' : '100%',
         }}
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-        className="relative w-full"
+        className="relative w-full max-w-7xl"
       >
         {/* Animated gradient border */}
         <div

@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Wallet, CreditCard, ChevronRight, Layers } from 'lucide-react';
+import { Wallet } from 'lucide-react';
 import { PieChart as RechartsPie, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { useTheme } from '../../../context/ThemeContext';
 import { useTranslation } from 'react-i18next';
@@ -30,39 +30,8 @@ const COLORS = [
   '#a855f7', // Violet
 ];
 
-type PaymentTab = 'all' | 'cards' | 'others';
-
-const isCardMethod = (name: string) => {
-  const n = String(name).toUpperCase();
-  return (
-    n === 'CARD' ||
-    n === 'CARDS' ||
-    n.includes('VISA') ||
-    n.includes('MASTER') ||
-    n.includes('AMEX') ||
-    n.includes('MADA') ||
-    n.includes('CREDIT') ||
-    n.includes('DEBIT') ||
-    n.includes('MEEZA') ||
-    n.includes('DISCOVER') ||
-    n.includes('JCB') ||
-    n.includes('UNIONPAY')
-  );
-};
-
-const isCashMethod = (name: string) => {
-  const n = String(name).toUpperCase();
-  return n === 'CASH' || n === 'MONEY';
-};
-
-const isOtherMethod = (name: string) => {
-  return !isCashMethod(name) && !isCardMethod(name);
-};
-
 export const PaymentMethodsBreakdown = React.memo(function PaymentMethodsBreakdown({
   paymentMethodBreakdown = [],
-  cardTypeBreakdown = [],
-  otherPaymentBreakdown = [],
 }: PaymentMethodsBreakdownProps) {
   const { t } = useTranslation();
   const { locationSlug } = useParams();
@@ -70,33 +39,12 @@ export const PaymentMethodsBreakdown = React.memo(function PaymentMethodsBreakdo
   const { resolvedTheme } = useTheme();
   const { currencySymbol } = useCurrency();
   const isDark = resolvedTheme === 'dark';
-  const [activeTab, setActiveTab] = useState<PaymentTab>('all');
 
   const rows = useMemo(() => paymentMethodBreakdown || [], [paymentMethodBreakdown]);
 
-  const cardsData = useMemo(() => {
-    if (cardTypeBreakdown && cardTypeBreakdown.length > 0) {
-      return cardTypeBreakdown.filter((item) => Number(item.value) > 0);
-    }
-    return rows.filter((r) => isCardMethod(r.name));
-  }, [cardTypeBreakdown, rows]);
-
-  const othersData = useMemo(() => {
-    if (otherPaymentBreakdown && otherPaymentBreakdown.length > 0) {
-      return otherPaymentBreakdown.filter((item) => Number(item.value) > 0);
-    }
-    return rows.filter((r) => isOtherMethod(r.name));
-  }, [otherPaymentBreakdown, rows]);
-
-  const currentData = useMemo(() => {
-    if (activeTab === 'cards') return cardsData;
-    if (activeTab === 'others') return othersData;
-    return rows;
-  }, [activeTab, cardsData, othersData, rows]);
-
   const currentTotal = useMemo(
-    () => currentData.reduce((sum, item) => sum + Math.max(Number(item.value) || 0, 0), 0),
-    [currentData]
+    () => rows.reduce((sum, item) => sum + Math.max(Number(item.value) || 0, 0), 0),
+    [rows]
   );
 
   const hasData = currentTotal > 0.005;
@@ -104,13 +52,13 @@ export const PaymentMethodsBreakdown = React.memo(function PaymentMethodsBreakdo
 
   const pieData = useMemo(() => {
     if (hasData) {
-      return currentData.map((item) => ({
+      return rows.map((item) => ({
         name: item.name,
         value: Math.max(Number(item.value) || 0, 0),
       }));
     }
     return [{ name: '__empty__', value: 1 }];
-  }, [currentData, hasData]);
+  }, [rows, hasData]);
 
   const getMethodName = (name: string) => {
     if (!name || name === '__empty__') return '—';
@@ -144,69 +92,15 @@ export const PaymentMethodsBreakdown = React.memo(function PaymentMethodsBreakdo
           </button>
         </div>
 
-        {/* Clickable Filter Tabs */}
-        <div className="flex items-center gap-1 p-1 bg-gray-100/80 dark:bg-white/5 rounded-xl mb-2">
-          <button
-            type="button"
-            onClick={() => setActiveTab('all')}
-            className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-              activeTab === 'all'
-                ? 'bg-white dark:bg-[#0F172A] text-gray-900 dark:text-white shadow-sm'
-                : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-            }`}
-          >
-            <Layers size={13} className="shrink-0" />
-            <span>{t('orders.payment.all', { defaultValue: 'All' })}</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('cards')}
-            className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-              activeTab === 'cards'
-                ? 'bg-white dark:bg-[#0F172A] text-gray-900 dark:text-white shadow-sm'
-                : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-            }`}
-          >
-            <CreditCard size={13} className="shrink-0" />
-            <span>{t('orders.payment.allCards', { defaultValue: 'Cards' })}</span>
-            {cardsData.length > 0 && (
-              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold leading-none ${
-                activeTab === 'cards' ? 'bg-mintcom-green/15 text-mintcom-green' : 'bg-gray-200/70 dark:bg-white/10 text-gray-500'
-              }`}>
-                {cardsData.length}
-              </span>
-            )}
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('others')}
-            className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-              activeTab === 'others'
-                ? 'bg-white dark:bg-[#0F172A] text-gray-900 dark:text-white shadow-sm'
-                : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-            }`}
-          >
-            <Wallet size={13} className="shrink-0" />
-            <span>{t('orders.payment.allOther', { defaultValue: 'Others' })}</span>
-            {othersData.length > 0 && (
-              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold leading-none ${
-                activeTab === 'others' ? 'bg-mintcom-green/15 text-mintcom-green' : 'bg-gray-200/70 dark:bg-white/10 text-gray-500'
-              }`}>
-                {othersData.length}
-              </span>
-            )}
-          </button>
-        </div>
-
-        {/* Donut Chart */}
+        {/* Donut Chart & Legend */}
         <div className="flex-1 flex flex-col justify-center min-h-0">
-          <div className="h-[145px] w-full" dir="ltr">
+          <div className="h-[155px] w-full" dir="ltr">
             <ResponsiveContainer width="100%" height="100%">
               <RechartsPie>
                 <Pie
                   data={pieData}
-                  innerRadius={42}
-                  outerRadius={65}
+                  innerRadius={46}
+                  outerRadius={70}
                   paddingAngle={hasData && pieData.length > 1 ? 4 : 0}
                   dataKey="value"
                   stroke="none"
@@ -244,27 +138,16 @@ export const PaymentMethodsBreakdown = React.memo(function PaymentMethodsBreakdo
             </ResponsiveContainer>
           </div>
 
-          {/* Scrollable Legend List (never stretches the card) */}
-          <div className="max-h-[145px] overflow-y-auto custom-scrollbar space-y-1 mt-2 pr-1">
-            {currentData.length > 0 ? (
-              currentData.map((item, i) => {
+          {/* Scrollable Legend List */}
+          <div className="max-h-[175px] overflow-y-auto custom-scrollbar space-y-1 mt-3 pr-1">
+            {rows.length > 0 ? (
+              rows.map((item, i) => {
                 const percentage = currentTotal > 0 ? (Math.max(Number(item.value) || 0, 0) / currentTotal) : 0;
-                const isCard = activeTab === 'all' && (item.name.toUpperCase() === 'CARD' || item.name.toUpperCase() === 'CARDS');
-                const isOther = activeTab === 'all' && (item.name.toUpperCase() === 'OTHER' || item.name.toUpperCase() === 'OTHERS');
-                const isClickable = isCard || isOther;
 
                 return (
                   <div
                     key={`${item.name}-${i}`}
-                    onClick={() => {
-                      if (isCard && cardsData.length > 0) setActiveTab('cards');
-                      if (isOther && othersData.length > 0) setActiveTab('others');
-                    }}
-                    className={`flex items-center justify-between gap-2.5 p-2 rounded-xl transition-all ${
-                      isClickable
-                        ? 'cursor-pointer hover:bg-mintcom-green/5 dark:hover:bg-white/5 active:scale-[0.99] group/item'
-                        : 'hover:bg-gray-50 dark:hover:bg-white/5'
-                    }`}
+                    className="flex items-center justify-between gap-2.5 p-2 rounded-xl transition-all hover:bg-gray-50 dark:hover:bg-white/5"
                   >
                     <div className="flex items-center gap-2 min-w-0">
                       <div
@@ -274,12 +157,6 @@ export const PaymentMethodsBreakdown = React.memo(function PaymentMethodsBreakdo
                       <span className="text-xs font-bold text-gray-700 dark:text-gray-200 truncate">
                         {getMethodName(item.name)}
                       </span>
-                      {isClickable && (
-                        <ChevronRight
-                          size={13}
-                          className="text-gray-400 opacity-0 group-hover/item:opacity-100 transition-opacity shrink-0"
-                        />
-                      )}
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       <StatValue value={Number(item.value) || 0} currency={currencySymbol} className="text-xs font-bold text-gray-900 dark:text-white" />

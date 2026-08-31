@@ -31,10 +31,12 @@ export const LoginRequiredModal = ({ open, onClose, redirectTo = '/support/ticke
             transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
             className="relative w-full max-w-md overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-[0_24px_80px_-16px_rgba(0,0,0,0.25)] dark:border-white/10 dark:bg-[#161616]"
           >
-            {/* close */}
-            <button onClick={onClose}
-              className="absolute end-4 top-4 flex h-8 w-8 items-center justify-center rounded-xl bg-gray-100 text-gray-400 transition-colors hover:bg-gray-200 dark:bg-white/10 dark:hover:bg-white/15">
-              <X size={14} strokeWidth={2.5} />
+            <button 
+              onClick={onClose}
+              aria-label={t('common.close', { defaultValue: 'Close' })}
+              className="absolute end-4 top-4 p-2 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all hover:bg-gray-100 dark:hover:bg-white/10 rounded-xl border border-gray-200 dark:border-white/5 shadow-sm active:scale-90"
+            >
+              <X size={18} />
             </button>
 
             <div className="p-8">

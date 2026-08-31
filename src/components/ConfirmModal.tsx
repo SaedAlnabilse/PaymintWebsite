@@ -85,7 +85,7 @@ export function ConfirmModal({
               <button
                 onClick={onClose}
                 aria-label={t('common.closeModal')}
-                className="absolute top-4 sm:top-5 right-4 sm:right-5 p-2 min-w-[40px] min-h-[40px] flex items-center justify-center text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-xl hover:bg-gray-100 dark:hover:bg-white/5 transition-all z-10 active:scale-90"
+                className="absolute top-4 sm:top-5 right-4 sm:right-5 p-2 min-w-[40px] min-h-[40px] flex items-center justify-center text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-xl hover:bg-gray-100 dark:hover:bg-white/5 border border-gray-200 dark:border-white/5 shadow-sm transition-all z-10 active:scale-90"
               >
                 <X size={18} />
               </button>

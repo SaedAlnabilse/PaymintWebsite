@@ -1568,7 +1568,7 @@ export const CloudControl = () => {
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-mintcom-green/5 rounded-full blur-[120px] -z-10" />
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-mintcom-green/5 rounded-full blur-[100px] -z-10" />
 
-      <div className="w-full px-6 md:px-10 lg:px-16">
+      <div className="mx-auto w-full max-w-7xl px-5 sm:px-6 lg:px-8">
         {/* Top Section: Header + Devices */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center mb-16 lg:mb-20">
           {/* Left: Heading */}

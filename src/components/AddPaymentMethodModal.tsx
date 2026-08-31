@@ -1,8 +1,9 @@
 import React, { useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, CreditCard, Lock, Info, Check } from 'lucide-react';
+import { X, CreditCard, Lock, Check } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { QuickInfo } from './QuickInfo';
 import api from '../config/api';
 import toast from 'react-hot-toast';
 import { useScrollLock } from '../hooks/useScrollLock';
@@ -174,7 +175,7 @@ export function AddPaymentMethodModal({ isOpen, onClose, onSuccess, linkEstablis
                             <div className="mb-7 flex items-start justify-between gap-4">
                                 <div>
                                     <h2 className="text-xl font-semibold tracking-normal text-slate-700">
-                                        {t('paymentMethods.modal.title', { defaultValue: 'Add payment card' })}
+                                        {t('paymentMethods.modal.title', { defaultValue: 'Add Payment Card' })}
                                     </h2>
                                     <div className="mt-1 flex items-center gap-1.5 text-sm font-medium tracking-normal text-slate-600">
                                         <Lock size={13} />
@@ -195,9 +196,9 @@ export function AddPaymentMethodModal({ isOpen, onClose, onSuccess, linkEstablis
                                     onClick={handleClose}
                                     disabled={isSubmitting}
                                     aria-label={t('common.close', { defaultValue: 'Close' })}
-                                    className="grid h-8 w-8 place-items-center rounded-md text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 disabled:opacity-50"
+                                    className="p-2 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all hover:bg-gray-100 dark:hover:bg-white/10 rounded-xl border border-gray-200 dark:border-white/5 shadow-sm active:scale-90 disabled:opacity-50"
                                 >
-                                    <X size={20} />
+                                    <X size={18} />
                                 </button>
                             </div>
 
@@ -209,7 +210,7 @@ export function AddPaymentMethodModal({ isOpen, onClose, onSuccess, linkEstablis
                                 )}
 
                                 <CardField
-                                    label={t('paymentMethods.modal.cardNumber', { defaultValue: 'Card number' })}
+                                    label={t('paymentMethods.modal.cardNumber', { defaultValue: 'Card Number' })}
                                     error={errors.cardNumber}
                                 >
                                     <input
@@ -231,7 +232,7 @@ export function AddPaymentMethodModal({ isOpen, onClose, onSuccess, linkEstablis
 
                                 <div className="grid grid-cols-2 gap-3">
                                     <CardField
-                                        label={t('paymentMethods.modal.expiry', { defaultValue: 'Expiry date' })}
+                                        label={t('paymentMethods.modal.expiry', { defaultValue: 'Expiry Date' })}
                                         error={errors.expiry}
                                     >
                                         <input
@@ -252,9 +253,9 @@ export function AddPaymentMethodModal({ isOpen, onClose, onSuccess, linkEstablis
 
                                     <CardField
                                         label={
-                                            <span className="flex items-center gap-1">
-                                                CVV
-                                                <Info size={12} className="text-slate-400" />
+                                            <span className="flex items-center">
+                                                {t('paymentMethods.modal.cvv', { defaultValue: 'CVV' })}
+                                                <QuickInfo text={t('paymentMethods.modal.cvvTip', { defaultValue: '3 or 4-digit security code on the back of your card (or front for Amex).' })} />
                                             </span>
                                         }
                                         error={errors.cvv}
@@ -277,7 +278,7 @@ export function AddPaymentMethodModal({ isOpen, onClose, onSuccess, linkEstablis
                                 </div>
 
                                 <CardField
-                                    label={t('paymentMethods.modal.cardholder', { defaultValue: 'Cardholder name' })}
+                                    label={t('paymentMethods.modal.cardholder', { defaultValue: 'Cardholder Name' })}
                                     error={errors.name}
                                 >
                                     <input
@@ -328,7 +329,7 @@ export function AddPaymentMethodModal({ isOpen, onClose, onSuccess, linkEstablis
                                     ) : (
                                         <>
                                             <CreditCard size={15} />
-                                            {t('paymentMethods.modal.addCard', { defaultValue: 'Add card' })}
+                                            {t('paymentMethods.modal.addCard', { defaultValue: 'Add Card' })}
                                         </>
                                     )}
                                 </button>

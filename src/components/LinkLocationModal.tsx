@@ -206,9 +206,10 @@ export function LinkLocationModal({
                         </div>
                         <button
                             onClick={handleClose}
-                            className="p-2 text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10 rounded-xl transition-all"
+                            aria-label={t('common.close', { defaultValue: 'Close' })}
+                            className="p-2 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all hover:bg-gray-100 dark:hover:bg-white/10 rounded-xl border border-gray-200 dark:border-white/5 shadow-sm active:scale-90"
                         >
-                            <X size={24} />
+                            <X size={18} />
                         </button>
                     </div>
 

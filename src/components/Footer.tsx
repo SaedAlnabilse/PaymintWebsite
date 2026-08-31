@@ -95,7 +95,7 @@ export const Footer = ({ minimal = false }: { minimal?: boolean }) => {
         className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-mintcom-green/50 to-transparent"
       />
 
-      <div className="w-full px-6 md:px-10 lg:px-16">
+      <div className="mx-auto w-full max-w-7xl px-5 sm:px-6 lg:px-8">
         {minimal ? (
           /* ===== Minimal footer ===== */
           <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">

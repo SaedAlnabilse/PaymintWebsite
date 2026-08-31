@@ -1,4 +1,4 @@
-import { Scale, Percent, FileEdit, History, Trash2 } from 'lucide-react';
+import { Scale, Percent, FileEdit, History, Trash2, CheckCircle2, AlertCircle, Info } from 'lucide-react';
 import { BiIcon } from '../../../ui/BiIcon';
 import { useCurrency } from '../../../../context/CurrencyContext';
 import type { SalesSummary } from '../../../../types';
@@ -382,34 +382,75 @@ export const TaxesView = React.memo(function TaxesView({ salesData }: TaxesViewP
           </div>
         </div>
 
-        {/* Unique audit metric only — Total Tax / Changed-tax already appear in top stats */}
-        <div className="bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.03] shadow-sm p-5 sm:p-6 flex flex-col">
-          <div className="mb-4">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">
-              {t('orders.reports.taxes.auditSummary', { defaultValue: 'Tax Audit Summary' })}
-            </h3>
-            <p className="text-xs text-gray-500">
+        {/* Tax Audit Summary Card with Full In-Card Explanation */}
+        <div className="bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-200 dark:border-white/[0.03] shadow-sm p-5 sm:p-6 flex flex-col gap-4">
+          <div>
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                {t('orders.reports.taxes.auditSummary', { defaultValue: 'Tax Audit Summary' })}
+              </h3>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-mintcom-green/10 text-mintcom-green border border-mintcom-green/20">
+                {t('orders.reports.taxes.auditTag', { defaultValue: 'Compliance' })}
+              </span>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
               {t('orders.reports.taxes.auditSummaryDesc', {
-                defaultValue: 'Quick checks for tax-free sales and POS tax edits',
+                defaultValue: 'Quick checks for tax-free sales and compliance',
               })}
             </p>
           </div>
 
+          {/* Primary Metric Tile */}
           <div className="rounded-2xl border border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-white/[0.02] p-5">
-            <div className="w-10 h-10 rounded-xl bg-gray-200/60 dark:bg-white/5 flex items-center justify-center text-gray-400 dark:text-white/30 mb-3">
-              <BiIcon icon="bi-receipt" size={18} />
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-10 h-10 rounded-xl bg-gray-200/60 dark:bg-white/5 flex items-center justify-center text-gray-500 dark:text-white/40">
+                <BiIcon icon="bi-receipt" size={18} />
+              </div>
+              {toNumber(salesData.taxExemptSales) === 0 ? (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 border border-emerald-500/20">
+                  <CheckCircle2 size={12} />
+                  {t('orders.reports.taxes.allSalesTaxed', { defaultValue: '100% Taxed' })}
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 border border-amber-500/20">
+                  <AlertCircle size={12} />
+                  {t('orders.reports.taxes.hasExemptSales', { defaultValue: 'Exempt Sales' })}
+                </span>
+              )}
             </div>
+
             <StatValue
               value={toNumber(salesData.taxExemptSales)}
               currency={currencySymbol}
-              className="text-2xl"
+              className="text-2xl font-bold"
             />
-            <p className="text-xs font-bold text-gray-400 mt-1">{t('orders.reports.taxes.taxFreeSales')}</p>
-            <p className="text-xs text-gray-500 mt-2 leading-relaxed">
+            <p className="text-xs font-bold text-gray-700 dark:text-gray-200 mt-1">
+              {t('orders.reports.taxes.taxFreeSales', { defaultValue: 'Tax-Free Sales' })}
+            </p>
+            <p className="text-xs text-gray-500 mt-1.5 leading-relaxed">
               {t('orders.reports.taxes.taxFreeSalesDesc', {
                 defaultValue: 'Completed sales where no tax was collected after refunds are netted out.',
               })}
             </p>
+          </div>
+
+          {/* Explanation / Audit Guide Box */}
+          <div className="rounded-2xl border border-mintcom-green/20 bg-mintcom-green/[0.03] dark:bg-mintcom-green/[0.05] p-4 space-y-2.5">
+            <div className="flex items-center gap-2 text-xs font-bold text-gray-900 dark:text-white">
+              <Info size={14} className="text-mintcom-green shrink-0" />
+              <span>{t('orders.reports.taxes.auditGuideTitle', { defaultValue: 'How to use this audit check' })}</span>
+            </div>
+
+            <div className="text-xs text-gray-600 dark:text-gray-300 space-y-2 leading-relaxed">
+              <div className="flex items-start gap-2">
+                <span className="text-mintcom-green font-bold shrink-0">•</span>
+                <p>{t('orders.reports.taxes.auditGuideWhat', { defaultValue: 'Tracks zero-tax items, tax-exempt customers (e.g. charities, diplomats), and manual 0% POS tax edits.' })}</p>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="text-mintcom-green font-bold shrink-0">•</span>
+                <p>{t('orders.reports.taxes.auditGuideWhy', { defaultValue: 'Use this figure for your tax declaration (Exempt Sales) and to ensure staff did not accidentally sell taxable items with zero tax.' })}</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
