@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation, Trans } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Trash2, Eye, EyeOff, ChevronDown, Check, MapPin } from 'lucide-react';
+import { X, Trash2, Eye, EyeOff, ChevronDown, Check, MapPin, Globe, Plus } from 'lucide-react';
 import api from '../../config/api';
 import {
   POS_PERMISSIONS as CANONICAL_POS_PERMISSIONS,
@@ -13,6 +13,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { useScrollLock } from '../../hooks/useScrollLock';
 import { formatInputPlaceholder } from '../../utils/textCase';
+import { CustomRoleFormModal } from '../CustomRoleFormModal';
 
 interface StaffMember {
   id: string;
@@ -47,6 +48,10 @@ interface EmployeeAssignment {
   permissions?: string[];
   allowedDiscounts?: string[];
   customRoleId?: string | null;
+  // Sent by /api/accounts/all-employees. Kept so a role that is not in the
+  // fetched template list still renders by name instead of "Select Role".
+  customRoleName?: string | null;
+  customRoleScope?: 'GLOBAL' | 'LOCATION' | null;
   backofficeAccess?: boolean;
   backofficePermissions?: string[];
   posAccess?: boolean;
@@ -163,6 +168,38 @@ const normalizeCustomRolesPayload = (payload: unknown): CustomRole[] => {
   }));
 };
 
+/**
+ * Tells apart the three kinds of role a picker can offer: a built-in one, an
+ * account-wide template shared by every branch, and a role that belongs to a
+ * single branch. Built-in needs no badge — it is the unmarked default.
+ */
+function RoleScopeBadge({
+  scope,
+  t,
+}: {
+  scope?: 'BUILTIN' | 'GLOBAL' | 'BRANCH';
+  t: (key: string, options?: Record<string, unknown>) => string;
+}) {
+  if (scope !== 'GLOBAL' && scope !== 'BRANCH') return null;
+
+  const isGlobal = scope === 'GLOBAL';
+
+  return (
+    <span
+      className={`shrink-0 inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide ${
+        isGlobal
+          ? 'border-blue-200 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400'
+          : 'border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400'
+      }`}
+    >
+      {isGlobal ? <Globe size={9} /> : <MapPin size={9} />}
+      {isGlobal
+        ? t('staff.form.globalBadge', { defaultValue: 'Global' })
+        : t('staff.form.branchBadge', { defaultValue: 'Branch' })}
+    </span>
+  );
+}
+
 export function EmployeeFormModal({
   isOpen,
   onClose,
@@ -224,6 +261,14 @@ export function EmployeeFormModal({
   const [roleSelectionTarget, setRoleSelectionTarget] = useState<'ALL' | string>('ALL');
   const [sameRoleForAllLocations, setSameRoleForAllLocations] = useState(true);
   const [assignmentRoleIds, setAssignmentRoleIds] = useState<Record<string, string>>({});
+  // Role names as the server reported them per assignment, so an existing
+  // assignment still shows its role name while templates are still loading.
+  const [assignmentRoleNames, setAssignmentRoleNames] = useState<Record<string, string>>({});
+  const [assignmentRoleScopes, setAssignmentRoleScopes] = useState<
+    Record<string, 'GLOBAL' | 'BRANCH'>
+  >({});
+  const [isCreatingRole, setIsCreatingRole] = useState(false);
+  const [isSavingNewRole, setIsSavingNewRole] = useState(false);
   const establishmentButtonRef = useRef<HTMLButtonElement>(null);
 
   // Custom Roles
@@ -436,33 +481,84 @@ export function EmployeeFormModal({
       if (optionId.startsWith('builtin:')) {
         const builtInRole = optionId.slice(8);
         if (builtInRole === 'ADMIN') return t('staff.form.adminRole');
-        if (builtInRole === 'USER') return t('staff.form.employeeRole');
+        // No longer selectable. Only reachable for assignments saved before
+        // named roles became mandatory, so it reads as the legacy state it is.
+        if (builtInRole === 'USER') {
+          return t('staff.form.legacyNoRole', {
+            defaultValue: 'No role (legacy custom permissions)',
+          });
+        }
         return t(`staff.roles.${builtInRole.toLowerCase()}`, {
           defaultValue: builtInRole.charAt(0) + builtInRole.slice(1).toLowerCase(),
         });
       }
 
       const customRole = getRoleTemplateByOptionId(optionId);
-      return customRole?.name || t('staff.form.selectRole');
+      if (customRole?.name) return customRole.name;
+
+      // The template list is fetched per selected location, so a role can be
+      // assigned but not present in it (still loading, or scoped to a branch
+      // that is no longer selected). Fall back to the name the server sent with
+      // the assignment rather than showing "Select Role" over a real role.
+      const assignedName = assignmentRoleNames[optionId];
+      return assignedName || t('staff.form.selectRole');
     },
-    [getRoleTemplateByOptionId, t],
+    [assignmentRoleNames, getRoleTemplateByOptionId, t],
   );
 
+  /**
+   * Scope of an option, used for the badge on the trigger and in the list so
+   * "which of these is shared across branches?" is answerable at a glance.
+   */
+  const getRoleOptionScope = useCallback(
+    (optionId?: string): 'BUILTIN' | 'GLOBAL' | 'BRANCH' | undefined => {
+      if (!optionId) return undefined;
+      if (optionId.startsWith('builtin:')) return 'BUILTIN';
+      const template = getRoleTemplateByOptionId(optionId);
+      if (template) return template.isGlobal ? 'GLOBAL' : 'BRANCH';
+      return assignmentRoleScopes[optionId];
+    },
+    [assignmentRoleScopes, getRoleTemplateByOptionId],
+  );
+
+  /**
+   * The role chosen for a target, or `undefined` when nothing has been chosen.
+   *
+   * This must never invent a value for a location. It used to fall back to the
+   * account-wide `role`, which is derived server-side as "the first assignment
+   * that is ADMIN" — so an employee who was Admin at one branch had every other
+   * branch silently display *and save* Admin (Full Access). It also made the
+   * "pick a role for each location" validation dead code, because the getter
+   * could never return a falsy value.
+   */
   const getRoleOptionForTarget = useCallback(
-    (target: 'ALL' | string) =>
-      target === 'ALL'
-        ? selectedCustomRoleId
-          ? customRoleOptionId(selectedCustomRoleId)
-          : builtInRoleOptionId(role)
-        : assignmentRoleIds[target] ||
-          (selectedCustomRoleId
-            ? customRoleOptionId(selectedCustomRoleId)
-            : builtInRoleOptionId(role)),
+    (target: 'ALL' | string): string | undefined => {
+      if (target === 'ALL') {
+        if (selectedCustomRoleId) return customRoleOptionId(selectedCustomRoleId);
+        if (role === 'ADMIN' || builtInEmployeeRoleSelected) {
+          return builtInRoleOptionId(role);
+        }
+        return undefined;
+      }
+
+      // In same-role mode every location follows the single top-level choice.
+      if (sameRoleForAllLocations) {
+        if (selectedCustomRoleId) return customRoleOptionId(selectedCustomRoleId);
+        if (role === 'ADMIN' || builtInEmployeeRoleSelected) {
+          return builtInRoleOptionId(role);
+        }
+        return undefined;
+      }
+
+      return assignmentRoleIds[target];
+    },
     [
       assignmentRoleIds,
+      builtInEmployeeRoleSelected,
       builtInRoleOptionId,
       customRoleOptionId,
       role,
+      sameRoleForAllLocations,
       selectedCustomRoleId,
     ],
   );
@@ -512,6 +608,74 @@ export function EmployeeFormModal({
     selectedCustomRoleId,
     selectedEstablishmentIds,
   ]);
+
+  /**
+   * A saved assignment counts as configured only when it points at the built-in
+   * Admin role or a named template. `builtin:USER` is the legacy "no role,
+   * hand-tuned permissions" state, which can still be read off old rows but can
+   * no longer be saved.
+   */
+  const isLegacyNoRoleOption = (optionId?: string) =>
+    optionId === builtInRoleOptionId('USER');
+
+  const isRoleChosenForTarget = (target: 'ALL' | string) => {
+    const optionId = getRoleOptionForTarget(target);
+    return !!optionId && !isLegacyNoRoleOption(optionId);
+  };
+
+  /**
+   * Where a role created from this form should live. A role picked for one
+   * location belongs to that location; a role meant for several locations at
+   * once has to be an account-wide global role.
+   */
+  const newRoleTargetEstablishmentId =
+    roleSelectionTarget !== 'ALL'
+      ? roleSelectionTarget
+      : selectedEstablishmentIds.length === 1
+        ? selectedEstablishmentIds[0]
+        : currentEstablishment && !establishments
+          ? currentEstablishment.id
+          : undefined;
+
+  const newRoleScopeLabel = newRoleTargetEstablishmentId
+    ? t('staff.form.createRoleForLocation', {
+        location:
+          establishments?.find((item) => item.id === newRoleTargetEstablishmentId)?.name ||
+          currentEstablishment?.name ||
+          t('staff.form.locationLabel'),
+        defaultValue: 'For {{location}}',
+      })
+    : t('staff.form.createRoleGlobal', {
+        defaultValue: 'Shared across all locations',
+      });
+
+  const handleCreateRoleSubmit = async (data: Record<string, unknown>) => {
+    setIsSavingNewRole(true);
+    try {
+      const response = newRoleTargetEstablishmentId
+        ? await api.post(`/api/custom-roles/${newRoleTargetEstablishmentId}`, data)
+        : await api.post('/api/custom-roles/owner/global', data);
+
+      const created = response.data;
+      if (created?.id) {
+        // Show it immediately rather than waiting for the next refetch, then
+        // apply it to whichever target the picker was opened for.
+        setCustomRoles((current) => [
+          ...current,
+          ...normalizeCustomRolesPayload([created]),
+        ]);
+        handleTemplateSelect(normalizeCustomRolesPayload([created])[0]);
+      }
+      setIsCreatingRole(false);
+    } finally {
+      setIsSavingNewRole(false);
+    }
+  };
+
+  // What the role list should show as selected. It follows the target being
+  // edited; previously it read the account-wide role, so opening the picker for
+  // any location showed the same option ticked regardless of that location.
+  const activeTargetOptionId = getRoleOptionForTarget(roleSelectionTarget);
 
   const isRoleVisibleForTarget = useCallback(
     (customRole: CustomRole, target: 'ALL' | string) => {
@@ -567,18 +731,30 @@ export function EmployeeFormModal({
           const roles = normalizeCustomRolesPayload(response.data);
 
           for (const r of roles) {
-            if (!seenIds.has(r.id)) {
-              seenIds.add(r.id);
+            if (seenIds.has(r.id)) continue;
+            seenIds.add(r.id);
+
+            // This endpoint returns the account's global roles alongside the
+            // branch's own, and the server tags which is which. Stamping
+            // `establishmentId: estId` onto everything would file a global
+            // template under the branch accordion.
+            if (r.isGlobal) {
               allRoles.push({
                 ...r,
-                establishmentId: estId,
-                establishmentName: est?.name || t('common.none'),
-                isGlobal: false
+                establishmentId: undefined,
+                establishmentName: t('staff.form.allLocations')
               });
+              continue;
             }
+
+            allRoles.push({
+              ...r,
+              establishmentId: r.establishmentId || estId,
+              establishmentName: r.establishmentName || est?.name || t('common.none'),
+              isGlobal: false
+            });
           }
         }
-
         setCustomRoles(allRoles);
       } catch (error) {
         console.error('Error fetching custom roles:', error);
@@ -598,11 +774,22 @@ export function EmployeeFormModal({
 
     try {
       const response = await api.get(`/api/custom-roles/${estId}`);
-      const rolesWithNames = normalizeCustomRolesPayload(response.data).map((r) => ({
-        ...r,
-        establishmentId: r.establishmentId || estId,
-        establishmentName: r.establishmentName || currentEstablishment?.name || t('staff.form.locationLabel')
-      }));
+      // Same as owner mode: the response mixes account-level global templates
+      // with this branch's own roles, distinguished by the server's `isGlobal`.
+      const rolesWithNames = normalizeCustomRolesPayload(response.data).map((r) =>
+        r.isGlobal
+          ? {
+              ...r,
+              establishmentId: undefined,
+              establishmentName: t('staff.form.allLocations')
+            }
+          : {
+              ...r,
+              establishmentId: r.establishmentId || estId,
+              establishmentName:
+                r.establishmentName || currentEstablishment?.name || t('staff.form.locationLabel')
+            }
+      );
       setCustomRoles(rolesWithNames);
     } catch (error) {
       console.error('Error fetching custom roles:', error);
@@ -631,12 +818,21 @@ export function EmployeeFormModal({
       setTimeout(() => {
         establishmentButtonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 150);
-    } else if (activeDropdown === 'ROLE' && rolesButtonRef.current) {
+    } else if (activeDropdown === 'ROLE') {
+      // Scroll to the trigger that was actually clicked. Using the shared
+      // trigger's ref scrolled to the wrong place in per-location mode, where
+      // that trigger is not even rendered.
       setTimeout(() => {
-        rolesButtonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        const openTrigger = document.querySelector(
+          `[data-role-trigger="${roleSelectionTarget}"]`,
+        );
+        (openTrigger || rolesButtonRef.current)?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        });
       }, 150);
     }
-  }, [activeDropdown]);
+  }, [activeDropdown, roleSelectionTarget]);
 
   useEffect(() => {
     if (activeDropdown !== 'ROLE') return;
@@ -720,12 +916,25 @@ export function EmployeeFormModal({
           (assignment) => assignment.isActive !== false,
         );
         const nextAssignmentRoleIds: Record<string, string> = {};
+        const nextAssignmentRoleNames: Record<string, string> = {};
+        const nextAssignmentRoleScopes: Record<string, 'GLOBAL' | 'BRANCH'> = {};
         activeAssignments.forEach((assignment) => {
-          nextAssignmentRoleIds[assignment.establishmentId] = assignment.customRoleId
+          const optionId = assignment.customRoleId
             ? customRoleOptionId(assignment.customRoleId)
             : builtInRoleOptionId((assignment.role || initialData.role || 'USER').toUpperCase());
+          nextAssignmentRoleIds[assignment.establishmentId] = optionId;
+
+          if (assignment.customRoleId && assignment.customRoleName) {
+            nextAssignmentRoleNames[optionId] = assignment.customRoleName;
+          }
+          if (assignment.customRoleId && assignment.customRoleScope) {
+            nextAssignmentRoleScopes[optionId] =
+              assignment.customRoleScope === 'GLOBAL' ? 'GLOBAL' : 'BRANCH';
+          }
         });
         setAssignmentRoleIds(nextAssignmentRoleIds);
+        setAssignmentRoleNames(nextAssignmentRoleNames);
+        setAssignmentRoleScopes(nextAssignmentRoleScopes);
         const uniqueRoleOptions = Array.from(new Set(Object.values(nextAssignmentRoleIds)));
         setSameRoleForAllLocations(uniqueRoleOptions.length <= 1);
 
@@ -751,6 +960,8 @@ export function EmployeeFormModal({
         setBuiltInEmployeeRoleSelected(false);
         setLastAppliedTemplate(null);
         setAssignmentRoleIds({});
+        setAssignmentRoleNames({});
+        setAssignmentRoleScopes({});
         setSameRoleForAllLocations(true);
         // Platform access control - defaults for new employees
         setPosAccess(true);
@@ -1052,7 +1263,8 @@ export function EmployeeFormModal({
 
     // Validate role selection - must be one of the built-in roles or a custom
     // role template. An existing employee already carries a decision.
-    if (!isOwnerMode && role !== 'ADMIN' && !selectedCustomRoleId && !builtInEmployeeRoleSelected) {
+    // Shared-role mode: Admin or a named template, nothing else.
+    if (!isOwnerMode && (!establishments || sameRoleForAllLocations) && !isRoleChosenForTarget('ALL')) {
       newErrors.role = t('staff.errors.roleRequired');
     }
 
@@ -1082,12 +1294,23 @@ export function EmployeeFormModal({
       newErrors.establishments = t('staff.errors.selectLocation');
     }
 
+    // Now that getRoleOptionForTarget no longer invents a role, this guard
+    // actually fires — it was unreachable before, which is how locations with
+    // no chosen role were being saved as Admin.
     if (!isOwnerMode && establishments && !sameRoleForAllLocations) {
-      const missingLocationRole = selectedEstablishmentIds.some(
-        (establishmentId) => !getRoleOptionForTarget(establishmentId),
-      );
-      if (missingLocationRole) {
-        newErrors.role = t('staff.errors.roleRequired');
+      const missingNames = selectedEstablishmentIds
+        .filter((establishmentId) => !isRoleChosenForTarget(establishmentId))
+        .map(
+          (establishmentId) =>
+            establishments.find((item) => item.id === establishmentId)?.name ||
+            t('staff.form.locationLabel'),
+        );
+
+      if (missingNames.length > 0) {
+        newErrors.role = t('staff.errors.roleRequiredForLocations', {
+          locations: missingNames.join(', '),
+          defaultValue: `Choose a role for: ${missingNames.join(', ')}`,
+        });
       }
     }
 
@@ -1144,6 +1367,9 @@ export function EmployeeFormModal({
 
       return {
         establishmentId,
+        // `role.toUpperCase()` is only reachable in same-role mode, where the
+        // top-level picker is the explicit choice. Per-location mode is gated
+        // by validation, so an unchosen location can never be posted as Admin.
         role: customRole
           ? (customRole.baseRole || customRole.role || 'USER').toUpperCase()
           : builtInRole || role.toUpperCase(),
@@ -1211,6 +1437,243 @@ export function EmployeeFormModal({
 
     await onSubmit(payload);
   };
+
+  /**
+   * The role list, rendered inline directly beneath whichever trigger opened
+   * it. It used to be rendered once after the whole location list, so opening
+   * the first location popped the panel open at the bottom of the section.
+   */
+  const renderRoleDropdown = (target: 'ALL' | string) => (
+    <AnimatePresence>
+      {activeDropdown === 'ROLE' && roleSelectionTarget === target && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="mt-3 w-full bg-white dark:bg-[#1E293B] border border-gray-200 dark:border-white/10 rounded-2xl z-[50] max-h-80 flex flex-col shadow-2xl overflow-hidden"
+                    >
+                      {/* Which target this list is editing. Without it the
+                          list looks identical for every location, which is
+                          what made a per-location picker so confusing. */}
+                      <div className="flex items-center gap-1.5 px-4 py-2.5 border-b border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-white/[0.03]">
+                        {roleSelectionTarget === 'ALL' ? (
+                          <>
+                            <Globe size={11} className="text-gray-400 shrink-0" />
+                            <span className="text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400 truncate">
+                              {establishments && selectedEstablishmentIds.length > 1
+                                ? t('staff.form.roleForAllLocations', { defaultValue: 'Role for all locations' })
+                                : t('staff.form.roleLabel', { defaultValue: 'Role' })}
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <MapPin size={11} className="text-mintcom-green shrink-0" />
+                            <span className="text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400 truncate">
+                              {establishments?.find((item) => item.id === roleSelectionTarget)?.name ||
+                                t('staff.form.locationLabel')}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                      <div className="p-2 max-h-80 overflow-y-auto custom-scrollbar">
+                        {/* Admin Option */}
+                        {canAssignAdminRole && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setRolePickerTouched(true);
+                              if (roleSelectionTarget !== 'ALL') {
+                                setAssignmentRoleIds((prev) => ({
+                                  ...prev,
+                                  [roleSelectionTarget]: builtInRoleOptionId('ADMIN'),
+                                }));
+                                setActiveDropdown(null);
+                                return;
+                              }
+                              setRole('ADMIN');
+                              setSelectedCustomRoleId('');
+                              setBuiltInEmployeeRoleSelected(false);
+                              setLastAppliedTemplate(null);
+                              setPermissions(POS_PERMISSIONS.map(p => p.id));
+                              setBackofficePermissions(
+                                sanitizeAssignableBackofficePermissions(
+                                  BACKOFFICE_PERMISSIONS.map(p => p.id),
+                                ),
+                              );
+                              setAllDiscountsSelected(true);
+                              setActiveDropdown(null);
+                              setPosAccess(true);
+                              setBackofficeAccess(true);
+                              if (sameRoleForAllLocations) {
+                                setAssignmentRoleIds((prev) => {
+                                  const next = { ...prev };
+                                  selectedEstablishmentIds.forEach((establishmentId) => {
+                                    next[establishmentId] = builtInRoleOptionId('ADMIN');
+                                  });
+                                  return next;
+                                });
+                              }
+                            }}
+                            className={`w-full flex items-center justify-between p-3 rounded-lg text-left transition-colors ${activeTargetOptionId === builtInRoleOptionId('ADMIN') ? 'bg-blue-500/10' : 'hover:bg-gray-50 dark:hover:bg-white/5'}`}
+                          >
+                            <div>
+                              <span className={`text-xs font-bold ${activeTargetOptionId === builtInRoleOptionId('ADMIN') ? 'text-blue-500' : 'text-gray-700 dark:text-gray-300'}`}>
+                                {t('staff.form.adminRole')}
+                              </span>
+                              <p className="text-xs font-bold text-gray-500 mt-0.5">{t('staff.form.adminDesc')}</p>
+                            </div>
+                            {activeTargetOptionId === builtInRoleOptionId('ADMIN') && <Check size={14} className="text-blue-500" />}
+                          </button>
+                        )}
+
+                        {/* The built-in "Employee (Custom Permissions)" option used to
+                            live here. It promised a permission list this form does not
+                            have, and on save it silently carried over whatever
+                            permissions the assignment already held - so an admin
+                            "demoted" to Employee kept every admin permission. Every
+                            assignment now needs a named role instead; legacy rows with
+                            no role are flagged on the trigger and block save. */}
+
+                        {/* Global Roles Section - Accordion */}
+                        {assignableCustomRoles.filter(r => r.isGlobal && isRoleVisibleForTarget(r, roleSelectionTarget)).length > 0 && (
+                          <div className="mt-2">
+                            <div className="border-t border-gray-100 dark:border-white/5 mb-2" />
+                            <button
+                              type="button"
+                              onClick={(e) => toggleSection('global', e)}
+                              className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+                            >
+                              <span className="flex items-center gap-1.5 min-w-0">
+                                <Globe size={11} className="text-blue-500 shrink-0" />
+                                <span className="text-xs font-black text-blue-600 dark:text-blue-400 tracking-widest uppercase truncate">{t('staff.form.globalRoles')}</span>
+                              </span>
+                              <ChevronDown size={14} className={`text-gray-400 transition-transform duration-200 ${expandedRoleSections.has('global') ? 'rotate-180' : ''}`} />
+                            </button>
+                            <AnimatePresence>
+                              {expandedRoleSections.has('global') && (
+                                <motion.div
+                                  initial={{ height: 0, opacity: 0 }}
+                                  animate={{ height: 'auto', opacity: 1 }}
+                                  exit={{ height: 0, opacity: 0 }}
+                                  transition={{ duration: 0.2 }}
+                                  className="overflow-hidden"
+                                >
+                                  {assignableCustomRoles.filter(r => r.isGlobal && isRoleVisibleForTarget(r, roleSelectionTarget)).map(customRole => (
+                                    <button
+                                      key={customRole.id}
+                                      type="button"
+                                      onClick={() => handleTemplateSelect(customRole)}
+                                      className={`w-full flex items-center justify-between p-3 pl-5 rounded-lg text-left transition-colors ${activeTargetOptionId === customRoleOptionId(customRole.id) ? 'bg-mintcom-green/10' : 'hover:bg-gray-50 dark:hover:bg-white/5'}`}
+                                    >
+                                      <div className="min-w-0">
+                                        <span className={`text-xs font-bold ${activeTargetOptionId === customRoleOptionId(customRole.id) ? 'text-mintcom-green' : 'text-gray-700 dark:text-gray-300'}`}>
+                                          {customRole.name}
+                                        </span>
+                                        <p className="text-xs font-bold text-gray-500 mt-0.5">{t('staff.form.permissionsCount', { count: customRole.permissions.length + (customRole.backofficePermissions?.length || 0) })}</p>
+                                      </div>
+                                      {activeTargetOptionId === customRoleOptionId(customRole.id) && <Check size={14} className="text-mintcom-green" />}
+                                    </button>
+                                  ))}
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          </div>
+                        )}
+
+                        {/* Establishment-Specific Roles - Accordion */}
+                        {(() => {
+                          const estRoles = assignableCustomRoles.filter(r => !r.isGlobal && isRoleVisibleForTarget(r, roleSelectionTarget));
+                          // Group by establishment
+                          const grouped: Record<string, CustomRole[]> = {};
+                          estRoles.forEach(r => {
+                            const key = r.establishmentName || t('staff.form.accessLabel');
+                            if (!grouped[key]) grouped[key] = [];
+                            grouped[key].push(r);
+                          });
+
+                          return Object.entries(grouped).map(([estName, roles]) => (
+                            <div key={estName} className="mt-2">
+                              <div className="border-t border-gray-100 dark:border-white/5 mb-2" />
+                              <button
+                                type="button"
+                                onClick={(e) => toggleSection(estName, e)}
+                                className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+                              >
+                                <span className="flex items-center gap-1.5 min-w-0">
+                                  <MapPin size={11} className="text-gray-400 shrink-0" />
+                                  <span className="text-xs font-black text-gray-500 dark:text-gray-400 tracking-widest uppercase truncate max-w-[200px]">{estName}</span>
+                                </span>
+                                <ChevronDown size={14} className={`text-gray-400 transition-transform duration-200 flex-shrink-0 ${expandedRoleSections.has(estName) ? 'rotate-180' : ''}`} />
+                              </button>
+                              <AnimatePresence>
+                                {expandedRoleSections.has(estName) && (
+                                  <motion.div
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: 'auto', opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    transition={{ duration: 0.2 }}
+                                    className="overflow-hidden"
+                                  >
+                                    {roles.map(customRole => (
+                                      <button
+                                        key={customRole.id}
+                                        type="button"
+                                        onClick={() => handleTemplateSelect(customRole)}
+                                        className={`w-full flex items-center justify-between p-3 pl-5 rounded-lg text-left transition-colors ${activeTargetOptionId === customRoleOptionId(customRole.id) ? 'bg-mintcom-green/10' : 'hover:bg-gray-50 dark:hover:bg-white/5'}`}
+                                      >
+                                        <div className="min-w-0">
+                                          <span className={`text-xs font-bold ${activeTargetOptionId === customRoleOptionId(customRole.id) ? 'text-mintcom-green' : 'text-gray-700 dark:text-gray-300'}`}>
+                                            {customRole.name}
+                                          </span>
+                                          <p className="text-xs font-bold text-gray-500 mt-0.5">{t('staff.form.permissionsCount', { count: customRole.permissions.length + (customRole.backofficePermissions?.length || 0) })}</p>
+                                        </div>
+                                        {activeTargetOptionId === customRoleOptionId(customRole.id) && <Check size={14} className="text-mintcom-green" />}
+                                      </button>
+                                    ))}
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </div>
+                          ));
+                        })()}
+
+                        {/* No custom roles message */}
+                        {assignableCustomRoles.length === 0 && (
+                          <div className="p-3 text-center">
+                            <p className="text-xs text-gray-500">{t('staff.form.noRoles')}</p>
+                          </div>
+                        )}
+
+                        {/* Create a role without leaving the employee form. Removing
+                            the free-permissions option would otherwise mean bouncing
+                            to the Roles page mid-edit just to name a new role. */}
+                        <div className="mt-2 border-t border-gray-100 dark:border-white/5 pt-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setActiveDropdown(null);
+                              setIsCreatingRole(true);
+                            }}
+                            className="w-full flex items-center gap-2 p-3 rounded-lg text-left transition-colors hover:bg-gray-50 dark:hover:bg-white/5"
+                          >
+                            <span className="w-6 h-6 rounded-lg bg-mintcom-green/10 text-mintcom-green flex items-center justify-center shrink-0">
+                              <Plus size={13} />
+                            </span>
+                            <span className="min-w-0">
+                              <span className="block text-xs font-bold text-mintcom-green">
+                                {t('staff.form.createRole', { defaultValue: 'Create a new role…' })}
+                              </span>
+                              <span className="block text-xs font-bold text-gray-500 mt-0.5 truncate">
+                                {newRoleScopeLabel}
+                              </span>
+                            </span>
+                          </button>
+                        </div>
+                      </div>
+                    </motion.div>
+      )}
+    </AnimatePresence>
+  );
 
   if (!isOpen) return null;
 
@@ -1359,7 +1822,11 @@ export function EmployeeFormModal({
                                         if (isRemoving) {
                                           delete updated[est.id];
                                         } else {
-                                          updated[est.id] = getRoleOptionForTarget('ALL');
+                                          // Newly ticked location: seed it with
+                                          // the shared role only if one is set,
+                                          // otherwise leave it unchosen.
+                                          const shared = getRoleOptionForTarget('ALL');
+                                          if (shared) updated[est.id] = shared;
                                         }
                                         return updated;
                                       });
@@ -1421,72 +1888,135 @@ export function EmployeeFormModal({
                   </div>
                 ) : (
                   <>
-                    <button
-                      ref={rolesButtonRef}
-                      type="button"
-                      onClick={() => {
-                        setRoleSelectionTarget('ALL');
-                        setActiveDropdown(activeDropdown === 'ROLE' ? null : 'ROLE');
-                      }}
-                      className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-left flex items-center justify-between transition-colors"
-                    >
-                      <span className={`text-sm font-bold ${(selectedCustomRoleId || role === 'ADMIN' || builtInEmployeeRoleSelected) ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'}`}>
-                        {selectedCustomRoleId || role === 'ADMIN' || builtInEmployeeRoleSelected
-                          ? getRoleOptionLabel(getRoleOptionForTarget('ALL'))
-                          : t('staff.form.selectRole')}
-                      </span>
-                      <ChevronDown size={16} className={`text-gray-400 transition-transform ${activeDropdown === 'ROLE' ? 'rotate-180' : ''}`} />
-                    </button>
-
+                    {/* Mode switch. A segmented control replaces the old
+                        checkbox: the two modes show different controls, so the
+                        choice needs to read as a mode, not an option. */}
                     {establishments && selectedEstablishmentIds.length > 1 && (
-                      <label className="mt-3 flex items-center gap-3 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 px-4 py-3">
-                        <input
-                          type="checkbox"
-                          checked={sameRoleForAllLocations}
-                          onChange={(event) => {
-                            setSameRoleForAllLocations(event.target.checked);
-                            if (event.target.checked) {
-                              setAssignmentRoleIds((current) => {
-                                const next = { ...current };
-                                selectedEstablishmentIds.forEach((establishmentId) => {
-                                  next[establishmentId] = getRoleOptionForTarget('ALL');
-                                });
-                                return next;
-                              });
-                            }
-                          }}
-                          className="h-4 w-4 accent-mintcom-green"
-                        />
-                        <span className="text-xs font-bold text-gray-600 dark:text-gray-300">
-                          {t('staff.form.sameRoleForAll', { defaultValue: 'Same role for all locations' })}
-                        </span>
-                      </label>
+                      <div className="mb-3 grid grid-cols-2 gap-1 rounded-xl bg-gray-100 dark:bg-white/5 p-1">
+                        {([true, false] as const).map((sameMode) => (
+                          <button
+                            key={String(sameMode)}
+                            type="button"
+                            onClick={() => {
+                              setActiveDropdown(null);
+                              setSameRoleForAllLocations(sameMode);
+                              if (!sameMode) {
+                                // Entering per-location mode seeds each location
+                                // with the shared choice so nothing silently
+                                // resets, but only when one was actually made.
+                                const shared = getRoleOptionForTarget('ALL');
+                                if (shared) {
+                                  setAssignmentRoleIds((current) => {
+                                    const next = { ...current };
+                                    selectedEstablishmentIds.forEach((establishmentId) => {
+                                      if (!next[establishmentId]) next[establishmentId] = shared;
+                                    });
+                                    return next;
+                                  });
+                                }
+                              }
+                            }}
+                            className={`rounded-lg px-3 py-2 text-xs font-black tracking-tight transition-colors ${
+                              sameRoleForAllLocations === sameMode
+                                ? 'bg-white dark:bg-[#1E293B] text-gray-900 dark:text-white shadow-sm'
+                                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                            }`}
+                          >
+                            {sameMode
+                              ? t('staff.form.roleModeShared', { defaultValue: 'One role everywhere' })
+                              : t('staff.form.roleModePerLocation', { defaultValue: 'Role per location' })}
+                          </button>
+                        ))}
+                      </div>
                     )}
 
-                    {establishments && !sameRoleForAllLocations && selectedEstablishmentIds.length > 0 && (
-                      <div className="mt-3 space-y-2">
+                    {/* Shared-role trigger */}
+                    {(sameRoleForAllLocations || !establishments || selectedEstablishmentIds.length <= 1) && (
+                      <>
+                        <button
+                          ref={rolesButtonRef}
+                          data-role-trigger="ALL"
+                          type="button"
+                          onClick={() => {
+                            setRoleSelectionTarget('ALL');
+                            setActiveDropdown(activeDropdown === 'ROLE' ? null : 'ROLE');
+                          }}
+                          className={`w-full rounded-xl px-4 py-3 text-left flex items-center justify-between gap-3 border transition-colors ${
+                            isRoleChosenForTarget('ALL')
+                              ? 'bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10'
+                              : 'bg-amber-50 dark:bg-amber-500/10 border-amber-300 dark:border-amber-500/30'
+                          }`}
+                        >
+                          <span className="min-w-0 flex items-center gap-2">
+                            <span className={`text-sm font-bold truncate ${isRoleChosenForTarget('ALL') ? 'text-gray-900 dark:text-white' : 'text-amber-700 dark:text-amber-400'}`}>
+                              {getRoleOptionForTarget('ALL')
+                                ? getRoleOptionLabel(getRoleOptionForTarget('ALL'))
+                                : t('staff.form.chooseRole', { defaultValue: 'Choose a role' })}
+                            </span>
+                            <RoleScopeBadge scope={getRoleOptionScope(getRoleOptionForTarget('ALL'))} t={t} />
+                          </span>
+                          <ChevronDown size={16} className={`text-gray-400 shrink-0 transition-transform ${activeDropdown === 'ROLE' ? 'rotate-180' : ''}`} />
+                        </button>
+
+                        {establishments && selectedEstablishmentIds.length > 1 && (
+                          <p className="mt-2 px-1 text-[11px] font-bold text-gray-400 dark:text-gray-500">
+                            {t('staff.form.appliesToLocations', {
+                              count: selectedEstablishmentIds.length,
+                              defaultValue: `Applies to all ${selectedEstablishmentIds.length} locations`,
+                            })}
+                          </p>
+                        )}
+
+                        {renderRoleDropdown('ALL')}
+                      </>
+                    )}
+
+                    {/* Per-location list. Each location owns its own choice and
+                        an unchosen one is called out instead of inheriting a
+                        role the employee was never given. */}
+                    {establishments && !sameRoleForAllLocations && selectedEstablishmentIds.length > 1 && (
+                      <div className="space-y-2">
                         {selectedEstablishmentIds.map((establishmentId) => {
                           const establishment = establishments.find((item) => item.id === establishmentId);
+                          const optionId = getRoleOptionForTarget(establishmentId);
+                          const isChosen = isRoleChosenForTarget(establishmentId);
+                          const isOpenForThis = activeDropdown === 'ROLE' && roleSelectionTarget === establishmentId;
+
                           return (
+                            <div key={establishmentId}>
                             <button
-                              key={establishmentId}
+                              data-role-trigger={establishmentId}
                               type="button"
                               onClick={() => {
                                 setRoleSelectionTarget(establishmentId);
-                                setActiveDropdown('ROLE');
+                                setActiveDropdown(isOpenForThis ? null : 'ROLE');
                               }}
-                              className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-left flex items-center justify-between transition-colors"
+                              className={`w-full rounded-xl px-4 py-3 text-left flex items-center justify-between gap-3 border transition-colors ${
+                                isChosen
+                                  ? 'bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10'
+                                  : 'bg-amber-50 dark:bg-amber-500/10 border-amber-300 dark:border-amber-500/30'
+                              }`}
                             >
-                              <span>
-                                <span className="block text-xs font-black text-gray-500 dark:text-gray-400">
-                                  {establishment?.name || t('staff.form.locationLabel')}
+                              <span className="min-w-0">
+                                <span className="flex items-center gap-1.5">
+                                  <MapPin size={10} className="text-gray-400 shrink-0" />
+                                  <span className="block text-xs font-black text-gray-500 dark:text-gray-400 truncate">
+                                    {establishment?.name || t('staff.form.locationLabel')}
+                                  </span>
                                 </span>
-                                <span className="block text-sm font-bold text-gray-900 dark:text-white">
-                                  {getRoleOptionLabel(getRoleOptionForTarget(establishmentId))}
+                                <span className="mt-0.5 flex items-center gap-2">
+                                  <span className={`text-sm font-bold truncate ${isChosen ? 'text-gray-900 dark:text-white' : 'text-amber-700 dark:text-amber-400'}`}>
+                                    {optionId
+                                      ? getRoleOptionLabel(optionId)
+                                      : t('staff.form.chooseRole', { defaultValue: 'Choose a role' })}
+                                  </span>
+                                  <RoleScopeBadge scope={getRoleOptionScope(optionId)} t={t} />
                                 </span>
                               </span>
-                              <ChevronDown size={16} className="text-gray-400" />
+                              <ChevronDown size={16} className={`text-gray-400 shrink-0 transition-transform ${isOpenForThis ? 'rotate-180' : ''}`} />
                             </button>
+                            {renderRoleDropdown(establishmentId)}
+                            </div>
                           );
                         })}
                       </div>
@@ -1500,231 +2030,6 @@ export function EmployeeFormModal({
                       </div>
                     )}
 
-                    <AnimatePresence>
-                      {activeDropdown === 'ROLE' && (
-                        <motion.div
-                          initial={{ opacity: 0, y: -10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
-                          className="mt-3 w-full bg-white dark:bg-[#1E293B] border border-gray-200 dark:border-white/10 rounded-2xl z-[50] max-h-80 flex flex-col shadow-2xl overflow-hidden"
-                        >
-                          <div className="p-2 max-h-80 overflow-y-auto custom-scrollbar">
-                            {/* Admin Option */}
-                            {canAssignAdminRole && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setRolePickerTouched(true);
-                                  if (roleSelectionTarget !== 'ALL') {
-                                    setAssignmentRoleIds((prev) => ({
-                                      ...prev,
-                                      [roleSelectionTarget]: builtInRoleOptionId('ADMIN'),
-                                    }));
-                                    setActiveDropdown(null);
-                                    return;
-                                  }
-                                  setRole('ADMIN');
-                                  setSelectedCustomRoleId('');
-                                  setBuiltInEmployeeRoleSelected(false);
-                                  setLastAppliedTemplate(null);
-                                  setPermissions(POS_PERMISSIONS.map(p => p.id));
-                                  setBackofficePermissions(
-                                    sanitizeAssignableBackofficePermissions(
-                                      BACKOFFICE_PERMISSIONS.map(p => p.id),
-                                    ),
-                                  );
-                                  setAllDiscountsSelected(true);
-                                  setActiveDropdown(null);
-                                  setPosAccess(true);
-                                  setBackofficeAccess(true);
-                                  if (sameRoleForAllLocations) {
-                                    setAssignmentRoleIds((prev) => {
-                                      const next = { ...prev };
-                                      selectedEstablishmentIds.forEach((establishmentId) => {
-                                        next[establishmentId] = builtInRoleOptionId('ADMIN');
-                                      });
-                                      return next;
-                                    });
-                                  }
-                                }}
-                                className={`w-full flex items-center justify-between p-3 rounded-lg text-left transition-colors ${role === 'ADMIN' ? 'bg-blue-500/10' : 'hover:bg-gray-50 dark:hover:bg-white/5'}`}
-                              >
-                                <div>
-                                  <span className={`text-xs font-bold ${role === 'ADMIN' ? 'text-blue-500' : 'text-gray-700 dark:text-gray-300'}`}>
-                                    {t('staff.form.adminRole')}
-                                  </span>
-                                  <p className="text-xs font-bold text-gray-500 mt-0.5">{t('staff.form.adminDesc')}</p>
-                                </div>
-                                {role === 'ADMIN' && <Check size={14} className="text-blue-500" />}
-                              </button>
-                            )}
-
-                            {/* Built-in Employee Option - an assignment that follows no
-                                role template, so the permissions picked below are the
-                                employee's own and survive future template edits. */}
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setRolePickerTouched(true);
-                                if (roleSelectionTarget !== 'ALL') {
-                                  setAssignmentRoleIds((prev) => ({
-                                    ...prev,
-                                    [roleSelectionTarget]: builtInRoleOptionId('USER'),
-                                  }));
-                                  setActiveDropdown(null);
-                                  return;
-                                }
-                                const leavingPresetRole = role === 'ADMIN' || !!selectedCustomRoleId;
-                                setRole('USER');
-                                setSelectedCustomRoleId('');
-                                setBuiltInEmployeeRoleSelected(true);
-                                setLastAppliedTemplate(null);
-                                // Coming down from Admin or off a template, start from the
-                                // standard employee rights instead of silently keeping the
-                                // wider set the previous role granted.
-                                if (leavingPresetRole) {
-                                  setPermissions(
-                                    sanitizeAssignablePosPermissions([...DEFAULT_EMPLOYEE_POS_PERMISSIONS]),
-                                  );
-                                  setBackofficePermissions(
-                                    buildEffectiveBackofficePermissions(
-                                      [...BACKOFFICE_DEFAULT_PERMISSION_IDS],
-                                      backofficeAccess,
-                                    ),
-                                  );
-                                }
-                                setActiveDropdown(null);
-                                if (sameRoleForAllLocations) {
-                                  setAssignmentRoleIds((prev) => {
-                                    const next = { ...prev };
-                                    selectedEstablishmentIds.forEach((establishmentId) => {
-                                      next[establishmentId] = builtInRoleOptionId('USER');
-                                    });
-                                    return next;
-                                  });
-                                }
-                              }}
-                              className={`w-full flex items-center justify-between p-3 rounded-lg text-left transition-colors ${role !== 'ADMIN' && !selectedCustomRoleId ? 'bg-mintcom-green/10' : 'hover:bg-gray-50 dark:hover:bg-white/5'}`}
-                            >
-                              <div>
-                                <span className={`text-xs font-bold ${role !== 'ADMIN' && !selectedCustomRoleId ? 'text-mintcom-green' : 'text-gray-700 dark:text-gray-300'}`}>
-                                  {t('staff.form.employeeRole')}
-                                </span>
-                                <p className="text-xs font-bold text-gray-500 mt-0.5">{t('staff.form.employeeDesc')}</p>
-                              </div>
-                              {role !== 'ADMIN' && !selectedCustomRoleId && (
-                                <Check size={14} className="text-mintcom-green" />
-                              )}
-                            </button>
-
-                            {/* Global Roles Section - Accordion */}
-                            {assignableCustomRoles.filter(r => r.isGlobal && isRoleVisibleForTarget(r, roleSelectionTarget)).length > 0 && (
-                              <div className="mt-2">
-                                <div className="border-t border-gray-100 dark:border-white/5 mb-2" />
-                                <button
-                                  type="button"
-                                  onClick={(e) => toggleSection('global', e)}
-                                  className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
-                                >
-                                  <span className="text-xs font-black text-gray-500 dark:text-gray-400 tracking-widest uppercase">{t('staff.form.globalRoles')}</span>
-                                  <ChevronDown size={14} className={`text-gray-400 transition-transform duration-200 ${expandedRoleSections.has('global') ? 'rotate-180' : ''}`} />
-                                </button>
-                                <AnimatePresence>
-                                  {expandedRoleSections.has('global') && (
-                                    <motion.div
-                                      initial={{ height: 0, opacity: 0 }}
-                                      animate={{ height: 'auto', opacity: 1 }}
-                                      exit={{ height: 0, opacity: 0 }}
-                                      transition={{ duration: 0.2 }}
-                                      className="overflow-hidden"
-                                    >
-                                      {assignableCustomRoles.filter(r => r.isGlobal && isRoleVisibleForTarget(r, roleSelectionTarget)).map(customRole => (
-                                        <button
-                                          key={customRole.id}
-                                          type="button"
-                                          onClick={() => handleTemplateSelect(customRole)}
-                                          className={`w-full flex items-center justify-between p-3 pl-5 rounded-lg text-left transition-colors ${selectedCustomRoleId === customRole.id && role !== 'ADMIN' ? 'bg-mintcom-green/10' : 'hover:bg-gray-50 dark:hover:bg-white/5'}`}
-                                        >
-                                          <div>
-                                            <span className={`text-xs font-bold ${selectedCustomRoleId === customRole.id && role !== 'ADMIN' ? 'text-mintcom-green' : 'text-gray-700 dark:text-gray-300'}`}>
-                                              {customRole.name}
-                                            </span>
-                                            <p className="text-xs font-bold text-gray-500 mt-0.5">{t('staff.form.permissionsCount', { count: customRole.permissions.length + (customRole.backofficePermissions?.length || 0) })}</p>
-                                          </div>
-                                          {selectedCustomRoleId === customRole.id && role !== 'ADMIN' && <Check size={14} className="text-mintcom-green" />}
-                                        </button>
-                                      ))}
-                                    </motion.div>
-                                  )}
-                                </AnimatePresence>
-                              </div>
-                            )}
-
-                            {/* Establishment-Specific Roles - Accordion */}
-                            {(() => {
-                              const estRoles = assignableCustomRoles.filter(r => !r.isGlobal && isRoleVisibleForTarget(r, roleSelectionTarget));
-                              // Group by establishment
-                              const grouped: Record<string, CustomRole[]> = {};
-                              estRoles.forEach(r => {
-                                const key = r.establishmentName || t('staff.form.accessLabel');
-                                if (!grouped[key]) grouped[key] = [];
-                                grouped[key].push(r);
-                              });
-
-                              return Object.entries(grouped).map(([estName, roles]) => (
-                                <div key={estName} className="mt-2">
-                                  <div className="border-t border-gray-100 dark:border-white/5 mb-2" />
-                                  <button
-                                    type="button"
-                                    onClick={(e) => toggleSection(estName, e)}
-                                    className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
-                                  >
-                                    <span className="text-xs font-black text-gray-500 dark:text-gray-400 tracking-widest uppercase truncate max-w-[200px]">{estName}</span>
-                                    <ChevronDown size={14} className={`text-gray-400 transition-transform duration-200 flex-shrink-0 ${expandedRoleSections.has(estName) ? 'rotate-180' : ''}`} />
-                                  </button>
-                                  <AnimatePresence>
-                                    {expandedRoleSections.has(estName) && (
-                                      <motion.div
-                                        initial={{ height: 0, opacity: 0 }}
-                                        animate={{ height: 'auto', opacity: 1 }}
-                                        exit={{ height: 0, opacity: 0 }}
-                                        transition={{ duration: 0.2 }}
-                                        className="overflow-hidden"
-                                      >
-                                        {roles.map(customRole => (
-                                          <button
-                                            key={customRole.id}
-                                            type="button"
-                                            onClick={() => handleTemplateSelect(customRole)}
-                                            className={`w-full flex items-center justify-between p-3 pl-5 rounded-lg text-left transition-colors ${selectedCustomRoleId === customRole.id && role !== 'ADMIN' ? 'bg-mintcom-green/10' : 'hover:bg-gray-50 dark:hover:bg-white/5'}`}
-                                          >
-                                            <div>
-                                              <span className={`text-xs font-bold ${selectedCustomRoleId === customRole.id && role !== 'ADMIN' ? 'text-mintcom-green' : 'text-gray-700 dark:text-gray-300'}`}>
-                                                {customRole.name}
-                                              </span>
-                                              <p className="text-xs font-bold text-gray-500 mt-0.5">{t('staff.form.permissionsCount', { count: customRole.permissions.length + (customRole.backofficePermissions?.length || 0) })}</p>
-                                            </div>
-                                            {selectedCustomRoleId === customRole.id && role !== 'ADMIN' && <Check size={14} className="text-mintcom-green" />}
-                                          </button>
-                                        ))}
-                                      </motion.div>
-                                    )}
-                                  </AnimatePresence>
-                                </div>
-                              ));
-                            })()}
-
-                            {/* No custom roles message */}
-                            {assignableCustomRoles.length === 0 && (
-                              <div className="p-3 text-center">
-                                <p className="text-xs text-gray-500">{t('staff.form.noRoles')}</p>
-                                <p className="text-xs font-bold text-gray-500 mt-1">{t('staff.form.createRolesInSettings')}</p>
-                              </div>
-                            )}
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
                   </>
                 )}
                 {errors.role && (
@@ -1959,6 +2264,17 @@ export function EmployeeFormModal({
           </div>
         </motion.div>
       </div>
+
+      {/* Nested role form. Both are portals, so this simply stacks on top and
+          returns to the employee form with the new role already selected. */}
+      {isCreatingRole && (
+        <CustomRoleFormModal
+          isOpen={isCreatingRole}
+          onClose={() => setIsCreatingRole(false)}
+          onSubmit={handleCreateRoleSubmit}
+          isSubmitting={isSavingNewRole}
+        />
+      )}
     </AnimatePresence>,
     document.body
   );

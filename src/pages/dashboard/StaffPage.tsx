@@ -31,6 +31,7 @@ import { usePermissionGuard } from '../../hooks/usePermissionGuard';
 import { PortalDropdown } from '../../components/PortalDropdown';
 import { formatInputPlaceholder } from '../../utils/textCase';
 import { useRealtime } from '../../hooks/useRealtime';
+import { getAssignmentRoleLabel } from '../../utils/roleNames';
 import { DataChangeEventTypes } from '../../services/realtimeService';
 
 interface Staff {
@@ -46,6 +47,7 @@ interface Staff {
   permissions?: string[];
   allowedDiscounts?: string[];
   customRoleId?: string;
+  customRoleName?: string | null;
   isAccountOwner?: boolean;
   isOwnerAccount?: boolean;
   isProtected?: boolean;
@@ -229,6 +231,10 @@ export function StaffPage() {
           if (sortConfig.key === 'username') {
             aValue = a.name || a.username;
             bValue = b.name || b.username;
+          } else if (sortConfig.key === 'role') {
+            // Sort by what the column prints, not the base-role enum behind it.
+            aValue = getRoleLabel(a);
+            bValue = getRoleLabel(b);
           } else {
             const valA = a[sortConfig.key as keyof Staff];
             const valB = b[sortConfig.key as keyof Staff];
@@ -333,7 +339,7 @@ export function StaffPage() {
     const exportData = staff.map(s => ({
       username: s.username,
       name: s.name,
-      role: s.role,
+      role: getRoleLabel(s),
       email: s.email || t('common.notAvailable'),
       phone: s.phone || t('common.notAvailable'),
       status: s.isActive ? t('common.active') : t('common.notAvailable'),
@@ -460,16 +466,10 @@ export function StaffPage() {
     }
   };
 
-  const getRoleLabel = (role: string) => {
-    if (role?.toUpperCase() === 'ACCOUNT_OWNER') {
-      return t('staff.roles.accountOwner', { defaultValue: 'Owner' });
-    }
-    const translationKey = `staff.roles.${role.toLowerCase()}`;
-    const translatedRole = t(translationKey);
-    return translatedRole !== translationKey
-      ? translatedRole
-      : role.charAt(0) + role.slice(1).toLowerCase();
-  };
+  // The table prints the role the operator named; the base-role enum is only a
+  // fallback for assignments with no template attached.
+  const getRoleLabel = (member: Pick<Staff, 'role' | 'customRoleName'>) =>
+    getAssignmentRoleLabel(member, t);
 
   return (
     <div className="space-y-6 sm:space-y-8 pb-24 sm:pb-10" dir={t('common.locale') === 'ar' ? 'rtl' : 'ltr'}>
@@ -620,7 +620,7 @@ export function StaffPage() {
                     </div>
                     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-black tracking-wide border ${getRoleStyle(member.role)}`}>
                       <Shield size={10} />
-                      {getRoleLabel(member.role)}
+                      {getRoleLabel(member)}
                     </span>
                   </div>
 
@@ -746,7 +746,7 @@ export function StaffPage() {
                       <td className="px-6 py-4 text-center">
                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-black tracking-wide border ${getRoleStyle(member.role)}`}>
                           <Shield size={10} />
-                          {getRoleLabel(member.role)}
+                          {getRoleLabel(member)}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-center">

@@ -34,6 +34,10 @@ interface CustomRole {
   backofficeAccess: boolean;
   backofficePermissions: string[];
   createdAt: string;
+  // Cross-branch usage, tagged by the API so owners can see how widely a
+  // global template is relied on before editing or deleting it.
+  employeeCount?: number;
+  locationCount?: number;
 }
 
 type ViewMode = 'grid' | 'list';
@@ -416,6 +420,12 @@ export function OwnerRolesPage() {
                       <Globe size={10} />
                       {t('owner.roles.global')}
                     </span>
+                    <p className="mt-2 text-xs font-medium text-gray-500">
+                      {t('owner.roles.usageSummary', {
+                        employees: role.employeeCount ?? 0,
+                        locations: role.locationCount ?? 0,
+                      })}
+                    </p>
                   </div>
                 </div>
 
@@ -488,6 +498,12 @@ export function OwnerRolesPage() {
                     <span className="font-bold text-gray-900 dark:text-white">
                       {new Date(role.createdAt).toLocaleDateString()}
                     </span>
+                    <span className="block mt-1 text-gray-500">
+                      {t('owner.roles.usageSummary', {
+                        employees: role.employeeCount ?? 0,
+                        locations: role.locationCount ?? 0,
+                      })}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -518,6 +534,7 @@ export function OwnerRolesPage() {
                     </div>
                   </th>
                   <th className="px-6 py-4 text-center label-strong whitespace-nowrap">{t('staff.form.accessLabel')}</th>
+                  <th className="px-6 py-4 text-center label-strong whitespace-nowrap">{t('owner.roles.usage')}</th>
                   <th
                     className="px-6 py-4 text-start label-strong cursor-pointer hover:text-mintcom-green transition-colors whitespace-nowrap"
                     onClick={() => handleSort('createdAt')}
@@ -565,6 +582,14 @@ export function OwnerRolesPage() {
                           <span className="text-xs text-gray-500 font-medium">{t('owner.roles.backofficeAccess')}: {getBackofficePermissionCount(role.backofficePermissions)}</span>
                         </div>
                       </div>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <p className="text-xs text-gray-500 font-medium">
+                        {t('owner.roles.usageSummary', {
+                          employees: role.employeeCount ?? 0,
+                          locations: role.locationCount ?? 0,
+                        })}
+                      </p>
                     </td>
                     <td className="px-6 py-4 text-start">
                       <p className="text-xs text-gray-500 font-medium">

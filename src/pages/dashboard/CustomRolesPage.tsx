@@ -10,7 +10,9 @@ import {
   UserCheck,
   ArrowUpDown,
   Grid3X3,
-  List
+  List,
+  Copy,
+  Globe
 } from 'lucide-react';
 import api, { extractErrorMessage } from '../../config/api';
 import { fetchAllPages } from '../../utils/fetchAllPages';
@@ -36,6 +38,14 @@ interface CustomRole {
   backofficeAccess: boolean;
   backofficePermissions: string[];
   createdAt: string;
+  // Scope metadata tagged by the API. A global role belongs to the account and
+  // is assignable from every branch, so this page shows it as a read-only
+  // template that a branch can fork rather than edit in place.
+  isGlobal?: boolean;
+  establishmentId?: string | null;
+  establishmentName?: string | null;
+  employeeCount?: number;
+  locationCount?: number;
 }
 
 type ViewMode = 'grid' | 'list';
@@ -115,6 +125,29 @@ export function CustomRolesPage() {
     locationCount: 0,
   });
   const [isResolvingRoleDelete, setIsResolvingRoleDelete] = useState(false);
+  const [duplicatingRoleId, setDuplicatingRoleId] = useState<string | null>(null);
+
+  /**
+   * Fork a global template into this branch as an editable branch-local copy.
+   * The copy is a snapshot — later edits to the global template do not reach it.
+   */
+  const handleDuplicateToBranch = async (role: CustomRole) => {
+    const establishmentId = currentEstablishment?.id;
+    if (!establishmentId || duplicatingRoleId) return;
+
+    try {
+      setDuplicatingRoleId(role.id);
+      await api.post(`/api/custom-roles/${role.id}/duplicate/${establishmentId}`, {});
+      toast.success(t('dashboard.roles.messages.duplicated'));
+      await fetchRoles();
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.message || t('dashboard.roles.messages.duplicateFailed'),
+      );
+    } finally {
+      setDuplicatingRoleId(null);
+    }
+  };
 
   useEffect(() => {
     void fetchRoles();
@@ -409,6 +442,12 @@ export function CustomRolesPage() {
                     </div>
                     <div>
                       <h3 className="font-bold text-gray-900 dark:text-white text-sm">{getRoleDisplayName(role.name)}</h3>
+                      {role.isGlobal && (
+                        <span className="inline-flex items-center gap-1 mt-1 me-1 px-2 py-0.5 rounded-md text-[10px] font-black tracking-wide border border-blue-200 dark:border-blue-500/30 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10">
+                          <Globe size={10} />
+                          {t('dashboard.roles.globalBadge')}
+                        </span>
+                      )}
                       <span className={`inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-md text-[10px] font-black tracking-wide border ${getBaseRoleStyle(role.baseRole)}`}>
                         <UserCheck size={10} />
                         {role.baseRole ? (t(`staff.roles.${role.baseRole.toLowerCase()}`) !== `staff.roles.${role.baseRole.toLowerCase()}` ? t(`staff.roles.${role.baseRole.toLowerCase()}`) : role.baseRole.charAt(0) + role.baseRole.slice(1).toLowerCase()) : ''}
@@ -416,20 +455,33 @@ export function CustomRolesPage() {
                     </div>
                   </div>
                   <div className="flex gap-2 relative z-20">
-                    <button
-                      onClick={() => handleEdit(role)}
-                      className="p-2 rounded-xl bg-gray-50 dark:bg-white/5 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all"
-                      title={t('dashboard.roles.editRole')}
-                    >
-                      <Edit2 size={16} />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteClick(role)}
-                      className="p-2 rounded-xl bg-red-50 dark:bg-red-500/10 text-red-400 hover:text-red-500 transition-all"
-                      title={t('dashboard.roles.deleteRole')}
-                    >
-                      <Trash2 size={16} />
-                    </button>
+                    {role.isGlobal ? (
+                      <button
+                        onClick={() => handleDuplicateToBranch(role)}
+                        disabled={duplicatingRoleId === role.id}
+                        className="p-2 rounded-xl bg-gray-50 dark:bg-white/5 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all disabled:opacity-50"
+                        title={t('dashboard.roles.duplicateToBranch')}
+                      >
+                        <Copy size={16} />
+                      </button>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => handleEdit(role)}
+                          className="p-2 rounded-xl bg-gray-50 dark:bg-white/5 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all"
+                          title={t('dashboard.roles.editRole')}
+                        >
+                          <Edit2 size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteClick(role)}
+                          className="p-2 rounded-xl bg-red-50 dark:bg-red-500/10 text-red-400 hover:text-red-500 transition-all"
+                          title={t('dashboard.roles.deleteRole')}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -482,6 +534,12 @@ export function CustomRolesPage() {
                     </div>
                     <div>
                       <h3 className="font-bold text-gray-900 dark:text-white text-sm">{getRoleDisplayName(role.name)}</h3>
+                      {role.isGlobal && (
+                        <span className="inline-flex items-center gap-1 mt-1 me-1 px-2 py-0.5 rounded-md text-[10px] font-black tracking-wide border border-blue-200 dark:border-blue-500/30 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10">
+                          <Globe size={10} />
+                          {t('dashboard.roles.globalBadge')}
+                        </span>
+                      )}
                       <span className={`inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-md text-[10px] font-black tracking-wide border ${getBaseRoleStyle(role.baseRole)}`}>
                         <UserCheck size={10} />
                         {role.baseRole ? (t(`staff.roles.${role.baseRole.toLowerCase()}`) !== `staff.roles.${role.baseRole.toLowerCase()}` ? t(`staff.roles.${role.baseRole.toLowerCase()}`) : role.baseRole.charAt(0) + role.baseRole.slice(1).toLowerCase()) : ''}
@@ -489,18 +547,31 @@ export function CustomRolesPage() {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <button
-                      onClick={() => handleEdit(role)}
-                      className="p-2 rounded-lg bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400"
-                    >
-                      <Edit2 size={16} />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteClick(role)}
-                      className="p-2 rounded-lg bg-red-500/10 text-red-500"
-                    >
-                      <Trash2 size={16} />
-                    </button>
+                    {role.isGlobal ? (
+                      <button
+                        onClick={() => handleDuplicateToBranch(role)}
+                        disabled={duplicatingRoleId === role.id}
+                        className="p-2 rounded-lg bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400 disabled:opacity-50"
+                        title={t('dashboard.roles.duplicateToBranch')}
+                      >
+                        <Copy size={16} />
+                      </button>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => handleEdit(role)}
+                          className="p-2 rounded-lg bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400"
+                        >
+                          <Edit2 size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteClick(role)}
+                          className="p-2 rounded-lg bg-red-500/10 text-red-500"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -572,6 +643,12 @@ export function CustomRolesPage() {
                         </div>
                         <div>
                           <p className="font-bold text-gray-900 dark:text-white text-sm">{getRoleDisplayName(role.name)}</p>
+                          {role.isGlobal && (
+                            <span className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-md text-[10px] font-black tracking-wide border border-blue-200 dark:border-blue-500/30 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10">
+                              <Globe size={10} />
+                              {t('dashboard.roles.globalBadge')}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </td>
@@ -600,20 +677,33 @@ export function CustomRolesPage() {
                     </td>
                     <td className="px-8 py-5 text-end">
                       <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => handleEdit(role)}
-                          className="p-2.5 rounded-xl bg-white dark:bg-white/5 border border-gray-100 dark:border-white/5 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all shadow-sm active:scale-90"
-                          title={t('dashboard.roles.editRole')}
-                        >
-                          <Edit2 size={16} />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteClick(role)}
-                          className="p-2.5 rounded-xl bg-white dark:bg-white/5 border border-gray-100 dark:border-white/5 text-mintcom-red/60 hover:text-mintcom-red hover:bg-mintcom-red/5 transition-all shadow-sm active:scale-90"
-                          title={t('dashboard.roles.deleteRole')}
-                        >
-                          <Trash2 size={16} />
-                        </button>
+                        {role.isGlobal ? (
+                          <button
+                            onClick={() => handleDuplicateToBranch(role)}
+                            disabled={duplicatingRoleId === role.id}
+                            className="p-2.5 rounded-xl bg-white dark:bg-white/5 border border-gray-100 dark:border-white/5 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all shadow-sm active:scale-90 disabled:opacity-50"
+                            title={t('dashboard.roles.duplicateToBranch')}
+                          >
+                            <Copy size={16} />
+                          </button>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => handleEdit(role)}
+                              className="p-2.5 rounded-xl bg-white dark:bg-white/5 border border-gray-100 dark:border-white/5 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all shadow-sm active:scale-90"
+                              title={t('dashboard.roles.editRole')}
+                            >
+                              <Edit2 size={16} />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteClick(role)}
+                              className="p-2.5 rounded-xl bg-white dark:bg-white/5 border border-gray-100 dark:border-white/5 text-mintcom-red/60 hover:text-mintcom-red hover:bg-mintcom-red/5 transition-all shadow-sm active:scale-90"
+                              title={t('dashboard.roles.deleteRole')}
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>

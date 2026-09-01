@@ -35,6 +35,10 @@ import { StatValue } from '../../components/ui/StatValue';
 import { StepUpVerifier } from '../../components/StepUpVerifier';
 import { reauthHeaders } from '../../services/stepUp';
 import { biIcon } from '../../components/ui/BiIcon';
+import {
+    getAssignmentRoleLabel,
+    getEmployeeRoleSummary,
+} from '../../utils/roleNames';
 
 interface EmployeeAssignment {
     establishmentId: string;
@@ -44,6 +48,8 @@ interface EmployeeAssignment {
     assignmentsId: string;
     isActive: boolean;
     customRoleId?: string;
+    customRoleName?: string | null;
+    customRoleScope?: 'GLOBAL' | 'LOCATION' | null;
     backofficeAccess?: boolean;
     backofficePermissions?: string[];
 }
@@ -321,6 +327,19 @@ export function OwnerEmployeesPage() {
         [],
     );
 
+    /**
+     * One label per employee for the list. An employee can hold different roles
+     * at different locations, so this shows the shared role when they agree and
+     * a "Mixed" summary when they do not - `emp.role` alone was the server's
+     * "Admin wins" collapse, which read as Admin for anyone who was Admin at a
+     * single branch.
+     */
+    const getEmployeeRoleLabel = useCallback(
+        (employee: Employee) =>
+            getEmployeeRoleSummary(getActiveAssignments(employee), { role: employee.role }, t),
+        [getActiveAssignments, t],
+    );
+
     const filteredEmployees = useMemo(() => {
         const result = employees.filter(emp => {
             const matchesSearch =
@@ -349,8 +368,9 @@ export function OwnerEmployeesPage() {
                         bValue = `${b.firstName} ${b.lastName}`.trim().toLowerCase() || b.username.toLowerCase();
                         break;
                     case 'role':
-                        aValue = a.role?.toLowerCase() || '';
-                        bValue = b.role?.toLowerCase() || '';
+                        // Sort by the printed label, not the base-role enum.
+                        aValue = getEmployeeRoleLabel(a).toLowerCase();
+                        bValue = getEmployeeRoleLabel(b).toLowerCase();
                         break;
                     case 'status':
                         aValue = a.isActive ? 1 : 0;
@@ -381,7 +401,7 @@ export function OwnerEmployeesPage() {
         }
 
         return result;
-    }, [employees, searchQuery, roleFilter, statusFilter, sortConfig, getActiveAssignments]);
+    }, [employees, searchQuery, roleFilter, statusFilter, sortConfig, getActiveAssignments, getEmployeeRoleLabel]);
 
     // Reset to page 1 when filters or sort change
     useEffect(() => {
@@ -410,18 +430,6 @@ export function OwnerEmployeesPage() {
         }
     };
 
-    const getRoleLabel = (role: string) => {
-        if (role?.toUpperCase() === 'ACCOUNT_OWNER') {
-            return t('staff.roles.accountOwner', { defaultValue: 'Owner' });
-        }
-        const translationKey = `staff.roles.${role?.toLowerCase?.() || ''}`;
-        const translatedRole = t(translationKey);
-        if (translatedRole !== translationKey) {
-            return translatedRole;
-        }
-
-        return role ? role.charAt(0) + role.slice(1).toLowerCase() : '';
-    };
 
     const getStatusBadge = (isActive: boolean | undefined) => {
         if (isActive) {
@@ -691,7 +699,7 @@ export function OwnerEmployeesPage() {
                                         <div className="mb-6">
                                             <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-black tracking-wide border ${getRoleStyle(emp.role)}`}>
                                                 <Shield size={10} />
-                                                {getRoleLabel(emp.role)}
+                                                {getEmployeeRoleLabel(emp)}
                                             </span>
                                         </div>
 
@@ -768,7 +776,7 @@ export function OwnerEmployeesPage() {
                                                 </div>
                                                 <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-black tracking-wide border ${getRoleStyle(emp.role)}`}>
                                                     <Shield size={10} />
-                                                    {getRoleLabel(emp.role)}
+                                                    {getEmployeeRoleLabel(emp)}
                                                 </span>
                                             </div>
 
@@ -914,7 +922,7 @@ export function OwnerEmployeesPage() {
                                                     <td className="px-6 py-4 text-center">
                                                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-black tracking-wide border ${getRoleStyle(emp.role)}`}>
                                                             <Shield size={10} />
-                                                            {getRoleLabel(emp.role)}
+                                                            {getEmployeeRoleLabel(emp)}
                                                         </span>
                                                     </td>
                                                     <td className="px-6 py-4 text-center">
@@ -1129,12 +1137,12 @@ export function OwnerEmployeesPage() {
                                                     {assignment.establishmentName}
                                                 </p>
                                                 <p className="text-xs text-gray-500 mt-1">
-                                                    {t('staff.table.role')}: {getRoleLabel(assignment.role)}
+                                                    {t('staff.table.role')}: {getAssignmentRoleLabel(assignment, t)}
                                                 </p>
                                             </div>
                                             <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-black tracking-wide border ${getRoleStyle(assignment.role)}`}>
                                                 <Shield size={10} />
-                                                {getRoleLabel(assignment.role)}
+                                                {getAssignmentRoleLabel(assignment, t)}
                                             </span>
                                         </div>
                                     ))}
