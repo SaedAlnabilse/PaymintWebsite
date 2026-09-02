@@ -3918,7 +3918,8 @@
       "taxWithRate": "Tax ({{rate}}%)",
       "title": "Order Details",
       "total": "Total",
-      "refundReason": "Refund Reason"
+      "refundReason": "Refund Reason",
+      "refundedTenders": "Refunded Tenders"
     },
     "export": "Export",
     "exportFields": {
@@ -3928,7 +3929,8 @@
       "paymentMethod": "Payment method",
       "serviceCharge": "Service Charge",
       "status": "Status",
-      "total": "Total ({{currency}})"
+      "total": "Total ({{currency}})",
+      "paymentBreakdown": "Payment Breakdown"
     },
     "filters": {
       "serviceCharge": "Service Charge",
@@ -3967,7 +3969,8 @@
       "allOther": "Others",
       "cardWithBrand": "Card ({{brand}})",
       "cash": "Cash",
-      "deliveryApps": "Delivery Apps"
+      "deliveryApps": "Delivery Apps",
+      "splitCount": "Split ({{count}})"
     },
     "period": "Period",
     "reports": {

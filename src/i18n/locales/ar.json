@@ -3918,7 +3918,8 @@
       "taxWithRate": "الضريبة ({{rate}}%)",
       "title": "تفاصيل الطلب",
       "total": "الإجمالي",
-      "refundReason": "سبب الاسترجاع"
+      "refundReason": "سبب الاسترجاع",
+      "refundedTenders": "المبالغ المستردة"
     },
     "export": "تصدير",
     "exportFields": {
@@ -3928,7 +3929,8 @@
       "paymentMethod": "طريقة الدفع",
       "serviceCharge": "رسوم الخدمة",
       "status": "الحالة",
-      "total": "الإجمالي ({{currency}})"
+      "total": "الإجمالي ({{currency}})",
+      "paymentBreakdown": "تفاصيل الدفع"
     },
     "filters": {
       "serviceCharge": "رسوم الخدمة",
@@ -3967,7 +3969,8 @@
       "allOther": "أخرى",
       "cardWithBrand": "بطاقة ({{brand}})",
       "cash": "نقد",
-      "deliveryApps": "تطبيقات التوصيل"
+      "deliveryApps": "تطبيقات التوصيل",
+      "splitCount": "تقسيم ({{count}})"
     },
     "period": "الفترة",
     "reports": {

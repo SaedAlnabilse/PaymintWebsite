@@ -85,6 +85,24 @@ interface Order {
   note?: string;
   status: string;
   refundOrders?: Array<{ items?: OrderItem[] }>;
+  tenders?: Array<{
+    method: string;
+    label: string;
+    amount: number;
+    tendered?: number;
+    change?: number;
+    isRefund?: boolean;
+    cardType?: string;
+    otherPaymentMethod?: string;
+  }>;
+  refundTenders?: Array<{
+    method: string;
+    label: string;
+    amount: number;
+    isRefund?: boolean;
+    cardType?: string;
+    otherPaymentMethod?: string;
+  }>;
 }
 
 interface OrderItem {
@@ -134,6 +152,9 @@ interface EmployeeShiftOption {
 
 // Orders per page — kept in sync with the backoffice Orders screen.
 const PAGE_SIZE = 15;
+
+import { formatPaymentBreakdown } from '../../utils/paymentBreakdownFormat';
+export { formatPaymentBreakdown };
 
 export function OrdersPage() {
   const { t } = useTranslation();
@@ -187,6 +208,12 @@ export function OrdersPage() {
 
   // Helper function to format payment method display
   const formatPaymentMethod = (order: Order): string => {
+    if (order.tenders && order.tenders.length > 1) {
+      return t('orders.payment.splitCount', {
+        count: order.tenders.length,
+        defaultValue: `Split (${order.tenders.length})`,
+      });
+    }
     if (order.paymentMethod === 'CARD' && order.cardType) {
       return t('orders.payment.cardWithBrand', { brand: formatPaymentBrandName(order.cardType) });
     }
@@ -1122,7 +1149,8 @@ export function OrdersPage() {
       total: o.total,
       serviceChargeAmount: o.serviceChargeAmount || 0,
       status: o.paymentStatus || o.status,
-      paymentMethod: o.paymentMethod
+      paymentMethod: o.paymentMethod,
+      paymentBreakdown: formatPaymentBreakdown(o),
     }));
 
     if (exportData.length === 0) {
@@ -1142,6 +1170,7 @@ export function OrdersPage() {
         { key: 'serviceChargeAmount', label: t('orders.exportFields.serviceCharge', { defaultValue: 'Service Charge' }) },
         { key: 'status', label: t('orders.exportFields.status') },
         { key: 'paymentMethod', label: t('orders.exportFields.paymentMethod') },
+        { key: 'paymentBreakdown', label: t('orders.exportFields.paymentBreakdown', { defaultValue: 'Payment Breakdown' }) },
       ],
       rows: exportData,
     });

@@ -314,7 +314,11 @@ export function ReceiptsReport({ startDate, endDate, employeeId }: ReceiptsRepor
                                                 </td>
                                                 <td className="px-6 py-4 text-end">
                                                     <div className="font-bold text-gray-900 dark:text-white text-xs">{formatCurrency(order.total || 0)}</div>
-                                                    <p className="text-xs text-gray-400 uppercase">{order.paymentMethod}</p>
+                                                    <p className="text-xs text-gray-400 uppercase">
+                                                        {order.tenders && order.tenders.length > 1
+                                                            ? t('orders.payment.splitCount', { count: order.tenders.length, defaultValue: `Split (${order.tenders.length})` })
+                                                            : (order.otherPaymentMethod || (order.cardType ? `CARD (${order.cardType})` : order.paymentMethod))}
+                                                    </p>
                                                 </td>
                                                 <td className="px-6 py-4 text-end">
                                                     <div className="flex justify-end">

@@ -70,3 +70,6 @@ test-results/
 report/
 .jscpd-report/
 .jscpd-gate/
+
+# Generated export test artifacts
+orders_export_*.csv

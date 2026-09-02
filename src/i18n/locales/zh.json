@@ -3818,7 +3818,8 @@
       "taxWithRate": "税 ({{rate}}%)",
       "title": "订单详情",
       "total": "合计",
-      "refundReason": "退款原因"
+      "refundReason": "退款原因",
+      "refundedTenders": "退款明细"
     },
     "export": "导出",
     "exportFields": {
@@ -3828,7 +3829,8 @@
       "paymentMethod": "支付方式",
       "serviceCharge": "服务费",
       "status": "状态",
-      "total": "合计（{{currency}}）"
+      "total": "合计（{{currency}}）",
+      "paymentBreakdown": "支付明细"
     },
     "filters": {
       "serviceCharge": "服务费",
@@ -3867,7 +3869,8 @@
       "allOther": "其他",
       "cardWithBrand": "银行卡（{{brand}}）",
       "cash": "现金",
-      "deliveryApps": "外卖平台"
+      "deliveryApps": "外卖平台",
+      "splitCount": "组合支付 ({{count}})"
     },
     "period": "时间段",
     "reports": {

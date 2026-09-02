@@ -73,6 +73,24 @@ export interface Order {
     total?: number;
     note?: string;
     refundOrders?: Array<{ items?: OrderItem[] }>;
+    tenders?: Array<{
+        method: string;
+        label: string;
+        amount: number;
+        tendered?: number;
+        change?: number;
+        isRefund?: boolean;
+        cardType?: string;
+        otherPaymentMethod?: string;
+    }>;
+    refundTenders?: Array<{
+        method: string;
+        label: string;
+        amount: number;
+        isRefund?: boolean;
+        cardType?: string;
+        otherPaymentMethod?: string;
+    }>;
 }
 
 export interface OrderDetailModalProps {
@@ -206,13 +224,15 @@ export function OrderDetailModal({ order, onClose, onRefundSuccess, canRefund = 
     };
 
     const paymentLabel =
-        order.paymentMethod === 'CARD' && order.cardType
-            ? t('orders.payment.cardWithBrand', { brand: formatPaymentBrandName(order.cardType) })
-            : order.paymentMethod === 'CASH'
-                ? t('orders.payment.cash')
-                : order.otherPaymentMethod
-                    ? formatPaymentBrandName(order.otherPaymentMethod)
-                    : formatPaymentBrandName(order.paymentMethod);
+        order.tenders && order.tenders.length > 1
+            ? t('orders.payment.splitCount', { count: order.tenders.length, defaultValue: `Split (${order.tenders.length})` })
+            : order.paymentMethod === 'CARD' && order.cardType
+                ? t('orders.payment.cardWithBrand', { brand: formatPaymentBrandName(order.cardType) })
+                : order.paymentMethod === 'CASH'
+                    ? t('orders.payment.cash')
+                    : order.otherPaymentMethod
+                        ? formatPaymentBrandName(order.otherPaymentMethod)
+                        : formatPaymentBrandName(order.paymentMethod);
 
     return createPortal(
         <AnimatePresence>
@@ -285,9 +305,25 @@ export function OrderDetailModal({ order, onClose, onRefundSuccess, canRefund = 
                                     {t('orders.details.payment')}
                                     <QuickInfo text={t('orders.details.paymentTip')} />
                                 </p>
-                                <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                                    {paymentLabel}
-                                </p>
+                                {order.tenders && order.tenders.length > 1 ? (
+                                    <div className="space-y-1">
+                                        <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                                            {t('orders.payment.splitCount', { count: order.tenders.length, defaultValue: `Split (${order.tenders.length})` })}
+                                        </p>
+                                        <div className="text-xs text-gray-600 dark:text-gray-300 space-y-0.5 pt-1 border-t border-gray-200 dark:border-white/10">
+                                            {order.tenders.map((tItem, idx) => (
+                                                <div key={idx} className="flex justify-between items-center">
+                                                    <span>{tItem.label}</span>
+                                                    <span className="font-medium">{formatCurrency(tItem.amount)}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                                        {paymentLabel}
+                                    </p>
+                                )}
                             </div>
                             <div className="rounded-xl border border-gray-100 dark:border-white/10 bg-gray-50/80 dark:bg-white/[0.03] p-3">
                                 <p className="text-xs text-gray-500 mb-1 flex items-center gap-1">
@@ -305,6 +341,21 @@ export function OrderDetailModal({ order, onClose, onRefundSuccess, canRefund = 
                                         <QuickInfo text={t('orders.details.refundedByTip')} />
                                     </p>
                                     <p className="text-sm font-semibold text-mintcom-red">{order.refundedByName}</p>
+                                </div>
+                            )}
+                            {order.refundTenders && order.refundTenders.length > 0 && (
+                                <div className="rounded-xl border border-red-100 dark:border-red-500/20 bg-red-50/50 dark:bg-red-500/5 p-3 col-span-2 sm:col-span-2">
+                                    <p className="text-xs text-red-500 font-semibold mb-1">
+                                        {t('orders.details.refundedTenders', { defaultValue: 'Refunded Tenders' })}
+                                    </p>
+                                    <div className="text-xs text-red-600 dark:text-red-400 space-y-0.5">
+                                        {order.refundTenders.map((rt, idx) => (
+                                            <div key={idx} className="flex justify-between items-center">
+                                                <span>{rt.label}</span>
+                                                <span className="font-medium">-{formatCurrency(rt.amount)}</span>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
                             )}
                             {((order.paymentStatus || order.status) === 'REFUNDED') && (
