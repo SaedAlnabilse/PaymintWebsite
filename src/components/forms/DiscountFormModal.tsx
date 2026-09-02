@@ -49,7 +49,11 @@ export function DiscountFormModal({
       setErrors({});
       if (initialData) {
         setName(initialData.name);
-        setPercentage((initialData.percentage * 100).toLocaleString(t('common.locale'), { useGrouping: false }));
+        // `percentage` is stored as a whole percent (15 => 15%), same unit the
+        // field edits in. It used to be scaled by 100 here because this form
+        // wrote fractions; an admin-portal-created 15% then prefilled as 1500
+        // and tripped the 100% cap, making the discount uneditable from web.
+        setPercentage(initialData.percentage.toLocaleString(t('common.locale'), { useGrouping: false }));
         setAdminOnly(initialData.adminOnly);
       } else {
         setName('');
@@ -113,7 +117,8 @@ export function DiscountFormModal({
       return;
     }
 
-    await onSubmit(name, numVal / 100, adminOnly);
+    // Submit the whole percent as typed — the API stores whole percents.
+    await onSubmit(name, numVal, adminOnly);
   };
 
   if (!isOpen) return null;

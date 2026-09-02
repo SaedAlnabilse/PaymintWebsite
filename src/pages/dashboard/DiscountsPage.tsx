@@ -95,7 +95,8 @@ export function DiscountsPage() {
         id: d.id,
         name: d.name,
         type: 'percentage' as const,
-        value: d.percentage * 100,
+        // Stored as a whole percent already — no scaling.
+        value: d.percentage,
         percentage: d.percentage,
         adminOnly: d.adminOnly,
         isActive: d.isActive !== false,

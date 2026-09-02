@@ -674,7 +674,7 @@ export function CustomRoleFormModal({
                                         {allowedDiscounts.includes(discount.id) && <Check size={14} className="text-white" />}
                                       </div>
                                       <p className="text-sm text-gray-600 dark:text-gray-400">
-                                        {discount.name} ({(discount.percentage * 100).toLocaleString(t('common.locale'))}%)
+                                        {discount.name} ({discount.percentage.toLocaleString(t('common.locale'))}%)
                                       </p>
                                     </div>
                                   ))}
