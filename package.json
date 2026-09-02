@@ -12,6 +12,7 @@
     "preview": "vite preview",
     "validate:locales": "node scripts/check-locale-encoding.cjs && node scripts/check-translation-keys.cjs",
     "validate:locales:strict": "node scripts/check-locale-encoding.cjs && node scripts/check-translation-keys.cjs --strict",
+    "validate:locales:all": "node scripts/validate-all-locales.cjs",
     "test": "vitest --passWithNoTests",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
