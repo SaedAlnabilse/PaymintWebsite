@@ -1,13 +1,69 @@
 
+import { useEffect, useState } from 'react';
 import { useRouteError, isRouteErrorResponse, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { AlertTriangle, Home, ArrowLeft } from 'lucide-react';
+import { AlertTriangle, Home, ArrowLeft, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+
+function isChunkLoadError(error: unknown): boolean {
+    if (!error) return false;
+    const msg = error instanceof Error ? error.message : String(error);
+    return (
+        msg.includes('Failed to fetch dynamically imported module') ||
+        msg.includes('Importing a module script failed') ||
+        msg.includes('error loading dynamically imported module') ||
+        msg.includes('Unable to preload CSS') ||
+        (error instanceof Error && error.name === 'TypeError' && msg.includes('Load failed'))
+    );
+}
 
 export function ErrorPage() {
     const { t } = useTranslation();
     const error = useRouteError();
     const navigate = useNavigate();
+
+    const isChunk = isChunkLoadError(error);
+    const [isAutoReloading, setIsAutoReloading] = useState(() => {
+        if (!isChunk) return false;
+        try {
+            const lastReload = Number(sessionStorage.getItem('chunk_reload_timestamp') || 0);
+            return (Date.now() - lastReload) > 15000;
+        } catch {
+            return true;
+        }
+    });
+
+    useEffect(() => {
+        if (isChunk) {
+            try {
+                const lastReload = Number(sessionStorage.getItem('chunk_reload_timestamp') || 0);
+                const now = Date.now();
+                if (now - lastReload > 15000) {
+                    sessionStorage.setItem('chunk_reload_timestamp', String(now));
+                    setIsAutoReloading(true);
+                    window.location.reload();
+                }
+            } catch {
+                setIsAutoReloading(true);
+                window.location.reload();
+            }
+        }
+    }, [isChunk]);
+
+    // When an outdated chunk fails after a deployment, auto-reload seamlessly
+    // with a smooth spinner instead of blocking the user with an alarming alert modal.
+    if (isAutoReloading) {
+        return (
+            <div className="min-h-screen bg-gray-50 dark:bg-mintcom-dark flex items-center justify-center p-4 font-sans">
+                <div className="text-center space-y-4">
+                    <Loader2 className="w-10 h-10 text-mintcom-green animate-spin mx-auto" />
+                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                        {t('common.loading')}
+                    </p>
+                </div>
+            </div>
+        );
+    }
 
     let title = t('errors.unexpected.title');
     let message = t('errors.unexpected.message');
@@ -25,16 +81,13 @@ export function ErrorPage() {
             title = t('errors.generic.title', { status: error.status });
             message = error.statusText || message;
         }
+    } else if (isChunk) {
+        // If it already attempted auto-reloading within 15s and still failed,
+        // it is a persistent network or server issue.
+        title = t('errors.serverError.title');
+        message = t('errors.serverError.message');
     } else if (error instanceof Error) {
-        // Check for the dynamic import error specifically to give a better message
-        // "Failed to fetch dynamically imported module" is the standard Vite error for chunk load failures
-        if (error.message.includes('Failed to fetch dynamically imported module') || error.message.includes('Importing a module script failed')) {
-            title = t('errors.updateAvailable.title');
-            message = t('errors.updateAvailable.message');
-            helpfulHint = t('errors.updateAvailable.hint');
-        } else {
-            message = error.message;
-        }
+        message = error.message;
     } else if (typeof error === 'string') {
         message = error;
     }
@@ -103,7 +156,7 @@ export function ErrorPage() {
                 </div>
 
                 {/* Technical details collapse for developers or further debugging */}
-                {(error instanceof Error && !error.message.includes('dynamically imported')) && (
+                {(error instanceof Error && !isChunk) && (
                     <div className="mt-8 pt-6 border-t border-gray-100 dark:border-gray-800">
                         <details className="group">
                             <summary className="flex items-center justify-center text-xs text-gray-400 dark:text-gray-600 cursor-pointer hover:text-gray-600 dark:hover:text-gray-400 transition-colors list-none">
