@@ -44,6 +44,8 @@ export type DemoCatalogProduct = {
   allowNegativeStock?: boolean;
   attributeIds?: string[];
   imageDataUrl?: string | null;
+  taxId?: string | null;
+  taxRate?: number;
 };
 
 export type DemoCatalog = {

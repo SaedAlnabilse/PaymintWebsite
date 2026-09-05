@@ -6,7 +6,7 @@
  */
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
-import { Check, List, ShoppingBag, Undo2, X } from 'lucide-react';
+import { Check, Info, List, ShoppingBag, Undo2, X } from 'lucide-react';
 
 const money = (n: number) =>
   n.toLocaleString(undefined, { style: 'currency', currency: 'USD', minimumFractionDigits: 2 });
@@ -24,6 +24,7 @@ export type RefundLine = {
 export type RefundResult = {
   mode: 'item' | 'order';
   reason: string;
+  refundMethod?: 'CASH' | 'CARD' | 'ORIGINAL';
   restock: boolean;
   /** lineId → qty refunded this action */
   lineQty: Record<string, number>;
@@ -57,15 +58,24 @@ export function DemoRefundModal({ open, orderNo, orderTotal, lines, onClose, onC
   const [mode, setMode] = useState<'item' | 'order'>('order');
   const [selected, setSelected] = useState<Record<string, number>>({});
   const [reason, setReason] = useState('');
+  const [refundMethod, setRefundMethod] = useState<'CASH' | 'CARD' | 'ORIGINAL'>('CASH');
   const [restock, setRestock] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState<{ amount: number } | null>(null);
+
+  const QUICK_REASONS = [
+    'Customer changed mind',
+    'Wrong order / item',
+    'Defect / Quality issue',
+    'Price correction',
+  ];
 
   useEffect(() => {
     if (!open) return;
     setMode(canItem ? 'order' : 'order');
     setSelected({});
     setReason('');
+    setRefundMethod('CASH');
     setRestock(true);
     setError('');
     setSuccess(null);
@@ -129,6 +139,7 @@ export function DemoRefundModal({ open, orderNo, orderTotal, lines, onClose, onC
       onConfirm({
         mode: 'item',
         reason: reason.trim(),
+        refundMethod,
         restock,
         lineQty,
         amount,
@@ -141,6 +152,7 @@ export function DemoRefundModal({ open, orderNo, orderTotal, lines, onClose, onC
       onConfirm({
         mode: 'order',
         reason: reason.trim(),
+        refundMethod,
         restock,
         lineQty,
         amount: orderTotal,
@@ -313,6 +325,61 @@ export function DemoRefundModal({ open, orderNo, orderTotal, lines, onClose, onC
             {money(orderTotal)}). All remaining items will be marked refunded.
           </div>
         )}
+
+        {/* Refund Method Selector (matches POS refund tenders) */}
+        <div className="mb-3">
+          <p className="mb-1 text-xs font-bold uppercase tracking-wider text-text-tertiary">
+            Refund Method
+          </p>
+          <div className="grid grid-cols-3 gap-1 rounded-xl border border-gray-200 bg-cream-50 p-1 dark:border-white/10 dark:bg-mintcom-dark">
+            {(['CASH', 'CARD', 'ORIGINAL'] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => setRefundMethod(m)}
+                className={`rounded-lg py-1.5 text-[11px] font-bold transition-colors ${
+                  refundMethod === m
+                    ? 'bg-mintcom-green text-white shadow-sm'
+                    : 'text-text-secondary hover:text-text-primary dark:text-mintcom-textSecondary'
+                }`}
+              >
+                {m === 'ORIGINAL' ? 'Original' : m}
+              </button>
+            ))}
+          </div>
+          {refundMethod === 'CASH' && (
+            <div className="mt-2 flex items-center gap-2 rounded-xl border border-blue-500/30 bg-blue-500/10 p-2.5 text-start text-[11px] font-semibold text-blue-600 dark:text-blue-400">
+              <Info size={15} className="shrink-0 text-blue-500" />
+              <span>Cash refund will automatically open the cash drawer.</span>
+            </div>
+          )}
+        </div>
+
+        {/* Quick Reason Chips (mirrors POS TodaysOrdersModal quick reasons) */}
+        <div className="mb-3">
+          <span className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-text-tertiary">
+            Quick Reason
+          </span>
+          <div className="flex flex-wrap gap-1.5">
+            {QUICK_REASONS.map((r) => (
+              <button
+                key={r}
+                type="button"
+                onClick={() => {
+                  setReason(r);
+                  setError('');
+                }}
+                className={`rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-colors ${
+                  reason === r
+                    ? 'border-mintcom-red bg-mintcom-red/10 text-mintcom-red'
+                    : 'border-gray-200 bg-white text-text-secondary hover:bg-cream-100 dark:border-white/10 dark:bg-mintcom-surface dark:text-mintcom-textSecondary'
+                }`}
+              >
+                {r}
+              </button>
+            ))}
+          </div>
+        </div>
 
         <label className="mb-3 block">
           <span className="mb-1 block text-xs font-bold uppercase tracking-wider text-text-tertiary">

@@ -1418,9 +1418,9 @@ export function SettingsPage() {
                     }}
                     {...register('holdOrderTableCount', {
                       valueAsNumber: true,
-                      min: { value: 0, message: t('settings.pos.holdOrderTableCountErrorRange') },
-                      max: { value: MAX_HOLD_ORDER_TABLE_COUNT, message: t('settings.pos.holdOrderTableCountErrorRange') },
-                      setValueAs: (value) => normalizeHoldOrderTableCount(value, 10),
+                      min: { value: 0, message: t('settings.pos.holdOrderTableCountErrorRange', { max: MAX_HOLD_ORDER_TABLE_COUNT }) },
+                      max: { value: MAX_HOLD_ORDER_TABLE_COUNT, message: t('settings.pos.holdOrderTableCountErrorRange', { max: MAX_HOLD_ORDER_TABLE_COUNT }) },
+                      setValueAs: (value) => normalizeHoldOrderTableCount(value),
                     })}
                     className={`w-full h-11 px-3 box-border bg-white dark:bg-[#0F172A] border shadow-sm ${errors.holdOrderTableCount ? 'border-red-500 bg-red-500/5 focus:ring-red-500/20' : 'border-gray-200 dark:border-white/15 hover:border-gray-300 dark:hover:border-white/25 focus:ring-mintcom-green/25 focus:border-mintcom-green'} rounded-xl text-sm font-bold text-gray-900 dark:text-white caret-mintcom-green placeholder:text-gray-400 focus:outline-none focus:ring-2 transition-all`}
                     placeholder={formatInputPlaceholder(t('settings.pos.holdOrderTableCountPlaceholder'), t('common.locale'))}
@@ -1430,7 +1430,7 @@ export function SettingsPage() {
                   {errors.holdOrderTableCount ? (
                     <p className="text-[11px] font-medium text-red-500 leading-snug flex items-start gap-1.5">
                       <AlertTriangle size={12} className="mt-0.5 shrink-0" />
-                      {errors.holdOrderTableCount.message as string || t('settings.pos.holdOrderTableCountErrorRange')}
+                      {errors.holdOrderTableCount.message as string || t('settings.pos.holdOrderTableCountErrorRange', { max: MAX_HOLD_ORDER_TABLE_COUNT })}
                     </p>
                   ) : (
                     <div className="space-y-1">

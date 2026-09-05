@@ -51,6 +51,9 @@ import {
   Heart,
   IceCreamCone,
   Info,
+  LayoutGrid,
+  List,
+  Lock,
   Martini,
   Package,
   Percent,
@@ -59,6 +62,7 @@ import {
   Printer,
   Sandwich,
   ShoppingBag,
+  SlidersHorizontal,
   Star,
   TrendingUp,
   Search,
@@ -77,6 +81,11 @@ import {
   X,
 } from 'lucide-react';
 import { DemoManufacturingPanel } from './PosDemoManufacturing';
+import {
+  DEFAULT_HOLD_ORDER_TABLE_COUNT,
+  MAX_HOLD_ORDER_TABLE_COUNT,
+  MAX_HOLD_ORDER_TABLE_DIGITS,
+} from '../../utils/settingsPayload';
 import { DemoProductFormModal, type DemoProductFormValue } from './PosDemoProductForm';
 import type {
   DemoCatalog,
@@ -87,6 +96,15 @@ import type {
 
 const money = (n: number) =>
   n.toLocaleString(undefined, { style: 'currency', currency: 'USD', minimumFractionDigits: 2 });
+
+export interface DemoTaxRate {
+  id: string;
+  name: string;
+  rate: number; // fraction e.g. 0.16
+  isDefault: boolean;
+}
+
+const QUICK_TAX_RATES = ['0', '5', '10', '16'];
 
 /* Category icon picker set — mirrors the POS CategoryFormModal AVAILABLE_ICONS. */
 const CATEGORY_ICONS: { key: string; Icon: typeof Coffee }[] = [
@@ -186,7 +204,7 @@ const THEMES = [
   { id: 'dark', name: 'Dark Mode', colors: ['#000000', '#1F2937', '#7dc6a2', '#374151'], desc: 'Dark surfaces with mint accent' },
 ] as const;
 
-const MAX_HOLD_ORDER_TABLES = 99;
+const MAX_HOLD_ORDER_TABLES = MAX_HOLD_ORDER_TABLE_COUNT;
 const MAX_EMPLOYEES = 50;
 
 /** Mirrors mintcom-pos EditEmployeeModal POS_PERMISSIONS */
@@ -543,6 +561,7 @@ function Toast({ msg }: { msg: string | null }) {
 export type DemoSalesSettings = {
   taxEnabled: boolean;
   taxRate: number;
+  taxes?: DemoTaxRate[];
   serviceChargeEnabled: boolean;
   serviceChargeName: string;
   serviceChargeType: 'PERCENTAGE' | 'FIXED';
@@ -555,6 +574,11 @@ export type DemoSalesSettings = {
 export const DEFAULT_DEMO_SALES_SETTINGS: DemoSalesSettings = {
   taxEnabled: true,
   taxRate: 8,
+  taxes: [
+    { id: 'tax-default', name: 'Sales Tax', rate: 0.08, isDefault: true },
+    { id: 'tax-custom-1', name: 'Special Tax', rate: 0.05, isDefault: false },
+    { id: 'tax-custom-2', name: 'Zero-Rated / Exempt', rate: 0.00, isDefault: false },
+  ],
   serviceChargeEnabled: false,
   serviceChargeName: 'Service Charge',
   serviceChargeType: 'PERCENTAGE',
@@ -610,7 +634,7 @@ export function DemoSettingsScreen({
   const [joinDate] = useState('30/04/2026');
   const [themeId, setThemeId] = useState<(typeof THEMES)[number]['id']>('green');
   const [useDeviceTheme, setUseDeviceTheme] = useState(false);
-  const [tableCount, setTableCount] = useState(10);
+  const [tableCount, setTableCount] = useState(DEFAULT_HOLD_ORDER_TABLE_COUNT);
   const [holdTableMaxError, setHoldTableMaxError] = useState(false);
   const [employees, setEmployees] = useState<Employee[]>([
     // `pin` field is demo-only storage for staff password (min 6 anything)
@@ -688,6 +712,108 @@ export function DemoSettingsScreen({
   const seed = salesSettings ?? DEFAULT_DEMO_SALES_SETTINGS;
   const [taxOn] = useState(seed.taxEnabled);
   const [taxRate, setTaxRate] = useState(seed.taxRate.toFixed(2));
+
+  // Taxes — mirrors POS TaxRatesGroup
+  const [taxesList, setTaxesList] = useState<DemoTaxRate[]>([
+    {
+      id: 'tax-default',
+      name: 'Sales Tax',
+      rate: Number((seed.taxRate / 100).toFixed(4)) || 0.16,
+      isDefault: true,
+    },
+    {
+      id: 'tax-custom-1',
+      name: 'Special Tax',
+      rate: 0.05,
+      isDefault: false,
+    },
+  ]);
+  const [taxFilter, setTaxFilter] = useState('');
+  const [taxEditor, setTaxEditor] = useState<{
+    id: string | null;
+    name: string;
+    ratePercent: string;
+    isDefault?: boolean;
+  } | null>(null);
+  const [taxNameError, setTaxNameError] = useState('');
+  const [taxRateError, setTaxRateError] = useState('');
+  const [taxToDelete, setTaxToDelete] = useState<DemoTaxRate | null>(null);
+  const [showDefaultTaxLockModal, setShowDefaultTaxLockModal] = useState(false);
+
+  const filteredTaxes = useMemo(() => {
+    if (!taxFilter.trim()) return taxesList;
+    const q = taxFilter.toLowerCase().trim();
+    return taxesList.filter(
+      (x) =>
+        x.name.toLowerCase().includes(q) ||
+        `${(x.rate * 100).toFixed(0)}%`.includes(q) ||
+        `${(x.rate * 100).toFixed(2)}%`.includes(q),
+    );
+  }, [taxesList, taxFilter]);
+
+  const handleQuickTaxRate = (rate: string) => {
+    if (!taxEditor) return;
+    setTaxEditor({ ...taxEditor, ratePercent: rate });
+    if (taxRateError) setTaxRateError('');
+  };
+
+  const handleSaveTax = () => {
+    if (!taxEditor) return;
+    let hasErr = false;
+    if (!taxEditor.name.trim()) {
+      setTaxNameError('Tax name is required');
+      hasErr = true;
+    } else {
+      setTaxNameError('');
+    }
+    const p = parseFloat(taxEditor.ratePercent);
+    if (!Number.isFinite(p) || p < 0 || p > 100) {
+      setTaxRateError('Please enter a rate between 0% and 100%');
+      hasErr = true;
+    } else {
+      setTaxRateError('');
+    }
+    if (hasErr) return;
+
+    const rateFraction = Number((p / 100).toFixed(6));
+
+    if (taxEditor.id) {
+      setTaxesList((prev) =>
+        prev.map((t) =>
+          t.id === taxEditor.id
+            ? { ...t, name: taxEditor.name.trim(), rate: rateFraction }
+            : t,
+        ),
+      );
+      if (taxEditor.isDefault) {
+        setTaxRate(p.toFixed(2));
+        emitSalesSettings({ taxRate: p, taxEnabled: p > 0 });
+        ping(`Default sales tax updated to ${p}%`);
+      } else {
+        ping(`Tax "${taxEditor.name.trim()}" updated`);
+      }
+    } else {
+      const newTax: DemoTaxRate = {
+        id: `tax-${Date.now()}`,
+        name: taxEditor.name.trim(),
+        rate: rateFraction,
+        isDefault: false,
+      };
+      setTaxesList((prev) => [...prev, newTax]);
+      ping(`Tax rate "${taxEditor.name.trim()}" created`);
+    }
+
+    markDirty();
+    setTaxEditor(null);
+  };
+
+  const handleDeleteTaxConfirm = () => {
+    if (!taxToDelete) return;
+    setTaxesList((prev) => prev.filter((t) => t.id !== taxToDelete.id));
+    ping(`Tax "${taxToDelete.name}" deleted`);
+    setTaxToDelete(null);
+    markDirty();
+  };
   // Service charge (mirrors ServiceChargeSettingsGroup)
   const [serviceOn, setServiceOn] = useState(seed.serviceChargeEnabled);
   const [serviceName, setServiceName] = useState(seed.serviceChargeName);
@@ -726,14 +852,65 @@ export function DemoSettingsScreen({
   const products = catalog.products;
   const categories = catalog.categories;
   const addons = catalog.addons;
+  // Product Management view mode & filters (mirrors POS ProductManagementScreen)
+  const [productViewMode, setProductViewMode] = useState<'grid' | 'list'>('grid');
+  const [productStatusFilter, setProductStatusFilter] = useState<'all' | 'in_stock' | 'low_stock' | 'out_of_stock' | 'archived'>('all');
+  const [productSortOption, setProductSortOption] = useState<
+    'newest' | 'oldest' | 'name_asc' | 'name_desc' | 'price_asc' | 'price_desc' | 'stock_asc' | 'stock_desc'
+  >('newest');
+  const [sortMenuOpen, setSortMenuOpen] = useState(false);
+
   const filteredProducts = useMemo(() => {
     const q = productSearch.trim().toLowerCase();
-    return products.filter(
-      (p) =>
-        (selectedSettingsCategory === 'all' || p.categoryId === selectedSettingsCategory) &&
-        (!q || p.name.toLowerCase().includes(q)),
-    );
-  }, [products, selectedSettingsCategory, productSearch]);
+    let list = products.filter((p) => {
+      // Category filter
+      if (selectedSettingsCategory !== 'all' && p.categoryId !== selectedSettingsCategory) {
+        return false;
+      }
+      // Query search
+      if (q && !p.name.toLowerCase().includes(q)) {
+        return false;
+      }
+      // Status filter
+      const isArchived = !p.active;
+      const stock = p.availableStock ?? 0;
+      if (productStatusFilter === 'archived') {
+        return isArchived;
+      }
+      if (isArchived) {
+        return false;
+      }
+      if (productStatusFilter === 'out_of_stock') {
+        return p.trackStock && stock <= 0;
+      }
+      if (productStatusFilter === 'low_stock') {
+        return p.trackStock && stock > 0 && stock <= 10;
+      }
+      if (productStatusFilter === 'in_stock') {
+        return !p.trackStock || stock > 0;
+      }
+      return true;
+    });
+
+    // Sort
+    if (productSortOption === 'oldest') {
+      list = [...list].reverse();
+    } else if (productSortOption === 'name_asc') {
+      list = [...list].sort((a, b) => a.name.localeCompare(b.name));
+    } else if (productSortOption === 'name_desc') {
+      list = [...list].sort((a, b) => b.name.localeCompare(a.name));
+    } else if (productSortOption === 'price_asc') {
+      list = [...list].sort((a, b) => a.price - b.price);
+    } else if (productSortOption === 'price_desc') {
+      list = [...list].sort((a, b) => b.price - a.price);
+    } else if (productSortOption === 'stock_asc') {
+      list = [...list].sort((a, b) => (a.availableStock ?? 9999) - (b.availableStock ?? 9999));
+    } else if (productSortOption === 'stock_desc') {
+      list = [...list].sort((a, b) => (b.availableStock ?? 0) - (a.availableStock ?? 0));
+    }
+
+    return list;
+  }, [products, selectedSettingsCategory, productSearch, productStatusFilter, productSortOption]);
   const setProducts = (
     updater: Product[] | ((prev: Product[]) => Product[]),
   ) => {
@@ -828,6 +1005,7 @@ export function DemoSettingsScreen({
       taxEnabled: patch.taxEnabled ?? taxOn,
       taxRate:
         patch.taxRate ?? Math.max(0, Math.min(100, parseFloat(taxRate) || 0)),
+      taxes: patch.taxes ?? taxesList,
       serviceChargeEnabled: patch.serviceChargeEnabled ?? serviceOn,
       serviceChargeName:
         patch.serviceChargeName ?? (serviceName.trim() || 'Service Charge'),
@@ -1088,6 +1266,8 @@ export function DemoSettingsScreen({
                 allowNegativeStock: value.allowNegativeStock,
                 attributeIds: value.attributeIds,
                 imageDataUrl: value.imageDataUrl,
+                taxId: value.taxId,
+                taxRate: value.taxRate,
               }
             : p,
         ),
@@ -1114,6 +1294,8 @@ export function DemoSettingsScreen({
           allowNegativeStock: value.allowNegativeStock,
           attributeIds: value.attributeIds,
           imageDataUrl: value.imageDataUrl,
+          taxId: value.taxId,
+          taxRate: value.taxRate,
         },
       ]);
       logActivity('Added product', value.name);
@@ -1571,14 +1753,14 @@ export function DemoSettingsScreen({
                 <div className="p-4 sm:p-5">
                   <div className="mb-2 flex items-center">
                     <span className="text-[15px] font-medium text-text-primary dark:text-white">
-                      Hold Order Table Count
+                      Tables Available
                     </span>
-                    <InfoDot text="Number of predefined table shortcuts shown when holding an order. Maximum 99." />
+                    <InfoDot text={`Number of tables (Table 1, Table 2...) shown when holding an order. Maximum ${MAX_HOLD_ORDER_TABLES}.`} />
                   </div>
                   <input
                     value={tableCount === 0 ? '' : String(tableCount)}
                     onChange={(e) => {
-                      const clean = e.target.value.replace(/\D/g, '').slice(0, 2);
+                      const clean = e.target.value.replace(/\D/g, '').slice(0, MAX_HOLD_ORDER_TABLE_DIGITS);
                       if (!clean) {
                         setTableCount(0);
                         setHoldTableMaxError(false);
@@ -1596,9 +1778,9 @@ export function DemoSettingsScreen({
                       setHoldTableMaxError(false);
                       markDirty();
                     }}
-                    maxLength={2}
+                    maxLength={MAX_HOLD_ORDER_TABLE_DIGITS}
                     inputMode="numeric"
-                    placeholder="e.g. 10"
+                    placeholder={`e.g. ${DEFAULT_HOLD_ORDER_TABLE_COUNT}`}
                     className="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-3 text-[15px] font-medium outline-none focus:border-mintcom-green dark:border-white/10 dark:bg-mintcom-dark dark:text-white"
                   />
                   {holdTableMaxError && (
@@ -1942,35 +2124,207 @@ export function DemoSettingsScreen({
           {/* ── Payment Processes (mirrors POS SalesManagementScreen) ── */}
           {active === 'sales' && (
             <div className="mx-auto flex max-w-2xl flex-col gap-5">
-              {/* Tax Rate + E-Invoicing (one card, like the POS tax group) */}
+              {/* Taxes — mirrors POS TaxRatesGroup */}
               <div className="rounded-xl border border-gray-300 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-mintcom-surface">
-                <div className="mb-2.5 flex items-center">
-                  <span className="text-[15px] font-semibold text-text-primary dark:text-white">Tax Rate</span>
-                  <InfoDot text="The tax percentage applied to all sales. This will be shown on receipts." />
-                </div>
-                <div className="flex items-center overflow-hidden rounded-xl border-[1.5px] border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-mintcom-dark">
-                  <span className="flex h-[46px] w-12 items-center justify-center border-e-[1.5px] border-gray-200 text-lg font-extrabold text-mintcom-green dark:border-white/10">
-                    %
-                  </span>
-                  <input
-                    value={taxRate}
-                    onChange={(e) => {
-                      const digits = e.target.value.replace(/\D/g, '').slice(0, 5);
-                      const cents = digits === '' ? 0 : parseInt(digits, 10);
-                      if (cents > 10000) return;
-                      const formatted = (cents / 100).toFixed(2);
-                      setTaxRate(formatted);
-                      markDirty();
-                      emitSalesSettings({ taxRate: cents / 100, taxEnabled: taxOn });
+                {/* Header */}
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-mintcom-green/15 text-mintcom-green">
+                      <Percent size={18} />
+                    </span>
+                    <div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-[15px] font-bold text-text-primary dark:text-white">
+                          Taxes
+                        </span>
+                        <InfoDot text="Product prices include tax. Tax is shown separately on the receipt." />
+                      </div>
+                      <p className="text-[12px] text-text-tertiary">
+                        Standard default sales tax · add custom rates per product
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTaxNameError('');
+                      setTaxRateError('');
+                      setTaxEditor({
+                        id: null,
+                        name: '',
+                        ratePercent: '16',
+                      });
                     }}
-                    inputMode="numeric"
-                    className="h-[46px] flex-1 bg-transparent px-3 text-[17px] font-bold outline-none dark:text-white tabular-nums"
-                  />
+                    className="flex items-center gap-1.5 rounded-xl bg-mintcom-green px-3 py-1.5 text-[12px] font-bold text-white shadow-sm transition-colors hover:bg-mintcom-green/90"
+                  >
+                    <Plus size={15} />
+                    <span>Add Tax</span>
+                  </button>
                 </div>
 
-                <div className="my-4 h-px bg-gray-200 dark:bg-white/8" />
+                {/* Pricing Context Banner */}
+                <div className="my-3.5 flex items-center gap-2.5 rounded-xl border border-blue-500/20 bg-blue-50/80 p-3 text-[12px] dark:border-blue-400/20 dark:bg-blue-950/20">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-400">
+                    <Info size={14} />
+                  </span>
+                  <span className="text-blue-900 dark:text-blue-300">
+                    Product prices include tax. Tax is shown separately on receipts and invoices.
+                  </span>
+                </div>
 
-                {/* E-Invoicing & Tax Compliance (nested collapsible) */}
+                {/* Search Bar (when multiple rates exist) */}
+                {taxesList.length > 2 && (
+                  <div className="mb-3 flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-3 py-1.5 dark:border-white/10 dark:bg-mintcom-dark">
+                    <Search size={14} className="text-text-tertiary" />
+                    <input
+                      value={taxFilter}
+                      onChange={(e) => setTaxFilter(e.target.value)}
+                      placeholder="Search tax rates by name or rate…"
+                      className="flex-1 bg-transparent text-[12px] outline-none dark:text-white"
+                    />
+                    {taxFilter && (
+                      <button type="button" onClick={() => setTaxFilter('')}>
+                        <X size={14} className="text-text-tertiary" />
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {/* Empty State */}
+                {taxesList.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-gray-200 py-8 text-center dark:border-white/10">
+                    <Percent size={28} className="text-text-tertiary" />
+                    <p className="text-[13px] font-bold text-text-primary dark:text-white">
+                      No tax rates yet
+                    </p>
+                    <p className="text-[11px] text-text-tertiary">
+                      Configure standard sales tax or custom rates.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTaxNameError('');
+                        setTaxRateError('');
+                        setTaxEditor({ id: null, name: '', ratePercent: '16' });
+                      }}
+                      className="mt-1 flex items-center gap-1.5 rounded-xl bg-mintcom-green px-3 py-1.5 text-[12px] font-bold text-white"
+                    >
+                      <Plus size={14} />
+                      <span>Create Tax Rate</span>
+                    </button>
+                  </div>
+                ) : filteredTaxes.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center gap-1.5 py-6 text-center">
+                    <Search size={20} className="text-text-tertiary" />
+                    <p className="text-[12px] text-text-secondary">
+                      No rates match “{taxFilter}”
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setTaxFilter('')}
+                      className="text-[11px] font-bold text-mintcom-green"
+                    >
+                      Clear search
+                    </button>
+                  </div>
+                ) : (
+                  <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-white/10">
+                    {/* Header Row */}
+                    <div className="flex items-center border-b border-gray-200 bg-gray-50/80 px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-text-tertiary dark:border-white/10 dark:bg-white/[0.03]">
+                      <span className="flex-1">Tax Name</span>
+                      <span className="w-24 text-center">Rate</span>
+                      <span className="w-24 text-end">Actions</span>
+                    </div>
+
+                    {/* Tax items */}
+                    {filteredTaxes.map((item, idx) => {
+                      const isLast = idx === filteredTaxes.length - 1;
+                      return (
+                        <div
+                          key={item.id}
+                          className={`flex items-center px-4 py-3 ${
+                            isLast ? '' : 'border-b border-gray-100 dark:border-white/5'
+                          } ${
+                            item.isDefault
+                              ? 'bg-mintcom-green/[0.06] dark:bg-mintcom-green/[0.08]'
+                              : ''
+                          }`}
+                        >
+                          <div className="flex min-w-0 flex-1 items-center gap-2">
+                            <span className="truncate text-[13px] font-bold text-text-primary dark:text-white">
+                              {item.name}
+                            </span>
+                            {item.isDefault && (
+                              <span className="rounded bg-mintcom-green/15 px-1.5 py-0.5 text-[10px] font-extrabold text-mintcom-green">
+                                Default
+                              </span>
+                            )}
+                          </div>
+
+                          <span className="w-24 text-center text-[13px] font-extrabold tabular-nums text-text-primary dark:text-white">
+                            {(item.rate * 100).toFixed(0)}%
+                          </span>
+
+                          <div className="flex w-24 items-center justify-end gap-1.5">
+                            {item.isDefault ? (
+                              <button
+                                type="button"
+                                onClick={() => setShowDefaultTaxLockModal(true)}
+                                title="Default tax is protected"
+                                className="flex h-7 w-7 items-center justify-center rounded-lg bg-black/[0.04] text-text-tertiary hover:bg-black/[0.08] dark:bg-white/[0.06]"
+                              >
+                                <Lock size={13} />
+                              </button>
+                            ) : null}
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setTaxNameError('');
+                                setTaxRateError('');
+                                setTaxEditor({
+                                  id: item.id,
+                                  name: item.name,
+                                  ratePercent: (item.rate * 100)
+                                    .toFixed(2)
+                                    .replace(/\.00$/, ''),
+                                  isDefault: item.isDefault,
+                                });
+                              }}
+                              className="flex h-7 w-7 items-center justify-center rounded-lg bg-mintcom-green/15 text-mintcom-green hover:bg-mintcom-green/25"
+                              title="Edit"
+                            >
+                              <Pencil size={13} />
+                            </button>
+
+                            {!item.isDefault && (
+                              <button
+                                type="button"
+                                onClick={() => setTaxToDelete(item)}
+                                className="flex h-7 w-7 items-center justify-center rounded-lg bg-red-500/10 text-[#D55263] hover:bg-red-500/20"
+                                title="Delete"
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                    {/* Footnote */}
+                    <div className="flex items-center gap-2 border-t border-gray-200 bg-gray-50/50 px-4 py-2.5 text-[11px] text-text-tertiary dark:border-white/10 dark:bg-white/[0.02]">
+                      <RefreshCw size={12} className="shrink-0" />
+                      <span>
+                        The default sales tax applies to new products. Custom rates can be assigned directly to individual products.
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Fiscal Compliance (standalone card matching POS FiscalComplianceGroup) */}
+              <div className="rounded-xl border border-gray-300 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-mintcom-surface">
                 <button
                   type="button"
                   onClick={() => toggleGroup('fiscal')}
@@ -2438,6 +2792,106 @@ export function DemoSettingsScreen({
                     </>
                   )}
                 </div>
+
+                {/* Sort dropdown (mirrors POS ProductSortFilterModal) */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setSortMenuOpen((v) => !v)}
+                    className="flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-[13px] font-semibold text-text-secondary hover:text-text-primary dark:border-white/10 dark:bg-mintcom-surface dark:text-mintcom-textSecondary"
+                    title="Sort products"
+                  >
+                    <SlidersHorizontal size={14} className="text-mintcom-green" />
+                    <span className="hidden sm:inline">Sort</span>
+                    <ChevronDown size={14} />
+                  </button>
+                  {sortMenuOpen && (
+                    <>
+                      <div className="fixed inset-0 z-10" onClick={() => setSortMenuOpen(false)} />
+                      <div className="absolute end-0 z-20 mt-1 w-48 rounded-xl border border-gray-200 bg-white p-1.5 shadow-xl dark:border-white/10 dark:bg-mintcom-surface">
+                        {[
+                          { id: 'newest', label: 'Newest First' },
+                          { id: 'oldest', label: 'Oldest First' },
+                          { id: 'name_asc', label: 'Name (A-Z)' },
+                          { id: 'name_desc', label: 'Name (Z-A)' },
+                          { id: 'price_asc', label: 'Price: Low to High' },
+                          { id: 'price_desc', label: 'Price: High to Low' },
+                          { id: 'stock_asc', label: 'Stock: Low to High' },
+                          { id: 'stock_desc', label: 'Stock: High to Low' },
+                        ].map((opt) => (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            onClick={() => {
+                              setProductSortOption(opt.id as any);
+                              setSortMenuOpen(false);
+                            }}
+                            className={`flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-start text-[12px] font-medium ${
+                              productSortOption === opt.id
+                                ? 'bg-mintcom-green/15 text-mintcom-green font-bold'
+                                : 'text-text-primary hover:bg-cream-100 dark:text-white dark:hover:bg-white/5'
+                            }`}
+                          >
+                            <span>{opt.label}</span>
+                            {productSortOption === opt.id && <Check size={14} />}
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* View mode toggle: Grid / List (mirrors POS viewMode toggle) */}
+                <div className="flex items-center rounded-xl border border-gray-200 bg-cream-50 p-0.5 dark:border-white/10 dark:bg-mintcom-dark">
+                  <button
+                    type="button"
+                    onClick={() => setProductViewMode('grid')}
+                    className={`rounded-lg p-2 transition-colors ${
+                      productViewMode === 'grid'
+                        ? 'bg-white text-mintcom-green shadow-sm dark:bg-mintcom-surface'
+                        : 'text-text-secondary hover:text-text-primary dark:text-mintcom-textSecondary'
+                    }`}
+                    title="Grid View"
+                  >
+                    <LayoutGrid size={15} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setProductViewMode('list')}
+                    className={`rounded-lg p-2 transition-colors ${
+                      productViewMode === 'list'
+                        ? 'bg-white text-mintcom-green shadow-sm dark:bg-mintcom-surface'
+                        : 'text-text-secondary hover:text-text-primary dark:text-mintcom-textSecondary'
+                    }`}
+                    title="List View"
+                  >
+                    <List size={15} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Stock Status Filter Tabs (mirrors POS statusFilter tabs) */}
+              <div className="mb-3.5 flex items-center gap-1.5 overflow-x-auto pb-0.5 text-xs font-semibold">
+                {[
+                  { key: 'all', label: 'All Items' },
+                  { key: 'in_stock', label: 'In Stock' },
+                  { key: 'low_stock', label: 'Low Stock' },
+                  { key: 'out_of_stock', label: 'Out of Stock' },
+                  { key: 'archived', label: 'Archived' },
+                ].map((tab) => (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    onClick={() => setProductStatusFilter(tab.key as any)}
+                    className={`rounded-xl px-3 py-1.5 font-bold transition-colors shrink-0 ${
+                      productStatusFilter === tab.key
+                        ? 'bg-mintcom-green text-white shadow-sm'
+                        : 'bg-white text-text-secondary hover:bg-cream-100 dark:bg-mintcom-surface dark:text-mintcom-textSecondary border border-gray-200 dark:border-white/10'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
               </div>
 
               {filteredProducts.length === 0 ? (
@@ -2446,7 +2900,7 @@ export function DemoSettingsScreen({
                     <Package size={44} />
                   </span>
                   <p className="text-lg font-semibold text-text-primary dark:text-white">
-                    {selectedSettingsCategory !== 'all' || productSearch ? 'This category is empty' : 'You have no products yet'}
+                    {selectedSettingsCategory !== 'all' || productSearch || productStatusFilter !== 'all' ? 'No products match your filters' : 'You have no products yet'}
                   </p>
                   <p className="mt-1 text-sm text-text-secondary dark:text-mintcom-textSecondary">
                     Tap to add your first product
@@ -2459,7 +2913,7 @@ export function DemoSettingsScreen({
                     <Plus size={16} /> Add Product
                   </button>
                 </div>
-              ) : (
+              ) : productViewMode === 'grid' ? (
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
                   {/* Add New Item card (mirrors AddItemCard) */}
                   <button
@@ -2483,9 +2937,6 @@ export function DemoSettingsScreen({
                             ? 'yellow'
                             : 'normal';
                     const archived = !p.active;
-                    // Mirrors ProductManagementCard: items with no sales history
-                    // are hard-deleted; items that have been sold are archived.
-                    // Newly-created products (id `p-…`) have no sales yet.
                     const willHardDelete = p.id.startsWith('p-');
                     return (
                       <div
@@ -2598,6 +3049,151 @@ export function DemoSettingsScreen({
                               className="flex h-8 flex-1 items-center justify-center gap-1 whitespace-nowrap rounded-xl bg-mintcom-red px-1 text-[11px] font-semibold text-white"
                             >
                               <Archive size={13} /> Archive
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                /* List View (mirrors POS ProductManagementRow) */
+                <div className="space-y-2">
+                  <button
+                    type="button"
+                    onClick={() => openProduct()}
+                    className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-mintcom-green bg-mintcom-green/[0.08] p-3 text-sm font-bold text-mintcom-green transition-colors hover:bg-mintcom-green/15"
+                  >
+                    <Plus size={18} strokeWidth={2.5} />
+                    <span>Add New Product</span>
+                  </button>
+                  {filteredProducts.map((p) => {
+                    const stock = p.availableStock ?? 0;
+                    const status = !p.trackStock
+                      ? null
+                      : stock <= 0
+                        ? 'out'
+                        : stock <= 5
+                          ? 'red'
+                          : stock <= 10
+                            ? 'yellow'
+                            : 'normal';
+                    const archived = !p.active;
+                    const willHardDelete = p.id.startsWith('p-');
+                    const catName = categories.find((c) => c.id === p.categoryId)?.name || 'General';
+
+                    return (
+                      <div
+                        key={p.id}
+                        className={`flex items-center gap-3 rounded-xl border bg-white p-3 shadow-sm dark:bg-mintcom-surface ${
+                          archived
+                            ? 'border-dashed border-slate-400 opacity-75'
+                            : status === 'red' || status === 'out'
+                              ? 'border-mintcom-red/40'
+                              : 'border-gray-200 dark:border-white/8'
+                        }`}
+                      >
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gray-100 dark:bg-mintcom-dark">
+                          {p.imageDataUrl ? (
+                            <img src={p.imageDataUrl} alt={p.name} className="h-full w-full object-cover" />
+                          ) : (
+                            <Package size={22} className="text-text-tertiary" />
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1 text-start">
+                          <div className="flex items-center gap-2">
+                            <p className="truncate text-sm font-bold text-text-primary dark:text-white">{p.name}</p>
+                            <span className="rounded-md bg-cream-100 px-1.5 py-0.5 text-[10px] font-semibold text-text-secondary dark:bg-white/10 dark:text-mintcom-textSecondary">
+                              {catName}
+                            </span>
+                          </div>
+                          <div className="mt-1 flex items-center gap-2 text-xs">
+                            <span className="font-bold text-mintcom-green">{money(p.price)}</span>
+                            {p.trackStock && (
+                              <span
+                                className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold uppercase ${
+                                  stock <= 0
+                                    ? 'bg-mintcom-red/15 text-mintcom-red'
+                                    : stock <= 10
+                                      ? 'bg-amber-500/15 text-amber-600'
+                                      : 'bg-mintcom-green/15 text-mintcom-green'
+                                }`}
+                              >
+                                {stock <= 0 ? 'Out of stock' : `${stock} in stock`}
+                              </span>
+                            )}
+                            {archived && (
+                              <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-extrabold uppercase text-slate-700 dark:bg-white/10 dark:text-slate-300">
+                                Archived
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => openProduct(p)}
+                            className="flex h-8 w-8 items-center justify-center rounded-xl border border-gray-200 text-text-secondary hover:border-mintcom-green hover:text-mintcom-green dark:border-white/10 dark:text-mintcom-textSecondary"
+                            title="Edit"
+                          >
+                            <Pencil size={14} />
+                          </button>
+                          {archived ? (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setProducts((list) => list.map((x) => (x.id === p.id ? { ...x, active: true } : x)));
+                                markDirty();
+                                ping('Product reactivated');
+                              }}
+                              className="flex h-8 w-8 items-center justify-center rounded-xl border border-amber-500/30 text-amber-500 hover:bg-amber-500/10"
+                              title="Reactivate"
+                            >
+                              <RotateCcw size={14} />
+                            </button>
+                          ) : willHardDelete ? (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setModal({
+                                  type: 'delete',
+                                  title: 'Delete Product',
+                                  body: `"${p.name}" has no sales history and will be permanently deleted. This cannot be undone.`,
+                                  confirmLabel: 'Delete',
+                                  onConfirm: () => {
+                                    setProducts((list) => list.filter((x) => x.id !== p.id));
+                                    markDirty();
+                                    setModal(null);
+                                    ping('Product deleted');
+                                  },
+                                })
+                              }
+                              className="flex h-8 w-8 items-center justify-center rounded-xl border border-mintcom-red/30 text-mintcom-red hover:bg-mintcom-red/10"
+                              title="Delete"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setModal({
+                                  type: 'delete',
+                                  title: 'Archive Product',
+                                  body: `"${p.name}" has sales history, so it will be archived (hidden from Sales). You can reactivate it anytime.`,
+                                  confirmLabel: 'Archive',
+                                  onConfirm: () => {
+                                    setProducts((list) => list.map((x) => (x.id === p.id ? { ...x, active: false } : x)));
+                                    markDirty();
+                                    setModal(null);
+                                    ping('Product archived');
+                                  },
+                                })
+                              }
+                              className="flex h-8 w-8 items-center justify-center rounded-xl border border-mintcom-red/30 text-mintcom-red hover:bg-mintcom-red/10"
+                              title="Archive"
+                            >
+                              <Archive size={14} />
                             </button>
                           )}
                         </div>
@@ -4225,6 +4821,7 @@ export function DemoSettingsScreen({
             mode={modal.p ? 'edit' : 'add'}
             categories={categories.map((c) => ({ id: c.id, name: c.name, emoji: c.emoji }))}
             addons={addons.map((a) => ({ id: a.id, name: a.name, multi: a.multi }))}
+            taxes={taxesList.map((t) => ({ id: t.id, name: t.name, rate: t.rate, isDefault: t.isDefault }))}
             taxRate={parseFloat(taxRate) || 8}
             initial={
               modal.p
@@ -4244,8 +4841,13 @@ export function DemoSettingsScreen({
                     allowNegativeStock: modal.p.allowNegativeStock ?? false,
                     attributeIds: modal.p.attributeIds ?? [],
                     imageDataUrl: modal.p.imageDataUrl ?? null,
+                    taxId: modal.p.taxId ?? null,
+                    taxRate: modal.p.taxRate,
                   }
-                : { categoryId: categories[0]?.id ?? 'bev' }
+                : {
+                    categoryId: categories[0]?.id ?? 'bev',
+                    taxId: taxesList.find((t) => t.isDefault)?.id ?? taxesList[0]?.id,
+                  }
             }
             willHardDelete={modal.p ? modal.p.id.startsWith('p-') : false}
             onClose={() => setModal(null)}
@@ -5206,7 +5808,6 @@ export function DemoSettingsScreen({
             confirmLabel={modal.confirmLabel ?? 'Delete'}
             danger
             onCancel={() => {
-              // Re-open printer settings if we came from remove-printer flow
               if (modal.title === 'Remove Printer') {
                 setModal({ type: 'printer' });
               } else {
@@ -5215,6 +5816,239 @@ export function DemoSettingsScreen({
             }}
             onConfirm={modal.onConfirm}
           />
+        )}
+
+        {/* Tax Editor Modal — matches POS TaxRatesGroup modal */}
+        {taxEditor && (
+          <div className="absolute inset-0 z-[90] flex items-center justify-center bg-black/55 p-3 backdrop-blur-[2px]">
+            <button
+              type="button"
+              aria-label="Close"
+              className="absolute inset-0"
+              onClick={() => setTaxEditor(null)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              className="relative flex h-auto max-h-[min(90%,500px)] w-full max-w-[420px] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-white/10 dark:bg-mintcom-surface"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="flex shrink-0 items-center justify-between border-b border-gray-100 px-5 py-3.5 dark:border-white/10">
+                <span className="w-8" />
+                <h3 className="text-center text-[16px] font-bold text-text-primary dark:text-white">
+                  {taxEditor.id
+                    ? taxEditor.isDefault
+                      ? 'Edit Default Sales Tax'
+                      : 'Edit Tax Rate'
+                    : 'Add Tax Rate'}
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setTaxEditor(null)}
+                  className="flex h-8 w-8 items-center justify-center rounded-full text-text-secondary hover:bg-gray-100 dark:hover:bg-white/10"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Form Content */}
+              <div className="flex-1 space-y-4 overflow-y-auto p-5">
+                {/* 1. Tax Name */}
+                <div>
+                  <label className="mb-1.5 block text-[12px] font-bold text-text-secondary dark:text-mintcom-textSecondary">
+                    Tax Name
+                  </label>
+                  <div
+                    className={`flex items-center overflow-hidden rounded-xl border bg-gray-50 dark:bg-mintcom-dark ${
+                      taxNameError
+                        ? 'border-red-500'
+                        : 'border-gray-200 dark:border-white/10'
+                    }`}
+                  >
+                    <span className="flex h-11 w-11 items-center justify-center border-e border-gray-200 text-text-tertiary dark:border-white/10">
+                      <Tag size={16} />
+                    </span>
+                    <input
+                      value={taxEditor.name}
+                      onChange={(e) => {
+                        setTaxEditor((prev) => (prev ? { ...prev, name: e.target.value } : null));
+                        if (taxNameError) setTaxNameError('');
+                      }}
+                      placeholder="e.g. Sales Tax"
+                      className="h-11 flex-1 bg-transparent px-3 text-[14px] font-medium outline-none dark:text-white"
+                    />
+                  </div>
+                  {taxNameError && (
+                    <p className="mt-1 text-[11px] font-medium text-red-500">{taxNameError}</p>
+                  )}
+                </div>
+
+                {/* 2. Rate Percentage */}
+                <div>
+                  <label className="mb-1.5 block text-[12px] font-bold text-text-secondary dark:text-mintcom-textSecondary">
+                    Rate Percentage (%)
+                  </label>
+                  <div
+                    className={`flex items-center overflow-hidden rounded-xl border bg-gray-50 dark:bg-mintcom-dark ${
+                      taxRateError
+                        ? 'border-red-500'
+                        : 'border-gray-200 dark:border-white/10'
+                    }`}
+                  >
+                    <span className="flex h-11 w-11 items-center justify-center border-e border-gray-200 text-base font-extrabold text-mintcom-green dark:border-white/10">
+                      %
+                    </span>
+                    <input
+                      value={taxEditor.ratePercent}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9.]/g, '');
+                        setTaxEditor((prev) => (prev ? { ...prev, ratePercent: val } : null));
+                        if (taxRateError) setTaxRateError('');
+                      }}
+                      placeholder="16"
+                      inputMode="decimal"
+                      className="h-11 flex-1 bg-transparent px-3 text-[14px] font-bold tabular-nums outline-none dark:text-white"
+                    />
+                  </div>
+                  {taxRateError && (
+                    <p className="mt-1 text-[11px] font-medium text-red-500">{taxRateError}</p>
+                  )}
+
+                  {/* Quick rate chips */}
+                  <div className="mt-2.5 flex gap-2">
+                    {QUICK_TAX_RATES.map((qr) => {
+                      const isSel = taxEditor.ratePercent === qr;
+                      return (
+                        <button
+                          key={qr}
+                          type="button"
+                          onClick={() => handleQuickTaxRate(qr)}
+                          className={`flex-1 rounded-lg border py-1.5 text-[12px] font-bold transition-all ${
+                            isSel
+                              ? 'border-mintcom-green bg-mintcom-green/15 text-mintcom-green'
+                              : 'border-gray-200 bg-white text-text-secondary hover:border-gray-300 dark:border-white/10 dark:bg-mintcom-dark dark:text-mintcom-textSecondary'
+                          }`}
+                        >
+                          {qr}%
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="flex shrink-0 gap-2.5 border-t border-gray-100 p-4 dark:border-white/10">
+                <button
+                  type="button"
+                  onClick={() => setTaxEditor(null)}
+                  className="flex-1 rounded-xl border border-gray-200 py-2.5 text-[13px] font-bold text-text-secondary transition-colors hover:bg-gray-50 dark:border-white/10 dark:text-mintcom-textSecondary dark:hover:bg-white/5"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveTax}
+                  className="flex-1 rounded-xl bg-mintcom-green py-2.5 text-[13px] font-bold text-white shadow-sm transition-colors hover:bg-mintcom-green/90"
+                >
+                  Save Tax Rate
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {/* Delete Tax Modal — matches POS TaxRatesGroup delete modal */}
+        {taxToDelete && (
+          <div className="absolute inset-0 z-[90] flex items-center justify-center bg-black/55 p-3 backdrop-blur-[2px]">
+            <button
+              type="button"
+              aria-label="Close"
+              className="absolute inset-0"
+              onClick={() => setTaxToDelete(null)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              className="relative flex w-full max-w-[380px] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 shadow-2xl dark:border-white/10 dark:bg-mintcom-surface"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-3 flex justify-center">
+                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-red-500/15 text-[#D55263]">
+                  <Trash2 size={24} />
+                </span>
+              </div>
+              <h3 className="text-center text-[16px] font-bold text-text-primary dark:text-white">
+                Delete Tax Rate
+              </h3>
+              <p className="mt-2 text-center text-[13px] leading-relaxed text-text-secondary dark:text-mintcom-textSecondary">
+                Are you sure you want to delete{' '}
+                <strong className="text-text-primary dark:text-white">
+                  {taxToDelete.name} ({(taxToDelete.rate * 100).toFixed(0)}%)
+                </strong>
+                ? Products using this rate will automatically fall back to the default sales tax.
+              </p>
+              <div className="mt-5 flex gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setTaxToDelete(null)}
+                  className="flex-1 rounded-xl border border-gray-200 py-2.5 text-[13px] font-bold text-text-secondary dark:border-white/10 dark:text-mintcom-textSecondary"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDeleteTaxConfirm}
+                  className="flex-1 rounded-xl bg-[#D55263] py-2.5 text-[13px] font-bold text-white shadow-sm hover:bg-[#D55263]/90"
+                >
+                  Delete Tax Rate
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {/* Default Tax Lock Info Modal — matches POS TaxRatesGroup default tax modal */}
+        {showDefaultTaxLockModal && (
+          <div className="absolute inset-0 z-[90] flex items-center justify-center bg-black/55 p-3 backdrop-blur-[2px]">
+            <button
+              type="button"
+              aria-label="Close"
+              className="absolute inset-0"
+              onClick={() => setShowDefaultTaxLockModal(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              className="relative flex w-full max-w-[360px] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 shadow-2xl dark:border-white/10 dark:bg-mintcom-surface"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-3 flex justify-center">
+                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-black/[0.05] text-text-secondary dark:bg-white/[0.08] dark:text-white">
+                  <Lock size={22} />
+                </span>
+              </div>
+              <h3 className="text-center text-[16px] font-bold text-text-primary dark:text-white">
+                Default Sales Tax Protected
+              </h3>
+              <p className="mt-2 text-center text-[13px] leading-relaxed text-text-secondary dark:text-mintcom-textSecondary">
+                The default sales tax cannot be deleted. You can edit its rate instead to update sales tax across the system.
+              </p>
+              <div className="mt-5">
+                <button
+                  type="button"
+                  onClick={() => setShowDefaultTaxLockModal(false)}
+                  className="w-full rounded-xl bg-mintcom-green py-2.5 text-[13px] font-bold text-white shadow-sm hover:bg-mintcom-green/90"
+                >
+                  Got It
+                </button>
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
 

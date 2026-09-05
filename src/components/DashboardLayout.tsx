@@ -470,7 +470,7 @@ export function DashboardLayout() {
         label: t('dashboard.menu.settings'),
         icon: Settings,
         items: [
-          { path: 'settings', label: t('dashboard.menu.establishmentSettings'), icon: Sliders },
+          { path: 'settings', label: t('dashboard.menu.establishmentSettings', { defaultValue: 'Location Settings' }), icon: Sliders },
           { path: 'activity-logs', label: t('dashboard.menu.activityLog'), icon: History },
         ],
       },

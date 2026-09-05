@@ -1648,6 +1648,7 @@
       "address": "地址",
       "addressPlaceholder": "街道、城市、国家",
       "email": "邮箱地址",
+      "emailHelper": "用于发送电子收据和会员卡。",
       "emailPlaceholder": "client@example.com",
       "name": "姓名",
       "namePhoneHelper": "顾客姓名为必填项。电话为选填。",
@@ -3265,7 +3266,8 @@
         "deletionRequest": "您可以随时通过注册邮箱发送邮件至 support@mintcompos.com，或在应用内使用账户删除选项（如可用），请求删除您的账户及所有关联数据。核实请求后，我们将在 30 天内删除或匿名化您的个人数据，但因法律、账单、税务、安全、审计或争议解决目的必须保留的记录除外。",
         "r1": "账户数据：在账户存续期间保留，并在删除请求后再保留 30 天",
         "r2": "交易记录：按金融法规要求保留 7 年",
-        "r3": "分析和诊断数据：在可行的情况下以汇总或去标识化形式保留"
+        "r3": "分析和诊断数据：在可行的情况下以汇总或去标识化形式保留",
+        "r4": "AI 助手对话：自您最后一条消息起保留 90 天，之后自动删除"
       },
       "rights": {
         "contact": "如需行使上述任何权利，请联系 support@mintcompos.com",
@@ -4638,7 +4640,7 @@
       "settings": "设置",
       "standard": "标准",
       "status": "状态",
-      "subtitle": "管理您的所有营业场所",
+      "subtitle": "管理您的所有门店",
       "title": "门店",
       "total": "门店总数",
       "trial": "试用",
@@ -5056,7 +5058,7 @@
       "title": "移动应用"
     },
     "overview": {
-      "establishments": "营业场所",
+      "establishments": "门店",
       "memberSince": "注册时间",
       "plan": "套餐",
       "teamMembers": "团队成员",
@@ -5859,12 +5861,12 @@
       "allowMultipleShiftsTitle": "多个钱箱",
       "allowMultipleShiftsDesc": "允许多名员工在本门店同时开启并独立管理各自的现金班次。",
       "allowMultipleShiftsOffHint": "关闭此选项将关闭其他已开启的钱箱，仅保留最近开启的一个。",
-      "holdOrderTableCountDesc": "挂单菜单中显示多少个桌台选项（1 号桌、2 号桌…）。",
-      "holdOrderTableCountErrorRange": "桌台快捷数量必须在 0 到 99 之间。",
+      "holdOrderTableCountDesc": "挂单菜单中显示多少张桌台（1 号桌、2 号桌…）。",
+      "holdOrderTableCountErrorRange": "桌台数量必须在 0 到 {{max}} 之间。",
       "holdOrderTableCountMaxHint": "最多 {{max}} 张餐桌。",
-      "holdOrderTableCountLabel": "桌台快捷选项",
-      "holdOrderTableCountPlaceholder": "20",
-      "holdOrderTableCountTitle": "桌台快捷选项数量"
+      "holdOrderTableCountLabel": "可用桌台",
+      "holdOrderTableCountPlaceholder": "50",
+      "holdOrderTableCountTitle": "可用桌台数量"
     }
   },
   "staff": {
@@ -5920,7 +5922,7 @@
       "leaveBlank": "留空则保持当前值",
       "legacyNoRole": "无角色（旧版自定义权限）",
       "location": "门店",
-      "locationDisclaimer": "要为员工添加更多门店或管理跨门店权限，请通过<0>业主后台</0>操作。",
+      "locationDisclaimer": "如果您有其他门店，可以从<0>业主控制台</0>为该员工添加。",
       "locationLabel": "门店访问权限",
       "locationsCount": "{{count}} 家门店",
       "locationsCount_few": "{{count}} 家门店",
@@ -6239,7 +6241,7 @@
       "ft6": "收据自定义",
       "ft6_excerpt": "使用标志、地址和自定义信息定制您的收据版式。",
       "ft7": "业主与品牌后台指南",
-      "ft7_excerpt": "管理营业场所、品牌、员工、角色、账单和品牌团队。",
+      "ft7_excerpt": "管理门店、品牌、员工、角色、账单和品牌团队。",
       "ft8": "支付方式设置",
       "ft8_excerpt": "配置接受的支付方式，包括银行卡和数字钱包。",
       "ft9": "加料与选配指南",
@@ -6416,7 +6418,7 @@
     "categories": {
       "all": "全部分类",
       "billing": "业主、账单与品牌",
-      "billingDesc": "订阅、发票、账单卡片、营业场所、品牌和业主级控制",
+      "billingDesc": "订阅、发票、账单卡片、门店、品牌和业主级控制",
       "billingDescShort": "业主与账单工具",
       "bug": "问题报告",
       "bugDescShort": "报告问题",
@@ -6517,7 +6519,7 @@
     },
     "popularArticles": {
       "account": "如何管理您的账户设置",
-      "establishment": "设置您的第一家营业场所",
+      "establishment": "设置您的第一个门店",
       "payment": "管理订阅付款方式",
       "printer": "连接您的收据打印机",
       "reports": "解读销售和运营报表"

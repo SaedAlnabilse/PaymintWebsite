@@ -353,114 +353,60 @@ export function DemoSalesTrendChart({
 
   const selected = selectedIdx != null ? data[selectedIdx] : null;
 
-  const modes: { id: ViewMode; label: string; sub: string; icon: typeof Activity; live?: boolean }[] = [
-    ...(shiftOpen
-      ? [{ id: 'live' as const, label: 'Active shift', sub: 'Current', icon: Activity, live: true }]
-      : []),
-    { id: 'lastShift', label: 'Last shift', sub: 'Previous', icon: Clock },
-    { id: 'last7Days', label: 'Last 7 days', sub: 'Week', icon: TrendingUp },
-    { id: 'last30Days', label: 'Last 30 days', sub: 'Month', icon: Calendar },
+  const modes: { id: ViewMode; label: string; sub: string; live?: boolean }[] = [
+    ...(shiftOpen ? [{ id: 'live' as const, label: 'Live', sub: 'Shift in progress', live: true }] : []),
+    { id: 'lastShift', label: 'Last Shift', sub: 'Previous' },
+    { id: 'last7Days', label: 'Last 7 Days', sub: 'Week' },
+    { id: 'last30Days', label: 'Last 30 Days', sub: 'Month' },
   ];
 
   const toggle = (k: keyof Visible) =>
     setVisible((v) => ({ ...v, [k]: !v[k] }));
 
   const legend: { key: keyof Visible; label: string; color: string }[] = [
-    { key: 'net', label: 'Net sales', color: COLORS.net },
-    { key: 'cash', label: 'Cash', color: COLORS.cash },
-    { key: 'card', label: 'Card', color: COLORS.card },
-    { key: 'other', label: 'Other', color: COLORS.other },
+    { key: 'net', label: 'Net Sales', color: COLORS.net },
+    { key: 'cash', label: 'Cash Sales', color: COLORS.cash },
+    { key: 'card', label: 'Card Sales', color: COLORS.card },
+    { key: 'other', label: 'Other Payments', color: COLORS.other },
   ];
 
   return (
-    /* POS SalesTrendChartCard: theme.backgroundSecondary #E8E8E8, border #D3D6DE, r16 → rounded-xl (12) for try-pos consistency */
-    <div className="relative flex h-full min-h-0 flex-col rounded-xl border border-[#D3D6DE] bg-[#E8E8E8] p-3 dark:border-white/10 dark:bg-mintcom-surface sm:p-4">
-      {/* Header */}
+    /* POS SalesTrendChartCard: theme.backgroundSecondary #F4F5F7, border #E2E8F0 */
+    <div className="relative flex h-full min-h-0 flex-col rounded-xl border border-[#E2E8F0] bg-[#F4F5F7] p-3 dark:border-white/10 dark:bg-mintcom-dark sm:p-4">
+      {/* Header with Title & Modern Segmented Capsule Filter (matching SalesTrendChartCard.tsx) */}
       <div className="relative mb-2 flex shrink-0 items-center justify-between gap-2">
-        <div className="flex min-w-0 items-center gap-1.5">
-          <p className="font-sans text-[13px] font-semibold text-text-primary dark:text-white">
-            Sales Overview
+        <div className="flex min-w-0 items-center gap-2">
+          <TrendingUp size={16} className="text-mintcom-green shrink-0" />
+          <p className="font-sans text-[14px] font-bold text-text-primary dark:text-white">
+            Sales Trend
           </p>
-          {viewMode === 'live' && shiftOpen && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-mintcom-green px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-white">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
-              Live
-            </span>
-          )}
         </div>
 
-        <div className="relative shrink-0">
-          <button
-            type="button"
-            onClick={() => setDropdownOpen((v) => !v)}
-            className="inline-flex max-w-[160px] items-center gap-1.5 rounded-xl border border-[#D3D6DE] bg-[#E8E8E8] px-2.5 py-1.5 text-[11px] font-semibold text-text-primary dark:border-white/10 dark:bg-mintcom-dark dark:text-white"
-          >
-            <span className="truncate">{MODE_LABEL[viewMode]}</span>
-            {viewMode === 'live' && shiftOpen && (
-              <span className="hidden rounded-xl bg-mintcom-green px-1 py-0.5 text-[8px] font-black text-white sm:inline">
-                LIVE
-              </span>
-            )}
-            <ChevronDown size={12} className={`shrink-0 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
-          </button>
-
-          <AnimatePresence>
-            {dropdownOpen && (
-              <>
-                <button
-                  type="button"
-                  className="fixed inset-0 z-20 cursor-default"
-                  aria-label="Close"
-                  onClick={() => setDropdownOpen(false)}
-                />
-                <motion.div
-                  initial={{ opacity: 0, y: 4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 4 }}
-                  className="absolute end-0 top-full z-30 mt-1 w-52 overflow-hidden rounded-xl border border-[#D3D6DE] bg-white py-1 shadow-xl dark:border-white/10 dark:bg-mintcom-surface"
-                >
-                  {modes.map((m) => {
-                    const on = viewMode === m.id;
-                    const Icon = m.icon;
-                    return (
-                      <button
-                        key={m.id}
-                        type="button"
-                        onClick={() => {
-                          setViewMode(m.id);
-                          setDropdownOpen(false);
-                          setSelectedIdx(null);
-                        }}
-                        className={`flex w-full items-center gap-2 px-3 py-2.5 text-start ${
-                          on ? 'bg-mintcom-green/10' : 'hover:bg-cream-50 dark:hover:bg-white/5'
-                        }`}
-                      >
-                        <span
-                          className={`flex h-7 w-7 items-center justify-center rounded-xl ${
-                            on ? 'bg-mintcom-green/20 text-mintcom-green' : 'bg-cream-100 text-text-tertiary dark:bg-mintcom-dark'
-                          }`}
-                        >
-                          <Icon size={14} />
-                        </span>
-                        <span className="min-w-0 flex-1">
-                          <span className={`flex items-center gap-1 text-[11px] font-bold ${on ? 'text-mintcom-green' : 'dark:text-white'}`}>
-                            {m.label}
-                            {m.live && (
-                              <span className="rounded-xl bg-mintcom-green px-1 text-[8px] font-black text-white">
-                                LIVE
-                              </span>
-                            )}
-                          </span>
-                          <span className="text-[9px] text-text-tertiary">{m.sub}</span>
-                        </span>
-                        {on && <Check size={14} className="text-mintcom-green" />}
-                      </button>
-                    );
-                  })}
-                </motion.div>
-              </>
-            )}
-          </AnimatePresence>
+        {/* Modern Segmented Capsule Filter */}
+        <div className="flex items-center gap-0.5 rounded-xl border border-gray-200 bg-black/[0.04] p-1 dark:border-white/8 dark:bg-white/[0.06]">
+          {modes.map((m) => {
+            const on = viewMode === m.id;
+            return (
+              <button
+                key={m.id}
+                type="button"
+                onClick={() => {
+                  setViewMode(m.id);
+                  setSelectedIdx(null);
+                }}
+                className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-bold transition-all ${
+                  on
+                    ? 'border border-black/5 bg-white text-mintcom-green shadow-xs dark:border-white/10 dark:bg-mintcom-surface'
+                    : 'text-text-secondary hover:text-text-primary dark:text-mintcom-textSecondary dark:hover:text-white'
+                }`}
+              >
+                {m.live && (
+                  <span className="h-1.5 w-1.5 rounded-full bg-mintcom-green animate-pulse" />
+                )}
+                <span>{m.label}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -681,25 +627,28 @@ export function DemoSalesTrendChart({
         Time
       </p>
 
-      {/* Legend */}
-      <div className="mt-1 flex shrink-0 flex-wrap items-center justify-center gap-x-3 gap-y-1">
+      {/* Interactive Legend (matching SalesTrendChartCard.tsx) */}
+      <div className="mt-2 flex shrink-0 flex-wrap items-center justify-center gap-x-4 gap-y-1">
         {legend.map((l) => (
           <button
             key={l.key}
             type="button"
             onClick={() => toggle(l.key)}
-            className={`inline-flex items-center gap-1 text-[9px] font-bold transition-opacity ${
-              visible[l.key] ? 'text-text-secondary dark:text-mintcom-textSecondary' : 'opacity-35'
+            className={`inline-flex items-center gap-1.5 text-[11px] font-semibold transition-all ${
+              visible[l.key] ? 'text-text-secondary dark:text-mintcom-textSecondary' : 'opacity-35 line-through'
             }`}
           >
-            <span className="h-2 w-2 rounded-full" style={{ background: l.color }} />
+            <span
+              className="h-2.5 w-2.5 rounded-full"
+              style={{ background: visible[l.key] ? l.color : '#d1d5db' }}
+            />
             {l.label}
           </button>
         ))}
         {viewMode === 'live' && shiftOpen && (
-          <div className="inline-flex items-center gap-1 text-[9px] font-bold text-text-tertiary opacity-60">
+          <div className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-text-tertiary opacity-60">
             <span className="h-0.5 w-3 border-t border-dashed" style={{ borderColor: COLORS.cash }} />
-            <span>Prev shift (net)</span>
+            <span>Prev Shift (Net)</span>
           </div>
         )}
       </div>

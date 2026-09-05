@@ -49,6 +49,7 @@ import {
 } from 'lucide-react';
 import type { DemoSale, DemoShift } from './PosDemoExtraScreens';
 import { DemoRefundModal, type RefundResult } from './PosDemoRefund';
+import type { OrderTender } from './posFeedback';
 import {
   PosCardIcon,
   PosCashIcon,
@@ -310,7 +311,7 @@ type ReportOrder = {
   tax: number;
   subtotal: number;
   discount: number;
-  method: 'cash' | 'card' | 'other';
+  method: 'cash' | 'card' | 'other' | 'split';
   methodLabel: string;
   cardType?: string;
   status: 'COMPLETED' | 'REFUNDED' | 'PARTIALLY_REFUNDED';
@@ -323,6 +324,7 @@ type ReportOrder = {
   refundReason?: string;
   refundedLineQty?: Record<string, number>;
   refundedAmount?: number;
+  tenders?: OrderTender[];
 };
 
 type LocalRefundState = {
@@ -525,6 +527,7 @@ function saleToOrder(s: DemoSale, staffFallback = 'You'): ReportOrder {
     refundReason: s.refundReason,
     refundedLineQty: s.refundedLineQty,
     refundedAmount: s.refundedAmount,
+    tenders: s.tenders,
   };
 }
 
@@ -948,9 +951,21 @@ function PaymentReceiptModal({
 
             <p className="my-1 text-center text-[12px] tracking-wide">{RECEIPT_DOUBLE}</p>
 
-            <p className="mt-2 text-center">
-              Payment: {paymentLabelForReceipt(order)}
-            </p>
+            {order.tenders && order.tenders.length > 0 ? (
+              <div className="mt-2 space-y-1">
+                <p className="text-center font-bold">PAYMENT BREAKDOWN</p>
+                {order.tenders.map((tItem, idx) => (
+                  <div key={idx} className="flex justify-between gap-2 text-[12px]">
+                    <span className="truncate">{tItem.label || tItem.method}</span>
+                    <span className="tabular-nums shrink-0">{receiptMoney(tItem.amount)}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-2 text-center">
+                Payment: {paymentLabelForReceipt(order)}
+              </p>
+            )}
 
             {isRefunded && (
               <>
@@ -1271,7 +1286,17 @@ function OrderTableRow({
       >
         {money(displayTotal)}
       </button>
-      <div className="min-w-0 flex-1" />
+      <div className="min-w-0 flex-1 flex items-center justify-end px-2">
+        {order.tenders && order.tenders.length > 1 ? (
+          <span className="rounded-md bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold text-amber-600 dark:text-amber-400">
+            SPLIT ({order.tenders.length})
+          </span>
+        ) : (
+          <span className="truncate text-[11px] font-medium text-text-tertiary">
+            {order.methodLabel}
+          </span>
+        )}
+      </div>
       <div className="flex w-auto shrink-0 items-center justify-end gap-1 sm:gap-1.5">
         {canRefund && (
           <button

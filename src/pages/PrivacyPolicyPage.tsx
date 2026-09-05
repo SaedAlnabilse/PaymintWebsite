@@ -289,6 +289,11 @@ export const PrivacyPolicyPage = () => {
                                 <li>{t('legal.privacy.retention.r1')}</li>
                                 <li>{t('legal.privacy.retention.r2')}</li>
                                 <li>{t('legal.privacy.retention.r3')}</li>
+                                {/* Keep in step with AI_CONVERSATION_RETENTION_DAYS
+                                    in mintcom-api (default 90). A retention period
+                                    enforced in code but absent from the notice only
+                                    solves half the storage-limitation problem. */}
+                                <li>{t('legal.privacy.retention.r4')}</li>
                             </ul>
                             <p className="text-sm font-medium">{t('legal.privacy.retention.deletionRequest')}</p>
                             <p className="text-sm font-medium mt-4">{appPrivacyAddendum.deletionNote}</p>

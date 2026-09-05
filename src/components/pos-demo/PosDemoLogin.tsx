@@ -250,10 +250,21 @@ export function PosDemoLogin({
               )}
             </button>
 
+            <div className="mt-4 text-center">
+              <p className="text-sm text-[#666]">
+                New to Mintcom?{' '}
+                <a
+                  href="/signup"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="font-bold text-mintcom-green hover:underline"
+                >
+                  Create Account
+                </a>
+              </p>
+            </div>
 
-
-
-            <div className="mt-6 text-center">
+            <div className="mt-5 text-center">
               <p className="text-sm text-[#666]">
                 Need help?{' '}
                 <button

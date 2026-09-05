@@ -232,7 +232,6 @@ export function CustomersPage() {
         name: data.name?.trim(),
         phone: data.phone?.trim() || undefined,
         email: data.email?.trim() || undefined,
-        address: data.address?.trim() || undefined,
       };
 
       if (customerId) {

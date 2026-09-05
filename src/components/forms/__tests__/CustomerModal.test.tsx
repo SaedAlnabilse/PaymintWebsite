@@ -63,7 +63,6 @@ describe('CustomerModal', () => {
     points: 450,
     totalSpent: 1200.5,
     totalVisits: 8,
-    address: '123 Market St',
   };
 
   it('renders correctly in Add Customer mode', () => {
@@ -97,7 +96,8 @@ describe('CustomerModal', () => {
     expect(screen.getByDisplayValue('Jane Doe')).toBeInTheDocument();
     expect(screen.getByDisplayValue('+1 555-0199')).toBeInTheDocument();
     expect(screen.getByDisplayValue('jane@example.com')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('123 Market St')).toBeInTheDocument();
+    // Address is intentionally not collected: no input should render for it.
+    expect(screen.queryByPlaceholderText(/Street, City, Country/i)).not.toBeInTheDocument();
 
     // Stats bar checks
     expect(screen.getAllByText('450').length).toBeGreaterThan(0); // points

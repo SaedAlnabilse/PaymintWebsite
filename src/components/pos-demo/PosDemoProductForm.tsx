@@ -13,6 +13,7 @@ import {
   ImagePlus,
   Layers,
   Package,
+  Percent,
   X,
 } from 'lucide-react';
 
@@ -32,10 +33,18 @@ export type DemoProductFormValue = {
   allowNegativeStock: boolean;
   attributeIds: string[];
   imageDataUrl?: string | null;
+  taxId?: string | null;
+  taxRate?: number;
 };
 
 type CategoryOpt = { id: string; name: string; emoji: string };
 type AddonOpt = { id: string; name: string; multi?: boolean };
+export type DemoTaxOpt = {
+  id: string;
+  name: string;
+  rate: number;
+  isDefault?: boolean;
+};
 
 type Props = {
   open: boolean;
@@ -43,6 +52,7 @@ type Props = {
   initial?: Partial<DemoProductFormValue> | null;
   categories: CategoryOpt[];
   addons: AddonOpt[];
+  taxes?: DemoTaxOpt[];
   taxRate?: number;
   /** true = product has no sales history → hard delete; false = archive. */
   willHardDelete?: boolean;
@@ -86,6 +96,7 @@ export function DemoProductFormModal({
   initial,
   categories,
   addons,
+  taxes,
   taxRate = 8,
   willHardDelete = false,
   onClose,
@@ -105,12 +116,21 @@ export function DemoProductFormModal({
   const [redThreshold, setRedThreshold] = useState('2');
   const [allowNegative, setAllowNegative] = useState(false);
   const [attributeIds, setAttributeIds] = useState<string[]>([]);
+  const [selectedTaxId, setSelectedTaxId] = useState<string>('');
+  const [taxOpen, setTaxOpen] = useState(false);
   const [addonOpen, setAddonOpen] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [saving, setSaving] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const stockRef = useRef<HTMLDivElement>(null);
+
+  const effectiveTaxes: DemoTaxOpt[] = useMemo(() => {
+    if (taxes && taxes.length > 0) return taxes;
+    return [
+      { id: 'tax-default', name: 'Sales Tax', rate: (taxRate ?? 8) / 100, isDefault: true },
+    ];
+  }, [taxes, taxRate]);
 
   useEffect(() => {
     if (!open) return;
@@ -127,19 +147,39 @@ export function DemoProductFormModal({
     setRedThreshold(String(initial?.redThreshold ?? 2));
     setAllowNegative(initial?.allowNegativeStock ?? false);
     setAttributeIds(initial?.attributeIds ?? []);
+    const defaultTaxId = effectiveTaxes.find((t) => t.isDefault)?.id || effectiveTaxes[0]?.id || '';
+    setSelectedTaxId(initial?.taxId || defaultTaxId);
+    setTaxOpen(false);
     setErrors({});
     setShowDeleteConfirm(false);
     setSaving(false);
-  }, [open, initial, categories]);
+  }, [open, initial, categories, effectiveTaxes]);
+
+  const selectedTax = useMemo(() => {
+    return (
+      effectiveTaxes.find((t) => t.id === selectedTaxId) ||
+      effectiveTaxes.find((t) => t.isDefault) ||
+      effectiveTaxes[0] ||
+      null
+    );
+  }, [effectiveTaxes, selectedTaxId]);
+
+  const effectiveTaxRate = useMemo(() => {
+    if (!selectedTax) return taxRate ?? 8;
+    return selectedTax.rate >= 1
+      ? selectedTax.rate
+      : Number((selectedTax.rate * 100).toFixed(2));
+  }, [selectedTax, taxRate]);
 
   const price = priceCents / 100;
   const cost = costCents / 100;
   const taxShare = useMemo(() => {
-    if (taxRate <= 0) return 0;
-    const rate = taxRate / 100;
-    // Inclusive: tax is extracted from the shelf price.
+    if (effectiveTaxRate <= 0) return 0;
+    const rate = effectiveTaxRate / 100;
+    // Inclusive: tax is extracted from the shelf price (mirrors POS ItemForm).
     return price - price / (1 + rate);
-  }, [price, taxRate]);
+  }, [price, effectiveTaxRate]);
+  const netPrice = Math.max(0, price - taxShare);
   const netCapital = price - cost;
 
   if (!open) return null;
@@ -180,6 +220,8 @@ export function DemoProductFormModal({
         allowNegativeStock: trackStock ? allowNegative : false,
         attributeIds,
         imageDataUrl,
+        taxId: selectedTax?.id ?? null,
+        taxRate: effectiveTaxRate,
       });
       setSaving(false);
     }, 280);
@@ -377,36 +419,98 @@ export function DemoProductFormModal({
               </div>
             </div>
 
+            {/* Tax Selection — mirrors POS ItemForm & web ProductFormModal */}
+            <div className="rounded-xl border border-gray-200 bg-white p-3 dark:border-white/10 dark:bg-mintcom-dark">
+              <label className="mb-1.5 block text-[12px] font-medium text-text-secondary">
+                Tax rate
+              </label>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTaxOpen((v) => !v);
+                    setAddonOpen(false);
+                  }}
+                  className={`flex w-full items-center justify-between gap-2 rounded-xl border bg-white px-3 py-2.5 text-start text-sm outline-none transition-colors dark:bg-mintcom-surface ${
+                    taxOpen ? 'border-mintcom-green ring-1 ring-mintcom-green' : 'border-gray-200 dark:border-white/10'
+                  }`}
+                >
+                  <span className="flex items-center gap-2 truncate text-text-primary dark:text-white">
+                    <Percent size={15} className="shrink-0 text-mintcom-green" />
+                    <span className="font-semibold">
+                      {selectedTax
+                        ? `${effectiveTaxRate}% — ${selectedTax.name}${selectedTax.isDefault ? ' (Default)' : ''}`
+                        : `${effectiveTaxRate}% Standard Tax`}
+                    </span>
+                  </span>
+                  <ChevronDown
+                    size={16}
+                    className={`shrink-0 text-text-tertiary transition-transform ${taxOpen ? 'rotate-180' : ''}`}
+                  />
+                </button>
+
+                {taxOpen && (
+                  <>
+                    <div className="fixed inset-0 z-20" onClick={() => setTaxOpen(false)} />
+                    <div className="absolute z-30 mt-1 max-h-56 w-full overflow-y-auto rounded-xl border border-gray-200 bg-white p-1.5 shadow-xl dark:border-white/10 dark:bg-mintcom-surface">
+                      {effectiveTaxes.map((t) => {
+                        const isSelected = selectedTax?.id === t.id;
+                        const ratePct = t.rate >= 1 ? t.rate : Number((t.rate * 100).toFixed(2));
+                        return (
+                          <button
+                            key={t.id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedTaxId(t.id);
+                              setTaxOpen(false);
+                            }}
+                            className="flex w-full items-center justify-between gap-2 rounded-xl px-2.5 py-2.5 text-start text-sm hover:bg-cream-100 dark:hover:bg-white/5"
+                          >
+                            <span className="flex items-center gap-2">
+                              <span
+                                className={`flex h-5 w-5 items-center justify-center rounded-lg border ${
+                                  isSelected
+                                    ? 'border-mintcom-green bg-mintcom-green text-white'
+                                    : 'border-gray-300 dark:border-white/20'
+                                }`}
+                              >
+                                {isSelected && <Check size={13} />}
+                              </span>
+                              <span className="font-medium text-text-primary dark:text-white">
+                                {t.name}
+                                {t.isDefault && (
+                                  <span className="ms-1.5 text-[11px] text-text-tertiary">
+                                    (Default)
+                                  </span>
+                                )}
+                              </span>
+                            </span>
+                            <span className="text-xs font-bold text-mintcom-green">
+                              {ratePct}%
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+
             <div className="grid grid-cols-3 gap-2">
               <div className="min-h-[64px] rounded-xl border border-gray-200 bg-white p-3 dark:border-white/10 dark:bg-mintcom-dark">
-                <p className="text-[10px] tracking-wide text-gray-500">Tax rate</p>
-                <p className="text-lg font-bold dark:text-white">{taxRate}%</p>
+                <p className="text-[10px] tracking-wide text-gray-500">
+                  {selectedTax ? selectedTax.name : 'Tax rate'}
+                </p>
+                <p className="text-lg font-bold dark:text-white">{effectiveTaxRate}%</p>
               </div>
               <div className="min-h-[64px] rounded-xl border border-gray-200 bg-white p-3 dark:border-white/10 dark:bg-mintcom-dark">
-                <p className="text-[10px] tracking-wide text-mintcom-green">Tax share</p>
+                <p className="text-[10px] tracking-wide text-mintcom-green">Tax included</p>
                 <p className="text-lg font-bold text-mintcom-green">{taxShare.toFixed(2)} $</p>
               </div>
-              <div
-                className={`min-h-[64px] rounded-xl border p-3 ${
-                  netCapital < 0
-                    ? 'border-mintcom-red/40 bg-mintcom-red/10 dark:bg-mintcom-red/10'
-                    : 'border-mintcom-green/40 bg-mintcom-green/5'
-                }`}
-              >
-                <p
-                  className={`text-[10px] tracking-wide ${
-                    netCapital < 0 ? 'text-mintcom-red' : 'text-mintcom-green'
-                  }`}
-                >
-                  Net capital
-                </p>
-                <p
-                  className={`text-lg font-bold ${
-                    netCapital < 0 ? 'text-mintcom-red' : 'text-mintcom-green'
-                  }`}
-                >
-                  {netCapital.toFixed(2)} $
-                </p>
+              <div className="min-h-[64px] rounded-xl border border-gray-200 bg-white p-3 dark:border-white/10 dark:bg-mintcom-dark">
+                <p className="text-[10px] tracking-wide text-gray-500">Net (excl. tax)</p>
+                <p className="text-lg font-bold dark:text-white">{netPrice.toFixed(2)} $</p>
               </div>
             </div>
           </div>

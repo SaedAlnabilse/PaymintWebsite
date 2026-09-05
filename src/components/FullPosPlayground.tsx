@@ -9,12 +9,15 @@ import {
   BadgePercent,
   Bell,
   Check,
+  CheckCircle2,
   ChevronDown,
+  ChevronRight,
   DollarSign,
   Hash,
   Headphones,
   Home,
   Inbox,
+  Info,
   LayoutGrid,
   LayoutList,
   List,
@@ -24,15 +27,20 @@ import {
   Minus,
   PauseCircle,
   Package,
+  PanelRightClose,
+  PanelRightOpen,
   Pencil,
   Percent,
   PieChart,
   Plus,
   Printer,
+  Receipt,
+  RefreshCw,
   Repeat,
   RotateCcw,
   Search,
   Settings,
+  Shield,
   ShoppingBag,
   ShoppingCart,
   SlidersHorizontal,
@@ -42,9 +50,20 @@ import {
   User,
   UserCheck,
   Users,
+  Utensils,
+  UtensilsCrossed,
   Wifi,
   X,
 } from 'lucide-react';
+import {
+  getSmartQuickCashSuggestions,
+  triggerCartAddFeedback,
+  triggerOutOfStockBuzzer,
+  saveActiveCartDraft,
+  loadActiveCartDraft,
+  clearActiveCartDraft,
+  type OrderTender,
+} from './pos-demo/posFeedback';
 import { Logo } from './Logo';
 import {
   DemoDashboardScreen,
@@ -59,6 +78,7 @@ import {
 import {
   DEFAULT_DEMO_SALES_SETTINGS,
   type DemoSalesSettings,
+  type DemoTaxRate,
 } from './pos-demo/PosDemoSettings';
 import { PosDemoLogin } from './pos-demo/PosDemoLogin';
 import {
@@ -94,6 +114,8 @@ type PosProduct = {
   imageDataUrl?: string | null;
   trackStock?: boolean;
   availableStock?: number;
+  taxId?: string | null;
+  taxRate?: number;
 };
 type CartLine = {
   id: string;
@@ -419,6 +441,7 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
   const [cashOpOpen, setCashOpOpen] = useState(false);
   const [cashOpType, setCashOpType] = useState<'in' | 'out'>('in');
   const [cart, setCart] = useState<CartLine[]>([]);
+  const [isBasketMinimized, setIsBasketMinimized] = useState(false);
   /**
    * Session sales settings (tax + service charge) — same source as Settings screen,
    * mirroring mintcom-pos appSettings used by OrderSummaryPanel.
@@ -428,6 +451,7 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
   );
   /** Per-order tax override (still defaults from settings.taxRate) */
   const [taxRate, setTaxRate] = useState(DEFAULT_DEMO_SALES_SETTINGS.taxRate);
+  const [taxName, setTaxName] = useState<string | null>('Sales Tax');
   const [taxModalOpen, setTaxModalOpen] = useState(false);
   /** Per-order service charge override mode (POS ServiceChargeModal) */
   const [scMode, setScMode] = useState<'DEFAULT' | 'NONE' | 'CUSTOM'>('DEFAULT');
@@ -533,6 +557,39 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
       document.body.style.overflow = prev;
     };
   }, [modalOpen]);
+
+  // Active Cart Draft Preservation (mirrors POS useActiveCartDraft)
+  useEffect(() => {
+    const draft = loadActiveCartDraft<{
+      lines: CartLine[];
+      orderNote?: string;
+      orderType?: OrderType;
+      discountPct?: number;
+      discountName?: string | null;
+    }>();
+    if (draft && Array.isArray(draft.lines) && draft.lines.length > 0) {
+      setCart(draft.lines);
+      if (draft.orderNote) setOrderNote(draft.orderNote);
+      if (draft.orderType) setOrderType(draft.orderType);
+      if (draft.discountPct) setDiscountPct(draft.discountPct);
+      if (draft.discountName) setDiscountName(draft.discountName);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (cart.length > 0) {
+      saveActiveCartDraft({
+        lines: cart,
+        orderNote,
+        orderType,
+        discountPct,
+        discountName,
+      });
+    } else {
+      clearActiveCartDraft();
+    }
+  }, [cart, orderNote, orderType, discountPct, discountName]);
+
   const [lastAdded, setLastAdded] = useState<string | null>(null);
   const [shift, setShift] = useState<DemoShift>(() => emptyShift());
   const [, setFlash] = useState<string | null>(null);
@@ -544,6 +601,24 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
   const [showHoldModal, setShowHoldModal] = useState(false);
   /** Mirrors POS SalesHeader retail / sort controls */
   const [retailMode, setRetailMode] = useState(false);
+  /** Sync badge & SyncSliderDrawer state (mirrors POS SyncStatusBadge + SyncSliderDrawer) */
+  const [isSyncDrawerOpen, setIsSyncDrawerOpen] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncJustCompleted, setSyncJustCompleted] = useState(false);
+  const [lastSyncedTime, setLastSyncedTime] = useState<Date>(() => new Date());
+
+  const handleTriggerManualSync = () => {
+    if (isSyncing) return;
+    setIsSyncing(true);
+    setTimeout(() => {
+      setIsSyncing(false);
+      setLastSyncedTime(new Date());
+      setSyncJustCompleted(true);
+      ping('All offline data synced successfully');
+      setTimeout(() => setSyncJustCompleted(false), 3500);
+    }, 1200);
+  };
+
   const [sortBy, setSortBy] = useState<'recent' | 'alpha' | 'bestseller'>('recent');
   const [sortOpen, setSortOpen] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
@@ -1095,6 +1170,7 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
     setLoyaltyCustomer(null);
     setAppliedLoyaltyReward(null);
     setNoteModalOpen(false);
+    clearActiveCartDraft();
     ping('Order cleared');
   };
 
@@ -1120,6 +1196,26 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
         ? Math.max(0, Math.round((amounts.tendered ?? total) * 100) / 100)
         : undefined;
 
+    // Per-order normalized tender breakdown (mirrors POS getOrderTenders)
+    const tenders: OrderTender[] = [];
+    if (method === 'split') {
+      if (amounts.cash > 0) {
+        tenders.push({ method: 'CASH', label: 'Cash', amount: amounts.cash, tendered: amounts.cash });
+      }
+      if (amounts.card > 0) {
+        tenders.push({ method: 'CARD', label: 'Card (Visa)', amount: amounts.card, cardType: 'Visa' });
+      }
+      if (amounts.other > 0) {
+        tenders.push({ method: 'OTHER', label: 'Other', amount: amounts.other, otherPaymentMethod: 'Other' });
+      }
+    } else if (method === 'cash') {
+      tenders.push({ method: 'CASH', label: 'Cash', amount: total, tendered, change: changeAmount });
+    } else if (method === 'card') {
+      tenders.push({ method: 'CARD', label: methodLabel || 'Card', amount: total, cardType: 'Visa' });
+    } else {
+      tenders.push({ method: 'OTHER', label: methodLabel || 'Other', amount: total, otherPaymentMethod: methodLabel });
+    }
+
     setShift((s) => ({
       ...s,
       orders: s.orders + 1,
@@ -1131,10 +1227,23 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
           id: saleId,
           orderNo: thisOrderNo,
           total,
-          method: method === 'split' ? 'other' : methodBucket,
+          method: (method === 'split' ? 'split' : methodBucket) as 'cash' | 'card' | 'other' | 'split',
           methodLabel,
           items: itemsLabel,
           at: Date.now(),
+          lines: cart.map((l) => ({
+            id: l.id,
+            name: l.name,
+            qty: l.qty,
+            unitPrice: l.unitPrice,
+            emoji: '',
+          })),
+          subtotal,
+          tax,
+          discount,
+          orderType,
+          status: 'completed' as const,
+          tenders,
         },
         ...s.sales,
       ].slice(0, 40),
@@ -1171,6 +1280,7 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
     setShowPaymentPanel(false);
     setShowSplitPanel(false);
     setCart([]);
+    clearActiveCartDraft();
     setDiscountPct(0);
     setDiscountName(null);
     setOrderNote('');
@@ -1281,6 +1391,7 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
     discount,
     tax,
     taxRate: taxRateEffective,
+    taxName,
     isTaxChanged,
     onEditTax: canChangeTax ? () => cart.length && setTaxModalOpen(true) : undefined,
     serviceChargeAmount,
@@ -1643,8 +1754,8 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
 
           {screen === 'sales' && (
             <>
-              {/* Menu pane ~2.3 */}
-              <section className={`flex h-full min-h-0 min-w-0 flex-[2.3] flex-col overflow-hidden bg-cream-50 dark:bg-mintcom-dark ${mobile && screen === 'sales' ? 'pb-[76px]' : ''}`}>
+              {/* Menu pane ~2.3 or full width when basket minimized (mirrors POS mainContentFull) */}
+              <section className={`flex h-full min-h-0 min-w-0 ${isBasketMinimized ? 'flex-1' : 'flex-[2.3]'} flex-col overflow-hidden bg-cream-50 dark:bg-mintcom-dark ${mobile && screen === 'sales' ? 'pb-[76px]' : ''}`}>
                 {/* Sales Header — mirrors mintcom-pos SalesHeader exactly */}
                 <header className={`shrink-0 bg-white dark:bg-mintcom-surface ${mobile ? 'px-3 py-2.5' : 'px-4 py-3 sm:px-5'}`}>
                   {/* Top row: square avatar + stacked date/tenant · Train / Retail / Open Drawer */}
@@ -1676,27 +1787,20 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
                     </div>
 
                     <div className={`mt-1 shrink-0 items-center justify-end gap-1.5 sm:gap-2 ${mobile ? 'hidden' : 'flex flex-wrap'}`}>
-                      {/* Sync badge — always “Synced” in demo */}
-                      <span
-                        className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-2.5 text-[12px] font-semibold text-text-secondary dark:border-white/10 dark:bg-mintcom-dark dark:text-mintcom-textSecondary"
-                        title="All data synced"
-                      >
-                        <Wifi size={13} className="text-mintcom-green" />
-                        <span className="hidden sm:inline">Synced</span>
-                      </span>
-
+                      {/* Sync Status Badge — mirrors POS SyncStatusBadge */}
                       <button
                         type="button"
-                        onClick={() => setRetailMode((v) => !v)}
-                        className={`inline-flex h-9 items-center gap-1.5 rounded-xl border px-2.5 text-[12px] font-semibold transition-colors ${
-                          retailMode
-                            ? 'border-mintcom-green bg-mintcom-green/10 text-mintcom-green'
-                            : 'border-gray-200 bg-white text-mintcom-green dark:border-white/10 dark:bg-mintcom-dark'
-                        }`}
-                        title="Retail list / Grid mode"
+                        onClick={() => setIsSyncDrawerOpen(true)}
+                        className="inline-flex h-9 items-center justify-center gap-1.5 rounded-[10px] border border-[#7dc6a2]/25 bg-[#EAF6F1] px-3 text-[13px] font-semibold text-[#7dc6a2] transition-transform active:scale-95 dark:border-mintcom-green/20 dark:bg-mintcom-green/15 dark:text-mintcom-green"
+                        title={isSyncing ? 'Syncing...' : 'All data synced — click to view sync status'}
+                        aria-label={isSyncing ? 'Syncing...' : 'Synced'}
                       >
-                        {retailMode ? <LayoutList size={14} /> : <LayoutGrid size={14} />}
-                        <span className="hidden sm:inline">{retailMode ? 'Retail' : 'Grid'}</span>
+                        <span
+                          className={`h-2 w-2 rounded-full bg-[#7dc6a2] dark:bg-mintcom-green ${
+                            isSyncing ? 'animate-ping' : ''
+                          }`}
+                        />
+                        <span>{isSyncing ? 'Syncing...' : 'Synced'}</span>
                       </button>
 
                       <button
@@ -1707,6 +1811,83 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
                         <Inbox size={14} />
                         <span className="hidden sm:inline">Open Drawer</span>
                       </button>
+
+                      {/* Basket minimize / HUD (mirrors POS SalesHeader exactly) */}
+                      {!isBasketMinimized ? (
+                        <button
+                          type="button"
+                          onClick={() => setIsBasketMinimized(true)}
+                          className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-mintcom-green transition-colors hover:border-mintcom-green/50 active:bg-mintcom-green/10 dark:border-white/10 dark:bg-mintcom-dark"
+                          title="Minimize Basket"
+                          aria-label="Minimize Basket"
+                        >
+                          <SidebarToggleIcon isMinimized={false} size={18} color="currentColor" strokeWidth={2} />
+                        </button>
+                      ) : (
+                        <div className="flex items-center gap-2 shrink-0">
+                          {/* Telemetry Touchpoint: Bag Icon + Order Info + Total Amount */}
+                          <button
+                            type="button"
+                            onClick={() => setIsBasketMinimized(false)}
+                            className="flex items-center gap-2 py-0.5 px-0.5 text-start transition-opacity hover:opacity-85"
+                            title={itemCount > 0 ? 'View Basket' : 'Expand Basket'}
+                            aria-label={itemCount > 0 ? 'View Basket' : 'Expand Basket'}
+                          >
+                            {/* Shopping Bag Icon Tile with Soft Green Background & Notification Badge */}
+                            <div
+                              className={`relative flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-[10px] ${
+                                itemCount > 0
+                                  ? 'bg-mintcom-green/15 text-mintcom-green'
+                                  : 'bg-black/[0.04] text-text-secondary dark:bg-white/[0.06] dark:text-mintcom-textSecondary'
+                              }`}
+                            >
+                              <ShoppingBag size={16} />
+                              {itemCount > 0 && (
+                                <span className="absolute -top-1 -end-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full border-[1.5px] border-white bg-mintcom-red px-1 text-[9px] font-extrabold text-white dark:border-mintcom-surface">
+                                  {itemCount > 99 ? '99+' : itemCount}
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Info Stack */}
+                            <div className="flex flex-col justify-center gap-px min-w-0">
+                              <div className="flex items-center gap-1">
+                                <span className="text-[11px] font-bold tracking-[0.2px] text-text-secondary dark:text-mintcom-textSecondary">
+                                  #{orderNo || '---'}
+                                </span>
+                                <span className="text-[10px] font-bold text-text-secondary dark:text-mintcom-textSecondary">•</span>
+                                <span className="text-[11px] font-semibold uppercase tracking-[0.2px] text-text-secondary dark:text-mintcom-textSecondary">
+                                  {itemCount} {itemCount === 1 ? 'item' : 'items'}
+                                </span>
+                              </div>
+                              <div className="flex items-baseline gap-1">
+                                <span className="text-[16px] font-black tracking-tight leading-[19px] text-[#111827] dark:text-white tabular-nums">
+                                  {total.toFixed(2)}
+                                </span>
+                                <span className="text-[10.5px] font-extrabold tracking-wider text-mintcom-green">
+                                  USD
+                                </span>
+                              </div>
+                            </div>
+                          </button>
+
+                          {/* Hairline Divider */}
+                          <div className="h-[22px] w-px bg-gray-200 dark:bg-white/12 mx-0.5" />
+
+                          {/* Expand Action Button (matching 36px header action buttons) */}
+                          <button
+                            type="button"
+                            onClick={() => setIsBasketMinimized(false)}
+                            className="flex h-9 items-center gap-1.5 rounded-xl bg-mintcom-green px-3 text-[11.5px] font-extrabold uppercase tracking-[0.5px] text-white shadow-md shadow-mintcom-green/25 transition-all hover:brightness-105 active:scale-[0.98]"
+                            aria-label={itemCount > 0 ? 'EXPAND TO CONTINUE' : 'EXPAND BASKET'}
+                          >
+                            <SidebarToggleIcon isMinimized={true} size={14} color="#FFFFFF" strokeWidth={2.2} />
+                            <span className="truncate">
+                              {itemCount > 0 ? 'EXPAND TO CONTINUE' : 'EXPAND BASKET'}
+                            </span>
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -1879,7 +2060,16 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
                           key={p.id}
                           type="button"
                           whileTap={{ scale: 0.99 }}
-                          onClick={() => openItem(p)}
+                          onClick={() => {
+                            const stock = p.availableStock ?? 0;
+                            if (p.trackStock && stock <= 0) {
+                              triggerOutOfStockBuzzer();
+                              ping(`Out of Stock: ${p.name} is currently out of stock`);
+                              return;
+                            }
+                            triggerCartAddFeedback();
+                            openItem(p);
+                          }}
                           className="group relative flex w-full items-center gap-2.5 rounded-xl border border-gray-200 bg-white px-2.5 py-2 text-start dark:border-white/10 dark:bg-mintcom-surface"
                         >
                           {lastAdded === p.id && (
@@ -1907,7 +2097,7 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
                       ))}
                     </div>
                   ) : (
-                    <div className={`grid ${mobile ? 'grid-cols-2 gap-2.5' : 'grid-cols-3 gap-3'}`}>
+                    <div className={`grid ${mobile ? 'grid-cols-2 gap-2.5' : isBasketMinimized ? 'grid-cols-4 sm:grid-cols-5 gap-3' : 'grid-cols-3 gap-3'}`}>
                       {visible.map((p) => {
                         const cartQty = cart
                           .filter((l) => l.productId === p.id)
@@ -1923,9 +2113,11 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
                           whileTap={soldOut ? undefined : { scale: 0.97 }}
                           onClick={() => {
                             if (soldOut) {
-                              ping(`${p.name} is out of stock`);
+                              triggerOutOfStockBuzzer();
+                              ping(`Out of Stock: ${p.name} is currently out of stock`);
                               return;
                             }
+                            triggerCartAddFeedback();
                             openItem(p);
                           }}
                           aria-disabled={soldOut}
@@ -1985,7 +2177,7 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
               </section>
 
               {/* Order pane */}
-              {!mobile && (
+              {!mobile && !isBasketMinimized && (
                 <OrderPanel
                   panelId="tour-order-panel"
                   payActionsId="tour-pay-actions"
@@ -2010,6 +2202,160 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
               onCancel={() => setShowHoldModal(false)}
               onHold={confirmHold}
             />
+          )}
+        </AnimatePresence>
+
+        {/* Sync Status Drawer / Modal — mirrors POS SyncSliderDrawer */}
+        <AnimatePresence>
+          {isSyncDrawerOpen && (
+            <div
+              className="absolute inset-0 z-[95] flex items-center justify-center bg-black/60 p-2.5 sm:p-3 backdrop-blur-sm"
+              onClick={() => setIsSyncDrawerOpen(false)}
+            >
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 8 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 8 }}
+                transition={{ duration: 0.18 }}
+                onClick={(e) => e.stopPropagation()}
+                className="relative flex max-h-[min(90%,500px)] w-[min(94%,420px)] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-white/10 dark:bg-mintcom-surface"
+              >
+                {/* Modal Header */}
+                <div className="flex shrink-0 items-center justify-between border-b border-gray-100 px-4 py-2.5 dark:border-white/10">
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-mintcom-green/15 text-mintcom-green">
+                      <RefreshCw size={16} className={isSyncing ? 'animate-spin' : ''} />
+                    </div>
+                    <div>
+                      <h3 className="text-[14px] font-bold text-text-primary dark:text-white">
+                        Cloud Sync Status
+                      </h3>
+                      <p className="text-[11px] text-text-secondary dark:text-mintcom-textSecondary">
+                        Last Synced: {syncJustCompleted ? 'Just now' : lastSyncedTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsSyncDrawerOpen(false)}
+                    className="flex h-7 w-7 items-center justify-center rounded-full text-text-secondary hover:bg-gray-100 dark:hover:bg-white/10"
+                    aria-label="Close"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+
+                {/* Scrollable Content */}
+                <div className="flex-1 min-h-0 space-y-2.5 overflow-y-auto p-3 sm:p-3.5">
+                  {/* Hero Status Card */}
+                  <div className="rounded-xl border border-mintcom-green/30 bg-mintcom-green/10 p-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-mintcom-green/20 text-mintcom-green">
+                        {isSyncing ? (
+                          <RefreshCw size={18} className="animate-spin text-mintcom-green" />
+                        ) : (
+                          <CheckCircle2 size={20} className="text-mintcom-green" />
+                        )}
+                      </div>
+                      <div>
+                        <h4 className="text-[14px] font-bold text-mintcom-green">
+                          {isSyncing ? 'Syncing Data...' : syncJustCompleted ? 'All Data Synced Successfully' : 'All Data Synced'}
+                        </h4>
+                        <p className="text-[11px] text-text-secondary dark:text-mintcom-textSecondary">
+                          {isSyncing
+                            ? 'Sending offline orders and fetching latest catalogue'
+                            : 'Your POS is fully up to date with cloud servers'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-2.5 flex items-center gap-2 border-t border-mintcom-green/20 pt-2">
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-mintcom-green/20 px-2.5 py-0.5 text-[10px] font-bold text-mintcom-green">
+                        <span className="h-1.5 w-1.5 rounded-full bg-mintcom-green" />
+                        Connected to Cloud
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Checklist Section Heading */}
+                  <div>
+                    <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-text-tertiary">
+                      Review real-time sync with cloud servers
+                    </p>
+
+                    {/* Sync Breakdown Checklist Card */}
+                    <div className="divide-y divide-gray-100 overflow-hidden rounded-xl border border-gray-200 bg-gray-50/70 dark:divide-white/5 dark:border-white/10 dark:bg-mintcom-dark/50">
+                      {[
+                        {
+                          icon: Receipt,
+                          title: 'Orders & Sales',
+                          subtitle: 'All completed orders sent to server',
+                        },
+                        {
+                          icon: UtensilsCrossed,
+                          title: 'Menu & Products',
+                          subtitle: 'Categories, items & pricing up to date',
+                        },
+                        {
+                          icon: Inbox,
+                          title: 'Shifts & Cash Drawer',
+                          subtitle: 'Shift records and cash logs synchronized',
+                        },
+                        {
+                          icon: Users,
+                          title: 'Customers & Loyalty',
+                          subtitle: 'Points balances and customer records verified',
+                        },
+                        {
+                          icon: SlidersHorizontal,
+                          title: 'Store Settings & Taxes',
+                          subtitle: 'Tax rates, discounts & receipt configs active',
+                        },
+                      ].map((item) => {
+                        const ItemIcon = item.icon;
+                        return (
+                          <div key={item.title} className="flex items-center gap-2.5 p-2 sm:p-2.5">
+                            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gray-200/60 text-mintcom-green dark:bg-white/10">
+                              <ItemIcon size={14} />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-[12px] font-bold text-text-primary dark:text-white leading-tight">
+                                {item.title}
+                              </p>
+                              <p className="text-[10.5px] text-text-secondary dark:text-mintcom-textSecondary truncate">
+                                {item.subtitle}
+                              </p>
+                            </div>
+                            <CheckCircle2 size={15} className="shrink-0 text-mintcom-green" />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Offline Safe Guarantee Note */}
+                  <div className="flex items-start gap-2 rounded-xl border border-blue-500/20 bg-blue-50/70 p-2.5 dark:border-blue-400/20 dark:bg-blue-950/20">
+                    <Shield size={14} className="mt-0.5 shrink-0 text-blue-600 dark:text-blue-400" />
+                    <p className="text-[11px] leading-snug text-blue-900 dark:text-blue-300">
+                      <strong>Offline Safety:</strong> All sales, receipts, and inventory made while offline are securely stored in your device encrypted storage.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Footer Button */}
+                <div className="shrink-0 border-t border-gray-100 p-2.5 sm:p-3 dark:border-white/10">
+                  <button
+                    type="button"
+                    onClick={handleTriggerManualSync}
+                    disabled={isSyncing}
+                    className="flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-mintcom-green text-[13px] font-bold text-white shadow-sm transition-colors hover:bg-mintcom-green/90 disabled:opacity-60"
+                  >
+                    <RefreshCw size={15} className={isSyncing ? 'animate-spin' : ''} />
+                    <span>{isSyncing ? 'Syncing...' : 'Sync Everything Now'}</span>
+                  </button>
+                </div>
+              </motion.div>
+            </div>
           )}
         </AnimatePresence>
 
@@ -2225,11 +2571,17 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
               open={taxModalOpen}
               currentRate={taxRate}
               defaultRate={salesSettings.taxRate}
+              taxes={salesSettings.taxes}
               onClose={() => setTaxModalOpen(false)}
-              onSelect={(rate) => {
+              onSelect={(rate, name) => {
                 setTaxRate(rate);
+                setTaxName(name ?? null);
                 setTaxModalOpen(false);
-                ping(rate === 0 ? 'No tax applied' : `Tax set to ${rate}%`);
+                ping(
+                  rate === 0
+                    ? 'No tax applied'
+                    : `Tax set to ${rate}%${name ? ` (${name})` : ''}`,
+                );
               }}
             />
           )}
@@ -2462,6 +2814,8 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
               subtotal={subtotal}
               discount={discount}
               discountPct={discountPct}
+              serviceChargeAmount={serviceChargeAmount}
+              serviceChargeName={salesSettings.serviceChargeName}
               tax={tax}
               taxRate={taxRateEffective}
               total={total}
@@ -2479,6 +2833,13 @@ export function FullPosPlayground({ mobile = false }: { mobile?: boolean }) {
           {showSplitPanel && (
             <SplitPaymentDemoModal
               cart={cart}
+              orderNo={orderNo}
+              subtotal={subtotal}
+              discount={discount}
+              serviceChargeAmount={serviceChargeAmount}
+              serviceChargeName={salesSettings.serviceChargeName}
+              tax={tax}
+              taxRate={taxRateEffective}
               total={total}
               onClose={() => setShowSplitPanel(false)}
               onComplete={finalizeSale}
@@ -3080,6 +3441,7 @@ function OrderPanel({
   discount,
   tax,
   taxRate = 8,
+  taxName,
   isTaxChanged = false,
   onEditTax,
   serviceChargeAmount = 0,
@@ -3125,6 +3487,7 @@ function OrderPanel({
   discount: number;
   tax: number;
   taxRate?: number;
+  taxName?: string | null;
   isTaxChanged?: boolean;
   onEditTax?: () => void;
   serviceChargeAmount?: number;
@@ -3424,10 +3787,19 @@ function OrderPanel({
             </div>
 
             <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-[#6B7280] dark:text-mintcom-textSecondary">
-                Order number
-              </p>
-              <p className="text-lg font-extrabold text-[#111827] dark:text-white">#{orderNo}</p>
+              <div className="flex items-center gap-2">
+                <span className="text-[13px] font-semibold text-[#6B7280] dark:text-mintcom-textSecondary">
+                  Order number
+                </span>
+                <span className="text-[16px] font-extrabold text-[#111827] dark:text-white">
+                  #{orderNo}
+                </span>
+              </div>
+              {cart.length > 0 && (
+                <span className="text-[13px] font-semibold text-[#6B7280] dark:text-mintcom-textSecondary">
+                  {cart.reduce((s, l) => s + l.qty, 0)} {cart.reduce((s, l) => s + l.qty, 0) === 1 ? 'item' : 'items'}
+                </span>
+              )}
             </div>
           </>
         )}
@@ -3463,7 +3835,7 @@ function OrderPanel({
                 <button
                   type="button"
                   onClick={() => toggleExpand(line.id)}
-                  className="flex w-full items-center gap-2 p-2.5 text-start"
+                  className="flex w-full items-center gap-2.5 p-2.5 text-start"
                 >
                   <span className={productImgWrapClass(line.imageDataUrl, 'flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm dark:border-white/10')}>
                     <img
@@ -3473,20 +3845,20 @@ function OrderPanel({
                     />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-xs font-bold text-text-primary dark:text-white">{line.name}</p>
+                    <p className="truncate text-[13.5px] font-bold text-text-primary dark:text-white">{line.name}</p>
                     {line.addons.length > 0 && (
-                      <p className="mt-0.5 truncate text-[10px] text-text-tertiary dark:text-mintcom-gray">
+                      <p className="mt-0.5 truncate text-[11px] font-medium text-text-tertiary dark:text-mintcom-textSecondary">
                         + {line.addons.map((a) => a.name).join(' · ')}
                       </p>
                     )}
                     {/* Discount only in expanded body (POS) — not on collapsed card header */}
                     {line.note && (
-                      <p className="mt-0.5 line-clamp-1 text-[10px] text-text-secondary dark:text-mintcom-textSecondary">
+                      <p className="mt-0.5 line-clamp-1 text-[10.5px] text-text-secondary dark:text-mintcom-textSecondary">
                         Note: {line.note}
                       </p>
                     )}
-                    <p className="mt-0.5">
-                      <PriceText value={lineTotal} size="sm" className="!text-text-primary dark:!text-white [&_span]:!text-inherit" />
+                    <p className="mt-0.5 text-[14px] font-bold text-text-primary dark:text-white">
+                      {money(lineTotal)} <span className="text-[11px] font-medium text-text-secondary dark:text-mintcom-textSecondary">USD</span>
                     </p>
                   </div>
                   {/* POS SwipeableOrderItem quantityBadge: 36×36, borderRadius 12 */}
@@ -3703,11 +4075,17 @@ function OrderPanel({
       </div>
 
       {/* Totals + payment methods — mirrors POS OrderSummaryPanel */}
-      <div className="border-t border-gray-100 px-3 py-3 dark:border-white/8">
-        <div className="space-y-0.5 text-[11px]">
-          <Row label="Subtotal" value={money(subtotal)} />
+      <div className="border-t border-gray-100 px-3.5 py-3 dark:border-white/8">
+        <div className="space-y-1.5 text-[13.5px]">
+          <div className="flex items-center justify-between">
+            <span className="text-text-secondary dark:text-mintcom-textSecondary">Subtotal</span>
+            <span className="tabular-nums font-medium text-text-primary dark:text-white">{money(subtotal)}</span>
+          </div>
           {discountPct > 0 && (
-            <Row label={`Discount ${discountPct}%`} value={`−${money(discount)}`} />
+            <div className="flex items-center justify-between">
+              <span className="text-text-secondary dark:text-mintcom-textSecondary">Discount {discountPct}%</span>
+              <span className="tabular-nums font-medium text-text-primary dark:text-white">−{money(discount)}</span>
+            </div>
           )}
           {/* Service charge — visible when enabled even with empty cart (POS) */}
           {(serviceChargeActive || serviceChargeAmount > 0) && (
@@ -3720,15 +4098,15 @@ function OrderPanel({
                 if (serviceChargeEditDisabled || !onEditServiceCharge) return;
                 onEditServiceCharge();
               }}
-              className="flex w-full items-center justify-between gap-2 py-0.5 text-start disabled:cursor-default"
+              className="flex w-full items-center justify-between gap-2 text-start disabled:cursor-default"
             >
-              <span className="inline-flex items-center gap-1 text-text-secondary dark:text-mintcom-textSecondary">
+              <span className="inline-flex items-center gap-1.5 text-text-secondary dark:text-mintcom-textSecondary">
                 {serviceChargeLabel}
                 {onEditServiceCharge && !serviceChargeEditDisabled && (
-                  <Pencil size={12} className="text-text-tertiary" />
+                  <Pencil size={13} className="text-text-tertiary" />
                 )}
               </span>
-              <span className="tabular-nums font-semibold text-text-primary dark:text-white">
+              <span className="tabular-nums font-medium text-text-primary dark:text-white">
                 {money(serviceChargeAmount)}
               </span>
             </button>
@@ -3738,25 +4116,27 @@ function OrderPanel({
             type="button"
             disabled={empty || !onEditTax}
             onClick={onEditTax}
-            className="flex w-full items-center justify-between gap-2 py-0.5 text-start disabled:cursor-default"
+            className="flex w-full items-center justify-between gap-2 text-start disabled:cursor-default"
           >
             <span
-              className={`inline-flex items-center gap-1 ${
+              className={`inline-flex items-center gap-1.5 ${
                 isTaxChanged
                   ? 'font-bold text-mintcom-green'
                   : 'text-text-secondary dark:text-mintcom-textSecondary'
               }`}
             >
-              {taxRate === 0 ? 'No Tax' : `Tax ${taxRate}%`}
+              {taxRate === 0
+                ? 'No Tax'
+                : `Tax ${taxName ? `(${taxName}) ` : ''}${taxRate}%`}
               {onEditTax && !empty && (
                 <Pencil
-                  size={12}
+                  size={13}
                   className={isTaxChanged ? 'text-mintcom-green' : 'text-text-tertiary'}
                 />
               )}
             </span>
             <span
-              className={`tabular-nums font-semibold ${
+              className={`tabular-nums font-medium ${
                 isTaxChanged
                   ? 'font-bold text-mintcom-green'
                   : 'text-text-primary dark:text-white'
@@ -3765,15 +4145,19 @@ function OrderPanel({
               {money(tax)}
             </span>
           </button>
-          <div className="flex justify-between border-t border-gray-100 pt-1.5 text-sm font-black text-text-primary dark:border-white/8 dark:text-white">
-            <span>Total</span>
-            <span className="tabular-nums text-mintcom-green">{money(total)}</span>
-          </div>
+        </div>
+
+        {/* Separator Line — mirrors POS totalSeparator */}
+        <div className="my-2.5 h-px w-full bg-gray-200 dark:bg-white/10" />
+
+        <div className="flex items-center justify-between text-base font-bold text-text-primary dark:text-white">
+          <span>Total</span>
+          <span className="tabular-nums text-xl font-extrabold text-mintcom-green">{money(total)}</span>
         </div>
 
         {/* Payment Method header + Split — always shown like Cash/Card/Other; disabled when cart empty */}
-        <div className="mt-2.5 flex items-center justify-between gap-2">
-          <p className="text-[12px] font-bold text-text-secondary dark:text-mintcom-textSecondary">
+        <div className="mt-3 flex items-center justify-between gap-2">
+          <p className="text-[14px] font-bold text-text-primary dark:text-white">
             Payment Method
           </p>
           {canSplit && (
@@ -3781,10 +4165,10 @@ function OrderPanel({
               type="button"
               disabled={empty}
               onClick={onPaySplit}
-              className={`inline-flex items-center justify-center gap-1.5 rounded-xl border-[1.5px] px-2.5 py-1.5 text-[13px] font-bold transition-opacity ${
+              className={`inline-flex items-center justify-center gap-1.5 rounded-xl border-[1.5px] px-2.5 py-1.5 text-[12.5px] font-bold transition-opacity ${
                 empty
                   ? 'cursor-not-allowed border-gray-200 bg-gray-100 text-[#9CA3AF] dark:border-white/10 dark:bg-white/5'
-                  : 'border-mintcom-green bg-mintcom-green/12 text-mintcom-green'
+                  : 'border-mintcom-green/50 bg-mintcom-green/15 text-mintcom-green'
               }`}
             >
               <PosSplitReceiptIcon
@@ -4489,27 +4873,35 @@ function DemoLoyaltyModal({
   );
 }
 
-/** Mirrors mintcom-pos HoldOrderModal — table dropdown or guest nickname */
+/**
+ * Mirrors mintcom-pos HoldOrderModal 1:1
+ * 3-step UX:
+ * 1. 'choose' — Dine-In Table choice card (with free/held count) vs Custom Note choice card
+ * 2. 'tables' — Responsive table grid with status indicators, back button, selection banner, and hold action
+ * 3. 'custom' — Character-counted note input, guidance, tip card, selection banner, and hold action
+ */
+type HoldModalStep = 'choose' | 'tables' | 'custom';
+
 function HoldOrderModal({
   usedLabels,
-  tableCount,
+  tableCount = 12,
   itemCount,
   orderTotal,
   onCancel,
   onHold,
 }: {
   usedLabels: string[];
-  tableCount: number;
+  tableCount?: number;
   itemCount: number;
   orderTotal: number;
   onCancel: () => void;
   onHold: (label: string) => void;
 }) {
+  const [step, setStep] = useState<HoldModalStep>('choose');
   const [selectedTable, setSelectedTable] = useState('');
   const [nickname, setNickname] = useState('');
-  const [tableOpen, setTableOpen] = useState(false);
 
-  const tables = useMemo(() => {
+  const allTables = useMemo(() => {
     return Array.from({ length: tableCount }, (_, i) => {
       const name = `Table ${i + 1}`;
       const used = usedLabels.some((u) => u.toLowerCase() === name.toLowerCase());
@@ -4517,229 +4909,387 @@ function HoldOrderModal({
     });
   }, [tableCount, usedLabels]);
 
-  const freeCount = tables.filter((t) => !t.used).length;
-  const busyCount = tables.filter((t) => t.used).length;
-  const holdLabel = selectedTable || nickname.trim();
-  const canHold = holdLabel.length > 0;
-  const nicknameMode = nickname.trim() !== '';
+  const freeCount = allTables.filter((t) => !t.used).length;
+  const busyCount = allTables.filter((t) => t.used).length;
 
-  const clearTable = () => {
-    setSelectedTable('');
-    setTableOpen(false);
+  const isHoldEnabled = selectedTable !== '' || nickname.trim() !== '';
+  const currentTargetName = selectedTable || (nickname.trim() ? `"${nickname.trim()}"` : '');
+
+  const handleConfirmHold = () => {
+    const finalLabel = selectedTable || nickname.trim();
+    if (!finalLabel) return;
+    onHold(finalLabel);
   };
 
-  const pickTable = (name: string) => {
-    // Tap same table again to unselect
-    if (selectedTable === name) {
-      clearTable();
-      return;
+  const getHeaderTitle = () => {
+    switch (step) {
+      case 'tables':
+        return 'Dine-In Table';
+      case 'custom':
+        return 'Custom Note';
+      default:
+        return 'Hold Order';
     }
-    setSelectedTable(name);
-    setNickname('');
-    setTableOpen(false);
+  };
+
+  const getHeaderSubtitle = () => {
+    switch (step) {
+      case 'tables':
+        return `Select a table · ${itemCount} items (${money(orderTotal)})`;
+      case 'custom':
+        return `e.g., John, counter pickup, etc. · ${itemCount} items`;
+      default:
+        return `Select a table or a custom note · ${itemCount} items (${money(orderTotal)})`;
+    }
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="absolute inset-0 z-[70] flex items-end justify-center bg-black/55 p-2 backdrop-blur-sm sm:items-center"
+    <div
+      className="absolute inset-0 z-[80] flex items-center justify-center bg-black/60 p-2.5 sm:p-3 backdrop-blur-sm"
       onClick={onCancel}
     >
       <motion.div
-        initial={{ y: 32, opacity: 0, scale: 0.98 }}
-        animate={{ y: 0, opacity: 1, scale: 1 }}
-        exit={{ y: 24, opacity: 0 }}
-        transition={{ type: 'spring', stiffness: 360, damping: 28 }}
+        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 10 }}
+        transition={{ duration: 0.18 }}
         onClick={(e) => e.stopPropagation()}
-        className="flex max-h-[min(88%,520px)] w-[min(94%,380px)] flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl dark:border-mintcom-tertiary dark:bg-mintcom-surface"
+        className="relative flex max-h-[min(90%,490px)] w-[min(94%,440px)] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-white/10 dark:bg-mintcom-surface"
       >
-        <div className="flex shrink-0 items-center justify-between border-b border-gray-100 px-4 py-3 dark:border-white/8">
-          <div>
-            <p className="text-sm font-black text-text-primary dark:text-white">Hold order</p>
-            <p className="text-[11px] text-text-secondary dark:text-mintcom-textSecondary">
-              Select a table or enter a name · {itemCount} items · {money(orderTotal)}
+        {/* Header */}
+        <div className="flex shrink-0 items-center justify-between border-b border-gray-100 px-4 py-2.5 dark:border-white/10">
+          {step !== 'choose' ? (
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedTable('');
+                setNickname('');
+                setStep('choose');
+              }}
+              className="flex h-7 w-7 items-center justify-center rounded-lg text-text-secondary hover:bg-gray-100 dark:hover:bg-white/10"
+              title="Back"
+            >
+              <ArrowLeft size={16} />
+            </button>
+          ) : (
+            <span className="w-7" />
+          )}
+
+          <div className="flex-1 text-center">
+            <h3 className="text-[15px] font-bold text-text-primary dark:text-white">
+              {getHeaderTitle()}
+            </h3>
+            <p className="truncate text-[10.5px] text-text-secondary dark:text-mintcom-textSecondary">
+              {getHeaderSubtitle()}
             </p>
           </div>
+
           <button
             type="button"
             onClick={onCancel}
-            className="flex h-8 w-8 items-center justify-center rounded-xl bg-cream-100 dark:bg-white/10"
+            className="flex h-7 w-7 items-center justify-center rounded-full text-text-secondary hover:bg-gray-100 dark:hover:bg-white/10"
             aria-label="Close"
           >
             <X size={16} />
           </button>
         </div>
 
-        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
-          <p className="text-xs font-bold text-text-secondary dark:text-mintcom-textSecondary">
-            Choose a free table or type a guest nickname
-          </p>
-
-          <div className="flex flex-wrap gap-1.5">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-mintcom-green/15 px-2.5 py-1 text-[10px] font-bold text-mintcom-green">
-              <span className="h-1.5 w-1.5 rounded-full bg-mintcom-green" />
-              {freeCount} free
-            </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-mintcom-red/10 px-2.5 py-1 text-[10px] font-bold text-mintcom-red">
-              <span className="h-1.5 w-1.5 rounded-full bg-mintcom-red" />
-              {busyCount} held
-            </span>
-          </div>
-
-          {/* Table dropdown */}
-          <div className={nicknameMode ? 'opacity-45' : ''}>
-            <p className="mb-1.5 text-[11px] font-bold text-text-primary dark:text-white">Table number</p>
-            <div className="relative">
-              <button
-                type="button"
-                disabled={nicknameMode}
-                onClick={() => !nicknameMode && setTableOpen((v) => !v)}
-                className={`flex w-full items-center justify-between rounded-xl border px-3 py-2.5 text-start text-sm font-bold transition-colors ${
-                  tableOpen
-                    ? 'border-mintcom-green bg-mintcom-green/5'
-                    : 'border-gray-200 bg-cream-50 dark:border-white/10 dark:bg-mintcom-dark'
-                } ${nicknameMode ? 'cursor-not-allowed' : ''}`}
+        {/* Modal Body */}
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-3 sm:p-3.5">
+          <AnimatePresence mode="wait">
+            {/* ─── Step 1: Choose Step ─── */}
+            {step === 'choose' && (
+              <motion.div
+                key="choose"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+                transition={{ duration: 0.15 }}
+                className="flex flex-1 flex-col justify-center gap-2.5"
               >
-                <span
-                  className={
-                    selectedTable ? 'text-text-primary dark:text-white' : 'text-text-tertiary dark:text-mintcom-gray'
-                  }
-                >
-                  {selectedTable || 'Select a table…'}
-                </span>
-                <span className="flex items-center gap-1">
-                  {selectedTable && !nicknameMode && (
-                    <span
-                      role="button"
-                      tabIndex={0}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        clearTable();
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          clearTable();
-                        }
-                      }}
-                      className="rounded-xl p-1 text-text-tertiary hover:bg-white hover:text-mintcom-red dark:hover:bg-white/10"
-                      aria-label="Clear table"
-                    >
-                      <X size={14} />
-                    </span>
-                  )}
-                  <ChevronDown
-                    size={16}
-                    className={`text-text-tertiary transition-transform ${tableOpen ? 'rotate-180' : ''}`}
-                  />
-                </span>
-              </button>
-
-              <AnimatePresence>
-                {tableOpen && !nicknameMode && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -4 }}
-                    className="absolute inset-x-0 top-full z-20 mt-1.5 max-h-48 overflow-y-auto rounded-xl border border-gray-200 bg-white py-1 shadow-xl dark:border-mintcom-tertiary dark:bg-mintcom-surface"
-                  >
-                    {tables.map((t) => {
-                      const selected = selectedTable === t.name;
-                      return (
-                        <button
-                          key={t.name}
-                          type="button"
-                          disabled={t.used}
-                          onClick={() => pickTable(t.name)}
-                          className={`flex w-full items-center justify-between px-3 py-2.5 text-start text-sm font-bold transition-colors ${
-                            t.used
-                              ? 'cursor-not-allowed text-mintcom-red/70'
-                              : selected
-                                ? 'bg-mintcom-green/15 text-mintcom-green'
-                                : 'text-text-primary hover:bg-cream-50 dark:text-white dark:hover:bg-white/5'
-                          }`}
-                        >
-                          <span>{t.name}</span>
-                          <span className="text-[10px] font-bold uppercase tracking-wide">
-                            {t.used ? 'Held' : selected ? 'Selected · tap to clear' : 'Free'}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-            {selectedTable && (
-              <p className="mt-1.5 text-[10px] text-text-tertiary">
-                Tap the × or the same table again to unselect and type a nickname
-              </p>
-            )}
-          </div>
-
-          {/* Nickname */}
-          <div className={selectedTable ? 'opacity-45' : ''}>
-            <p className="mb-1.5 text-[11px] font-bold text-text-primary dark:text-white">
-              Or enter a nickname
-            </p>
-            <div className="relative">
-              <input
-                value={nickname}
-                onChange={(e) => {
-                  const v = e.target.value.slice(0, 40);
-                  setNickname(v);
-                  if (v.trim()) {
-                    setSelectedTable('');
-                    setTableOpen(false);
-                  }
-                }}
-                onFocus={() => {
-                  // Typing a name takes priority — clear table so field is active
-                  if (selectedTable) clearTable();
-                }}
-                placeholder="e.g. Emma, Uber Eats, Walk-in"
-                maxLength={40}
-                className="w-full rounded-xl border border-gray-200 bg-cream-50 px-3 py-2.5 pe-9 text-sm font-medium outline-none focus:border-mintcom-green dark:border-mintcom-tertiary dark:bg-mintcom-dark dark:text-white"
-              />
-              {nickname && (
+                {/* Tables Card */}
                 <button
                   type="button"
-                  onClick={() => setNickname('')}
-                  className="absolute end-2 top-1/2 -translate-y-1/2 rounded-xl p-1 text-text-tertiary hover:bg-white dark:hover:bg-white/10"
-                  aria-label="Clear nickname"
+                  onClick={() => setStep('tables')}
+                  className="group flex flex-1 flex-col justify-center rounded-2xl border-2 border-gray-200 bg-gray-50/70 p-4 text-start transition-all hover:border-mintcom-green/50 hover:bg-white active:scale-[0.99] dark:border-white/10 dark:bg-white/[0.04] dark:hover:bg-white/[0.07]"
                 >
-                  <X size={14} />
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-[15px] font-bold text-text-primary group-hover:text-mintcom-green dark:text-white">
+                        Dine-In Table
+                      </h4>
+                      <p className="mt-0.5 text-[12px] text-text-secondary dark:text-mintcom-textSecondary">
+                        Select a table
+                      </p>
+                      <div className="mt-2 flex items-center gap-3 text-[11px] font-semibold">
+                        <span className="flex items-center gap-1.5 text-mintcom-green">
+                          <span className="h-1.5 w-1.5 rounded-full bg-mintcom-green" />
+                          {freeCount} free
+                        </span>
+                        {busyCount > 0 && (
+                          <span className="flex items-center gap-1.5 text-[#D55263]">
+                            <span className="h-1.5 w-1.5 rounded-full bg-[#D55263]" />
+                            {busyCount} held
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <ChevronRight size={20} className="text-text-secondary transition-transform group-hover:translate-x-1 group-hover:text-mintcom-green" />
+                  </div>
                 </button>
-              )}
-            </div>
-            {nickname.trim() && (
-              <p className="mt-1 text-[10px] text-text-tertiary">Clear the name to pick a table instead</p>
+
+                {/* Custom Note Card */}
+                <button
+                  type="button"
+                  onClick={() => setStep('custom')}
+                  className="group flex flex-1 flex-col justify-center rounded-2xl border-2 border-gray-200 bg-gray-50/70 p-4 text-start transition-all hover:border-mintcom-green/50 hover:bg-white active:scale-[0.99] dark:border-white/10 dark:bg-white/[0.04] dark:hover:bg-white/[0.07]"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-[15px] font-bold text-text-primary group-hover:text-mintcom-green dark:text-white">
+                        Custom Note
+                      </h4>
+                      <p className="mt-0.5 text-[12px] text-text-secondary dark:text-mintcom-textSecondary">
+                        e.g., John, counter pickup, delivery, etc.
+                      </p>
+                    </div>
+                    <ChevronRight size={20} className="text-text-secondary transition-transform group-hover:translate-x-1 group-hover:text-mintcom-green" />
+                  </div>
+                </button>
+              </motion.div>
             )}
-          </div>
+
+            {/* ─── Step 2: Tables Grid Step ─── */}
+            {step === 'tables' && (
+              <motion.div
+                key="tables"
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                transition={{ duration: 0.15 }}
+                className="flex flex-1 flex-col"
+              >
+                {/* Status info row */}
+                <div className="mb-2.5 flex items-center gap-3 px-1 text-[11px] font-semibold">
+                  <span className="flex items-center gap-1.5 text-mintcom-green">
+                    <span className="h-1.5 w-1.5 rounded-full bg-mintcom-green" />
+                    {freeCount} free
+                  </span>
+                  {busyCount > 0 && (
+                    <span className="flex items-center gap-1.5 text-[#D55263]">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#D55263]" />
+                      {busyCount} held
+                    </span>
+                  )}
+                </div>
+
+                {/* Table Grid */}
+                <div className="grid flex-1 grid-cols-4 gap-2 overflow-y-auto p-1">
+                  {allTables.map((t) => {
+                    const isSelected = selectedTable === t.name;
+                    return (
+                      <button
+                        key={t.name}
+                        type="button"
+                        disabled={t.used}
+                        onClick={() => {
+                          if (isSelected) {
+                            setSelectedTable('');
+                          } else {
+                            setSelectedTable(t.name);
+                            setNickname('');
+                          }
+                        }}
+                        className={`flex aspect-square flex-col items-center justify-center rounded-xl border p-1.5 text-center transition-all ${
+                          isSelected
+                            ? 'border-2 border-mintcom-green bg-mintcom-green/15 text-mintcom-green shadow-sm'
+                            : t.used
+                              ? 'cursor-not-allowed border-red-200 bg-red-50 text-red-500 opacity-75 dark:border-red-900/40 dark:bg-red-950/25'
+                              : 'border-gray-200 bg-white hover:border-mintcom-green/50 active:scale-95 dark:border-white/10 dark:bg-mintcom-dark'
+                        }`}
+                      >
+                        <span className={`text-base font-black ${
+                          isSelected
+                            ? 'text-mintcom-green'
+                            : t.used
+                              ? 'text-red-500'
+                              : 'text-text-primary dark:text-white'
+                        }`}>
+                          {t.num}
+                        </span>
+                        <span className={`text-[9.5px] font-bold ${
+                          isSelected
+                            ? 'text-mintcom-green'
+                            : t.used
+                              ? 'text-red-500'
+                              : 'text-text-secondary dark:text-mintcom-textSecondary'
+                        }`}>
+                          {t.used ? 'Held' : isSelected ? 'Selected' : 'Free'}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
+
+            {/* ─── Step 3: Custom Note Step ─── */}
+            {step === 'custom' && (
+              <motion.div
+                key="custom"
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                transition={{ duration: 0.15 }}
+                className="flex flex-1 flex-col space-y-3"
+              >
+                {/* Guidance row */}
+                <div className="flex items-center gap-2 text-[11px] text-text-secondary dark:text-mintcom-textSecondary">
+                  <Receipt size={13} className="text-mintcom-green shrink-0" />
+                  <span>Enter a customer name or note to easily identify this held order.</span>
+                </div>
+
+                {/* Input section */}
+                <div>
+                  <div className="mb-1 flex items-center justify-between text-[11px] font-bold">
+                    <span className="text-text-primary dark:text-white">Customer Name / Note</span>
+                    <span className="text-text-secondary">{nickname.length}/40</span>
+                  </div>
+
+                  <div className="relative">
+                    <div className="flex items-center overflow-hidden rounded-xl border border-gray-200 bg-gray-50 focus-within:border-mintcom-green dark:border-white/10 dark:bg-mintcom-dark">
+                      <span className="flex h-10 w-10 items-center justify-center border-e border-gray-200 text-text-tertiary dark:border-white/10">
+                        <Pencil size={14} />
+                      </span>
+                      <input
+                        autoFocus
+                        value={nickname}
+                        onChange={(e) => {
+                          const v = e.target.value.slice(0, 40);
+                          setNickname(v);
+                          if (v.trim()) setSelectedTable('');
+                        }}
+                        placeholder="e.g., John, counter pickup, delivery, etc."
+                        maxLength={40}
+                        className="h-10 flex-1 bg-transparent px-3 text-[13px] font-medium outline-none dark:text-white"
+                      />
+                      {nickname && (
+                        <button
+                          type="button"
+                          onClick={() => setNickname('')}
+                          className="flex h-10 w-9 items-center justify-center text-text-tertiary hover:text-text-primary"
+                        >
+                          <X size={14} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Tip Card */}
+                <div className="flex items-start gap-2 rounded-xl border border-gray-200 bg-gray-50/70 p-2.5 text-[11px] text-text-secondary dark:border-white/10 dark:bg-white/[0.03] dark:text-mintcom-textSecondary">
+                  <AlertTriangle size={13} className="mt-0.5 shrink-0 text-mintcom-green" />
+                  <span>Useful for takeaway orders, counter pickups, delivery, or phone orders.</span>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
-        <div className="flex shrink-0 gap-2 border-t border-gray-100 p-4 dark:border-white/8">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="flex-1 rounded-xl border border-gray-200 py-3 text-xs font-bold text-text-secondary dark:border-white/10 dark:text-mintcom-textSecondary"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            disabled={!canHold}
-            onClick={() => canHold && onHold(holdLabel)}
-            className="flex-1 rounded-xl bg-mintcom-green py-3 text-xs font-black text-white disabled:opacity-40"
-          >
-            Hold · {canHold ? holdLabel : '…'}
-          </button>
-        </div>
+        {/* Sticky Selection Banner (steps 2 & 3 when something is picked) */}
+        {step !== 'choose' && isHoldEnabled && (
+          <div className="shrink-0 border-t border-gray-100 bg-gray-50/50 px-3 py-2 dark:border-white/10 dark:bg-mintcom-dark/50">
+            <div className="flex items-center justify-between rounded-xl border border-mintcom-green/30 bg-mintcom-green/10 px-2.5 py-1.5 text-[11px]">
+              <div className="flex min-w-0 items-center gap-1.5">
+                <CheckCircle2 size={14} className="shrink-0 text-mintcom-green" />
+                <span className="truncate text-text-secondary dark:text-mintcom-textSecondary">
+                  Holding order as:{' '}
+                  <strong className="text-mintcom-green">{currentTargetName}</strong>
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedTable('');
+                  setNickname('');
+                }}
+                className="ms-2 rounded-lg p-0.5 text-text-tertiary hover:text-text-primary"
+                title="Clear selection"
+              >
+                <X size={12} />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Modal Footer (steps 2 & 3) */}
+        {step !== 'choose' && (
+          <div className="flex shrink-0 gap-2 border-t border-gray-100 p-2.5 sm:p-3 dark:border-white/10">
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedTable('');
+                setNickname('');
+                setStep('choose');
+              }}
+              className="flex h-10 items-center justify-center gap-1.5 rounded-xl border border-gray-200 px-3.5 text-[12px] font-bold text-text-secondary transition-colors hover:bg-gray-50 dark:border-white/10 dark:text-mintcom-textSecondary dark:hover:bg-white/5"
+            >
+              <ArrowLeft size={15} />
+              <span>Back</span>
+            </button>
+            <button
+              type="button"
+              disabled={!isHoldEnabled}
+              onClick={handleConfirmHold}
+              className="flex h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-mintcom-green text-[12.5px] font-bold text-white shadow-sm transition-colors hover:bg-mintcom-green/90 disabled:opacity-45"
+            >
+              <PauseCircle size={16} />
+              <span>Hold Order</span>
+            </button>
+          </div>
+        )}
       </motion.div>
-    </motion.div>
+    </div>
+  );
+}
+
+/**
+ * Sidebar toggle icon (mirrors mintcom-pos SidebarToggleIcon.tsx exactly)
+ * - isMinimized=false: sidebar open -> arrow points right (>) towards sidebar to minimize it
+ * - isMinimized=true: sidebar minimized -> arrow points left (<) out from sidebar to expand it
+ */
+function SidebarToggleIcon({
+  isMinimized = false,
+  size = 18,
+  color = 'currentColor',
+  strokeWidth = 2,
+  className = '',
+}: {
+  isMinimized?: boolean;
+  size?: number;
+  color?: string;
+  strokeWidth?: number;
+  className?: string;
+}) {
+  const dividerX = 15;
+  const arrowPath = !isMinimized ? 'M 8 9 L 11 12 L 8 15' : 'M 11 9 L 8 12 L 11 15';
+
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <rect x="3" y="3" width="18" height="18" rx="4" ry="4" />
+      <line x1={dividerX} y1="3" x2={dividerX} y2="21" />
+      <path d={arrowPath} />
+    </svg>
   );
 }
 
@@ -4868,6 +5418,7 @@ function DemoNoteModal({
               <div className="flex gap-2">
                 {(
                   [
+                    { id: 'dine-in' as const, label: 'Dine-In', Icon: Utensils },
                     { id: 'takeaway' as const, label: 'Takeaway', Icon: ShoppingBag },
                     { id: 'delivery' as const, label: 'Delivery', Icon: Truck },
                   ] as const
@@ -4955,59 +5506,142 @@ function payMethodLabel(m: PayMethod | null) {
   return '—';
 }
 
-/** Tax rate modal — mintcom-pos TaxSelectionModal (ATM % entry) */
+/** Tax selection — mirrors mintcom-pos/src/components/TaxSelectionModal.tsx */
 function TaxRateModal({
   open,
   currentRate,
   defaultRate,
+  taxes,
   onClose,
   onSelect,
 }: {
   open: boolean;
   currentRate: number;
   defaultRate: number;
+  taxes?: DemoTaxRate[];
   onClose: () => void;
-  onSelect: (rate: number) => void;
+  onSelect: (rate: number, taxName?: string, taxId?: string) => void;
 }) {
-  const MAX_CENTS = 10000; // 100.00%
-  const [cents, setCents] = useState(() =>
-    Math.min(Math.round(currentRate * 100), MAX_CENTS),
+  const MAX_RATE_CENTS = 10000; // 100.00%
+  const QUICK_PERCENTAGES = [0, 5, 10, 16];
+
+  const configuredTaxes = useMemo(() => {
+    if (taxes && taxes.length > 0) {
+      return taxes.map((t) => {
+        const r = Number(t.rate);
+        const ratePercent = r <= 1 && r > 0 ? Number((r * 100).toFixed(2)) : r;
+        return {
+          id: t.id,
+          name: t.name,
+          rate: r,
+          ratePercent,
+          isDefault: Boolean(t.isDefault),
+        };
+      });
+    }
+    return [
+      { id: 'tax-default', name: 'Sales Tax', rate: defaultRate / 100, ratePercent: defaultRate, isDefault: true },
+      { id: 'tax-special', name: 'Special Tax', rate: 0.05, ratePercent: 5, isDefault: false },
+      { id: 'tax-zero', name: 'Zero-Rated / Exempt', rate: 0, ratePercent: 0, isDefault: false },
+    ];
+  }, [taxes, defaultRate]);
+
+  const [taxCents, setTaxCents] = useState(() =>
+    Math.min(Math.round(currentRate * 100), MAX_RATE_CENTS),
   );
+  const [selectedTaxId, setSelectedTaxId] = useState<string | null>(null);
+  const [selectedTaxName, setSelectedTaxName] = useState<string | null>(null);
+
+  const currentNumericPercent = taxCents / 100;
+  const taxInput = currentNumericPercent.toFixed(2);
+  const isTaxEmpty = taxCents === 0;
+  const isAtDefault = Math.abs(currentNumericPercent - defaultRate) < 0.0001;
 
   useEffect(() => {
-    if (open) setCents(Math.min(Math.round(currentRate * 100), MAX_CENTS));
-  }, [open, currentRate]);
+    if (open) {
+      const initialCents = Math.min(Math.max(Math.round(currentRate * 100), 0), MAX_RATE_CENTS);
+      setTaxCents(initialCents);
+      const currPct = initialCents / 100;
+      const match = configuredTaxes.find((ct) => Math.abs(ct.ratePercent - currPct) < 0.001);
+      if (match) {
+        setSelectedTaxId(match.id);
+        setSelectedTaxName(match.name);
+      } else {
+        setSelectedTaxId(null);
+        setSelectedTaxName(null);
+      }
+    }
+  }, [open, currentRate, configuredTaxes]);
+
+  // Synchronize matching preset selection whenever configured taxes or taxCents change
+  useEffect(() => {
+    if (configuredTaxes.length > 0) {
+      const match = configuredTaxes.find(
+        (ct) => Math.abs(ct.ratePercent - currentNumericPercent) < 0.001,
+      );
+      if (match) {
+        setSelectedTaxId(match.id);
+        setSelectedTaxName(match.name);
+      } else {
+        setSelectedTaxId(null);
+        setSelectedTaxName(null);
+      }
+    }
+  }, [configuredTaxes, currentNumericPercent]);
 
   if (!open) return null;
 
-  const display = (cents / 100).toFixed(2);
-  const isEmpty = cents === 0;
-  const isAtDefault = Math.abs(cents / 100 - defaultRate) < 0.0001;
+  const handleSelectPreset = (tax: { id: string; name: string; ratePercent: number }) => {
+    const cents = Math.min(Math.max(Math.round(tax.ratePercent * 100), 0), MAX_RATE_CENTS);
+    setTaxCents(cents);
+    setSelectedTaxId(tax.id);
+    setSelectedTaxName(tax.name);
+  };
 
-  const onChangeDigits = (raw: string) => {
-    const digits = raw.replace(/\D/g, '');
-    if (!digits) {
-      setCents(0);
+  const handleTaxTextChange = (text: string) => {
+    const digitsOnly = text.replace(/\D/g, '');
+    if (digitsOnly === '') {
+      setTaxCents(0);
+      setSelectedTaxId(null);
+      setSelectedTaxName(null);
       return;
     }
-    const n = parseInt(digits.replace(/^0+(?=\d)/, '') || '0', 10);
-    if (n > MAX_CENTS) return;
-    setCents(n);
+    const significantDigits = digitsOnly.replace(/^0+(?=\d)/, '');
+    const newCents = parseInt(significantDigits || '0', 10);
+    if (newCents > MAX_RATE_CENTS) return;
+    setTaxCents(newCents);
+  };
+
+  const handleQuickPercent = (pct: number) => {
+    const cents = Math.min(Math.max(Math.round(pct * 100), 0), MAX_RATE_CENTS);
+    setTaxCents(cents);
+  };
+
+  const handleResetToDefault = () => {
+    const cents = Math.min(Math.max(Math.round(defaultRate * 100), 0), MAX_RATE_CENTS);
+    setTaxCents(cents);
+  };
+
+  const handleApply = () => {
+    const rate = Number((taxCents / 100).toFixed(2));
+    onSelect(rate, selectedTaxName || undefined, selectedTaxId || undefined);
+    onClose();
   };
 
   return (
     <div
-      className="absolute inset-0 z-[110] flex items-center justify-center bg-black/50 p-3"
+      className="absolute inset-0 z-[110] flex items-center justify-center bg-black/60 p-3"
       onClick={onClose}
     >
       <motion.div
         initial={{ opacity: 0, y: 12, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-[360px] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl dark:border-white/10 dark:bg-mintcom-surface"
+        className="w-full max-w-[420px] max-h-[90vh] flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-white/10 dark:bg-mintcom-surface"
       >
-        <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3 dark:border-white/8">
-          <p className="text-[15px] font-bold text-text-primary dark:text-white">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4 dark:border-white/8">
+          <p className="text-base font-bold text-text-primary dark:text-white">
             Change Tax Rate
           </p>
           <button
@@ -5018,62 +5652,145 @@ function TaxRateModal({
             <X size={20} />
           </button>
         </div>
-        <div className="space-y-2.5 px-4 pb-4 pt-3">
-          <p className="text-[12px] font-medium text-text-secondary">
-            Enter Tax Percentage (%)
-          </p>
-          <div className="flex overflow-hidden rounded-xl border border-gray-200 bg-[#F9FAFB] dark:border-white/10 dark:bg-mintcom-dark">
-            <div className="flex items-center justify-center border-e border-gray-200 bg-mintcom-green/15 px-3 dark:border-white/10">
-              <span className="text-base font-black text-mintcom-green">%</span>
+
+        {/* Scrollable content */}
+        <div className="flex-1 overflow-y-auto p-5 space-y-4">
+          {/* Section 1: Choose from Configured Rates (mirrors POS presetsGrid) */}
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-text-secondary dark:text-mintcom-textSecondary">
+              Choose from Configured Rates
+            </p>
+            <div className="space-y-2">
+              {configuredTaxes.map((tax) => {
+                const isSelected =
+                  selectedTaxId === tax.id ||
+                  (!selectedTaxId && Math.abs(tax.ratePercent - currentNumericPercent) < 0.001);
+
+                return (
+                  <button
+                    key={tax.id}
+                    type="button"
+                    onClick={() => handleSelectPreset(tax)}
+                    className={`flex w-full items-center justify-between rounded-xl border p-3 text-start transition-all ${
+                      isSelected
+                        ? 'border-mintcom-green bg-mintcom-green/[0.09] shadow-sm dark:bg-mintcom-green/15'
+                        : 'border-gray-200 bg-gray-50/60 hover:bg-gray-100/60 dark:border-white/10 dark:bg-mintcom-dark'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span
+                        className={`truncate text-sm font-bold ${
+                          isSelected ? 'text-mintcom-green' : 'text-text-primary dark:text-white'
+                        }`}
+                      >
+                        {tax.name}
+                      </span>
+                      {tax.isDefault && (
+                        <span className="text-[11px] font-semibold text-text-tertiary">
+                          (Default)
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span
+                        className={`rounded-lg px-2.5 py-1 text-xs font-black tabular-nums ${
+                          isSelected
+                            ? 'bg-mintcom-green text-white'
+                            : 'bg-gray-200/80 text-text-secondary dark:bg-white/10 dark:text-gray-300'
+                        }`}
+                      >
+                        {tax.ratePercent}%
+                      </span>
+                      {isSelected && (
+                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-mintcom-green text-white">
+                          <Check size={12} strokeWidth={3} />
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
-            <input
-              inputMode="numeric"
-              value={display}
-              onChange={(e) => onChangeDigits(e.target.value)}
-              className={`w-full bg-transparent px-3 py-3.5 text-2xl font-black tabular-nums outline-none dark:text-white ${
-                isEmpty ? 'text-text-tertiary' : 'text-text-primary'
-              }`}
-              autoFocus
-            />
           </div>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => onSelect(0)}
-              className="flex-1 rounded-xl border border-gray-200 py-2.5 text-[13px] font-bold dark:border-white/10 dark:text-white"
-            >
-              0%
-            </button>
-            <button
-              type="button"
-              onClick={() => onSelect(16)}
-              className="flex-1 rounded-xl border border-gray-200 py-2.5 text-[13px] font-bold dark:border-white/10 dark:text-white"
-            >
-              16%
-            </button>
-            <button
-              type="button"
-              onClick={() => onSelect(defaultRate)}
-              className="flex-1 rounded-xl border border-gray-200 py-2.5 text-[13px] font-bold dark:border-white/10 dark:text-white"
-            >
-              {defaultRate}%
-            </button>
+
+          {/* Section 2: Custom Tax Percentage (mirrors POS ATM card + quick chips) */}
+          <div className="pt-2 border-t border-gray-100 dark:border-white/8">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-semibold uppercase tracking-wider text-text-secondary dark:text-mintcom-textSecondary">
+                Custom Tax Percentage (%)
+              </p>
+              {selectedTaxName && (
+                <span className="inline-flex items-center rounded-md bg-mintcom-green/15 px-2 py-0.5 text-[11px] font-bold text-mintcom-green">
+                  {selectedTaxName}
+                </span>
+              )}
+            </div>
+
+            {/* ATM-style Input */}
+            <div className="flex overflow-hidden rounded-xl border border-gray-200 bg-gray-50/80 dark:border-white/10 dark:bg-mintcom-dark">
+              <div className="flex items-center justify-center border-e border-gray-200 bg-mintcom-green/15 px-3.5 dark:border-white/10">
+                <span className="text-base font-black text-mintcom-green">%</span>
+              </div>
+              <input
+                inputMode="numeric"
+                value={taxInput}
+                onChange={(e) => handleTaxTextChange(e.target.value)}
+                className={`w-full bg-transparent px-3 py-3 text-2xl font-black tabular-nums outline-none dark:text-white ${
+                  isTaxEmpty ? 'text-text-tertiary' : 'text-text-primary'
+                }`}
+              />
+            </div>
+
+            {/* Quick Selection Buttons */}
+            <div className="mt-2.5 grid grid-cols-4 gap-2">
+              {QUICK_PERCENTAGES.map((pct) => {
+                const isSelected = Math.abs(currentNumericPercent - pct) < 0.001;
+                return (
+                  <button
+                    key={pct}
+                    type="button"
+                    onClick={() => handleQuickPercent(pct)}
+                    className={`rounded-xl border py-2 text-xs font-extrabold transition-colors ${
+                      isSelected
+                        ? 'border-mintcom-green bg-mintcom-green/15 text-mintcom-green dark:bg-mintcom-green/25'
+                        : 'border-gray-200 bg-white hover:bg-gray-50 text-text-primary dark:border-white/10 dark:bg-mintcom-surface dark:text-white'
+                    }`}
+                  >
+                    {pct}%
+                  </button>
+                );
+              })}
+            </div>
           </div>
+
+          {/* Reset to Default Button */}
           <button
             type="button"
             disabled={isAtDefault}
-            onClick={() => onSelect(defaultRate)}
-            className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 py-2.5 text-[12px] font-bold text-text-secondary disabled:opacity-40 dark:border-white/10"
+            onClick={handleResetToDefault}
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 py-2.5 text-xs font-bold text-text-secondary transition-opacity disabled:opacity-40 hover:bg-gray-50 dark:border-white/10 dark:hover:bg-white/5"
           >
-            <RotateCcw size={14} />
-            Reset to default ({defaultRate}%)
+            <RotateCcw size={13} className={isAtDefault ? 'text-text-tertiary' : 'text-mintcom-green'} />
+            <span>Reset to default ({defaultRate}%)</span>
+          </button>
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center gap-2.5 border-t border-gray-100 p-4 dark:border-white/8">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 rounded-xl border border-gray-200 py-2.5 text-sm font-bold text-text-secondary hover:bg-gray-50 dark:border-white/10 dark:hover:bg-white/5"
+          >
+            Cancel
           </button>
           <button
             type="button"
-            onClick={() => onSelect(cents / 100)}
-            className="w-full rounded-xl bg-mintcom-green py-3 text-[14px] font-extrabold text-white"
+            onClick={handleApply}
+            className="flex-1 rounded-xl bg-mintcom-green py-2.5 text-sm font-extrabold text-white shadow-sm hover:bg-mintcom-green/90"
           >
-            Apply
+            Apply Tax
           </button>
         </div>
       </motion.div>
@@ -5081,7 +5798,7 @@ function TaxRateModal({
   );
 }
 
-/** Service charge override — mintcom-pos ServiceChargeModal */
+/** Service charge override — mirrors mintcom-pos/src/components/ServiceChargeModal.tsx */
 function ServiceChargeEditModal({
   open,
   amount,
@@ -5109,143 +5826,278 @@ function ServiceChargeEditModal({
   onRemove: () => void;
   onCustom: (type: 'PERCENTAGE' | 'FIXED', value: number) => void;
 }) {
-  const [type, setType] = useState(customType);
-  const [cents, setCents] = useState(() => Math.round(customValue * 100));
+  const PERCENTAGE_PRESETS = [0, 5, 10, 12, 15, 20];
+  const [cType, setCType] = useState<'PERCENTAGE' | 'FIXED'>(customType);
+  const [cValue, setCValue] = useState(String(customValue));
 
   useEffect(() => {
     if (!open) return;
-    setType(customType);
-    setCents(Math.round(customValue * 100));
-  }, [open, customType, customValue]);
+    if (mode === 'CUSTOM') {
+      setCType(customType);
+      setCValue(String(customValue));
+    } else {
+      setCType(defaultType);
+      setCValue(String(defaultValue));
+    }
+  }, [open, mode, customType, customValue, defaultType, defaultValue]);
 
   if (!open) return null;
 
-  const display =
-    type === 'PERCENTAGE'
-      ? (cents / 100).toFixed(2)
-      : (cents / 100).toFixed(2);
+  const defaultSubtitle =
+    defaultType === 'PERCENTAGE' ? `${defaultValue}%` : money(defaultValue);
 
-  const pushCustom = (nextType: 'PERCENTAGE' | 'FIXED', nextCents: number) => {
-    const v =
-      nextType === 'PERCENTAGE'
-        ? Math.min(100, nextCents / 100)
-        : nextCents / 100;
-    onCustom(nextType, v);
+  const handleTypeChange = (nextType: 'PERCENTAGE' | 'FIXED') => {
+    setCType(nextType);
+    const num = parseFloat(cValue) || 0;
+    const norm = nextType === 'PERCENTAGE' ? Math.min(num, 100) : num;
+    onCustom(nextType, norm);
   };
 
-  const opt = (selected: boolean) =>
-    `flex-1 rounded-xl border-2 py-2.5 text-center text-[12px] font-extrabold transition-colors ${
-      selected
-        ? 'border-mintcom-green bg-mintcom-green text-white'
-        : 'border-gray-200 bg-white text-text-secondary dark:border-white/10 dark:bg-mintcom-dark dark:text-white'
-    }`;
+  const handleValueChange = (valText: string) => {
+    const sanitized = valText.replace(/[^0-9.]/g, '');
+    const firstDot = sanitized.indexOf('.');
+    const nextValue =
+      firstDot === -1
+        ? sanitized
+        : `${sanitized.slice(0, firstDot + 1)}${sanitized.slice(firstDot + 1).replace(/\./g, '')}`;
+    setCValue(nextValue);
+    const num = parseFloat(nextValue) || 0;
+    const norm = cType === 'PERCENTAGE' ? Math.min(num, 100) : num;
+    onCustom(cType, norm);
+  };
+
+  const handlePresetSelect = (preset: number) => {
+    setCValue(String(preset));
+    onCustom(cType, preset);
+  };
 
   return (
     <div
-      className="absolute inset-0 z-[110] flex items-center justify-center bg-black/50 p-3"
+      className="absolute inset-0 z-[110] flex items-center justify-center bg-black/60 p-3"
       onClick={onClose}
     >
       <motion.div
         initial={{ opacity: 0, y: 12, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-[380px] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl dark:border-white/10 dark:bg-mintcom-surface"
+        className="w-full max-w-[420px] max-h-[90vh] flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-white/10 dark:bg-mintcom-surface"
       >
-        <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3 dark:border-white/8">
-          <div className="min-w-0">
-            <p className="text-[15px] font-bold text-text-primary dark:text-white">
-              {chargeName}
-            </p>
-            <p className="text-[13px] font-extrabold tabular-nums text-mintcom-green">
-              {money(amount)}
-            </p>
+        {/* Header (mirrors POS modalHeader) */}
+        <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4 dark:border-white/8">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-mintcom-green/15 text-mintcom-green">
+              <UtensilsCrossed size={19} />
+            </div>
+            <div>
+              <p className="text-base font-bold text-text-primary dark:text-white leading-tight">
+                {chargeName}
+              </p>
+              <p className="text-xs text-text-secondary dark:text-mintcom-textSecondary">
+                Fee Adjustment
+              </p>
+            </div>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-xl p-1.5 text-text-secondary hover:bg-cream-100 dark:hover:bg-white/10"
-          >
-            <X size={20} />
-          </button>
+
+          <div className="flex items-center gap-2">
+            <span
+              className={`rounded-full px-2.5 py-1 text-xs font-bold tabular-nums border ${
+                amount > 0
+                  ? 'border-mintcom-green/40 bg-mintcom-green/15 text-mintcom-green'
+                  : 'border-gray-200 bg-gray-100 text-text-secondary dark:border-white/10 dark:bg-white/5 dark:text-gray-400'
+              }`}
+            >
+              {amount > 0 ? `+ ${money(amount)}` : money(0)}
+            </span>
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-xl p-1.5 text-text-secondary hover:bg-cream-100 dark:hover:bg-white/10"
+            >
+              <X size={20} />
+            </button>
+          </div>
         </div>
-        <div className="space-y-3 p-4">
-          <div className="flex gap-2">
+
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto p-5 space-y-4">
+          {/* 3 Mode Option Cards (cardsRow) */}
+          <div className="grid grid-cols-3 gap-2">
+            {/* 1. Default Option */}
             <button
               type="button"
               onClick={onApplyDefault}
-              className={opt(mode === 'DEFAULT')}
+              className={`flex flex-col items-center justify-center rounded-xl border p-3 text-center transition-all ${
+                mode === 'DEFAULT'
+                  ? 'border-2 border-mintcom-green bg-mintcom-green/10 text-mintcom-green shadow-sm'
+                  : 'border-gray-200 bg-gray-50/60 hover:bg-gray-100/60 text-text-primary dark:border-white/10 dark:bg-mintcom-dark dark:text-white'
+              }`}
             >
-              Default (
-              {defaultType === 'PERCENTAGE'
-                ? `${defaultValue}%`
-                : money(defaultValue)}
-              )
+              <span className="text-sm font-extrabold truncate w-full">
+                {defaultSubtitle}
+              </span>
+              <span className="mt-0.5 text-[10px] font-semibold text-text-secondary dark:text-mintcom-textSecondary">
+                Default
+              </span>
             </button>
-            <button type="button" onClick={onRemove} className={opt(mode === 'NONE')}>
-              None
-            </button>
+
+            {/* 2. No Charge Option */}
             <button
               type="button"
-              onClick={() => pushCustom(type, cents)}
-              className={opt(mode === 'CUSTOM')}
+              onClick={onRemove}
+              className={`flex flex-col items-center justify-center rounded-xl border p-3 text-center transition-all ${
+                mode === 'NONE'
+                  ? 'border-2 border-mintcom-green bg-mintcom-green/10 text-mintcom-green shadow-sm'
+                  : 'border-gray-200 bg-gray-50/60 hover:bg-gray-100/60 text-text-primary dark:border-white/10 dark:bg-mintcom-dark dark:text-white'
+              }`}
             >
-              Custom
+              <span className="text-sm font-extrabold truncate w-full">
+                No Charge
+              </span>
+              <span className="mt-0.5 text-[10px] font-semibold text-text-secondary dark:text-mintcom-textSecondary">
+                Waived
+              </span>
+            </button>
+
+            {/* 3. Custom Option */}
+            <button
+              type="button"
+              onClick={() => {
+                const num = parseFloat(cValue) || 0;
+                onCustom(cType, num);
+              }}
+              className={`flex flex-col items-center justify-center rounded-xl border p-3 text-center transition-all ${
+                mode === 'CUSTOM'
+                  ? 'border-2 border-mintcom-green bg-mintcom-green/10 text-mintcom-green shadow-sm'
+                  : 'border-gray-200 bg-gray-50/60 hover:bg-gray-100/60 text-text-primary dark:border-white/10 dark:bg-mintcom-dark dark:text-white'
+              }`}
+            >
+              <span className="text-sm font-extrabold truncate w-full">
+                Custom
+              </span>
+              <span className="mt-0.5 text-[10px] font-semibold text-text-secondary dark:text-mintcom-textSecondary">
+                Adjust
+              </span>
             </button>
           </div>
 
+          {/* Context details section */}
+          {mode === 'DEFAULT' && (
+            <div className="flex items-start gap-3 rounded-xl border border-mintcom-green/20 bg-mintcom-green/[0.08] p-3.5 dark:bg-mintcom-green/10">
+              <Info size={17} className="mt-0.5 shrink-0 text-mintcom-green" />
+              <div>
+                <p className="text-xs font-bold text-text-primary dark:text-white">
+                  Establishment Default Applied
+                </p>
+                <p className="mt-0.5 text-xs text-text-secondary dark:text-mintcom-textSecondary">
+                  Using the store standard rate of {defaultSubtitle}.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {mode === 'NONE' && (
+            <div className="flex items-start gap-3 rounded-xl border border-gray-200 bg-gray-50/70 p-3.5 dark:border-white/10 dark:bg-white/5">
+              <CheckCircle2 size={17} className="mt-0.5 shrink-0 text-mintcom-green" />
+              <div>
+                <p className="text-xs font-bold text-text-primary dark:text-white">
+                  Service Charge Waived
+                </p>
+                <p className="mt-0.5 text-xs text-text-secondary dark:text-mintcom-textSecondary">
+                  No service charge will be added to this current order.
+                </p>
+              </div>
+            </div>
+          )}
+
           {mode === 'CUSTOM' && (
-            <>
-              <div className="flex gap-2">
+            <div className="rounded-xl border border-gray-200 bg-gray-50/50 p-4 dark:border-white/10 dark:bg-mintcom-dark space-y-3.5">
+              {/* Type toggle */}
+              <div className="flex rounded-xl border border-gray-200 bg-white p-1 dark:border-white/10 dark:bg-mintcom-surface">
                 <button
                   type="button"
-                  onClick={() => {
-                    setType('PERCENTAGE');
-                    pushCustom('PERCENTAGE', cents);
-                  }}
-                  className={opt(type === 'PERCENTAGE')}
+                  onClick={() => handleTypeChange('PERCENTAGE')}
+                  className={`flex-1 rounded-lg py-2 text-xs font-extrabold transition-colors ${
+                    cType === 'PERCENTAGE'
+                      ? 'bg-mintcom-green text-white shadow-sm'
+                      : 'text-text-secondary hover:text-text-primary dark:text-mintcom-textSecondary dark:hover:text-white'
+                  }`}
                 >
-                  %
+                  % Percentage
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
-                    setType('FIXED');
-                    pushCustom('FIXED', cents);
-                  }}
-                  className={opt(type === 'FIXED')}
+                  onClick={() => handleTypeChange('FIXED')}
+                  className={`flex-1 rounded-lg py-2 text-xs font-extrabold transition-colors ${
+                    cType === 'FIXED'
+                      ? 'bg-mintcom-green text-white shadow-sm'
+                      : 'text-text-secondary hover:text-text-primary dark:text-mintcom-textSecondary dark:hover:text-white'
+                  }`}
                 >
-                  Fixed $
+                  $ Fixed Amount
                 </button>
               </div>
-              <div className="flex overflow-hidden rounded-xl border border-gray-200 bg-[#F9FAFB] dark:border-white/10 dark:bg-mintcom-dark">
-                <div className="flex items-center justify-center border-e border-gray-200 bg-mintcom-green/15 px-3 dark:border-white/10">
-                  <span className="text-base font-black text-mintcom-green">
-                    {type === 'PERCENTAGE' ? '%' : '$'}
+
+              {/* Value Input */}
+              <div className="flex items-center overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/10 dark:bg-mintcom-surface">
+                <div className="flex h-11 w-11 items-center justify-center border-e border-gray-200 bg-mintcom-green/15 dark:border-white/10">
+                  <span className="text-sm font-black text-mintcom-green">
+                    {cType === 'PERCENTAGE' ? '%' : '$'}
                   </span>
                 </div>
                 <input
-                  inputMode="numeric"
-                  value={display}
-                  onChange={(e) => {
-                    const digits = e.target.value.replace(/\D/g, '');
-                    const n = digits === '' ? 0 : parseInt(digits, 10);
-                    const capped =
-                      type === 'PERCENTAGE' ? Math.min(10000, n) : Math.min(99999999, n);
-                    setCents(capped);
-                    pushCustom(type, capped);
-                  }}
-                  className="w-full bg-transparent px-3 py-3 text-xl font-black tabular-nums outline-none dark:text-white"
+                  type="text"
+                  inputMode="decimal"
+                  value={cValue}
+                  onChange={(e) => handleValueChange(e.target.value)}
+                  placeholder="0"
+                  className="w-full bg-transparent px-3 py-2 text-lg font-bold tabular-nums outline-none dark:text-white"
                 />
+                {cValue.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => handleValueChange('')}
+                    className="p-2 text-text-tertiary hover:text-text-primary"
+                  >
+                    <X size={16} />
+                  </button>
+                )}
               </div>
-            </>
-          )}
 
+              {/* Quick Presets (when Percentage) */}
+              {cType === 'PERCENTAGE' && (
+                <div className="grid grid-cols-6 gap-1.5 pt-1">
+                  {PERCENTAGE_PRESETS.map((preset) => {
+                    const isPresetActive = Number(cValue) === preset;
+                    return (
+                      <button
+                        key={preset}
+                        type="button"
+                        onClick={() => handlePresetSelect(preset)}
+                        className={`rounded-lg border py-2 text-xs font-extrabold transition-colors ${
+                          isPresetActive
+                            ? 'border-mintcom-green bg-mintcom-green text-white shadow-sm'
+                            : 'border-gray-200 bg-white text-text-primary hover:bg-gray-100/60 dark:border-white/10 dark:bg-mintcom-surface dark:text-white'
+                        }`}
+                      >
+                        {preset}%
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="border-t border-gray-100 p-4 dark:border-white/8">
           <button
             type="button"
             onClick={onClose}
-            className="w-full rounded-xl bg-mintcom-green py-3 text-[14px] font-extrabold text-white"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-mintcom-green py-3 text-sm font-extrabold text-white shadow-md transition-colors hover:bg-mintcom-green/90"
           >
-            Done
+            <Check size={18} strokeWidth={2.5} />
+            <span>Done</span>
           </button>
         </div>
       </motion.div>
@@ -5261,9 +6113,13 @@ function ServiceChargeEditModal({
 function PaymentCheckoutPanel({
   cart,
   orderNo,
+  orderType,
   orderNote = '',
   subtotal,
   discount,
+  discountPct,
+  serviceChargeAmount = 0,
+  serviceChargeName = 'Service Charge',
   tax,
   taxRate = 8,
   total,
@@ -5271,6 +6127,7 @@ function PaymentCheckoutPanel({
   onClose,
   onComplete,
   staffName = 'Cashier',
+  businessName,
 }: {
   cart: CartLine[];
   orderNo: number;
@@ -5279,6 +6136,8 @@ function PaymentCheckoutPanel({
   subtotal: number;
   discount: number;
   discountPct: number;
+  serviceChargeAmount?: number;
+  serviceChargeName?: string;
   tax: number;
   taxRate?: number;
   total: number;
@@ -5363,6 +6222,11 @@ function PaymentCheckoutPanel({
   };
 
   const setExact = () => setTenderedCents(Math.round(amountDue * 100));
+  const smartCashSuggestions = useMemo(
+    () => getSmartQuickCashSuggestions(amountDue),
+    [amountDue],
+  );
+  const diff = Math.round((tendered - amountDue) * 100) / 100;
 
   const receiptLines = (
     <div className="flex h-full min-h-0 flex-col bg-white dark:bg-mintcom-surface">
@@ -5442,15 +6306,27 @@ function PaymentCheckoutPanel({
             <span className="text-[11px] font-medium text-text-secondary">USD</span>
           </span>
         </div>
+        {discount > 0 && (
+          <div className="flex justify-between text-text-secondary">
+            <span>Discount</span>
+            <span className="tabular-nums font-semibold text-[#D55263]">
+              -{discount.toFixed(2)}{' '}
+              <span className="text-[11px] font-medium text-text-secondary">USD</span>
+            </span>
+          </div>
+        )}
+        {serviceChargeAmount > 0 && (
+          <div className="flex justify-between text-text-secondary">
+            <span>{serviceChargeName || 'Service Charge'}</span>
+            <span className="tabular-nums font-semibold text-text-primary dark:text-white">
+              {serviceChargeAmount.toFixed(2)}{' '}
+              <span className="text-[11px] font-medium text-text-secondary">USD</span>
+            </span>
+          </div>
+        )}
+        {/* Tax group (matching POS PaymentPanel) */}
         <div className="flex justify-between text-text-secondary">
-          <span>Discount</span>
-          <span className="tabular-nums font-semibold text-text-primary dark:text-white">
-            -{discount.toFixed(2)}{' '}
-            <span className="text-[11px] font-medium text-text-secondary">USD</span>
-          </span>
-        </div>
-        <div className="flex justify-between text-text-secondary">
-          <span>Tax ({taxRate}%)</span>
+          <span>{taxRate === 0 ? 'No Tax' : `Tax (${taxRate}%)`}</span>
           <span className="tabular-nums font-semibold text-text-primary dark:text-white">
             {tax.toFixed(2)}{' '}
             <span className="text-[11px] font-medium text-text-secondary">USD</span>
@@ -5512,19 +6388,34 @@ function PaymentCheckoutPanel({
           />
         </div>
         <div className="mt-2 flex justify-center">
-          <span className="inline-flex items-center gap-1 rounded-full bg-mintcom-green/15 px-2.5 py-1 text-[11px] font-bold text-mintcom-green">
-            $ Amount Due {amountDue.toFixed(2)} USD
-          </span>
+          {tendered === 0 ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-mintcom-green/15 px-2.5 py-1 text-[11px] font-bold text-mintcom-green">
+              Amount Due {amountDue.toFixed(2)} USD
+            </span>
+          ) : diff === 0 ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-mintcom-green/15 px-2.5 py-1 text-[11px] font-bold text-mintcom-green">
+              Exact Amount
+            </span>
+          ) : diff > 0 ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-mintcom-green/15 px-2.5 py-1 text-[11px] font-bold text-mintcom-green">
+              Change: {diff.toFixed(2)} USD
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2.5 py-1 text-[11px] font-bold text-amber-600 dark:text-amber-400">
+              Short by: {Math.abs(diff).toFixed(2)} USD
+            </span>
+          )}
         </div>
       </div>
 
-      {/* Exact + presets — fixed equal height chips */}
+      {/* Exact + dynamic smart cash suggestions strictly >= total (mirrors POS getSmartQuickCashSuggestions) */}
       <div className="mb-2 flex shrink-0 gap-1.5">
         {[
           { label: 'Exact', onClick: setExact },
-          { label: '10', onClick: () => setTenderedCents(1000) },
-          { label: '20', onClick: () => setTenderedCents(2000) },
-          { label: '50', onClick: () => setTenderedCents(5000) },
+          ...smartCashSuggestions.map((val) => ({
+            label: `${val}`,
+            onClick: () => setTenderedCents(Math.round(val * 100)),
+          })),
         ].map((b) => (
           <button
             key={b.label}
@@ -5779,11 +6670,25 @@ function PaymentCheckoutPanel({
  */
 function SplitPaymentDemoModal({
   cart,
+  orderNo = 1,
+  subtotal,
+  discount = 0,
+  serviceChargeAmount = 0,
+  serviceChargeName = 'Service Charge',
+  tax = 0,
+  taxRate = 16,
   total,
   onClose,
   onComplete,
 }: {
   cart: CartLine[];
+  orderNo?: number;
+  subtotal?: number;
+  discount?: number;
+  serviceChargeAmount?: number;
+  serviceChargeName?: string;
+  tax?: number;
+  taxRate?: number;
   total: number;
   onClose: () => void;
   onComplete: (
@@ -5887,6 +6792,15 @@ function SplitPaymentDemoModal({
       minute: '2-digit',
     });
 
+    const shareRatio = total > 0 ? shareAmount / total : 1 / splitPayments.length;
+    const cartItemsTotal = cart.reduce((sum, l) => sum + l.unitPrice * l.qty, 0);
+    const effectiveSubtotal = subtotal !== undefined ? subtotal : cartItemsTotal;
+    const shareSubtotal = Math.round(effectiveSubtotal * shareRatio * 100) / 100;
+    const shareDiscount = Math.round(discount * shareRatio * 100) / 100;
+    const shareServiceCharge = Math.round(serviceChargeAmount * shareRatio * 100) / 100;
+    const shareTax = Math.round(tax * shareRatio * 100) / 100;
+    const taxRowLabel = taxRate === 0 ? 'No Tax' : `Tax (${taxRate}%)`;
+
     const advanceOrComplete = () => {
       if (!canProcess) return;
       if (!isLastShare) {
@@ -5929,7 +6843,10 @@ function SplitPaymentDemoModal({
               <p className="mt-0.5 text-[11px] font-semibold text-mintcom-green">
                 Share {payStep + 1} of {splitPayments.length}
               </p>
-              <p className="mt-2 text-[11px] text-text-secondary">
+              <p className="mt-1 text-[11px] font-bold text-text-secondary">
+                Order #{orderNo}
+              </p>
+              <p className="mt-0.5 text-[11px] text-text-secondary">
                 Payment Method:{' '}
                 <span className="font-bold text-text-primary dark:text-white">
                   {methodLabel}
@@ -5952,26 +6869,54 @@ function SplitPaymentDemoModal({
                 </div>
               ))}
             </div>
-            <div className="shrink-0 space-y-1 border-t border-gray-100 px-3.5 py-2.5 text-[12px] dark:border-white/8">
+            {/* Fiscal summary — mirrors POS SplitPaymentProcessModal summaryRowCompact with taxRowLabel */}
+            <div className="shrink-0 space-y-1.5 border-t border-gray-100 px-3.5 py-2.5 text-[12px] dark:border-white/8">
               <div className="flex justify-between text-text-secondary">
                 <span>Subtotal</span>
-                <span className="tabular-nums">{total.toFixed(2)}</span>
+                <span className="tabular-nums font-semibold text-text-primary dark:text-white">
+                  {shareSubtotal.toFixed(2)} USD
+                </span>
+              </div>
+              {shareDiscount > 0 && (
+                <div className="flex justify-between text-text-secondary">
+                  <span>Discount</span>
+                  <span className="tabular-nums font-semibold text-[#D55263]">
+                    -{shareDiscount.toFixed(2)} USD
+                  </span>
+                </div>
+              )}
+              {shareServiceCharge > 0 && (
+                <div className="flex justify-between text-text-secondary">
+                  <span>{serviceChargeName || 'Service Charge'}</span>
+                  <span className="tabular-nums font-semibold text-text-primary dark:text-white">
+                    {shareServiceCharge.toFixed(2)} USD
+                  </span>
+                </div>
+              )}
+              {/* Tax Group */}
+              <div className="flex justify-between text-text-secondary">
+                <span>{taxRowLabel}</span>
+                <span className="tabular-nums font-semibold text-text-primary dark:text-white">
+                  {shareTax.toFixed(2)} USD
+                </span>
               </div>
               {isCash && (
                 <div className="flex justify-between text-text-secondary">
                   <span>Change</span>
                   <span
-                    className={`tabular-nums ${
-                      change > 0 ? 'font-bold text-mintcom-green' : ''
+                    className={`tabular-nums font-semibold ${
+                      change > 0 ? 'font-bold text-mintcom-green' : 'text-text-primary dark:text-white'
                     }`}
                   >
-                    {change.toFixed(2)}
+                    {change.toFixed(2)} USD
                   </span>
                 </div>
               )}
               <div className="flex justify-between border-t border-gray-100 pt-1.5 text-[15px] font-extrabold text-text-primary dark:border-white/8 dark:text-white">
                 <span>Total</span>
-                <span className="tabular-nums">{shareAmount.toFixed(2)} USD</span>
+                <span className="tabular-nums text-mintcom-green font-extrabold">
+                  {shareAmount.toFixed(2)} USD
+                </span>
               </div>
             </div>
           </div>
@@ -6508,8 +7453,8 @@ function SplitPaymentDemoModal({
           {/* By Amount */}
           {splitMode === 'amount' && (
             <div className="flex min-h-0 flex-1 flex-col">
-              <div className="grid min-h-0 flex-1 grid-cols-1 overflow-hidden lg:grid-cols-2 lg:items-stretch">
-                <div className="flex min-h-0 flex-col border-b border-gray-100 px-3 py-2 dark:border-white/8 lg:border-b-0 lg:border-e">
+              <div className="grid min-h-0 flex-1 grid-cols-1 overflow-hidden sm:grid-cols-2 sm:items-stretch">
+                <div className="flex min-h-0 flex-col border-b border-gray-100 px-3 py-2 dark:border-white/8 sm:border-b-0 sm:border-e">
                   <div className="mb-1.5 flex items-center justify-between">
                     <p className="text-[10px] font-bold uppercase tracking-wide text-text-secondary">
                       Split equally
@@ -6602,7 +7547,7 @@ function SplitPaymentDemoModal({
                           Clear
                         </button>
                       </div>
-                      <div className="min-h-0 flex-1 space-y-0 overflow-y-auto rounded-xl border border-gray-100 bg-cream-50 dark:border-white/8 dark:bg-mintcom-dark">
+                      <div className="min-h-0 flex-1 space-y-0 overflow-y-auto rounded-xl border border-gray-100 bg-[#F4F5F7] dark:border-white/8 dark:bg-mintcom-dark">
                         {splitPayments.map((p, index) => {
                           const tint = PERSON_PALETTE[index % PERSON_PALETTE.length];
                           const pct =
@@ -6664,7 +7609,7 @@ function SplitPaymentDemoModal({
                 </div>
 
                 {/* Amount + full-height numpad (fills column — not thin fixed keys) */}
-                <div className="flex h-full min-h-[260px] flex-1 flex-col px-3 py-2 lg:min-h-0">
+                <div className="flex h-full min-h-[260px] flex-1 flex-col px-3 py-2 sm:min-h-0">
                   <div className="mb-1 flex shrink-0 items-center justify-between">
                     <p className="text-[10px] font-bold uppercase tracking-wide text-text-secondary">
                       Amount
@@ -7172,6 +8117,31 @@ function PosDemoStoreConnect({ onConnect }: StoreConnectProps) {
                 <ArrowRight size={20} className="absolute end-5" strokeWidth={2.25} />
               )}
             </button>
+
+            {/* Section 3: Create New Account Section — mirrors mintcom-pos TenantSelectionScreen */}
+            <div className="mt-5 w-full">
+              <div className="mb-4 flex items-center">
+                <div className="h-px flex-1 bg-[#e5e7eb] dark:bg-white/10" />
+                <span className="mx-3 text-[13px] font-semibold uppercase text-[#6b7280]">
+                  OR
+                </span>
+                <div className="h-px flex-1 bg-[#e5e7eb] dark:bg-white/10" />
+              </div>
+
+              <Link
+                to="/signup"
+                target="_blank"
+                rel="noreferrer"
+                className="flex h-14 w-full items-center justify-center gap-2.5 rounded-xl border-[1.5px] border-mintcom-green bg-white text-base font-bold text-mintcom-green shadow-sm shadow-mintcom-green/15 transition-all hover:bg-mintcom-green/5 active:scale-[0.99] dark:bg-mintcom-surface"
+              >
+                <User size={20} className="text-mintcom-green" />
+                <span>Create New Account</span>
+              </Link>
+
+              <p className="mt-2.5 text-center text-xs leading-relaxed text-[#999]">
+                New to Mintcom? Register your store online, then come back and connect with your Store ID.
+              </p>
+            </div>
 
             {/* Footer — matches mintcom-pos TenantSelectionScreen */}
             <div className="mt-6 text-center">

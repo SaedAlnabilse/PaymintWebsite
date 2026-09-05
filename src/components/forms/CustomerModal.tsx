@@ -9,7 +9,6 @@ import {
   User,
   Phone,
   Mail,
-  MapPin,
   Award,
   Plus,
   Minus,
@@ -28,7 +27,6 @@ export const CUSTOMER_FIELD_LIMITS = {
   name: 50,
   phone: 20,
   email: 80,
-  address: 120,
 } as const;
 
 export const MAX_POINTS_ADJUSTMENT = 1000000;
@@ -42,6 +40,8 @@ export interface Customer {
   tier?: string;
   totalSpent: number;
   totalVisits: number;
+  // Still stored server-side for existing records, but no longer collected or
+  // displayed: nothing in the product ever read a customer address.
   address?: string;
 }
 
@@ -49,7 +49,6 @@ export type CustomerFormData = {
   name: string;
   phone?: string;
   email?: string;
-  address?: string;
 };
 
 const createCustomerSchema = (requiredMessage: string, invalidEmailMessage: string) =>
@@ -57,7 +56,6 @@ const createCustomerSchema = (requiredMessage: string, invalidEmailMessage: stri
     name: z.string().trim().min(1, requiredMessage).max(CUSTOMER_FIELD_LIMITS.name),
     phone: z.string().max(CUSTOMER_FIELD_LIMITS.phone).optional().or(z.literal('')),
     email: z.string().email(invalidEmailMessage).max(CUSTOMER_FIELD_LIMITS.email).optional().or(z.literal('')),
-    address: z.string().max(CUSTOMER_FIELD_LIMITS.address).optional().or(z.literal('')),
   });
 
 export interface CustomerModalProps {
@@ -131,7 +129,6 @@ export function CustomerModal({
           name: customer.name || '',
           phone: customer.phone || '',
           email: customer.email || '',
-          address: customer.address || '',
         });
       } else {
         setLocalPoints(0);
@@ -139,7 +136,6 @@ export function CustomerModal({
           name: '',
           phone: '',
           email: '',
-          address: '',
         });
       }
     }
@@ -430,51 +426,37 @@ export function CustomerModal({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {/* Email Field */}
-                  <div className="space-y-1">
-                    <label className="flex items-center gap-1 text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-1">
-                      <span>{formatInputLabel(t('customers.form.email'), t('common.locale'))}</span>
-                      <span className="text-[10px] font-normal text-gray-400 dark:text-gray-500 lowercase">
-                        ({t('customers.form.optional', { defaultValue: 'optional' })})
-                      </span>
-                    </label>
-                    <div className="relative">
-                      <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                      <input
-                        maxLength={CUSTOMER_FIELD_LIMITS.email}
-                        type="email"
-                        {...register('email')}
-                        placeholder={t('customers.form.emailPlaceholder', { defaultValue: 'customer@example.com' })}
-                        className={`w-full pl-10 pr-3 py-2.5 bg-gray-50 dark:bg-white/5 border ${
-                          errors.email
-                            ? 'border-mintcom-red ring-1 ring-mintcom-red'
-                            : 'border-gray-200 dark:border-white/10 focus:border-mintcom-green focus:ring-2 focus:ring-mintcom-green/20'
-                        } rounded-xl text-xs sm:text-sm font-medium outline-none transition-all text-gray-900 dark:text-white`}
-                      />
-                    </div>
-                    {errors.email && <p className="text-[10px] font-bold text-mintcom-red px-1">{errors.email.message}</p>}
+                {/* Email Field */}
+                <div className="space-y-1">
+                  <label className="flex items-center gap-1 text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-1">
+                    <span>{formatInputLabel(t('customers.form.email'), t('common.locale'))}</span>
+                    <span className="text-[10px] font-normal text-gray-400 dark:text-gray-500 lowercase">
+                      ({t('customers.form.optional', { defaultValue: 'optional' })})
+                    </span>
+                  </label>
+                  <div className="relative">
+                    <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input
+                      maxLength={CUSTOMER_FIELD_LIMITS.email}
+                      type="email"
+                      {...register('email')}
+                      placeholder={t('customers.form.emailPlaceholder', { defaultValue: 'customer@example.com' })}
+                      className={`w-full pl-10 pr-3 py-2.5 bg-gray-50 dark:bg-white/5 border ${
+                        errors.email
+                          ? 'border-mintcom-red ring-1 ring-mintcom-red'
+                          : 'border-gray-200 dark:border-white/10 focus:border-mintcom-green focus:ring-2 focus:ring-mintcom-green/20'
+                      } rounded-xl text-xs sm:text-sm font-medium outline-none transition-all text-gray-900 dark:text-white`}
+                    />
                   </div>
-
-                  {/* Address Field */}
-                  <div className="space-y-1">
-                    <label className="flex items-center gap-1 text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-1">
-                      <span>{formatInputLabel(t('customers.form.address'), t('common.locale'))}</span>
-                      <span className="text-[10px] font-normal text-gray-400 dark:text-gray-500 lowercase">
-                        ({t('customers.form.optional', { defaultValue: 'optional' })})
-                      </span>
-                    </label>
-                    <div className="relative">
-                      <MapPin size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                      <input
-                        maxLength={CUSTOMER_FIELD_LIMITS.address}
-                        {...register('address')}
-                        placeholder={t('customers.form.addressPlaceholder', { defaultValue: 'Street, City, Country' })}
-                        className="w-full pl-10 pr-3 py-2.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-xs sm:text-sm font-medium text-gray-900 dark:text-white focus:ring-2 focus:ring-mintcom-green/20 focus:border-mintcom-green outline-none transition-all"
-                      />
-                    </div>
-                    {errors.address && <p className="text-[10px] font-bold text-mintcom-red px-1">{errors.address.message}</p>}
-                  </div>
+                  {errors.email ? (
+                    <p className="text-[10px] font-bold text-mintcom-red px-1">{errors.email.message}</p>
+                  ) : (
+                    <p className="text-[10px] font-medium text-gray-400 dark:text-gray-500 px-1">
+                      {t('customers.form.emailHelper', {
+                        defaultValue: 'Used to email receipts and loyalty passes.',
+                      })}
+                    </p>
+                  )}
                 </div>
 
                 {/* Submit Profile Actions */}

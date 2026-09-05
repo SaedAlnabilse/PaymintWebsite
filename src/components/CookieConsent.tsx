@@ -12,11 +12,17 @@ interface CookiePreferences {
   functional: boolean;
 }
 
+// Pre-consent state. Every non-essential category MUST default to false: under
+// PECR (and Planet49) a pre-ticked box is not consent, and this object is what
+// the UI shows before the visitor has chosen anything. `functional` used to
+// default to true, which opted people in silently.
+// Note this is also the fallback when stored consent fails to parse — failing
+// closed there is the correct behaviour too.
 const defaultPreferences: CookiePreferences = {
-  essential: true, // Always true and disabled
+  essential: true, // Always true and disabled — strictly necessary
   analytics: false,
   marketing: false,
-  functional: true,
+  functional: false,
 };
 
 export function CookieConsent() {

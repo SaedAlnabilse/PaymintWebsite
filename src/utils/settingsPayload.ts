@@ -6,8 +6,17 @@ export const MAX_ESTABLISHMENT_TAX_ID_LENGTH = 32;
 export const MAX_RECEIPT_FAREWELL_LENGTH = 80;
 export const MAX_TAX_RATE_PERCENT = 100;
 export const MAX_TAX_RATE_INPUT_DIGITS = 5;
-export const MAX_HOLD_ORDER_TABLE_COUNT = 99;
-export const MAX_HOLD_ORDER_TABLE_DIGITS = 2;
+/**
+ * Hold Order table shortcuts. Mirrors
+ * mintcom-api/src/common/constants/hold-order-tables.ts — the API rejects
+ * anything above MAX_HOLD_ORDER_TABLE_COUNT, so these must move together.
+ * 0 is valid and means "no table shortcuts".
+ */
+export const DEFAULT_HOLD_ORDER_TABLE_COUNT = 50;
+export const MAX_HOLD_ORDER_TABLE_COUNT = 200;
+export const MAX_HOLD_ORDER_TABLE_DIGITS = String(
+  MAX_HOLD_ORDER_TABLE_COUNT,
+).length;
 export const MAX_SERVICE_CHARGE_NAME_LENGTH = 28;
 export const MAX_SERVICE_CHARGE_VALUE = 1000000;
 /** Percentage service charge is capped the same way as tax rate. */
@@ -125,7 +134,10 @@ export const normalizeBackendTaxRateForForm = (value: unknown) => {
   return clampTaxRatePercent(percent);
 };
 
-export const normalizeHoldOrderTableCount = (value: unknown, fallback = 20) => {
+export const normalizeHoldOrderTableCount = (
+  value: unknown,
+  fallback = DEFAULT_HOLD_ORDER_TABLE_COUNT,
+) => {
   const parsed = Number(value);
   if (!Number.isFinite(parsed)) return fallback;
   return Math.min(MAX_HOLD_ORDER_TABLE_COUNT, Math.max(0, Math.floor(parsed)));

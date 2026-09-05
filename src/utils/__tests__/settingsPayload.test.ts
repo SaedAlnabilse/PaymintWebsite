@@ -6,6 +6,8 @@ import {
   getChangedAppSettingsKeys,
   normalizeBackendTaxRateForForm,
   MAX_SERVICE_CHARGE_PERCENT,
+  DEFAULT_HOLD_ORDER_TABLE_COUNT,
+  MAX_HOLD_ORDER_TABLE_COUNT,
 } from '../settingsPayload';
 
 describe('settings update payload', () => {
@@ -79,7 +81,21 @@ describe('settings update payload', () => {
 
     expect(payload.taxRate).toBe(0);
     expect(payload.serviceChargeValue).toBe(0);
-    expect(payload.holdOrderTableCount).toBe(20);
+    expect(payload.holdOrderTableCount).toBe(DEFAULT_HOLD_ORDER_TABLE_COUNT);
+  });
+
+  it('caps the hold order table count at the backend limit', () => {
+    const payload = buildAppSettingsUpdatePayload({
+      holdOrderTableCount: MAX_HOLD_ORDER_TABLE_COUNT + 1,
+    });
+
+    expect(payload.holdOrderTableCount).toBe(MAX_HOLD_ORDER_TABLE_COUNT);
+  });
+
+  it('keeps an explicit zero table count instead of substituting the default', () => {
+    const payload = buildAppSettingsUpdatePayload({ holdOrderTableCount: 0 });
+
+    expect(payload.holdOrderTableCount).toBe(0);
   });
 
   it('caps a FIXED service charge at the backend limit', () => {

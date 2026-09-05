@@ -60,7 +60,7 @@ export type DemoSale = {
   id: string;
   orderNo: number;
   total: number;
-  method: 'cash' | 'card' | 'other';
+  method: 'cash' | 'card' | 'other' | 'split';
   methodLabel: string;
   items: string;
   at: number;
@@ -75,6 +75,16 @@ export type DemoSale = {
   refundedLineQty?: Record<string, number>;
   refundReason?: string;
   refundedAmount?: number;
+  /** Per-order tender breakdown (matches POS getOrderTenders) */
+  tenders?: Array<{
+    method: string;
+    label: string;
+    amount: number;
+    tendered?: number;
+    change?: number;
+    cardType?: string;
+    otherPaymentMethod?: string;
+  }>;
 };
 
 export type DemoShift = {
@@ -631,6 +641,7 @@ export function DemoDashboardScreen({
   const [shiftModal, setShiftModal] = useState<'open' | 'close' | null>(null);
   const [shiftStartedSuccess, setShiftStartedSuccess] = useState(false);
   const [todaysOrdersOpen, setTodaysOrdersOpen] = useState(false);
+  const [showShiftPrint, setShowShiftPrint] = useState(false);
   const [closedReview, setClosedReview] = useState<{
     expected: number;
     actual: number;
@@ -1105,25 +1116,137 @@ export function DemoDashboardScreen({
                 </div>
               </div>
 
-              <div className="flex shrink-0 gap-2 border-t border-gray-100 p-4 dark:border-white/8">
-                {/* POS handleClosedShiftStay — dismiss review, remain on dashboard */}
+              <div className="flex shrink-0 flex-col gap-2 border-t border-gray-100 p-4 dark:border-white/8">
                 <button
                   type="button"
-                  onClick={() => setClosedReview(null)}
-                  className="flex-1 rounded-xl border border-gray-200 py-2.5 text-[12px] font-bold text-text-secondary dark:border-white/10"
+                  onClick={() => setShowShiftPrint(true)}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-mintcom-green py-2.5 text-[12px] font-extrabold text-white shadow-sm transition-opacity hover:opacity-90"
                 >
-                  Stay on Dashboard
+                  <Printer size={16} /> Print Report
                 </button>
-                {/* POS handleClosedShiftLogout — dismiss + sign out of POS */}
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setClosedReview(null)}
+                    className="flex-1 rounded-xl border border-gray-200 py-2.5 text-[12px] font-bold text-text-secondary dark:border-white/10"
+                  >
+                    Stay on Dashboard
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setClosedReview(null);
+                      onSignOut?.();
+                    }}
+                    className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-mintcom-red py-2.5 text-[12px] font-extrabold text-white"
+                  >
+                    <LogOut size={15} /> Confirm &amp; Log Out
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Shift Report Print Modal (mirrors POS PrintReportModal / ShiftReportPrintData) */}
+      <AnimatePresence>
+        {showShiftPrint && (
+          <div className="fixed inset-0 z-[85] flex items-center justify-center bg-black/55 p-4">
+            <motion.div
+              initial={{ scale: 0.96, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.96, opacity: 0 }}
+              className="flex max-h-[min(90%,580px)] w-full max-w-md flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl dark:border-white/10 dark:bg-mintcom-surface"
+            >
+              <div className="flex items-center justify-between border-b border-gray-100 px-5 py-3.5 dark:border-white/8">
+                <div className="flex items-center gap-2">
+                  <Printer size={18} className="text-mintcom-green" />
+                  <p className="text-base font-bold text-text-primary dark:text-white">
+                    Shift Report
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowShiftPrint(false)}
+                  className="rounded-lg p-1 text-text-secondary hover:bg-cream-100 dark:hover:bg-white/10"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              <div className="min-h-0 flex-1 overflow-y-auto p-5 font-mono text-[13px] leading-relaxed">
+                <div className="border-b border-dashed border-gray-200 pb-3 text-center dark:border-white/10">
+                  <p className="font-sans text-base font-extrabold text-text-primary dark:text-white">Cafe Delight</p>
+                  <p className="text-xs text-text-secondary">Shift Summary Report</p>
+                  <p className="mt-1 text-[11px] text-text-tertiary">{dateLabel}</p>
+                </div>
+                <div className="space-y-1.5 py-3 border-b border-dashed border-gray-200 dark:border-white/10">
+                  <div className="flex justify-between">
+                    <span className="text-text-secondary">Cashier:</span>
+                    <span className="font-bold text-text-primary dark:text-white">{userName}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-text-secondary">Status:</span>
+                    <span className="font-bold text-mintcom-green">{isOpen ? 'ACTIVE SHIFT' : 'CLOSED'}</span>
+                  </div>
+                  {shift.startedAt && (
+                    <div className="flex justify-between">
+                      <span className="text-text-secondary">Started:</span>
+                      <span className="tabular-nums">{shiftStartedLabel}</span>
+                    </div>
+                  )}
+                </div>
+                <div className="space-y-1.5 py-3 border-b border-dashed border-gray-200 dark:border-white/10">
+                  <div className="flex justify-between">
+                    <span>Opening Cash:</span>
+                    <span className="font-bold tabular-nums">{money(shift.openingCash)}</span>
+                  </div>
+                  <div className="flex justify-between text-mintcom-green font-bold">
+                    <span>Cash Sales (+):</span>
+                    <span className="tabular-nums">{money(displayCashSales)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Card Sales (+):</span>
+                    <span className="tabular-nums font-bold">{money(displayCardSales)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Other Payments (+):</span>
+                    <span className="tabular-nums font-bold">{money(displayOtherSales)}</span>
+                  </div>
+                  <div className="flex justify-between text-mintcom-green">
+                    <span>Pay-In (+):</span>
+                    <span className="tabular-nums font-bold">{money(displayPayIn)}</span>
+                  </div>
+                  <div className="flex justify-between text-mintcom-red">
+                    <span>Pay-Out (-):</span>
+                    <span className="tabular-nums font-bold">−{money(displayPayOut)}</span>
+                  </div>
+                </div>
+                <div className="space-y-1.5 py-3">
+                  <div className="flex justify-between font-bold">
+                    <span>Net Sales:</span>
+                    <span className="text-mintcom-green font-black tabular-nums">{money(displayNetSales)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Total Orders:</span>
+                    <span className="tabular-nums font-bold">{displayOrders}</span>
+                  </div>
+                  <div className="flex justify-between border-t border-dashed border-gray-200 pt-2 font-bold dark:border-white/10">
+                    <span>Expected in Drawer:</span>
+                    <span className="tabular-nums text-mintcom-green font-black">{money(expectedCash)}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="border-t border-gray-100 bg-cream-50 p-4 dark:border-white/8 dark:bg-mintcom-dark">
                 <button
                   type="button"
                   onClick={() => {
-                    setClosedReview(null);
-                    onSignOut?.();
+                    setShowShiftPrint(false);
+                    if (typeof window !== 'undefined') window.print();
                   }}
-                  className="flex-1 rounded-xl bg-mintcom-green py-2.5 text-[12px] font-extrabold text-white"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-mintcom-green py-2.5 text-sm font-bold text-white shadow-md shadow-mintcom-green/20"
                 >
-                  Review &amp; Sign Out
+                  <Printer size={16} /> Print Shift Receipt
                 </button>
               </div>
             </motion.div>
@@ -1152,7 +1275,7 @@ function MetricSalesCard({
 }) {
   // Static POS SalesCard — equal height via parent flex, fixed padding/type
   return (
-    <div className="flex min-h-0 flex-1 flex-col rounded-xl border border-[#D3D6DE] bg-[#E8E8E8] p-4 dark:border-white/10 dark:bg-mintcom-dark">
+    <div className="flex min-h-0 flex-1 flex-col rounded-xl border border-[#E2E8F0] bg-[#F4F5F7] p-4 dark:border-white/10 dark:bg-mintcom-dark">
       <div className="flex items-center gap-3">
         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-mintcom-green !text-white [&_svg]:text-white">
           {icon}
@@ -1203,7 +1326,7 @@ function SmallMetric({
   return (
     <div
       ref={containerRef}
-      className="relative flex min-h-[90px] items-center gap-3 rounded-xl border border-[#D3D6DE] bg-[#E8E8E8] p-3 dark:border-white/10 dark:bg-mintcom-dark"
+      className="relative flex min-h-[90px] items-center gap-3 rounded-xl border border-[#E2E8F0] bg-[#F4F5F7] p-3 dark:border-white/10 dark:bg-mintcom-dark"
     >
       {info && (
         <button
@@ -1236,7 +1359,7 @@ function SmallMetric({
 /** POS PayCard — PAY-IN green / PAY-OUT red */
 function PayInOutMetric({ payIn, payOut }: { payIn: string; payOut: string }) {
   return (
-    <div className="flex min-h-[90px] items-center gap-3 rounded-xl border border-[#D3D6DE] bg-[#E8E8E8] p-3 dark:border-white/10 dark:bg-mintcom-dark">
+    <div className="flex min-h-[90px] items-center gap-3 rounded-xl border border-[#E2E8F0] bg-[#F4F5F7] p-3 dark:border-white/10 dark:bg-mintcom-dark">
       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-mintcom-green !text-white">
         <ArrowUpDown size={20} className="text-white" />
       </span>
@@ -1249,7 +1372,7 @@ function PayInOutMetric({ payIn, payOut }: { payIn: string; payOut: string }) {
             {payIn}
           </span>
         </div>
-        <div className="h-px bg-[#D3D6DE] dark:bg-white/10" />
+        <div className="h-px bg-[#E2E8F0] dark:bg-white/10" />
         <div className="flex items-center justify-between gap-2">
           <span className="text-[11px] font-semibold uppercase tracking-wide text-[#737182]">
             PAY-OUT
@@ -1993,10 +2116,28 @@ export function DemoTodaysOrdersModal({
                       {statusLabel(selected)}
                     </span>
                   </div>
-                  <div className="mb-2 flex justify-between text-[12px]">
-                    <span className="text-text-secondary">Payment Method</span>
-                    <span className="font-bold text-text-primary dark:text-white">{selected.methodLabel}</span>
-                  </div>
+                  {selected.tenders && selected.tenders.length > 0 ? (
+                    <div className="mb-2">
+                      <div className="flex justify-between text-[12px] mb-1.5">
+                        <span className="text-text-secondary">Payment Method</span>
+                        <span className="font-bold text-text-primary dark:text-white">{selected.methodLabel}</span>
+                      </div>
+                      <div className="rounded-lg bg-white p-2 text-[11px] space-y-1 border border-gray-100 dark:bg-mintcom-surface dark:border-white/5">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-text-tertiary">Tender Breakdown</span>
+                        {selected.tenders.map((tItem, idx) => (
+                          <div key={idx} className="flex justify-between font-medium">
+                            <span className="text-text-secondary">{tItem.label || tItem.method}</span>
+                            <span className="font-bold tabular-nums text-text-primary dark:text-white">{money(tItem.amount)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mb-2 flex justify-between text-[12px]">
+                      <span className="text-text-secondary">Payment Method</span>
+                      <span className="font-bold text-text-primary dark:text-white">{selected.methodLabel}</span>
+                    </div>
+                  )}
                   {selected.orderType && (
                     <div className="mb-2 flex justify-between text-[12px]">
                       <span className="text-text-secondary">Type</span>
