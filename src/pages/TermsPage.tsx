@@ -100,6 +100,14 @@ export const TermsPage = () => {
                             <p className="text-sm font-medium">
                                 {t('legal.terms.availability.desc')}
                             </p>
+                            {/* Material limitation on a feature we advertise in the
+                                plan, so it belongs in the contract rather than being
+                                discovered when the assistant stops answering. Keep the
+                                figure in step with AI_DAILY_LIMIT / AI_MONTHLY_LIMIT
+                                in mintcom-api. */}
+                            <p className="text-sm font-medium mt-3">
+                                {t('legal.terms.availability.aiFairUse')}
+                            </p>
                         </section>
 
                         {/* 6. Intellectual Property */}

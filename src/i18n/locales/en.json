@@ -3396,7 +3396,8 @@
     },
     "terms": {
       "availability": {
-        "desc": "We strive to maintain high availability but do not guarantee uninterrupted service. We may perform scheduled maintenance with advance notice."
+        "desc": "We strive to maintain high availability but do not guarantee uninterrupted service. We may perform scheduled maintenance with advance notice.",
+        "aiFairUse": "The AI business assistant is subject to fair-use limits, currently 100 questions per day and 1,000 questions per month for each location. We will tell you in the app as you approach a limit, and it resets automatically. We may adjust these limits to keep the service sustainable, and will give notice before reducing them."
       },
       "contact": {
         "desc": "For questions about these Terms of Service, please contact us at support@mintcompos.com"
@@ -6895,7 +6896,7 @@
         "loyalty": "Built-in loyalty & rewards",
         "multi": "Multi-location & brand tools",
         "mobile": "Owner mobile alerts & monitoring",
-        "ai": "AI business assistant",
+        "ai": "AI business assistant (fair-use limits apply)",
         "support": "Help center & support tickets",
         "updates": "Ongoing product updates"
       },
